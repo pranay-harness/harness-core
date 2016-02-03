@@ -1,0 +1,24 @@
+xxxxxxxx
+  applicationContextPath: /wings
+  applicationConnectors:
+    - type: http
+      port: 9090
+  adminContextPath: /admin
+  adminMinThreads: 1
+  adminMaxThreads: 64
+  adminConnectors:
+    - type: http
+      port: 9091
+logging:
+  appenders:
+    - type: console
+      threshold: INFO
+      target: stdout
+
+mongo:
+  host: localhost
+  port: 12345
+  db: wings
+
+portal:
+  url: http://192.168.1.50:9090/wings
