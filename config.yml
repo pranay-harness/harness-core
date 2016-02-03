@@ -17,7 +17,7 @@ logging:
 
 mongo:
   host: localhost
-  port: 12345
+  port: 27017
   db: wings
 
 portal:
