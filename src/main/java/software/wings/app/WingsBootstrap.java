@@ -76,7 +76,8 @@ public class WingsBootstrap {
 
     // service registry
     register(AppService.class, new AppServiceImpl(datastore));
-    register(AuditService.class, new AuditServiceImpl(datastore));
+    register(
+        AuditService.class, new AuditServiceImpl(datastore, mongoClient, mongoConnectionFactory.getDb(), "audits"));
     register(ReleaseService.class, new ReleaseServiceImpl(datastore));
     register(ArtifactService.class, new ArtifactServiceImpl(datastore));
     register(FileService.class, new FileServiceImpl(mongoClient, mongoConnectionFactory.getDb(), "lob"));

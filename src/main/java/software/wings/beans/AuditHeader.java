@@ -14,6 +14,9 @@ import org.mongodb.morphia.annotations.Reference;
  */
 @Entity(value = "audits", noClassnameStored = true)
 public class AuditHeader extends Base {
+  public enum RequestType { REQUEST, RESPONSE }
+  ;
+
   public enum ResponseType { SUCCESS, FAILED }
 
   private String url;
@@ -43,6 +46,10 @@ public class AuditHeader extends Base {
   private String localHostName;
 
   private String localIpAddress;
+
+  private String requestPayloadUUID;
+
+  private String responsePayloadUUID;
 
   @Reference protected Application application;
 
@@ -206,6 +213,22 @@ public class AuditHeader extends Base {
 
   public void setHeaderString(String headerString) {
     this.headerString = headerString;
+  }
+
+  public String getRequestPayloadUUID() {
+    return requestPayloadUUID;
+  }
+
+  public void setRequestPayloadUUID(String requestPayloadUUID) {
+    this.requestPayloadUUID = requestPayloadUUID;
+  }
+
+  public String getResponsePayloadUUID() {
+    return responsePayloadUUID;
+  }
+
+  public void setResponsePayloadUUID(String responsePayloadUUID) {
+    this.responsePayloadUUID = responsePayloadUUID;
   }
 
   @Override

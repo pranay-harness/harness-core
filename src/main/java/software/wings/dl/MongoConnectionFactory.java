@@ -10,9 +10,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.mongodb.MongoClient;
 
 import io.dropwizard.setup.Environment;
-import software.wings.beans.Application;
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditPayload;
 
 /**
  *  MongoConnectionFactory is used to establish the MongoDB connection pool.
@@ -71,9 +68,6 @@ public class MongoConnectionFactory {
     Datastore ds = m.createDatastore(getMongoClient(), getDb());
 
     // TODO - Need to automate package scanning
-    m.map(Application.class);
-    m.map(AuditHeader.class);
-    m.map(AuditPayload.class);
 
     ds.ensureIndexes();
     return ds;

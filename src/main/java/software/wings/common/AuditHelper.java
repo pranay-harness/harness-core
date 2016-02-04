@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditPayload;
+import software.wings.beans.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
 /**
@@ -45,19 +45,19 @@ public class AuditHelper {
 
   private static Logger logger = LoggerFactory.getLogger(AuditHelper.class);
 
-  public void create(AuditPayload payload) {
-    try {
-      AuditService auditService = WingsBootstrap.lookup(AuditService.class);
-      auditService.create(payload);
-    } catch (RuntimeException rException) {
-      logger.error("Exception occurred while trying to save payload - headerId" + payload.getHeaderId());
-      throw rException;
-    }
+  public void finalizeAudit(AuditHeader header, byte[] payload) {
+    AuditService auditService = WingsBootstrap.lookup(AuditService.class);
+    auditService.finalize(header, payload);
+    auditThreadLocal.remove();
   }
 
-  public void finalizeAudit(AuditHeader header) {
-    AuditService auditService = WingsBootstrap.lookup(AuditService.class);
-    auditService.finalize(header);
-    auditThreadLocal.remove();
+  public void create(AuditHeader header, RequestType requestType, byte[] httpBody) {
+    try {
+      AuditService auditService = WingsBootstrap.lookup(AuditService.class);
+      auditService.create(header, requestType, httpBody);
+    } catch (RuntimeException rException) {
+      logger.error("Exception occurred while trying to save payload - headerId" + header.getUuid());
+      throw rException;
+    }
   }
 }

@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditPayload;
+import software.wings.beans.AuditHeader.RequestType;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 
@@ -15,9 +15,9 @@ import software.wings.beans.PageResponse;
 public interface AuditService {
   public AuditHeader create(AuditHeader header);
 
-  public AuditPayload create(AuditPayload payload);
-
-  public void finalize(AuditHeader header);
+  public void finalize(AuditHeader header, byte[] payload);
 
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req);
+
+  public String create(AuditHeader header, RequestType requestType, byte[] httpBody);
 }

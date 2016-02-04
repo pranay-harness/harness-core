@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditPayload;
-import software.wings.beans.AuditPayload.RequestType;
 import software.wings.common.AuditHelper;
 
 /**
@@ -49,14 +47,9 @@ public class AuditResponseFilter implements Filter {
 
       AuditHeader header = auditHelper.get();
       if (header != null) {
-        AuditPayload detail = new AuditPayload();
-        detail.setHeaderId(header.getUuid());
-        detail.setRequestType(RequestType.RESPONSE);
-        detail.setPayload(copy);
-        auditHelper.create(detail);
         header.setResponseTime(new Timestamp(System.currentTimeMillis()));
         header.setResponseStatusCode(((HttpServletResponse) response).getStatus());
-        auditHelper.finalizeAudit(header);
+        auditHelper.finalizeAudit(header, copy);
       }
     }
   }

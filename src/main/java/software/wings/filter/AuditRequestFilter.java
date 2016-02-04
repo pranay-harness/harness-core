@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
@@ -22,10 +19,9 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import software.wings.beans.HTTPMethod;
 import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditPayload;
-import software.wings.beans.AuditPayload.RequestType;
+import software.wings.beans.AuditHeader.RequestType;
+import software.wings.beans.HTTPMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
 import software.wings.utils.Misc;
@@ -77,7 +73,6 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     InputStream entityStream = null;
     ByteArrayInputStream byteArrayInputStream = null;
     try {
-      AuditPayload detail = new AuditPayload();
       entityStream = requestContext.getEntityStream();
 
       byte[] httpBody = IOUtils.toByteArray(entityStream);
@@ -86,10 +81,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         byteArrayInputStream = new ByteArrayInputStream(httpBody);
 
         requestContext.setEntityStream(byteArrayInputStream);
-        detail.setHeaderId(header.getUuid());
-        detail.setRequestType(RequestType.REQUEST);
-        detail.setPayload(httpBody);
-        auditHelper.create(detail);
+
+        auditHelper.create(header, RequestType.REQUEST, httpBody);
       }
 
     } catch (Exception exception) {
