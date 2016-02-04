@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import software.wings.beans.Execution;
 import software.wings.beans.HostInstanceMapping;
+import software.wings.helpers.ConsoleExecutionCallback;
 import software.wings.helpers.SSHCommandExecutionCallback;
 import software.wings.helpers.SSHCommandExecutor;
 import software.wings.resources.AppResource;
@@ -31,29 +32,9 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
       String sshPassword = execution.getSshPassword();
       String command = execution.getCommand();
 
-      SSHCommandExecutor executor =
-          new SSHCommandExecutor(hostName, sshPort, sshUser, sshPassword, command, new ExecutionCallback(execution));
+      SSHCommandExecutor executor = new SSHCommandExecutor(
+          hostName, sshPort, sshUser, sshPassword, command, new ConsoleExecutionCallback(execution));
       executor.execute();
     }
   }
-}
-
-class ExecutionCallback implements SSHCommandExecutionCallback {
-  private Execution execution;
-
-  public ExecutionCallback(Execution execution) {
-    this.execution = execution;
-  }
-
-  @Override
-  public void log(String message) {
-    LOGGER.info(message);
-  }
-
-  @Override
-  public void updateStatus() {
-    LOGGER.info("updateStatus is called");
-  }
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionCallback.class);
 }
