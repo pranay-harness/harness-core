@@ -1,8 +1,7 @@
-package software.wings.helpers;
+package software.wings.helpers.executors;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +13,17 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
+import software.wings.helpers.executors.callbacks.SSHCommandExecutionCallback;
 import software.wings.utils.Misc;
 
-public class SSHCommandExecutor {
+public class SSHCommandExecutor implements CommandExecutor {
+  private static final Logger LOGGER = LoggerFactory.getLogger(SSHCommandExecutor.class);
   private String hostName;
   private String sshUser;
   private String sshPassword;
   private String command;
   private SSHCommandExecutionCallback callback;
+
   private int sshPort = 22;
 
   public SSHCommandExecutor(String hostName, int sshPort, String sshUser, String sshPassword, String command,
@@ -33,7 +35,6 @@ public class SSHCommandExecutor {
     this.command = command;
     this.callback = callback;
   }
-
   public void execute() {
     try {
       JSch jsch = new JSch();
@@ -75,31 +76,4 @@ public class SSHCommandExecutor {
       e.printStackTrace();
     }
   }
-
-  private static class MyUserInfo implements UserInfo {
-    private String sshPassword;
-    public MyUserInfo(String sshPassword) {
-      this.sshPassword = sshPassword;
-    }
-    public String getPassword() {
-      return sshPassword;
-    }
-    public boolean promptYesNo(String str) {
-      return true;
-    }
-    public String getPassphrase() {
-      return null;
-    }
-    public boolean promptPassphrase(String message) {
-      return true;
-    }
-    public boolean promptPassword(String message) {
-      return true;
-    }
-    public void showMessage(String message) {
-      System.out.println(message);
-    }
-  }
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(SSHCommandExecutor.class);
 }
