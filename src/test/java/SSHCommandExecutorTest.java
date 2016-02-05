@@ -1,13 +1,13 @@
 import org.junit.Test;
 
-import software.wings.helpers.ConsoleExecutionCallback;
-import software.wings.helpers.SSHCommandExecutor;
+import software.wings.helpers.executors.callbacks.ConsoleExecutionCallback;
+import software.wings.helpers.executors.SSHSudoCommandExecutor;
 
 public class SSHCommandExecutorTest {
   @Test
   public void test() {
-    SSHCommandExecutor executor = new SSHCommandExecutor(
-        "localhost", 2222, "vagrant", "wings1234", "ls -al && whoami && pwd", new ConsoleExecutionCallback(null));
+    SSHSudoCommandExecutor executor = new SSHSudoCommandExecutor("localhost", 2222, "osboxes", "osboxes.org",
+        "sudo su - vagrant  -c 'ls && whoami'", new ConsoleExecutionCallback(null));
     executor.execute();
   }
 }

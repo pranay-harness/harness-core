@@ -3,15 +3,11 @@ package software.wings.service.impl;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.mongodb.morphia.Datastore;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import software.wings.beans.Execution;
 import software.wings.beans.HostInstanceMapping;
-import software.wings.helpers.ConsoleExecutionCallback;
-import software.wings.helpers.SSHCommandExecutionCallback;
-import software.wings.helpers.SSHCommandExecutor;
-import software.wings.resources.AppResource;
+import software.wings.helpers.executors.callbacks.ConsoleExecutionCallback;
+import software.wings.helpers.executors.SSHCommandExecutor;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
 
 public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {
