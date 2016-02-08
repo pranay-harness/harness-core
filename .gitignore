@@ -8,3 +8,4 @@ target
 *.orig
 .settings
 .project
+dependency-reduced-pom.xml
