@@ -1,14 +1,12 @@
-package software.wings.helpers.executors;
+package software.wings.core.executors;
 
 import org.junit.Test;
-import software.wings.helpers.executors.callbacks.ConsoleExecutionCallback;
-
-import static org.junit.Assert.*;
+import software.wings.core.executors.callbacks.ConsoleExecutionCallback;
 
 /**
  * Created by anubhaw on 2/5/16.
  */
-public class SSHJumpBoxCommandExecutorTest {
+public class SSHJumpBoxExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SSHJumpBoxCommandExecutor executor = new SSHJumpBoxCommandExecutor(

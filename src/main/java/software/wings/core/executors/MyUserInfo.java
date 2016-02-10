@@ -1,4 +1,4 @@
-package software.wings.helpers.executors;
+package software.wings.core.executors;
 
 import com.jcraft.jsch.UserInfo;
 

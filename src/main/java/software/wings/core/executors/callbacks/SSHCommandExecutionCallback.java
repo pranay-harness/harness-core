@@ -1,4 +1,4 @@
-package software.wings.helpers.executors.callbacks;
+package software.wings.core.executors.callbacks;
 
 public interface SSHCommandExecutionCallback {
   public void log(String message);

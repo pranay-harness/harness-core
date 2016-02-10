@@ -1,14 +1,11 @@
 package software.wings.service.impl;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.mongodb.morphia.Datastore;
-
 import software.wings.beans.Execution;
 import software.wings.beans.HostInstanceMapping;
-import software.wings.helpers.executors.callbacks.ConsoleExecutionCallback;
-import software.wings.helpers.executors.SSHCommandExecutor;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {
   private AtomicInteger maxSSHConnection;
@@ -28,9 +25,8 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
       String sshPassword = execution.getSshPassword();
       String command = execution.getCommand();
 
-      SSHCommandExecutor executor = new SSHCommandExecutor(
-          hostName, sshPort, sshUser, sshPassword, command, new ConsoleExecutionCallback(execution));
-      executor.execute();
+      //			SSHCommandExecutor executor = new SSHCommandExecutor(hostName, sshPort, sshUser,
+      //sshPassword, command, new ConsoleExecutionCallback(execution)); 			executor.execute();
     }
   }
 }

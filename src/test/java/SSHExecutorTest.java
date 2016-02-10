@@ -1,10 +1,10 @@
 import org.junit.Test;
 
-import software.wings.helpers.executors.SSHCommandExecutor;
-import software.wings.helpers.executors.callbacks.ConsoleExecutionCallback;
-import software.wings.helpers.executors.SSHSudoCommandExecutor;
+import software.wings.core.executors.SSHCommandExecutor;
+import software.wings.core.executors.callbacks.ConsoleExecutionCallback;
+import software.wings.core.executors.SSHSudoCommandExecutor;
 
-public class SSHCommandExecutorTest {
+public class SSHExecutorTest {
   @Test
   public void test() {
     SSHCommandExecutor executor = new SSHCommandExecutor(
