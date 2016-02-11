@@ -9,12 +9,8 @@ import software.wings.core.executors.SSHSessionConfig.SSHSessionConfigBuilder;
 public class SSHPwdAuthExecutorTest {
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfigBuilder()
-                                  .setHost("localhost")
-                                  .setPort(3333)
-                                  .setUser("osboxes")
-                                  .setPassword("osboxes.org")
-                                  .build();
+    SSHSessionConfig config =
+        new SSHSessionConfigBuilder().host("localhost").port(3333).user("osboxes").password("osboxes.org").build();
 
     SSHExecutor executor = new SSHPwdAuthExecutor();
     executor.init(config);

@@ -9,10 +9,10 @@ public class SSHPubKeyExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
-                                  .setHost("localhost")
-                                  .setPort(3333)
-                                  .setUser("osboxes")
-                                  .setKey("/Users/anubhaw/.ssh/id_rsa")
+                                  .host("localhost")
+                                  .port(3333)
+                                  .user("osboxes")
+                                  .keyPath("/Users/anubhaw/.ssh/id_rsa")
                                   .build();
 
     SSHExecutor executor = new SSHPubKeyAuthExecutor();

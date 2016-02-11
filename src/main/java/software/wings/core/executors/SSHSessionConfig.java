@@ -12,7 +12,7 @@ public class SSHSessionConfig {
   private Integer port;
   private String user;
   private String password;
-  private String key;
+  private String keyPath;
   private String sudoUserName;
   private String sudoUserPassword;
 
@@ -24,7 +24,7 @@ public class SSHSessionConfig {
     this.port = builder.port;
     this.user = builder.user;
     this.password = builder.password;
-    this.key = builder.key;
+    this.keyPath = builder.keyPath;
     this.sudoUserName = builder.sudoUserName;
     this.sudoUserPassword = builder.sudoUserPassword;
   }
@@ -37,56 +37,56 @@ public class SSHSessionConfig {
     private Integer port;
     private String user;
     private String password;
-    private String key;
+    private String keyPath;
     private String sudoUserName;
     private String sudoUserPassword;
 
-    public SSHSessionConfigBuilder setSSHConnectionTimeout(Integer sshConnectionTimeout) {
+    public SSHSessionConfigBuilder SSHConnectionTimeout(Integer sshConnectionTimeout) {
       this.SSHConnectionTimeout = sshConnectionTimeout;
       return this;
     }
 
-    public SSHSessionConfigBuilder setSSHSessionTimeout(Integer sshSessionTimeout) {
+    public SSHSessionConfigBuilder SSHSessionTimeout(Integer sshSessionTimeout) {
       this.SSHSessionTimeout = sshSessionTimeout;
       return this;
     }
 
-    public SSHSessionConfigBuilder setRetryInterval(Integer retryInterval) {
+    public SSHSessionConfigBuilder retryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
       return this;
     }
 
-    public SSHSessionConfigBuilder setHost(String host) {
+    public SSHSessionConfigBuilder host(String host) {
       this.host = host;
       return this;
     }
 
-    public SSHSessionConfigBuilder setPort(Integer port) {
+    public SSHSessionConfigBuilder port(Integer port) {
       this.port = port;
       return this;
     }
 
-    public SSHSessionConfigBuilder setUser(String user) {
+    public SSHSessionConfigBuilder user(String user) {
       this.user = user;
       return this;
     }
 
-    public SSHSessionConfigBuilder setPassword(String password) {
+    public SSHSessionConfigBuilder password(String password) {
       this.password = password;
       return this;
     }
 
-    public SSHSessionConfigBuilder setKey(String key) {
-      this.key = key;
+    public SSHSessionConfigBuilder keyPath(String key) {
+      this.keyPath = key;
       return this;
     }
 
-    public SSHSessionConfigBuilder setSudoUserName(String sudoUserName) {
+    public SSHSessionConfigBuilder sudoUserName(String sudoUserName) {
       this.sudoUserName = sudoUserName;
       return this;
     }
 
-    public SSHSessionConfigBuilder setSudoUserPassword(String sudoUserPassword) {
+    public SSHSessionConfigBuilder sudoUserPassword(String sudoUserPassword) {
       this.sudoUserPassword = sudoUserPassword;
       return this;
     }
@@ -124,8 +124,8 @@ public class SSHSessionConfig {
     return password;
   }
 
-  public String getKey() {
-    return key;
+  public String getKeyPath() {
+    return keyPath;
   }
 
   public String getSudoUserName() {

@@ -1,7 +1,6 @@
 package software.wings.core.executors;
 
 import com.jcraft.jsch.*;
-import software.wings.core.executors.callbacks.SSHCommandExecutionCallback;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -27,7 +26,7 @@ public class SSHSessionFactory {
     JSch jsch = new JSch();
     Session session = null;
     try {
-      jsch.addIdentity(config.getKey());
+      jsch.addIdentity(config.getKeyPath());
       session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
       session.setConfig("StrictHostKeyChecking", "no");
       session.connect(config.getSSHConnectionTimeout());

@@ -71,7 +71,7 @@
 //            Thread thread = new Thread(()-> {
 //                while (!channel.isClosed()) {
 //                    try {
-//                        quietSleep(RetryInterval);
+//                        quietSleep(retryInterval);
 //                    } catch (Exception e) {
 //                        // ignored
 //                    }

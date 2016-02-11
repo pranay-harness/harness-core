@@ -10,12 +10,12 @@ public class SSHSudoExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
-                                  .setHost("localhost")
-                                  .setPort(3333)
-                                  .setUser("osboxes")
-                                  .setPassword("osboxes.org")
-                                  .setSudoUserName("vagrant")
-                                  .setSudoUserPassword("wings1234")
+                                  .host("localhost")
+                                  .port(3333)
+                                  .user("osboxes")
+                                  .password("osboxes.org")
+                                  .sudoUserName("vagrant")
+                                  .sudoUserPassword("wings1234")
                                   .build();
 
     SSHExecutor executor = new SSHSudoExecutor();
