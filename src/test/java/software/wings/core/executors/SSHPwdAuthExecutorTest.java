@@ -2,11 +2,6 @@ package software.wings.core.executors;
 
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
-import static org.junit.Assert.*;
-
 /**
  * Created by anubhaw on 2/10/16.
  */
@@ -14,7 +9,7 @@ public class SSHPwdAuthExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SSHSessionConfig config = new SSHSessionConfig("localhost", 3333, "osboxes", "osboxes.org");
-    Executor executor = new SSHPwdAuthExecutor();
+    SSHExecutor executor = new SSHPwdAuthExecutor();
     executor.init(config);
     executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     //

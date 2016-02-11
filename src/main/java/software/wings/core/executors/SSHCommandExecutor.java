@@ -16,7 +16,7 @@
 // import software.wings.core.executors.callbacks.SSHCommandExecutionCallback;
 // import software.wings.utils.Misc;
 //
-// public class SSHCommandExecutor implements Executor {
+// public class SSHCommandExecutor implements SSHExecutor {
 //
 //	private static final Logger LOGGER = LoggerFactory.getLogger(SSHCommandExecutor.class);
 //	private String hostName;

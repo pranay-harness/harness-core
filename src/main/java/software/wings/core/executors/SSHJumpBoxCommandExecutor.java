@@ -14,7 +14,7 @@
 // * Created by anubhaw on 2/5/16.
 // */
 //
-// public class SSHJumpBoxCommandExecutor implements Executor {
+// public class SSHJumpBoxCommandExecutor implements SSHExecutor {
 //    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SSHCommandExecutor.class);
 //    private String hostName;
 //    private String sshUser;

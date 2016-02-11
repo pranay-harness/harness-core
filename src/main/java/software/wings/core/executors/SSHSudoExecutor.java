@@ -8,7 +8,7 @@ import java.io.IOException;
  * Created by anubhaw on 2/4/16.
  */
 
-public class SSHSudoExecutor extends AbstractExecutor {
+public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
     return SSHSessionFactory.getSSHSessionWithPwd(config);

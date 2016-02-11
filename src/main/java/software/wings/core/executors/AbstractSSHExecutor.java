@@ -16,7 +16,8 @@ import static software.wings.utils.Misc.quietSleep;
 /**
  * Created by anubhaw on 2/10/16.
  */
-public abstract class AbstractExecutor implements Executor {
+
+public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
   private Session session = null;
   private Channel channel = null;
