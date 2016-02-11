@@ -4,6 +4,8 @@ package software.wings.core.executors;
  * Created by anubhaw on 2/8/16.
  */
 
+// Fixme: Use builder pattern
+
 public class SSHSessionConfig {
   private Integer SSHConnectionTimeout = 10000; // 10 seconds
   private Integer SSHSessionTimeout = 600000; // 10 minutes
@@ -13,12 +15,14 @@ public class SSHSessionConfig {
   private Integer port;
   private String user;
   private String password;
+  private String key;
 
   public SSHSessionConfig(String host, Integer port, String user, String password) {
     this.host = host;
     this.port = port;
     this.user = user;
     this.password = password;
+    this.key = password; // Fixme: with Builder pattern
   }
 
   public Integer getSSHConnectionTimeout() {
@@ -75,5 +79,13 @@ public class SSHSessionConfig {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public String getKey() {
+    return key;
+  }
+
+  public void setKey(String key) {
+    this.key = key;
   }
 }

@@ -22,4 +22,19 @@ public class SSHSessionFactory {
     }
     return session;
   }
+
+  public static Session getSSHSessionWithKey(SSHSessionConfig config) {
+    JSch jsch = new JSch();
+    Session session = null;
+    try {
+      jsch.addIdentity(config.getKey());
+      session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
+      session.setConfig("StrictHostKeyChecking", "no");
+      session.connect(config.getSSHConnectionTimeout());
+      session.setTimeout(config.getSSHSessionTimeout());
+    } catch (JSchException e) {
+      e.printStackTrace();
+    }
+    return session;
+  }
 }

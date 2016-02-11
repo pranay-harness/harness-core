@@ -4,6 +4,7 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
@@ -16,7 +17,7 @@ import static software.wings.utils.Misc.quietSleep;
  * Created by anubhaw on 2/10/16.
  */
 public abstract class AbstractExecutor implements Executor {
-  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SSHPwdAuthExecutor.class);
+  private final Logger LOGGER = LoggerFactory.getLogger(getClass());
   private Session session = null;
   private Channel channel = null;
   private SSHSessionConfig config = null;
@@ -26,7 +27,7 @@ public abstract class AbstractExecutor implements Executor {
   public void init(SSHSessionConfig config) {
     preInit();
     this.config = config;
-    session = SSHSessionFactory.getSSHSessionWithPwd(config);
+    session = getSession(config);
     try {
       channel = session.openChannel("exec");
       ((ChannelExec) channel).setPty(true);
@@ -96,6 +97,7 @@ public abstract class AbstractExecutor implements Executor {
     }
   }
 
+  public abstract Session getSession(SSHSessionConfig config);
   public abstract void preInit();
   public abstract void postInit();
   public abstract void preExecute();

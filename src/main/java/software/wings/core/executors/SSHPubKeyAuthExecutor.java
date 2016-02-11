@@ -1,25 +1,22 @@
 package software.wings.core.executors;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+import com.jcraft.jsch.*;
 import org.slf4j.LoggerFactory;
+import software.wings.core.executors.callbacks.SSHCommandExecutionCallback;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 import static software.wings.utils.Misc.quietSleep;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
-public class SSHPwdAuthExecutor extends AbstractExecutor {
+
+public class SSHPubKeyAuthExecutor extends AbstractExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSessionWithPwd(config);
+    return SSHSessionFactory.getSSHSessionWithKey(config);
   }
 
   @Override
