@@ -21,16 +21,4 @@ public class SSHPwdAuthExecutor extends AbstractExecutor {
   public Session getSession(SSHSessionConfig config) {
     return SSHSessionFactory.getSSHSessionWithPwd(config);
   }
-
-  @Override
-  public void preInit() {}
-
-  @Override
-  public void postInit() {}
-
-  @Override
-  public void preExecute() {}
-
-  @Override
-  public void postExecute() {}
 }

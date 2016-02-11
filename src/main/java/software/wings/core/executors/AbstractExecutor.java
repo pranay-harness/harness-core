@@ -98,8 +98,8 @@ public abstract class AbstractExecutor implements Executor {
   }
 
   public abstract Session getSession(SSHSessionConfig config);
-  public abstract void preInit();
-  public abstract void postInit();
-  public abstract void preExecute();
-  public abstract void postExecute();
+  public void preInit(){};
+  public void postInit(){};
+  public void preExecute(){};
+  public void postExecute(){};
 }
