@@ -4,13 +4,10 @@ package software.wings.core.executors;
  * Created by anubhaw on 2/8/16.
  */
 
-// Fixme: Use builder pattern
-
 public class SSHSessionConfig {
-  private Integer SSHConnectionTimeout = 10000; // 10 seconds
-  private Integer SSHSessionTimeout = 600000; // 10 minutes
-  private Integer RetryInterval = 1000;
-
+  private Integer SSHConnectionTimeout;
+  private Integer SSHSessionTimeout;
+  private Integer retryInterval;
   private String host;
   private Integer port;
   private String user;
@@ -19,85 +16,123 @@ public class SSHSessionConfig {
   private String sudoUserName;
   private String sudoUserPassword;
 
-  public SSHSessionConfig(String host, Integer port, String user, String password) {
-    this.host = host;
-    this.port = port;
-    this.user = user;
-    this.password = password;
-    this.key = password; // Fixme: with Builder pattern
+  public SSHSessionConfig(SSHSessionConfigBuilder builder) {
+    this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
+    this.SSHSessionTimeout = builder.SSHSessionTimeout;
+    retryInterval = builder.retryInterval;
+    this.host = builder.host;
+    this.port = builder.port;
+    this.user = builder.user;
+    this.password = builder.password;
+    this.key = builder.key;
+    this.sudoUserName = builder.sudoUserName;
+    this.sudoUserPassword = builder.sudoUserPassword;
   }
 
-  public SSHSessionConfig(
-      String host, Integer port, String user, String password, String sudoUserName, String sudoUserPassword) {
-    this.host = host;
-    this.port = port;
-    this.user = user;
-    this.password = password;
-    this.sudoUserName = sudoUserName;
-    this.sudoUserPassword = sudoUserPassword;
+  public static class SSHSessionConfigBuilder {
+    private Integer SSHConnectionTimeout = 10000; // 10 seconds
+    private Integer SSHSessionTimeout = 600000; // 10 minutes
+    private Integer retryInterval = 1000;
+    private String host;
+    private Integer port;
+    private String user;
+    private String password;
+    private String key;
+    private String sudoUserName;
+    private String sudoUserPassword;
+
+    public SSHSessionConfigBuilder setSSHConnectionTimeout(Integer sshConnectionTimeout) {
+      this.SSHConnectionTimeout = sshConnectionTimeout;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setSSHSessionTimeout(Integer sshSessionTimeout) {
+      this.SSHSessionTimeout = sshSessionTimeout;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setRetryInterval(Integer retryInterval) {
+      this.retryInterval = retryInterval;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setHost(String host) {
+      this.host = host;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setPort(Integer port) {
+      this.port = port;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setUser(String user) {
+      this.user = user;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setKey(String key) {
+      this.key = key;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setSudoUserName(String sudoUserName) {
+      this.sudoUserName = sudoUserName;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder setSudoUserPassword(String sudoUserPassword) {
+      this.sudoUserPassword = sudoUserPassword;
+      return this;
+    }
+
+    public SSHSessionConfig build() {
+      return new SSHSessionConfig(this);
+    }
   }
 
   public Integer getSSHConnectionTimeout() {
     return SSHConnectionTimeout;
   }
 
-  public void setSSHConnectionTimeout(Integer SSHConnectionTimeout) {
-    this.SSHConnectionTimeout = SSHConnectionTimeout;
-  }
-
   public Integer getSSHSessionTimeout() {
     return SSHSessionTimeout;
   }
 
-  public void setSSHSessionTimeout(Integer SSHSessionTimeout) {
-    this.SSHSessionTimeout = SSHSessionTimeout;
-  }
-
   public Integer getRetryInterval() {
-    return RetryInterval;
-  }
-
-  public void setRetryInterval(Integer retryInterval) {
-    RetryInterval = retryInterval;
+    return retryInterval;
   }
 
   public String getHost() {
     return host;
   }
 
-  public void setHost(String host) {
-    this.host = host;
-  }
-
   public Integer getPort() {
     return port;
-  }
-
-  public void setPort(Integer port) {
-    this.port = port;
   }
 
   public String getUser() {
     return user;
   }
 
-  public void setUser(String user) {
-    this.user = user;
-  }
-
   public String getPassword() {
     return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
   }
 
   public String getKey() {
     return key;
   }
 
-  public void setKey(String key) {
-    this.key = key;
+  public String getSudoUserName() {
+    return sudoUserName;
+  }
+
+  public String getSudoUserPassword() {
+    return sudoUserPassword;
   }
 }

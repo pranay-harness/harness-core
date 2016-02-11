@@ -1,6 +1,7 @@
 package software.wings.core.executors;
 
 import org.junit.Test;
+import software.wings.core.executors.SSHSessionConfig.SSHSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -8,7 +9,13 @@ import org.junit.Test;
 public class SSHPwdAuthExecutorTest {
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfig("localhost", 3333, "osboxes", "osboxes.org");
+    SSHSessionConfig config = new SSHSessionConfigBuilder()
+                                  .setHost("localhost")
+                                  .setPort(3333)
+                                  .setUser("osboxes")
+                                  .setPassword("osboxes.org")
+                                  .build();
+
     SSHExecutor executor = new SSHPwdAuthExecutor();
     executor.init(config);
     executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
