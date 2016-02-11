@@ -8,6 +8,10 @@ public class ExecutorFactory {
     switch (executorType) {
       case PASSWORD:
         return new SSHPwdAuthExecutor();
+      case SSHKEY:
+        return new SSHPubKeyAuthExecutor();
+      case JUMPBOX:
+        return new SSHJumpboxExecutor();
       default:
         // TODO: throw exception
         return null;

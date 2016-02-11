@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import com.jcraft.jsch.*;
 import org.slf4j.*;
 import org.slf4j.Logger;
+import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -11,11 +12,11 @@ import org.slf4j.Logger;
 public class SSHSessionFactory {
   private final static Logger LOGGER = LoggerFactory.getLogger(SSHSessionFactory.class);
 
-  public static Session getSSHSession(SSHSessionConfig config, String credentialType) {
+  public static Session getSSHSession(SSHSessionConfig config) {
     JSch jsch = new JSch();
     Session session = null;
     try {
-      if ("KEY".equals(credentialType)) {
+      if ("KEY".equals(getSessionType(config))) {
         jsch.addIdentity(config.getKeyPath());
         session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
       } else {
@@ -34,17 +35,25 @@ public class SSHSessionFactory {
   public static Session getSSHSessionWithJumpbox(SSHSessionConfig config) {
     Session session = null;
     try {
-      Session jumpboxSession = getSSHSession(config.getJumpboxConfig(), "PASSWORD");
+      Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
       LOGGER.info("portforwarding port " + forwardingPort);
-      session = (new JSch()).getSession(config.getUser(), "127.0.0.1", forwardingPort);
-      session.setConfig("StrictHostKeyChecking", "no");
-      session.setPassword(config.getPassword());
-      session.connect(config.getSSHConnectionTimeout());
-      session.setTimeout(config.getSSHSessionTimeout());
+
+      SSHSessionConfig newConfig = new SSHSessionConfigBuilder()
+                                       .user(config.getUser())
+                                       .password(config.getPassword())
+                                       .keyPath(config.getKeyPath())
+                                       .host("127.0.0.1")
+                                       .port(forwardingPort)
+                                       .build();
+      session = getSSHSession(newConfig);
     } catch (JSchException e) {
       e.printStackTrace();
     }
     return session;
+  }
+
+  private static String getSessionType(SSHSessionConfig config) {
+    return config.getKeyPath() != null && config.getKeyPath().length() > 0 ? "KEY" : "PASSWORD";
   }
 }

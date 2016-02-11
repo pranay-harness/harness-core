@@ -8,6 +8,6 @@ import com.jcraft.jsch.Session;
 public class SSHPwdAuthExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSession(config, "PASSWORD");
+    return SSHSessionFactory.getSSHSession(config);
   }
 }

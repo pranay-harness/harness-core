@@ -11,7 +11,7 @@ import java.io.IOException;
 public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSession(config, "PASSWORD");
+    return SSHSessionFactory.getSSHSession(config);
   }
 
   @Override
