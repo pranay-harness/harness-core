@@ -2,7 +2,7 @@
 //
 // import software.wings.core.executors.SSHCommandExecutor;
 // import software.wings.core.executors.callbacks.ConsoleExecutionCallback;
-// import software.wings.core.executors.SSHSudoCommandExecutor;
+// import software.wings.core.executors.SSHSudoExecutor;
 //
 // public class SSHExecutorTest {
 //

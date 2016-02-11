@@ -16,6 +16,8 @@ public class SSHSessionConfig {
   private String user;
   private String password;
   private String key;
+  private String sudoUserName;
+  private String sudoUserPassword;
 
   public SSHSessionConfig(String host, Integer port, String user, String password) {
     this.host = host;
@@ -23,6 +25,16 @@ public class SSHSessionConfig {
     this.user = user;
     this.password = password;
     this.key = password; // Fixme: with Builder pattern
+  }
+
+  public SSHSessionConfig(
+      String host, Integer port, String user, String password, String sudoUserName, String sudoUserPassword) {
+    this.host = host;
+    this.port = port;
+    this.user = user;
+    this.password = password;
+    this.sudoUserName = sudoUserName;
+    this.sudoUserPassword = sudoUserPassword;
   }
 
   public Integer getSSHConnectionTimeout() {

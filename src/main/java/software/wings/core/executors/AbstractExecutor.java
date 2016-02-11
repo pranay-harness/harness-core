@@ -17,15 +17,14 @@ import static software.wings.utils.Misc.quietSleep;
  * Created by anubhaw on 2/10/16.
  */
 public abstract class AbstractExecutor implements Executor {
-  private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+  protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
   private Session session = null;
   private Channel channel = null;
-  private SSHSessionConfig config = null;
+  protected SSHSessionConfig config = null;
   private OutputStream outputStream = null;
-  private OutputStream inputStream = null;
+  protected OutputStream inputStream = null;
 
   public void init(SSHSessionConfig config) {
-    preInit();
     this.config = config;
     session = getSession(config);
     try {
@@ -38,19 +37,17 @@ public abstract class AbstractExecutor implements Executor {
     } catch (JSchException | IOException ioe) {
       LOGGER.error("Failed to initialize executor");
     }
-    postInit();
   }
 
   public void execute(String command) {
-    preExecute();
     genericExecute(command);
-    postExecute();
   }
 
   private void genericExecute(String command) {
     try {
       ((ChannelExec) channel).setCommand(command);
       channel.connect();
+      postChannelConnect();
       Thread thread = new Thread(() -> {
         while (!channel.isClosed()) {
           try {
@@ -98,8 +95,5 @@ public abstract class AbstractExecutor implements Executor {
   }
 
   public abstract Session getSession(SSHSessionConfig config);
-  public void preInit(){};
-  public void postInit(){};
-  public void preExecute(){};
-  public void postExecute(){};
+  public void postChannelConnect(){};
 }
