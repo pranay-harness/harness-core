@@ -24,6 +24,7 @@ public abstract class AbstractExecutor implements Executor {
   private OutputStream inputStream = null;
 
   public void init(SSHSessionConfig config) {
+    preInit();
     this.config = config;
     session = SSHSessionFactory.getSSHSessionWithPwd(config);
     try {
@@ -36,9 +37,16 @@ public abstract class AbstractExecutor implements Executor {
     } catch (JSchException | IOException ioe) {
       LOGGER.error("Failed to initialize executor");
     }
+    postInit();
   }
 
   public void execute(String command) {
+    preExecute();
+    genericExecute(command);
+    postExecute();
+  }
+
+  private void genericExecute(String command) {
     try {
       ((ChannelExec) channel).setCommand(command);
       channel.connect();
@@ -70,7 +78,6 @@ public abstract class AbstractExecutor implements Executor {
     }
   }
 
-  @Override
   public void destroy() {
     if (null != channel) {
       channel.disconnect();
@@ -80,7 +87,6 @@ public abstract class AbstractExecutor implements Executor {
     }
   }
 
-  @Override
   public void abort() {
     try {
       inputStream.write(3); // Send ^C command
