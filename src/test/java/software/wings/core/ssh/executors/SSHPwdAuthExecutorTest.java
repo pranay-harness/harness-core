@@ -1,7 +1,7 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import org.junit.Test;
-import software.wings.core.executors.SSHSessionConfig.SSHSessionConfigBuilder;
+import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/10/16.

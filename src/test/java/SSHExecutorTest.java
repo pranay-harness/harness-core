@@ -1,8 +1,8 @@
 // import org.junit.Test;
 //
-// import software.wings.core.executors.SSHCommandExecutor;
-// import software.wings.core.executors.callbacks.ConsoleExecutionCallback;
-// import software.wings.core.executors.SSHSudoExecutor;
+// import software.wings.core.ssh.executors.SSHCommandExecutor;
+// import software.wings.core.ssh.executors.callbacks.ConsoleExecutionCallback;
+// import software.wings.core.ssh.executors.SSHSudoExecutor;
 //
 // public class SSHExecutorTest {
 //

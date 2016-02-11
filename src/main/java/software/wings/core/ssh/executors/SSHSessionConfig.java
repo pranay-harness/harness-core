@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -15,6 +15,7 @@ public class SSHSessionConfig {
   private String keyPath;
   private String sudoUserName;
   private String sudoUserPassword;
+  private SSHSessionConfig jumpboxConfig;
 
   public SSHSessionConfig(SSHSessionConfigBuilder builder) {
     this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
@@ -27,6 +28,7 @@ public class SSHSessionConfig {
     this.keyPath = builder.keyPath;
     this.sudoUserName = builder.sudoUserName;
     this.sudoUserPassword = builder.sudoUserPassword;
+    this.jumpboxConfig = builder.jumpboxConfig;
   }
 
   public static class SSHSessionConfigBuilder {
@@ -40,6 +42,7 @@ public class SSHSessionConfig {
     private String keyPath;
     private String sudoUserName;
     private String sudoUserPassword;
+    private SSHSessionConfig jumpboxConfig;
 
     public SSHSessionConfigBuilder SSHConnectionTimeout(Integer sshConnectionTimeout) {
       this.SSHConnectionTimeout = sshConnectionTimeout;
@@ -91,6 +94,11 @@ public class SSHSessionConfig {
       return this;
     }
 
+    public SSHSessionConfigBuilder jumpboxConfig(SSHSessionConfig jumpboxConfig) {
+      this.jumpboxConfig = jumpboxConfig;
+      return this;
+    }
+
     public SSHSessionConfig build() {
       return new SSHSessionConfig(this);
     }
@@ -134,5 +142,9 @@ public class SSHSessionConfig {
 
   public String getSudoUserPassword() {
     return sudoUserPassword;
+  }
+
+  public SSHSessionConfig getJumpboxConfig() {
+    return jumpboxConfig;
   }
 }

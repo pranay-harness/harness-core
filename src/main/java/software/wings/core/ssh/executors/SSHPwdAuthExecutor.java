@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.Session;
 
@@ -8,6 +8,6 @@ import com.jcraft.jsch.Session;
 public class SSHPwdAuthExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSessionWithPwd(config);
+    return SSHSessionFactory.getSSHSession(config, "PASSWORD");
   }
 }

@@ -1,4 +1,4 @@
-package software.wings.core.executors.callbacks;
+package software.wings.core.ssh.executors.callbacks;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

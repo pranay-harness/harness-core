@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.Session;
 
@@ -9,6 +9,6 @@ import com.jcraft.jsch.Session;
 public class SSHPubKeyAuthExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSessionWithKey(config);
+    return SSHSessionFactory.getSSHSession(config, "KEY");
   }
 }

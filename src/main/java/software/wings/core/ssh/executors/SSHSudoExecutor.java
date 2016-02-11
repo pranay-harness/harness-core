@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.Session;
 
@@ -11,14 +11,14 @@ import java.io.IOException;
 public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) {
-    return SSHSessionFactory.getSSHSessionWithPwd(config);
+    return SSHSessionFactory.getSSHSession(config, "PASSWORD");
   }
 
   @Override
   public void postChannelConnect() {
     super.postChannelConnect();
     try {
-      inputStream.write((config.getPassword() + "\n").getBytes());
+      inputStream.write((config.getSudoUserPassword() + "\n").getBytes());
       inputStream.flush();
     } catch (IOException e) {
       LOGGER.error("PostChannelConnect failed " + e.getStackTrace());

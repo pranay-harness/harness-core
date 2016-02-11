@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
@@ -19,10 +19,10 @@ import static software.wings.utils.Misc.quietSleep;
 
 public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-  private Session session = null;
-  private Channel channel = null;
+  protected Session session = null;
+  protected Channel channel = null;
   protected SSHSessionConfig config = null;
-  private OutputStream outputStream = null;
+  protected OutputStream outputStream = null;
   protected OutputStream inputStream = null;
 
   public void init(SSHSessionConfig config) {

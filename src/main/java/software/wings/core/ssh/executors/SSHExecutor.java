@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 /**
  * Created by anubhaw on 2/4/16.

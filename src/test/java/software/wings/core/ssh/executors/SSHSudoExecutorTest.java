@@ -1,4 +1,4 @@
-package software.wings.core.executors;
+package software.wings.core.ssh.executors;
 
 import org.junit.Test;
 
@@ -15,7 +15,7 @@ public class SSHSudoExecutorTest {
                                   .user("osboxes")
                                   .password("osboxes.org")
                                   .sudoUserName("vagrant")
-                                  .sudoUserPassword("wings1234")
+                                  .sudoUserPassword("osboxes.org")
                                   .build();
 
     SSHExecutor executor = new SSHSudoExecutor();
