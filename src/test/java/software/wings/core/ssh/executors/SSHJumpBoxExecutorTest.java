@@ -2,7 +2,6 @@ package software.wings.core.ssh.executors;
 
 import org.junit.Test;
 import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
-import software.wings.core.ssh.executors.callbacks.ConsoleExecutionCallback;
 
 /**
  * Created by anubhaw on 2/5/16.
