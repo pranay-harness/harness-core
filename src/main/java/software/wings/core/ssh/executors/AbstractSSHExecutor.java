@@ -6,11 +6,16 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorConstants;
+import software.wings.exception.WingsException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
+import static software.wings.beans.ErrorConstants.*;
 import static software.wings.utils.Misc.quietSleep;
 
 /**
@@ -27,16 +32,20 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
 
   public void init(SSHSessionConfig config) {
     this.config = config;
-    session = getSession(config);
     try {
+      session = getSession(config);
       channel = session.openChannel("exec");
       ((ChannelExec) channel).setPty(true);
       ((ChannelExec) channel).setErrStream(System.err, true);
       outputStream = new ByteArrayOutputStream();
       channel.setOutputStream(outputStream);
       inputStream = channel.getOutputStream();
-    } catch (JSchException | IOException ioe) {
+    } catch (JSchException e) {
       LOGGER.error("Failed to initialize executor");
+      SSHException shEx = extractSSHException(e);
+      throw new WingsException(shEx.code, shEx.msg, e.getCause());
+    } catch (IOException e) {
+      e.printStackTrace();
     }
   }
 
@@ -70,8 +79,12 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
           LOGGER.info("Remote command failed with exit status " + ec);
         }
       }
-    } catch (JSchException | IOException | InterruptedException e) {
+    } catch (JSchException e) {
+      SSHException shEx = extractSSHException(e);
       LOGGER.error("Command execution failed with error " + e.getStackTrace());
+      throw new WingsException(shEx.code, shEx.msg, e.getCause());
+    } catch (InterruptedException | UnsupportedEncodingException e) {
+      e.printStackTrace();
     } finally {
       destroy();
     }
@@ -95,6 +108,55 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     }
   }
 
-  public abstract Session getSession(SSHSessionConfig config);
+  public abstract Session getSession(SSHSessionConfig config) throws JSchException;
   public void postChannelConnect(){};
+
+  public class SSHException {
+    private String code;
+    private String msg;
+
+    private SSHException(String code, String cause) {
+      this.code = code;
+      this.msg = cause;
+    }
+  }
+
+  private SSHException extractSSHException(JSchException jSchException) {
+    String message = jSchException.getMessage();
+    Throwable cause = jSchException.getCause();
+
+    String customMessage = null;
+    String customCode = null;
+
+    if (null != cause) {
+      if (cause instanceof NoRouteToHostException || cause instanceof UnknownHostException) {
+        customMessage = UNKNOWN_HOST_ERROR_MSG;
+        customCode = UNKNOWN_HOST_ERROR_CODE;
+      } else if (cause instanceof SocketTimeoutException) {
+        customMessage = UNKNOWN_HOST_ERROR_MSG;
+        customCode = UNKNOWN_HOST_ERROR_CODE;
+      } else if (cause instanceof SocketException) {
+        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
+        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+      } else if (cause instanceof FileNotFoundException) {
+        customMessage = INVALID_KEYPATH_ERROR_CODE;
+        customCode = INVALID_KEYPATH_ERROR_MSG;
+      } else {
+        customMessage = UNKNOWN_ERROR_CODE;
+        customCode = UNKNOWN_ERROR_MEG;
+      }
+    } else {
+      if (message.startsWith("invalid privatekey")) {
+        customMessage = INVALID_KEY_ERROR_MSG;
+        customCode = INVALID_KEY_ERROR_CODE;
+      } else if (message.contains("Auth fail") || message.contains("Auth cancel")) {
+        customMessage = INVALID_CREDENTIAL_ERROR_MSG;
+        customCode = INVALID_CREDENTIAL_ERROR_CODE;
+      } else if (message.startsWith("timeout: socket is not established")) {
+        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
+        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+      }
+    }
+    return new SSHException(customCode, customMessage);
+  }
 }

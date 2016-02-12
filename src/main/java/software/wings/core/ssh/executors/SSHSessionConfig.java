@@ -33,7 +33,7 @@ public class SSHSessionConfig {
 
   public static class SSHSessionConfigBuilder {
     private Integer SSHConnectionTimeout = 10000; // 10 seconds
-    private Integer SSHSessionTimeout = 600000; // 10 minutes
+    private Integer SSHSessionTimeout = 10000; // 10 minutes
     private Integer retryInterval = 1000;
     private String host;
     private Integer port;

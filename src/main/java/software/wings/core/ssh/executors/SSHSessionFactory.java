@@ -12,23 +12,19 @@ import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilde
 public class SSHSessionFactory {
   private final static Logger LOGGER = LoggerFactory.getLogger(SSHSessionFactory.class);
 
-  public static Session getSSHSession(SSHSessionConfig config) {
+  public static Session getSSHSession(SSHSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
     Session session = null;
-    try {
-      if ("KEY".equals(getSessionType(config))) {
-        jsch.addIdentity(config.getKeyPath());
-        session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
-      } else {
-        session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
-        session.setPassword(config.getPassword());
-      }
-      session.setConfig("StrictHostKeyChecking", "no");
-      session.connect(config.getSSHConnectionTimeout());
-      session.setTimeout(config.getSSHSessionTimeout());
-    } catch (JSchException e) {
-      e.printStackTrace();
+    if ("KEY".equals(getSessionType(config))) {
+      jsch.addIdentity(config.getKeyPath());
+      session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
+    } else {
+      session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
+      session.setPassword(config.getPassword());
     }
+    session.setConfig("StrictHostKeyChecking", "no");
+    session.connect(config.getSSHConnectionTimeout());
+    session.setTimeout(config.getSSHSessionTimeout());
     return session;
   }
 

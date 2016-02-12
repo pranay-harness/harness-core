@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.io.IOException;
 
 public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
-  public Session getSession(SSHSessionConfig config) {
+  public Session getSession(SSHSessionConfig config) throws JSchException {
     return SSHSessionFactory.getSSHSession(config);
   }
 
