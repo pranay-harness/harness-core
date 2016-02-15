@@ -13,6 +13,7 @@ public class SSHSessionConfig {
   private String user;
   private String password;
   private String keyPath;
+  private String keyPassphrase;
   private String sudoUserName;
   private String sudoUserPassword;
   private SSHSessionConfig jumpboxConfig;
@@ -26,9 +27,14 @@ public class SSHSessionConfig {
     this.user = builder.user;
     this.password = builder.password;
     this.keyPath = builder.keyPath;
+    this.keyPassphrase = builder.keyPassphrase;
     this.sudoUserName = builder.sudoUserName;
     this.sudoUserPassword = builder.sudoUserPassword;
     this.jumpboxConfig = builder.jumpboxConfig;
+  }
+
+  public String getKeyPassphrase() {
+    return keyPassphrase;
   }
 
   public static class SSHSessionConfigBuilder {
@@ -40,6 +46,7 @@ public class SSHSessionConfig {
     private String user;
     private String password;
     private String keyPath;
+    private String keyPassphrase;
     private String sudoUserName;
     private String sudoUserPassword;
     private SSHSessionConfig jumpboxConfig;
@@ -81,6 +88,11 @@ public class SSHSessionConfig {
 
     public SSHSessionConfigBuilder keyPath(String key) {
       this.keyPath = key;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder keyPassphrase(String keyPassphrase) {
+      this.keyPassphrase = keyPassphrase;
       return this;
     }
 

@@ -61,6 +61,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       Thread thread = new Thread(() -> {
         while (!channel.isClosed()) {
           try {
+            LOGGER.info("(" + new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8") + ")"); // FIXME
             quietSleep(config.getRetryInterval());
           } catch (Exception e) {
             // ignored
@@ -149,7 +150,8 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       if (message.startsWith("invalid privatekey")) {
         customMessage = INVALID_KEY_ERROR_MSG;
         customCode = INVALID_KEY_ERROR_CODE;
-      } else if (message.contains("Auth fail") || message.contains("Auth cancel")) {
+      } else if (message.contains("Auth fail") || message.contains("Auth cancel")
+          || message.contains("USERAUTH fail")) {
         customMessage = INVALID_CREDENTIAL_ERROR_MSG;
         customCode = INVALID_CREDENTIAL_ERROR_CODE;
       } else if (message.startsWith("timeout: socket is not established")) {

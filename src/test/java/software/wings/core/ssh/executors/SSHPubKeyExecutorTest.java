@@ -9,10 +9,11 @@ public class SSHPubKeyExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
-                                  .host("192.168.43.8")
+                                  .host("192.168.1.88")
                                   .port(22)
                                   .user("osboxes")
                                   .keyPath("/Users/anubhaw/.ssh/id_rsa")
+                                  //                        .keyPassphrase("wings123")
                                   .build();
 
     SSHExecutor executor = new SSHPubKeyAuthExecutor();

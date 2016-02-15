@@ -7,11 +7,11 @@ import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilde
  * Created by anubhaw on 2/10/16.
  */
 public class SSHPwdAuthExecutorTest {
-  private String host = "192.168.1.8";
+  private String host = "192.168.1.56";
   private Integer port = 22;
   private String user = "osboxes";
-  private String password = "osboxes.or";
-  private String keyPath = "/Users/anubhaw/.ssh/id_rsa";
+  private String password = "osboxes.org";
+  private String keyPath = "/Users/anubhaw/.ssh/wings";
 
   @Test
   public void testExecuteFailureScenarios() throws Exception {
@@ -21,6 +21,7 @@ public class SSHPwdAuthExecutorTest {
                                   .user(user)
                                   //                        .password(password)
                                   .keyPath(keyPath)
+                                  .keyPassphrase("wings123")
                                   .build();
 
     SSHExecutor executor = new SSHPwdAuthExecutor();

@@ -16,7 +16,11 @@ public class SSHSessionFactory {
     JSch jsch = new JSch();
     Session session = null;
     if ("KEY".equals(getSessionType(config))) {
-      jsch.addIdentity(config.getKeyPath());
+      if (null == config.getKeyPassphrase()) {
+        jsch.addIdentity(config.getKeyPath());
+      } else {
+        jsch.addIdentity(config.getKeyPath(), config.getKeyPassphrase());
+      }
       session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
     } else {
       session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
