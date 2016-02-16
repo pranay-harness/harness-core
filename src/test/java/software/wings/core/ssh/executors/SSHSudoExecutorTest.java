@@ -11,7 +11,7 @@ public class SSHSudoExecutorTest {
   public void testExecute() throws Exception {
     SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
                                   .host("localhost")
-                                  .port(3333)
+                                  .port(2222)
                                   .user("osboxes")
                                   .password("osboxes.org")
                                   .sudoUserName("vagrant")
