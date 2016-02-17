@@ -60,12 +60,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       postChannelConnect();
       Thread thread = new Thread(() -> {
         while (!channel.isClosed()) {
-          try {
-            LOGGER.info("(" + new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8") + ")"); // FIXME
-            quietSleep(config.getRetryInterval());
-          } catch (Exception e) {
-            // ignored
-          }
+          quietSleep(config.getRetryInterval());
         }
       });
       thread.start();
@@ -84,8 +79,12 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       SSHException shEx = extractSSHException(e);
       LOGGER.error("Command execution failed with error " + e.getStackTrace());
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
-    } catch (InterruptedException | UnsupportedEncodingException e) {
-      e.printStackTrace();
+    } catch (InterruptedException e) {
+      LOGGER.error("Exception in channel observer thread");
+      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
+    } catch (UnsupportedEncodingException e) {
+      LOGGER.error("Exception in reading output stream");
+      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
     } finally {
       destroy();
     }

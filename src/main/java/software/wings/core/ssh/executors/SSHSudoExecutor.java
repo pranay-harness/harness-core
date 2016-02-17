@@ -2,10 +2,13 @@ package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import software.wings.exception.WingsException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
 import static software.wings.utils.Misc.quietSleep;
 
 /**
@@ -39,7 +42,8 @@ public class SSHSudoExecutor extends AbstractSSHExecutor {
         inputStream.flush();
       }
     } catch (IOException e) {
-      LOGGER.error("PostChannelConnect failed " + e.getStackTrace());
+      LOGGER.error("Reading writing to output/input stream failed");
+      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
     }
   }
 }
