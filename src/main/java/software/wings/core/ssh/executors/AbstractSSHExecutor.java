@@ -16,6 +16,8 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import static software.wings.beans.ErrorConstants.*;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
 /**
@@ -49,11 +51,11 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     }
   }
 
-  public void execute(String command) {
-    genericExecute(command);
+  public ExecutionResult execute(String command) {
+    return genericExecute(command);
   }
 
-  private void genericExecute(String command) {
+  private ExecutionResult genericExecute(String command) {
     try {
       ((ChannelExec) channel).setCommand(command);
       channel.connect();
@@ -68,12 +70,11 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
 
       if (thread.isAlive()) {
         LOGGER.info("Command couldn't complete in time. Connection closed");
+        return FAILURE;
       } else {
         LOGGER.info("[" + new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8") + "]"); // FIXME
-        int ec = channel.getExitStatus();
-        if (ec != 0) {
-          LOGGER.info("Remote command failed with exit status " + ec);
-        }
+        LOGGER.info("Remote command failed with exit status " + channel.getExitStatus());
+        return channel.getExitStatus() != 0 ? FAILURE : SUCCESS;
       }
     } catch (JSchException e) {
       SSHException shEx = extractSSHException(e);

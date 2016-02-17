@@ -6,8 +6,10 @@ package software.wings.core.ssh.executors;
 public interface SSHExecutor {
   public enum ExecutorType { PASSWORD, SSHKEY, JUMPBOX }
 
+  public enum ExecutionResult { SUCCESS, FAILURE }
+
   void init(SSHSessionConfig config);
-  void execute(String command);
+  ExecutionResult execute(String command);
   void abort();
   void destroy();
 }
