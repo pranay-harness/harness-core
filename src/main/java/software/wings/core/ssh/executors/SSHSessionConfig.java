@@ -1,10 +1,13 @@
 package software.wings.core.ssh.executors;
 
+import software.wings.beans.Execution;
+
 /**
  * Created by anubhaw on 2/8/16.
  */
 
 public class SSHSessionConfig {
+  private String executionID;
   private Integer SSHConnectionTimeout;
   private Integer SSHSessionTimeout;
   private Integer retryInterval;
@@ -19,6 +22,7 @@ public class SSHSessionConfig {
   private SSHSessionConfig jumpboxConfig;
 
   public SSHSessionConfig(SSHSessionConfigBuilder builder) {
+    this.executionID = builder.executionID;
     this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
     this.SSHSessionTimeout = builder.SSHSessionTimeout;
     retryInterval = builder.retryInterval;
@@ -33,14 +37,11 @@ public class SSHSessionConfig {
     this.jumpboxConfig = builder.jumpboxConfig;
   }
 
-  public String getKeyPassphrase() {
-    return keyPassphrase;
-  }
-
   public static class SSHSessionConfigBuilder {
     private Integer SSHConnectionTimeout = 10000; // 10 seconds
     private Integer SSHSessionTimeout = 10000; // 10 minutes
     private Integer retryInterval = 1000;
+    public String executionID;
     private String host;
     private Integer port;
     private String user;
@@ -63,6 +64,11 @@ public class SSHSessionConfig {
 
     public SSHSessionConfigBuilder retryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder executionID(String executionID) {
+      this.executionID = executionID;
       return this;
     }
 
@@ -128,6 +134,10 @@ public class SSHSessionConfig {
     return retryInterval;
   }
 
+  public String getExecutionID() {
+    return executionID;
+  }
+
   public String getHost() {
     return host;
   }
@@ -144,6 +154,10 @@ public class SSHSessionConfig {
     return password;
   }
 
+  public String getKeyPassphrase() {
+    return keyPassphrase;
+  }
+
   public String getKeyPath() {
     return keyPath;
   }
@@ -151,7 +165,6 @@ public class SSHSessionConfig {
   public String getSudoUserName() {
     return sudoUserName;
   }
-
   public String getSudoUserPassword() {
     return sudoUserPassword;
   }

@@ -6,7 +6,8 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.Execution;
+import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
 
 import java.io.*;
@@ -16,6 +17,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import static software.wings.beans.ErrorConstants.*;
+import static software.wings.core.ssh.ExecutionLogs.getInstance;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
@@ -26,22 +28,28 @@ import static software.wings.utils.Misc.quietSleep;
 
 public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
-  protected Session session = null;
-  protected Channel channel = null;
-  protected SSHSessionConfig config = null;
-  protected OutputStream outputStream = null;
-  protected OutputStream inputStream = null;
+  protected Session session;
+  protected Channel channel;
+  protected SSHSessionConfig config;
+  protected OutputStream outputStream;
+  protected InputStream inputStream;
+  protected ExecutionLogs executionLogs = getInstance();
+
+  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   public void init(SSHSessionConfig config) {
+    if (null == config.getExecutionID() || config.getExecutionID().length() == 0) {
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("INVALID_EXECUTION_ID"));
+    }
+
     this.config = config;
     try {
       session = getSession(config);
       channel = session.openChannel("exec");
       ((ChannelExec) channel).setPty(true);
       ((ChannelExec) channel).setErrStream(System.err, true);
-      outputStream = new ByteArrayOutputStream();
-      channel.setOutputStream(outputStream);
-      inputStream = channel.getOutputStream();
+      outputStream = channel.getOutputStream();
+      inputStream = channel.getInputStream();
     } catch (JSchException e) {
       LOGGER.error("Failed to initialize executor");
       SSHException shEx = extractSSHException(e);
@@ -59,39 +67,39 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     try {
       ((ChannelExec) channel).setCommand(command);
       channel.connect();
-      postChannelConnect();
-      Thread thread = new Thread(() -> {
-        while (!channel.isClosed()) {
-          quietSleep(config.getRetryInterval());
-        }
-      });
-      thread.start();
-      thread.join(config.getSSHSessionTimeout());
 
-      if (thread.isAlive()) {
-        LOGGER.info("Command couldn't complete in time. Connection closed");
-        return FAILURE;
-      } else {
-        LOGGER.info("[" + new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8") + "]"); // FIXME
-        LOGGER.info("Remote command failed with exit status " + channel.getExitStatus());
-        return channel.getExitStatus() != 0 ? FAILURE : SUCCESS;
+      byte[] tmp = new byte[1024]; // FIXME: Improve stream reading/writing logic
+      while (true) {
+        while (inputStream.available() > 0) {
+          int i = inputStream.read(tmp, 0, 1024);
+          if (i < 0)
+            break;
+          String line = new String(tmp, 0, i);
+          if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
+            outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
+            outputStream.flush();
+          }
+          executionLogs.appendLogs(config.getExecutionID(), line);
+        }
+        if (channel.isClosed()) {
+          return channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+        }
+        quietSleep(1000);
       }
     } catch (JSchException e) {
       SSHException shEx = extractSSHException(e);
-      LOGGER.error("Command execution failed with error " + e.getStackTrace());
+      LOGGER.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
-    } catch (InterruptedException e) {
-      LOGGER.error("Exception in channel observer thread");
-      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
-    } catch (UnsupportedEncodingException e) {
-      LOGGER.error("Exception in reading output stream");
-      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
+    } catch (IOException e) {
+      LOGGER.error("Exception in reading InputStream");
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
     } finally {
       destroy();
     }
   }
 
   public void destroy() {
+    LOGGER.info("Disconnecting ssh session");
     if (null != channel) {
       channel.disconnect();
     }
@@ -102,8 +110,8 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
 
   public void abort() {
     try {
-      inputStream.write(3); // Send ^C command
-      inputStream.flush();
+      outputStream.write(3); // Send ^C command
+      outputStream.flush();
     } catch (IOException e) {
       LOGGER.error("Abort command failed " + e.getStackTrace());
     }
@@ -120,6 +128,10 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       this.code = code;
       this.msg = cause;
     }
+  }
+
+  private void saveLogs(String logs) {
+    executionLogs.appendLogs(config.getExecutionID(), logs);
   }
 
   private SSHException extractSSHException(JSchException jSchException) {

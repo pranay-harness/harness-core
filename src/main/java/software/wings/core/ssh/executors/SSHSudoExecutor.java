@@ -16,8 +16,6 @@ import static software.wings.utils.Misc.quietSleep;
  */
 
 public class SSHSudoExecutor extends AbstractSSHExecutor {
-  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
-
   @Override
   public Session getSession(SSHSessionConfig config) throws JSchException {
     return SSHSessionFactory.getSSHSession(config);
@@ -26,20 +24,20 @@ public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
   public void postChannelConnect() {
     super.postChannelConnect();
-    String outputStreamContent = null;
+    String inputStream = null;
     try {
       int sudoPromptTimeout = 5;
       while (sudoPromptTimeout > 0) {
-        outputStreamContent = new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8");
-        if (outputStreamContent.length() > 0) {
+        inputStream = new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8");
+        if (inputStream.length() > 0) {
           break;
         }
         quietSleep(1000);
         sudoPromptTimeout--;
       }
-      if (outputStreamContent.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-        inputStream.write((config.getSudoUserPassword() + "\n").getBytes());
-        inputStream.flush();
+      if (inputStream.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
+        outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
+        outputStream.flush();
       }
     } catch (IOException e) {
       LOGGER.error("Reading writing to output/input stream failed");
