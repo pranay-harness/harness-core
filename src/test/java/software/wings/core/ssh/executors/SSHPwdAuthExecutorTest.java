@@ -1,7 +1,10 @@
 package software.wings.core.ssh.executors;
 
 import org.junit.Test;
+import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
+
+import static software.wings.common.UUIDGenerator.getUUID;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -27,6 +30,25 @@ public class SSHPwdAuthExecutorTest {
     SSHExecutor executor = new SSHPwdAuthExecutor();
     executor.init(config);
     executor.execute("ls && whoami");
+  }
+
+  @Test
+  public void testSCP() throws Exception {
+    SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
+                                  .executionID(getUUID())
+                                  .SSHConnectionTimeout(100000)
+                                  .SSHSessionTimeout(100000)
+                                  .host("192.168.43.163")
+                                  .port(22)
+                                  .user("osboxes")
+                                  .password("osboxes.org")
+                                  .build();
+
+    SSHExecutor executor = new SSHPwdAuthExecutor();
+    executor.init(config);
+    String fileName = "mvim";
+    ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
+    System.out.println(result);
   }
 
   @Test

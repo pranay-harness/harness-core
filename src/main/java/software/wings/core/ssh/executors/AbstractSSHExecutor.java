@@ -182,4 +182,114 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     }
     return new SSHException(customCode, customMessage);
   }
+
+  /**** SCP ****/
+
+  public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
+    FileInputStream fis = null;
+    try {
+      String command = "scp -t " + remoteFilePath;
+      Channel channel = session.openChannel("exec");
+      ((ChannelExec) channel).setCommand(command);
+
+      // get I/O streams for remote scp
+      OutputStream out = channel.getOutputStream();
+      InputStream in = channel.getInputStream();
+      channel.connect();
+
+      if (checkAck(in) != 0) {
+        LOGGER.error("SCP connection initiation failed");
+        return FAILURE;
+      }
+
+      File _lfile = new File(localFilePath);
+
+      // send "C0644 filesize filename", where filename should not include '/'
+      long filesize = _lfile.length();
+      command = "C0644 " + filesize + " ";
+      if (localFilePath.lastIndexOf('/') > 0) {
+        command += localFilePath.substring(localFilePath.lastIndexOf('/') + 1);
+      } else {
+        command += localFilePath;
+      }
+      command += "\n";
+      out.write(command.getBytes());
+      out.flush();
+      if (checkAck(in) != 0) {
+        return FAILURE;
+      }
+
+      // send a content of lfile
+      fis = new FileInputStream(localFilePath);
+      byte[] buf = new byte[1024];
+      while (true) {
+        int len = fis.read(buf, 0, buf.length);
+        if (len <= 0)
+          break;
+        out.write(buf, 0, len); // out.flush();
+      }
+      fis.close();
+      fis = null;
+      // send '\0'
+      buf[0] = 0;
+      out.write(buf, 0, 1);
+      out.flush();
+
+      if (checkAck(in) != 0) {
+        LOGGER.error("SCP connection initiation failed");
+        return FAILURE;
+      }
+      out.close();
+
+      channel.disconnect();
+      session.disconnect();
+    } catch (FileNotFoundException ex) {
+      LOGGER.error("file [" + localFilePath + "] could not be found");
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
+    } catch (IOException e) {
+      LOGGER.error("Exception in reading InputStream");
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
+    } catch (JSchException e) {
+      SSHException shEx = extractSSHException(e);
+      LOGGER.error("Command execution failed with error " + e.getMessage());
+      throw new WingsException(shEx.getCode(), shEx.getMsg(), e.getCause());
+    } finally {
+      try {
+        if (fis != null)
+          fis.close();
+      } catch (Exception ignored) {
+      }
+    }
+    return SUCCESS;
+  }
+
+  int checkAck(InputStream in) throws IOException {
+    int b = in.read();
+    // b may be 0 for success,
+    //          1 for error,
+    //          2 for fatal error,
+    //          -1
+    if (b == 0)
+      return b;
+    else if (b == -1)
+      return b;
+    else { // error or echoed string on session initiation from remote host
+      StringBuilder sb = new StringBuilder();
+      if (b > 2) {
+        sb.append((char) b);
+      }
+
+      int c;
+      do {
+        c = in.read();
+        sb.append((char) c);
+      } while (c != '\n');
+
+      if (b <= 2) {
+        throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable(sb.toString()));
+      }
+      LOGGER.error(sb.toString());
+      return 0;
+    }
+  }
 }

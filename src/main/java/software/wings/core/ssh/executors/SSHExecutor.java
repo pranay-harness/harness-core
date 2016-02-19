@@ -10,6 +10,7 @@ public interface SSHExecutor {
 
   void init(SSHSessionConfig config);
   ExecutionResult execute(String command);
+  ExecutionResult transferFile(String localFilePath, String remoteFilePath);
   void abort();
   void destroy();
 }
