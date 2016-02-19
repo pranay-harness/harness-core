@@ -118,9 +118,10 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
   }
 
   public abstract Session getSession(SSHSessionConfig config) throws JSchException;
+
   public void postChannelConnect(){};
 
-  public class SSHException {
+  protected class SSHException {
     private String code;
     private String msg;
 
@@ -128,13 +129,21 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       this.code = code;
       this.msg = cause;
     }
+
+    public String getCode() {
+      return code;
+    }
+
+    public String getMsg() {
+      return msg;
+    }
   }
 
   private void saveLogs(String logs) {
     executionLogs.appendLogs(config.getExecutionID(), logs);
   }
 
-  private SSHException extractSSHException(JSchException jSchException) {
+  protected SSHException extractSSHException(JSchException jSchException) {
     String message = jSchException.getMessage();
     Throwable cause = jSchException.getCause();
 
