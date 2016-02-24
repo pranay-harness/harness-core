@@ -1,12 +1,13 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.beans.Execution;
+import software.wings.core.ssh.executors.SSHExecutor.ExecutorType;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
 
 public class SSHSessionConfig {
+  private ExecutorType executorType;
   private String executionID;
   private Integer SSHConnectionTimeout;
   private Integer SSHSessionTimeout;
@@ -22,6 +23,7 @@ public class SSHSessionConfig {
   private SSHSessionConfig jumpboxConfig;
 
   public SSHSessionConfig(SSHSessionConfigBuilder builder) {
+    this.executorType = builder.executorType;
     this.executionID = builder.executionID;
     this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
     this.SSHSessionTimeout = builder.SSHSessionTimeout;
@@ -39,8 +41,9 @@ public class SSHSessionConfig {
 
   public static class SSHSessionConfigBuilder {
     private Integer SSHConnectionTimeout = 10000; // 10 seconds
-    private Integer SSHSessionTimeout = 10000; // 10 minutes
+
     private Integer retryInterval = 1000;
+    private ExecutorType executorType;
     public String executionID;
     private String host;
     private Integer port;
@@ -48,6 +51,7 @@ public class SSHSessionConfig {
     private String password;
     private String keyPath;
     private String keyPassphrase;
+    private Integer SSHSessionTimeout = 10000; // 10 minutes
     private String sudoUserName;
     private String sudoUserPassword;
     private SSHSessionConfig jumpboxConfig;
@@ -64,6 +68,11 @@ public class SSHSessionConfig {
 
     public SSHSessionConfigBuilder retryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
+      return this;
+    }
+
+    public SSHSessionConfigBuilder executionType(ExecutorType executorType) {
+      this.executorType = executorType;
       return this;
     }
 
@@ -132,6 +141,10 @@ public class SSHSessionConfig {
 
   public Integer getRetryInterval() {
     return retryInterval;
+  }
+
+  public ExecutorType getExecutorType() {
+    return executorType;
   }
 
   public String getExecutionID() {
