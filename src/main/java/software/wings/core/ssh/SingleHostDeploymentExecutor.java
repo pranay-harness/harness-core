@@ -27,20 +27,17 @@ public class SingleHostDeploymentExecutor {
   }
 
   public ExecutionResult deploy() {
-    SSHExecutor executor = SSHExecutorFactory.getExectorByType(config.getExecutorType());
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     ExecutionResult result = executor.execute(setupCommand);
     ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Setup finished with " + result);
 
     if (SUCCESS == result) {
-      executor = SSHExecutorFactory.getExectorByType(config.getExecutorType());
-      executor.init(config);
+      executor = SSHExecutorFactory.getExecutor(config);
       result = executor.transferFile(localFilePath, remoteFilePath);
       ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "File transfer finished with " + result);
 
       if (SUCCESS == result) {
-        executor = SSHExecutorFactory.getExectorByType(config.getExecutorType());
-        executor.init(config);
+        executor = SSHExecutorFactory.getExecutor(config);
         result = executor.execute(deployCommand);
         ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Deploy command finished with " + result);
       }

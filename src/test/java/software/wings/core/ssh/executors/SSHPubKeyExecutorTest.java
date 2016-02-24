@@ -16,8 +16,7 @@ public class SSHPubKeyExecutorTest {
                                   //                        .keyPassphrase("wings123")
                                   .build();
 
-    SSHExecutor executor = new SSHPubKeyAuthExecutor();
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     //        executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     executor.execute("ld && whoami");
   }

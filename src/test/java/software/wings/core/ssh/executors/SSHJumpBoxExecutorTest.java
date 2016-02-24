@@ -28,8 +28,7 @@ public class SSHJumpBoxExecutorTest {
                                   .jumpboxConfig(jumpboxConfig)
                                   .build();
 
-    SSHExecutor executor = new SSHJumpboxExecutor();
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     //        executor.execute("ls && whoami");
     String fileName = "mvim";
     SSHExecutor.ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);

@@ -21,7 +21,7 @@ public class SingleHostDeploymentExecutorTest {
                                   .executionID(getUUID())
                                   .SSHConnectionTimeout(100000)
                                   .SSHSessionTimeout(100000)
-                                  .host("192.168.137.108")
+                                  .host("192.168.1.65")
                                   .port(22)
                                   .user("osboxes")
                                   .password("osboxes.org")

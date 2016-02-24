@@ -7,17 +7,23 @@ import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
 
 public class SSHExecutorFactory {
-  public static SSHExecutor getExectorByType(ExecutorType executorType) {
-    switch (executorType) {
+  public static SSHExecutor getExecutor(SSHSessionConfig config) {
+    SSHExecutor executor;
+    switch (config.getExecutorType()) {
       case PASSWORD:
-        return new SSHPwdAuthExecutor();
+        executor = new SSHPwdAuthExecutor();
+        break;
       case SSHKEY:
-        return new SSHPubKeyAuthExecutor();
+        executor = new SSHPubKeyAuthExecutor();
+        break;
       case JUMPBOX:
-        return new SSHJumpboxExecutor();
+        executor = new SSHJumpboxExecutor();
+        break;
       default:
         throw new WingsException(
-            UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("Unknown executor type: " + executorType));
+            UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("Unknown executor type: " + config.getExecutorType()));
     }
+    executor.init(config);
+    return executor;
   }
 }

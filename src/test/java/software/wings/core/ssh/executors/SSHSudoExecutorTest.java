@@ -22,8 +22,7 @@ public class SSHSudoExecutorTest {
                                   .sudoUserPassword("osboxes.org")
                                   .build();
 
-    SSHExecutor executor = new SSHSudoExecutor();
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     executor.execute("sudo su - vagrant  -c 'ls && whoami'");
   }
 }

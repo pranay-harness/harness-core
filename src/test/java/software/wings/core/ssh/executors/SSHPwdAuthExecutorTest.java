@@ -44,8 +44,7 @@ public class SSHPwdAuthExecutorTest {
                                   .password("osboxes.org")
                                   .build();
 
-    SSHExecutor executor = new SSHPwdAuthExecutor();
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     String fileName = "mvim";
     ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     System.out.println(result);
@@ -56,8 +55,7 @@ public class SSHPwdAuthExecutorTest {
     SSHSessionConfig config =
         new SSHSessionConfigBuilder().host("localhost").port(3333).user("osboxes").password("osboxes.org").build();
 
-    SSHExecutor executor = new SSHPwdAuthExecutor();
-    executor.init(config);
+    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     //
     //        Thread thread1 = new Thread(()->{
