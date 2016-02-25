@@ -57,8 +57,8 @@ public class Deployment extends Execution {
     // TODO - get from config
     String portalUrl = WingsBootstrap.getConfig().getPortal().getUrl();
     String fwURL = portalUrl + "/bins/framework";
-    String params = portalUrl
-        + "/configs/download/E74494E3595C430C849634CD6636ADF4 23FE4E432B284AA2B7649DC36061D7C1 1DF1481B96CA405CA528DF7AEA06F223";
+    String params = String.format("%s/configs/download/%s %s %s", portalUrl, getRelease().getApplication().getUuid(),
+        getRelease().getUuid(), getArtifact().getUuid());
 
     return "mkdir -p $HOME/wings_temp && cd $HOME/wings_temp"
         + " && curl -sk -o wings_main.pl " + fwURL + " && chmod a+x wings_main.pl && ./wings_main.pl " + params

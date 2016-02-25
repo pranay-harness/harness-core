@@ -4,7 +4,7 @@ __app.download_path=/home/osboxes/sample/download
 __app.backup_path=/home/osboxes/sample/backup
 __app.startup_path=bin/startup.sh
 __app.shutdown_path=bin/startup.sh
-__app.artifact_url=http://192.168.1.35:9090/wings/bins/sample
+__app.artifact_url=http://192.168.1.15:9090/wings/bins/sample
 __app.artifact_filename=sample.tar.gz
 __app.artifact_extn=TAR
 
