@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
+import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.model.Filters;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -29,6 +29,13 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public File download(String fileId, File file) {
+    downloadToStream(fileId, new OutputStream() {
+      @Override
+      public void write(int b) throws IOException {
+        //                System.out.println(b);
+      }
+    });
+
     try {
       FileOutputStream streamToDownload = new FileOutputStream(file);
       gridFSBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
@@ -38,6 +45,19 @@ public class FileServiceImpl implements FileService {
       logger.error("Error in download", e);
       return null;
     }
+  }
+
+  @Override
+  public void downloadToStream(String fileId, OutputStream outputStream) {
+    gridFSBucket.downloadToStream(new ObjectId(fileId), outputStream);
+    //            GridFSFindIterable filemetaData = gridFSBucket.find(Filters.eq("_id", new ObjectId(fileId)));
+    //            GridFSFile fridFsFile = filemetaData.first();
+  }
+
+  @Override
+  public GridFSFile getGridFsFile(String fileId) {
+    GridFSFindIterable filemetaData = gridFSBucket.find(Filters.eq("_id", new ObjectId(fileId)));
+    return filemetaData.first();
   }
 
   @Override

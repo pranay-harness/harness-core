@@ -13,4 +13,14 @@ public class Operation extends Execution {
     // TODO Auto-generated method stub
     return null;
   }
+
+  @Override
+  public String getSetupCommand() {
+    return null;
+  }
+
+  @Override
+  public String getDeployCommand() {
+    return null;
+  }
 }

@@ -8,4 +8,14 @@ public class Control extends Execution {
   public String getCommand() {
     return null;
   }
+
+  @Override
+  public String getSetupCommand() {
+    return null;
+  }
+
+  @Override
+  public String getDeployCommand() {
+    return null;
+  }
 }

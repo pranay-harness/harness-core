@@ -63,4 +63,6 @@ public abstract class Execution extends Base {
   }
 
   public abstract String getCommand();
+  public abstract String getSetupCommand();
+  public abstract String getDeployCommand();
 }

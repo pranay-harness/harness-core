@@ -52,6 +52,7 @@ public class Deployment extends Execution {
   public void setBackup(boolean backup) {
     this.backup = backup;
   }
+
   @Override
   public String getCommand() {
     // TODO - get from config
@@ -63,5 +64,17 @@ public class Deployment extends Execution {
     return "mkdir -p $HOME/wings_temp && cd $HOME/wings_temp"
         + " && curl -sk -o wings_main.pl " + fwURL + " && chmod a+x wings_main.pl && ./wings_main.pl " + params
         + " && echo \"SUCCESS\"";
+  }
+
+  @Override
+  public String getSetupCommand() {
+    return "rm -rf wings && mkdir -p $HOME/wings && cd $HOME/wings && mkdir -p downloads"; // TODO: Read deployment dir
+                                                                                           // location from config
+  }
+
+  @Override
+  public String getDeployCommand() {
+    return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xzf ../downloads/%s",
+        getArtifact().getArtifactFile().getFileName());
   }
 }

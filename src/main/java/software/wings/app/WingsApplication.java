@@ -42,7 +42,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-
     bootstrap.addBundle(new AssetsBundle("/static", "/static", "index.html"));
     logger.info("bootstrapping done.");
   }

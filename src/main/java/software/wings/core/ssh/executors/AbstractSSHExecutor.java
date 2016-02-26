@@ -4,11 +4,15 @@ import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.WingsBootstrap;
 import software.wings.beans.Execution;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.FileServiceImpl;
+import software.wings.service.intfc.FileService;
 
 import java.io.*;
 import java.net.NoRouteToHostException;
@@ -201,38 +205,24 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
         LOGGER.error("SCP connection initiation failed");
         return FAILURE;
       }
-
-      File _lfile = new File(localFilePath);
+      FileService fileService = WingsBootstrap.lookup(FileService.class);
+      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath);
 
       // send "C0644 filesize filename", where filename should not include '/'
-      long filesize = _lfile.length();
-      command = "C0644 " + filesize + " ";
-      if (localFilePath.lastIndexOf('/') > 0) {
-        command += localFilePath.substring(localFilePath.lastIndexOf('/') + 1);
-      } else {
-        command += localFilePath;
+      long filesize = fileMetaData.getLength();
+      String fileName = fileMetaData.getFilename();
+      if (fileName.lastIndexOf('/') > 0) {
+        fileName += fileName.substring(fileName.lastIndexOf('/') + 1);
       }
-      command += "\n";
+      command = "C0644 " + filesize + " " + fileName + "\n";
+
       out.write(command.getBytes());
       out.flush();
       if (checkAck(in) != 0) {
         return FAILURE;
       }
-
-      // send a content of lfile
-      fis = new FileInputStream(localFilePath);
-      byte[] buf = new byte[1024];
-      while (true) {
-        int len = fis.read(buf, 0, buf.length);
-        if (len <= 0)
-          break;
-        out.write(buf, 0, len); // out.flush();
-      }
-      fis.close();
-      fis = null;
-      // send '\0'
-      buf[0] = 0;
-      out.write(buf, 0, 1);
+      fileService.downloadToStream(localFilePath, out);
+      out.write(new byte[1], 0, 1);
       out.flush();
 
       if (checkAck(in) != 0) {
