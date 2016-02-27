@@ -1,24 +1,21 @@
 package software.wings.service.impl;
 
-import java.io.*;
-
+import com.mongodb.MongoClient;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.mongodb.MongoClient;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-
-import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.service.intfc.FileService;
+
+import java.io.*;
 
 public class FileServiceImpl implements FileService {
   private GridFSBucket gridFSBucket;
@@ -29,13 +26,6 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public File download(String fileId, File file) {
-    downloadToStream(fileId, new OutputStream() {
-      @Override
-      public void write(int b) throws IOException {
-        //                System.out.println(b);
-      }
-    });
-
     try {
       FileOutputStream streamToDownload = new FileOutputStream(file);
       gridFSBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
@@ -50,8 +40,6 @@ public class FileServiceImpl implements FileService {
   @Override
   public void downloadToStream(String fileId, OutputStream outputStream) {
     gridFSBucket.downloadToStream(new ObjectId(fileId), outputStream);
-    //            GridFSFindIterable filemetaData = gridFSBucket.find(Filters.eq("_id", new ObjectId(fileId)));
-    //            GridFSFile fridFsFile = filemetaData.first();
   }
 
   @Override

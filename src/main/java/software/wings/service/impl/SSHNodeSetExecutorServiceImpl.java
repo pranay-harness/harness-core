@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.*;
 import software.wings.core.ssh.ExecutionLogs;
-import software.wings.core.ssh.SingleHostDeploymentExecutor;
 import software.wings.core.ssh.executors.SSHExecutor;
 import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SSHExecutorFactory;
@@ -51,9 +50,9 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
       if (SUCCESS == result) {
         executor = SSHExecutorFactory.getExecutor(config);
         result = executor.execute(deployment.getDeployCommand());
-        ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Deploy command finished with " + result);
       }
     }
+    ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Deploy command finished with " + result);
     return result;
   }
 
@@ -62,7 +61,6 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
     int sshPort = host.getSshPort();
     String sshUser = deployment.getSshUser();
     String sshPassword = deployment.getSshPassword();
-    String command = deployment.getCommand();
 
     return new SSHSessionConfig.SSHSessionConfigBuilder()
         .executionType(PASSWORD)

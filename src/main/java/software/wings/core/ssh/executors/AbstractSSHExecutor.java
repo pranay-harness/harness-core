@@ -143,10 +143,6 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     }
   }
 
-  private void saveLogs(String logs) {
-    executionLogs.appendLogs(config.getExecutionID(), logs);
-  }
-
   protected SSHException extractSSHException(JSchException jSchException) {
     String message = jSchException.getMessage();
     Throwable cause = jSchException.getCause();
@@ -230,7 +226,6 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
         return FAILURE;
       }
       out.close();
-
       channel.disconnect();
       session.disconnect();
     } catch (FileNotFoundException ex) {
@@ -243,12 +238,6 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       SSHException shEx = extractSSHException(e);
       LOGGER.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.getCode(), shEx.getMsg(), e.getCause());
-    } finally {
-      try {
-        if (fis != null)
-          fis.close();
-      } catch (Exception ignored) {
-      }
     }
     return SUCCESS;
   }
