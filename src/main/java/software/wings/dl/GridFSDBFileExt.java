@@ -50,11 +50,11 @@ public class GridFSDBFileExt {
           String.format("No file found with name [%s]. Creating new file and writing initial chunks", fileName));
       put(fileName, content);
     } else {
-      int fileLength = (int) file.getLength();
+      long fileLength = file.getLength();
       int chunkSize = file.getChunkSize();
       int existingChunksCount = (int) Math.ceil(fileLength / (double) chunkSize);
 
-      int bytesFreeInLastChunk = fileLength % chunkSize == 0 ? 0 : chunkSize - fileLength % chunkSize;
+      int bytesFreeInLastChunk = fileLength % chunkSize == 0 ? 0 : (int) (chunkSize - fileLength % chunkSize);
 
       if (bytesFreeInLastChunk > 0) {
         appendToExistingChunk(file, existingChunksCount, content.substring(0, bytesFreeInLastChunk));
@@ -103,7 +103,7 @@ public class GridFSDBFileExt {
   }
 
   public void put(String fileName, String content) {
-    InputStream streamToUploadFrom = null;
+    InputStream streamToUploadFrom;
     try {
       streamToUploadFrom = new ByteArrayInputStream(content.getBytes("UTF-8"));
     } catch (UnsupportedEncodingException e) {
