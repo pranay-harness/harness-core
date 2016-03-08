@@ -40,19 +40,21 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
   public ExecutionResult deploy(Deployment deployment, SSHSessionConfig config) {
     SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     ExecutionResult result = executor.execute(deployment.getSetupCommand());
-    ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Setup finished with " + result);
+    ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), String.format("Setup finished with %s\n", result));
 
     if (SUCCESS == result) {
       executor = SSHExecutorFactory.getExecutor(config);
       result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUUID(), "wings/downloads/");
-      ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "File transfer finished with " + result);
+      ExecutionLogs.getInstance().appendLogs(
+          config.getExecutionID(), String.format("File transfer finished with %s\n", result));
 
       if (SUCCESS == result) {
         executor = SSHExecutorFactory.getExecutor(config);
         result = executor.execute(deployment.getDeployCommand());
       }
     }
-    ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), "Deploy command finished with " + result);
+    ExecutionLogs.getInstance().appendLogs(
+        config.getExecutionID(), String.format("Deploy command finished with %s\n", result));
     return result;
   }
 

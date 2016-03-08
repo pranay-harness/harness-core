@@ -74,7 +74,7 @@ public class Deployment extends Execution {
 
   @Override
   public String getDeployCommand() {
-    return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xzf ../downloads/%s",
+    return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xvzf ../downloads/%s",
         getArtifact().getArtifactFile().getFileName());
   }
 }
