@@ -16,6 +16,16 @@ public class PersistentLocker implements Locker {
     this.wingsPersistence = wingsPersistence;
   }
   @Override
+  public boolean acquireLock(Class entityClass, String entityId) {
+    return acquireLock(entityClass.getName(), entityId, null);
+  }
+
+  @Override
+  public boolean acquireLock(Class entityClass, String entityId, Date expiryDate) {
+    return acquireLock(entityClass.getName(), entityId, null);
+  }
+
+  @Override
   public boolean acquireLock(String entityType, String entityId) {
     return acquireLock(entityType, entityId, null);
   }
@@ -40,6 +50,10 @@ public class PersistentLocker implements Locker {
     }
   }
 
+  @Override
+  public boolean releaseLock(Class entityClass, String entityId) {
+    return releaseLock(entityClass.getName(), entityId);
+  }
   @Override
   public boolean releaseLock(String entityType, String entityId) {
     try {
