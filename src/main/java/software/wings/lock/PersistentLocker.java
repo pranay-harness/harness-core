@@ -88,6 +88,8 @@ public class PersistentLocker implements Locker {
 
   private void populateHostIp(Lock lock) {
     try {
+      lock.setThreadId(Thread.currentThread().getId());
+      lock.setThreadName(Thread.currentThread().getName());
       InetAddress ip = InetAddress.getLocalHost();
       lock.setHostName(ip.getHostName());
       lock.setIpAddress(ip.getHostAddress());

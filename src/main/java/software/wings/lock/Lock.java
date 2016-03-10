@@ -23,6 +23,9 @@ public class Lock extends Base {
   private String hostName;
   private String ipAddress;
 
+  private String threadName;
+  private long threadId;
+
   @Indexed private Date expiryDate;
 
   public String getEntityType() {
@@ -54,5 +57,17 @@ public class Lock extends Base {
   }
   public void setExpiryDate(Date expiryDate) {
     this.expiryDate = expiryDate;
+  }
+  public String getThreadName() {
+    return threadName;
+  }
+  public void setThreadName(String threadName) {
+    this.threadName = threadName;
+  }
+  public long getThreadId() {
+    return threadId;
+  }
+  public void setThreadId(long threadId) {
+    this.threadId = threadId;
   }
 }
