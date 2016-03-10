@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import java.net.InetAddress;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class PersistentLocker implements Locker {
     lock.setEntityType(entityType);
     lock.setEntityId(entityId);
     lock.setExpiryDate(expiryDate);
-
+    populateHostIp(lock);
     try {
       String uuid = wingsPersistence.save(lock);
       logger.debug(
@@ -85,5 +86,15 @@ public class PersistentLocker implements Locker {
     }
   }
 
+  private void populateHostIp(Lock lock) {
+    try {
+      InetAddress ip = InetAddress.getLocalHost();
+      lock.setHostName(ip.getHostName());
+      lock.setIpAddress(ip.getHostAddress());
+
+    } catch (Exception e) {
+      // ignore
+    }
+  }
   private static Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
 }
