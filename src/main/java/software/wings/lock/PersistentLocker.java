@@ -10,6 +10,13 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.WingsPersistence;
 
+/**
+ *  Persistent Locker implementation using Mongo DB.
+ *
+ *
+ * @author Rishi
+ *
+ */
 public class PersistentLocker implements Locker {
   private WingsPersistence wingsPersistence;
 

@@ -18,7 +18,6 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.Release;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.OP;
 
@@ -30,7 +29,7 @@ public class WingsMongoPersistence implements WingsPersistence {
   }
 
   public <T extends Base> T get(Class<T> cls, String id) {
-    return (T) datastore.get(Release.class, id);
+    return (T) datastore.get(cls, id);
   }
 
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {

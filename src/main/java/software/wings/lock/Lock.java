@@ -12,6 +12,13 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import software.wings.beans.Base;
 
+/**
+ *  Lock bean class
+ *
+ *
+ * @author Rishi
+ *
+ */
 @Embedded
 @Entity(value = "locks", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("entityType")
