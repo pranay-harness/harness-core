@@ -35,6 +35,8 @@ public class PageRequest<T> {
   private int pageSize = DEFAULT_PAGE_SIZE;
   private List<SearchFilter> filters = new ArrayList<SearchFilter>();
   private List<SortOrder> orders = new ArrayList<>();
+  private List<String> fieldsIncluded = new ArrayList<>();
+  private List<String> fieldsExcluded = new ArrayList<>();
 
   @JsonIgnore @Context private UriInfo uriInfo;
 
@@ -50,6 +52,8 @@ public class PageRequest<T> {
     this.filters = req.filters;
     this.orders = req.orders;
     this.isOR = req.isOR;
+    this.fieldsIncluded = req.fieldsIncluded;
+    this.fieldsExcluded = req.fieldsExcluded;
   }
 
   public List<SearchFilter> getFilters() {
@@ -95,6 +99,22 @@ public class PageRequest<T> {
   }
   public void setOR(boolean isOR) {
     this.isOR = isOR;
+  }
+
+  public List<String> getFieldsIncluded() {
+    return fieldsIncluded;
+  }
+
+  public void setFieldsIncluded(List<String> fieldsIncluded) {
+    this.fieldsIncluded = fieldsIncluded;
+  }
+
+  public List<String> getFieldsExcluded() {
+    return fieldsExcluded;
+  }
+
+  public void setFieldsExcluded(List<String> fieldsExcluded) {
+    this.fieldsExcluded = fieldsExcluded;
   }
 
   public void populateFilters() {

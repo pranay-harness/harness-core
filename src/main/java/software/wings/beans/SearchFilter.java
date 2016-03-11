@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import java.util.List;
+
 /**
  *  SearchFilter bean class.
  *
@@ -8,11 +10,12 @@ package software.wings.beans;
  *
  */
 public class SearchFilter {
-  public enum OP { EQ, LT, GT, CONTAINS, STARTSWITH }
+  public enum OP { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
   ;
 
   private String fieldName;
   private String fieldValue;
+  private List<String> fieldValues;
   private OP op;
 
   public String getFieldName() {
@@ -32,5 +35,11 @@ public class SearchFilter {
   }
   public void setOp(OP op) {
     this.op = op;
+  }
+  public List<String> getFieldValues() {
+    return fieldValues;
+  }
+  public void setFieldValues(List<String> fieldValues) {
+    this.fieldValues = fieldValues;
   }
 }

@@ -21,6 +21,9 @@ public class MongoHelper {
 
   public static <T> PageResponse<T> queryPageRequest(
       Datastore datastore, Class<T> cls, PageRequest<T> req, String fieldName, String fieldValue) {
+    if (req == null) {
+      req = new PageRequest<>();
+    }
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
     filter.setFieldValue(fieldValue);
@@ -90,8 +93,14 @@ public class MongoHelper {
       case CONTAINS:
         return fieldEnd.containsIgnoreCase(filter.getFieldValue());
 
-      case STARTSWITH:
+      case STARTS_WITH:
         return fieldEnd.startsWithIgnoreCase(filter.getFieldValue());
+
+      case IN:
+        return fieldEnd.hasAnyOf(filter.getFieldValues());
+
+      case NOT_IN:
+        return fieldEnd.hasNoneOf(filter.getFieldValues());
     }
     return null;
   }
