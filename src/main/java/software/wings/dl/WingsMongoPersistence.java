@@ -10,6 +10,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
+import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
@@ -17,7 +18,6 @@ import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.Release;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.OP;
 
@@ -29,7 +29,15 @@ public class WingsMongoPersistence implements WingsPersistence {
   }
 
   public <T extends Base> T get(Class<T> cls, String id) {
-    return (T) datastore.get(Release.class, id);
+    return (T) datastore.get(cls, id);
+  }
+
+  public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
+    PageResponse<T> res = MongoHelper.queryPageRequest(datastore, cls, req);
+    if (res == null || res.getResponse() == null || res.getResponse().size() == 0) {
+      return null;
+    }
+    return res.getResponse().get(0);
   }
 
   public <T extends Base> String save(T t) {
@@ -44,6 +52,22 @@ public class WingsMongoPersistence implements WingsPersistence {
 
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
     return datastore.update(ent, ops);
+  }
+
+  public <T extends Base> boolean delete(Class<T> cls, String uuid) {
+    WriteResult result = datastore.delete(cls, uuid);
+    if (result == null || result.getN() == 0) {
+      return false;
+    }
+    return true;
+  }
+
+  public <T extends Base> boolean delete(T t) {
+    WriteResult result = datastore.delete(t);
+    if (result == null || result.getN() == 0) {
+      return false;
+    }
+    return true;
   }
 
   public <T> List<T> query(Class<T> cls, SimpleEntry<String, String>... pairs) {

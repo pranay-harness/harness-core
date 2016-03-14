@@ -21,4 +21,6 @@ public interface ErrorConstants {
   public static final String SSH_SOCKET_CONNECTION_ERROR_MSG = "SSH_SOCKET_CONNECTION_ERROR_MSG";
   public static final String UNKNOWN_ERROR_CODE = "UNKNOWN_ERROR_CODE";
   public static final String UNKNOWN_ERROR_MEG = "UNKNOWN_ERROR_MSG";
+  public static final String NOT_INITIALIZED = "NOT_INITIALIZED";
+  public static final String ALREADY_INITIALIZED = "ALREADY_INITIALIZED";
 }
