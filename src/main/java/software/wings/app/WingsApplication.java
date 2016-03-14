@@ -4,6 +4,9 @@ import java.util.EnumSet;
 
 import javax.servlet.DispatcherType;
 
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +17,14 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import software.wings.beans.User;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
+import software.wings.security.AuthRuleFilter;
 import software.wings.filter.ResponseMessageResolver;
 import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
+import software.wings.security.BasicAuthAuthenticator;
 
 /**
  *  The main application - entry point for the entire Wings Application
@@ -56,10 +62,16 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(ResponseMessageResolver.class);
     environment.jersey().register(MultiPartFeature.class);
 
+    //        environment.jersey().register(new AuthDynamicFeature(new
+    //        BasicCredentialAuthFilter.Builder<User>().setAuthenticator(new
+    //        BasicAuthAuthenticator()).buildAuthFilter())); environment.jersey().register(new
+    //        AuthValueFactoryProvider.Binder<>(User.class));
+
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
 
+    environment.jersey().register(AuthRuleFilter.class);
     environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
 
     logger.info("Starting app done");

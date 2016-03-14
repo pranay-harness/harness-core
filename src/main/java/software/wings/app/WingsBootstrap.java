@@ -13,6 +13,7 @@ import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import software.wings.dl.MongoConnectionFactory;
 import software.wings.health.MongoConnectionHealth;
+import software.wings.service.UserService;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
@@ -87,6 +88,8 @@ public class WingsBootstrap {
     register(DeploymentService.class, new DeploymentServiceImpl(datastore));
     register(InfraService.class, new InfraServiceImpl(datastore));
     register(PlatformService.class, new PlatformServiceImpl(datastore));
+    register(UserService.class, new UserService(datastore));
+    register(Datastore.class, datastore);
   }
 
   public static MainConfiguration getConfig() {
