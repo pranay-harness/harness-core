@@ -2,6 +2,9 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
@@ -16,12 +19,13 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
  *
  */
 @JsonInclude(NON_EMPTY)
+@Entity(value = "users", noClassnameStored = true)
 public class User extends Base implements Principal {
   private String name;
-  private String email;
+  @Indexed(unique = true) private String email;
   @JsonIgnore private String passwordHash;
   private long lastLogin;
-  private String token;
+  @Transient private String token;
 
   public String getEmail() {
     return email;

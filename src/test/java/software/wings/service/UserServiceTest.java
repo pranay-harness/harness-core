@@ -23,6 +23,7 @@ public class UserServiceTest {
     user.setEmail("anubhaw@gmail.com");
     user.setName("Anubhaw Srivastava");
     user.setPasswordHash("password");
+    user.setToken("DummyTokenShouldNotBeStored");
     user.setLastLogin(System.currentTimeMillis());
     userService.register(user);
   }

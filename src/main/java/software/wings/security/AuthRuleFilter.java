@@ -1,46 +1,65 @@
 package software.wings.security;
 
+import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.security.annotations.AuthRule;
 
 import javax.annotation.Priority;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
-import java.io.IOException;
+import javax.ws.rs.core.HttpHeaders;
 import java.lang.reflect.Method;
 
-import static javax.ws.rs.Priorities.AUTHORIZATION;
+import static javax.ws.rs.Priorities.AUTHENTICATION;
 
 /**
  * Created by anubhaw on 3/11/16.
  */
 
-@Priority(AUTHORIZATION)
+@Priority(AUTHENTICATION)
 @AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context ResourceInfo resourceInfo;
 
   @Override
-  public void filter(ContainerRequestContext requestContext) throws IOException {
+  public void filter(ContainerRequestContext requestContext) {
+    AuthToken authToken = extractToken(requestContext);
+    User user = findUserFromDB(authToken.getUserID());
+    requestContext.setProperty("USER", user);
+
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule annotations = resourceMethod.getAnnotation(AuthRule.class);
     AccessType[] permissions = annotations.permissions();
 
-    String token = requestContext.getHeaderString("X-AUTH_TOKEN");
-    String userID = requestContext.getHeaderString("X-AUTH_USERID");
-
-    User user = validateToken(token, userID);
-    requestContext.setProperty("USER", user);
-
     // Rest of the flow
   }
 
-  private User validateToken(String token, String userID) {
-    User user = new User();
-    user.setName("Anubhaw");
-    user.setToken("dlskfewf");
-    return user;
+  private User findUserFromDB(String userID) {
+    return null;
+  }
+
+  private void validateToken(String token) {}
+
+  private User extractUserFromToken(String token) {
+    // Validate token
+    // Extend token expiry
+    // fetch and return user
+    return null;
+  }
+
+  private AuthToken extractToken(ContainerRequestContext requestContext) {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      throw new NotAuthorizedException("Authorization header must be provided");
+    }
+    String tokenString = authorizationHeader.substring("Bearer".length()).trim();
+    return fetchTokenFromDB(tokenString);
+  }
+
+  private AuthToken fetchTokenFromDB(String tokenString) {
+    return null;
   }
 }
