@@ -2,6 +2,7 @@ package software.wings.service;
 
 import org.junit.Test;
 import org.mongodb.morphia.Datastore;
+import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.dl.MongoConnectionFactory;
 
@@ -20,11 +21,9 @@ public class UserServiceTest {
   @Test
   public void testRegister() throws Exception {
     User user = new User();
-    user.setEmail("anubhaw@gmail.com");
-    user.setName("Anubhaw Srivastava");
+    user.setEmail("user1@wings.software");
+    user.setName("John Doe");
     user.setPasswordHash("password");
-    user.setToken("DummyTokenShouldNotBeStored");
-    user.setLastLogin(System.currentTimeMillis());
     userService.register(user);
   }
 

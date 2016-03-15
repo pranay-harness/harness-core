@@ -25,7 +25,17 @@ public class User extends Base implements Principal {
   @Indexed(unique = true) private String email;
   @JsonIgnore private String passwordHash;
   private long lastLogin;
+
   @Transient private String token;
+
+  @Override
+  public String getName() {
+    return name;
+  }
+  @Override
+  public boolean implies(Subject subject) {
+    return false;
+  }
 
   public String getEmail() {
     return email;
@@ -45,20 +55,9 @@ public class User extends Base implements Principal {
   public long getLastLogin() {
     return lastLogin;
   }
-
   public void setName(String name) {
     this.name = name;
   }
-  @Override
-  public String getName() {
-    return name;
-  }
-
-  @Override
-  public boolean implies(Subject subject) {
-    return false;
-  }
-
   public String getToken() {
     return token;
   }

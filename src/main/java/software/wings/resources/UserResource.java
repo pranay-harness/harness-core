@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import io.dropwizard.auth.Auth;
 import software.wings.app.WingsBootstrap;
+import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.UserService;
@@ -24,7 +25,7 @@ import static software.wings.security.AccessType.DEPLOYMENT_READ;
 @Path("/users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class UserResource {
+public class UserResource extends Base {
   private UserService userService = WingsBootstrap.lookup(UserService.class);
 
   @POST
@@ -36,7 +37,6 @@ public class UserResource {
 
   @GET
   @Path("login")
-  @AuthRule
   public User login(@Auth User user) {
     return user; // TODO: mask fields
   }

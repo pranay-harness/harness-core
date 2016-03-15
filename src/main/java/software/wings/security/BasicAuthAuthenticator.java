@@ -1,13 +1,21 @@
 package software.wings.security;
 
 import com.google.common.base.Optional;
+import com.sun.tools.internal.ws.processor.model.Response;
+import com.sun.tools.internal.ws.wsdl.document.http.HTTPConstants;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.Datastore;
 import software.wings.app.WingsBootstrap;
+import software.wings.beans.AuthToken;
 import software.wings.beans.User;
+import software.wings.exception.WingsException;
+
+import javax.ws.rs.WebApplicationException;
+
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 /**
  * Created by anubhaw on 3/10/16.
@@ -18,9 +26,12 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
   @Override
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {
     User user = datastore.find(User.class).field("email").equal(basicCredentials.getUsername()).get();
-    if (BCrypt.checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
+    if (null != user && BCrypt.checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
+      AuthToken authToken = new AuthToken(user.getUuid());
+      datastore.save(authToken);
+      user.setToken(authToken.getToken());
       return Optional.of(user);
     }
-    return Optional.absent();
+    throw new WingsException(String.valueOf(UNAUTHORIZED));
   }
 }

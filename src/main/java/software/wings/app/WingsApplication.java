@@ -62,10 +62,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(ResponseMessageResolver.class);
     environment.jersey().register(MultiPartFeature.class);
 
-    //        environment.jersey().register(new AuthDynamicFeature(new
-    //        BasicCredentialAuthFilter.Builder<User>().setAuthenticator(new
-    //        BasicAuthAuthenticator()).buildAuthFilter())); environment.jersey().register(new
-    //        AuthValueFactoryProvider.Binder<>(User.class));
+    environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                                                             .setAuthenticator(new BasicAuthAuthenticator())
+                                                             .buildAuthFilter()));
+    environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
 
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
