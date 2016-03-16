@@ -12,7 +12,7 @@ import com.codahale.metrics.annotation.Timed;
 
 import io.dropwizard.jersey.caching.CacheControl;
 import software.wings.app.WingsBootstrap;
-import software.wings.beans.AuditHeader;
+import software.wings.audit.AuditHeader;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;

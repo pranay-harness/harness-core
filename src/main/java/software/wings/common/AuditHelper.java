@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import software.wings.app.WingsBootstrap;
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditHeader.RequestType;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
 /**

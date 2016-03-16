@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditHeader.RequestType;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 
