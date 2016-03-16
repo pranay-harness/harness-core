@@ -22,6 +22,7 @@ import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 /**
  *  Application Resource class
@@ -31,6 +32,7 @@ import software.wings.service.intfc.AppService;
  *
  */
 @Path("/apps")
+@AuthRule
 public class AppResource {
   private static final Logger logger = LoggerFactory.getLogger(AppResource.class);
 

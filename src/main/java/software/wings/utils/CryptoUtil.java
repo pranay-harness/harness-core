@@ -3,6 +3,7 @@ package software.wings.utils;
 import java.security.SecureRandom;
 import java.util.Random;
 
+/* http://stackoverflow.com/a/19597101 */
 public class CryptoUtil {
   private static char[] VALID_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();

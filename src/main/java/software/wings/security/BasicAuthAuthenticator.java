@@ -1,8 +1,6 @@
 package software.wings.security;
 
 import com.google.common.base.Optional;
-import com.sun.tools.internal.ws.processor.model.Response;
-import com.sun.tools.internal.ws.wsdl.document.http.HTTPConstants;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
@@ -12,8 +10,6 @@ import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
-
-import javax.ws.rs.WebApplicationException;
 
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 

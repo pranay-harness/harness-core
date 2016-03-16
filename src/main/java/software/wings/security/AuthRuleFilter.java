@@ -1,7 +1,11 @@
 package software.wings.security;
 
+import org.mongodb.morphia.Datastore;
+import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Host;
 import software.wings.beans.User;
+import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 
 import javax.annotation.Priority;
@@ -11,9 +15,11 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.Response;
 import java.lang.reflect.Method;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -23,6 +29,7 @@ import static javax.ws.rs.Priorities.AUTHENTICATION;
 @AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context ResourceInfo resourceInfo;
+  Datastore datastore = WingsBootstrap.lookup(Datastore.class);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -31,14 +38,22 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     requestContext.setProperty("USER", user);
 
     Method resourceMethod = resourceInfo.getResourceMethod();
-    AuthRule annotations = resourceMethod.getAnnotation(AuthRule.class);
-    AccessType[] permissions = annotations.permissions();
+    AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
+    if (null != methodAnnotations) {
+      AccessType[] methodAnnotion = methodAnnotations.permissions();
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
+    if (null != classAnnotations) {
+      AccessType[] classPermissions = classAnnotations.permissions();
+    }
 
     // Rest of the flow
   }
 
   private User findUserFromDB(String userID) {
-    return null;
+    return datastore.find(User.class, "_id", userID).get();
   }
 
   private void validateToken(String token) {}
@@ -53,13 +68,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuthToken extractToken(ContainerRequestContext requestContext) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new NotAuthorizedException("Authorization header must be provided");
+      throw new WingsException(String.valueOf(UNAUTHORIZED), "Authorization header must be provided",
+          new Throwable("Authorization header must be provided"));
     }
     String tokenString = authorizationHeader.substring("Bearer".length()).trim();
     return fetchTokenFromDB(tokenString);
   }
 
   private AuthToken fetchTokenFromDB(String tokenString) {
-    return null;
+    return datastore.find(AuthToken.class, "token", tokenString).get();
   }
 }

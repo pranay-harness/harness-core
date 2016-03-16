@@ -66,7 +66,7 @@ public class MongoConnectionFactory {
   public Datastore getDatastore() {
     Morphia m = new Morphia();
     Datastore ds = m.createDatastore(getMongoClient(), getDb());
-    //		m.mapPackage("software.wings.beans");
+    m.mapPackage("software.wings.beans");
     ds.ensureIndexes();
     return ds;
   }
