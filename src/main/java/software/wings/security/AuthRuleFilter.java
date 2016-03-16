@@ -34,7 +34,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Override
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);
-    User user = findUserFromDB(authToken.getUserID());
+    User user = authToken.getUser();
     requestContext.setProperty("USER", user);
 
     Method resourceMethod = resourceInfo.getResourceMethod();

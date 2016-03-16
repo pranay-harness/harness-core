@@ -23,7 +23,7 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {
     User user = datastore.find(User.class).field("email").equal(basicCredentials.getUsername()).get();
     if (null != user && BCrypt.checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
-      AuthToken authToken = new AuthToken(user.getUuid());
+      AuthToken authToken = new AuthToken(user);
       datastore.save(authToken);
       user.setToken(authToken.getToken());
       return Optional.of(user);
