@@ -58,10 +58,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     header.setRequestTime(new Timestamp(System.currentTimeMillis()));
 
     HttpServletRequest request = resourceContext.getResource(HttpServletRequest.class);
-    if (request.getRemoteUser() != null) {
-      // TODO
-      // header.setRemoteUser(new User(request.getRemoteUser()));
-    }
+
     header.setRemoteHostName(request.getRemoteHost());
     header.setRemoteIpAddress(request.getRemoteAddr());
     header.setRemoteHostPort(request.getRemotePort());

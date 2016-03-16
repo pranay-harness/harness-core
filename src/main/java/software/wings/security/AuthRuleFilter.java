@@ -3,19 +3,18 @@ package software.wings.security;
 import org.mongodb.morphia.Datastore;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
-import software.wings.beans.Host;
 import software.wings.beans.User;
+import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AuditService;
 
 import javax.annotation.Priority;
-import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.Response;
 import java.lang.reflect.Method;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
@@ -30,11 +29,15 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context ResourceInfo resourceInfo;
   Datastore datastore = WingsBootstrap.lookup(Datastore.class);
+  AuditService auditService = WingsBootstrap.lookup(AuditService.class);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);
     User user = authToken.getUser();
+    if (null != user) {
+      updateUserInAuditRecord(user);
+    }
     requestContext.setProperty("USER", user);
 
     Method resourceMethod = resourceInfo.getResourceMethod();
@@ -50,6 +53,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     // Rest of the flow
+  }
+
+  private void updateUserInAuditRecord(User user) {
+    auditService.updateUser(AuditHelper.getInstance().get(), User.getPublicUser(user));
   }
 
   private User findUserFromDB(String userID) {

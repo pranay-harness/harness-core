@@ -64,4 +64,12 @@ public class User extends Base implements Principal {
   public void setToken(String token) {
     this.token = token;
   }
+
+  public static User getPublicUser(User fullUser) {
+    User publicUser = new User();
+    publicUser.setUuid(fullUser.getUuid());
+    publicUser.setName(fullUser.getName());
+    publicUser.setEmail(fullUser.getEmail());
+    return publicUser;
+  }
 }
