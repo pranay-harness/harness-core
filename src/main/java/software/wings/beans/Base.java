@@ -19,7 +19,7 @@ import software.wings.common.UUIDGenerator;
 public class Base {
   @Id private String uuid;
 
-  private User createdBy;
+  @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 
   @Indexed private long createdAt;
 
