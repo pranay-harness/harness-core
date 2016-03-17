@@ -16,5 +16,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @NameBinding
 public @interface AuthRule {
-  AccessType[] permissions() default {};
+  AccessType[] value() default {};
 }

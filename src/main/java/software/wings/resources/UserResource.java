@@ -43,7 +43,7 @@ public class UserResource extends Base {
 
   @GET
   @Path("secure")
-  @AuthRule(permissions = {DEPLOYMENT_CREATE, DEPLOYMENT_READ})
+  @AuthRule({DEPLOYMENT_CREATE, DEPLOYMENT_READ})
   public String secure(@Context ContainerRequestContext crc) {
     User user = (User) crc.getProperty("USER");
     return user.getName();

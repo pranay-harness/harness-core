@@ -54,7 +54,7 @@ public class AppResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
-  @AuthRule(permissions = {APP_READ})
+  @AuthRule({APP_READ})
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest) {
     return new RestResponse<PageResponse<Application>>(appService.list(pageRequest));
   }

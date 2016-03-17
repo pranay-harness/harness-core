@@ -95,14 +95,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
-    if (null != methodAnnotations && methodAnnotations.permissions().length > 0) {
-      methodAccessTypes.addAll(Lists.newArrayList(methodAnnotations.permissions()));
+    if (null != methodAnnotations && methodAnnotations.value().length > 0) {
+      methodAccessTypes.addAll(Lists.newArrayList(methodAnnotations.value()));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
-    if (null != classAnnotations && classAnnotations.permissions().length > 0) {
-      classAccessTypes.addAll(Lists.newArrayList(classAnnotations.permissions()));
+    if (null != classAnnotations && classAnnotations.value().length > 0) {
+      classAccessTypes.addAll(Lists.newArrayList(classAnnotations.value()));
     }
     accessTypes.addAll(methodAccessTypes);
     accessTypes.removeAll(classAccessTypes);
