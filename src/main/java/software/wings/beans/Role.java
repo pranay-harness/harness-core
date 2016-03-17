@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
@@ -13,7 +14,15 @@ import java.util.List;
 public class Role extends Base {
   private String name;
   private String description;
-  @Reference(idOnly = true) private List<Permission> permissions;
+  @Embedded private List<Permission> permissions;
+
+  public Role() {}
+
+  public Role(String name, String description, List<Permission> permissions) {
+    this.name = name;
+    this.description = description;
+    this.permissions = permissions;
+  }
 
   public String getName() {
     return name;

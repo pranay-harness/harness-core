@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
@@ -7,8 +8,8 @@ import org.mongodb.morphia.annotations.Reference;
  * Created by anubhaw on 3/17/16.
  */
 
-@Entity(value = "permissions", noClassnameStored = true)
-public class Permission extends Base {
+@Embedded
+public class Permission {
   private String action;
   private String accessType;
   private String envID;

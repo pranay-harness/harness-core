@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
+import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
@@ -24,6 +26,7 @@ public class User extends Base implements Principal {
   private String name;
   @Indexed(unique = true) private String email;
   @JsonIgnore private String passwordHash;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
   private long lastLogin;
 
   @Transient private String token;
@@ -63,6 +66,12 @@ public class User extends Base implements Principal {
   }
   public void setToken(String token) {
     this.token = token;
+  }
+  public List<Role> getRoles() {
+    return roles;
+  }
+  public void setRoles(List<Role> roles) {
+    this.roles = roles;
   }
 
   public static User getPublicUser(User fullUser) {

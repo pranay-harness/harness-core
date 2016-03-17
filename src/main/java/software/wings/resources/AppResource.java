@@ -22,8 +22,12 @@ import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
+import software.wings.security.AccessType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
+
+import static software.wings.security.AccessType.APP_READ;
+
 /**
  *  Application Resource class
  *
@@ -50,6 +54,7 @@ public class AppResource {
   @ExceptionMetered
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
+  @AuthRule(permissions = {APP_READ})
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest) {
     return new RestResponse<PageResponse<Application>>(appService.list(pageRequest));
   }

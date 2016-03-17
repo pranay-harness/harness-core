@@ -1,8 +1,11 @@
 package software.wings.security;
 
+import com.google.common.collect.Lists;
 import org.mongodb.morphia.Datastore;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Permission;
+import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
@@ -13,10 +16,13 @@ import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.*;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
@@ -36,23 +42,72 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     AuthToken authToken = extractToken(requestContext);
     User user = authToken.getUser();
     if (null != user) {
-      updateUserInAuditRecord(user);
+      updateUserInAuditRecord(user); // Set for FIXME: find better place
     }
     requestContext.setProperty("USER", user);
+    List<AccessType> accessTypes = getAccessTypes();
+    authorizeRequest(requestContext.getUriInfo(), user, accessTypes);
+  }
+
+  private void authorizeRequest(UriInfo uriInfo, User user, List<AccessType> accessTypes) {
+    MultivaluedMap<String, String> pathParameters = uriInfo.getPathParameters();
+    for (AccessType accessType : accessTypes) {
+      if (!authorizeAccessType(pathParameters, accessType, user.getRoles())) {
+        throw new WingsException(String.valueOf(UNAUTHORIZED), "User not authorized to access",
+            new Throwable("User not authorized to access"));
+      }
+    }
+  }
+
+  private boolean authorizeAccessType(
+      MultivaluedMap<String, String> pathParameters, AccessType accessType, List<Role> roles) {
+    Application application = null;
+    if (pathParameters.containsKey("app_id")) {
+      String appID = pathParameters.getFirst("app_id");
+      application = datastore.get(Application.class, appID);
+    }
+    for (Role role : roles) {
+      if (roleAuthorizedWithAccessType(role, accessType, application)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean roleAuthorizedWithAccessType(Role role, AccessType accessType, Application application) {
+    String[] accessTypeParts = accessType.name().split("_");
+    String reqAction = accessTypeParts[0];
+    String reqType = accessTypeParts[1];
+    for (Permission permission : role.getPermissions()) {
+      if ("ALL".equals(permission.getAction()) || (reqAction.equals(permission.getAction()))) {
+        if ("ALL".equals(permission.getAccessType()) || (reqType.equals(permission.getAccessType()))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private List<AccessType> getAccessTypes() {
+    List<AccessType> accessTypes = new ArrayList<>();
+    List<AccessType> methodAccessTypes = new ArrayList<>();
+    List<AccessType> classAccessTypes = new ArrayList<>();
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
-    if (null != methodAnnotations) {
-      AccessType[] methodAnnotion = methodAnnotations.permissions();
+    if (null != methodAnnotations && methodAnnotations.permissions().length > 0) {
+      methodAccessTypes.addAll(Lists.newArrayList(methodAnnotations.permissions()));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
-    if (null != classAnnotations) {
-      AccessType[] classPermissions = classAnnotations.permissions();
+    if (null != classAnnotations && classAnnotations.permissions().length > 0) {
+      classAccessTypes.addAll(Lists.newArrayList(classAnnotations.permissions()));
     }
-
-    // Rest of the flow
+    accessTypes.addAll(methodAccessTypes);
+    accessTypes.removeAll(classAccessTypes);
+    accessTypes.addAll(classAccessTypes);
+    return accessTypes;
   }
 
   private void updateUserInAuditRecord(User user) {
