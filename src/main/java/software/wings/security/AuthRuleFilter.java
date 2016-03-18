@@ -140,6 +140,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           new Throwable("Authorization header must be provided"));
     }
     String tokenString = authorizationHeader.substring("Bearer".length()).trim();
-    return dbCache.get(AuthToken.class, tokenString);
+    AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
+    if (null != authToken && authToken.getExpireAt() < System.currentTimeMillis()) {
+      throw new WingsException(
+          String.valueOf(UNAUTHORIZED), "Authorization token expired", new Throwable("Authorization token expired"));
+    }
+    return authToken;
   }
 }
