@@ -25,7 +25,7 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
     if (null != user && BCrypt.checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
       AuthToken authToken = new AuthToken(user);
       datastore.save(authToken);
-      user.setToken(authToken.getToken());
+      user.setToken(authToken.getUuid());
       return Optional.of(user);
     }
     throw new WingsException(String.valueOf(UNAUTHORIZED));

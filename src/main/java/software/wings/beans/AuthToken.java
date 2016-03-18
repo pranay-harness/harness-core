@@ -15,7 +15,6 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 @Entity(value = "authTokens", noClassnameStored = true)
 public class AuthToken extends Base {
-  @Indexed private String token;
   @Reference(idOnly = true) private User user;
   private long expireAt;
 
@@ -23,16 +22,10 @@ public class AuthToken extends Base {
 
   public AuthToken(User user) {
     this.user = user;
-    token = secureRandAlphaNumString(32);
+    setUuid(secureRandAlphaNumString(32));
     expireAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000; // 24 hrs expiry
   }
 
-  public String getToken() {
-    return token;
-  }
-  public void setToken(String token) {
-    this.token = token;
-  }
   public User getUser() {
     return user;
   }

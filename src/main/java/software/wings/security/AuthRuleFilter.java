@@ -6,6 +6,7 @@ import software.wings.app.WingsBootstrap;
 import software.wings.beans.*;
 import software.wings.beans.Application;
 import software.wings.common.AuditHelper;
+import software.wings.dl.GenericDBCache;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AuditService;
@@ -29,9 +30,9 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 @Priority(AUTHENTICATION)
 @AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {
-  @Context ResourceInfo resourceInfo;
-  Datastore datastore = WingsBootstrap.lookup(Datastore.class);
-  AuditService auditService = WingsBootstrap.lookup(AuditService.class);
+  @Context private ResourceInfo resourceInfo;
+  private AuditService auditService = WingsBootstrap.lookup(AuditService.class);
+  private GenericDBCache dbCache = WingsBootstrap.lookup(GenericDBCache.class);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -61,11 +62,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Environment environment = null;
     if (pathParameters.containsKey("app_id")) {
       String appID = pathParameters.getFirst("app_id");
-      application = datastore.get(Application.class, appID);
+      application = dbCache.get(Application.class, appID);
     }
-    if (pathParameters.containsKey("env")) {
-      String env = pathParameters.getFirst("env");
-      environment = datastore.get(Environment.class, env);
+    if (pathParameters.containsKey("env_id")) {
+      String env = pathParameters.getFirst("env_id");
+      environment = dbCache.get(Environment.class, env);
     }
     for (Role role : roles) {
       if (roleAuthorizedWithAccessType(role, permissionAttr, application, environment)) {
@@ -139,10 +140,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
           new Throwable("Authorization header must be provided"));
     }
     String tokenString = authorizationHeader.substring("Bearer".length()).trim();
-    return fetchTokenFromDB(tokenString);
-  }
-
-  private AuthToken fetchTokenFromDB(String tokenString) {
-    return datastore.find(AuthToken.class, "token", tokenString).get();
+    return dbCache.get(AuthToken.class, tokenString);
   }
 }
