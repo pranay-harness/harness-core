@@ -12,8 +12,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import static software.wings.security.AccessType.DEPLOYMENT_CREATE;
-import static software.wings.security.AccessType.DEPLOYMENT_READ;
+import static software.wings.security.PermissionAttr.USER;
 
 /**
  *  Users Resource class
@@ -43,7 +42,7 @@ public class UserResource extends Base {
 
   @GET
   @Path("secure")
-  @AuthRule({DEPLOYMENT_CREATE, DEPLOYMENT_READ})
+  @AuthRule({USER})
   public String secure(@Context ContainerRequestContext crc) {
     User user = (User) crc.getProperty("USER");
     return user.getName();

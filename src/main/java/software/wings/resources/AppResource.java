@@ -22,11 +22,10 @@ import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
-import software.wings.security.AccessType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 
-import static software.wings.security.AccessType.APP_READ;
+import static software.wings.security.PermissionAttr.APP_READ;
 
 /**
  *  Application Resource class

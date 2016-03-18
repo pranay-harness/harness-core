@@ -1,8 +1,6 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
 
 /**
  * Created by anubhaw on 3/17/16.
@@ -10,31 +8,31 @@ import org.mongodb.morphia.annotations.Reference;
 
 @Embedded
 public class Permission {
+  private String resource;
   private String action;
-  private String accessType;
   private String envID;
   private String serviceID;
 
   public Permission() {}
 
-  public Permission(String action, String accessType, String envID, String serviceID) {
+  public Permission(String resource, String action, String envID, String serviceID) {
+    this.resource = resource;
     this.action = action;
-    this.accessType = accessType;
     this.envID = envID;
     this.serviceID = serviceID;
   }
 
+  public String getResource() {
+    return resource;
+  }
+  public void setResource(String resource) {
+    this.resource = resource.toUpperCase();
+  }
   public String getAction() {
     return action;
   }
   public void setAction(String action) {
     this.action = action.toUpperCase();
-  }
-  public String getAccessType() {
-    return accessType;
-  }
-  public void setAccessType(String accessType) {
-    this.accessType = accessType.toUpperCase();
   }
   public String getEnvID() {
     return envID;

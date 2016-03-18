@@ -1,6 +1,6 @@
 package software.wings.security.annotations;
 
-import software.wings.security.AccessType;
+import software.wings.security.PermissionAttr;
 
 import javax.ws.rs.NameBinding;
 import java.lang.annotation.ElementType;
@@ -16,5 +16,5 @@ import java.lang.annotation.Target;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @NameBinding
 public @interface AuthRule {
-  AccessType[] value() default {};
+  PermissionAttr[] value() default {};
 }
