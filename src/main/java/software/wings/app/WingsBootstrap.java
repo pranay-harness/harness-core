@@ -77,6 +77,7 @@ public class WingsBootstrap {
     environment.healthChecks().register("mongo", new MongoConnectionHealth(mongoClient));
 
     // service registry
+    register(Datastore.class, datastore);
     register(AppService.class, new AppServiceImpl(datastore));
     register(
         AuditService.class, new AuditServiceImpl(datastore, mongoClient, mongoConnectionFactory.getDb(), "audits"));
@@ -90,7 +91,6 @@ public class WingsBootstrap {
     register(InfraService.class, new InfraServiceImpl(datastore));
     register(PlatformService.class, new PlatformServiceImpl(datastore));
     register(UserService.class, new UserService(datastore));
-    register(Datastore.class, datastore);
     register(GenericDBCache.class, new GenericDBCache());
   }
 
