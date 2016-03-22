@@ -5,13 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
-import org.mongodb.morphia.annotations.Transient;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.*;
 
 @Entity(value = "infra-meta", noClassnameStored = true)
 public class InfraMetaData {
+  @Id private ObjectId id;
+
   @Indexed @Reference(idOnly = true) private Environment environment;
 
   private List<DataCenter> dataCenters = new ArrayList<>();

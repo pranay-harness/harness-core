@@ -1,9 +1,10 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditHeader.RequestType;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
+import software.wings.beans.User;
 
 /**
  *  HttpAuditService.
@@ -20,4 +21,6 @@ public interface AuditService {
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req);
 
   public String create(AuditHeader header, RequestType requestType, byte[] httpBody);
+
+  public void updateUser(AuditHeader header, User user);
 }

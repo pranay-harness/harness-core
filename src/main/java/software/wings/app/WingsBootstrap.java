@@ -11,9 +11,11 @@ import com.mongodb.MongoClient;
 
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
+import software.wings.dl.GenericDBCache;
 import software.wings.dl.MongoConnectionFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.health.MongoConnectionHealth;
+import software.wings.service.UserService;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
@@ -83,6 +85,7 @@ public class WingsBootstrap {
     StateMachineExecutor.init(wingsPersistence);
 
     // service registry
+    register(Datastore.class, datastore);
     register(AppService.class, new AppServiceImpl(datastore));
     register(
         AuditService.class, new AuditServiceImpl(datastore, mongoClient, mongoConnectionFactory.getDb(), "audits"));
@@ -95,6 +98,8 @@ public class WingsBootstrap {
     register(DeploymentService.class, new DeploymentServiceImpl(datastore));
     register(InfraService.class, new InfraServiceImpl(datastore));
     register(PlatformService.class, new PlatformServiceImpl(datastore));
+    register(UserService.class, new UserService(datastore));
+    register(GenericDBCache.class, new GenericDBCache());
   }
 
   public static MainConfiguration getConfig() {

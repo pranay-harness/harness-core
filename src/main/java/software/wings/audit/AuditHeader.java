@@ -1,9 +1,10 @@
-package software.wings.beans;
+package software.wings.audit;
 
 import java.util.Date;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.beans.*;
 
 /**
  *  HttpAuditHeader bean class.
@@ -15,7 +16,6 @@ import org.mongodb.morphia.annotations.Reference;
 @Entity(value = "audits", noClassnameStored = true)
 public class AuditHeader extends Base {
   public enum RequestType { REQUEST, RESPONSE }
-  ;
 
   public enum ResponseType { SUCCESS, FAILED }
 
@@ -51,12 +51,10 @@ public class AuditHeader extends Base {
 
   private String responsePayloadUUID;
 
-  @Reference protected Application application;
+  protected Application application;
 
-  //@Reference
   protected Service component;
 
-  //@Reference
   protected Environment environment;
 
   private Date requestTime;

@@ -4,10 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 
 @Entity(value = "phases", noClassnameStored = true)
 public class Phase {
+  @Id private ObjectId id;
+
   private String name;
   private String description;
   private String compName;

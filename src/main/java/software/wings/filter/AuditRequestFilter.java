@@ -19,8 +19,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditHeader.RequestType;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HTTPMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
@@ -58,10 +58,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     header.setRequestTime(new Timestamp(System.currentTimeMillis()));
 
     HttpServletRequest request = resourceContext.getResource(HttpServletRequest.class);
-    if (request.getRemoteUser() != null) {
-      // TODO
-      // header.setRemoteUser(new User(request.getRemoteUser()));
-    }
+
     header.setRemoteHostName(request.getRemoteHost());
     header.setRemoteIpAddress(request.getRemoteAddr());
     header.setRemoteHostPort(request.getRemotePort());

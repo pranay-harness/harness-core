@@ -1,11 +1,14 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import java.io.ByteArrayInputStream;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import com.mongodb.MongoClient;
@@ -13,10 +16,11 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
-import software.wings.beans.AuditHeader;
-import software.wings.beans.AuditHeader.RequestType;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
+import software.wings.beans.User;
 import software.wings.dl.MongoHelper;
 import software.wings.service.intfc.AuditService;
 
@@ -71,6 +75,14 @@ public class AuditServiceImpl implements AuditService {
     ObjectId fileId =
         gridFSBucket.uploadFromStream(requestType + "-" + headerId, new ByteArrayInputStream(httpBody), options);
     return fileId.toHexString();
+  }
+
+  @Override
+  public void updateUser(AuditHeader header, User user) {
+    Query<AuditHeader> updateQuery = datastore.createQuery(AuditHeader.class).field(ID_KEY).equal(header.getUuid());
+    UpdateOperations<AuditHeader> updateOperations =
+        datastore.createUpdateOperations(AuditHeader.class).set("remoteUser", user);
+    datastore.update(updateQuery, updateOperations);
   }
 
   @Override

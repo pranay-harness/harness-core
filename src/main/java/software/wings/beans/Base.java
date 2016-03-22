@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 
+import org.mongodb.morphia.annotations.Reference;
 import software.wings.common.UUIDGenerator;
 
 /**
@@ -18,11 +19,12 @@ import software.wings.common.UUIDGenerator;
 public class Base {
   @Id private String uuid;
 
-  private User createdBy;
+  @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 
   @Indexed private long createdAt;
 
-  private User lastUpdatedBy;
+  @Reference(idOnly = true, ignoreMissing = true) private User lastUpdatedBy;
+
   private long lastUpdatedAt;
 
   @Indexed private boolean active = true;
