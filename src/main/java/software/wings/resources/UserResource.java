@@ -3,6 +3,7 @@ package software.wings.resources;
 import io.dropwizard.auth.Auth;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Base;
+import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.UserService;
@@ -29,9 +30,8 @@ public class UserResource extends Base {
 
   @POST
   @Path("register")
-  public String register(User user) {
-    userService.register(user);
-    return "SUCCESS";
+  public RestResponse<User> register(User user) {
+    return new RestResponse<>(userService.register(user));
   }
 
   @GET

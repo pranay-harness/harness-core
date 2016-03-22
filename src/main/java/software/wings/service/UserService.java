@@ -2,8 +2,8 @@ package software.wings.service;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Key;
 import software.wings.beans.User;
-import software.wings.common.UUIDGenerator;
 
 /**
  * Created by anubhaw on 3/9/16.
@@ -15,10 +15,11 @@ public class UserService {
     this.datastore = datastore;
   }
 
-  public void register(User user) {
-    String hashed = BCrypt.hashpw("password", BCrypt.gensalt());
+  public User register(User user) {
+    String hashed = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
-    datastore.save(user);
+    Key<User> key = datastore.save(user);
+    return datastore.get(User.class, key.getId());
   }
 
   public boolean matchPassword(String password, String hash) {

@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
@@ -29,6 +30,7 @@ public class User extends Base implements Principal {
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
   private long lastLogin;
 
+  @Transient private String password;
   @Transient private String token;
 
   @Override
@@ -80,5 +82,13 @@ public class User extends Base implements Principal {
     publicUser.setName(fullUser.getName());
     publicUser.setEmail(fullUser.getEmail());
     return publicUser;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 }

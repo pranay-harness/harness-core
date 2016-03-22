@@ -4,6 +4,9 @@ public interface ErrorConstants {
   public static final String DEFAULT_ERROR_CODE = "DEFAULT_ERROR_CODE";
   public static final String INVALID_APP_NAME = "INVALID_APP_NAME";
   public static final String INVALID_ARGUMENT = "INVALID_ARGUMENT";
+  public static final String INVALID_TOKEN = "INVALID_TOKEN";
+  public static final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
+  public static final String ACCESS_DENIED = "ACCESS_DENIED";
 
   public static final String INVALID_CREDENTIAL_ERROR_CODE = "INVALID_CREDENTIAL_ERROR_CODE";
   public static final String INVALID_CREDENTIAL_ERROR_MSG = "INVALID_CREDENTIAL_ERROR_MSG";

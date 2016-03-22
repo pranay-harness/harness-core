@@ -12,6 +12,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AuditService;
 
 import javax.annotation.Priority;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -22,6 +23,7 @@ import java.util.List;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static software.wings.beans.ErrorConstants.*;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -50,8 +52,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> pathParameters = uriInfo.getPathParameters();
     for (PermissionAttr permissionAttr : permissionAttrs) {
       if (!authorizeAccessType(pathParameters, permissionAttr, user.getRoles())) {
-        throw new WingsException(String.valueOf(UNAUTHORIZED), "User not authorized to access",
-            new Throwable("User not authorized to access"));
+        throw new WingsException(String.valueOf(ACCESS_DENIED));
       }
     }
   }
@@ -136,14 +137,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuthToken extractToken(ContainerRequestContext requestContext) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(String.valueOf(UNAUTHORIZED), "Authorization header must be provided",
-          new Throwable("Authorization header must be provided"));
+      throw new WingsException(ErrorConstants.INVALID_TOKEN);
     }
     String tokenString = authorizationHeader.substring("Bearer".length()).trim();
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
     if (null != authToken && authToken.getExpireAt() < System.currentTimeMillis()) {
-      throw new WingsException(
-          String.valueOf(UNAUTHORIZED), "Authorization token expired", new Throwable("Authorization token expired"));
+      throw new WingsException(EXPIRED_TOKEN);
     }
     return authToken;
   }

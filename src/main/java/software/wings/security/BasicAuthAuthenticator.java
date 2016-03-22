@@ -8,10 +8,12 @@ import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.Datastore;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
+import software.wings.beans.ErrorConstants;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
 
 /**
  * Created by anubhaw on 3/10/16.
@@ -28,6 +30,6 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
       user.setToken(authToken.getUuid());
       return Optional.of(user);
     }
-    throw new WingsException(String.valueOf(UNAUTHORIZED));
+    throw new WingsException(INVALID_CREDENTIAL_ERROR_MSG);
   }
 }
