@@ -10,9 +10,11 @@ import org.mongodb.morphia.annotations.Transient;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 /**
  *  User bean class.
@@ -27,7 +29,7 @@ public class User extends Base implements Principal {
   private String name;
   @Indexed(unique = true) private String email;
   @JsonIgnore private String passwordHash;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   private long lastLogin;
 
   @Transient private String password;

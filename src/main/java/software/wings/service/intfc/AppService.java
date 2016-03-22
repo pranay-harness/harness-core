@@ -18,7 +18,6 @@ public interface AppService {
   public List<Application> list();
 
   public PageResponse<Application> list(PageRequest<Application> req);
-  public Application findByName(String appName);
   public Application findByUUID(String uuid);
   public Application update(Application app);
 }

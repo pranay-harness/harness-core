@@ -15,10 +15,8 @@ import org.mongodb.morphia.annotations.Indexed;
  */
 @Entity(value = "applications", noClassnameStored = true)
 public class Application extends Base {
-  @Indexed private String name;
-
+  private String name;
   private String description;
-
   private List<Service> services = new ArrayList<>();
 
   public String getName() {

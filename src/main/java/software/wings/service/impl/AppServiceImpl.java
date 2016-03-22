@@ -46,15 +46,6 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application findByName(String appName) {
-    Application app = datastore.find(Application.class, "name", appName).get();
-    if (app == null) {
-      throw new WingsException(Collections.singletonMap("appName", appName), ErrorConstants.INVALID_APP_NAME);
-    }
-    return app;
-  }
-
-  @Override
   public PageResponse<Application> list(PageRequest<Application> req) {
     return MongoHelper.queryPageRequest(datastore, Application.class, req);
   }
