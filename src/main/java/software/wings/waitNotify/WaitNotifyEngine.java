@@ -1,4 +1,4 @@
-package software.wings.workflow;
+package software.wings.waitNotify;
 
 import java.io.Serializable;
 import java.util.Arrays;

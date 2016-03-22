@@ -12,12 +12,13 @@ import com.mongodb.MongoClient;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import software.wings.dl.MongoConnectionFactory;
+import software.wings.dl.WingsMongoPersistence;
 import software.wings.health.MongoConnectionHealth;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
-import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.NodeSetExecutorServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
@@ -25,14 +26,16 @@ import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.SSHNodeSetExecutorServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.NodeSetExecutorService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
+import software.wings.sm.StateMachineExecutor;
+import software.wings.waitNotify.WaitNotifyEngine;
 
 /**
  *  This class is used initialize all the resources such as Mongo DB Connection Pool, Service registry etc.
@@ -73,6 +76,11 @@ public class WingsBootstrap {
       }
     });
     environment.healthChecks().register("mongo", new MongoConnectionHealth(mongoClient));
+
+    // initialize factories
+    WingsMongoPersistence wingsPersistence = new WingsMongoPersistence(datastore);
+    WaitNotifyEngine.init(wingsPersistence);
+    StateMachineExecutor.init(wingsPersistence);
 
     // service registry
     register(AppService.class, new AppServiceImpl(datastore));

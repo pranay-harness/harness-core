@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,6 @@ import com.codahale.metrics.annotation.Metered;
 
 import software.wings.beans.Application;
 import software.wings.beans.ErrorConstants;
-import software.wings.beans.AuditHeader;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.dl.MongoHelper;

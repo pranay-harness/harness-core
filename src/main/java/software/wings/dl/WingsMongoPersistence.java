@@ -28,10 +28,12 @@ public class WingsMongoPersistence implements WingsPersistence {
     this.datastore = datastore;
   }
 
+  @Override
   public <T extends Base> T get(Class<T> cls, String id) {
-    return (T) datastore.get(cls, id);
+    return datastore.get(cls, id);
   }
 
+  @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
     PageResponse<T> res = MongoHelper.queryPageRequest(datastore, cls, req);
     if (res == null || res.getResponse() == null || res.getResponse().size() == 0) {
@@ -40,20 +42,24 @@ public class WingsMongoPersistence implements WingsPersistence {
     return res.getResponse().get(0);
   }
 
+  @Override
   public <T extends Base> String save(T t) {
     Key<T> key = datastore.save(t);
     return (String) key.getId();
   }
 
+  @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T t) {
     Object id = save(t);
     return datastore.get(cls, id);
   }
 
+  @Override
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
     return datastore.update(ent, ops);
   }
 
+  @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
     WriteResult result = datastore.delete(cls, uuid);
     if (result == null || result.getN() == 0) {
@@ -62,6 +68,7 @@ public class WingsMongoPersistence implements WingsPersistence {
     return true;
   }
 
+  @Override
   public <T extends Base> boolean delete(T t) {
     WriteResult result = datastore.delete(t);
     if (result == null || result.getN() == 0) {
@@ -81,14 +88,26 @@ public class WingsMongoPersistence implements WingsPersistence {
     }
     return null;
   }
+  @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req) {
     return MongoHelper.queryPageRequest(datastore, cls, req);
   }
 
+  @Override
   public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
     GridFSBucket gridFSBucket =
         GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
     ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
     return fileId.toHexString();
+  }
+
+  @Override
+  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
+    return datastore.createUpdateOperations(cls);
+  }
+
+  @Override
+  public void close() {
+    datastore.getMongo().close();
   }
 }

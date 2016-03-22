@@ -5,11 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import software.wings.dl.MongoConnectionFactory;
 import software.wings.dl.WingsMongoPersistence;
+import software.wings.waitNotify.NotifyCallback;
+import software.wings.waitNotify.WaitNotifyEngine;
 
 public class TestWaitNotifyEngine {
   static Map<String, Serializable> responseMap = new HashMap<>();
@@ -44,7 +45,7 @@ public class TestWaitNotifyEngine {
 
 class TestNotifyCallback implements NotifyCallback {
   @Override
-  public void notify(Map<String, ? extends Serializable> response) {
+  public void notify(Map<String, Serializable> response) {
     System.out.println("TestNotifyCallback-notify " + response);
     TestWaitNotifyEngine.responseMap.putAll(response);
   }

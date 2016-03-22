@@ -1,4 +1,4 @@
-package software.wings.workflow;
+package software.wings.waitNotify;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;

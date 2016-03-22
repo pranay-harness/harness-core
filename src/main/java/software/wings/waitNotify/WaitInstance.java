@@ -1,4 +1,4 @@
-package software.wings.workflow;
+package software.wings.waitNotify;
 
 import java.util.Arrays;
 import java.util.List;
