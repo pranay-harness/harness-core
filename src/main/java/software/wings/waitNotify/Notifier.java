@@ -1,4 +1,4 @@
-package software.wings.workflow;
+package software.wings.waitNotify;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;

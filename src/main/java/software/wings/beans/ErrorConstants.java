@@ -26,4 +26,13 @@ public interface ErrorConstants {
   public static final String UNKNOWN_ERROR_MEG = "UNKNOWN_ERROR_MSG";
   public static final String NOT_INITIALIZED = "NOT_INITIALIZED";
   public static final String ALREADY_INITIALIZED = "ALREADY_INITIALIZED";
+
+  public static final String DUPLICATE_STATE_NAMES = "DUPLICATE_STATE_NAMES";
+  public static final String TRANSITION_NOT_LINKED = "TRANSITION_NOT_LINKED";
+  public static final String TRANSITION_TO_INCORRECT_STATE = "TRANSITION_TO_INCORRECT_STATE";
+  public static final String TRANSITION_TYPE_NULL = "TRANSITION_TYPE_NULL";
+  public static final String STATES_WITH_DUP_TRANSITIONS = "STATES_WITH_DUP_TRANSITIONS";
+  public static final String NON_FORK_STATES = "NON_FORK_STATES";
+  public static final String NON_REPEAT_STATES = "NON_REPEAT_STATES";
+  public static final String INITIAL_STATE_NOT_DEFINED = "INITIAL_STATE_NOT_DEFINED";
 }

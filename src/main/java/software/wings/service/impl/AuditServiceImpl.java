@@ -1,12 +1,13 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import java.io.ByteArrayInputStream;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -22,8 +23,6 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.dl.MongoHelper;
 import software.wings.service.intfc.AuditService;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  *  Audit Service Implementation class.

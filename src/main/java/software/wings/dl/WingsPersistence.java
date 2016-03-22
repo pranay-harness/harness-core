@@ -5,7 +5,6 @@ import java.io.InputStream;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
-import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 import software.wings.beans.Base;
@@ -30,4 +29,8 @@ public interface WingsPersistence {
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
 
   public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in);
+
+  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
+
+  public void close();
 }
