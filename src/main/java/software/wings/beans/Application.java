@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Reference;
 
 /**
  *  Application bean class.
@@ -17,7 +18,7 @@ import org.mongodb.morphia.annotations.Indexed;
 public class Application extends Base {
   private String name;
   private String description;
-  private List<Service> services = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
 
   public String getName() {
     return name;
@@ -30,6 +31,12 @@ public class Application extends Base {
   }
   public void setDescription(String description) {
     this.description = description;
+  }
+  public void addService(Service service) {
+    if (services == null) {
+      services = new ArrayList<>();
+    }
+    services.add(service);
   }
   public List<Service> getServices() {
     return services;
