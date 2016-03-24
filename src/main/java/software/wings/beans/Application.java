@@ -32,16 +32,16 @@ public class Application extends Base {
   public void setDescription(String description) {
     this.description = description;
   }
-  public void addService(Service service) {
-    if (services == null) {
-      services = new ArrayList<>();
-    }
-    services.add(service);
-  }
   public List<Service> getServices() {
     return services;
   }
   public void setServices(List<Service> services) {
     this.services = services;
+  }
+  public void addService(Service service) {
+    if (services == null) {
+      services = new ArrayList<>();
+    }
+    services.add(service);
   }
 }

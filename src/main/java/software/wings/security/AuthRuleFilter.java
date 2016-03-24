@@ -40,10 +40,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);
     User user = authToken.getUser();
+    requestContext.setProperty("USER", user);
     if (null != user) {
       updateUserInAuditRecord(user); // Set for FIXME: find better place
     }
-    requestContext.setProperty("USER", user);
     List<PermissionAttr> permissionAttrs = getAccessTypes();
     authorizeRequest(requestContext.getUriInfo(), user, permissionAttrs);
   }

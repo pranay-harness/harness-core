@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -41,5 +42,11 @@ public class Role extends Base {
   }
   public void setPermissions(List<Permission> permissions) {
     this.permissions = permissions;
+  }
+  public void addPermission(Permission permission) {
+    if (permissions == null) {
+      permissions = new ArrayList<>();
+    }
+    permissions.add(permission);
   }
 }

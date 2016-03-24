@@ -29,7 +29,7 @@ public class User extends Base implements Principal {
   private String name;
   @Indexed(unique = true) private String email;
   @JsonIgnore private String passwordHash;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
   private long lastLogin;
 
   @Transient private String password;
@@ -76,6 +76,12 @@ public class User extends Base implements Principal {
   }
   public void setRoles(List<Role> roles) {
     this.roles = roles;
+  }
+  public void addRole(Role role) {
+    if (roles == null) {
+      roles = new ArrayList<>();
+    }
+    roles.add(role);
   }
 
   public static User getPublicUser(User fullUser) {
