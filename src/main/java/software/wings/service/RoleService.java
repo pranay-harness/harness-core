@@ -1,12 +1,17 @@
 package software.wings.service;
 
-import org.bson.Document;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.*;
+import software.wings.app.WingsBootstrap;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.Role;
+import software.wings.beans.User;
 import software.wings.dl.MongoHelper;
+
+import java.util.List;
 
 /**
  * Created by anubhaw on 3/23/16.
@@ -14,10 +19,13 @@ import software.wings.dl.MongoHelper;
 
 public class RoleService {
   private Datastore datastore;
+  private UserService userService;
+
   private static Logger logger = LoggerFactory.getLogger(RoleService.class);
 
-  public RoleService(Datastore datastore) {
+  public RoleService(Datastore datastore, UserService userService) {
     this.datastore = datastore;
+    this.userService = userService;
   }
 
   public PageResponse<Role> list(PageRequest<Role> pageRequest) {
@@ -36,5 +44,13 @@ public class RoleService {
 
   public Role update(Role role) {
     return save(role);
+  }
+
+  public void delete(String roleID) {
+    datastore.delete(Role.class, roleID);
+    List<User> users = datastore.createQuery(User.class).disableValidation().field("roles").equal(roleID).asList();
+    for (User user : users) {
+      userService.revokeRole(user.getUuid(), roleID);
+    }
   }
 }

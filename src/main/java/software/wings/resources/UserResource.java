@@ -65,9 +65,9 @@ public class UserResource extends Base {
   }
 
   @PUT
-  @Path("{userID}/role")
-  public RestResponse<User> assignRole(@PathParam("userID") String userID, @BeanParam Role role) {
-    return new RestResponse<>(userService.addRole(userID, role));
+  @Path("{userID}/role/{roleID}")
+  public RestResponse<User> assignRole(@PathParam("userID") String userID, @PathParam("roleID") String roleID) {
+    return new RestResponse<>(userService.addRole(userID, roleID));
   }
 
   @DELETE

@@ -15,6 +15,7 @@ import software.wings.dl.GenericDBCache;
 import software.wings.dl.MongoConnectionFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.health.MongoConnectionHealth;
+import software.wings.service.RoleService;
 import software.wings.service.UserService;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -98,8 +99,10 @@ public class WingsBootstrap {
     register(DeploymentService.class, new DeploymentServiceImpl(datastore));
     register(InfraService.class, new InfraServiceImpl(datastore));
     register(PlatformService.class, new PlatformServiceImpl(datastore));
-    register(UserService.class, new UserService(datastore));
     register(GenericDBCache.class, new GenericDBCache());
+    UserService userService = new UserService(datastore);
+    register(UserService.class, userService);
+    register(RoleService.class, new RoleService(datastore, userService));
   }
 
   public static MainConfiguration getConfig() {

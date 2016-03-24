@@ -3,6 +3,7 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
+import software.wings.app.WingsBootstrap;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
@@ -24,11 +25,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class RoleResource {
-  private RoleService roleService;
-
-  public RoleResource(RoleService roleService) {
-    this.roleService = roleService;
-  }
+  private RoleService roleService = WingsBootstrap.lookup(RoleService.class);
 
   @GET
   public RestResponse<PageResponse<Role>> list(@BeanParam PageRequest<Role> pageRequest) {
@@ -43,6 +40,12 @@ public class RoleResource {
   @PUT
   public RestResponse<Role> update(Role role) {
     return new RestResponse<>(roleService.update(role));
+  }
+
+  @DELETE
+  @Path("{roleID}")
+  public void delete(@PathParam("{roleID}") String roleID) {
+    roleService.delete(roleID);
   }
 
   @GET

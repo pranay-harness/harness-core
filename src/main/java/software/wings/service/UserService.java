@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.*;
 import software.wings.dl.MongoHelper;
+import software.wings.exception.WingsException;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -33,12 +34,16 @@ public class UserService {
     return BCrypt.checkpw(password, hash);
   }
 
-  public User addRole(String userID, Role role) {
+  public User addRole(String userID, String roleID) {
     User user = datastore.get(User.class, userID);
-    if (user != null) {
-      user.addRole(role);
+    Role role = datastore.get(Role.class, roleID);
+    if (user != null && role != null) {
+      UpdateOperations<User> updateOp = datastore.createUpdateOperations(User.class).add("roles", role);
+      Query<User> updateQuery = datastore.createQuery(User.class).field(ID_KEY).equal(userID);
+      datastore.update(updateQuery, updateOp);
+      return datastore.get(User.class, userID);
     }
-    return user;
+    throw new WingsException("Invalid operation. Either User or Role doesn't exist");
   }
 
   public User update(User user) {
@@ -58,10 +63,11 @@ public class UserService {
   }
 
   public User revokeRole(String userID, String roleID) {
-    UpdateOperations<User> updateOp =
-        datastore.createUpdateOperations(User.class).removeAll("roles", new Document("_id", roleID));
+    Role role = new Role();
+    role.setUuid(roleID);
+    UpdateOperations<User> updateOp = datastore.createUpdateOperations(User.class).removeAll("roles", role);
     Query<User> updateQuery = datastore.createQuery(User.class).field(ID_KEY).equal(userID);
-    UpdateResults update = datastore.update(updateQuery, updateOp);
+    datastore.update(updateQuery, updateOp);
     return datastore.get(User.class, userID);
   }
 }
