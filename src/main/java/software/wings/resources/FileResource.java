@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import java.io.InputStream;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
@@ -14,7 +15,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
@@ -25,9 +25,7 @@ public class FileResource {
 
   private FileService fileService;
 
-  public FileResource() {
-    fileService = WingsBootstrap.lookup(FileService.class);
-  }
+  @Inject
   public FileResource(FileService fileService) {
     this.fileService = fileService;
   }

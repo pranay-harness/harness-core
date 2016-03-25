@@ -6,6 +6,7 @@ package software.wings.sm;
 import java.util.ArrayList;
 import java.util.List;
 
+import software.wings.app.WingsBootstrap;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.waitNotify.WaitNotifyEngine;
@@ -66,7 +67,6 @@ class Notifier implements Runnable {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
-
-    WaitNotifyEngine.getInstance().notify(uuid, "SUCCESS");
+    WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "SUCCESS");
   }
 }

@@ -1,27 +1,40 @@
 package software.wings.service.impl;
 
-import com.mongodb.MongoClient;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.GridFSFindIterable;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-import com.mongodb.client.model.Filters;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import javax.inject.Inject;
+
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Singleton;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import com.mongodb.client.model.Filters;
+
 import software.wings.beans.FileMetadata;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
-import java.io.*;
-
+@Singleton
 public class FileServiceImpl implements FileService {
+  private static final String FILE_BUCKET = "lob";
+
+  @Inject private WingsPersistence wingsPersistence;
+
   private GridFSBucket gridFSBucket;
 
-  public FileServiceImpl(MongoClient mongoClient, String db, String bucketName) {
-    this.gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase(db), bucketName);
+  public FileServiceImpl() {
+    this.gridFSBucket = wingsPersistence.createGridFSBucket(FILE_BUCKET);
   }
 
   @Override

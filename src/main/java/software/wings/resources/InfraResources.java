@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -10,7 +11,6 @@ import javax.ws.rs.Produces;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.HostInstanceMapping;
@@ -24,8 +24,9 @@ import software.wings.service.intfc.InfraService;
 public class InfraResources {
   private InfraService infraService;
 
-  public InfraResources() {
-    infraService = WingsBootstrap.lookup(InfraService.class);
+  @Inject
+  public InfraResources(InfraService infraService) {
+    this.infraService = infraService;
   }
 
   @GET

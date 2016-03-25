@@ -1,7 +1,10 @@
 package software.wings.resources;
 
+import static software.wings.security.PermissionAttr.APP_READ;
+
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -17,15 +20,12 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
 import io.dropwizard.jersey.caching.CacheControl;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
-
-import static software.wings.security.PermissionAttr.APP_READ;
 
 /**
  *  Application Resource class
@@ -41,9 +41,7 @@ public class AppResource {
 
   private AppService appService;
 
-  public AppResource() {
-    appService = WingsBootstrap.lookup(AppService.class);
-  }
+  @Inject
   public AppResource(AppService appService) {
     this.appService = appService;
   }

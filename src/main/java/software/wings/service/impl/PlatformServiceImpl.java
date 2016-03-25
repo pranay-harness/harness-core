@@ -1,30 +1,27 @@
 package software.wings.service.impl;
 
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
+import javax.inject.Inject;
+
+import com.google.inject.Singleton;
 
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.PlatformSoftware;
-import software.wings.dl.MongoHelper;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PlatformService;
 
+@Singleton
 public class PlatformServiceImpl implements PlatformService {
-  private Datastore datastore;
-
-  public PlatformServiceImpl(Datastore datastore) {
-    this.datastore = datastore;
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public PageResponse<PlatformSoftware> list(PageRequest<PlatformSoftware> req) {
-    return MongoHelper.queryPageRequest(datastore, PlatformSoftware.class, req);
+    return wingsPersistence.query(PlatformSoftware.class, req);
   }
 
   @Override
   public PlatformSoftware create(PlatformSoftware platform) {
-    Key<PlatformSoftware> key = datastore.save(platform);
-    return datastore.get(PlatformSoftware.class, key.getId());
+    return wingsPersistence.saveAndGet(PlatformSoftware.class, platform);
   }
 
   @Override

@@ -4,28 +4,40 @@ import java.io.InputStream;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.List;
 
+import javax.inject.Inject;
+
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
+import com.google.inject.Singleton;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.OP;
 
+@Singleton
 public class WingsMongoPersistence implements WingsPersistence {
   private Datastore datastore;
 
-  public WingsMongoPersistence(Datastore datastore) {
-    this.datastore = datastore;
+  @Inject
+  public WingsMongoPersistence(MainConfiguration configuration) {
+    this.datastore = configuration.getMongoConnectionFactory().getDatastore();
+  }
+
+  @Override
+  public <T extends Base> List<T> list(Class<T> cls) {
+    return datastore.find(cls).asList();
   }
 
   @Override
@@ -104,6 +116,25 @@ public class WingsMongoPersistence implements WingsPersistence {
   @Override
   public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
     return datastore.createUpdateOperations(cls);
+  }
+
+  @Override
+  public <T> Query<T> createQuery(Class<T> cls) {
+    return datastore.createQuery(cls);
+  }
+
+  @Override
+  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+    datastore.update(updateQuery, updateOperations);
+  }
+
+  @Override
+  public GridFSBucket createGridFSBucket(String bucketName) {
+    return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
+  }
+
+  public Datastore getDatastore() {
+    return datastore;
   }
 
   @Override

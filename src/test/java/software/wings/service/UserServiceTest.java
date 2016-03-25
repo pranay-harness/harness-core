@@ -1,36 +1,48 @@
 package software.wings.service;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
+import java.util.Collections;
+
 import org.junit.Test;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.audit.AuditHeader;
-import software.wings.beans.AuthToken;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.MongoConnectionFactory;
-
-import java.util.Collections;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import software.wings.dl.WingsMongoPersistence;
+import software.wings.dl.WingsPersistence;
 
 /**
  * Created by anubhaw on 3/9/16.
  */
 
 public class UserServiceTest {
-  private Datastore getDataStore() {
+  private Injector getInjector() {
     MongoConnectionFactory factory = new MongoConnectionFactory();
     factory.setDb("wings");
     factory.setHost("localhost");
-    return factory.getDatastore();
+
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(MongoConnectionFactory.class).toInstance(factory);
+        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
+      }
+    });
+    return injector;
   }
 
-  Datastore datastore = getDataStore();
-
-  UserService userService = new UserService(getDataStore());
+  Injector injector = getInjector();
+  WingsPersistence wingsPersistence = injector.getInstance(WingsPersistence.class);
+  UserService userService = injector.getInstance(UserService.class);
 
   @Test
   public void testRegister() throws Exception {
@@ -45,9 +57,10 @@ public class UserServiceTest {
   public void testAssignRoleToUser() {
     Role role = new Role();
     role.setUuid("35D7D2C04A164655AB732B963A5DD308");
-    Query<User> updateQuery = datastore.createQuery(User.class).field(ID_KEY).equal("D3BB4DEA57D043BCA73597CCDE01E637");
-    UpdateOperations<User> updateOperations = datastore.createUpdateOperations(User.class).add("roles", role);
-    datastore.update(updateQuery, updateOperations);
+    Query<User> updateQuery =
+        wingsPersistence.createQuery(User.class).field(ID_KEY).equal("D3BB4DEA57D043BCA73597CCDE01E637");
+    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
+    wingsPersistence.update(updateQuery, updateOperations);
   }
 
   @Test
@@ -63,12 +76,12 @@ public class UserServiceTest {
     Permission permission = new Permission("ALL", "ALL", "ALL", "ALL");
     Role role = new Role("ADMIN", "Administrator role. It can access resource and perform any action",
         Collections.singletonList(permission));
-    datastore.save(role);
+    wingsPersistence.save(role);
   }
 
   @Test
   public void testHelper() {
-    User user = datastore.get(User.class, "D3BB4DEA57D043BCA73597CCDE01E637");
+    User user = wingsPersistence.get(User.class, "D3BB4DEA57D043BCA73597CCDE01E637");
     System.out.println(user);
   }
 }

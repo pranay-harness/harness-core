@@ -7,9 +7,13 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
+
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorConstants;
 import software.wings.common.thread.ThreadPool;
@@ -22,26 +26,11 @@ import software.wings.waitNotify.WaitNotifyEngine;
  * @author Rishi
  *
  */
+@Singleton
 public class StateMachineExecutor {
-  private static StateMachineExecutor instance;
-  private WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
 
-  public StateMachineExecutor(WingsPersistence wingsPersistence) {
-    this.wingsPersistence = wingsPersistence;
-  }
-
-  public synchronized static void init(WingsPersistence wingsPersistence) {
-    if (instance == null) {
-      instance = new StateMachineExecutor(wingsPersistence);
-    }
-  }
-
-  public static StateMachineExecutor getInstance() {
-    if (instance == null) {
-      throw new WingsException(ErrorConstants.NOT_INITIALIZED);
-    }
-    return instance;
-  }
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void execute(StateMachine sm) {
     execute(sm, new HashMap<>());
@@ -95,7 +84,7 @@ public class StateMachineExecutor {
 
   public void execute(StateMachine sm, SMInstance smInstance) {
     NotifyCallback callback = new SMAsynchResumeCallback(smInstance.getUuid());
-    execute(sm, smInstance, WaitNotifyEngine.getInstance(), callback);
+    execute(sm, smInstance, waitNotifyEngine, callback);
   }
 
   public void execute(
@@ -165,7 +154,6 @@ public class StateMachineExecutor {
     SMInstance smInstance = wingsPersistence.get(SMInstance.class, smInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
     State currentState = sm.getState(smInstance.getStateName());
-    WaitNotifyEngine waitNotifyEngine = WaitNotifyEngine.getInstance();
     try {
       ExecutionResponse executionResponse = currentState.handleAsynchResponse(smInstance.getContext(), response);
       NotifyCallback callback = new SMAsynchResumeCallback(smInstance.getUuid());

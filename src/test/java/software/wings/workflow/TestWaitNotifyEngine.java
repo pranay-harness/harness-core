@@ -7,8 +7,14 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+
 import software.wings.dl.MongoConnectionFactory;
 import software.wings.dl.WingsMongoPersistence;
+import software.wings.dl.WingsPersistence;
 import software.wings.waitNotify.NotifyCallback;
 import software.wings.waitNotify.WaitNotifyEngine;
 
@@ -22,10 +28,15 @@ public class TestWaitNotifyEngine {
     factory.setHost("localhost");
     factory.setPort(27017);
 
-    WingsMongoPersistence wingsPersistence = new WingsMongoPersistence(factory.getDatastore());
-    WaitNotifyEngine.init(wingsPersistence);
+    Injector injector = Guice.createInjector(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(MongoConnectionFactory.class).toInstance(factory);
+        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
+      }
+    });
 
-    WaitNotifyEngine waitNotifyEngine = WaitNotifyEngine.getInstance();
+    WaitNotifyEngine waitNotifyEngine = injector.getInstance(WaitNotifyEngine.class);
     waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "345");
 
     System.out.println("responseMap:" + responseMap);

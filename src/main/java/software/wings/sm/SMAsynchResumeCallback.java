@@ -6,6 +6,7 @@ package software.wings.sm;
 import java.io.Serializable;
 import java.util.Map;
 
+import software.wings.app.WingsBootstrap;
 import software.wings.waitNotify.NotifyCallback;
 
 /**
@@ -26,6 +27,6 @@ public class SMAsynchResumeCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, Serializable> response) {
-    StateMachineExecutor.getInstance().resume(smInstanceId, response);
+    WingsBootstrap.lookup(StateMachineExecutor.class).resume(smInstanceId, response);
   }
 }

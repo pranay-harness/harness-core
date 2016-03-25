@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.GeneralSecurityException;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
@@ -24,7 +25,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -43,8 +43,9 @@ import software.wings.service.intfc.ArtifactService;
 public class ArtifactResource {
   private ArtifactService artifactService;
 
-  public ArtifactResource() {
-    artifactService = WingsBootstrap.lookup(ArtifactService.class);
+  @Inject
+  public ArtifactResource(ArtifactService artifactService) {
+    this.artifactService = artifactService;
   }
 
   @GET

@@ -6,6 +6,10 @@ package software.wings.service.impl;
 import java.io.Serializable;
 import java.util.Map;
 
+import javax.inject.Inject;
+
+import com.google.inject.Singleton;
+
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
@@ -16,14 +20,11 @@ import software.wings.sm.StateMachineExecutor;
  * @author Rishi
  *
  */
+@Singleton
 public class WorkflowServiceImpl implements WorkflowService {
-  private WingsPersistence wingsPersistence;
-  private StateMachineExecutor stateMachineExecutor;
+  @Inject private WingsPersistence wingsPersistence;
 
-  public WorkflowServiceImpl(WingsPersistence wingsPersistence) {
-    this.wingsPersistence = wingsPersistence;
-    this.stateMachineExecutor = new StateMachineExecutor(wingsPersistence);
-  }
+  @Inject private StateMachineExecutor stateMachineExecutor;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)

@@ -142,7 +142,22 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>4.0</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.reflections</groupId>
+		    <artifactId>reflections</artifactId>
+		    <version>0.9.10</version>
+		    <exclusions>
+		    	<exclusion>
+				    <groupId>org.javassist</groupId>
+				    <artifactId>javassist</artifactId>
+		    	</exclusion>
+		    </exclusions>
+		</dependency>
 		<dependency>
 			<groupId>com.offbytwo.jenkins</groupId>
 			<artifactId>jenkins-client</artifactId>

@@ -1,25 +1,22 @@
 package software.wings.service;
 
+import javax.inject.Inject;
+
 import org.mindrot.jbcrypt.BCrypt;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
+
 import software.wings.beans.User;
+import software.wings.dl.WingsPersistence;
 
 /**
  * Created by anubhaw on 3/9/16.
  */
 public class UserService {
-  private Datastore datastore;
-
-  public UserService(Datastore datastore) {
-    this.datastore = datastore;
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   public User register(User user) {
     String hashed = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
-    Key<User> key = datastore.save(user);
-    return datastore.get(User.class, key.getId());
+    return wingsPersistence.saveAndGet(User.class, user);
   }
 
   public boolean matchPassword(String password, String hash) {
