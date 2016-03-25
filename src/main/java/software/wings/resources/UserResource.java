@@ -28,7 +28,7 @@ import static software.wings.security.PermissionAttr.USER;
 @ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class UserResource extends Base {
+public class UserResource {
   private UserService userService = WingsBootstrap.lookup(UserService.class);
 
   @GET

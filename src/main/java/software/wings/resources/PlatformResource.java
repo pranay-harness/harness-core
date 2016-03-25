@@ -21,6 +21,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PlatformService;
 
 @Path("/platforms")
+@Timed
+@ExceptionMetered
+@Produces("application/json")
+@Consumes("application/json")
 public class PlatformResource {
   private PlatformService platformService;
 
@@ -30,23 +34,17 @@ public class PlatformResource {
 
   @GET
   @Path("{applicationId}")
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<PageResponse<PlatformSoftware>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<PlatformSoftware> pageRequest) {
     pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
-    return new RestResponse<PageResponse<PlatformSoftware>>(platformService.list(pageRequest));
+    return new RestResponse<>(platformService.list(pageRequest));
   }
 
   @POST
   @Path("{applicationId}")
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<PlatformSoftware> save(
       @PathParam("applicationId") String applicationId, PlatformSoftware platform) {
     platform.setApplication(WingsBootstrap.lookup(AppService.class).findByUUID(applicationId));
-    return new RestResponse<PlatformSoftware>(platformService.create(platform));
+    return new RestResponse<>(platformService.create(platform));
   }
 }

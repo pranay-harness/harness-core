@@ -59,6 +59,6 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public Application update(Application app) {
-    return null;
+    return save(app);
   }
 }
