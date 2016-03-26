@@ -10,9 +10,11 @@ import org.mongodb.morphia.annotations.Transient;
 
 import javax.security.auth.Subject;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 /**
  *  User bean class.
@@ -74,6 +76,12 @@ public class User extends Base implements Principal {
   }
   public void setRoles(List<Role> roles) {
     this.roles = roles;
+  }
+  public void addRole(Role role) {
+    if (roles == null) {
+      roles = new ArrayList<>();
+    }
+    roles.add(role);
   }
 
   public static User getPublicUser(User fullUser) {

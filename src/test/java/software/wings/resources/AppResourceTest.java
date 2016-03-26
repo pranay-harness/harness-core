@@ -2,10 +2,8 @@ package software.wings.resources;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import software.wings.beans.Application;
@@ -26,11 +24,6 @@ public class AppResourceTest {
     Application app = new Application();
     app.setName(testName);
     return app;
-  }
-
-  @Before
-  public void setup() {
-    when(appService.findByName(testName)).thenReturn(testApp);
   }
 
   @After

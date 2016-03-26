@@ -1,22 +1,26 @@
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttr.USER;
-
 import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
 
 import io.dropwizard.auth.Auth;
 import software.wings.beans.Base;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.UserService;
 
 /**
@@ -26,7 +30,10 @@ import software.wings.service.UserService;
  * @author Rishi
  *
  */
+
 @Path("/users")
+@Timed
+@ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource extends Base {
@@ -37,23 +44,48 @@ public class UserResource extends Base {
     this.userService = userService;
   }
 
+  @GET
+  public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
+    return new RestResponse<>(userService.list(pageRequest));
+  }
+
   @POST
-  @Path("register")
   public RestResponse<User> register(User user) {
     return new RestResponse<>(userService.register(user));
   }
 
-  @GET
-  @Path("login")
-  public User login(@Auth User user) {
-    return user; // TODO: mask fields
+  @PUT
+  public RestResponse<User> update(User user) {
+    return new RestResponse<>(userService.update(user));
+  }
+
+  @DELETE
+  @Path("{userID}")
+  public void delete(@PathParam("userID") String userID) {
+    userService.delete(userID);
   }
 
   @GET
-  @Path("secure")
-  @AuthRule({USER})
-  public String secure(@Context ContainerRequestContext crc) {
-    User user = (User) crc.getProperty("USER");
-    return user.getName();
+  @Path("{userID}")
+  public RestResponse<User> get(@PathParam("userID") String userID) {
+    return new RestResponse<>(userService.get(userID));
+  }
+
+  @GET
+  @Path("login")
+  public RestResponse<User> login(@Auth User user) {
+    return new RestResponse<>(user); // TODO: mask fields
+  }
+
+  @PUT
+  @Path("{userID}/role/{roleID}")
+  public RestResponse<User> assignRole(@PathParam("userID") String userID, @PathParam("roleID") String roleID) {
+    return new RestResponse<>(userService.addRole(userID, roleID));
+  }
+
+  @DELETE
+  @Path("{userID}/role/{roleID}")
+  public RestResponse<User> revokeRole(@PathParam("userID") String userID, @PathParam("roleID") String roleID) {
+    return new RestResponse<>(userService.revokeRole(userID, roleID));
   }
 }

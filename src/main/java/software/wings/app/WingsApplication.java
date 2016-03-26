@@ -65,7 +65,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     Injector injector = Guice.createInjector(new WingsModule(configuration));
 
     WingsBootstrap.initialize(injector);
-    //		environment.jersey().register(injector.getInstance(AppResource.class));
     addResources(environment, injector);
 
     environment.jersey().register(ResponseMessageResolver.class);

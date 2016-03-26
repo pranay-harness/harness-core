@@ -1,9 +1,5 @@
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttr.APP_READ;
-
-import java.util.concurrent.TimeUnit;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -19,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
-import io.dropwizard.jersey.caching.CacheControl;
 import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -34,8 +29,12 @@ import software.wings.service.intfc.AppService;
  * @author Rishi
  *
  */
+
 @Path("/apps")
 @AuthRule
+@Produces("application/json")
+@Timed
+@ExceptionMetered
 public class AppResource {
   private static final Logger logger = LoggerFactory.getLogger(AppResource.class);
 
@@ -47,35 +46,23 @@ public class AppResource {
   }
 
   @GET
-  @Timed
-  @ExceptionMetered
-  @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
-  @Produces("application/json")
-  @AuthRule({APP_READ})
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest) {
-    return new RestResponse<PageResponse<Application>>(appService.list(pageRequest));
-  }
-
-  @GET
-  @Path("{name}")
-  @Produces("application/json")
-  public RestResponse<Application> get(@PathParam("name") String name) {
-    return new RestResponse<Application>(appService.findByName(name));
+    return new RestResponse<>(appService.list(pageRequest));
   }
 
   @POST
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Application> save(Application app) {
-    return new RestResponse<Application>(appService.save(app));
+    return new RestResponse<>(appService.save(app));
   }
 
   @PUT
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Application> update(Application app) {
-    return new RestResponse<Application>(appService.update(app));
+    return new RestResponse<>(appService.update(app));
+  }
+
+  @GET
+  @Path("{appID}")
+  public RestResponse<Application> get(@PathParam("appID") String appID) {
+    return new RestResponse<>(appService.findByUUID(appID));
   }
 }
