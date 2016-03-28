@@ -1,32 +1,28 @@
 package software.wings.service;
 
-import com.mongodb.Mongo;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
+import com.google.inject.Inject;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.dl.MongoHelper;
+import software.wings.dl.WingsPersistence;
 
 /**
  * Created by anubhaw on 3/25/16.
  */
 
 public class ServiceResourceService {
-  private Datastore datastore; // TODO: AutoInject
+  @Inject private WingsPersistence wingsPersistence;
 
   public PageResponse<Service> list(PageRequest<Service> pageRequest) {
-    return MongoHelper.queryPageRequest(datastore, Service.class, pageRequest);
+    return wingsPersistence.query(Service.class, pageRequest);
   }
 
   public Service save(Service service) {
-    Key<Service> key = datastore.save(service);
-    return datastore.get(Service.class, key);
+    return wingsPersistence.saveAndGet(Service.class, service);
   }
 
   public Service findByUUID(String uuid) {
-    return datastore.get(Service.class, uuid);
+    return wingsPersistence.get(Service.class, uuid);
   }
 
   public Service update(Service service) {
