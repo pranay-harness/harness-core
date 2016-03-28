@@ -1,19 +1,18 @@
 package software.wings.service;
 
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-
-import javax.inject.Inject;
-
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+
+import javax.inject.Inject;
+
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  * Created by anubhaw on 3/9/16.
