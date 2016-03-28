@@ -8,7 +8,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import software.wings.dl.MongoConnectionFactory;
+import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 
@@ -17,7 +17,7 @@ public class TestPersistentLocker {
 
   @BeforeClass
   public static void setup() {
-    MongoConnectionFactory factory = new MongoConnectionFactory();
+    MongoConfig factory = new MongoConfig();
     factory.setDb("test");
     factory.setHost("localhost");
     factory.setPort(27017);
@@ -25,7 +25,7 @@ public class TestPersistentLocker {
     Injector injector = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(MongoConnectionFactory.class).toInstance(factory);
+        bind(MongoConfig.class).toInstance(factory);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
       }
     });

@@ -4,18 +4,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 
 import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
 
+import io.dropwizard.testing.junit.ResourceTestRule;
 import software.wings.beans.Application;
 import software.wings.service.intfc.AppService;
 
 public class AppResourceTest {
   private static final AppService appService = mock(AppService.class);
 
-  //	@ClassRule
-  //    public static final ResourceTestRule resources = ResourceTestRule.builder()
-  //            .addResource(new AppResource(appService))
-  //            .build();
+  @ClassRule
+  public static final ResourceTestRule resources =
+      ResourceTestRule.builder().addResource(new AppResource(appService)).build();
 
   private final String testName = "testName-" + System.currentTimeMillis();
   private final Application testApp = getTestApplication();

@@ -11,7 +11,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import software.wings.dl.MongoConnectionFactory;
+import software.wings.app.WingsBootstrap;
+import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
@@ -38,7 +39,7 @@ public class TestWorkflowServiceImpl {
 
   @BeforeClass
   public static void setup() {
-    MongoConnectionFactory factory = new MongoConnectionFactory();
+    MongoConfig factory = new MongoConfig();
     factory.setDb("test");
     factory.setHost("localhost");
     factory.setPort(27017);
@@ -46,11 +47,12 @@ public class TestWorkflowServiceImpl {
     injector = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(MongoConnectionFactory.class).toInstance(factory);
+        bind(MongoConfig.class).toInstance(factory);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
         bind(WorkflowService.class).to(WorkflowServiceImpl.class);
       }
     });
+    WingsBootstrap.initialize(injector);
     wingsPersistence = injector.getInstance(WingsPersistence.class);
   }
 
@@ -69,15 +71,15 @@ public class TestWorkflowServiceImpl {
   private StateMachine createSynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
     State stateA = new StateA();
-    sm.getStates().add(stateA);
+    sm.addState(stateA);
     StateB stateB = new StateB();
-    sm.getStates().add(stateB);
+    sm.addState(stateB);
     StateC stateC = new StateC();
-    sm.getStates().add(stateC);
+    sm.addState(stateC);
     sm.setInitialStateName(StateA.class.getName());
 
-    sm.getTransitions().add(new Transition(stateA, TransitionType.SUCCESS, stateB));
-    sm.getTransitions().add(new Transition(stateB, TransitionType.SUCCESS, stateC));
+    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateB));
+    sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateC));
 
     sm = svc.create(sm);
     assertThat(sm).isNotNull();
@@ -92,23 +94,23 @@ public class TestWorkflowServiceImpl {
   private StateMachine createAsynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
     State stateA = new StateA();
-    sm.getStates().add(stateA);
+    sm.addState(stateA);
     StateB stateB = new StateB();
-    sm.getStates().add(stateB);
+    sm.addState(stateB);
     StateC stateC = new StateC();
-    sm.getStates().add(stateC);
+    sm.addState(stateC);
 
     State stateAB = new StateAsynch("StateAB", 10000);
-    sm.getStates().add(stateAB);
+    sm.addState(stateAB);
     State stateBC = new StateAsynch("StateBC", 5000);
-    sm.getStates().add(stateBC);
+    sm.addState(stateBC);
 
     sm.setInitialStateName(StateA.class.getName());
 
-    sm.getTransitions().add(new Transition(stateA, TransitionType.SUCCESS, stateAB));
-    sm.getTransitions().add(new Transition(stateAB, TransitionType.SUCCESS, stateB));
-    sm.getTransitions().add(new Transition(stateB, TransitionType.SUCCESS, stateBC));
-    sm.getTransitions().add(new Transition(stateBC, TransitionType.SUCCESS, stateC));
+    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateAB));
+    sm.addTransition(new Transition(stateAB, TransitionType.SUCCESS, stateB));
+    sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateBC));
+    sm.addTransition(new Transition(stateBC, TransitionType.SUCCESS, stateC));
 
     sm = svc.create(sm);
     assertThat(sm).isNotNull();
@@ -146,7 +148,7 @@ public class TestWorkflowServiceImpl {
     System.out.println("Going to trigger state machine");
     svc.trigger(smId);
 
-    Thread.sleep(300000);
+    Thread.sleep(30000);
   }
 
   @AfterClass
