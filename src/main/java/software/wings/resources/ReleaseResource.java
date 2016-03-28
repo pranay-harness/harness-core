@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -30,8 +31,9 @@ import software.wings.service.intfc.ReleaseService;
 public class ReleaseResource {
   private ReleaseService releaseService;
 
-  public ReleaseResource() {
-    releaseService = WingsBootstrap.lookup(ReleaseService.class);
+  @Inject
+  public ReleaseResource(ReleaseService releaseService) {
+    this.releaseService = releaseService;
   }
 
   @GET

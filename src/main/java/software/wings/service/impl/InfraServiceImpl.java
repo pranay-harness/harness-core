@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
+import javax.inject.Inject;
 
-import software.wings.beans.Application;
+import com.google.inject.Singleton;
+
 import software.wings.beans.DataCenter;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -12,19 +12,16 @@ import software.wings.beans.OperationalZone;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Phase;
-import software.wings.dl.MongoHelper;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfraService;
 
+@Singleton
 public class InfraServiceImpl implements InfraService {
-  private Datastore datastore;
-
-  public InfraServiceImpl(Datastore datastore) {
-    this.datastore = datastore;
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public PageResponse<Environment> listEnvironments(PageRequest<Environment> req) {
-    return MongoHelper.queryPageRequest(datastore, Environment.class, req);
+    return wingsPersistence.query(Environment.class, req);
   }
 
   @Override
@@ -35,8 +32,7 @@ public class InfraServiceImpl implements InfraService {
   @Override
   public Environment createEnvironment(String applicationId, Environment environment) {
     environment.setApplicationId(applicationId);
-    Key<Environment> key = datastore.save(environment);
-    return datastore.get(Environment.class, key.getId());
+    return wingsPersistence.saveAndGet(Environment.class, environment);
   }
 
   @Override
@@ -93,7 +89,7 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public PageResponse<Host> listHosts(PageRequest<Host> req) {
-    return MongoHelper.queryPageRequest(datastore, Host.class, req);
+    return wingsPersistence.query(Host.class, req);
   }
 
   @Override
@@ -105,19 +101,17 @@ public class InfraServiceImpl implements InfraService {
   @Override
   public Host createHost(String applicationId, Host host) {
     host.setApplicationId(applicationId);
-    Key<Host> key = datastore.save(host);
-    return datastore.get(Host.class, key.getId());
+    return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public HostInstanceMapping createHostInstanceMapping(String applicationId, HostInstanceMapping hostInstanceMapping) {
     hostInstanceMapping.setApplicationId(applicationId);
-    Key<HostInstanceMapping> key = datastore.save(hostInstanceMapping);
-    return datastore.get(HostInstanceMapping.class, key.getId());
+    return wingsPersistence.saveAndGet(HostInstanceMapping.class, hostInstanceMapping);
   }
 
   @Override
   public PageResponse<HostInstanceMapping> listHostInstanceMapping(PageRequest<HostInstanceMapping> pageRequest) {
-    return MongoHelper.queryPageRequest(datastore, HostInstanceMapping.class, pageRequest);
+    return wingsPersistence.query(HostInstanceMapping.class, pageRequest);
   }
 }

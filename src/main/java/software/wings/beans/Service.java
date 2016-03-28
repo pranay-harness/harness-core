@@ -20,7 +20,7 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
-  q @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
+  @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
 
   public String getName() {
     return name;

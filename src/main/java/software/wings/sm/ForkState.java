@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import software.wings.app.WingsBootstrap;
+
 /**
  * @author Rishi
  *
@@ -29,8 +31,8 @@ public class ForkState extends State {
     List<String> correlationIds = new ArrayList<>();
     for (String state : forkStateNames) {
       String notifyId = smInstance.getUuid() + "-forkTo-" + state;
-      StateMachineExecutor.getInstance().execute(
-          smInstance.getStateMachineId(), state, context, smInstance.getUuid(), notifyId);
+      WingsBootstrap.lookup(StateMachineExecutor.class)
+          .execute(smInstance.getStateMachineId(), state, context, smInstance.getUuid(), notifyId);
       correlationIds.add(notifyId);
     }
 

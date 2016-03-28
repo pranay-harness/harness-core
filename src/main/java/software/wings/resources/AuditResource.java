@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -11,7 +12,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
 import io.dropwizard.jersey.caching.CacheControl;
-import software.wings.app.WingsBootstrap;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -22,10 +22,12 @@ import software.wings.service.intfc.AuditService;
 public class AuditResource {
   private AuditService httpAuditService;
 
-  public AuditResource() {
-    httpAuditService = WingsBootstrap.lookup(AuditService.class);
+  @Inject
+  public AuditService getHttpAuditService() {
+    return httpAuditService;
   }
-  public AuditResource(AuditService httpAuditService) {
+
+  public void setHttpAuditService(AuditService httpAuditService) {
     this.httpAuditService = httpAuditService;
   }
 

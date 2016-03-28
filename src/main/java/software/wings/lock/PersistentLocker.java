@@ -3,14 +3,16 @@ package software.wings.lock;
 import java.net.InetAddress;
 import java.util.Date;
 
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import software.wings.beans.ErrorConstants;
+import com.google.inject.Singleton;
+
 import software.wings.beans.PageRequest;
 import software.wings.beans.SearchFilter;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 
 /**
  *  Persistent Locker implementation using Mongo DB.
@@ -19,26 +21,9 @@ import software.wings.exception.WingsException;
  * @author Rishi
  *
  */
+@Singleton
 public class PersistentLocker implements Locker {
-  private static PersistentLocker instance;
-  private WingsPersistence wingsPersistence;
-
-  public PersistentLocker(WingsPersistence wingsPersistence) {
-    this.wingsPersistence = wingsPersistence;
-  }
-
-  public synchronized static void init(WingsPersistence wingsPersistence) {
-    if (instance == null) {
-      instance = new PersistentLocker(wingsPersistence);
-    }
-  }
-
-  public static PersistentLocker getInstance() {
-    if (instance == null) {
-      throw new WingsException(ErrorConstants.NOT_INITIALIZED);
-    }
-    return instance;
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public boolean acquireLock(Class entityClass, String entityId) {

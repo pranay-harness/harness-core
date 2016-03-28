@@ -1,36 +1,39 @@
 package software.wings.service.impl;
 
-import org.mongodb.morphia.Datastore;
+import static software.wings.common.UUIDGenerator.getUUID;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutorType.PASSWORD;
+
+import javax.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.*;
+
+import com.google.inject.Singleton;
+
+import software.wings.beans.Deployment;
+import software.wings.beans.Execution;
+import software.wings.beans.Host;
+import software.wings.beans.HostInstanceMapping;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.core.ssh.executors.SSHExecutor;
 import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SSHExecutorFactory;
 import software.wings.core.ssh.executors.SSHSessionConfig;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static software.wings.common.UUIDGenerator.getUUID;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutorType.PASSWORD;
-
+@Singleton
 public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {
-  private AtomicInteger maxSSHConnection;
-  private Datastore datastore;
   private Logger LOGGER = LoggerFactory.getLogger(getClass());
 
-  public SSHNodeSetExecutorServiceImpl(Datastore datastore, int maxSSHConnection) {
-    this.datastore = datastore;
-    this.maxSSHConnection = new AtomicInteger(maxSSHConnection);
-  }
+  @Inject private WingsPersistence wingsPersistence;
+
   @Override
   public void execute(Execution execution) {
     Deployment deployment = (Deployment) execution;
     for (String hostInstanceMapping : deployment.getHostInstanceMappings()) {
-      Host host = datastore.get(HostInstanceMapping.class, hostInstanceMapping).getHost();
+      Host host = wingsPersistence.get(HostInstanceMapping.class, hostInstanceMapping).getHost();
       ExecutionResult result = deploy(deployment, getSshSessionConfig(deployment, host));
       LOGGER.info(String.format("Deployment [%s] on Host [id: %s, ip:%s] finished with status [%S]",
           deployment.getUuid(), host.getUuid(), host.getIpAddress(), result));

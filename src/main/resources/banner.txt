@@ -5,7 +5,7 @@
  w     w      w   1   n  n  n     n   gg    gg   ss                   sss       o    o     f   f  -t-       w            w     a     a        r r    e   e
   w    ww    w    1        n      n   gg    gg    sssss                  sss   o      o   ---      t         w    ww    w     a      a        r      eeee
    w  w  w  w     1        n      n   gg    gg         ss                 ss    o    o     f       t    t     w  w  w  w       a    a  g  a   r      e    
-    ww    ww      1        n      n     gggggg     ssssss         ssssssss       oooo      f        tttt       ww    ww          a      aa    r       eeee 
+    ww    ww      1        n      n     gggggg    ssssss          ssssssss       oooo      f        tttt       ww    ww          a      aa    r       eeee 
 ____________________________________________gg_____________________________________________________________________________________________________________
                                       ggggg gg
                                      g     gg

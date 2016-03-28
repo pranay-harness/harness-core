@@ -15,6 +15,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.OP;
 import software.wings.common.thread.ThreadPool;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.PersistentLocker;
 import software.wings.utils.CollectionUtils;
 
 /**
@@ -26,9 +27,11 @@ import software.wings.utils.CollectionUtils;
 public class Notifier implements Runnable {
   private WingsPersistence wingsPersistence;
   private String correlationId;
+  private PersistentLocker persistentLocker;
 
-  public Notifier(WingsPersistence wingsPersistence, String correlationId) {
+  public Notifier(WingsPersistence wingsPersistence, PersistentLocker persistentLocker, String correlationId) {
     this.wingsPersistence = wingsPersistence;
+    this.persistentLocker = persistentLocker;
     this.correlationId = correlationId;
   }
 
@@ -73,7 +76,8 @@ public class Notifier implements Runnable {
         waitInstanceIds.add(waitQueue.getWaitInstanceId());
       }
       for (String waitInstanceId : waitInstanceIds) {
-        ThreadPool.execute(new NotifierForWaitInstance(wingsPersistence, waitInstanceId, correlationIds));
+        ThreadPool.execute(
+            new NotifierForWaitInstance(wingsPersistence, persistentLocker, waitInstanceId, correlationIds));
       }
     } catch (IllegalAccessException e) {
       logger.error(e.getMessage(), e);

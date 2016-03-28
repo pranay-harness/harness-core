@@ -1,36 +1,32 @@
 package software.wings.service.impl;
 
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
+import javax.inject.Inject;
 
-import software.wings.beans.Application;
+import com.google.inject.Singleton;
+
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
-import software.wings.dl.MongoHelper;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ReleaseService;
 
+@Singleton
 public class ReleaseServiceImpl implements ReleaseService {
-  private Datastore datastore;
-
-  public ReleaseServiceImpl(Datastore datastore) {
-    this.datastore = datastore;
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public Release create(Release release) {
-    Key<Release> key = datastore.save(release);
-    return datastore.get(Release.class, key.getId());
+    return wingsPersistence.saveAndGet(Release.class, release);
   }
 
   @Override
   public Release update(Release release) {
-    Key<Release> key = datastore.save(release);
-    return datastore.get(Release.class, key.getId());
+    String key = wingsPersistence.save(release);
+    return wingsPersistence.get(Release.class, key);
   }
 
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
-    return MongoHelper.queryPageRequest(datastore, Release.class, req);
+    return wingsPersistence.query(Release.class, req);
   }
 }

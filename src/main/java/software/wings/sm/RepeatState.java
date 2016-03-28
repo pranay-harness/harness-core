@@ -11,6 +11,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import software.wings.app.WingsBootstrap;
+
 /**
  * @author Rishi
  *
@@ -66,8 +68,9 @@ public class RepeatState extends State {
       for (RepeatElement repeatElement : repeatElements) {
         context.getRepeatElementMap().put(repeatElementType, repeatElement);
         String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-        StateMachineExecutor.getInstance().execute(
-            smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+        WingsBootstrap.lookup(StateMachineExecutor.class)
+            .execute(
+                smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
         correlationIds.add(notifyId);
       }
     } else {
@@ -76,8 +79,8 @@ public class RepeatState extends State {
       RepeatElement repeatElement = repeatElements.get(repeatElementIndex);
       context.getRepeatElementMap().put(repeatElementType, repeatElement);
       String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-      StateMachineExecutor.getInstance().execute(
-          smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+      WingsBootstrap.lookup(StateMachineExecutor.class)
+          .execute(smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
       correlationIds.add(notifyId);
     }
 
@@ -111,8 +114,8 @@ public class RepeatState extends State {
       RepeatElement repeatElement = repeatElements.get(repeatElementIndex);
       context.getRepeatElementMap().put(repeatElementType, repeatElement);
       String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-      StateMachineExecutor.getInstance().execute(
-          smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+      WingsBootstrap.lookup(StateMachineExecutor.class)
+          .execute(smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(notifyId);
 
