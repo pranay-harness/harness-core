@@ -18,7 +18,7 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
-import software.wings.dl.MongoConnectionFactory;
+import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 
@@ -28,14 +28,14 @@ import software.wings.dl.WingsPersistence;
 
 public class UserServiceTest {
   private Injector getInjector() {
-    MongoConnectionFactory factory = new MongoConnectionFactory();
+    MongoConfig factory = new MongoConfig();
     factory.setDb("wings");
     factory.setHost("localhost");
 
     Injector injector = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(MongoConnectionFactory.class).toInstance(factory);
+        bind(MongoConfig.class).toInstance(factory);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
       }
     });

@@ -28,9 +28,9 @@ public class StateMachine extends Base {
   @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
   private String initialStateName;
 
-  @Serialized private List<State> states = new ArrayList<>();
+  @Serialized private List<State> states;
 
-  @Serialized private List<Transition> transitions = new ArrayList<>();
+  @Serialized private List<Transition> transitions;
 
   @Transient private transient Map<String, State> cachedStatesMap = null;
 
@@ -45,11 +45,25 @@ public class StateMachine extends Base {
   public List<State> getStates() {
     return states;
   }
+  public State addState(State state) {
+    if (states == null) {
+      states = new ArrayList<>();
+    }
+    states.add(state);
+    return state;
+  }
   public void setStates(List<State> states) {
     this.states = states;
   }
   public List<Transition> getTransitions() {
     return transitions;
+  }
+  public Transition addTransition(Transition transition) {
+    if (transitions == null) {
+      transitions = new ArrayList<>();
+    }
+    transitions.add(transition);
+    return transition;
   }
   public void setTransitions(List<Transition> transitions) {
     this.transitions = transitions;
@@ -118,65 +132,67 @@ public class StateMachine extends Base {
     Map<String, Map<TransitionType, List<State>>> flowMap = new HashMap<>();
 
     Map<String, List<String>> forkStateNamesMap = new HashMap<>();
-    for (Transition transition : transitions) {
-      if (transition.getTransitionType() == null) {
-        throw new WingsException(ErrorConstants.TRANSITION_TYPE_NULL);
-      }
-      State fromState = transition.getFromState();
-      State toState = transition.getToState();
-      if (fromState == null || toState == null) {
-        throw new WingsException(ErrorConstants.TRANSITION_NOT_LINKED);
-      }
-      boolean invalidState = false;
-      if (statesMap.get(fromState.getName()) == null) {
-        invalidStateNames.add(fromState.getName());
-        invalidState = true;
-      }
-      if (statesMap.get(toState.getName()) == null) {
-        invalidStateNames.add(toState.getName());
-        invalidState = true;
-      }
-      if (!invalidState) {
-        if (transition.getTransitionType() == TransitionType.FORK && fromState.getStateType() != StateType.FORK) {
-          nonForkStates.add(fromState.getName());
-          continue;
+    if (transitions != null) {
+      for (Transition transition : transitions) {
+        if (transition.getTransitionType() == null) {
+          throw new WingsException(ErrorConstants.TRANSITION_TYPE_NULL);
         }
-
-        if (transition.getTransitionType() == TransitionType.REPEAT && fromState.getStateType() != StateType.REPEAT) {
-          nonRepeatStates.add(fromState.getName());
-          continue;
+        State fromState = transition.getFromState();
+        State toState = transition.getToState();
+        if (fromState == null || toState == null) {
+          throw new WingsException(ErrorConstants.TRANSITION_NOT_LINKED);
         }
+        boolean invalidState = false;
+        if (statesMap.get(fromState.getName()) == null) {
+          invalidStateNames.add(fromState.getName());
+          invalidState = true;
+        }
+        if (statesMap.get(toState.getName()) == null) {
+          invalidStateNames.add(toState.getName());
+          invalidState = true;
+        }
+        if (!invalidState) {
+          if (transition.getTransitionType() == TransitionType.FORK && fromState.getStateType() != StateType.FORK) {
+            nonForkStates.add(fromState.getName());
+            continue;
+          }
 
-        Map<TransitionType, List<State>> transitionMap = flowMap.get(fromState.getName());
-        if (transitionMap == null) {
-          transitionMap = new HashMap<>();
-          flowMap.put(fromState.getName(), transitionMap);
-          List<State> toStates = new ArrayList<>();
-          toStates.add(toState);
-          transitionMap.put(transition.getTransitionType(), toStates);
-        } else {
-          List<State> toStates = transitionMap.get(transition.getTransitionType());
-          if (toStates == null) {
-            toStates = new ArrayList<>();
+          if (transition.getTransitionType() == TransitionType.REPEAT && fromState.getStateType() != StateType.REPEAT) {
+            nonRepeatStates.add(fromState.getName());
+            continue;
+          }
+
+          Map<TransitionType, List<State>> transitionMap = flowMap.get(fromState.getName());
+          if (transitionMap == null) {
+            transitionMap = new HashMap<>();
+            flowMap.put(fromState.getName(), transitionMap);
+            List<State> toStates = new ArrayList<>();
             toStates.add(toState);
             transitionMap.put(transition.getTransitionType(), toStates);
           } else {
-            if (transition.getTransitionType() != TransitionType.FORK
-                && transition.getTransitionType() != TransitionType.CONDITIONAL) {
-              statesWithDupTransitions.add(fromState.getName());
-            } else {
+            List<State> toStates = transitionMap.get(transition.getTransitionType());
+            if (toStates == null) {
+              toStates = new ArrayList<>();
               toStates.add(toState);
+              transitionMap.put(transition.getTransitionType(), toStates);
+            } else {
+              if (transition.getTransitionType() != TransitionType.FORK
+                  && transition.getTransitionType() != TransitionType.CONDITIONAL) {
+                statesWithDupTransitions.add(fromState.getName());
+              } else {
+                toStates.add(toState);
+              }
             }
           }
-        }
 
-        if (transition.getTransitionType() == TransitionType.FORK) {
-          List<String> forkStateNames = forkStateNamesMap.get(fromState.getName());
-          if (forkStateNames == null) {
-            forkStateNames = new ArrayList<>();
-            forkStateNamesMap.put(fromState.getName(), forkStateNames);
+          if (transition.getTransitionType() == TransitionType.FORK) {
+            List<String> forkStateNames = forkStateNamesMap.get(fromState.getName());
+            if (forkStateNames == null) {
+              forkStateNames = new ArrayList<>();
+              forkStateNamesMap.put(fromState.getName(), forkStateNames);
+            }
+            forkStateNames.add(toState.getName());
           }
-          forkStateNames.add(toState.getName());
         }
       }
     }

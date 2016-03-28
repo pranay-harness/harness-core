@@ -20,11 +20,11 @@ public class TestStateMachine {
   public void testValidate() {
     StateMachine sm = new StateMachine();
     State state = new StateA();
-    sm.getStates().add(state);
+    sm.addState(state);
     state = new StateB();
-    sm.getStates().add(state);
+    sm.addState(state);
     state = new StateC();
-    sm.getStates().add(state);
+    sm.addState(state);
     sm.setInitialStateName(StateA.class.getName());
     assertThat(true).as("Validate result").isEqualTo(sm.validate());
   }
@@ -34,14 +34,14 @@ public class TestStateMachine {
     try {
       StateMachine sm = new StateMachine();
       State state = new StateA();
-      sm.getStates().add(state);
+      sm.addState(state);
       state = new StateB();
-      sm.getStates().add(state);
+      sm.addState(state);
       state = new StateC();
-      sm.getStates().add(state);
+      sm.addState(state);
       sm.setInitialStateName(StateA.class.getName());
       state = new StateB();
-      sm.getStates().add(state);
+      sm.addState(state);
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {

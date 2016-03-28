@@ -3,7 +3,7 @@ package software.wings.app;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.dropwizard.Configuration;
-import software.wings.dl.MongoConnectionFactory;
+import software.wings.dl.MongoConfig;
 
 /**
  *  Used to load all the application configuration
@@ -12,15 +12,15 @@ import software.wings.dl.MongoConnectionFactory;
  *
  */
 public class MainConfiguration extends Configuration {
-  @JsonProperty("mongo") private MongoConnectionFactory mongoConnectionFactory = new MongoConnectionFactory();
+  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = new MongoConfig();
 
   @JsonProperty private PortalConfig portal;
 
-  public MongoConnectionFactory getMongoConnectionFactory() {
+  public MongoConfig getMongoConnectionFactory() {
     return mongoConnectionFactory;
   }
 
-  public void setMongoConnectionFactory(MongoConnectionFactory mongoConnectionFactory) {
+  public void setMongoConnectionFactory(MongoConfig mongoConnectionFactory) {
     this.mongoConnectionFactory = mongoConnectionFactory;
   }
 

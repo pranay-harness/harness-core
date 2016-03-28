@@ -25,7 +25,7 @@ public class NotifierForWaitInstance implements Runnable {
   private WingsPersistence wingsPersistence;
   private PersistentLocker persistentLocker;
 
-  public NotifierForWaitInstance(WingsPersistence wingsPersistence, PersistentLocker persistentLocker2,
+  public NotifierForWaitInstance(WingsPersistence wingsPersistence, PersistentLocker persistentLocker,
       String waitInstanceId, List<String> correlationIds) {
     this.wingsPersistence = wingsPersistence;
     this.waitInstanceId = waitInstanceId;
