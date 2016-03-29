@@ -12,7 +12,7 @@ import software.wings.dl.MongoConfig;
  *
  */
 public class MainConfiguration extends Configuration {
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = new MongoConfig();
+  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
 
   @JsonProperty private PortalConfig portal;
 

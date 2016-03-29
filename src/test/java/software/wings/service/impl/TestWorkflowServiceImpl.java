@@ -9,8 +9,8 @@ import org.junit.Test;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 
+import software.wings.app.MainConfiguration;
 import software.wings.app.WingsBootstrap;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
@@ -43,12 +43,14 @@ public class TestWorkflowServiceImpl {
     factory.setDb("test");
     factory.setHost("localhost");
     factory.setPort(27017);
+    MainConfiguration mainConfiguration = new MainConfiguration();
+    mainConfiguration.setMongoConnectionFactory(factory);
 
     injector = Guice.createInjector(new AbstractModule() {
       @Override
       protected void configure() {
-        bind(MongoConfig.class).toInstance(factory);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
+        bind(MainConfiguration.class).toInstance(mainConfiguration);
+        bind(WingsPersistence.class).to(WingsMongoPersistence.class);
         bind(WorkflowService.class).to(WorkflowServiceImpl.class);
       }
     });

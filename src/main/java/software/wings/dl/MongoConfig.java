@@ -18,7 +18,7 @@ public class MongoConfig {
 
   @Min(1) @Max(65535) @JsonProperty private int port = 27017;
 
-  @JsonProperty @NotEmpty private String db = "meta";
+  @JsonProperty @NotEmpty private String db;
 
   @JsonProperty
   public String getHost() {
