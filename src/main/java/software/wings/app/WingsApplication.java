@@ -69,17 +69,21 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     environment.jersey().register(ResponseMessageResolver.class);
     environment.jersey().register(MultiPartFeature.class);
-    environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                                                             .setAuthenticator(new BasicAuthAuthenticator())
-                                                             .buildAuthFilter()));
-    environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
 
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-
-    environment.jersey().register(AuthRuleFilter.class);
     environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+
+    // Authentication/Authorization filters
+
+    if (configuration.isEnableAuth()) {
+      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                                                               .setAuthenticator(new BasicAuthAuthenticator())
+                                                               .buildAuthFilter()));
+      environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+      environment.jersey().register(AuthRuleFilter.class);
+    }
 
     logger.info("Starting app done");
   }

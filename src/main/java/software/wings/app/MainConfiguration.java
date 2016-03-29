@@ -16,6 +16,8 @@ public class MainConfiguration extends Configuration {
 
   @JsonProperty private PortalConfig portal;
 
+  @JsonProperty private boolean enableAuth;
+
   public MongoConfig getMongoConnectionFactory() {
     return mongoConnectionFactory;
   }
@@ -30,5 +32,13 @@ public class MainConfiguration extends Configuration {
 
   public void setPortal(PortalConfig portal) {
     this.portal = portal;
+  }
+
+  public boolean isEnableAuth() {
+    return enableAuth;
+  }
+
+  public void setEnableAuth(boolean enableAuth) {
+    this.enableAuth = enableAuth;
   }
 }
