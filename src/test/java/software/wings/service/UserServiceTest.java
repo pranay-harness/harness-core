@@ -21,6 +21,10 @@ import software.wings.beans.User;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.UserService;
 
 /**
  * Created by anubhaw on 3/9/16.
@@ -37,6 +41,8 @@ public class UserServiceTest {
       protected void configure() {
         bind(MongoConfig.class).toInstance(factory);
         bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
+        bind(RoleService.class).to(RoleServiceImpl.class);
+        bind(UserService.class).to(UserServiceImpl.class);
       }
     });
     return injector;

@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -9,6 +9,7 @@ import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.UserService;
 
 import javax.inject.Inject;
 
@@ -17,7 +18,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 /**
  * Created by anubhaw on 3/9/16.
  */
-public class UserService {
+public class UserServiceImpl implements UserService {
   @Inject private WingsPersistence wingsPersistence;
 
   public User register(User user) {

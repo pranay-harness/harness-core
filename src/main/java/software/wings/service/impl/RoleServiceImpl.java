@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import java.util.List;
 
@@ -13,18 +13,19 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.UserService;
 
 /**
  * Created by anubhaw on 3/23/16.
  */
 
 @Singleton
-public class RoleService {
+public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private UserService userService;
 
-  private static Logger logger = LoggerFactory.getLogger(RoleService.class);
+  private static Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
 
   public PageResponse<Role> list(PageRequest<Role> pageRequest) {
     return wingsPersistence.query(Role.class, pageRequest);

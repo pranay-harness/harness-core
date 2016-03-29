@@ -2,11 +2,13 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.google.inject.Inject;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.service.ServiceResourceService;
+import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.intfc.ServiceResourceService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -21,7 +23,7 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ServiceResource {
-  private ServiceResourceService srs = new ServiceResourceService(); // TODO: AutoInject
+  @Inject private ServiceResourceService srs;
 
   @GET
   public RestResponse<PageResponse<Service>> list(@BeanParam PageRequest<Service> pageRequest) {

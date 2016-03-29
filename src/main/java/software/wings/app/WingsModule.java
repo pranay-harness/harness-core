@@ -7,26 +7,8 @@ import com.google.inject.AbstractModule;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.AppServiceImpl;
-import software.wings.service.impl.ArtifactServiceImpl;
-import software.wings.service.impl.AuditServiceImpl;
-import software.wings.service.impl.DeploymentServiceImpl;
-import software.wings.service.impl.FileServiceImpl;
-import software.wings.service.impl.InfraServiceImpl;
-import software.wings.service.impl.NodeSetExecutorServiceImpl;
-import software.wings.service.impl.PlatformServiceImpl;
-import software.wings.service.impl.ReleaseServiceImpl;
-import software.wings.service.impl.SSHNodeSetExecutorServiceImpl;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.AuditService;
-import software.wings.service.intfc.DeploymentService;
-import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.InfraService;
-import software.wings.service.intfc.NodeSetExecutorService;
-import software.wings.service.intfc.PlatformService;
-import software.wings.service.intfc.ReleaseService;
-import software.wings.service.intfc.SSHNodeSetExecutorService;
+import software.wings.service.impl.*;
+import software.wings.service.intfc.*;
 
 /**
  * @author Rishi
@@ -60,5 +42,8 @@ public class WingsModule extends AbstractModule {
     bind(SSHNodeSetExecutorService.class).to(SSHNodeSetExecutorServiceImpl.class);
     bind(PlatformService.class).to(PlatformServiceImpl.class);
     bind(ReleaseService.class).to(ReleaseServiceImpl.class);
+    bind(UserService.class).to(UserServiceImpl.class);
+    bind(RoleService.class).to(RoleServiceImpl.class);
+    bind(ServiceResourceService.class).to(ServiceResourceServiceImpl.class);
   }
 }

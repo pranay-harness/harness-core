@@ -1,27 +1,17 @@
 package software.wings.resources;
 
-import javax.inject.Inject;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
+import com.google.inject.Inject;
 import io.dropwizard.auth.Auth;
-import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.service.UserService;
+import software.wings.service.intfc.UserService;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
 /**
  *  Users Resource class
@@ -37,12 +27,7 @@ import software.wings.service.UserService;
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
-  private UserService userService;
-
-  @Inject
-  public UserResource(UserService userService) {
-    this.userService = userService;
-  }
+  @Inject private UserService userService;
 
   @GET
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
