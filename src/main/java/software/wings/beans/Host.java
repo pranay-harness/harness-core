@@ -2,6 +2,9 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Reference;
+
+import java.util.List;
 
 @Entity(value = "hosts", noClassnameStored = true)
 public class Host extends Base {
@@ -9,7 +12,7 @@ public class Host extends Base {
 
   @Indexed private String applicationId;
 
-  @Indexed private String hostName;
+  @Indexed(unique = true) private String hostName;
 
   private String ipAddress;
   private int sshPort;
@@ -20,6 +23,8 @@ public class Host extends Base {
   private String ozUuid;
 
   private AccessType accessType;
+
+  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
   public String getHostName() {
     return hostName;
@@ -78,5 +83,13 @@ public class Host extends Base {
   }
   public void setApplicationId(String applicationId) {
     this.applicationId = applicationId;
+  }
+
+  public List<Tag> getTags() {
+    return tags;
+  }
+
+  public void setTags(List<Tag> tags) {
+    this.tags = tags;
   }
 }
