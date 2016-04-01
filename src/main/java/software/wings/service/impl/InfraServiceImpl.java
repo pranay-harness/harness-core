@@ -14,28 +14,12 @@ public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Environment> listEnvironments(PageRequest<Environment> req) {
-    return wingsPersistence.query(Environment.class, req);
-  }
-
-  @Override
-  public Environment getEnvironments(String applicationId, String envName) {
-    return null;
-  }
-
-  @Override
-  public Environment createEnvironment(String applicationId, Environment environment) {
-    environment.setApplicationId(applicationId);
-    return wingsPersistence.saveAndGet(Environment.class, environment);
-  }
-
-  @Override
   public PageResponse<Host> listHosts(PageRequest<Host> req) {
     return wingsPersistence.query(Host.class, req);
   }
 
   @Override
-  public Host getHost(String hostUuid) {
+  public Host getHost(String appID, String hostUuid) {
     return wingsPersistence.get(Host.class, hostUuid);
   }
 

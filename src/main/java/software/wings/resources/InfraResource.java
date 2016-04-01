@@ -20,21 +20,6 @@ public class InfraResource {
   @Inject private InfraService infraService;
 
   @GET
-  @Path("environments/{applicationId}")
-  public RestResponse<PageResponse<Environment>> listEnvironments(
-      @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("applicationId", applicationId, SearchFilter.OP.EQ);
-    return new RestResponse<PageResponse<Environment>>(infraService.listEnvironments(pageRequest));
-  }
-
-  @POST
-  @Path("environments/{applicationId}")
-  public RestResponse<Environment> createEnvironment(
-      @PathParam("applicationId") String applicationId, Environment environment) {
-    return new RestResponse<Environment>(infraService.createEnvironment(applicationId, environment));
-  }
-
-  @GET
   @Path("hosts/{applicationId}")
   public RestResponse<PageResponse<Host>> listHosts(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Host> pageRequest) {
@@ -43,9 +28,9 @@ public class InfraResource {
   }
 
   @GET
-  @Path("hosts/{hostID}")
-  public RestResponse<Host> listHosts(@PathParam("hostID") String hostID) {
-    return new RestResponse<>(infraService.getHost(hostID));
+  @Path("hosts/{applicationID}/{hostID}")
+  public RestResponse<Host> listHosts(@PathParam("applicationID") String appID, @PathParam("hostID") String hostID) {
+    return new RestResponse<>(infraService.getHost(appID, hostID));
   }
 
   @POST
