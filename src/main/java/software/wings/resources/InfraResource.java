@@ -42,6 +42,12 @@ public class InfraResource {
     return new RestResponse<PageResponse<Host>>(infraService.listHosts(pageRequest));
   }
 
+  @GET
+  @Path("hosts/{hostID}")
+  public RestResponse<Host> listHosts(@PathParam("hostID") String hostID) {
+    return new RestResponse<>(infraService.getHost(hostID));
+  }
+
   @POST
   @Path("hosts/{applicationId}")
   public RestResponse<Host> createHost(@PathParam("applicationId") String applicationId, Host host) {

@@ -5,7 +5,6 @@ import javax.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.*;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfraService;
@@ -31,66 +30,13 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public PageResponse<DataCenter> listDataCenters(PageRequest<DataCenter> req) {
-    return null;
-  }
-
-  @Override
-  public DataCenter getDataCenter(String applicationId, String envName, String dcName) {
-    return null;
-  }
-
-  @Override
-  public DataCenter createDataCenter(String applicationId, String envName, DataCenter DataCenter) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public PageResponse<OperationalZone> listOperationalZones(PageRequest<OperationalZone> req) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public OperationalZone getOperationalZone(String applicationId, String envName, String dcName, String ozName) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public OperationalZone createOperationalZone(OperationalZone OperationalZone) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public PageResponse<Phase> listPhases(PageRequest<Phase> req) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public Phase getPhase(String applicationId, String envName, String compName, String phaseName) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public Phase createPhase(Phase Phase) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
   public PageResponse<Host> listHosts(PageRequest<Host> req) {
     return wingsPersistence.query(Host.class, req);
   }
 
   @Override
-  public Host getHost(String applicationId, String hostUuid) {
-    // TODO Auto-generated method stub
-    return null;
+  public Host getHost(String hostUuid) {
+    return wingsPersistence.get(Host.class, hostUuid);
   }
 
   @Override

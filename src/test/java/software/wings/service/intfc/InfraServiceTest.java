@@ -12,10 +12,6 @@ import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.InfraServiceImpl;
-import software.wings.service.impl.RoleServiceImpl;
-import software.wings.service.impl.UserServiceImpl;
-
-import static org.junit.Assert.*;
 
 /**
  * Created by anubhaw on 3/30/16.
