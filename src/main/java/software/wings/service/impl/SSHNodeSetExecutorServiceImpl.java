@@ -14,7 +14,6 @@ import com.google.inject.Singleton;
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.beans.Host;
-import software.wings.beans.HostInstanceMapping;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.core.ssh.executors.SSHExecutor;
 import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
@@ -33,10 +32,11 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
   public void execute(Execution execution) {
     Deployment deployment = (Deployment) execution;
     for (String hostInstanceMapping : deployment.getHostInstanceMappings()) {
-      Host host = wingsPersistence.get(HostInstanceMapping.class, hostInstanceMapping).getHost();
-      ExecutionResult result = deploy(deployment, getSshSessionConfig(deployment, host));
-      LOGGER.info(String.format("Deployment [%s] on Host [id: %s, ip:%s] finished with status [%S]",
-          deployment.getUuid(), host.getUuid(), host.getIpAddress(), result));
+      //			Host host = wingsPersistence.get(HostInstanceMapping.class,
+      //hostInstanceMapping).getHost(); 			ExecutionResult result = deploy(deployment,
+      //getSshSessionConfig(deployment, host)); 			LOGGER.info(String.format("Deployment [%s] on
+      //Host [id: %s, ip:%s] finished with status [%S]", deployment.getUuid(), host.getUuid(), host.getIpAddress(),
+      //result));
     }
   }
 

@@ -42,15 +42,4 @@ public class InfraServiceImpl implements InfraService {
     wingsPersistence.update(host, updateOp);
     return wingsPersistence.get(Host.class, hostID);
   }
-
-  @Override
-  public HostInstanceMapping createHostInstanceMapping(String applicationId, HostInstanceMapping hostInstanceMapping) {
-    hostInstanceMapping.setApplicationId(applicationId);
-    return wingsPersistence.saveAndGet(HostInstanceMapping.class, hostInstanceMapping);
-  }
-
-  @Override
-  public PageResponse<HostInstanceMapping> listHostInstanceMapping(PageRequest<HostInstanceMapping> pageRequest) {
-    return wingsPersistence.query(HostInstanceMapping.class, pageRequest);
-  }
 }

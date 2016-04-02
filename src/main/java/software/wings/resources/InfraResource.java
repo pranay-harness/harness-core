@@ -39,22 +39,6 @@ public class InfraResource {
     return new RestResponse<Host>(infraService.createHost(applicationId, host));
   }
 
-  @GET
-  @Path("host-mappings/{applicationId}")
-  public RestResponse<PageResponse<HostInstanceMapping>> listHostInstanceMapping(
-      @PathParam("applicationId") String applicationId, @BeanParam PageRequest<HostInstanceMapping> pageRequest) {
-    pageRequest.addFilter("applicationId", applicationId, SearchFilter.OP.EQ);
-    return new RestResponse<PageResponse<HostInstanceMapping>>(infraService.listHostInstanceMapping(pageRequest));
-  }
-
-  @POST
-  @Path("host-mappings/{applicationId}")
-  public RestResponse<HostInstanceMapping> createHostMapping(
-      @PathParam("applicationId") String applicationId, HostInstanceMapping hostInstanceMapping) {
-    return new RestResponse<HostInstanceMapping>(
-        infraService.createHostInstanceMapping(applicationId, hostInstanceMapping));
-  }
-
   @POST
   @Path("tags")
   public RestResponse<Tag> saveTag(Tag tag) {

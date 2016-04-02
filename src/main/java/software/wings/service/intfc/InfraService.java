@@ -9,7 +9,4 @@ public interface InfraService {
 
   public Tag createTag(Tag tag);
   public Host applyTag(String hostID, String tagID);
-
-  public PageResponse<HostInstanceMapping> listHostInstanceMapping(PageRequest<HostInstanceMapping> pageRequest);
-  public HostInstanceMapping createHostInstanceMapping(String applicationId, HostInstanceMapping hostInstanceMapping);
 }
