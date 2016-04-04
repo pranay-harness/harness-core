@@ -19,7 +19,7 @@ import javax.ws.rs.*;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
-public class EnvResource {
+public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 
   @GET
