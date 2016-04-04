@@ -7,35 +7,31 @@ import org.mongodb.morphia.annotations.*;
  */
 
 @Entity(value = "tags", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("tagType")
-                           , @Field("tag") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("type")
+                           , @Field("name"), @Field("envID") }, options = @IndexOptions(unique = true)))
 public class Tag extends Base {
-  private String tagType;
-  private String tag;
+  private String type;
+  private String name;
   private String description;
+  private String autoTaggingRule;
+  private String envID;
 
   public Tag() {}
 
-  public Tag(String tagType, String tag, String description) {
-    this.tagType = tagType;
-    this.tag = tag;
-    this.description = description;
+  public String getType() {
+    return type;
   }
 
-  public String getTagType() {
-    return tagType;
+  public void setType(String type) {
+    this.type = type;
   }
 
-  public void setTagType(String tagType) {
-    this.tagType = tagType;
+  public String getName() {
+    return name;
   }
 
-  public String getTag() {
-    return tag;
-  }
-
-  public void setTag(String tag) {
-    this.tag = tag;
+  public void setName(String name) {
+    this.name = name;
   }
 
   public String getDescription() {
@@ -44,5 +40,21 @@ public class Tag extends Base {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public String getAutoTaggingRule() {
+    return autoTaggingRule;
+  }
+
+  public void setAutoTaggingRule(String autoTaggingRule) {
+    this.autoTaggingRule = autoTaggingRule;
+  }
+
+  public String getEnvID() {
+    return envID;
+  }
+
+  public void setEnvID(String envID) {
+    this.envID = envID;
   }
 }

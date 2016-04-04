@@ -19,21 +19,20 @@ import javax.ws.rs.*;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
-public class EnvironmentResource {
+public class EnvResource {
   @Inject private EnvironmentService envService;
 
   @GET
-  @Path("environments/{applicationId}")
+  @Path("{appID}")
   public RestResponse<PageResponse<Environment>> listEnvironments(
-      @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("applicationId", applicationId, SearchFilter.OP.EQ);
+      @PathParam("appID") String appID, @BeanParam PageRequest<Environment> pageRequest) {
+    pageRequest.addFilter("appID", appID, SearchFilter.OP.EQ);
     return new RestResponse<PageResponse<Environment>>(envService.listEnvironments(pageRequest));
   }
 
   @POST
-  @Path("environments/{applicationId}")
-  public RestResponse<Environment> createEnvironment(
-      @PathParam("applicationId") String applicationId, Environment environment) {
-    return new RestResponse<>(envService.createEnvironment(applicationId, environment));
+  @Path("{appID}")
+  public RestResponse<Environment> createEnvironment(@PathParam("appID") String appID, Environment environment) {
+    return new RestResponse<>(envService.createEnvironment(appID, environment));
   }
 }

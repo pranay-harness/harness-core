@@ -14,23 +14,41 @@ public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
+  public PageResponse<Infra> listInfra(String envID, PageRequest<Infra> req) {
+    return wingsPersistence.query(Infra.class, req);
+  }
+
+  @Override
+  public Infra createInfra(Infra infra, String envID) {
+    infra.setEnvID(envID);
+    return wingsPersistence.saveAndGet(Infra.class, infra);
+  }
+
+  @Override
   public PageResponse<Host> listHosts(PageRequest<Host> req) {
     return wingsPersistence.query(Host.class, req);
   }
 
   @Override
-  public Host getHost(String appID, String hostUuid) {
-    return wingsPersistence.get(Host.class, hostUuid);
+  public Host getHost(String infraID, String hostID) {
+    return wingsPersistence.get(Host.class, hostID);
   }
 
   @Override
-  public Host createHost(String applicationId, Host host) {
-    host.setApplicationId(applicationId);
+  public Host createHost(String infraID, Host host) {
+    host.setApplicationId(infraID);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public Tag createTag(Tag tag) {
+  public Host updateHost(String infraID, Host host) {
+    host.setInfraID(infraID);
+    return wingsPersistence.saveAndGet(Host.class, host);
+  }
+
+  @Override
+  public Tag createTag(String envID, Tag tag) {
+    tag.setEnvID(envID);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 

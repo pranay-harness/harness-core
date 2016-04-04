@@ -20,8 +20,6 @@ public class Environment extends Base {
   private String name;
   private String description;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Infra> infras;
-
   public String getName() {
     return name;
   }

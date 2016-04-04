@@ -1,10 +1,6 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -15,8 +11,7 @@ public class Infra extends Base {
   public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }
 
   private InfraType infraType;
-
-  @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts;
+  private String envID;
 
   public InfraType getInfraType() {
     return infraType;
@@ -26,18 +21,11 @@ public class Infra extends Base {
     this.infraType = infraType;
   }
 
-  public List<Host> getHosts() {
-    return hosts;
+  public String getEnvID() {
+    return envID;
   }
 
-  public void setHosts(List<Host> hosts) {
-    this.hosts = hosts;
-  }
-
-  public void addHost(Host host) {
-    if (this.hosts == null) {
-      this.hosts = new ArrayList<>();
-    }
-    this.hosts.add(host);
+  public void setEnvID(String envID) {
+    this.envID = envID;
   }
 }

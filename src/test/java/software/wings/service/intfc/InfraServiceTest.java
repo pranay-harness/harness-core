@@ -41,8 +41,12 @@ public class InfraServiceTest {
 
   @Test
   public void testCreateTag() {
-    Tag tag = new Tag("OS", "LINUX", "Operating system types");
-    tag = infraService.createTag(tag);
+    Tag tag = new Tag();
+    tag.setType("OS");
+    tag.setName("OS");
+    tag.setDescription("Operating system types");
+    tag.setEnvID("ddn");
+    tag = infraService.createTag(envID, tag);
 
     Host host = new Host();
     host = infraService.createHost("ff329r", host);

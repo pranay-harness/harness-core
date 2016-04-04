@@ -26,6 +26,8 @@ public class Host extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
+  private String infraID;
+
   public String getHostName() {
     return hostName;
   }
@@ -85,10 +87,17 @@ public class Host extends Base {
     this.applicationId = applicationId;
   }
 
+  public String getInfraID() {
+    return infraID;
+  }
+
+  public void setInfraID(String infraID) {
+    this.infraID = infraID;
+  }
+
   public List<Tag> getTags() {
     return tags;
   }
-
   public void setTags(List<Tag> tags) {
     this.tags = tags;
   }

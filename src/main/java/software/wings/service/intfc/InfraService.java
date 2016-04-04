@@ -3,10 +3,15 @@ package software.wings.service.intfc;
 import software.wings.beans.*;
 
 public interface InfraService {
-  public PageResponse<Host> listHosts(PageRequest<Host> req);
-  public Host getHost(String appID, String hostUuid);
-  public Host createHost(String applicationId, Host host);
+  PageResponse<Infra> listInfra(String envID, PageRequest<Infra> pageRequest);
+  public Infra createInfra(Infra infra, String envID);
 
-  public Tag createTag(Tag tag);
+  public PageResponse<Host> listHosts(PageRequest<Host> req);
+  public Host getHost(String infraID, String hostID);
+  public Host createHost(String infraID, Host host);
+  public Host updateHost(String infraID, Host host);
+
+  public Tag createTag(String envID, Tag tag);
+
   public Host applyTag(String hostID, String tagID);
 }
