@@ -32,7 +32,7 @@ import software.wings.service.intfc.UserService;
 
 public class UserServiceTest {
   private Injector getInjector() {
-    MongoConfig factory = new MongoConfig();
+    final MongoConfig factory = new MongoConfig();
     factory.setDb("wings");
     factory.setHost("localhost");
 
@@ -90,7 +90,7 @@ public class UserServiceTest {
         wingsPersistence.createQuery(User.class).field(ID_KEY).equal("D3BB4DEA57D043BCA73597CCDE01E637");
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
     wingsPersistence.update(updateQuery, updateOperations);
-    PageResponse<User> list = userService.list(new PageRequest<>());
+    PageResponse<User> list = userService.list(new PageRequest<User>());
     userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "BFB4B4F079EB449C9B421D1BB720742E");
     userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "2C496ED72DDC48FEA51E5C3736DD33B9");
     userService.addRole("1AF8F38C83394D67B03AC13E704C8186", "BFB4B4F079EB449C9B421D1BB720742E");

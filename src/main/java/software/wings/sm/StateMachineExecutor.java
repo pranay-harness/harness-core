@@ -33,7 +33,7 @@ public class StateMachineExecutor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void execute(StateMachine sm) {
-    execute(sm, new HashMap<>());
+    execute(sm, new HashMap<String, Serializable>());
   }
 
   public void execute(String smId, Map<String, Serializable> arguments) {

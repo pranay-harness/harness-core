@@ -43,7 +43,7 @@ public class TestWorkflowServiceImpl {
     factory.setDb("test");
     factory.setHost("localhost");
     factory.setPort(27017);
-    MainConfiguration mainConfiguration = new MainConfiguration();
+    final MainConfiguration mainConfiguration = new MainConfiguration();
     mainConfiguration.setMongoConnectionFactory(factory);
 
     injector = Guice.createInjector(new AbstractModule() {
