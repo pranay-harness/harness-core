@@ -6,10 +6,14 @@ import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 
+import javax.validation.Valid;
+
 public interface ArtifactService {
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest);
 
-  public Artifact create(String applicationId, String releaseId, String artifactSourceName);
+  public Artifact create(@Valid Artifact artifact);
+
+  public Artifact update(@Valid Artifact artifact);
 
   public File download(String applicationId, String artifactId);
 

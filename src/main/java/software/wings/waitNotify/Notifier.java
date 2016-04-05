@@ -1,7 +1,5 @@
 package software.wings.waitNotify;
 
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,25 +24,22 @@ import software.wings.utils.CollectionUtils;
  */
 public class Notifier implements Runnable {
   private WingsPersistence wingsPersistence;
-  private String correlationId;
   private PersistentLocker persistentLocker;
 
-  public Notifier(WingsPersistence wingsPersistence, PersistentLocker persistentLocker, String correlationId) {
+  public Notifier(WingsPersistence wingsPersistence, PersistentLocker persistentLocker) {
     this.wingsPersistence = wingsPersistence;
     this.persistentLocker = persistentLocker;
-    this.correlationId = correlationId;
   }
 
   @Override
   public void run() {
-    // Get notify response
-    //		NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, correlationId);
-    //		if (notifyResponse == null) {
-    //			logger.warn("NO notifyResponse found for correlationId:" + correlationId +"... Already processed or will be
-    //processed by scheduler"); 			return;
-    //		}
-
+    boolean lockAcquired = false;
     try {
+      lockAcquired = persistentLocker.acquireLock(Notifier.class, Notifier.class.getName());
+      if (!lockAcquired) {
+        logger.warn("Persistent lock could not be acquired for the Notifier");
+        return;
+      }
       PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
       reqNotifyRes.getFieldsIncluded().add("uuid");
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
@@ -61,12 +56,10 @@ public class Notifier implements Runnable {
       filter.setFieldValues(correlationIds);
       filter.setOp(OP.IN);
       req.getFilters().add(filter);
-      //			req.getFieldsIncluded().add("waitInstanceId");
-      //			req.getFieldsIncluded().add("correlationId");
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
       if (waitQueuesResponse == null || waitQueuesResponse.getResponse() == null
           || waitQueuesResponse.getResponse().size() == 0) {
-        logger.warn("No entry in the waitQueue found for the correlationId:" + correlationId + " skipping ...");
+        logger.warn("No entry in the waitQueue found for the correlationIds:" + correlationIds + " skipping ...");
         return;
       }
       List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
@@ -79,17 +72,12 @@ public class Notifier implements Runnable {
         ThreadPool.execute(
             new NotifierForWaitInstance(wingsPersistence, persistentLocker, waitInstanceId, correlationIds));
       }
-    } catch (IllegalAccessException e) {
-      logger.error(e.getMessage(), e);
-    } catch (IllegalArgumentException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (InvocationTargetException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    } catch (IntrospectionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+    } catch (Exception e) {
+      logger.error("Error seen in the Notifier call", e);
+    } finally {
+      if (lockAcquired) {
+        persistentLocker.releaseLock(Notifier.class, Notifier.class.getName());
+      }
     }
   }
   private static Logger logger = LoggerFactory.getLogger(Notifier.class);

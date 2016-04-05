@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 public class ResponseMessage {
   public enum ResponseTypeEnum { INFO, WARN, ERROR }
   ;
@@ -24,5 +26,14 @@ public class ResponseMessage {
   }
   public void setMessage(String message) {
     this.message = message;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("code", code)
+        .add("errorType", errorType)
+        .add("message", message)
+        .toString();
   }
 }

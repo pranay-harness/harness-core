@@ -1,65 +1,41 @@
 package software.wings.dl;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
-
 import com.google.inject.Singleton;
-import com.mongodb.MongoClient;
-import com.mongodb.ReadPreference;
-import com.mongodb.ServerAddress;
+import com.google.inject.name.Named;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-
-import software.wings.app.MainConfiguration;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
+
+import javax.inject.Inject;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence {
   private Datastore primaryDatastore;
   private Datastore secondaryDatastore;
 
-  private Map<ReadPref, Datastore> datastoreMap = new HashMap<>();
+  private Map<ReadPref, Datastore> datastoreMap;
 
   @Inject
-  public WingsMongoPersistence(MainConfiguration configuration) {
-    MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    String[] hosts = mongoConfig.getHost().split(",");
-    List<ServerAddress> serverAddresses = new ArrayList<>();
-    for (String host : hosts) {
-      serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
-    }
-    Morphia m = new Morphia();
-    MongoClient mongoClient = new MongoClient(serverAddresses);
-    this.primaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
-
-    if (hosts.length > 1) {
-      mongoClient = new MongoClient(serverAddresses);
-      mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
-      this.secondaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
-    } else {
-      this.secondaryDatastore = primaryDatastore;
-    }
-
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
+  public WingsMongoPersistence(@Named("primaryDatasource") Datastore primaryDatastore,
+      @Named("secondaryDatasource") Datastore secondaryDatastore,
+      @Named("datastoreMap") Map<ReadPref, Datastore> datastoreMap) {
+    this.primaryDatastore = primaryDatastore;
+    this.secondaryDatastore = secondaryDatastore;
+    this.datastoreMap = datastoreMap;
   }
 
   @Override
@@ -76,6 +52,7 @@ public class WingsMongoPersistence implements WingsPersistence {
   public <T extends Base> T get(Class<T> cls, String id) {
     return get(cls, id, ReadPref.NORMAL);
   }
+
   @Override
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
     return datastoreMap.get(readPref).get(cls, id);
@@ -157,6 +134,7 @@ public class WingsMongoPersistence implements WingsPersistence {
   public <T> Query<T> createQuery(Class<T> cls) {
     return createQuery(cls, ReadPref.NORMAL);
   }
+
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
     return datastoreMap.get(readPref).createQuery(cls);

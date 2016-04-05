@@ -2,9 +2,12 @@ package software.wings.utils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import software.wings.beans.ErrorConstants;
 import software.wings.exception.WingsException;
+
+import javax.validation.ConstraintViolationException;
 
 public class Validator {
   public static void notNullCheck(String name, Object value) {
@@ -16,5 +19,12 @@ public class Validator {
     }
   }
 
-  public static void equalCheck(Object applicationId, Object uuid) {}
+  public static void equalCheck(Object applicationId, Object uuid) {
+    if (!Objects.equals(applicationId, uuid)) {
+      Map<String, Object> map = new HashMap<>();
+      map.put("applicationId", applicationId);
+      map.put("uuid", uuid);
+      throw new WingsException(map, ErrorConstants.INVALID_ARGUMENT);
+    }
+  }
 }

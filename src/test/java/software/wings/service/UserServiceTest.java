@@ -13,6 +13,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
@@ -26,32 +27,16 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
+import javax.inject.Inject;
+
 /**
  * Created by anubhaw on 3/9/16.
  */
 
-public class UserServiceTest {
-  private Injector getInjector() {
-    MongoConfig factory = new MongoConfig();
-    factory.setDb("wings");
-    factory.setHost("localhost");
-
-    Injector injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MongoConfig.class).toInstance(factory);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-        bind(RoleService.class).to(RoleServiceImpl.class);
-        bind(UserService.class).to(UserServiceImpl.class);
-      }
-    });
-    return injector;
-  }
-
-  Injector injector = getInjector();
-  WingsPersistence wingsPersistence = injector.getInstance(WingsPersistence.class);
-  UserService userService = injector.getInstance(UserService.class);
-  RoleService roleService = injector.getInstance(RoleService.class);
+public class UserServiceTest extends WingsBaseTest {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserService userService;
+  @Inject private RoleService roleService;
 
   @Test
   public void testRegister() throws Exception {
@@ -90,7 +75,7 @@ public class UserServiceTest {
         wingsPersistence.createQuery(User.class).field(ID_KEY).equal("D3BB4DEA57D043BCA73597CCDE01E637");
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
     wingsPersistence.update(updateQuery, updateOperations);
-    PageResponse<User> list = userService.list(new PageRequest<>());
+    PageResponse<User> list = userService.list(new PageRequest<User>());
     userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "BFB4B4F079EB449C9B421D1BB720742E");
     userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "2C496ED72DDC48FEA51E5C3736DD33B9");
     userService.addRole("1AF8F38C83394D67B03AC13E704C8186", "BFB4B4F079EB449C9B421D1BB720742E");

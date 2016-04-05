@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Serialized;
 
 import software.wings.beans.Base;
+import software.wings.sm.ExecutionStatus;
 
 /**
  * @author Rishi
@@ -20,6 +21,8 @@ public class NotifyResponse extends Base {
   @Serialized private Serializable response;
 
   @Indexed private Date expiryTs;
+
+  @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
 
   public NotifyResponse() {}
 
@@ -40,5 +43,13 @@ public class NotifyResponse extends Base {
 
   public void setExpiryTs(Date expiryTs) {
     this.expiryTs = expiryTs;
+  }
+
+  public ExecutionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
   }
 }

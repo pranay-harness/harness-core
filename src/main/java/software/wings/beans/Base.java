@@ -1,11 +1,15 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.common.UUIDGenerator;
+import software.wings.utils.validation.Update;
+
+import javax.validation.constraints.NotNull;
 
 /**
  *  The Base class is used to extend all the bean classes that requires persistence. The base class includes
@@ -17,7 +21,7 @@ import software.wings.common.UUIDGenerator;
  *
  */
 public class Base {
-  @Id private String uuid;
+  @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 
@@ -97,5 +101,17 @@ public class Base {
     if (createdAt == 0) {
       createdAt = System.currentTimeMillis();
     }
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("uuid", uuid)
+        .add("createdBy", createdBy)
+        .add("createdAt", createdAt)
+        .add("lastUpdatedBy", lastUpdatedBy)
+        .add("lastUpdatedAt", lastUpdatedAt)
+        .add("active", active)
+        .toString();
   }
 }
