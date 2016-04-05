@@ -7,22 +7,13 @@ import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
-import software.wings.dl.MongoConfig;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
 import software.wings.waitNotify.NotifyCallback;
 import software.wings.waitNotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
 
-public class TestWaitNotifyEngine extends WingsBaseTest {
+public class WaitNotifyEngineTest extends WingsBaseTest {
   static Map<String, Serializable> responseMap = new HashMap<>();
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -44,12 +35,15 @@ public class TestWaitNotifyEngine extends WingsBaseTest {
     Assert.assertEquals("response-345", responseMap.get("345"));
     System.out.println("All Done");
   }
-}
 
-class TestNotifyCallback implements NotifyCallback {
-  @Override
-  public void notify(Map<String, Serializable> response) {
-    System.out.println("TestNotifyCallback-notify " + response);
-    TestWaitNotifyEngine.responseMap.putAll(response);
+  /**
+   * Created by peeyushaggarwal on 4/5/16.
+   */
+  static class TestNotifyCallback implements NotifyCallback {
+    @Override
+    public void notify(Map<String, Serializable> response) {
+      System.out.println("TestNotifyCallback-notify " + response);
+      responseMap.putAll(response);
+    }
   }
 }

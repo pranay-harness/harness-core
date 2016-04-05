@@ -1,5 +1,7 @@
 package software.wings.helpers.ext;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.Test;
 
 import software.wings.beans.Deployment;
@@ -42,5 +44,76 @@ public class JsonTest {
   @Test
   public void testJson3() {
     Deployment deployment = new Deployment();
+  }
+
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = BaseA.class, name = "A")
+    , @JsonSubTypes.Type(value = BaseB.class, name = "B"), @JsonSubTypes.Type(value = BaseC.class, name = "C")
+  })
+  public static class Base {
+    public enum BaseType { A, B, C }
+    ;
+
+    private BaseType baseType;
+
+    public BaseType getBaseType() {
+      return baseType;
+    }
+
+    public void setBaseType(BaseType baseType) {
+      this.baseType = baseType;
+    }
+  }
+
+  public static class BaseA extends Base {
+    private String name = BaseA.class.getName();
+
+    public BaseA() {
+      super();
+      setBaseType(BaseType.A);
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+  }
+
+  public static class BaseB extends Base {
+    private String name = BaseB.class.getName();
+
+    public BaseB() {
+      super();
+      setBaseType(BaseType.B);
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
+  }
+
+  public static class BaseC extends Base {
+    private String name = BaseC.class.getName();
+
+    public BaseC() {
+      super();
+      setBaseType(BaseType.C);
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public void setName(String name) {
+      this.name = name;
+    }
   }
 }

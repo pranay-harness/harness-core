@@ -11,13 +11,12 @@ import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.junit.rules.MethodRule;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.app.WingsBootstrap;
 import software.wings.beans.ReadPref;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -83,6 +82,7 @@ public class WingsRule implements MethodRule {
         bind(UserService.class).to(UserServiceImpl.class);
       }
     });
+    WingsBootstrap.initialize(injector);
   }
 
   public Datastore getDatastore() {

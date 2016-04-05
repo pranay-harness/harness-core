@@ -1,30 +1,13 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
-import software.wings.app.WingsBootstrap;
-import software.wings.dl.MongoConfig;
-import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.State;
-import software.wings.sm.StateA;
-import software.wings.sm.StateAsynch;
-import software.wings.sm.StateB;
-import software.wings.sm.StateC;
-import software.wings.sm.StateMachine;
-import software.wings.sm.Transition;
-import software.wings.sm.TransitionType;
+import software.wings.sm.*;
 
 import javax.inject.Inject;
 
@@ -36,7 +19,7 @@ import javax.inject.Inject;
  * @author Rishi
  *
  */
-public class TestWorkflowServiceImpl extends WingsBaseTest {
+public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -53,13 +36,13 @@ public class TestWorkflowServiceImpl extends WingsBaseTest {
    */
   private StateMachine createSynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
-    State stateA = new StateA();
+    State stateA = new StateMachineTest.StateA();
     sm.addState(stateA);
-    StateB stateB = new StateB();
+    StateMachineTest.StateB stateB = new StateMachineTest.StateB();
     sm.addState(stateB);
-    StateC stateC = new StateC();
+    StateMachineTest.StateC stateC = new StateMachineTest.StateC();
     sm.addState(stateC);
-    sm.setInitialStateName(StateA.class.getName());
+    sm.setInitialStateName(StateMachineTest.StateA.class.getName());
 
     sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateB));
     sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateC));
@@ -76,19 +59,19 @@ public class TestWorkflowServiceImpl extends WingsBaseTest {
    */
   private StateMachine createAsynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
-    State stateA = new StateA();
+    State stateA = new StateMachineTest.StateA();
     sm.addState(stateA);
-    StateB stateB = new StateB();
+    StateMachineTest.StateB stateB = new StateMachineTest.StateB();
     sm.addState(stateB);
-    StateC stateC = new StateC();
+    StateMachineTest.StateC stateC = new StateMachineTest.StateC();
     sm.addState(stateC);
 
-    State stateAB = new StateAsynch("StateAB", 10000);
+    State stateAB = new StateMachineTest.StateAsynch("StateAB", 10000);
     sm.addState(stateAB);
-    State stateBC = new StateAsynch("StateBC", 5000);
+    State stateBC = new StateMachineTest.StateAsynch("StateBC", 5000);
     sm.addState(stateBC);
 
-    sm.setInitialStateName(StateA.class.getName());
+    sm.setInitialStateName(StateMachineTest.StateA.class.getName());
 
     sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateAB));
     sm.addTransition(new Transition(stateAB, TransitionType.SUCCESS, stateB));
