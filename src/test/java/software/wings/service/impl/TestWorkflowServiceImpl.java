@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.app.WingsBootstrap;
 import software.wings.dl.MongoConfig;
@@ -25,6 +26,8 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 
+import javax.inject.Inject;
+
 /**
  *
  */
@@ -33,36 +36,14 @@ import software.wings.sm.TransitionType;
  * @author Rishi
  *
  */
-public class TestWorkflowServiceImpl {
-  private static Injector injector;
-  private static WingsPersistence wingsPersistence;
+public class TestWorkflowServiceImpl extends WingsBaseTest {
+  @Inject private WorkflowService workflowService;
 
-  @BeforeClass
-  public static void setup() {
-    MongoConfig factory = new MongoConfig();
-    factory.setDb("test");
-    factory.setHost("localhost");
-    factory.setPort(27017);
-    final MainConfiguration mainConfiguration = new MainConfiguration();
-    mainConfiguration.setMongoConnectionFactory(factory);
-
-    injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MainConfiguration.class).toInstance(mainConfiguration);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-        bind(WorkflowService.class).to(WorkflowServiceImpl.class);
-      }
-    });
-    WingsBootstrap.initialize(injector);
-    wingsPersistence = injector.getInstance(WingsPersistence.class);
-  }
+  @Inject private WingsPersistence wingsPersistence;
 
   @Test
   public void testSave() {
-    WorkflowService svc = injector.getInstance(WorkflowService.class);
-
-    StateMachine sm = createSynchSM(svc);
+    StateMachine sm = createSynchSM(workflowService);
     System.out.println("All Done!");
   }
 
@@ -122,8 +103,7 @@ public class TestWorkflowServiceImpl {
 
   @Test
   public void testRead() throws InterruptedException {
-    WorkflowService svc = injector.getInstance(WorkflowService.class);
-    StateMachine sm = createSynchSM(svc);
+    StateMachine sm = createSynchSM(workflowService);
     String smId = sm.getUuid();
     sm = wingsPersistence.get(StateMachine.class, smId);
     assertThat(sm).isNotNull();
@@ -133,28 +113,21 @@ public class TestWorkflowServiceImpl {
 
   @Test
   public void testTrigger() throws InterruptedException {
-    WorkflowService svc = injector.getInstance(WorkflowService.class);
-    StateMachine sm = createSynchSM(svc);
+    StateMachine sm = createSynchSM(workflowService);
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    svc.trigger(smId);
+    workflowService.trigger(smId);
 
     Thread.sleep(5000);
   }
 
   @Test
   public void testTriggerAsynch() throws InterruptedException {
-    WorkflowService svc = injector.getInstance(WorkflowService.class);
-    StateMachine sm = createAsynchSM(svc);
+    StateMachine sm = createAsynchSM(workflowService);
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    svc.trigger(smId);
+    workflowService.trigger(smId);
 
     Thread.sleep(30000);
-  }
-
-  @AfterClass
-  public static void close() {
-    wingsPersistence.close();
   }
 }

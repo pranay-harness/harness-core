@@ -13,6 +13,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
@@ -26,32 +27,16 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
+import javax.inject.Inject;
+
 /**
  * Created by anubhaw on 3/9/16.
  */
 
-public class UserServiceTest {
-  private Injector getInjector() {
-    final MongoConfig factory = new MongoConfig();
-    factory.setDb("wings");
-    factory.setHost("localhost");
-
-    Injector injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MongoConfig.class).toInstance(factory);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-        bind(RoleService.class).to(RoleServiceImpl.class);
-        bind(UserService.class).to(UserServiceImpl.class);
-      }
-    });
-    return injector;
-  }
-
-  Injector injector = getInjector();
-  WingsPersistence wingsPersistence = injector.getInstance(WingsPersistence.class);
-  UserService userService = injector.getInstance(UserService.class);
-  RoleService roleService = injector.getInstance(RoleService.class);
+public class UserServiceTest extends WingsBaseTest {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserService userService;
+  @Inject private RoleService roleService;
 
   @Test
   public void testRegister() throws Exception {

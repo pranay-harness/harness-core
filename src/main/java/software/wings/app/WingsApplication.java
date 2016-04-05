@@ -24,7 +24,10 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import ru.vyarus.guice.validator.ImplicitValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.filter.ResponseMessageResolver;
 import software.wings.health.WingsHealthCheck;
@@ -62,7 +65,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void run(MainConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
-    Injector injector = Guice.createInjector(new WingsModule(configuration));
+    Injector injector = Guice.createInjector(new ValidationModule(), new WingsModule(configuration));
 
     WingsBootstrap.initialize(injector);
     addResources(environment, injector);
@@ -74,6 +77,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+    environment.jersey().register(WingsExceptionMapper.class);
 
     // Authentication/Authorization filters
 

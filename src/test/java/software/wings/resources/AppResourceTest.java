@@ -1,7 +1,8 @@
 package software.wings.resources;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+import static software.wings.beans.Application.Builder.anApplication;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -9,7 +10,10 @@ import org.junit.Test;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import software.wings.beans.Application;
+import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AppService;
+
+import javax.ws.rs.core.GenericType;
 
 public class AppResourceTest {
   private static final AppService appService = mock(AppService.class);
@@ -18,14 +22,8 @@ public class AppResourceTest {
   public static final ResourceTestRule resources =
       ResourceTestRule.builder().addResource(new AppResource(appService)).build();
 
-  private final String testName = "testName-" + System.currentTimeMillis();
-  private final Application testApp = getTestApplication();
-
-  private Application getTestApplication() {
-    Application app = new Application();
-    app.setName(testName);
-    return app;
-  }
+  private final String TEST_UUID = "TEST-UUID-" + System.currentTimeMillis();
+  private final Application testApp = anApplication().withUuid(TEST_UUID).build();
 
   @After
   public void tearDown() {
@@ -36,9 +34,10 @@ public class AppResourceTest {
 
   @Test
   public void testFindByName() {
-    //    	Application actual = resources.client().target("/apps/" + testName).request().get(Application.class);
-    //        assertThat(actual)
-    //        .isEqualToComparingFieldByField(testApp);
-    //        verify(appService).findByName(testName).equals(testApp);
+    when(appService.findByUUID(TEST_UUID)).thenReturn(testApp);
+    RestResponse<Application> actual =
+        resources.client().target("/apps/" + TEST_UUID).request().get(new GenericType<RestResponse<Application>>() {});
+    assertThat(actual.getResource()).isEqualTo(testApp);
+    verify(appService).findByUUID(TEST_UUID);
   }
 }

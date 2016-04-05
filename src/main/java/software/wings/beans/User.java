@@ -99,4 +99,126 @@ public class User extends Base implements Principal {
   public void setPassword(String password) {
     this.password = password;
   }
+
+  public static class Builder {
+    private String name;
+    private String email;
+    private String passwordHash;
+    private List<Role> roles;
+    private long lastLogin;
+    private String password;
+    private String token;
+    private String uuid;
+    private User createdBy;
+    private long createdAt;
+    private User lastUpdatedBy;
+    private long lastUpdatedAt;
+    private boolean active = true;
+
+    private Builder() {}
+
+    public static Builder anUser() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withEmail(String email) {
+      this.email = email;
+      return this;
+    }
+
+    public Builder withPasswordHash(String passwordHash) {
+      this.passwordHash = passwordHash;
+      return this;
+    }
+
+    public Builder withRoles(List<Role> roles) {
+      this.roles = roles;
+      return this;
+    }
+
+    public Builder withLastLogin(long lastLogin) {
+      this.lastLogin = lastLogin;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withToken(String token) {
+      this.token = token;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder but() {
+      return anUser()
+          .withName(name)
+          .withEmail(email)
+          .withPasswordHash(passwordHash)
+          .withRoles(roles)
+          .withLastLogin(lastLogin)
+          .withPassword(password)
+          .withToken(token)
+          .withUuid(uuid)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withActive(active);
+    }
+
+    public User build() {
+      User user = new User();
+      user.setName(name);
+      user.setEmail(email);
+      user.setPasswordHash(passwordHash);
+      user.setRoles(roles);
+      user.setLastLogin(lastLogin);
+      user.setPassword(password);
+      user.setToken(token);
+      user.setUuid(uuid);
+      user.setCreatedBy(createdBy);
+      user.setCreatedAt(createdAt);
+      user.setLastUpdatedBy(lastUpdatedBy);
+      user.setLastUpdatedAt(lastUpdatedAt);
+      user.setActive(active);
+      return user;
+    }
+  }
 }

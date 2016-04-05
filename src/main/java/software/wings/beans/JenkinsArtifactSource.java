@@ -3,7 +3,9 @@ package software.wings.beans;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
 import org.apache.commons.io.IOUtils;
 
 import com.offbytwo.jenkins.JenkinsServer;
@@ -97,5 +99,109 @@ public class JenkinsArtifactSource extends ArtifactSource {
       setSourceName(jobname);
     }
     return super.getSourceName();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    if (!super.equals(o))
+      return false;
+    JenkinsArtifactSource that = (JenkinsArtifactSource) o;
+    return Objects.equals(jenkinsURL, that.jenkinsURL) && Objects.equals(username, that.username)
+        && Objects.equals(password, that.password) && Objects.equals(jobname, that.jobname)
+        && Objects.equals(artifactPathRegex, that.artifactPathRegex);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("jenkinsURL", jenkinsURL)
+        .add("username", username)
+        .add("password", password)
+        .add("jobname", jobname)
+        .add("artifactPathRegex", artifactPathRegex)
+        .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), jenkinsURL, username, password, jobname, artifactPathRegex);
+  }
+
+  public static class Builder {
+    private ArtifactType artifactType;
+    private String sourceName;
+    private String artifactPathRegex;
+    private String jobname;
+    private String password;
+    private String username;
+    private String jenkinsURL;
+
+    private Builder() {}
+
+    public static Builder aJenkinsArtifactSource() {
+      return new Builder();
+    }
+
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
+    public Builder withArtifactPathRegex(String artifactPathRegex) {
+      this.artifactPathRegex = artifactPathRegex;
+      return this;
+    }
+
+    public Builder withJobname(String jobname) {
+      this.jobname = jobname;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withUsername(String username) {
+      this.username = username;
+      return this;
+    }
+
+    public Builder withJenkinsURL(String jenkinsURL) {
+      this.jenkinsURL = jenkinsURL;
+      return this;
+    }
+
+    public Builder but() {
+      return aJenkinsArtifactSource()
+          .withArtifactType(artifactType)
+          .withSourceName(sourceName)
+          .withArtifactPathRegex(artifactPathRegex)
+          .withJobname(jobname)
+          .withPassword(password)
+          .withUsername(username)
+          .withJenkinsURL(jenkinsURL);
+    }
+
+    public JenkinsArtifactSource build() {
+      JenkinsArtifactSource jenkinsArtifactSource = new JenkinsArtifactSource();
+      jenkinsArtifactSource.setArtifactType(artifactType);
+      jenkinsArtifactSource.setSourceName(sourceName);
+      jenkinsArtifactSource.setArtifactPathRegex(artifactPathRegex);
+      jenkinsArtifactSource.setJobname(jobname);
+      jenkinsArtifactSource.setPassword(password);
+      jenkinsArtifactSource.setUsername(username);
+      jenkinsArtifactSource.setJenkinsURL(jenkinsURL);
+      return jenkinsArtifactSource;
+    }
   }
 }

@@ -3,6 +3,9 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.google.common.base.MoreObjects;
+
+import java.util.Objects;
 
 /**
  *  ArtifactSource bean class.
@@ -52,4 +55,29 @@ public abstract class ArtifactSource {
   }
 
   public abstract ArtifactFile collect(Object[] params);
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    ArtifactSource that = (ArtifactSource) o;
+    return Objects.equals(sourceName, that.sourceName) && sourceType == that.sourceType
+        && artifactType == that.artifactType;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(sourceName, sourceType, artifactType);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("sourceName", sourceName)
+        .add("sourceType", sourceType)
+        .add("artifactType", artifactType)
+        .toString();
+  }
 }

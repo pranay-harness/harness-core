@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,5 +29,10 @@ public class RestRequest<T> {
   }
   public void setResource(T resource) {
     this.resource = resource;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("metaData", metaData).add("resource", resource).toString();
   }
 }

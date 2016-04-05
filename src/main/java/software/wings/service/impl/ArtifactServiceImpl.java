@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import java.io.File;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -10,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Singleton;
 
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -23,11 +26,15 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.FileUtils;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 import software.wings.utils.Validator;
 
 @Singleton
+@ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifatcFile";
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -36,21 +43,31 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact create(String applicationId, String releaseId, String artifactSourceName) {
-    Validator.notNullCheck("applicationId", applicationId);
-    Validator.notNullCheck("releaseId", releaseId);
-    Application application = wingsPersistence.get(Application.class, applicationId);
-    Release release = wingsPersistence.get(Release.class, releaseId);
-    Validator.equalCheck(applicationId, release.getApplication().getUuid());
+  @ValidationGroups(Create.class)
+  public Artifact create(@Valid Artifact artifact) {
+    Application application = wingsPersistence.get(Application.class, artifact.getApplication().getUuid());
+    Validator.notNullCheck("application", application);
+    Release release = wingsPersistence.get(Release.class, artifact.getRelease().getUuid());
+    Validator.notNullCheck("release", release);
 
-    Artifact artifact = new Artifact();
+    Validator.equalCheck(application.getUuid(), release.getApplication().getUuid());
+
     artifact.setApplication(application);
     artifact.setRelease(release);
-    artifact.setArtifactSourceName(artifactSourceName);
     artifact.setStatus(Status.RUNNING);
     String key = wingsPersistence.save(artifact);
 
-    ThreadPool.execute(new ArtifactCollector(wingsPersistence, release, artifactSourceName, artifact));
+    ThreadPool.execute(new ArtifactCollector(wingsPersistence, release, artifact.getArtifactSourceName(), artifact));
+
+    return wingsPersistence.get(Artifact.class, key);
+  }
+
+  @Override
+  @ValidationGroups(value = {Update.class})
+  public Artifact update(@Valid Artifact artifact) {
+    Artifact dbArtifact = wingsPersistence.get(Artifact.class, artifact.getUuid());
+    dbArtifact.setDisplayName(artifact.getDisplayName());
+    String key = wingsPersistence.save(dbArtifact);
 
     return wingsPersistence.get(Artifact.class, key);
   }

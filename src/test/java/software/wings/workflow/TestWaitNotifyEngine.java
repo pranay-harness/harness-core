@@ -12,6 +12,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
@@ -19,27 +20,15 @@ import software.wings.dl.WingsPersistence;
 import software.wings.waitNotify.NotifyCallback;
 import software.wings.waitNotify.WaitNotifyEngine;
 
-public class TestWaitNotifyEngine {
+import javax.inject.Inject;
+
+public class TestWaitNotifyEngine extends WingsBaseTest {
   static Map<String, Serializable> responseMap = new HashMap<>();
+
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Test
   public void testWaitNotify() throws InterruptedException {
-    MongoConfig factory = new MongoConfig();
-    factory.setDb("test");
-    factory.setHost("localhost");
-    factory.setPort(27017);
-    final MainConfiguration mainConfiguration = new MainConfiguration();
-    mainConfiguration.setMongoConnectionFactory(factory);
-
-    Injector injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MainConfiguration.class).toInstance(mainConfiguration);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-      }
-    });
-
-    WaitNotifyEngine waitNotifyEngine = injector.getInstance(WaitNotifyEngine.class);
     waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "345");
 
     System.out.println("responseMap:" + responseMap);

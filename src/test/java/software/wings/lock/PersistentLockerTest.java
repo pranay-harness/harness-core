@@ -7,32 +7,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 
-public class TestPersistentLocker {
-  static PersistentLocker persistentLocker;
+import javax.inject.Inject;
 
-  @BeforeClass
-  public static void setup() {
-    MongoConfig factory = new MongoConfig();
-    factory.setDb("test");
-    factory.setHost("localhost");
-    factory.setPort(27017);
-    final MainConfiguration mainConfiguration = new MainConfiguration();
-    mainConfiguration.setMongoConnectionFactory(factory);
-
-    Injector injector = Guice.createInjector(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(MainConfiguration.class).toInstance(mainConfiguration);
-        bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-      }
-    });
-    persistentLocker = injector.getInstance(PersistentLocker.class);
-  }
+public class PersistentLockerTest extends WingsBaseTest {
+  @Inject private PersistentLocker persistentLocker;
 
   @Test
   public void testAcquireLock() {

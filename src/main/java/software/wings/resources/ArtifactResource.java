@@ -6,15 +6,7 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 
 import javax.inject.Inject;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Encoded;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -31,6 +23,11 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.utils.Validator;
+
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.beans.Release.Builder.aRelease;
 
 /**
  *  ArtifactResource.
@@ -74,29 +71,42 @@ public class ArtifactResource {
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Artifact> save(@PathParam("applicationId") String applicationId,
-      @QueryParam("releaseId") String releaseId, @QueryParam("artifactSourceName") String artifactSourceName) {
-    return new RestResponse<Artifact>(artifactService.create(applicationId, releaseId, artifactSourceName));
+  public RestResponse<Artifact> save(@PathParam("applicationId") String applicationId, Artifact artifact) {
+    Validator.equalCheck(applicationId, artifact.getApplication().getUuid());
+    return new RestResponse<Artifact>(artifactService.create(artifact));
   }
 
+  @PUT
+  @Path("{applicationId}/{artifactId}")
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  public RestResponse<Artifact> update(Artifact artifact) {
+    return new RestResponse<Artifact>(artifactService.update(artifact));
+  }
+
+  /*
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  public RestResponse<String> uploadArtifact(@FormDataParam("part") InputStream uploadedInputStream,
-      @FormDataParam("part") FormDataContentDisposition fileDetail) {
-    //		logger.debug("uploadedInputStream :" + uploadedInputStream);
-    //		logger.debug("fileDetail :" + fileDetail);
-    //
-    //		String filename = fileDetail.getFileName();
-    //		logger.debug("filename Received :" + filename);
-    //
-    //		// save it
-    //		String uploadedFilename = dumpFile(uploadedInputStream);
-    //		logger.debug("File uploaded to : " + uploadedFilename);
-    //
-    //		return new RestResponse<String>(uploadedFilename);
-    return null;
-  }
+  @Path("upload")
+  public RestResponse<String> uploadArtifact(
+          @FormDataParam("part") InputStream uploadedInputStream,
+          @FormDataParam("part") FormDataContentDisposition fileDetail) {
+
+//		logger.debug("uploadedInputStream :" + uploadedInputStream);
+//		logger.debug("fileDetail :" + fileDetail);
+//
+//		String filename = fileDetail.getFileName();
+//		logger.debug("filename Received :" + filename);
+//
+//		// save it
+//		String uploadedFilename = dumpFile(uploadedInputStream);
+//		logger.debug("File uploaded to : " + uploadedFilename);
+//
+//		return new RestResponse<String>(uploadedFilename);
+          return new RestResponse<String>(null);
+  }*/
 
   @GET
   @Path("download/{applicationId}/{artifactId}")
