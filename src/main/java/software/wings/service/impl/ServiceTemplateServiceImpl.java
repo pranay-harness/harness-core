@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import com.google.inject.Inject;
 import software.wings.beans.Host;
