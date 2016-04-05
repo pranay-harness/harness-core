@@ -8,13 +8,16 @@ import software.wings.app.WingsBootstrap;
 import software.wings.beans.Deployment;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.NodeSetExecutorService;
 
+import java.util.concurrent.ExecutorService;
+
 @Singleton
 public class DeploymentServiceImpl implements DeploymentService {
+  @Inject private ExecutorService executorService;
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -25,21 +28,21 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   public Deployment create(Deployment deployment) {
     deployment = wingsPersistence.saveAndGet(Deployment.class, deployment);
-    ThreadPool.execute(new DeploymentExecutor(deployment));
+    executorService.submit(new DeploymentExecutor(deployment));
     return deployment;
   }
-}
 
-class DeploymentExecutor implements Runnable {
-  private Deployment deployment;
+  static class DeploymentExecutor implements Runnable {
+    private Deployment deployment;
 
-  public DeploymentExecutor(Deployment deployment) {
-    this.deployment = deployment;
-  }
+    public DeploymentExecutor(Deployment deployment) {
+      this.deployment = deployment;
+    }
 
-  @Override
-  public void run() {
-    NodeSetExecutorService nodeSetExecutorService = WingsBootstrap.lookup(NodeSetExecutorService.class);
-    nodeSetExecutorService.execute(deployment);
+    @Override
+    public void run() {
+      NodeSetExecutorService nodeSetExecutorService = WingsBootstrap.lookup(NodeSetExecutorService.class);
+      nodeSetExecutorService.execute(deployment);
+    }
   }
 }

@@ -18,6 +18,9 @@ import org.mongodb.morphia.Morphia;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.ReadPref;
+import software.wings.common.thread.ForceQueuePolicy;
+import software.wings.common.thread.ScalingQueue;
+import software.wings.common.thread.ScalingThreadPoolExecutor;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -28,9 +31,12 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.utils.CurrentThreadExecutor;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
 
 /**
  * Created by peeyushaggarwal on 4/5/16.
@@ -40,8 +46,7 @@ public class WingsRule implements MethodRule {
   private MongoServer mongoServer;
   private Datastore datastore;
   private int port = 0;
-
-  public WingsRule() {}
+  private ExecutorService executorService = new CurrentThreadExecutor();
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
@@ -80,6 +85,7 @@ public class WingsRule implements MethodRule {
         bind(WorkflowService.class).to(WorkflowServiceImpl.class);
         bind(RoleService.class).to(RoleServiceImpl.class);
         bind(UserService.class).to(UserServiceImpl.class);
+        bind(ExecutorService.class).toInstance(executorService);
       }
     });
     WingsBootstrap.initialize(injector);

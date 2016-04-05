@@ -12,9 +12,13 @@ import com.google.inject.name.Names;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import org.glassfish.hk2.utilities.NamedImpl;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import software.wings.beans.ReadPref;
+import software.wings.common.thread.ForceQueuePolicy;
+import software.wings.common.thread.ScalingQueue;
+import software.wings.common.thread.ScalingThreadPoolExecutor;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -26,6 +30,9 @@ import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Rishi
@@ -67,6 +74,14 @@ public class WingsModule extends AbstractModule {
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
+  private ExecutorService createExecutor(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {
+    ScalingQueue queue = new ScalingQueue();
+    ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue);
+    executor.setRejectedExecutionHandler(new ForceQueuePolicy());
+    queue.setThreadPoolExecutor(executor);
+    return executor;
+  }
+
   /* (non-Javadoc)
    * @see com.google.inject.AbstractModule#configure()
    */
@@ -93,5 +108,6 @@ public class WingsModule extends AbstractModule {
     bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
         .annotatedWith(Names.named("datastoreMap"))
         .toInstance(datastoreMap);
+    bind(ExecutorService.class).toInstance(createExecutor(20, 1000, 500L, TimeUnit.MILLISECONDS));
   }
 }

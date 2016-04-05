@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import java.io.File;
+import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -21,7 +22,6 @@ import software.wings.beans.ArtifactFile;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
@@ -34,6 +34,8 @@ import software.wings.utils.Validator;
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifatcFile";
+
+  @Inject private ExecutorService executorService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -57,7 +59,8 @@ public class ArtifactServiceImpl implements ArtifactService {
     artifact.setStatus(Status.RUNNING);
     String key = wingsPersistence.save(artifact);
 
-    ThreadPool.execute(new ArtifactCollector(wingsPersistence, release, artifact.getArtifactSourceName(), artifact));
+    executorService.submit(
+        new ArtifactCollector(wingsPersistence, release, artifact.getArtifactSourceName(), artifact));
 
     return wingsPersistence.get(Artifact.class, key);
   }
@@ -97,38 +100,38 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact get(String applicationId, String artifactId) {
     return wingsPersistence.get(Artifact.class, artifactId);
   }
-}
 
-class ArtifactCollector implements Runnable {
-  private WingsPersistence wingsPersistence;
-  private Release release;
-  private Artifact artifact;
-  private String artifactSourceName;
+  static class ArtifactCollector implements Runnable {
+    private WingsPersistence wingsPersistence;
+    private Release release;
+    private Artifact artifact;
+    private String artifactSourceName;
 
-  public ArtifactCollector(
-      WingsPersistence wingsPersistence, Release release, String artifactSourceName, Artifact artifact) {
-    this.wingsPersistence = wingsPersistence;
-    this.release = release;
-    this.artifactSourceName = artifactSourceName;
-    this.artifact = artifact;
-  }
-
-  @Override
-  public void run() {
-    try {
-      ArtifactFile artifactFile = release.getArtifactSources().get(artifactSourceName).collect(null);
-      UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class)
-                                           .set("artifactFile", artifactFile)
-                                           .set("status", Artifact.Status.READY);
-      wingsPersistence.update(artifact, ops);
-      logger.info("Artifact collection completed - artifactId : " + artifact.getUuid());
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
-      UpdateOperations<Artifact> ops =
-          wingsPersistence.createUpdateOperations(Artifact.class).set("status", Artifact.Status.FAILED);
-      wingsPersistence.update(artifact, ops);
+    public ArtifactCollector(
+        WingsPersistence wingsPersistence, Release release, String artifactSourceName, Artifact artifact) {
+      this.wingsPersistence = wingsPersistence;
+      this.release = release;
+      this.artifactSourceName = artifactSourceName;
+      this.artifact = artifact;
     }
-  }
 
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
+    @Override
+    public void run() {
+      try {
+        ArtifactFile artifactFile = release.getArtifactSources().get(artifactSourceName).collect(null);
+        UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class)
+                                             .set("artifactFile", artifactFile)
+                                             .set("status", Status.READY);
+        wingsPersistence.update(artifact, ops);
+        logger.info("Artifact collection completed - artifactId : " + artifact.getUuid());
+      } catch (Exception e) {
+        logger.error(e.getMessage(), e);
+        UpdateOperations<Artifact> ops =
+            wingsPersistence.createUpdateOperations(Artifact.class).set("status", Status.FAILED);
+        wingsPersistence.update(artifact, ops);
+      }
+    }
+
+    private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
+  }
 }

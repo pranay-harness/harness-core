@@ -6,6 +6,7 @@ package software.wings.sm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 
@@ -16,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Singleton;
 
 import software.wings.beans.ErrorConstants;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.waitNotify.NotifyCallback;
@@ -28,6 +28,8 @@ import software.wings.waitNotify.WaitNotifyEngine;
  */
 @Singleton
 public class StateMachineExecutor {
+  @Inject private ExecutorService executorService;
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -74,7 +76,7 @@ public class StateMachineExecutor {
     smInstance.setNotifyId(notifyId);
     smInstance = wingsPersistence.saveAndGet(SMInstance.class, smInstance);
 
-    ThreadPool.execute(new SMExecutionDispatcher(sm, this, smInstance));
+    executorService.submit(new SMExecutionDispatcher(sm, this, smInstance));
   }
 
   public void execute(SMInstance smInstance) {
@@ -225,29 +227,29 @@ public class StateMachineExecutor {
   }
 
   private static Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
-}
 
-class SMExecutionDispatcher implements Runnable {
-  private SMInstance smInstance;
-  private StateMachine sm;
-  private StateMachineExecutor stateMachineExecutor;
+  static class SMExecutionDispatcher implements Runnable {
+    private SMInstance smInstance;
+    private StateMachine sm;
+    private StateMachineExecutor stateMachineExecutor;
 
-  /**
-   * @param sm
-   * @param smInstance
-   */
-  public SMExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SMInstance smInstance) {
-    this.sm = sm;
-    this.stateMachineExecutor = stateMachineExecutor;
-    this.smInstance = smInstance;
+    /**
+     * @param sm
+     * @param smInstance
+     */
+    public SMExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SMInstance smInstance) {
+      this.sm = sm;
+      this.stateMachineExecutor = stateMachineExecutor;
+      this.smInstance = smInstance;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      stateMachineExecutor.execute(sm, smInstance);
+    }
+    private static Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
   }
-
-  /* (non-Javadoc)
-   * @see java.lang.Runnable#run()
-   */
-  @Override
-  public void run() {
-    stateMachineExecutor.execute(sm, smInstance);
-  }
-  private static Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
 }

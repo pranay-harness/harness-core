@@ -3,6 +3,7 @@ package software.wings.waitNotify;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,10 +26,13 @@ import software.wings.utils.CollectionUtils;
 public class Notifier implements Runnable {
   private WingsPersistence wingsPersistence;
   private PersistentLocker persistentLocker;
+  private ExecutorService executorService;
 
-  public Notifier(WingsPersistence wingsPersistence, PersistentLocker persistentLocker) {
+  public Notifier(
+      WingsPersistence wingsPersistence, PersistentLocker persistentLocker, ExecutorService executorService) {
     this.wingsPersistence = wingsPersistence;
     this.persistentLocker = persistentLocker;
+    this.executorService = executorService;
   }
 
   @Override
@@ -69,7 +73,7 @@ public class Notifier implements Runnable {
         waitInstanceIds.add(waitQueue.getWaitInstanceId());
       }
       for (String waitInstanceId : waitInstanceIds) {
-        ThreadPool.execute(
+        executorService.execute(
             new NotifierForWaitInstance(wingsPersistence, persistentLocker, waitInstanceId, correlationIds));
       }
     } catch (Exception e) {

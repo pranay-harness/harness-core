@@ -2,6 +2,7 @@ package software.wings.waitNotify;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 
@@ -32,6 +33,8 @@ public class WaitNotifyEngine {
 
   @Inject private PersistentLocker persistentLocker;
 
+  @Inject private ExecutorService executorService;
+
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
     return waitForAll(NO_TIMEOUT, callback, correlationIds);
   }
@@ -61,7 +64,7 @@ public class WaitNotifyEngine {
     }
     logger.debug("notify request received for the correlationId :" + correlationId);
     String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
-    ThreadPool.execute(new Notifier(wingsPersistence, persistentLocker));
+    executorService.submit(new Notifier(wingsPersistence, persistentLocker, executorService));
     return notificationId;
   }
 
