@@ -61,7 +61,7 @@ public class WaitNotifyEngine {
     }
     logger.debug("notify request received for the correlationId :" + correlationId);
     String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
-    ThreadPool.execute(new Notifier(wingsPersistence, persistentLocker, correlationId));
+    ThreadPool.execute(new Notifier(wingsPersistence, persistentLocker));
     return notificationId;
   }
 

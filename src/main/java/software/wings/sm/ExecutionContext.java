@@ -67,13 +67,27 @@ public class ExecutionContext implements Serializable {
     this.repeatElementMap = repeatElementMap;
   }
 
+  public Object evaluateExpression(String expression) {
+    return null;
+  }
+
+  public List evaluateExpressionAsList(String expression) {
+    return null;
+  }
+
+  public Map evaluateExpressionAsMap(String expression) {
+    return null;
+  }
+
   public List<RepeatElement> evaluateRepeatExpression(
       RepeatElementType repeatElementType, String repeatElementExpression) {
     return null;
   }
+
   public boolean isDirty() {
     return dirty;
   }
+
   public void setDirty(boolean dirty) {
     this.dirty = dirty;
   }

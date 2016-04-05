@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Serialized;
 
 import software.wings.beans.Base;
+import software.wings.sm.ExecutionStatus;
 
 /**
  * @author Rishi
@@ -19,6 +20,8 @@ public class WaitInstance extends Base {
   @Serialized private NotifyCallback callback;
 
   private long timeoutMsec;
+
+  private ExecutionStatus status = ExecutionStatus.NEW;
 
   public WaitInstance() {}
   public WaitInstance(NotifyCallback callback, String[] correlationIds) {
@@ -46,5 +49,11 @@ public class WaitInstance extends Base {
   }
   public void setTimeoutMsec(long timeoutMsec) {
     this.timeoutMsec = timeoutMsec;
+  }
+  public ExecutionStatus getStatus() {
+    return status;
+  }
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
   }
 }

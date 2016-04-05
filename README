@@ -1,0 +1,11 @@
+Wings Project Setup instructions :
+1) Eclipse Download: http://www.eclipse.org/downloads/
+
+2) Maven download : https://maven.apache.org/download.cgi 
+
+3) Project Checkout from repository:  https://bitbucket.org/rishiwings/wings
+
+4) Set up Project:
+4a) Eclipse project - Run "mvn eclipse:eclipse -DdownloadSources=true" command in the project checkout directory.
+
+5) Import the project in the eclipse.

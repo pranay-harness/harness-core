@@ -16,5 +16,6 @@ public enum StateType {
   START,
   STOP,
   RESTART,
-  DEPLOY;
+  DEPLOY,
+  SUB_STATE_MACHINE;
 }
