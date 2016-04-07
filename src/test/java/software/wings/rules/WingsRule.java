@@ -23,14 +23,8 @@ import software.wings.common.thread.ScalingQueue;
 import software.wings.common.thread.ScalingThreadPoolExecutor;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.ArtifactServiceImpl;
-import software.wings.service.impl.RoleServiceImpl;
-import software.wings.service.impl.UserServiceImpl;
-import software.wings.service.impl.WorkflowServiceImpl;
-import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.RoleService;
-import software.wings.service.intfc.UserService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.impl.*;
+import software.wings.service.intfc.*;
 import software.wings.utils.CurrentThreadExecutor;
 
 import java.net.InetSocketAddress;
@@ -86,6 +80,7 @@ public class WingsRule implements MethodRule {
         bind(RoleService.class).to(RoleServiceImpl.class);
         bind(UserService.class).to(UserServiceImpl.class);
         bind(ExecutorService.class).toInstance(executorService);
+        bind(InfraService.class).to(InfraServiceImpl.class);
       }
     });
     WingsBootstrap.initialize(injector);
