@@ -20,7 +20,7 @@ public class ThreadPool {
   private static ThreadPoolExecutor commonPool =
       create(CORE_POOL_SIZE, MAX_POOL_SIZE, IDLE_TIME, TimeUnit.MILLISECONDS);
 
-  private static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {
+  public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {
     ScalingQueue queue = new ScalingQueue();
     ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue);
     executor.setRejectedExecutionHandler(new ForceQueuePolicy());

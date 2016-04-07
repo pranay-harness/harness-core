@@ -36,7 +36,7 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.createServiceTemplate(envID, serviceTemplate));
   }
 
-  @POST
+  @PUT
   @Path("{envID}")
   public RestResponse<ServiceTemplate> update(@PathParam("envID") String envID, ServiceTemplate serviceTemplate) {
     return new RestResponse<>(serviceTemplateService.updateServiceTemplate(envID, serviceTemplate));

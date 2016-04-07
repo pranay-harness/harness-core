@@ -30,8 +30,8 @@ public class WingsMongoPersistence implements WingsPersistence {
   private Map<ReadPref, Datastore> datastoreMap;
 
   @Inject
-  public WingsMongoPersistence(@Named("primaryDatasource") Datastore primaryDatastore,
-      @Named("secondaryDatasource") Datastore secondaryDatastore,
+  public WingsMongoPersistence(@Named("primaryDatastore") Datastore primaryDatastore,
+      @Named("secondaryDatastore") Datastore secondaryDatastore,
       @Named("datastoreMap") Map<ReadPref, Datastore> datastoreMap) {
     this.primaryDatastore = primaryDatastore;
     this.secondaryDatastore = secondaryDatastore;

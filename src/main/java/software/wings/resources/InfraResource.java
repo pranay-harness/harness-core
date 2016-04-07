@@ -1,16 +1,13 @@
 package software.wings.resources;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
+import com.google.inject.Inject;
 import software.wings.beans.*;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfraService;
 
-import java.util.List;
+import javax.ws.rs.*;
 
 @Path("/infra")
 @AuthRule
@@ -55,7 +52,7 @@ public class InfraResource {
     return new RestResponse<Host>(infraService.createHost(infraID, host));
   }
 
-  @POST
+  @PUT
   @Path("{infraID}/hosts")
   public RestResponse<Host> updateHost(@PathParam("infraID") String infraID, Host host) {
     return new RestResponse<Host>(infraService.updateHost(infraID, host));

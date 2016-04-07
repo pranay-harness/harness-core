@@ -31,12 +31,12 @@ public class ServiceResource {
   }
 
   @POST
-  RestResponse<Service> save(Service service) {
+  public RestResponse<Service> save(Service service) {
     return new RestResponse<>(srs.save(service));
   }
 
   @PUT
-  RestResponse<Service> update(Service service) {
+  public RestResponse<Service> update(Service service) {
     return new RestResponse<>(srs.update(service));
   }
 }

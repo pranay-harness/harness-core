@@ -45,8 +45,7 @@ public class InfraServiceTest {
     tag.setType("OS");
     tag.setName("OS");
     tag.setDescription("Operating system types");
-    tag.setEnvID("ddn");
-    tag = infraService.createTag(envID, tag);
+    tag = infraService.createTag("ddn", tag);
 
     Host host = new Host();
     host = infraService.createHost("ff329r", host);
