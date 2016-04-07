@@ -1,33 +1,26 @@
 package software.wings;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.TypeLiteral;
-import com.google.inject.name.Names;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-import org.junit.ClassRule;
+import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TestRule;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-import ru.vyarus.guice.validator.ValidationModule;
-import software.wings.beans.ReadPref;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
+import org.junit.rules.TestName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.rules.WingsRule;
-import software.wings.service.impl.ArtifactServiceImpl;
-import software.wings.service.intfc.ArtifactService;
-
-import java.net.InetSocketAddress;
-import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 4/5/16.
  */
-public class WingsBaseTest { @Rule public WingsRule wingsRule = new WingsRule(); }
+public class WingsBaseTest {
+  @Rule public TestName testName = new TestName();
+
+  @Before
+  public void logTestCaseName() {
+    System.out.println(String.format("Running test %s", testName.getMethodName()));
+  }
+
+  @Rule public WingsRule wingsRule = new WingsRule();
+
+  protected Logger logger() {
+    return LoggerFactory.getLogger(getClass());
+  }
+}

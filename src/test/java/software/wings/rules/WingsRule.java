@@ -75,8 +75,8 @@ public class WingsRule implements MethodRule {
     injector = Guice.createInjector(new ValidationModule(), new AbstractModule() {
       @Override
       protected void configure() {
-        bind(Datastore.class).annotatedWith(Names.named("primaryDatasource")).toInstance(datastore);
-        bind(Datastore.class).annotatedWith(Names.named("secondaryDatasource")).toInstance(datastore);
+        bind(Datastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(datastore);
+        bind(Datastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(datastore);
         bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
             .annotatedWith(Names.named("datastoreMap"))
             .toInstance(ImmutableMap.<ReadPref, Datastore>of(ReadPref.CRITICAL, datastore, ReadPref.NORMAL, datastore));
