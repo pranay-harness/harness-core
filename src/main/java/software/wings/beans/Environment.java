@@ -4,6 +4,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.List;
+
 /**
  *  Environment bean class.
  *
@@ -15,7 +17,6 @@ import org.mongodb.morphia.annotations.Reference;
 @Entity(value = "environments", noClassnameStored = true)
 public class Environment extends Base {
   @Indexed private String applicationId;
-
   private String name;
   private String description;
 
