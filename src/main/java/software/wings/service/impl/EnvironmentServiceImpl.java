@@ -42,7 +42,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   public Environment createEnvironment(String applicationId, Environment environment) {
     Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
     UpdateOperations<Application> updateOperations =
-        wingsPersistence.createUpdateOperations(Application.class).add("environment", savedEnv);
+        wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);
     Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(applicationId);
     wingsPersistence.update(updateQuery, updateOperations);
     return savedEnv;

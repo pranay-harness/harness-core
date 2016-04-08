@@ -14,7 +14,7 @@ import java.util.List;
  * Created by anubhaw on 4/1/16.
  */
 
-@Path("/env")
+@Path("/environments")
 @AuthRule
 @Timed
 @ExceptionMetered
