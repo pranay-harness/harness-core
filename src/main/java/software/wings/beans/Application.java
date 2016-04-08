@@ -21,6 +21,7 @@ public class Application extends Base {
   private String name;
   private String description;
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments;
 
   public String getName() {
     return name;
@@ -34,6 +35,7 @@ public class Application extends Base {
   public void setDescription(String description) {
     this.description = description;
   }
+
   public List<Service> getServices() {
     return services;
   }
@@ -41,10 +43,23 @@ public class Application extends Base {
     this.services = services;
   }
   public void addService(Service service) {
-    if (services == null) {
-      services = new ArrayList<>();
+    if (this.services == null) {
+      this.services = new ArrayList<>();
     }
-    services.add(service);
+    this.services.add(service);
+  }
+
+  public List<Environment> getEnvironments() {
+    return environments;
+  }
+  public void setEnvironments(List<Environment> environments) {
+    this.environments = environments;
+  }
+  public void addEnvironment(Environment environment) {
+    if (this.environments == null) {
+      this.environments = new ArrayList<>();
+    }
+    this.environments.add(environment);
   }
 
   @Override

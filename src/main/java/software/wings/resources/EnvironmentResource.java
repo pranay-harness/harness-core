@@ -8,6 +8,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.EnvironmentService;
 
 import javax.ws.rs.*;
+import java.util.List;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -24,10 +25,8 @@ public class EnvironmentResource {
 
   @GET
   @Path("{appID}")
-  public RestResponse<PageResponse<Environment>> listEnvironments(
-      @PathParam("appID") String appID, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("appID", appID, SearchFilter.OP.EQ);
-    return new RestResponse<PageResponse<Environment>>(envService.listEnvironments(pageRequest));
+  public RestResponse<List<Environment>> listEnvironments(@PathParam("appID") String appID) {
+    return new RestResponse<List<Environment>>(envService.listEnvironments(appID));
   }
 
   @POST

@@ -12,6 +12,7 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * Created by anubhaw on 3/25/16.
@@ -26,16 +27,19 @@ public class ServiceResource {
   @Inject private ServiceResourceService srs;
 
   @GET
-  public RestResponse<PageResponse<Service>> list(@BeanParam PageRequest<Service> pageRequest) {
-    return new RestResponse<>(srs.list(pageRequest));
+  @Path("{appID}")
+  public RestResponse<List<Service>> list(@PathParam("appID") String appID) {
+    return new RestResponse<>(srs.list(appID));
   }
 
   @POST
-  public RestResponse<Service> save(Service service) {
-    return new RestResponse<>(srs.save(service));
+  @Path("{appID}")
+  public RestResponse<Service> save(@PathParam("appID") String appID, Service service) {
+    return new RestResponse<>(srs.save(appID, service));
   }
 
   @PUT
+  @Path("{appID}")
   public RestResponse<Service> update(Service service) {
     return new RestResponse<>(srs.update(service));
   }

@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -8,6 +11,9 @@ import software.wings.service.intfc.EnvironmentService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
+
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -18,8 +24,13 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Environment> listEnvironments(PageRequest<Environment> req) {
-    return wingsPersistence.query(Environment.class, req);
+  public List<Environment> listEnvironments(String appID) {
+    Application application = wingsPersistence.createQuery(Application.class)
+                                  .field(ID_KEY)
+                                  .equal(appID)
+                                  .retrievedFields(true, "environments")
+                                  .get();
+    return application.getEnvironments();
   }
 
   @Override
@@ -29,7 +40,11 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public Environment createEnvironment(String applicationId, Environment environment) {
-    environment.setApplicationId(applicationId);
-    return wingsPersistence.saveAndGet(Environment.class, environment);
+    Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
+    UpdateOperations<Application> updateOperations =
+        wingsPersistence.createUpdateOperations(Application.class).add("environment", savedEnv);
+    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(applicationId);
+    wingsPersistence.update(updateQuery, updateOperations);
+    return savedEnv;
   }
 }
