@@ -22,6 +22,7 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
+  @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
 
   public String getName() {
     return name;
@@ -47,6 +48,21 @@ public class Service extends Base {
     this.artifactType = artifactType;
   }
 
+  public List<PlatformSoftware> getPlatformSoftwares() {
+    return platformSoftwares;
+  }
+
+  public void setPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
+    this.platformSoftwares = platformSoftwares;
+  }
+
+  public void addPlatformSoftware(PlatformSoftware platformSoftware) {
+    if (platformSoftwares == null) {
+      platformSoftwares = new ArrayList<>();
+    }
+    platformSoftwares.add(platformSoftware);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -57,12 +73,12 @@ public class Service extends Base {
       return false;
     Service service = (Service) o;
     return Objects.equals(name, service.name) && Objects.equals(description, service.description)
-        && artifactType == service.artifactType;
+        && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), name, description, artifactType);
+    return Objects.hash(super.hashCode(), name, description, artifactType, platformSoftwares);
   }
 
   @Override
@@ -71,6 +87,7 @@ public class Service extends Base {
         .add("name", name)
         .add("description", description)
         .add("artifactType", artifactType)
+        .add("platformSoftwares", platformSoftwares)
         .toString();
   }
 
@@ -78,6 +95,7 @@ public class Service extends Base {
     private String name;
     private String description;
     private ArtifactType artifactType;
+    private List<PlatformSoftware> platformSoftwares;
     private String uuid;
     private User createdBy;
     private long createdAt;
@@ -103,6 +121,11 @@ public class Service extends Base {
 
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
+      this.platformSoftwares = platformSoftwares;
       return this;
     }
 
@@ -141,6 +164,7 @@ public class Service extends Base {
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
+          .withPlatformSoftwares(platformSoftwares)
           .withUuid(uuid)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
@@ -154,6 +178,7 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
+      service.setPlatformSoftwares(platformSoftwares);
       service.setUuid(uuid);
       service.setCreatedBy(createdBy);
       service.setCreatedAt(createdAt);
