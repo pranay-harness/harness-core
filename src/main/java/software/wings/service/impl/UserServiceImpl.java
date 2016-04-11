@@ -40,7 +40,8 @@ public class UserServiceImpl implements UserService {
       wingsPersistence.update(updateQuery, updateOp);
       return wingsPersistence.get(User.class, userID);
     }
-    throw new WingsException("Invalid operation. Either User or Role doesn't exist");
+    throw new WingsException(
+        "Invalid operation. Either User or Role doesn't exist user = [" + user + "] role = [" + role + "]");
   }
 
   public User update(User user) {

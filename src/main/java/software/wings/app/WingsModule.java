@@ -3,6 +3,10 @@
  */
 package software.wings.app;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
@@ -39,7 +43,6 @@ import static software.wings.common.thread.ThreadPool.*;
 
 /**
  * @author Rishi
- *
  */
 public class WingsModule extends AbstractModule {
   private MainConfiguration configuration;
@@ -48,8 +51,9 @@ public class WingsModule extends AbstractModule {
 
   private Datastore secondaryDatastore;
 
-  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
+  private DistributedLockSvc distributedLockSvc;
 
+  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
   /**
    * @param configuration
    */
@@ -58,12 +62,17 @@ public class WingsModule extends AbstractModule {
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
     List<String> hosts = Splitter.on(",").splitToList(mongoConfig.getHost());
     List<ServerAddress> serverAddresses = new ArrayList<>();
+    StringBuilder mongoURI = new StringBuilder("mongo://");
     for (String host : hosts) {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
     Morphia m = new Morphia();
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
+    distributedLockSvc =
+        new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
+            .getLockSvc();
+    distributedLockSvc.startup();
 
     if (hosts.size() > 1) {
       mongoClient = new MongoClient(serverAddresses);
@@ -84,7 +93,6 @@ public class WingsModule extends AbstractModule {
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-
     bind(AppService.class).to(AppServiceImpl.class);
     bind(ArtifactService.class).to(ArtifactServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
@@ -106,5 +114,6 @@ public class WingsModule extends AbstractModule {
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
     bind(InfraService.class).to(InfraServiceImpl.class);
+    bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
   }
 }

@@ -1,5 +1,10 @@
 package software.wings.rules;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.github.fakemongo.Fongo;
+import com.github.fakemongo.junit.FongoRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -39,6 +44,7 @@ public class WingsRule implements MethodRule {
   private Injector injector;
   private MongoServer mongoServer;
   private Datastore datastore;
+  private DistributedLockSvc distributedLockSvc;
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
 
@@ -61,10 +67,15 @@ public class WingsRule implements MethodRule {
     mongoServer = new MongoServer(new MemoryBackend());
     mongoServer.bind("localhost", port);
     InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-    MongoClient client = new MongoClient(new ServerAddress(serverAddress));
+    final MongoClient client = new MongoClient(new ServerAddress(serverAddress));
 
     Morphia morphia = new Morphia();
     datastore = morphia.createDatastore(client, "wings");
+    distributedLockSvc =
+        new DistributedLockSvcFactory(new DistributedLockSvcOptions(client, "wings", "locks")).getLockSvc();
+    if (!distributedLockSvc.isRunning()) {
+      distributedLockSvc.startup();
+    }
 
     injector = Guice.createInjector(new ValidationModule(), new AbstractModule() {
       @Override
@@ -81,6 +92,8 @@ public class WingsRule implements MethodRule {
         bind(UserService.class).to(UserServiceImpl.class);
         bind(ExecutorService.class).toInstance(executorService);
         bind(InfraService.class).to(InfraServiceImpl.class);
+        bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
+        bind(MongoClient.class).toInstance(client);
       }
     });
     WingsBootstrap.initialize(injector);
@@ -91,6 +104,7 @@ public class WingsRule implements MethodRule {
   }
 
   protected void after() {
+    distributedLockSvc.shutdown();
     mongoServer.shutdown();
     injector.getInstance(WingsPersistence.class).close();
   }
