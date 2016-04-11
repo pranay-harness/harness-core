@@ -5,8 +5,6 @@ import com.google.inject.name.Named;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -18,7 +16,6 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
 
 import javax.inject.Inject;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -115,14 +112,6 @@ public class WingsMongoPersistence implements WingsPersistence {
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
-  }
-
-  @Override
-  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
-    GridFSBucket gridFSBucket =
-        GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
-    return fileId.toHexString();
   }
 
   @Override

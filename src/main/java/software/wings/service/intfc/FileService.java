@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 
@@ -18,6 +19,8 @@ public interface FileService {
   public void downloadToStream(String fileId, OutputStream op, FileBucket fileBucket);
 
   public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
+
+  public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options);
 
   public static enum FileBucket {
     LOB("lob"),

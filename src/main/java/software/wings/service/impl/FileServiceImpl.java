@@ -8,6 +8,7 @@ import java.io.OutputStream;
 
 import javax.inject.Inject;
 
+import com.mongodb.client.gridfs.GridFSBuckets;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -49,6 +50,12 @@ public class FileServiceImpl implements FileService {
   public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket) {
     GridFSFindIterable filemetaData = fileBucket.getGridFSBucket().find(Filters.eq("_id", new ObjectId(fileId)));
     return filemetaData.first();
+  }
+
+  @Override
+  public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options) {
+    ObjectId fileId = fileBucket.getGridFSBucket().uploadFromStream(filename, in, options);
+    return fileId.toHexString();
   }
 
   @Override

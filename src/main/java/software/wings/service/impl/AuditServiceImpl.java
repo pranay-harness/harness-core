@@ -1,20 +1,11 @@
 package software.wings.service.impl;
 
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-
-import java.io.ByteArrayInputStream;
-
-import javax.inject.Inject;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.bson.Document;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import com.google.inject.Singleton;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.PageRequest;
@@ -22,6 +13,11 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.FileService;
+
+import java.io.ByteArrayInputStream;
+
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  *  Audit Service Implementation class.
@@ -32,16 +28,12 @@ import software.wings.service.intfc.AuditService;
  */
 @Singleton
 public class AuditServiceImpl implements AuditService {
-  private static final String AUDIT_BUCKET = "audits";
-
+  @Inject private FileService fileService;
   private WingsPersistence wingsPersistence;
-
-  private GridFSBucket gridFSBucket;
 
   @Inject
   public AuditServiceImpl(WingsPersistence wingsPersistence) {
     this.wingsPersistence = wingsPersistence;
-    this.gridFSBucket = wingsPersistence.createGridFSBucket(AUDIT_BUCKET);
   }
 
   @Override
@@ -75,9 +67,9 @@ public class AuditServiceImpl implements AuditService {
     metadata.append("headerId", headerId);
     metadata.append("requestType", requestType == null ? null : requestType.name());
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
-    ObjectId fileId =
-        gridFSBucket.uploadFromStream(requestType + "-" + headerId, new ByteArrayInputStream(httpBody), options);
-    return fileId.toHexString();
+    String fileID = fileService.uploadFromStream(
+        requestType + "-" + headerId, new ByteArrayInputStream(httpBody), FileService.FileBucket.AUDITS, options);
+    return fileID;
   }
 
   @Override
