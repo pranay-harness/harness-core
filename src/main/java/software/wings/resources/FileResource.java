@@ -20,6 +20,8 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.FileService;
 
+import static software.wings.service.intfc.FileService.FileBucket.LOB;
+
 public class FileResource {
   private static final Logger logger = LoggerFactory.getLogger(FileResource.class);
 
@@ -51,7 +53,7 @@ public class FileResource {
       fileMetadata.setChecksumType(ChecksumType.MD5);
       fileMetadata.setChecksum(md5);
     }
-    String fileId = fileService.saveFile(fileMetadata, uploadedInputStream);
+    String fileId = fileService.saveFile(fileMetadata, uploadedInputStream, LOB);
     return new RestResponse<String>(fileId);
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import com.google.inject.Inject;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -24,6 +25,7 @@ import static software.wings.beans.ErrorConstants.*;
 import static software.wings.core.ssh.ExecutionLogs.getInstance;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
+import static software.wings.service.intfc.FileService.FileBucket.LOB;
 import static software.wings.utils.Misc.quietSleep;
 
 /**
@@ -38,6 +40,8 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected OutputStream outputStream;
   protected InputStream inputStream;
   protected ExecutionLogs executionLogs = getInstance();
+
+  @Inject protected FileService fileService;
 
   public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
@@ -201,8 +205,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
         LOGGER.error("SCP connection initiation failed");
         return FAILURE;
       }
-      FileService fileService = WingsBootstrap.lookup(FileService.class);
-      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath);
+      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath, LOB);
 
       // send "C0644 filesize filename", where filename should not include '/'
       long filesize = fileMetaData.getLength();
@@ -217,7 +220,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       if (checkAck(in) != 0) {
         return FAILURE;
       }
-      fileService.downloadToStream(localFilePath, out);
+      fileService.downloadToStream(localFilePath, out, LOB);
       out.write(new byte[1], 0, 1);
       out.flush();
 

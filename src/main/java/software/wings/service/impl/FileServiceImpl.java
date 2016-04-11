@@ -27,21 +27,11 @@ import software.wings.service.intfc.FileService;
 
 @Singleton
 public class FileServiceImpl implements FileService {
-  private static final String FILE_BUCKET = "lob";
-
-  @Inject private WingsPersistence wingsPersistence;
-
-  private GridFSBucket gridFSBucket;
-
-  public FileServiceImpl() {
-    this.gridFSBucket = wingsPersistence.createGridFSBucket(FILE_BUCKET);
-  }
-
   @Override
-  public File download(String fileId, File file) {
+  public File download(String fileId, File file, FileBucket fileBucket) {
     try {
       FileOutputStream streamToDownload = new FileOutputStream(file);
-      gridFSBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
+      fileBucket.getGridFSBucket().downloadToStream(new ObjectId(fileId), streamToDownload);
       streamToDownload.close();
       return file;
     } catch (IOException e) {
@@ -51,18 +41,18 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
-  public void downloadToStream(String fileId, OutputStream outputStream) {
-    gridFSBucket.downloadToStream(new ObjectId(fileId), outputStream);
+  public void downloadToStream(String fileId, OutputStream outputStream, FileBucket fileBucket) {
+    fileBucket.getGridFSBucket().downloadToStream(new ObjectId(fileId), outputStream);
   }
 
   @Override
-  public GridFSFile getGridFsFile(String fileId) {
-    GridFSFindIterable filemetaData = gridFSBucket.find(Filters.eq("_id", new ObjectId(fileId)));
+  public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket) {
+    GridFSFindIterable filemetaData = fileBucket.getGridFSBucket().find(Filters.eq("_id", new ObjectId(fileId)));
     return filemetaData.first();
   }
 
   @Override
-  public String saveFile(FileMetadata fileMetadata, InputStream in) {
+  public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
     Document metadata = new Document();
     if (StringUtils.isNotBlank(fileMetadata.getFileDataType())) {
       metadata.append("fileDataType", fileMetadata.getFileDataType());
@@ -77,7 +67,7 @@ public class FileServiceImpl implements FileService {
 
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
 
-    ObjectId fileId = gridFSBucket.uploadFromStream(fileMetadata.getFileName(), in, options);
+    ObjectId fileId = fileBucket.getGridFSBucket().uploadFromStream(fileMetadata.getFileName(), in, options);
     return fileId.toHexString();
   }
 

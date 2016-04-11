@@ -17,6 +17,8 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import software.wings.app.WingsBootstrap;
 import software.wings.service.intfc.FileService;
 
+import static software.wings.service.intfc.FileService.FileBucket.LOB;
+
 public class JenkinsArtifactSource extends ArtifactSource {
   public JenkinsArtifactSource() {
     super(SourceType.JENKINS);
@@ -42,7 +44,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
       FileService fileService = WingsBootstrap.lookup(FileService.class);
       FileMetadata fileMetadata = new FileMetadata();
       fileMetadata.setFileName(buildArtifact.getFileName());
-      String uuid = fileService.saveFile(fileMetadata, in);
+      String uuid = fileService.saveFile(fileMetadata, in, LOB);
       ArtifactFile artifactFile = new ArtifactFile();
       artifactFile.setFileUUID(uuid);
       artifactFile.setFileName(buildArtifact.getFileName());
