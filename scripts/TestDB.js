@@ -1,6 +1,6 @@
 // start mongo client and run following command -> 'load("scripts/TestDB.js");'
 
-var DB = connect('127.0.0.1:27017/test');
+var DB = connect('127.0.0.1:27017/wings');
 
 var devENV = {
     "_id" : "852E4A1399664BABBA8C47BEEB985BC8",
