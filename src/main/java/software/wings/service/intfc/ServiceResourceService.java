@@ -1,7 +1,11 @@
 package software.wings.service.intfc;
 
+import com.mongodb.DBObject;
+import software.wings.beans.FileMetadata;
 import software.wings.beans.Service;
+import software.wings.service.intfc.FileService.FileBucket;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -12,4 +16,6 @@ public interface ServiceResourceService {
   public Service save(String appID, Service service);
   public Service findByUUID(String uuid);
   public Service update(Service service);
+  String saveFile(String serviceID, FileMetadata fileMetadata, InputStream uploadedInputStream, FileBucket configs);
+  List<DBObject> fetchConfigs(String serviceID);
 }

@@ -1,35 +1,31 @@
 package software.wings.service.impl;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.inject.Inject;
-
-import com.mongodb.client.gridfs.GridFSBuckets;
-import org.apache.commons.lang3.StringUtils;
-import org.bson.Document;
-import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Singleton;
-import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
-
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.app.WingsBootstrap;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Singleton
 public class FileServiceImpl implements FileService {
+  private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
+
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {
     try {
@@ -61,16 +57,32 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
+  public List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket) {
+    List<ObjectId> objIDs = new ArrayList<>();
+    for (String id : fileIDs) {
+      objIDs.add(new ObjectId(id));
+    }
+    BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
+    List<DBObject> dbObjects =
+        WingsBootstrap.lookup(WingsPersistence.class).getCollection("configs.files").find(query).toArray();
+    return dbObjects;
+  }
+
+  @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
     Document metadata = new Document();
 
     if (isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
       metadata.append("checksum", fileMetadata.getChecksum());
-      metadata.append("checksumType", fileMetadata.getChecksumType());
+      metadata.append("checksumType", fileMetadata.getChecksumType().name());
     }
 
     if (isNotBlank(fileMetadata.getMimeType())) {
       metadata.append("mimeType", fileMetadata.getMimeType());
+    }
+
+    if (isNotBlank(fileMetadata.getRelativePath())) {
+      metadata.append("relativePath", fileMetadata.getRelativePath());
     }
 
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
@@ -78,6 +90,4 @@ public class FileServiceImpl implements FileService {
     ObjectId fileId = fileBucket.getGridFSBucket().uploadFromStream(fileMetadata.getFileName(), in, options);
     return fileId.toHexString();
   }
-
-  private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
 }

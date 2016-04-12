@@ -5,6 +5,7 @@ public class FileMetadata {
   private String mimeType;
   private ChecksumType checksumType;
   private String checksum;
+  private String relativePath;
 
   public String getFileName() {
     return fileName;
@@ -36,5 +37,13 @@ public class FileMetadata {
 
   public void setChecksum(String checksum) {
     this.checksum = checksum;
+  }
+
+  public String getRelativePath() {
+    return relativePath;
+  }
+
+  public void setRelativePath(String relativePath) {
+    this.relativePath = relativePath;
   }
 }

@@ -23,6 +23,7 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
+  private List<String> configIDs;
 
   public String getName() {
     return name;
@@ -63,6 +64,14 @@ public class Service extends Base {
     platformSoftwares.add(platformSoftware);
   }
 
+  public List<String> getConfigIDs() {
+    return configIDs;
+  }
+
+  public void setConfigIDs(List<String> configIDs) {
+    this.configIDs = configIDs;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -96,6 +105,7 @@ public class Service extends Base {
     private String description;
     private ArtifactType artifactType;
     private List<PlatformSoftware> platformSoftwares;
+    private List<String> configIDs;
     private String uuid;
     private User createdBy;
     private long createdAt;
@@ -126,6 +136,11 @@ public class Service extends Base {
 
     public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
       this.platformSoftwares = platformSoftwares;
+      return this;
+    }
+
+    public Builder withServiceIDs(List<String> configIDs) {
+      this.configIDs = configIDs;
       return this;
     }
 
