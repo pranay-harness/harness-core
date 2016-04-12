@@ -24,6 +24,7 @@ public interface FileService {
 
   public static enum FileBucket {
     LOB("lob"),
+    ARTIFACTS("artifacts"),
     AUDITS("audits"),
     CONFIGS("configs"),
     LOGS("logs");

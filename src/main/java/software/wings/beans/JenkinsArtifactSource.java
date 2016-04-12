@@ -1,25 +1,23 @@
 package software.wings.beans;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.util.Objects;
-
 import com.google.common.base.MoreObjects;
-import org.apache.commons.io.IOUtils;
-
+import com.google.inject.Inject;
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
-
-import software.wings.app.WingsBootstrap;
 import software.wings.service.intfc.FileService;
 
-import static software.wings.service.intfc.FileService.FileBucket.LOB;
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Objects;
+
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 public class JenkinsArtifactSource extends ArtifactSource {
+  @Inject private FileService fileService;
+
   public JenkinsArtifactSource() {
     super(SourceType.JENKINS);
   }
@@ -41,10 +39,9 @@ public class JenkinsArtifactSource extends ArtifactSource {
       Artifact buildArtifact = buildWithDetails.getArtifacts().get(0);
       InputStream in = buildWithDetails.downloadArtifact(buildArtifact);
 
-      FileService fileService = WingsBootstrap.lookup(FileService.class);
       FileMetadata fileMetadata = new FileMetadata();
       fileMetadata.setFileName(buildArtifact.getFileName());
-      String uuid = fileService.saveFile(fileMetadata, in, LOB);
+      String uuid = fileService.saveFile(fileMetadata, in, ARTIFACTS);
       ArtifactFile artifactFile = new ArtifactFile();
       artifactFile.setFileUUID(uuid);
       artifactFile.setFileName(buildArtifact.getFileName());

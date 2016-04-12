@@ -30,7 +30,7 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 import software.wings.utils.Validator;
 
-import static software.wings.service.intfc.FileService.FileBucket.LOB;
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 @Singleton
 @ValidateOnExecution
@@ -94,7 +94,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     File artifactFile = new File(tempDir, fileName);
 
     FileService fileService = WingsBootstrap.lookup(FileService.class);
-    fileService.download(artifact.getArtifactFile().getFileUUID(), artifactFile, LOB);
+    fileService.download(artifact.getArtifactFile().getFileUUID(), artifactFile, ARTIFACTS);
     return artifactFile;
   }
 

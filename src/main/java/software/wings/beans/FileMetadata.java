@@ -1,21 +1,10 @@
 package software.wings.beans;
 
 public class FileMetadata {
-  private String fileUUID;
   private String fileName;
   private String mimeType;
-  private String fileDataType;
-  private String fileRefId;
   private ChecksumType checksumType;
   private String checksum;
-
-  public String getFileUUID() {
-    return fileUUID;
-  }
-
-  public void setFileUUID(String fileUUID) {
-    this.fileUUID = fileUUID;
-  }
 
   public String getFileName() {
     return fileName;
@@ -31,22 +20,6 @@ public class FileMetadata {
 
   public void setMimeType(String mimeType) {
     this.mimeType = mimeType;
-  }
-
-  public String getFileDataType() {
-    return fileDataType;
-  }
-
-  public void setFileDataType(String fileDataType) {
-    this.fileDataType = fileDataType;
-  }
-
-  public String getFileRefId() {
-    return fileRefId;
-  }
-
-  public void setFileRefId(String fileRefId) {
-    this.fileRefId = fileRefId;
   }
 
   public ChecksumType getChecksumType() {

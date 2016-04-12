@@ -20,7 +20,7 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.FileService;
 
-import static software.wings.service.intfc.FileService.FileBucket.LOB;
+import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 public class FileResource {
   private static final Logger logger = LoggerFactory.getLogger(FileResource.class);
@@ -35,8 +35,8 @@ public class FileResource {
   @POST
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
-  public RestResponse<String> upload(@QueryParam("md5") String md5, @QueryParam("fileDataType") String fileDataType,
-      @QueryParam("fileDataRefId") String fileDataRefId, @FormDataParam("part") InputStream uploadedInputStream,
+  public RestResponse<String> upload(@QueryParam("md5") String md5,
+      @FormDataParam("part") InputStream uploadedInputStream,
       @FormDataParam("part") FormDataContentDisposition fileDetail) {
     String filename;
     if (fileDetail == null || fileDetail.getFileName() == null) {
@@ -46,14 +46,12 @@ public class FileResource {
     }
 
     FileMetadata fileMetadata = new FileMetadata();
-    fileMetadata.setFileDataType(fileDataType);
-    fileMetadata.setFileRefId(fileDataRefId);
     fileMetadata.setFileName(filename);
     if (StringUtils.isNotBlank(md5)) {
       fileMetadata.setChecksumType(ChecksumType.MD5);
       fileMetadata.setChecksum(md5);
     }
-    String fileId = fileService.saveFile(fileMetadata, uploadedInputStream, LOB);
-    return new RestResponse<String>(fileId);
+    String fileId = fileService.saveFile(fileMetadata, uploadedInputStream, CONFIGS);
+    return new RestResponse<>(fileId);
   }
 }

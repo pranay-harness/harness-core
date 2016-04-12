@@ -26,6 +26,8 @@ import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 @Singleton
 public class FileServiceImpl implements FileService {
   @Override
@@ -61,15 +63,14 @@ public class FileServiceImpl implements FileService {
   @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
     Document metadata = new Document();
-    if (StringUtils.isNotBlank(fileMetadata.getFileDataType())) {
-      metadata.append("fileDataType", fileMetadata.getFileDataType());
-    }
-    if (StringUtils.isNotBlank(fileMetadata.getFileRefId())) {
-      metadata.append("fileDataRefId", fileMetadata.getFileRefId());
-    }
-    if (StringUtils.isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
+
+    if (isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
       metadata.append("checksum", fileMetadata.getChecksum());
       metadata.append("checksumType", fileMetadata.getChecksumType());
+    }
+
+    if (isNotBlank(fileMetadata.getMimeType())) {
+      metadata.append("mimeType", fileMetadata.getMimeType());
     }
 
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);

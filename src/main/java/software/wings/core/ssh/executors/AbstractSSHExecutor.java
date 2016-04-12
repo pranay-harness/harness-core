@@ -21,7 +21,7 @@ import java.net.UnknownHostException;
 import static software.wings.beans.ErrorConstants.*;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
-import static software.wings.service.intfc.FileService.FileBucket.LOB;
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.Misc.quietSleep;
 
 /**
@@ -201,7 +201,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
         LOGGER.error("SCP connection initiation failed");
         return FAILURE;
       }
-      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath, LOB);
+      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath, ARTIFACTS);
 
       // send "C0644 filesize filename", where filename should not include '/'
       long filesize = fileMetaData.getLength();
@@ -216,7 +216,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       if (checkAck(in) != 0) {
         return FAILURE;
       }
-      fileService.downloadToStream(localFilePath, out, LOB);
+      fileService.downloadToStream(localFilePath, out, ARTIFACTS);
       out.write(new byte[1], 0, 1);
       out.flush();
 
