@@ -155,6 +155,8 @@
 			<version>0.3m</version>
 		</dependency>
 
+
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>io.dropwizard</groupId>
@@ -360,6 +362,53 @@
 						<goals>
 							<goal>shade</goal>
 						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<version>0.0.27</version>
+				<configuration>
+					<workingDirectory>wingsui</workingDirectory>
+					<nodeVersion>v5.10.1</nodeVersion>
+					<npmVersion>3.8.3</npmVersion>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install node and npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<phase>generate-resources</phase>
+					</execution>
+					<execution>
+						<id>npm install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm build</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run build</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm clean</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<configuration>
+							<arguments>run clean</arguments>
+						</configuration>
+						<phase>clean</phase>
 					</execution>
 				</executions>
 			</plugin>

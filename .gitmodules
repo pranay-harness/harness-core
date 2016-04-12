@@ -1,0 +1,3 @@
+[submodule "wingsui"]
+	path = wingsui
+	url = git@github.com:wings-software/wingsui.git
