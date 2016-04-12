@@ -23,7 +23,7 @@ import software.wings.utils.Misc;
  *
  */
 public class PageRequest<T> {
-  public static final int UNLIMITED = -1;
+  public static final String UNLIMITED = "UNLIMITED";
   public static final int DEFAULT_PAGE_SIZE = 50;
 
   @DefaultValue("0") @QueryParam("offset") private String offset;
@@ -163,7 +163,7 @@ public class PageRequest<T> {
     }
   }
 
-  public void addFilter(String fieldName, String fieldValue, OP op) {
+  public void addFilter(String fieldName, Object fieldValue, OP op) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
     filter.setFieldValue(fieldValue);
