@@ -25,7 +25,8 @@ public interface FileService {
   public static enum FileBucket {
     LOB("lob"),
     AUDITS("audits"),
-    CONFIGS("configs");
+    CONFIGS("configs"),
+    LOGS("logs");
 
     FileBucket(String name, long chunkSize) {
       this.name = name;
@@ -37,8 +38,7 @@ public interface FileService {
       this(name, 16 * 1024 * 1024);
     }
 
-    //		@Inject
-    private WingsPersistence wingsPersistence;
+    @Inject private WingsPersistence wingsPersistence;
     private String name;
     private long chunkSize;
     private GridFSBucket gridFSBucket;

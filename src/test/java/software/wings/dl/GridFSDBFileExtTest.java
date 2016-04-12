@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import com.google.inject.Inject;
 import com.mongodb.MongoClient;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.junit.Test;
@@ -13,7 +14,7 @@ import java.io.IOException;
  * Created by anubhaw on 3/4/16.
  */
 public class GridFSDBFileExtTest {
-  GridFSDBFileExt gridFSDBFileExt = new GridFSDBFileExt(new MongoClient("localhost").getDatabase("wings"), "logs", 6);
+  @Inject GridFSDBFileExt gridFSDBFileExt;
 
   @Test
   public void testAppendToFile() throws Exception {

@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -52,4 +53,6 @@ public interface WingsPersistence {
   public Datastore getDatastore();
 
   public void close();
+
+  public DBCollection getCollection(String collectionName);
 }

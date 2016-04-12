@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
@@ -148,5 +149,10 @@ public class WingsMongoPersistence implements WingsPersistence {
   @Override
   public void close() {
     primaryDatastore.getMongo().close();
+  }
+
+  @Override
+  public DBCollection getCollection(String collectionName) {
+    return primaryDatastore.getDB().getCollection(collectionName);
   }
 }

@@ -4,8 +4,7 @@ import static software.wings.common.UUIDGenerator.getUUID;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutorType.PASSWORD;
 
-import javax.inject.Inject;
-
+import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +26,7 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
   private Logger LOGGER = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ExecutionLogs executionLogs;
 
   @Override
   public void execute(Execution execution) {
@@ -43,21 +43,19 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
   public ExecutionResult deploy(Deployment deployment, SSHSessionConfig config) {
     SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
     ExecutionResult result = executor.execute(deployment.getSetupCommand());
-    ExecutionLogs.getInstance().appendLogs(config.getExecutionID(), String.format("Setup finished with %s\n", result));
+    executionLogs.appendLogs(config.getExecutionID(), String.format("Setup finished with %s\n", result));
 
     if (SUCCESS == result) {
       executor = SSHExecutorFactory.getExecutor(config);
       result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUUID(), "wings/downloads/");
-      ExecutionLogs.getInstance().appendLogs(
-          config.getExecutionID(), String.format("File transfer finished with %s\n", result));
+      executionLogs.appendLogs(config.getExecutionID(), String.format("File transfer finished with %s\n", result));
 
       if (SUCCESS == result) {
         executor = SSHExecutorFactory.getExecutor(config);
         result = executor.execute(deployment.getDeployCommand());
       }
     }
-    ExecutionLogs.getInstance().appendLogs(
-        config.getExecutionID(), String.format("Deploy command finished with %s\n", result));
+    executionLogs.appendLogs(config.getExecutionID(), String.format("Deploy command finished with %s\n", result));
     return result;
   }
 

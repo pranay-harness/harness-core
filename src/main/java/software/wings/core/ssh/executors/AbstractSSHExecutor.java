@@ -8,11 +8,8 @@ import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
-import software.wings.beans.Execution;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.intfc.FileService;
 
 import java.io.*;
@@ -22,7 +19,6 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
 import static software.wings.beans.ErrorConstants.*;
-import static software.wings.core.ssh.ExecutionLogs.getInstance;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
 import static software.wings.service.intfc.FileService.FileBucket.LOB;
@@ -39,8 +35,8 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected SSHSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
-  protected ExecutionLogs executionLogs = getInstance();
 
+  @Inject protected ExecutionLogs executionLogs;
   @Inject protected FileService fileService;
 
   public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
