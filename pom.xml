@@ -26,11 +26,10 @@
 			<name>Sonatype Nexus releases</name>
 			<url>http://oss.sonatype.org/content/repositories/releases</url>
 		</repository>
-		<repository>
-			<id>wings-maven</id>
-			<name>Wings Maven Repository</name>
-			<url>https://mymavenrepo.com/repo/M2EDILKwUOF3b4WNHnDd/</url>
-		</repository>
+                <repository>
+                        <id>repo.wings</id>
+                        <url>s3://repo.wings/release</url>
+                </repository>
 	</repositories>
 
 	<dependencyManagement>
@@ -166,13 +165,6 @@
 			<version>0.1.7</version>
 		</dependency>
 
-		<dependency>
-			<groupId>com.github.fakemongo</groupId>
-			<artifactId>fongo</artifactId>
-			<version>2.0.6</version>
-			<scope>test</scope>
-		</dependency>
-
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>io.dropwizard</groupId>
@@ -248,6 +240,13 @@
 	</dependencies>
 
 	<build>
+                <extensions>
+      <extension>
+        <groupId>org.kuali.maven.wagons</groupId>
+        <artifactId>maven-s3-wagon</artifactId>
+        <version>1.2.1</version>
+      </extension>
+    </extensions>
 		<pluginManagement>
 			<plugins>
 				<plugin>

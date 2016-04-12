@@ -3,8 +3,6 @@ package software.wings.rules;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
-import com.github.fakemongo.Fongo;
-import com.github.fakemongo.junit.FongoRule;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
