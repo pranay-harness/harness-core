@@ -38,7 +38,9 @@ public class MongoHelper {
 
     long total = q.countAll();
     q.offset(req.getStart());
-    q.limit(req.getPageSize());
+    if (!PageRequest.UNLIMITED.equals(req.getLimit())) {
+      q.limit(req.getPageSize());
+    }
     List<T> list = q.asList();
 
     PageResponse<T> response = new PageResponse<>(req);
@@ -78,7 +80,7 @@ public class MongoHelper {
   private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
     OP op = filter.getOp();
     if (op == null) {
-      op = OP.CONTAINS;
+      op = OP.EQ;
     }
     switch (op) {
       case LT:
@@ -91,10 +93,10 @@ public class MongoHelper {
         return fieldEnd.equal(filter.getFieldValue());
 
       case CONTAINS:
-        return fieldEnd.containsIgnoreCase(filter.getFieldValue());
+        return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValue()));
 
       case STARTS_WITH:
-        return fieldEnd.startsWithIgnoreCase(filter.getFieldValue());
+        return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValue()));
 
       case IN:
         return fieldEnd.hasAnyOf(filter.getFieldValues());

@@ -14,7 +14,7 @@ public class SearchFilter {
   ;
 
   private String fieldName;
-  private String fieldValue;
+  private Object fieldValue;
   private List<String> fieldValues;
   private OP op;
 
@@ -24,10 +24,10 @@ public class SearchFilter {
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
   }
-  public String getFieldValue() {
+  public Object getFieldValue() {
     return fieldValue;
   }
-  public void setFieldValue(String fieldValue) {
+  public void setFieldValue(Object fieldValue) {
     this.fieldValue = fieldValue;
   }
   public OP getOp() {
