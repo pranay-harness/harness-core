@@ -3,6 +3,7 @@
  */
 package software.wings.waitNotify;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,14 +55,14 @@ public class NotifyResponseCleanupHandler implements Runnable {
       filter.setFieldValues(correlationIds);
       filter.setOp(OP.IN);
       req.getFilters().add(filter);
+
+      Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
-      if (waitQueuesResponse == null || waitQueuesResponse.getResponse() == null
-          || waitQueuesResponse.getResponse().size() == 0) {
-        logger.warn("No entry in the waitQueue found for the correlationIds:" + correlationIds + " skipping ...");
-        return;
+      if (waitQueuesResponse != null && waitQueuesResponse.getResponse() != null
+          && waitQueuesResponse.getResponse().size() > 0) {
+        List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
+        waitQueueMap = CollectionUtils.hierarchy(waitQueues, "correlationId");
       }
-      List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
-      Map<String, List<WaitQueue>> waitQueueMap = CollectionUtils.hierarchy(waitQueues, "correlationId");
 
       for (NotifyResponse notifyResponse : notifyPageResponses.getResponse()) {
         if (waitQueueMap.get(notifyResponse.getUuid()) != null) {
