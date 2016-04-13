@@ -24,6 +24,7 @@ public abstract class Queuable {
   private Date created = new Date();
 
   protected Queuable() {}
+
   public Queuable(Queuable other) {
     id = other.id;
     running = other.running;

@@ -1,16 +1,23 @@
 package software.wings.core.queue;
 
+import com.google.common.base.Throwables;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
+import com.mongodb.WriteConcern;
 import org.bson.types.ObjectId;
+import org.joor.Reflect;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.validation.ClassConstraint;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static org.joor.Reflect.on;
 
 /**
  * Created by peeyushaggarwal on 4/11/16.
@@ -20,7 +27,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   private Class<T> klass;
 
   public MongoQueueImpl(Class<T> klass, final Datastore datastore) {
-    Objects.requireNonNull(datastore);
+    // Objects.requireNonNull(datastore);
     Objects.requireNonNull(klass);
     this.datastore = datastore;
     this.klass = klass;
@@ -52,22 +59,12 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
                          .order("priority")
                          .order("created");
 
-    final Calendar calendar = Calendar.getInstance();
-
-    calendar.add(Calendar.SECOND, resetDuration);
-    final Date resetTimestamp = calendar.getTime();
+    Date resetTimestamp = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(resetDuration));
 
     UpdateOperations<T> updateOperations =
         datastore.createUpdateOperations(klass).set("running", true).set("resetTimestamp", resetTimestamp);
 
-    final BasicDBObject sort = new BasicDBObject("priority", 1).append("created", 1);
-    final BasicDBObject update =
-        new BasicDBObject("$set", new BasicDBObject("running", true).append("resetTimestamp", resetTimestamp));
-    final BasicDBObject fields = new BasicDBObject("payload", 1);
-
-    calendar.setTimeInMillis(System.currentTimeMillis());
-    calendar.add(Calendar.MILLISECOND, waitDuration);
-    final Date end = calendar.getTime();
+    long endTime = System.currentTimeMillis() + waitDuration;
 
     while (true) {
       T message = datastore.findAndModify(query, updateOperations);
@@ -75,7 +72,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
         return message;
       }
 
-      if (new Date().compareTo(end) >= 0) {
+      if (System.currentTimeMillis() >= endTime) {
         return null;
       }
 
@@ -86,6 +83,30 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
       } catch (final IllegalArgumentException ex) {
         pollDuration = 0;
       }
+    }
+  }
+
+  @Override
+  public void updateResetDuration(T message, int resetDuration) {
+    Objects.requireNonNull(message);
+
+    Query<T> query = datastore.createQuery(klass)
+                         .field("_id")
+                         .equal(message.getId())
+                         .field("resetTimestamp")
+                         .greaterThan(new Date())
+                         .field("running")
+                         .equal(true);
+
+    Date resetTimestamp = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(resetDuration));
+
+    UpdateOperations<T> updateOperations =
+        datastore.createUpdateOperations(klass).set("resetTimestamp", resetTimestamp);
+
+    if (datastore.findAndModify(query, updateOperations) != null) {
+      message.setResetTimestamp(resetTimestamp);
+    } else {
+      System.out.println("Reset failed");
     }
   }
 
@@ -102,7 +123,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   @Override
   public void ack(final T message) {
     Objects.requireNonNull(message);
-    final String id = message.getId();
+    String id = message.getId();
     datastore.delete(klass, id);
   }
 
@@ -111,7 +132,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     Objects.requireNonNull(message);
     Objects.requireNonNull(payload);
 
-    final String id = message.getId();
+    String id = message.getId();
 
     payload.setId(id);
     payload.setRunning(false);
@@ -122,26 +143,24 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void requeue(final T message) throws Exception {
+  public void requeue(final T message) {
     requeue(message, new Date());
   }
 
   @Override
-  public void requeue(final T message, final Date earliestGet) throws Exception {
+  public void requeue(final T message, final Date earliestGet) {
     requeue(message, earliestGet, 0.0);
   }
 
   @Override
-  public void requeue(final T message, final Date earliestGet, final double priority) throws Exception {
+  public void requeue(final T message, final Date earliestGet, final double priority) {
     Objects.requireNonNull(message);
     Objects.requireNonNull(earliestGet);
     if (Double.isNaN(priority)) {
       throw new IllegalArgumentException("priority was NaN");
     }
 
-    final String id = message.getId();
-
-    T forRequeue = createCopy(message);
+    T forRequeue = on(klass).create(message).get();
     forRequeue.setId(null);
     forRequeue.setPriority(priority);
     forRequeue.setEarliestGet(earliestGet);
@@ -154,9 +173,8 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     datastore.save(payload);
   }
 
-  public T createCopy(T item) throws Exception {
-    Constructor<T> copyConstructor = klass.getConstructor(klass);
-    T copy = copyConstructor.newInstance(item);
-    return copy;
+  @Override
+  public String getName() {
+    return datastore.getCollection(klass).getName();
   }
 }

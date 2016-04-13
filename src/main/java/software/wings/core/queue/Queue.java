@@ -37,6 +37,15 @@ public interface Queue<T> {
   T get(final int resetDuration, final int waitDuration, long pollDuration);
 
   /**
+   * Update the refresh duration of a message while still processing.
+   *
+   * @param message message received from get(). Should not be null.
+   * @param resetDuration duration in seconds before this message is considered abandoned and will be given with another
+   * call to get()
+   */
+  void updateResetDuration(final T message, final int resetDuration);
+
+  /**
    * Count in queue, running true or false
    *
    * @return count
@@ -71,7 +80,7 @@ public interface Queue<T> {
    *
    * @param message message to requeue received from get(). Should not be null
    */
-  void requeue(final T message) throws Exception;
+  void requeue(final T message);
 
   /**
    * Requeue message with 0.0 priority. Same as ackSend() with the same message.
@@ -79,7 +88,7 @@ public interface Queue<T> {
    * @param message message to requeue received from get(). Should not be null
    * @param earliestGet earliest instant that a call to get() can return message. Should not be null
    */
-  void requeue(final T message, final Date earliestGet) throws Exception;
+  void requeue(final T message, final Date earliestGet);
 
   /**
    * Requeue message. Same as ackSend() with the same message.
@@ -88,7 +97,7 @@ public interface Queue<T> {
    * @param earliestGet earliest instant that a call to get() can return message. Should not be null
    * @param priority priority for order out of get(). 0 is higher priority than 1. Should not be NaN
    */
-  void requeue(final T message, final Date earliestGet, final double priority) throws Exception;
+  void requeue(final T message, final Date earliestGet, final double priority);
 
   /**
    * Send message to queue with earliestGet as Now and 0.0 priority
@@ -96,4 +105,6 @@ public interface Queue<T> {
    * @param payload payload. Should not be null
    */
   void send(final T payload);
+
+  String getName();
 }
