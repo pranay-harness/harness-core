@@ -9,3 +9,4 @@ target
 .settings
 .project
 dependency-reduced-pom.xml
+test*

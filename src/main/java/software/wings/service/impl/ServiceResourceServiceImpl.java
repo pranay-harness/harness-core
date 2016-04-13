@@ -52,7 +52,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public List<ConfigFile> fetchConfigs(String serviceID) {
+  public List<ConfigFile> getConfigs(String serviceID) {
     Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class).field("serviceID").equal(serviceID);
     return query.asList();
   }
@@ -67,5 +67,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
         wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(configFile.getServiceID());
     wingsPersistence.update(updateQuery, updateOperations);
     return configFileId;
+  }
+
+  @Override
+  public ConfigFile getConfig(String configID) {
+    return wingsPersistence.get(ConfigFile.class, configID);
+  }
+
+  @Override
+  public void updateFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs) {
+    fileService.saveFile(configFile, uploadedInputStream, configs);
+    wingsPersistence.save(configFile);
   }
 }
