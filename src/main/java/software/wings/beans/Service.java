@@ -5,7 +5,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.ArtifactSource.ArtifactType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -23,7 +22,7 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
-  private List<String> configIDs;
+  @Reference(idOnly = true, ignoreMissing = true) private List<ConfigFile> configFiles;
 
   public String getName() {
     return name;
@@ -57,19 +56,12 @@ public class Service extends Base {
     this.platformSoftwares = platformSoftwares;
   }
 
-  public void addPlatformSoftware(PlatformSoftware platformSoftware) {
-    if (platformSoftwares == null) {
-      platformSoftwares = new ArrayList<>();
-    }
-    platformSoftwares.add(platformSoftware);
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
   }
 
-  public List<String> getConfigIDs() {
-    return configIDs;
-  }
-
-  public void setConfigIDs(List<String> configIDs) {
-    this.configIDs = configIDs;
+  public void setConfigFiles(List<ConfigFile> configFiles) {
+    this.configFiles = configFiles;
   }
 
   @Override
@@ -105,7 +97,7 @@ public class Service extends Base {
     private String description;
     private ArtifactType artifactType;
     private List<PlatformSoftware> platformSoftwares;
-    private List<String> configIDs;
+    private List<ConfigFile> configFiles;
     private String uuid;
     private User createdBy;
     private long createdAt;
@@ -139,8 +131,8 @@ public class Service extends Base {
       return this;
     }
 
-    public Builder withServiceIDs(List<String> configIDs) {
-      this.configIDs = configIDs;
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
+      this.configFiles = configFiles;
       return this;
     }
 
@@ -195,6 +187,7 @@ public class Service extends Base {
       service.setArtifactType(artifactType);
       service.setPlatformSoftwares(platformSoftwares);
       service.setUuid(uuid);
+      service.setConfigFiles(configFiles);
       service.setCreatedBy(createdBy);
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);

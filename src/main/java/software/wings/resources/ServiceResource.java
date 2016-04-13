@@ -3,7 +3,6 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
-import com.mongodb.DBObject;
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -11,12 +10,7 @@ import software.wings.beans.*;
 import software.wings.service.intfc.ServiceResourceService;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.io.File;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -61,20 +55,21 @@ public class ServiceResource {
       @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    FileMetadata fileMetadata = new FileMetadata();
-    fileMetadata.setFileName(fileName);
+    ConfigFile configFile = new ConfigFile();
+    configFile.setName(fileName);
     if (StringUtils.isNotBlank(md5)) {
-      fileMetadata.setChecksumType(MD5);
-      fileMetadata.setChecksum(md5);
+      configFile.setChecksumType(MD5);
+      configFile.setChecksum(md5);
     }
-    fileMetadata.setRelativePath(relativePath);
-    String fileId = srs.saveFile(serviceID, fileMetadata, uploadedInputStream, CONFIGS);
+    configFile.setRelativePath(relativePath);
+    configFile.setServiceID(serviceID);
+    String fileId = srs.saveFile(configFile, uploadedInputStream, CONFIGS);
     return new RestResponse<>(fileId);
   }
 
   @GET
   @Path("{serviceID}/configs")
-  public RestResponse<List<DBObject>> fetchConfigs(@PathParam("serviceID") String serviceID) {
+  public RestResponse<List<ConfigFile>> fetchConfigs(@PathParam("serviceID") String serviceID) {
     return new RestResponse<>(srs.fetchConfigs(serviceID));
   }
 }

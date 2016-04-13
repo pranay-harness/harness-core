@@ -12,6 +12,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
+import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
@@ -85,9 +86,21 @@ public class FileServiceImpl implements FileService {
       metadata.append("relativePath", fileMetadata.getRelativePath());
     }
 
-    GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
+    GridFSUploadOptions options =
+        new GridFSUploadOptions().chunkSizeBytes(fileBucket.getChunkSize()).metadata(metadata);
 
     ObjectId fileId = fileBucket.getGridFSBucket().uploadFromStream(fileMetadata.getFileName(), in, options);
     return fileId.toHexString();
+  }
+
+  @Override
+  public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
+    String fileID =
+        fileBucket.getGridFSBucket().uploadFromStream(baseFile.getName(), uploadedInputStream).toHexString();
+    GridFSFile gridFsFile = getGridFsFile(fileID, fileBucket);
+    baseFile.setFileUUID(fileID);
+    baseFile.setChecksum(gridFsFile.getMD5());
+    baseFile.setSize(gridFsFile.getLength());
+    return fileID;
   }
 }

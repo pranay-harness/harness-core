@@ -5,6 +5,7 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import software.wings.app.WingsBootstrap;
+import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 
@@ -15,6 +16,7 @@ import java.util.List;
 
 public interface FileService {
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
+  public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket configs);
 
   public File download(String fileId, File file, FileBucket fileBucket);
 
@@ -33,7 +35,7 @@ public interface FileService {
     CONFIGS("configs"),
     LOGS("logs");
 
-    FileBucket(String name, long chunkSize) {
+    FileBucket(String name, int chunkSize) {
       this.name = name;
       this.chunkSize = chunkSize;
       this.gridFSBucket = WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(name);
@@ -45,14 +47,14 @@ public interface FileService {
 
     private WingsPersistence wingsPersistence;
     private String name;
-    private long chunkSize;
+    private int chunkSize;
     private GridFSBucket gridFSBucket;
 
     public String getName() {
       return name;
     }
 
-    public long getChunkSize() {
+    public int getChunkSize() {
       return chunkSize;
     }
 
