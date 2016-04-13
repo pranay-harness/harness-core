@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -13,15 +14,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.BaseFile;
+import software.wings.beans.ErrorConstants;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorConstants.FILE_INTEGRITY_CHECK_FAILED;
 
 @Singleton
 public class FileServiceImpl implements FileService {
@@ -98,9 +103,16 @@ public class FileServiceImpl implements FileService {
     String fileID =
         fileBucket.getGridFSBucket().uploadFromStream(baseFile.getName(), uploadedInputStream).toHexString();
     GridFSFile gridFsFile = getGridFsFile(fileID, fileBucket);
-    baseFile.setFileUUID(fileID);
+    verifyFileIntegrity(baseFile, gridFsFile);
     baseFile.setChecksum(gridFsFile.getMD5());
+    baseFile.setFileUUID(fileID);
     baseFile.setSize(gridFsFile.getLength());
     return fileID;
+  }
+
+  private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {
+    if (!isNullOrEmpty(baseFile.getChecksum()) && !gridFsFile.getMD5().equals(baseFile.getChecksum())) {
+      throw new WingsException(FILE_INTEGRITY_CHECK_FAILED);
+    }
   }
 }

@@ -52,7 +52,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> pathParameters = uriInfo.getPathParameters();
     for (PermissionAttr permissionAttr : permissionAttrs) {
       if (!authorizeAccessType(pathParameters, permissionAttr, user.getRoles())) {
-        throw new WingsException(String.valueOf(ACCESS_DENIED));
+        throw new WingsException(ACCESS_DENIED);
       }
     }
   }

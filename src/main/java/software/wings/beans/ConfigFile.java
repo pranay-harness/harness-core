@@ -1,12 +1,14 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.*;
 
 /**
  * Created by anubhaw on 4/12/16.
  */
 
 @Entity(value = "configFiles", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("serviceID")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 public class ConfigFile extends BaseFile {
   private String serviceID;
   private String relativePath;
