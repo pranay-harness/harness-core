@@ -13,6 +13,8 @@ public class ConfigFile extends BaseFile {
   private String serviceID;
   private String relativePath;
 
+  public ConfigFile() {}
+
   public ConfigFile(String serviceID, String fileName, String relativePath, String md5) {
     super(fileName, md5);
     this.serviceID = serviceID;

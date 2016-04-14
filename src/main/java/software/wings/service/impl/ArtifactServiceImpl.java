@@ -35,7 +35,7 @@ import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 @Singleton
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
-  private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifatcFile";
+  private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
 
   @Inject private ExecutorService executorService;
 

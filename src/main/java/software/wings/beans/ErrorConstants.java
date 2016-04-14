@@ -36,4 +36,6 @@ public interface ErrorConstants {
   public static final String NON_REPEAT_STATES = "NON_REPEAT_STATES";
   public static final String INITIAL_STATE_NOT_DEFINED = "INITIAL_STATE_NOT_DEFINED";
   public static final String FILE_INTEGRITY_CHECK_FAILED = "FILE_INTIGRITY_CHECK_FAILED";
+  public static final String INVALID_URL = "INVALID_URL";
+  public static final String FILE_DOWNLOAD_FAILED = "FILE_DOWNLOAD_FAILED";
 }

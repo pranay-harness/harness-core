@@ -100,8 +100,10 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
-    String fileID =
-        fileBucket.getGridFSBucket().uploadFromStream(baseFile.getName(), uploadedInputStream).toHexString();
+    GridFSUploadOptions gridFSUploadOptions = new GridFSUploadOptions().chunkSizeBytes(fileBucket.getChunkSize());
+    String fileID = fileBucket.getGridFSBucket()
+                        .uploadFromStream(baseFile.getName(), uploadedInputStream, gridFSUploadOptions)
+                        .toHexString();
     GridFSFile gridFsFile = getGridFsFile(fileID, fileBucket);
     verifyFileIntegrity(baseFile, gridFsFile);
     baseFile.setChecksum(gridFsFile.getMD5());

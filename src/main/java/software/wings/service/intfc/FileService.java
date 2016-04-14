@@ -33,7 +33,8 @@ public interface FileService {
     ARTIFACTS("artifacts"),
     AUDITS("audits"),
     CONFIGS("configs"),
-    LOGS("logs");
+    LOGS("logs"),
+    SOFTWARES("software");
 
     FileBucket(String name, int chunkSize) {
       this.name = name;
@@ -42,7 +43,7 @@ public interface FileService {
     }
 
     FileBucket(String name) {
-      this(name, 16 * 1024 * 1024);
+      this(name, 16 * 1000 * 1000);
     }
 
     private WingsPersistence wingsPersistence;

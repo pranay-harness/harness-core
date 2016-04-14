@@ -16,6 +16,8 @@ public class BaseFile extends Base {
   private ChecksumType checksumType;
   private String checksum;
 
+  public BaseFile() {}
+
   public BaseFile(String fileName, String md5) {
     this.name = fileName;
     if (StringUtils.isNotBlank(md5)) {
