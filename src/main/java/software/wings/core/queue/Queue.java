@@ -9,41 +9,33 @@ public interface Queue<T> {
   /**
    * Get a non running message from queue with a wait of 3 seconds and poll of 200 milliseconds
    *
-   * @param resetDuration duration in seconds before this message is considered abandoned and will be given with another
-   * call to get()
    * @return message or null
    */
-  T get(final int resetDuration);
+  T get();
 
   /**
    * Get a non running message from queue with a poll of 200 milliseconds
    *
-   * @param resetDuration duration in seconds before this message is considered abandoned and will be given with another
-   * call to get()
    * @param waitDuration duration in milliseconds to keep polling before returning null
    * @return message or null
    */
-  T get(final int resetDuration, final int waitDuration);
+  T get(final int waitDuration);
 
   /**
    * Get a non running message from queue
    *
-   * @param resetDuration duration in seconds before this message is considered abandoned and will be given with another
-   * call to get()
    * @param waitDuration duration in milliseconds to keep polling before returning null
    * @param pollDuration duration in milliseconds between poll attempts
    * @return message or null
    */
-  T get(final int resetDuration, final int waitDuration, long pollDuration);
+  T get(final int waitDuration, long pollDuration);
 
   /**
    * Update the refresh duration of a message while still processing.
    *
    * @param message message received from get(). Should not be null.
-   * @param resetDuration duration in seconds before this message is considered abandoned and will be given with another
-   * call to get()
    */
-  void updateResetDuration(final T message, final int resetDuration);
+  void updateResetDuration(final T message);
 
   /**
    * Count in queue, running true or false
@@ -106,5 +98,16 @@ public interface Queue<T> {
    */
   void send(final T payload);
 
-  String getName();
+  /**
+   * reset duration in milliseconds.
+   *
+   * @return reset duration in milliseconds
+   */
+  long resetDurationMillis();
+
+  /**
+   * Returns the name of the queue
+   *
+   */
+  String name();
 }

@@ -171,6 +171,12 @@
             <version>0.9.5</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.ifesdjeen</groupId>
+            <artifactId>hashed-wheel-timer-core</artifactId>
+            <version>1.0.0-RC1</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>

@@ -25,7 +25,7 @@ public class WingsBaseTest {
 
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
-  protected Logger logger() {
+  protected Logger log() {
     return LoggerFactory.getLogger(getClass());
   }
 }

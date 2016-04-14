@@ -1,19 +1,9 @@
 package software.wings.core.queue;
 
-import com.google.common.base.Throwables;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.WriteConcern;
-import org.bson.types.ObjectId;
-import org.joor.Reflect;
 import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.mapping.validation.ClassConstraint;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -25,27 +15,33 @@ import static org.joor.Reflect.on;
 public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   private Datastore datastore;
   private Class<T> klass;
+  private int resetDurationInSeconds;
 
   public MongoQueueImpl(Class<T> klass, final Datastore datastore) {
-    // Objects.requireNonNull(datastore);
+    this(klass, datastore, 5);
+  }
+
+  public MongoQueueImpl(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
+    Objects.requireNonNull(datastore);
     Objects.requireNonNull(klass);
     this.datastore = datastore;
     this.klass = klass;
+    this.resetDurationInSeconds = resetDurationInSeconds;
     datastore.ensureIndexes(klass);
   }
 
   @Override
-  public T get(final int resetDuration) {
-    return get(resetDuration, 3000, 200);
+  public T get() {
+    return get(3000, 200);
   }
 
   @Override
-  public T get(final int resetDuration, final int waitDuration) {
-    return get(resetDuration, waitDuration, 200);
+  public T get(final int waitDuration) {
+    return get(waitDuration, 200);
   }
 
   @Override
-  public T get(final int resetDuration, final int waitDuration, long pollDuration) {
+  public T get(final int waitDuration, long pollDuration) {
     // reset stuck messages
     datastore.update(
         datastore.createQuery(klass).field("running").equal(true).field("resetTimestamp").lessThanOrEq(new Date()),
@@ -59,7 +55,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
                          .order("priority")
                          .order("created");
 
-    Date resetTimestamp = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(resetDuration));
+    Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
     UpdateOperations<T> updateOperations =
         datastore.createUpdateOperations(klass).set("running", true).set("resetTimestamp", resetTimestamp);
@@ -87,7 +83,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public void updateResetDuration(T message, int resetDuration) {
+  public void updateResetDuration(T message) {
     Objects.requireNonNull(message);
 
     Query<T> query = datastore.createQuery(klass)
@@ -98,7 +94,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
                          .field("running")
                          .equal(true);
 
-    Date resetTimestamp = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(resetDuration));
+    Date resetTimestamp = new Date(System.currentTimeMillis() + resetDurationMillis());
 
     UpdateOperations<T> updateOperations =
         datastore.createUpdateOperations(klass).set("resetTimestamp", resetTimestamp);
@@ -174,7 +170,17 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   }
 
   @Override
-  public String getName() {
+  public long resetDurationMillis() {
+    return TimeUnit.SECONDS.toMillis(resetDurationInSeconds);
+  }
+
+  @Override
+  public String name() {
     return datastore.getCollection(klass).getName();
+  }
+
+  // package protected
+  void resetDuration(int resetDurationInSeconds) {
+    this.resetDurationInSeconds = resetDurationInSeconds;
   }
 }

@@ -9,7 +9,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
-import org.omg.CORBA.INTERNAL;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
@@ -125,7 +124,7 @@ public class MongoQueueTest extends WingsBaseTest {
     }
   }
 
-  private Queue<TestQueuable> queue;
+  private MongoQueueImpl<TestQueuable> queue;
 
   @Before
   public void setup() throws UnknownHostException {
@@ -134,30 +133,30 @@ public class MongoQueueTest extends WingsBaseTest {
 
   @Test
   public void shouldGetWithNegativeWait() {
-    assertThat(queue.get(Integer.MAX_VALUE, Integer.MIN_VALUE)).isNull();
+    assertThat(queue.get(Integer.MIN_VALUE)).isNull();
 
     queue.send(new TestQueuable(1));
 
-    assertThat(queue.get(Integer.MAX_VALUE, Integer.MIN_VALUE)).isNotNull();
+    assertThat(queue.get(Integer.MIN_VALUE)).isNotNull();
   }
 
   @Test
   public void shouldGetWhenNegativePoll() {
-    assertThat(queue.get(Integer.MAX_VALUE, 100, Long.MIN_VALUE)).isNull();
+    assertThat(queue.get(100, Long.MIN_VALUE)).isNull();
 
     queue.send(new TestQueuable(1));
 
-    assertThat(queue.get(Integer.MAX_VALUE, 100, Long.MIN_VALUE)).isNotNull();
+    assertThat(queue.get(100, Long.MIN_VALUE)).isNotNull();
   }
 
   @Test
   public void shouldNotGetMessageOnceAcquired() {
     queue.send(new TestQueuable(1));
 
-    assertThat(queue.get(Integer.MAX_VALUE)).isNotNull();
+    assertThat(queue.get()).isNotNull();
 
     // try get message we already have before ack
-    assertThat(queue.get(Integer.MAX_VALUE, 0)).isNull();
+    assertThat(queue.get(0)).isNull();
   }
 
   @Test
@@ -173,9 +172,9 @@ public class MongoQueueTest extends WingsBaseTest {
     queue.send(messageTwo);
     queue.send(messageThree);
 
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageOne);
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageTwo);
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageThree);
+    assertThat(queue.get()).isEqualTo(messageOne);
+    assertThat(queue.get()).isEqualTo(messageTwo);
+    assertThat(queue.get()).isEqualTo(messageThree);
   }
 
   @Test
@@ -188,15 +187,15 @@ public class MongoQueueTest extends WingsBaseTest {
     queue.send(messageTwo);
     queue.send(messageThree);
 
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageOne);
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageTwo);
-    assertThat(queue.get(Integer.MAX_VALUE)).isEqualTo(messageThree);
+    assertThat(queue.get()).isEqualTo(messageOne);
+    assertThat(queue.get()).isEqualTo(messageTwo);
+    assertThat(queue.get()).isEqualTo(messageThree);
   }
 
   @Test
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
-    queue.get(Integer.MAX_VALUE, 200);
+    queue.get(200);
     long elapsed = new Date().getTime() - start.getTime();
 
     assertThat(elapsed).isBetween(200L, 400L);
@@ -208,7 +207,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.send(new TestQueuable(1));
 
-    queue.get(Integer.MAX_VALUE, 3000);
+    queue.get(3000);
 
     assertThat(new Date().getTime() - start.getTime()).isLessThan(2000);
   }
@@ -219,26 +218,26 @@ public class MongoQueueTest extends WingsBaseTest {
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
     queue.send(message);
 
-    assertThat(queue.get(Integer.MAX_VALUE, 0)).isNull();
+    assertThat(queue.get(0)).isNull();
 
     Thread.sleep(200);
 
-    assertThat(queue.get(Integer.MAX_VALUE)).isNotNull();
+    assertThat(queue.get()).isNotNull();
   }
 
   @Test
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
     queue.send(new TestQueuable(1));
 
+    queue.resetDuration(0);
     // sets resetTimestamp on messageOne
-    assertThat(queue.get(0)).isNotNull();
-
-    assertThat(queue.get(Integer.MAX_VALUE)).isNotNull();
+    assertThat(queue.get()).isNotNull();
+    assertThat(queue.get()).isNotNull();
   }
 
   @Test
   public void shouldThrowNPEWhenTryToUpdateResetDurationForNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null, 0));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null));
   }
 
   @Test
@@ -247,7 +246,7 @@ public class MongoQueueTest extends WingsBaseTest {
     // sets resetTimestamp on messageOne
     TestQueuable message = queue.get(0);
 
-    queue.updateResetDuration(message, Integer.MAX_VALUE);
+    queue.updateResetDuration(message);
 
     TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
 
@@ -260,7 +259,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.send(message);
 
-    queue.updateResetDuration(message, 0);
+    queue.updateResetDuration(message);
 
     TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
 
@@ -269,19 +268,20 @@ public class MongoQueueTest extends WingsBaseTest {
 
   @Test
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
+    queue.resetDuration(10);
     queue.send(new TestQueuable(1));
 
     Date beforeGet = new Date();
-    TestQueuable message = queue.get(10);
+    TestQueuable message = queue.get();
 
     Date messageResetTimeStamp = message.getResetTimestamp();
 
     assertThat(messageResetTimeStamp).isAfter(beforeGet);
-
-    queue.updateResetDuration(message, 20);
+    queue.resetDuration(20);
+    queue.updateResetDuration(message);
 
     TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
-    System.out.println(actual.getResetTimestamp());
+    log().info("Actual Timestamp of message = {}", actual.getResetTimestamp());
 
     assertThat(actual.getResetTimestamp()).isAfter(messageResetTimeStamp);
 
@@ -300,7 +300,7 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.count(false)).isEqualTo(1);
     assertThat(queue.count()).isEqualTo(1);
 
-    queue.get(Integer.MAX_VALUE);
+    queue.get();
 
     assertThat(queue.count(true)).isEqualTo(1);
     assertThat(queue.count(false)).isEqualTo(0);
@@ -312,11 +312,11 @@ public class MongoQueueTest extends WingsBaseTest {
     queue.send(new TestQueuable(0));
     queue.send(new TestQueuable(1));
 
-    TestQueuable result = queue.get(Integer.MAX_VALUE);
+    TestQueuable result = queue.get();
 
     assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(2);
 
-    datastore.getCollection(TestQueuable.class).find().forEach(System.out::println);
+    datastore.getCollection(TestQueuable.class).find().forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
     assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
   }
@@ -334,7 +334,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
 
-    TestQueuable resultOne = queue.get(Integer.MAX_VALUE);
+    TestQueuable resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
@@ -375,7 +375,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.send(message);
 
-    TestQueuable resultOne = queue.get(Integer.MAX_VALUE);
+    TestQueuable resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
@@ -458,7 +458,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     assertThat(datastore.getCount(TestQueuableWithEntity.class)).isEqualTo(1);
 
-    TestQueuableWithEntity actual = entityQueue.get(Integer.MAX_VALUE);
+    TestQueuableWithEntity actual = entityQueue.get();
 
     assertThat(actual.getEntity()).isEqualTo(testEntity);
   }
