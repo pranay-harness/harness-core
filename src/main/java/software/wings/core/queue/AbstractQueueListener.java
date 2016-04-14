@@ -59,7 +59,10 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
   protected void onException(Exception e, T message) {
     log().error("Exception happened while processing message " + message, e);
-    queue.requeue(message);
+    if (message.getRetries() > 0) {
+      message.setRetries(message.getRetries() - 1);
+      queue.requeue(message);
+    }
   }
 
   public void shutDown() {

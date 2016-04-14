@@ -22,6 +22,7 @@ public abstract class Queuable {
   private Date earliestGet = new Date();
   private double priority = 0.0;
   private Date created = new Date();
+  private int retries = 0;
 
   protected Queuable() {}
 
@@ -32,6 +33,7 @@ public abstract class Queuable {
     earliestGet = other.earliestGet;
     priority = other.priority;
     created = other.created;
+    retries = other.retries;
   }
 
   public String getId() {
@@ -80,6 +82,14 @@ public abstract class Queuable {
 
   public void setCreated(Date created) {
     this.created = created;
+  }
+
+  public int getRetries() {
+    return retries;
+  }
+
+  public void setRetries(int retries) {
+    this.retries = retries;
   }
 
   @PrePersist

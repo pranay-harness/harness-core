@@ -7,21 +7,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.logging.LoggerFactory;
-import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
 
 import javax.inject.Inject;
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -57,22 +51,6 @@ public class QueueListenerTest extends WingsBaseTest {
     listener.run();
     assertThat(queue.count()).isEqualTo(0);
     verify(listener).onMessage(message);
-  }
-
-  @Test
-  public void shouldRequeueMessageWhenOnMessageThrowsException() throws Exception {
-    TestQueuable message = new TestQueuable(1);
-    Exception exception = new Exception();
-    doThrow(exception).when(listener).onMessage(message);
-    queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
-
-    listener.run();
-
-    assertThat(queue.count()).isEqualTo(1);
-    verify(listener).onMessage(message);
-    verify(listener).onException(exception, message);
-    verify(queue).requeue(message);
   }
 
   @Test(timeout = 1000)
@@ -141,5 +119,38 @@ public class QueueListenerTest extends WingsBaseTest {
     listenerThread.join();
 
     verify(listener, times(0)).onMessage(any(TestQueuable.class));
+  }
+
+  @Test
+  public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
+    TestQueuable message = new TestQueuable(1);
+    message.setRetries(1);
+    Exception exception = new Exception();
+    doThrow(exception).when(listener).onMessage(message);
+    queue.send(message);
+    assertThat(queue.count()).isEqualTo(1);
+
+    listener.run();
+
+    assertThat(queue.count()).isEqualTo(1);
+    verify(listener).onMessage(message);
+    verify(listener).onException(exception, message);
+    verify(queue).requeue(message);
+  }
+
+  @Test
+  public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
+    TestQueuable message = new TestQueuable(1);
+    Exception exception = new Exception();
+    doThrow(exception).when(listener).onMessage(message);
+    queue.send(message);
+    assertThat(queue.count()).isEqualTo(1);
+
+    listener.run();
+
+    assertThat(queue.count()).isEqualTo(1);
+    verify(listener).onMessage(message);
+    verify(listener).onException(exception, message);
+    verify(queue, times(0)).requeue(message);
   }
 }
