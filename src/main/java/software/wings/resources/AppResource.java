@@ -7,6 +7,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.*;
+import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
@@ -76,12 +77,13 @@ public class AppResource {
   public RestResponse<String> uploadPlatform(@PathParam("appID") String appID,
       @FormDataParam("standard") boolean standard, @FormDataParam("fileName") String fileName,
       @FormDataParam("version") String version, @FormDataParam("description") String description,
-      @FormDataParam("sourceType") String sourceType, @FormDataParam("md5") String md5,
+      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
         urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
-    uploadedInputStream = updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware);
+    uploadedInputStream =
+        updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
     String fileId = appService.savePlatformSoftware(platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
@@ -92,13 +94,14 @@ public class AppResource {
   public RestResponse<String> updatePlatform(@PathParam("appID") String appID,
       @PathParam("platformID") String platformID, @FormDataParam("standard") boolean standard,
       @FormDataParam("fileName") String fileName, @FormDataParam("version") String version,
-      @FormDataParam("description") String description, @FormDataParam("sourceType") String sourceType,
+      @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
         urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
-    uploadedInputStream = updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware);
+    uploadedInputStream =
+        updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
     String fileId = appService.updatePlatformSoftware(platformID, platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
@@ -115,20 +118,18 @@ public class AppResource {
       @PathParam("appID") String appID, @PathParam("platformID") String platformID) {
     return new RestResponse<>(appService.getPlatform(appID, platformID));
   }
-  private InputStream updateTheUploadedInputStream(@FormDataParam("url") String urlString,
-      @FormDataParam("file") InputStream uploadedInputStream, PlatformSoftware platformSoftware) {
-    if (platformSoftware.getSource().getSourceType().equals(HTTP)) {
+  private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
+    if (sourceType.equals(HTTP)) {
       try {
         URL url = new URL(urlString);
-        uploadedInputStream = new BoundedInputStream(url.openStream(), 4 * 1000 * 1000 * 1000); // TODO: read from
-                                                                                                // config
+        inputStream = new BoundedInputStream(url.openStream(), 4 * 1000 * 1000 * 1000); // TODO: read from config
       } catch (MalformedURLException e) {
         throw new WingsException(INVALID_URL);
       } catch (IOException e) {
         throw new WingsException(FILE_DOWNLOAD_FAILED);
       }
     }
-    return uploadedInputStream;
+    return inputStream;
   }
 
   @DELETE
@@ -138,12 +139,12 @@ public class AppResource {
   }
 
   private PlatformSoftware createPlatformSoftwareFromRequest(String appID, String fileName, String version, String md5,
-      String description, String urlString, boolean standard, String sourceType, InputStream inputStream) {
+      String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
     PlatformSoftware platformSoftware = new PlatformSoftware(fileName, md5);
     platformSoftware.setAppID(appID);
     platformSoftware.setStandard(standard);
     platformSoftware.setDescription(description);
-    if ("URL".equals(sourceType.toUpperCase())) {
+    if (sourceType.equals(HTTP)) {
       FileUrlSource fileUrlSource = new FileUrlSource();
       fileUrlSource.setUrl(urlString);
       platformSoftware.setSource(fileUrlSource);
