@@ -6,36 +6,27 @@ package software.wings.app;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import org.glassfish.hk2.utilities.NamedImpl;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import software.wings.beans.ReadPref;
-import software.wings.common.thread.ForceQueuePolicy;
-import software.wings.common.thread.ScalingQueue;
-import software.wings.common.thread.ScalingThreadPoolExecutor;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.*;
 import software.wings.service.intfc.*;
 
-import javax.inject.Named;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static software.wings.common.thread.ThreadPool.*;
+import static software.wings.common.thread.ThreadPool.create;
 
 /**
  * @author Rishi

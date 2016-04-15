@@ -1,20 +1,7 @@
 package software.wings.app;
 
-import java.util.EnumSet;
-import java.util.Set;
-
-import javax.servlet.DispatcherType;
-import javax.ws.rs.Path;
-
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -24,7 +11,11 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import ru.vyarus.guice.validator.ImplicitValidationModule;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
@@ -34,6 +25,11 @@ import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
+
+import javax.servlet.DispatcherType;
+import javax.ws.rs.Path;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  *  The main application - entry point for the entire Wings Application

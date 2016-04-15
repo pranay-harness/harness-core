@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.BaseFile;
-import software.wings.beans.ErrorConstants;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -110,6 +108,11 @@ public class FileServiceImpl implements FileService {
     baseFile.setFileUUID(fileID);
     baseFile.setSize(gridFsFile.getLength());
     return fileID;
+  }
+
+  @Override
+  public void deleteFile(String fileID, FileBucket fileBucket) {
+    fileBucket.getGridFSBucket().delete(new ObjectId(fileID));
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {

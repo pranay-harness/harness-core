@@ -15,16 +15,18 @@ import java.io.OutputStream;
 import java.util.List;
 
 public interface FileService {
-  public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
-  public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket configs);
+  String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
+  String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket);
 
-  public File download(String fileId, File file, FileBucket fileBucket);
+  void deleteFile(String fileID, FileBucket fileBucket);
 
-  public void downloadToStream(String fileId, OutputStream op, FileBucket fileBucket);
+  File download(String fileId, File file, FileBucket fileBucket);
 
-  public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
+  void downloadToStream(String fileId, OutputStream op, FileBucket fileBucket);
 
-  public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options);
+  GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
+
+  String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options);
 
   List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket);
 
@@ -34,7 +36,7 @@ public interface FileService {
     AUDITS("audits"),
     CONFIGS("configs"),
     LOGS("logs"),
-    SOFTWARES("software");
+    PLATFORMS("platforms");
 
     FileBucket(String name, int chunkSize) {
       this.name = name;

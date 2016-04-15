@@ -31,4 +31,6 @@ public interface AppService {
 
   List<PlatformSoftware> getPlatforms(String appID);
   PlatformSoftware getPlatform(String appID, String platformID);
+
+  void deletePlatform(String appID, String platformID);
 }

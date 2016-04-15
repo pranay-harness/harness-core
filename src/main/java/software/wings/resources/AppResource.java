@@ -24,7 +24,7 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 import static software.wings.beans.ErrorConstants.FILE_DOWNLOAD_FAILED;
 import static software.wings.beans.ErrorConstants.INVALID_URL;
-import static software.wings.service.intfc.FileService.FileBucket.SOFTWARES;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 /**
  *  Application Resource class
@@ -79,10 +79,10 @@ public class AppResource {
       @FormDataParam("sourceType") String sourceType, @FormDataParam("md5") String md5,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(fileName, version, md5, description,
+    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
         urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream = updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware);
-    String fileId = appService.savePlatformSoftware(platformSoftware, uploadedInputStream, SOFTWARES);
+    String fileId = appService.savePlatformSoftware(platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
 
@@ -96,10 +96,10 @@ public class AppResource {
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(fileName, version, md5, description,
+    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
         urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream = updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware);
-    String fileId = appService.updatePlatformSoftware(platformID, platformSoftware, uploadedInputStream, SOFTWARES);
+    String fileId = appService.updatePlatformSoftware(platformID, platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
 
@@ -131,9 +131,16 @@ public class AppResource {
     return uploadedInputStream;
   }
 
-  private PlatformSoftware createPlatformSoftwareFromRequest(String fileName, String version, String md5,
+  @DELETE
+  @Path("{appID}/platforms/{platformID}")
+  public void deletePlatform(@PathParam("appID") String appID, @PathParam("platformID") String platformID) {
+    appService.deletePlatform(appID, platformID);
+  }
+
+  private PlatformSoftware createPlatformSoftwareFromRequest(String appID, String fileName, String version, String md5,
       String description, String urlString, boolean standard, String sourceType, InputStream inputStream) {
     PlatformSoftware platformSoftware = new PlatformSoftware(fileName, md5);
+    platformSoftware.setAppID(appID);
     platformSoftware.setStandard(standard);
     platformSoftware.setDescription(description);
     if ("URL".equals(sourceType.toUpperCase())) {

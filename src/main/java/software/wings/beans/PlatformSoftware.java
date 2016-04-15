@@ -22,7 +22,8 @@ public class PlatformSoftware extends BaseFile {
   private String version;
   private String description;
   private ArtifactSource source;
-  private String binaryDocumentId;
+
+  public PlatformSoftware() {}
 
   public PlatformSoftware(String fileName, String md5) {
     super(fileName, md5);
@@ -60,14 +61,6 @@ public class PlatformSoftware extends BaseFile {
     this.description = description;
   }
 
-  public String getBinaryDocumentId() {
-    return binaryDocumentId;
-  }
-
-  public void setBinaryDocumentId(String binaryDocumentId) {
-    this.binaryDocumentId = binaryDocumentId;
-  }
-
   public ArtifactSource getSource() {
     return source;
   }
@@ -86,19 +79,18 @@ public class PlatformSoftware extends BaseFile {
       return false;
     PlatformSoftware that = (PlatformSoftware) o;
     return standard == that.standard && Objects.equals(appID, that.appID) && Objects.equals(version, that.version)
-        && Objects.equals(description, that.description) && Objects.equals(source, that.source)
-        && Objects.equals(binaryDocumentId, that.binaryDocumentId);
+        && Objects.equals(description, that.description) && Objects.equals(source, that.source);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), appID, standard, version, description, source, binaryDocumentId);
+    return Objects.hash(super.hashCode(), appID, standard, version, description, source);
   }
 
   @Override
   public String toString() {
     return "PlatformSoftware{"
         + "appID='" + appID + '\'' + ", standard=" + standard + ", version='" + version + '\'' + ", description='"
-        + description + '\'' + ", source=" + source + ", binaryDocumentId='" + binaryDocumentId + '\'' + '}';
+        + description + '\'' + ", source=" + source + '}';
   }
 }

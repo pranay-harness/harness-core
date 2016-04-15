@@ -7,19 +7,22 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Metered;
 
-import software.wings.beans.Application;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
-import software.wings.beans.PlatformSoftware;
+import software.wings.beans.*;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorConstants.PLATFORM_SOFTWARE_DELETE_ERROR;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 /**
  *  Application Service Implementation class.
@@ -64,7 +67,7 @@ public class AppServiceImpl implements AppService {
   @Override
   public String savePlatformSoftware(PlatformSoftware platformSoftware, InputStream in, FileBucket fileBucket) {
     String fileID = fileService.saveFile(platformSoftware, in, fileBucket);
-    platformSoftware.setBinaryDocumentId(fileID);
+    platformSoftware.setFileUUID(fileID);
     return wingsPersistence.save(platformSoftware);
   }
 
@@ -74,7 +77,7 @@ public class AppServiceImpl implements AppService {
     PlatformSoftware storedPlatformSoftware = wingsPersistence.get(PlatformSoftware.class, platformID);
     if (newPlatformSoftwareBinaryUploaded(storedPlatformSoftware, platformSoftware)) {
       String fileID = fileService.saveFile(platformSoftware, in, fileBucket);
-      platformSoftware.setBinaryDocumentId(fileID);
+      platformSoftware.setFileUUID(fileID);
     }
     platformSoftware.setAppID(storedPlatformSoftware.getAppID());
     platformSoftware.setUuid(storedPlatformSoftware.getUuid());
@@ -90,6 +93,22 @@ public class AppServiceImpl implements AppService {
   @Override
   public PlatformSoftware getPlatform(String appID, String platformID) {
     return wingsPersistence.get(PlatformSoftware.class, platformID);
+  }
+
+  @Override
+  public void deletePlatform(String appID, String platformID) {
+    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
+    for (Service service : application.getServices()) {
+      for (PlatformSoftware platformSoftware : service.getPlatformSoftwares()) {
+        if (platformSoftware.getUuid().equals(platformID)) {
+          throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
+        }
+      }
+    }
+    // safe to delete
+    PlatformSoftware platformSoftware = wingsPersistence.get(PlatformSoftware.class, platformID);
+    wingsPersistence.delete(PlatformSoftware.class, platformID);
+    fileService.deleteFile(platformSoftware.getFileUUID(), PLATFORMS);
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(
