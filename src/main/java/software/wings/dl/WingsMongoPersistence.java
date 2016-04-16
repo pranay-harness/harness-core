@@ -1,11 +1,11 @@
 package software.wings.dl;
 
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import io.dropwizard.lifecycle.Managed;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
@@ -18,12 +18,13 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class WingsMongoPersistence implements WingsPersistence {
+public class WingsMongoPersistence implements WingsPersistence, Managed {
   private Datastore primaryDatastore;
   private Datastore secondaryDatastore;
 
@@ -159,5 +160,15 @@ public class WingsMongoPersistence implements WingsPersistence {
   @Override
   public void close() {
     primaryDatastore.getMongo().close();
+  }
+
+  @Override
+  public void start() throws Exception {
+    // Do nothing
+  }
+
+  @Override
+  public void stop() throws Exception {
+    close();
   }
 }

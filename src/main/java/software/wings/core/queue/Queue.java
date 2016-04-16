@@ -7,14 +7,14 @@ import java.util.Date;
 
 public interface Queue<T> {
   /**
-   * Get a non running message from queue with a wait of 3 seconds and poll of 200 milliseconds
+   * Get a non running message from queue with a wait of 3 seconds and poll of 1 second
    *
    * @return message or null
    */
   T get();
 
   /**
-   * Get a non running message from queue with a poll of 200 milliseconds
+   * Get a non running message from queue with a poll of 1 second
    *
    * @param waitDuration duration in milliseconds to keep polling before returning null
    * @return message or null

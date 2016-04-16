@@ -4,11 +4,9 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.TypeLiteral;
+import com.google.inject.*;
 import com.google.inject.name.Names;
+import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
@@ -18,18 +16,24 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.ReadPref;
 import software.wings.common.thread.ForceQueuePolicy;
 import software.wings.common.thread.ScalingQueue;
 import software.wings.common.thread.ScalingThreadPoolExecutor;
+import software.wings.core.queue.*;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.*;
 import software.wings.service.intfc.*;
 import software.wings.utils.CurrentThreadExecutor;
+import software.wings.waitNotify.NotifyEvent;
+import software.wings.waitNotify.NotifyEventListener;
 
+import javax.inject.Named;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
@@ -92,8 +96,13 @@ public class WingsRule implements MethodRule {
         bind(InfraService.class).to(InfraServiceImpl.class);
         bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
         bind(MongoClient.class).toInstance(client);
+        bind(new TypeLiteral<Queue<NotifyEvent>>() {})
+            .toInstance(new MongoQueueImpl<NotifyEvent>(NotifyEvent.class, datastore));
+        bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
+        bind(ScheduledExecutorService.class).annotatedWith(Names.named("timer")).to(HashedWheelTimer.class);
       }
     });
+    injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
     WingsBootstrap.initialize(injector);
   }
 
@@ -102,8 +111,35 @@ public class WingsRule implements MethodRule {
   }
 
   protected void after() {
+    try {
+      log().info("Stopping timer...");
+      ScheduledExecutorService executorService =
+          injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")));
+      executorService.shutdownNow();
+      log().info("Stopped timer...");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    try {
+      log().info("Stopping queue listener controller...");
+      injector.getInstance(QueueListenerController.class).stop();
+      log().info("Stopped queue listener controller...");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    log().info("Stopping distributed lock service...");
     distributedLockSvc.shutdown();
-    mongoServer.shutdown();
+    log().info("Stopped distributed lock service...");
+    log().info("Stopping WingsPersistance...");
     injector.getInstance(WingsPersistence.class).close();
+    log().info("Stopped WingsPersistance...");
+    log().info("Stopping Mongo server...");
+    mongoServer.shutdown();
+    log().info("Stopped Mongo server...");
+  }
+
+  private Logger log() {
+    return LoggerFactory.getLogger(getClass());
   }
 }

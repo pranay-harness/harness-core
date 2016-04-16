@@ -1,7 +1,6 @@
 package software.wings.core.queue;
 
 import com.google.common.base.MoreObjects;
-import com.google.inject.name.Named;
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.Datastore;
@@ -13,6 +12,7 @@ import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
@@ -195,10 +195,10 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
-    queue.get(200);
+    queue.get(1000);
     long elapsed = new Date().getTime() - start.getTime();
 
-    assertThat(elapsed).isBetween(200L, 400L);
+    assertThat(elapsed).isBetween(1000L, 2000L);
   }
 
   @Test

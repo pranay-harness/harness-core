@@ -1,6 +1,5 @@
 package software.wings.core.queue;
 
-import com.google.inject.name.Named;
 import com.ifesdjeen.timer.HashedWheelTimer;
 import com.ifesdjeen.timer.WaitStrategy;
 import org.junit.Before;
@@ -11,6 +10,7 @@ import org.mongodb.morphia.Datastore;
 import software.wings.WingsBaseTest;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;

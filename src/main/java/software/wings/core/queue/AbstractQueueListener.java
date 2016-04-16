@@ -2,8 +2,10 @@ package software.wings.core.queue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.common.UUIDGenerator;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,10 +21,14 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
-  @Inject private ScheduledExecutorService timer;
+  @Inject @Named("timer") private ScheduledExecutorService timer;
 
   @Override
   public void run() {
+    String threadName = queue.name() + "-handler-" + UUIDGenerator.getUUID();
+    log().debug("Setting thread name to {}", threadName);
+    Thread.currentThread().setName(threadName);
+
     boolean run = !runOnce;
     do {
       T message = null;
@@ -30,7 +36,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         message = queue.get();
       } catch (Exception e) {
         if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
-          log().info("Thread interrupted, shutting down for queue {}, Exception: {}", queue.name(), e);
+          log().info("Thread interrupted, shutting down for queue {}, Exception: " + e, queue.name());
           run = false;
         } else {
           log().error("Exception happened while fetching message from queue " + queue.name(), e);
@@ -63,6 +69,10 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
       message.setRetries(message.getRetries() - 1);
       queue.requeue(message);
     }
+  }
+
+  public Queue<T> getQueue() {
+    return queue;
   }
 
   public void shutDown() {

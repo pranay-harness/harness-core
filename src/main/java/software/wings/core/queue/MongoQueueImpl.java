@@ -32,12 +32,12 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
 
   @Override
   public T get() {
-    return get(3000, 200);
+    return get(3000, 1000);
   }
 
   @Override
   public T get(final int waitDuration) {
-    return get(waitDuration, 200);
+    return get(waitDuration, 1000);
   }
 
   @Override

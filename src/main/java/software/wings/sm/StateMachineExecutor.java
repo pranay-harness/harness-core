@@ -152,7 +152,7 @@ public class StateMachineExecutor {
     }
   }
 
-  public void resume(String smInstanceId, Map<String, Serializable> response) {
+  public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
     SMInstance smInstance = wingsPersistence.get(SMInstance.class, smInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
     State currentState = sm.getState(smInstance.getStateName());

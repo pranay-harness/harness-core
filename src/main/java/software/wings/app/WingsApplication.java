@@ -6,6 +6,8 @@ import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
+import io.dropwizard.lifecycle.Managed;
+import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
@@ -69,14 +71,14 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     WingsBootstrap.initialize(injector);
     addResources(environment, injector);
-
-    environment.jersey().register(ResponseMessageResolver.class);
-    environment.jersey().register(MultiPartFeature.class);
+    addManagedBeans(environment, injector);
 
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-    environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+
+    environment.jersey().register(ResponseMessageResolver.class);
+    environment.jersey().register(MultiPartFeature.class);
     environment.jersey().register(WingsExceptionMapper.class);
 
     // Authentication/Authorization filters
@@ -89,6 +91,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       environment.jersey().register(AuthRuleFilter.class);
     }
 
+    environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+
     logger.info("Starting app done");
   }
 
@@ -100,6 +104,20 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
+    }
+  }
+
+  private void addManagedBeans(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
+
+    Set<Class<? extends Managed>> managedClasses = reflections.getSubTypesOf(Managed.class);
+    for (Class<?> managedClass : managedClasses) {
+      environment.lifecycle().manage((Managed) injector.getInstance(managedClass));
+    }
+
+    Set<Class<? extends LifeCycle>> lifecycleClasses = reflections.getSubTypesOf(LifeCycle.class);
+    for (Class<?> managedClass : lifecycleClasses) {
+      environment.lifecycle().manage((LifeCycle) injector.getInstance(managedClass));
     }
   }
   private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
