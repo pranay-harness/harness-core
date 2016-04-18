@@ -152,12 +152,14 @@ public class StateMachine extends Base {
           invalidState = true;
         }
         if (!invalidState) {
-          if (transition.getTransitionType() == TransitionType.FORK && fromState.getStateType() != StateType.FORK) {
+          if (transition.getTransitionType() == TransitionType.FORK
+              && !StateType.FORK.equals(fromState.getStateType())) {
             nonForkStates.add(fromState.getName());
             continue;
           }
 
-          if (transition.getTransitionType() == TransitionType.REPEAT && fromState.getStateType() != StateType.REPEAT) {
+          if (transition.getTransitionType() == TransitionType.REPEAT
+              && !StateType.REPEAT.equals(fromState.getStateType())) {
             nonRepeatStates.add(fromState.getName());
             continue;
           }

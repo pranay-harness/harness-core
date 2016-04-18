@@ -24,7 +24,7 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import ru.vyarus.guice.validator.ImplicitValidationModule;
+import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
@@ -88,6 +88,10 @@ public class WingsApplication extends Application<MainConfiguration> {
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
       environment.jersey().register(AuthRuleFilter.class);
     }
+
+    PluginManager pluginManager = injector.getInstance(PluginManager.class);
+    pluginManager.loadPlugins();
+    pluginManager.startPlugins();
 
     logger.info("Starting app done");
   }

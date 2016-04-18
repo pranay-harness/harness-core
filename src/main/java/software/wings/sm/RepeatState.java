@@ -33,7 +33,7 @@ public class RepeatState extends State {
   private List<RepeatElement> repeatElements = new ArrayList<>();
 
   public RepeatState(String name) {
-    super(name, StateType.REPEAT);
+    super(name, StateType.REPEAT.name());
   }
 
   /* (non-Javadoc)

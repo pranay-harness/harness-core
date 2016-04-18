@@ -20,7 +20,7 @@ public class ForkState extends State {
   private List<String> forkStateNames = new ArrayList<String>();
 
   public ForkState(String name) {
-    super(name, StateType.FORK);
+    super(name, StateType.FORK.name());
   }
   /* (non-Javadoc)
    * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)

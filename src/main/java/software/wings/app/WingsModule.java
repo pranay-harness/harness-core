@@ -3,39 +3,64 @@
  */
 package software.wings.app;
 
+import static software.wings.common.thread.ThreadPool.create;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import org.glassfish.hk2.utilities.NamedImpl;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
+
+import ro.fortsoft.pf4j.DefaultPluginManager;
+import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ReadPref;
-import software.wings.common.thread.ForceQueuePolicy;
-import software.wings.common.thread.ScalingQueue;
-import software.wings.common.thread.ScalingThreadPoolExecutor;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.*;
-import software.wings.service.intfc.*;
-
-import javax.inject.Named;
-import javax.xml.crypto.Data;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-
-import static software.wings.common.thread.ThreadPool.*;
+import software.wings.service.impl.AppServiceImpl;
+import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.AuditServiceImpl;
+import software.wings.service.impl.DeploymentServiceImpl;
+import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.FileServiceImpl;
+import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.NodeSetExecutorServiceImpl;
+import software.wings.service.impl.PlatformServiceImpl;
+import software.wings.service.impl.ReleaseServiceImpl;
+import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.SSHNodeSetExecutorServiceImpl;
+import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.DeploymentService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.NodeSetExecutorService;
+import software.wings.service.intfc.PlatformService;
+import software.wings.service.intfc.ReleaseService;
+import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSHNodeSetExecutorService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 
 /**
  * @author Rishi
@@ -106,5 +131,7 @@ public class WingsModule extends AbstractModule {
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
     bind(InfraService.class).to(InfraServiceImpl.class);
+    bind(WorkflowService.class).to(WorkflowServiceImpl.class);
+    bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
   }
 }

@@ -250,6 +250,6 @@ public class StateMachineExecutor {
     public void run() {
       stateMachineExecutor.execute(sm, smInstance);
     }
-    private static Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
   }
 }
