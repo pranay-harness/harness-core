@@ -12,7 +12,6 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import io.dropwizard.lifecycle.Managed;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
@@ -31,7 +30,6 @@ import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import ru.vyarus.guice.validator.ImplicitValidationModule;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
 import software.wings.core.queue.QueueListenerController;
@@ -78,20 +76,25 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     WingsBootstrap.initialize(injector);
 
-    addResources(environment, injector);
+    registerResources(environment, injector);
 
-    addManagedBeans(environment, injector);
+    registerManagedBeans(environment, injector);
 
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
 
-    environment.jersey().register(ResponseMessageResolver.class);
-    environment.jersey().register(MultiPartFeature.class);
-    environment.jersey().register(WingsExceptionMapper.class);
+    registerJerseyProviders(environment);
 
     // Authentication/Authorization filters
+    registerAuthFilters(configuration, environment);
 
+    environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+
+    logger.info("Starting app done");
+  }
+
+  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
     if (configuration.isEnableAuth()) {
       environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
                                                                .setAuthenticator(new BasicAuthAuthenticator())
@@ -99,13 +102,15 @@ public class WingsApplication extends Application<MainConfiguration> {
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
       environment.jersey().register(AuthRuleFilter.class);
     }
-
-    environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
-
-    logger.info("Starting app done");
   }
 
-  private void addResources(Environment environment, Injector injector) {
+  private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(ResponseMessageResolver.class);
+    environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(WingsExceptionMapper.class);
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
     Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
 
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
@@ -116,7 +121,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
-  private void addManagedBeans(Environment environment, Injector injector) {
+  private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
