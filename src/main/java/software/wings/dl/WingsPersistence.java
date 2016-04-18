@@ -28,6 +28,8 @@ public interface WingsPersistence {
 
   public <T extends Base> String save(T t);
 
+  public <T extends Base> List<String> save(List<T> tList);
+
   public <T extends Base> T saveAndGet(Class<T> cls, T t);
 
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops);

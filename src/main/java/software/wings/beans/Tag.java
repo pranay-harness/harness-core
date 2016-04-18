@@ -57,4 +57,8 @@ public class Tag extends Base {
   public void setEnvID(String envID) {
     this.envID = envID;
   }
+
+  public String getTagString() {
+    return type + ":" + name;
+  }
 }

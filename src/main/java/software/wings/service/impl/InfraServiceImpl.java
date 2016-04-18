@@ -8,6 +8,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.*;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfraService;
+import software.wings.utils.HostFileHelper;
+import software.wings.utils.HostFileHelper.HostFileType;
+
+import java.io.*;
+import java.util.List;
 
 @Singleton
 public class InfraServiceImpl implements InfraService {
@@ -36,7 +41,7 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Host createHost(String infraID, Host host) {
-    host.setApplicationId(infraID);
+    host.setInfraID(infraID);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
@@ -59,5 +64,19 @@ public class InfraServiceImpl implements InfraService {
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
     wingsPersistence.update(host, updateOp);
     return wingsPersistence.get(Host.class, hostID);
+  }
+
+  @Override
+  public Integer importHosts(String infraID, InputStream inputStream, HostFileType fileType) {
+    Infra infra = wingsPersistence.get(Infra.class, infraID); // TODO: validate infra
+    List<Host> hosts = HostFileHelper.parseHosts(inputStream, infraID, fileType);
+    List<String> IDs = wingsPersistence.save(hosts);
+    return IDs.size();
+  }
+
+  @Override
+  public File exportHosts(String infraID, HostFileType fileType) {
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraID).asList();
+    return HostFileHelper.createHostsFile(hosts, fileType);
   }
 }

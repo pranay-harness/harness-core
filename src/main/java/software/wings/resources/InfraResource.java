@@ -3,11 +3,23 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.*;
+import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfraService;
+import software.wings.utils.BoundedInputStream;
+import software.wings.utils.HostFileHelper.HostFileType;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.InputStream;
+
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 
 @Path("/infra")
 @AuthRule
@@ -68,5 +80,29 @@ public class InfraResource {
   @Path("hosts/{hostID}/tag/{tagID}")
   public RestResponse<Host> applyTag(@PathParam("hostID") String hostID, @PathParam("tagID") String tagID) {
     return new RestResponse<>(infraService.applyTag(hostID, tagID));
+  }
+
+  @POST
+  @Path("{infraID}/hosts/import/{fileType}")
+  @Consumes(MULTIPART_FORM_DATA)
+  public void importHosts(@PathParam("infraID") String infraID, @PathParam("fileType") HostFileType fileType,
+      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+    if (sourceType.equals(HTTP)) {
+      uploadedInputStream =
+          BoundedInputStream.getBoundedStreamForURL(urlString, 40 * 1000 * 1000); // TODO: read from config
+    }
+    infraService.importHosts(infraID, uploadedInputStream, fileType);
+  }
+
+  @GET
+  @Path("{infraID}/hosts/export/{fileType}")
+  @Encoded
+  public Response exportHosts(@PathParam("infraID") String infraID, @PathParam("fileType") HostFileType fileType) {
+    File hostsFile = infraService.exportHosts(infraID, fileType);
+    Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
+    response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
+    return response.build();
   }
 }

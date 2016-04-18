@@ -39,4 +39,5 @@ public interface ErrorConstants {
   public static final String INVALID_URL = "INVALID_URL";
   public static final String FILE_DOWNLOAD_FAILED = "FILE_DOWNLOAD_FAILED";
   public static final String PLATFORM_SOFTWARE_DELETE_ERROR = "PLATFORM_SOFTWARE_DELETE_ERROR";
+  public static final String INVALID_CSV_FILE = "INVALID_CSV_FILE";
 }

@@ -118,24 +118,19 @@ public class AppResource {
       @PathParam("appID") String appID, @PathParam("platformID") String platformID) {
     return new RestResponse<>(appService.getPlatform(appID, platformID));
   }
-  private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
-    if (sourceType.equals(HTTP)) {
-      try {
-        URL url = new URL(urlString);
-        inputStream = new BoundedInputStream(url.openStream(), 4 * 1000 * 1000 * 1000); // TODO: read from config
-      } catch (MalformedURLException e) {
-        throw new WingsException(INVALID_URL);
-      } catch (IOException e) {
-        throw new WingsException(FILE_DOWNLOAD_FAILED);
-      }
-    }
-    return inputStream;
-  }
 
   @DELETE
   @Path("{appID}/platforms/{platformID}")
   public void deletePlatform(@PathParam("appID") String appID, @PathParam("platformID") String platformID) {
     appService.deletePlatform(appID, platformID);
+  }
+
+  private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
+    if (sourceType.equals(HTTP)) {
+      inputStream =
+          BoundedInputStream.getBoundedStreamForURL(urlString, 4 * 1000 * 1000 * 1000); // TODO: read from config
+    }
+    return inputStream;
   }
 
   private PlatformSoftware createPlatformSoftwareFromRequest(String appID, String fileName, String version, String md5,

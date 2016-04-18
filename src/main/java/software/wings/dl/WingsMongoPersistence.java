@@ -17,6 +17,7 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -74,6 +75,14 @@ public class WingsMongoPersistence implements WingsPersistence {
   public <T extends Base> String save(T t) {
     Key<T> key = primaryDatastore.save(t);
     return (String) key.getId();
+  }
+
+  @Override
+  public <T extends Base> List<String> save(List<T> ts) {
+    Iterable<Key<T>> keys = primaryDatastore.save(ts);
+    List<String> IDs = new ArrayList<>();
+    keys.forEach(tKey -> IDs.add((String) tKey.getId()));
+    return IDs;
   }
 
   @Override
