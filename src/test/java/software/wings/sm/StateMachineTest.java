@@ -6,6 +6,9 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 
 import software.wings.app.WingsBootstrap;
@@ -14,9 +17,6 @@ import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
 import software.wings.waitNotify.WaitNotifyEngine;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Rishi
@@ -91,7 +91,7 @@ public class StateMachineTest {
    */
   public static class StateA extends State {
     public StateA() {
-      super(StateA.class.getName(), StateType.HTTP);
+      super(StateA.class.getName(), StateType.HTTP.name());
     }
     /* (non-Javadoc)
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
@@ -114,7 +114,7 @@ public class StateMachineTest {
     private int duration;
 
     public StateAsynch(String name, int duration) {
-      super(name, StateType.HTTP);
+      super(name, StateType.HTTP.name());
       this.duration = duration;
     }
 
@@ -142,7 +142,7 @@ public class StateMachineTest {
    */
   public static class StateB extends State {
     public StateB() {
-      super(StateB.class.getName(), StateType.HTTP);
+      super(StateB.class.getName(), StateType.HTTP.name());
     }
     /* (non-Javadoc)
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
@@ -162,7 +162,7 @@ public class StateMachineTest {
    */
   public static class StateC extends State {
     public StateC() {
-      super(StateC.class.getName(), StateType.HTTP);
+      super(StateC.class.getName(), StateType.HTTP.name());
     }
     /* (non-Javadoc)
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
