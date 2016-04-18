@@ -34,6 +34,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
 
   @Override
   protected void onMessage(NotifyEvent message) throws Exception {
+    log().trace("Processing message {}", message);
     String waitInstanceId = message.getWaitInstanceId();
 
     WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId);
@@ -156,6 +157,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
         persistentLocker.releaseLock(WaitInstance.class, waitInstanceId);
       }
     }
+    log().trace("Done processing message {}", message);
   }
 
   private Logger log() {

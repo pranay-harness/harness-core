@@ -475,4 +475,34 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+      <profile>
+      <id>build-ui</id>
+      <build>
+      <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+               <execution>
+                  <phase>test</phase>
+                  <goals>
+                     <goal>run</goal>
+                  </goals>
+                  <configuration>
+                  <tasks>
+                     <echo>Using env.test.properties</echo>
+            <copy file="src/main/resources/env.test.properties" tofile
+		    ="${project.build.outputDirectory}/env.properties"/>
+                  </tasks>
+                  </configuration>
+               </execution>
+            </executions>
+         </plugin>
+      </plugins>
+      </build>
+      </profile>
+   </profiles>
 </project>

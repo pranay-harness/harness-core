@@ -2,10 +2,15 @@ package software.wings.app;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.dropwizard.lifecycle.Managed;
 import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -29,6 +34,8 @@ import io.dropwizard.setup.Environment;
 import ru.vyarus.guice.validator.ImplicitValidationModule;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
+import software.wings.core.queue.QueueListenerController;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.filter.ResponseMessageResolver;
@@ -70,7 +77,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     Injector injector = Guice.createInjector(new ValidationModule(), new WingsModule(configuration));
 
     WingsBootstrap.initialize(injector);
+
     addResources(environment, injector);
+
     addManagedBeans(environment, injector);
 
     environment.servlets()
@@ -108,17 +117,13 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void addManagedBeans(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
-
-    Set<Class<? extends Managed>> managedClasses = reflections.getSubTypesOf(Managed.class);
-    for (Class<?> managedClass : managedClasses) {
-      environment.lifecycle().manage((Managed) injector.getInstance(managedClass));
-    }
-
-    Set<Class<? extends LifeCycle>> lifecycleClasses = reflections.getSubTypesOf(LifeCycle.class);
-    for (Class<?> managedClass : lifecycleClasses) {
-      environment.lifecycle().manage((LifeCycle) injector.getInstance(managedClass));
-    }
+    environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
+    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
+    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
+    environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
+
   private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
 }

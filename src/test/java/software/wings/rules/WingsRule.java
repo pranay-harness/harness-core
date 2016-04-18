@@ -11,6 +11,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import io.dropwizard.lifecycle.Managed;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -27,9 +28,11 @@ import software.wings.common.thread.ScalingThreadPoolExecutor;
 import software.wings.core.queue.*;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.*;
 import software.wings.service.intfc.*;
 import software.wings.utils.CurrentThreadExecutor;
+import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitNotify.NotifyEvent;
 import software.wings.waitNotify.NotifyEventListener;
 
@@ -73,8 +76,8 @@ public class WingsRule implements MethodRule {
 
     Morphia morphia = new Morphia();
     datastore = morphia.createDatastore(client, "wings");
-    distributedLockSvc =
-        new DistributedLockSvcFactory(new DistributedLockSvcOptions(client, "wings", "locks")).getLockSvc();
+    distributedLockSvc = new ManagedDistributedLockSvc(
+        new DistributedLockSvcFactory(new DistributedLockSvcOptions(client, "wings", "locks")).getLockSvc());
     if (!distributedLockSvc.isRunning()) {
       distributedLockSvc.startup();
     }
@@ -96,10 +99,11 @@ public class WingsRule implements MethodRule {
         bind(InfraService.class).to(InfraServiceImpl.class);
         bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
         bind(MongoClient.class).toInstance(client);
-        bind(new TypeLiteral<Queue<NotifyEvent>>() {})
-            .toInstance(new MongoQueueImpl<NotifyEvent>(NotifyEvent.class, datastore));
+        bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore));
         bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
-        bind(ScheduledExecutorService.class).annotatedWith(Names.named("timer")).to(HashedWheelTimer.class);
+        bind(ScheduledExecutorService.class)
+            .annotatedWith(Names.named("timer"))
+            .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
@@ -113,8 +117,7 @@ public class WingsRule implements MethodRule {
   protected void after() {
     try {
       log().info("Stopping timer...");
-      ScheduledExecutorService executorService =
-          injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")));
+      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
       executorService.shutdownNow();
       log().info("Stopped timer...");
     } catch (Exception e) {
@@ -128,12 +131,24 @@ public class WingsRule implements MethodRule {
     } catch (Exception e) {
       e.printStackTrace();
     }
-    log().info("Stopping distributed lock service...");
-    distributedLockSvc.shutdown();
-    log().info("Stopped distributed lock service...");
-    log().info("Stopping WingsPersistance...");
-    injector.getInstance(WingsPersistence.class).close();
-    log().info("Stopped WingsPersistance...");
+
+    try {
+      log().info("Stopping distributed lock service...");
+      ((Managed) distributedLockSvc).stop();
+      log().info("Stopped distributed lock service...");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    try {
+      log().info("Stopping WingsPersistance...");
+      ((Managed) injector.getInstance(WingsPersistence.class)).stop();
+      log().info("Stopped WingsPersistance...");
+      log().info("Stopped distributed lock service...");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
     log().info("Stopping Mongo server...");
     mongoServer.shutdown();
     log().info("Stopped Mongo server...");

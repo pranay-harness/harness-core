@@ -33,7 +33,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     do {
       T message = null;
       try {
+        log().trace("Waiting for message");
         message = queue.get();
+        log().trace("got message {}", message);
       } catch (Exception e) {
         if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
           log().info("Thread interrupted, shutting down for queue {}, Exception: " + e, queue.name());

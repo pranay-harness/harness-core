@@ -6,40 +6,35 @@ package software.wings.app;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import org.glassfish.hk2.utilities.NamedImpl;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import software.wings.beans.ReadPref;
-import software.wings.common.thread.ForceQueuePolicy;
-import software.wings.common.thread.ScalingQueue;
-import software.wings.common.thread.ScalingThreadPoolExecutor;
-import software.wings.common.thread.ThreadPool;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.*;
 import software.wings.service.intfc.*;
+import software.wings.utils.ManagedExecutorService;
+import software.wings.utils.ManagedScheduledExecutorService;
 
-import javax.inject.Named;
-import javax.xml.crypto.Data;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static software.wings.common.thread.ThreadPool.*;
+import static software.wings.common.thread.ThreadPool.create;
 
 /**
  * @author Rishi
@@ -62,17 +57,16 @@ public class WingsModule extends AbstractModule {
     MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
     List<String> hosts = Splitter.on(",").splitToList(mongoConfig.getHost());
     List<ServerAddress> serverAddresses = new ArrayList<>();
-    StringBuilder mongoURI = new StringBuilder("mongo://");
+
     for (String host : hosts) {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
     Morphia m = new Morphia();
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
-    distributedLockSvc =
+    distributedLockSvc = new ManagedDistributedLockSvc(
         new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
-            .getLockSvc();
-    distributedLockSvc.startup();
+            .getLockSvc());
 
     if (hosts.size() > 1) {
       mongoClient = new MongoClient(serverAddresses);
@@ -110,10 +104,13 @@ public class WingsModule extends AbstractModule {
     bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
         .annotatedWith(Names.named("datastoreMap"))
         .toInstance(datastoreMap);
-    bind(ExecutorService.class).toInstance(create(20, 1000, 500L, TimeUnit.MILLISECONDS));
+    bind(ExecutorService.class).toInstance(new ManagedExecutorService(create(20, 1000, 500L, TimeUnit.MILLISECONDS)));
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
     bind(InfraService.class).to(InfraServiceImpl.class);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("timer"))
+        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
   }
 }
