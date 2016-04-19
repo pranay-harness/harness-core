@@ -18,6 +18,8 @@ import com.mongodb.ServerAddress;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import software.wings.beans.ReadPref;
+import software.wings.core.queue.MongoQueueImpl;
+import software.wings.core.queue.Queue;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -26,6 +28,7 @@ import software.wings.service.impl.*;
 import software.wings.service.intfc.*;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
+import software.wings.waitNotify.NotifyEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -112,5 +115,7 @@ public class WingsModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("timer"))
         .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(NotifyEvent.class, primaryDatastore));
   }
 }
