@@ -18,15 +18,12 @@
         <maven.site.skip>true</maven.site.skip>
         <maven.site.deploy.skip>true</maven.site.deploy.skip>
         <dropwizard.version>0.9.1</dropwizard.version>
-        <buildUI>true</buildUI>
     </properties>
 
     <repositories>
         <repository>
-            <id>sonatype-nexus-snapshots</id>
-            <name>Sonatype Nexus snapshots</name>
-            <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-            <snapshots><enabled>true</enabled></snapshots>
+            <id>localrepository</id>
+             <url>file://${basedir}/repo</url>
         </repository>
         <repository>
             <id>sonatype-nexus-releases</id>
