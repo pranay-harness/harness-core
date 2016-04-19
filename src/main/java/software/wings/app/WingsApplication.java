@@ -4,7 +4,9 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
@@ -33,6 +35,7 @@ import io.dropwizard.setup.Environment;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
+import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
@@ -42,6 +45,7 @@ import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
+import software.wings.waitNotify.Notifier;
 
 /**
  *  The main application - entry point for the entire Wings Application
@@ -80,6 +84,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
+
+    registerQueueListeners(injector);
+
+    registerScheduledJobs(injector);
 
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
@@ -133,12 +141,31 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
+  private void registerQueueListeners(Injector injector) {
+    logger.info("Initializing queuelisteners...");
+    Reflections reflections = new Reflections("software.wings");
+
+    Set<Class<? extends AbstractQueueListener>> queueListeners = reflections.getSubTypesOf(AbstractQueueListener.class);
+    for (Class<? extends AbstractQueueListener> queueListener : queueListeners) {
+      logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
+      injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListener), 5);
+    }
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    logger.info("Initializing scheduledJobs...");
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+  }
+
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
     environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(
         (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
 

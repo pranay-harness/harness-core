@@ -31,8 +31,10 @@ import com.mongodb.ServerAddress;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ReadPref;
+import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
+import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -72,6 +74,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitNotify.NotifyEvent;
+import software.wings.waitNotify.NotifyEventListener;
 
 /**
  * @author Rishi
@@ -153,5 +156,9 @@ public class WingsModule extends AbstractModule {
         .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
     bind(new TypeLiteral<Queue<NotifyEvent>>() {})
         .toInstance(new MongoQueueImpl<>(NotifyEvent.class, primaryDatastore));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("notifier"))
+        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+    bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
   }
 }
