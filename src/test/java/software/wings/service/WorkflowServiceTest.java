@@ -2,14 +2,18 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import javax.inject.Inject;
+
 import org.junit.Test;
 
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.*;
-
-import javax.inject.Inject;
+import software.wings.sm.State;
+import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachineTest;
+import software.wings.sm.Transition;
+import software.wings.sm.TransitionType;
 
 /**
  *

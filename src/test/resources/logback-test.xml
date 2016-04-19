@@ -4,7 +4,7 @@
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<!-- By default, encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
 		<encoder>
-			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n
+			<pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n
 			</pattern>
 		</encoder>
 	</appender>
@@ -12,6 +12,10 @@
 	<logger name="org.apache.http.wire" level="WARN" additivity="false">
 		<appender-ref ref="STDOUT" />
 	</logger>
+
+	<logger name="de.bwaldvogel" level="ERROR"/>
+	<logger name="org.mongodb.driver" level="ERROR"/>
+	<logger name="io.netty" level="ERROR"/>
 	
 	<!-- By default, the level of the root level is set to DEBUG -->
 	<root level="DEBUG">

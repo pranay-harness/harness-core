@@ -13,8 +13,7 @@ public class ExecState extends State {
    * @param stateType
    */
   public ExecState(String name, StateType stateType) {
-    super(name, stateType);
-    // TODO Auto-generated constructor stub
+    super(name, stateType.name());
   }
 
   /**

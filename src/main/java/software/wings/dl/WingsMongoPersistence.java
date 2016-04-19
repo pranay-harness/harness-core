@@ -6,6 +6,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import io.dropwizard.lifecycle.Managed;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
-public class WingsMongoPersistence implements WingsPersistence {
+public class WingsMongoPersistence implements WingsPersistence, Managed {
   private Datastore primaryDatastore;
   private Datastore secondaryDatastore;
 
@@ -163,5 +164,14 @@ public class WingsMongoPersistence implements WingsPersistence {
   @Override
   public DBCollection getCollection(String collectionName) {
     return primaryDatastore.getDB().getCollection(collectionName);
+  }
+
+  public void start() throws Exception {
+    // Do nothing
+  }
+
+  @Override
+  public void stop() throws Exception {
+    close();
   }
 }

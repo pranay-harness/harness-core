@@ -1,5 +1,6 @@
 package software.wings.waitNotify;
 
+import com.google.common.base.MoreObjects;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 
@@ -36,5 +37,13 @@ public class WaitQueue extends Base {
 
   public void setCorrelationId(String correlationId) {
     this.correlationId = correlationId;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("waitInstanceId", waitInstanceId)
+        .add("correlationId", correlationId)
+        .toString();
   }
 }

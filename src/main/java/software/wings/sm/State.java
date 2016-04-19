@@ -15,9 +15,9 @@ public abstract class State implements Serializable {
 
   private String name;
 
-  private StateType stateType;
+  private String stateType;
 
-  public State(String name, StateType stateType) {
+  public State(String name, String stateType) {
     this.name = name;
     this.stateType = stateType;
   }
@@ -30,11 +30,11 @@ public abstract class State implements Serializable {
     this.name = name;
   }
 
-  public StateType getStateType() {
+  public String getStateType() {
     return stateType;
   }
 
-  public void setStateType(StateType stateType) {
+  public void setStateType(String stateType) {
     this.stateType = stateType;
   }
 
