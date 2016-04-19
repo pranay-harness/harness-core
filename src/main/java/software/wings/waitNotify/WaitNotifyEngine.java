@@ -1,20 +1,22 @@
 package software.wings.waitNotify;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-
-import javax.inject.Inject;
-
+import com.google.common.base.Preconditions;
+import com.google.inject.Singleton;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Singleton;
-
-import software.wings.common.thread.ThreadPool;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.SearchFilter;
+import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
-import software.wings.lock.PersistentLocker;
+
+import javax.inject.Inject;
+import java.io.Serializable;
+import java.util.Arrays;
+
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
+import static software.wings.waitNotify.NotifyEvent.Builder.aNotifyEvent;
 
 /**
  *  WaitNotifyEngine
@@ -31,42 +33,43 @@ public class WaitNotifyEngine {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject private PersistentLocker persistentLocker;
-
-  @Inject private ExecutorService executorService;
+  @Inject private Queue<NotifyEvent> notifyQueue;
 
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
     return waitForAll(NO_TIMEOUT, callback, correlationIds);
   }
 
   public String waitForAll(long timeoutMsec, NotifyCallback callback, String... correlationIds) {
-    if (correlationIds == null || correlationIds.length == 0) {
-      throw new IllegalArgumentException("correlationIds are null or empty");
-    }
+    Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
-    logger.debug("Received waitForAll on - correlationIds : " + Arrays.toString(correlationIds));
+    log().debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
 
-    WaitInstance waitInstance = new WaitInstance(callback, correlationIds);
-    String waitInstanceId = wingsPersistence.save(waitInstance);
+    String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
 
     // create queue
-    for (String correlationId : correlationIds) {
-      WaitQueue queue = new WaitQueue(waitInstanceId, correlationId);
-      wingsPersistence.save(queue);
-    }
+    Arrays.stream(correlationIds)
+        .forEach(correlationId -> wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId)));
 
     return waitInstanceId;
   }
 
-  public String notify(String correlationId, Serializable response) {
-    if (StringUtils.isEmpty(correlationId)) {
-      throw new IllegalArgumentException("correlationIds are null or empty");
-    }
-    logger.debug("notify request received for the correlationId :" + correlationId);
+  public <T extends Serializable> String notify(String correlationId, T response) {
+    Preconditions.checkArgument(StringUtils.isNotEmpty(correlationId), "correlationId is null or empty");
+
+    log().debug("notify request received for the correlationId : {}", correlationId);
+
     String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
-    executorService.submit(new Notifier(wingsPersistence, persistentLocker, executorService));
+
+    PageRequest<WaitQueue> req = new PageRequest<>();
+    req.addFilter("correlationId", correlationId, SearchFilter.OP.EQ);
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+    waitQueuesResponse.getResponse().forEach(
+        waitQueue -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).build()));
+
     return notificationId;
   }
 
-  private static Logger logger = LoggerFactory.getLogger(WaitNotifyEngine.class);
+  private Logger log() {
+    return LoggerFactory.getLogger(WaitNotifyEngine.class);
+  }
 }

@@ -1,48 +1,156 @@
 package software.wings.workflow;
 
+import org.junit.Before;
+import org.junit.Test;
+import software.wings.WingsBaseTest;
+import software.wings.core.queue.Queue;
+import software.wings.dl.WingsPersistence;
+import software.wings.waitNotify.*;
+
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import software.wings.WingsBaseTest;
-import software.wings.waitNotify.NotifyCallback;
-import software.wings.waitNotify.WaitNotifyEngine;
-
-import javax.inject.Inject;
+import static com.google.common.collect.ImmutableMap.of;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 public class WaitNotifyEngineTest extends WingsBaseTest {
-  static Map<String, Serializable> responseMap = new HashMap<>();
+  private static AtomicInteger callCount;
+  private static Map<String, Serializable> responseMap;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
+  @Inject private WingsPersistence wingsPersistence;
+
+  @Inject private Queue<NotifyEvent> notifyEventQueue;
+
+  @Before
+  public void setupResponseMap() {
+    callCount = new AtomicInteger(0);
+    responseMap = new HashMap<>();
+  }
+
   @Test
-  public void testWaitNotify() throws InterruptedException {
-    waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "345");
+  public void shouldWaitForCorrelationId() {
+    String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
 
-    System.out.println("responseMap:" + responseMap);
-    Thread.sleep(5000);
-    waitNotifyEngine.notify("123", "response-123");
-    Thread.sleep(5000);
-    System.out.println("responseMap:" + responseMap);
-    waitNotifyEngine.notify("345", "response-345");
-    Thread.sleep(5000);
-    System.out.println("responseMap:" + responseMap);
+    assertThat(wingsPersistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
 
-    Assert.assertEquals("response-123", responseMap.get("123"));
-    Assert.assertEquals("response-345", responseMap.get("345"));
-    System.out.println("All Done");
+    assertThat(wingsPersistence.list(WaitQueue.class))
+        .hasSize(1)
+        .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
+        .containsExactly(tuple(waitInstanceId, "123"));
+
+    String id = waitNotifyEngine.notify("123", "response-123");
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, id))
+        .isNotNull()
+        .extracting(NotifyResponse::getResponse)
+        .containsExactly("response-123");
+
+    while (notifyEventQueue.count() != 0) {
+      Thread.yield();
+    }
+
+    assertThat(responseMap).hasSize(1).isEqualTo(of("123", "response-123"));
+    assertThat(callCount.get()).isEqualTo(1);
+  }
+
+  @Test
+  public void shouldWaitForCorrelationIds() {
+    String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "456", "789");
+
+    assertThat(wingsPersistence.get(WaitInstance.class, waitInstanceId)).isNotNull();
+
+    assertThat(wingsPersistence.list(WaitQueue.class))
+        .hasSize(3)
+        .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
+        .containsExactly(tuple(waitInstanceId, "123"), tuple(waitInstanceId, "456"), tuple(waitInstanceId, "789"));
+
+    String id = waitNotifyEngine.notify("123", "response-123");
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, id))
+        .isNotNull()
+        .extracting(NotifyResponse::getResponse)
+        .containsExactly("response-123");
+
+    while (notifyEventQueue.count() != 0) {
+      Thread.yield();
+    }
+
+    assertThat(responseMap).hasSize(0);
+
+    id = waitNotifyEngine.notify("456", "response-456");
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, id))
+        .isNotNull()
+        .extracting(NotifyResponse::getResponse)
+        .containsExactly("response-456");
+
+    while (notifyEventQueue.count() != 0) {
+      Thread.yield();
+    }
+
+    assertThat(responseMap).hasSize(0);
+
+    id = waitNotifyEngine.notify("789", "response-789");
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, id))
+        .isNotNull()
+        .extracting(NotifyResponse::getResponse)
+        .containsExactly("response-789");
+
+    while (notifyEventQueue.count() != 0) {
+      Thread.yield();
+    }
+
+    assertThat(responseMap)
+        .hasSize(3)
+        .containsAllEntriesOf(of("123", "response-123", "456", "response-456", "789", "response-789"));
+    assertThat(callCount.get()).isEqualTo(1);
+  }
+
+  @Test
+  public void shouldWaitForCorrelationIdForMultipleWaitInstances() {
+    String waitInstanceId1 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+    String waitInstanceId2 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+    String waitInstanceId3 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
+
+    assertThat(wingsPersistence.list(WaitInstance.class))
+        .hasSize(3)
+        .extracting(WaitInstance::getUuid)
+        .containsExactly(waitInstanceId1, waitInstanceId2, waitInstanceId3);
+
+    assertThat(wingsPersistence.list(WaitQueue.class))
+        .hasSize(3)
+        .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
+        .containsExactly(tuple(waitInstanceId1, "123"), tuple(waitInstanceId2, "123"), tuple(waitInstanceId3, "123"));
+
+    String id = waitNotifyEngine.notify("123", "response-123");
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, id))
+        .isNotNull()
+        .extracting(NotifyResponse::getResponse)
+        .containsExactly("response-123");
+
+    while (notifyEventQueue.count() != 0) {
+      Thread.yield();
+    }
+
+    assertThat(responseMap).hasSize(1).containsAllEntriesOf(of("123", "response-123"));
+    assertThat(callCount.get()).isEqualTo(3);
   }
 
   /**
    * Created by peeyushaggarwal on 4/5/16.
    */
-  static class TestNotifyCallback implements NotifyCallback {
+  public static class TestNotifyCallback implements NotifyCallback {
     @Override
-    public void notify(Map<String, Serializable> response) {
-      System.out.println("TestNotifyCallback-notify " + response);
+    public void notify(Map<String, ? extends Serializable> response) {
+      callCount.incrementAndGet();
       responseMap.putAll(response);
     }
   }

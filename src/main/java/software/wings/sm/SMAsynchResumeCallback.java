@@ -26,7 +26,7 @@ public class SMAsynchResumeCallback implements NotifyCallback {
    * @see software.wings.waitNotify.NotifyCallback#notify(java.util.Map)
    */
   @Override
-  public void notify(Map<String, Serializable> response) {
+  public void notify(Map<String, ? extends Serializable> response) {
     WingsBootstrap.lookup(StateMachineExecutor.class).resume(smInstanceId, response);
   }
 }

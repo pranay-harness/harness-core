@@ -17,8 +17,8 @@ import software.wings.sm.ExecutionStatus;
  */
 @Embedded
 @Entity(value = "notifyResponses", noClassnameStored = true)
-public class NotifyResponse extends Base {
-  @Serialized private Serializable response;
+public class NotifyResponse<T extends Serializable> extends Base {
+  @Serialized private T response;
 
   @Indexed private Date expiryTs;
 
@@ -26,14 +26,14 @@ public class NotifyResponse extends Base {
 
   public NotifyResponse() {}
 
-  public NotifyResponse(String correlationId, Serializable response) {
+  public NotifyResponse(String correlationId, T response) {
     setUuid(correlationId);
     setResponse(response);
   }
-  public Serializable getResponse() {
+  public T getResponse() {
     return response;
   }
-  public void setResponse(Serializable response) {
+  public void setResponse(T response) {
     this.response = response;
   }
 

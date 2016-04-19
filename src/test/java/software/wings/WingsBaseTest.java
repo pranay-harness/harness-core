@@ -3,6 +3,9 @@ package software.wings;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoJUnitRule;
+import org.mockito.junit.MockitoRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.rules.WingsRule;
@@ -20,7 +23,9 @@ public class WingsBaseTest {
 
   @Rule public WingsRule wingsRule = new WingsRule();
 
-  protected Logger logger() {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
+  protected Logger log() {
     return LoggerFactory.getLogger(getClass());
   }
 }
