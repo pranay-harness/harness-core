@@ -1,17 +1,10 @@
 package software.wings.rules;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.*;
-import com.google.inject.name.Names;
-import com.ifesdjeen.timer.HashedWheelTimer;
-import com.mongodb.MongoClient;
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
-import io.dropwizard.lifecycle.Managed;
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -19,28 +12,50 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
+import com.ifesdjeen.timer.HashedWheelTimer;
+import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import io.dropwizard.lifecycle.Managed;
+import ro.fortsoft.pf4j.DefaultPluginManager;
+import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.ReadPref;
-import software.wings.common.thread.ForceQueuePolicy;
-import software.wings.common.thread.ScalingQueue;
-import software.wings.common.thread.ScalingThreadPoolExecutor;
-import software.wings.core.queue.*;
+import software.wings.core.queue.AbstractQueueListener;
+import software.wings.core.queue.MongoQueueImpl;
+import software.wings.core.queue.Queue;
+import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
-import software.wings.service.impl.*;
-import software.wings.service.intfc.*;
+import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CurrentThreadExecutor;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitNotify.NotifyEvent;
 import software.wings.waitNotify.NotifyEventListener;
-
-import javax.inject.Named;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.*;
 
 /**
  * Created by peeyushaggarwal on 4/5/16.
@@ -56,6 +71,7 @@ public class WingsRule implements MethodRule {
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return new Statement() {
+      @Override
       public void evaluate() throws Throwable {
         WingsRule.this.before();
         injector.injectMembers(target);
@@ -104,6 +120,7 @@ public class WingsRule implements MethodRule {
         bind(ScheduledExecutorService.class)
             .annotatedWith(Names.named("timer"))
             .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
