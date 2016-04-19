@@ -111,6 +111,11 @@ public class AppServiceImpl implements AppService {
     fileService.deleteFile(platformSoftware.getFileUUID(), PLATFORMS);
   }
 
+  @Override
+  public void deleteApp(String appID) {
+    wingsPersistence.delete(Application.class, appID);
+  }
+
   private boolean newPlatformSoftwareBinaryUploaded(
       PlatformSoftware storedPlatformSoftware, PlatformSoftware platformSoftware) {
     if (storedPlatformSoftware.getSource().equals(platformSoftware.getSource())) {

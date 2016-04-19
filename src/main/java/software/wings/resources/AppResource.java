@@ -71,6 +71,12 @@ public class AppResource {
     return new RestResponse<>(appService.findByUUID(appID));
   }
 
+  @DELETE
+  @Path("{appID}")
+  public void delete(@PathParam("appID") String appID) {
+    appService.deleteApp(appID);
+  }
+
   @POST
   @Path("{appID}/platforms")
   @Consumes(MULTIPART_FORM_DATA)
