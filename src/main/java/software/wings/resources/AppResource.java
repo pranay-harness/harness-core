@@ -2,29 +2,27 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.collect.ImmutableMap;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.*;
 import software.wings.beans.ArtifactSource.SourceType;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.BoundedInputStream;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import java.io.IOException;
+import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
+import java.util.Map;
 
+import static com.google.common.collect.ImmutableMap.*;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
-import static software.wings.beans.ErrorConstants.FILE_DOWNLOAD_FAILED;
-import static software.wings.beans.ErrorConstants.INVALID_URL;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 /**
@@ -73,8 +71,9 @@ public class AppResource {
 
   @DELETE
   @Path("{appID}")
-  public void delete(@PathParam("appID") String appID) {
+  public RestResponse delete(@PathParam("appID") String appID) {
     appService.deleteApp(appID);
+    return new RestResponse(of("status", "success"));
   }
 
   @POST
