@@ -21,7 +21,6 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 /**
  * Created by anubhaw on 3/25/16.
  */
-
 @Path("/services")
 @Timed
 @ExceptionMetered

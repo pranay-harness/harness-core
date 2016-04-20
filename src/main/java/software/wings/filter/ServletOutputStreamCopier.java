@@ -1,24 +1,23 @@
 package software.wings.filter;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
-import javax.servlet.ServletOutputStream;
-import javax.servlet.WriteListener;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
+
 /**
- *  HttpServletResponseCopier that creates a copy of the http response payload.
- *  Based on
- * https://github.com/ukwa/interject/blob/master/interject-servlet-filter/src/main/java/uk/bl/wa/interject/filter/ServletOutputStreamCopier.java
+ * HttpServletResponseCopier that creates a copy of the http response payload. Based on
+ * https://github.com/ukwa/interject/blob/master/interject-servlet-filter
+ * /src/main/java/uk/bl/wa/interject/filter/ServletOutputStreamCopier.java
  *
  * @author Rishi
- *
  */
 public class ServletOutputStreamCopier extends ServletOutputStream {
+  private static Logger logger = LoggerFactory.getLogger(ServletOutputStreamCopier.class);
   private OutputStream outputStream;
   private ByteArrayOutputStream copy;
 
@@ -52,8 +51,6 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
       }
     }
   }
-
-  private static Logger logger = LoggerFactory.getLogger(ServletOutputStreamCopier.class);
 
   @Override
   public boolean isReady() {

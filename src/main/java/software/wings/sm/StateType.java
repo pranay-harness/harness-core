@@ -3,22 +3,20 @@
  */
 package software.wings.sm;
 
-import java.net.URL;
-import java.util.HashMap;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.common.JsonUtils;
 import software.wings.exception.WingsException;
 
+import java.net.URL;
+import java.util.HashMap;
+
 /**
  * @author Rishi
- *
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
@@ -33,27 +31,16 @@ public enum StateType implements StateTypeDescriptor {
   DEPLOY,
   STATE_MACHINE;
 
-  StateType() {
-    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
-    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
-  }
-
+  private static final String stencilsPath = "/templates/stencils/";
+  private static final String jsonSchemaSuffix = "-JSONSchema.json";
+  private static final String uiSchemaSuffix = "-UISchema.json";
+  private static final Logger logger = LoggerFactory.getLogger(StateType.class);
   private Object jsonSchema;
   private Object uiSchema;
 
-  @Override
-  public Object getJsonSchema() {
-    return jsonSchema;
-  }
-
-  @Override
-  public Object getUiSchema() {
-    return uiSchema;
-  }
-
-  @Override
-  public String getType() {
-    return name();
+  StateType() {
+    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
+    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
   private Object readResource(String file) {
@@ -68,11 +55,20 @@ public enum StateType implements StateTypeDescriptor {
     }
   }
 
-  private static final String stencilsPath = "/templates/stencils/";
-  private static final String jsonSchemaSuffix = "-JSONSchema.json";
-  private static final String uiSchemaSuffix = "-UISchema.json";
+  @Override
+  public String getType() {
+    return name();
+  }
 
-  private static final Logger logger = LoggerFactory.getLogger(StateType.class);
+  @Override
+  public Object getJsonSchema() {
+    return jsonSchema;
+  }
+
+  @Override
+  public Object getUiSchema() {
+    return uiSchema;
+  }
 
   /* (non-Javadoc)
    * @see software.wings.sm.StateTypeDescriptor#newInstance(java.lang.String)

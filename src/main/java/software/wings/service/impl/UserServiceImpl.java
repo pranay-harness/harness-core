@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -12,8 +14,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
 
 import javax.inject.Inject;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  * Created by anubhaw on 3/9/16.

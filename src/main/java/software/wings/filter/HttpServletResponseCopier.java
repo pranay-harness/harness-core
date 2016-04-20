@@ -3,18 +3,15 @@ package software.wings.filter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
 /**
- *  HttpServletResponseCopier based on
- * https://github.com/ukwa/interject/blob/master/interject-servlet-filter/src/main/java/uk/bl/wa/interject/filter/HttpServletResponseCopier.java
- *
+ * HttpServletResponseCopier based on https://github.com/ukwa/interject/blob/master
+ * /interject-servlet-filter/src/main /java/uk/bl/wa/interject/filter/HttpServletResponseCopier.java
  *
  * @author Rishi
- *
  */
 public class HttpServletResponseCopier extends HttpServletResponseWrapper {
   private ServletOutputStream outputStream;

@@ -4,12 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.
@@ -63,6 +63,10 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     } while (run && !shouldStop.get());
   }
 
+  private Logger log() {
+    return LoggerFactory.getLogger(getClass());
+  }
+
   protected abstract void onMessage(T message) throws Exception;
 
   protected void onException(Exception e, T message) {
@@ -77,23 +81,20 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     return queue;
   }
 
+  void setQueue(Queue<T> queue) {
+    this.queue = queue;
+  }
+
   public void shutDown() {
     shouldStop.set(true);
   }
+
   // Package protected for testing
   void setRunOnce(boolean runOnce) {
     this.runOnce = runOnce;
   }
 
-  void setQueue(Queue<T> queue) {
-    this.queue = queue;
-  }
-
   void setTimer(ScheduledExecutorService timer) {
     this.timer = timer;
-  }
-
-  private Logger log() {
-    return LoggerFactory.getLogger(getClass());
   }
 }

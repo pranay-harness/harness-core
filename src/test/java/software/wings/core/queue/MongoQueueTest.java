@@ -1,6 +1,10 @@
 package software.wings.core.queue;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+
 import com.google.common.base.MoreObjects;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mongodb.morphia.Datastore;
@@ -11,118 +15,17 @@ import org.mongodb.morphia.annotations.Reference;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/11/16.
  */
 public class MongoQueueTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
-
-  @Entity(value = "testEntity")
-  private static class TestEntity {
-    @Id private String id;
-    private int data;
-
-    public TestEntity() {}
-
-    public TestEntity(int data) {
-      this.data = data;
-    }
-
-    public String getId() {
-      return id;
-    }
-
-    public int getData() {
-      return data;
-    }
-
-    public void setData(int data) {
-      this.data = data;
-    }
-
-    public void setId(String id) {
-      this.id = id;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
-      TestEntity that = (TestEntity) o;
-      return data == that.data && Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(id, data);
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("id", id).add("data", data).toString();
-    }
-
-    @PrePersist
-    public void onUpdate() {
-      if (id == null) {
-        id = UUIDGenerator.getUUID();
-      }
-    }
-  }
-  @Entity(value = "testEntityQueue", noClassnameStored = true)
-  public static class TestQueuableWithEntity extends Queuable {
-    @Reference private TestEntity entity;
-
-    public TestQueuableWithEntity() {}
-
-    public TestQueuableWithEntity(TestQueuableWithEntity other) {
-      super(other);
-      this.entity = other.entity;
-    }
-
-    public TestQueuableWithEntity(TestEntity entity) {
-      this.entity = entity;
-    }
-
-    public TestEntity getEntity() {
-      return entity;
-    }
-
-    public void setEntity(TestEntity entity) {
-      this.entity = entity;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
-      TestQueuableWithEntity that = (TestQueuableWithEntity) o;
-      return Objects.equals(entity, that.entity);
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(entity);
-    }
-
-    @Override
-    public String toString() {
-      return MoreObjects.toStringHelper(this).add("entity", entity).toString();
-    }
-  }
 
   private MongoQueueImpl<TestQueuable> queue;
 
@@ -461,5 +364,104 @@ public class MongoQueueTest extends WingsBaseTest {
     TestQueuableWithEntity actual = entityQueue.get();
 
     assertThat(actual.getEntity()).isEqualTo(testEntity);
+  }
+
+  @Entity(value = "testEntity")
+  private static class TestEntity {
+    @Id private String id;
+    private int data;
+
+    public TestEntity() {}
+
+    public TestEntity(int data) {
+      this.data = data;
+    }
+
+    public String getId() {
+      return id;
+    }
+
+    public void setId(String id) {
+      this.id = id;
+    }
+
+    public int getData() {
+      return data;
+    }
+
+    public void setData(int data) {
+      this.data = data;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(id, data);
+    }
+
+    @PrePersist
+    public void onUpdate() {
+      if (id == null) {
+        id = UUIDGenerator.getUUID();
+      }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      TestEntity that = (TestEntity) o;
+      return data == that.data && Objects.equals(id, that.id);
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("id", id).add("data", data).toString();
+    }
+  }
+
+  @Entity(value = "testEntityQueue", noClassnameStored = true)
+  public static class TestQueuableWithEntity extends Queuable {
+    @Reference private TestEntity entity;
+
+    public TestQueuableWithEntity() {}
+
+    public TestQueuableWithEntity(TestQueuableWithEntity other) {
+      super(other);
+      this.entity = other.entity;
+    }
+
+    public TestQueuableWithEntity(TestEntity entity) {
+      this.entity = entity;
+    }
+
+    public TestEntity getEntity() {
+      return entity;
+    }
+
+    public void setEntity(TestEntity entity) {
+      this.entity = entity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o)
+        return true;
+      if (o == null || getClass() != o.getClass())
+        return false;
+      TestQueuableWithEntity that = (TestQueuableWithEntity) o;
+      return Objects.equals(entity, that.entity);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(entity);
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("entity", entity).toString();
+    }
   }
 }

@@ -68,7 +68,8 @@ public interface Queue<T> {
   void ackSend(final T message, final T payload);
 
   /**
-   * Requeue message with earliestGet as Now and 0.0 priority. Same as ackSend() with the same message.
+   * Requeue message with earliestGet as Now and 0.0 priority. Same as ackSend() with the same
+   * message.
    *
    * @param message message to requeue received from get(). Should not be null
    */
@@ -107,7 +108,6 @@ public interface Queue<T> {
 
   /**
    * Returns the name of the queue
-   *
    */
   String name();
 }

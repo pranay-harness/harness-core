@@ -1,38 +1,38 @@
 package software.wings.service.impl;
 
-import java.io.InputStream;
-import java.util.List;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorConstants.PLATFORM_SOFTWARE_DELETE_ERROR;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
+import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.annotation.Metered;
-
-import software.wings.beans.*;
+import software.wings.beans.Application;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.PlatformSoftware;
+import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorConstants.PLATFORM_SOFTWARE_DELETE_ERROR;
-import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
+import java.io.InputStream;
+import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
- *  Application Service Implementation class.
- *
+ * Application Service Implementation class.
  *
  * @author Rishi
- *
  */
 @Singleton
 public class AppServiceImpl implements AppService {
+  private static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 
@@ -51,8 +51,6 @@ public class AppServiceImpl implements AppService {
   public PageResponse<Application> list(PageRequest<Application> req) {
     return wingsPersistence.query(Application.class, req);
   }
-
-  private static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
 
   @Override
   public Application findByUUID(String uuid) {

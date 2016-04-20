@@ -3,17 +3,15 @@
  */
 package software.wings.waitNotify;
 
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Serialized;
+import software.wings.beans.Base;
+
 import java.io.Serializable;
 import java.util.Map;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Serialized;
-
-import software.wings.beans.Base;
-
 /**
  * @author Rishi
- *
  */
 @Entity(value = "waitInstanceErrors", noClassnameStored = true)
 public class WaitInstanceError extends Base {

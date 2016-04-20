@@ -3,7 +3,6 @@ package software.wings.lock;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-
 import io.dropwizard.lifecycle.Managed;
 
 /**

@@ -7,7 +7,6 @@ import java.util.List;
 /**
  * Created by anubhaw on 4/4/16.
  */
-
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 public class ServiceTemplate extends Base {
   private String serviceID;

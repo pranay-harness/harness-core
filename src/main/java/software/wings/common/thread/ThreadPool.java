@@ -1,17 +1,16 @@
 package software.wings.common.thread;
+
+import software.wings.utils.Misc;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import software.wings.utils.Misc;
-
 /**
- *  This is a common threadpool for the entire application
- *
+ * This is a common threadpool for the entire application
  *
  * @author Rishi
- *
  */
 public class ThreadPool {
   private static final int CORE_POOL_SIZE = 20;
@@ -28,12 +27,12 @@ public class ThreadPool {
     return executor;
   }
 
-  public static void execute(Runnable task) {
-    commonPool.execute(task);
-  }
-
   public static void execute(Runnable task, int delay) {
     execute(new Delayed(task, delay));
+  }
+
+  public static void execute(Runnable task) {
+    commonPool.execute(task);
   }
 
   public static <T> Future<T> submit(Callable<T> task) {

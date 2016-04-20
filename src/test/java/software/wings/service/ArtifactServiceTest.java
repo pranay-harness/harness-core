@@ -1,5 +1,12 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.User.Builder.anUser;
+
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -10,13 +17,6 @@ import software.wings.service.intfc.ArtifactService;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.Release.Builder.aRelease;
-import static software.wings.beans.User.Builder.anUser;
 
 /**
  * Created by peeyushaggarwal on 4/4/16.

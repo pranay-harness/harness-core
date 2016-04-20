@@ -5,10 +5,7 @@ package software.wings.workflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.inject.Inject;
-
 import org.junit.Test;
-
 import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -19,9 +16,10 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.waitNotify.NotifyResponse;
 import software.wings.waitNotify.NotifyResponseCleanupHandler;
 
+import javax.inject.Inject;
+
 /**
  * @author Rishi
- *
  */
 public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
   @Inject private NotifyResponseCleanupHandler notifyResponseCleanupHandler;

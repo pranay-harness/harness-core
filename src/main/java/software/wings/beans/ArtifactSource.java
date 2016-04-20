@@ -1,34 +1,30 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.google.common.base.MoreObjects;
 
 import java.util.Objects;
 
 /**
- *  ArtifactSource bean class.
- *
+ * ArtifactSource bean class.
  *
  * @author Rishi
- *
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "sourceType")
 @JsonSubTypes({ @Type(value = JenkinsArtifactSource.class, name = "JENKINS") })
 public abstract class ArtifactSource {
-  public enum SourceType { JENKINS, NEXUS, ARTIFACTORY, SVN, GIT, HTTP, FILE_UPLOAD }
+  private String sourceName;
   ;
 
-  public enum ArtifactType { JAR, WAR, TAR, ZIP, OTHER }
+  private SourceType sourceType;
+  private ArtifactType artifactType;
 
   public ArtifactSource(SourceType sourceType) {
     this.sourceType = sourceType;
   }
-
-  private String sourceName;
-  private SourceType sourceType;
-  private ArtifactType artifactType;
 
   public String getSourceName() {
     return sourceName;
@@ -57,6 +53,11 @@ public abstract class ArtifactSource {
   public abstract ArtifactFile collect(Object[] params);
 
   @Override
+  public int hashCode() {
+    return Objects.hash(sourceName, sourceType, artifactType);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -68,11 +69,6 @@ public abstract class ArtifactSource {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(sourceName, sourceType, artifactType);
-  }
-
-  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("sourceName", sourceName)
@@ -80,4 +76,8 @@ public abstract class ArtifactSource {
         .add("artifactType", artifactType)
         .toString();
   }
+
+  public enum SourceType { JENKINS, NEXUS, ARTIFACTORY, SVN, GIT, HTTP, FILE_UPLOAD }
+
+  public enum ArtifactType { JAR, WAR, TAR, ZIP, OTHER }
 }

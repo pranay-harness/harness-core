@@ -7,7 +7,6 @@ import ro.fortsoft.pf4j.ExtensionPoint;
 
 /**
  * @author Rishi
- *
  */
 public interface StateTypeDescriptor extends ExtensionPoint {
   public String getType();

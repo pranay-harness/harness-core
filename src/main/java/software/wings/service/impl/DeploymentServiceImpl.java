@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import javax.inject.Inject;
-
 import com.google.inject.Singleton;
 
 import software.wings.app.WingsBootstrap;
@@ -13,6 +11,7 @@ import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.NodeSetExecutorService;
 
 import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
 
 @Singleton
 public class DeploymentServiceImpl implements DeploymentService {

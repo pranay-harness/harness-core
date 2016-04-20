@@ -1,4 +1,3 @@
-
 package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,12 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.common.JsonUtils;
+
 /**
  * Test case
- * @author Rishi
  *
+ * @author Rishi
  */
 public class ApplicationTest {
   @Test

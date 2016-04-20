@@ -2,18 +2,12 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
-
-import java.util.List;
 
 /**
- *  Environment bean class.
- *
+ * Environment bean class.
  *
  * @author Rishi
- *
  */
-
 @Entity(value = "environments", noClassnameStored = true)
 public class Environment extends Base {
   private String name;
@@ -22,12 +16,15 @@ public class Environment extends Base {
   public String getName() {
     return name;
   }
+
   public void setName(String name) {
     this.name = name;
   }
+
   public String getDescription() {
     return description;
   }
+
   public void setDescription(String description) {
     this.description = description;
   }

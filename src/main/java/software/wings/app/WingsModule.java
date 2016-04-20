@@ -1,16 +1,16 @@
-/**
- *
- */
 package software.wings.app;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import static software.wings.common.thread.ThreadPool.create;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
@@ -23,13 +23,42 @@ import software.wings.beans.ReadPref;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
-import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
-import software.wings.service.impl.*;
-import software.wings.service.intfc.*;
+import software.wings.service.impl.AppServiceImpl;
+import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.AuditServiceImpl;
+import software.wings.service.impl.DeploymentServiceImpl;
+import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.FileServiceImpl;
+import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.NodeSetExecutorServiceImpl;
+import software.wings.service.impl.PlatformServiceImpl;
+import software.wings.service.impl.ReleaseServiceImpl;
+import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.SSHNodeSetExecutorServiceImpl;
+import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.DeploymentService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.NodeSetExecutorService;
+import software.wings.service.intfc.PlatformService;
+import software.wings.service.intfc.ReleaseService;
+import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSHNodeSetExecutorService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitNotify.NotifyEvent;
@@ -42,9 +71,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static software.wings.common.thread.ThreadPool.create;
-
 /**
+ * Guice Module for initializing all beans.
+ *
  * @author Rishi
  */
 public class WingsModule extends AbstractModule {
@@ -57,8 +86,11 @@ public class WingsModule extends AbstractModule {
   private DistributedLockSvc distributedLockSvc;
 
   private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
+
   /**
-   * @param configuration
+   * Creates a guice module for portal app.
+   *
+   * @param configuration Dropwizard configuration
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
@@ -69,9 +101,12 @@ public class WingsModule extends AbstractModule {
     for (String host : hosts) {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
-    Morphia m = new Morphia();
+
+    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
+    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
+    Morphia morphia = new Morphia();
     MongoClient mongoClient = new MongoClient(serverAddresses);
-    this.primaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
+    this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     distributedLockSvc = new ManagedDistributedLockSvc(
         new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
             .getLockSvc());
@@ -79,12 +114,12 @@ public class WingsModule extends AbstractModule {
     if (hosts.size() > 1) {
       mongoClient = new MongoClient(serverAddresses);
       mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
-      this.secondaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
+      this.secondaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     } else {
       this.secondaryDatastore = primaryDatastore;
     }
 
-    m.mapPackage("software.wings.beans");
+    morphia.mapPackage("software.wings.beans");
     this.primaryDatastore.ensureIndexes();
     if (hosts.size() > 1) {
       this.secondaryDatastore.ensureIndexes();
@@ -94,9 +129,6 @@ public class WingsModule extends AbstractModule {
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
-  /* (non-Javadoc)
-   * @see com.google.inject.AbstractModule#configure()
-   */
   @Override
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);

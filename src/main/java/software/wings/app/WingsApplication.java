@@ -1,10 +1,11 @@
 package software.wings.app;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+
+import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -37,21 +38,22 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.waitNotify.Notifier;
 
-import javax.servlet.DispatcherType;
-import javax.ws.rs.Path;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.servlet.DispatcherType;
+import javax.ws.rs.Path;
 
 /**
- *  The main application - entry point for the entire Wings Application
+ * The main application - entry point for the entire Wings Application.
  *
  * @author Rishi
- *
  */
 public class WingsApplication extends Application<MainConfiguration> {
+  private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
+
   public static void main(String[] args) throws Exception {
     new WingsApplication().run(args);
   }
@@ -90,6 +92,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+
     environment.jersey().register(AuditRequestFilter.class);
 
     registerJerseyProviders(environment);
@@ -104,13 +107,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Starting app done");
   }
 
-  /**
-   * @param injector
-   */
-  private void startPlugins(Injector injector) {
-    PluginManager pluginManager = injector.getInstance(PluginManager.class);
-    pluginManager.loadPlugins();
-    pluginManager.startPlugins();
+  private void registerResources(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
+    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
+    for (Class<?> resource : resourceClasses) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
   }
 
   private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
@@ -124,21 +128,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     }
   }
 
-  private void registerJerseyProviders(Environment environment) {
-    environment.jersey().register(ResponseMessageResolver.class);
-    environment.jersey().register(MultiPartFeature.class);
-    environment.jersey().register(WingsExceptionMapper.class);
-  }
-
-  private void registerResources(Environment environment, Injector injector) {
-    Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
-
-    Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
-    for (Class<?> resource : resourceClasses) {
-      if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
-      }
-    }
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
+    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
+    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
+    environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
 
   private void registerQueueListeners(Injector injector) {
@@ -158,16 +156,15 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30000L, TimeUnit.MILLISECONDS);
   }
 
-  private void registerManagedBeans(Environment environment, Injector injector) {
-    environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
-    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
-    environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
+  private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(ResponseMessageResolver.class);
+    environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(WingsExceptionMapper.class);
   }
 
-  private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
+  private void startPlugins(Injector injector) {
+    PluginManager pluginManager = injector.getInstance(PluginManager.class);
+    pluginManager.loadPlugins();
+    pluginManager.startPlugins();
+  }
 }

@@ -1,8 +1,8 @@
 package software.wings.beans;
 
-import java.util.HashMap;
-
 import org.apache.commons.lang3.text.StrSubstitutor;
+
+import java.util.HashMap;
 
 public class WingsResponse<T> {
   public void test() {

@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.ArtifactSource.ArtifactType;
@@ -9,19 +10,18 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *  Component bean class.
- *
+ * Component bean class.
  *
  * @author Rishi
- *
  */
-
 @Entity(value = "services", noClassnameStored = true)
 public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<ConfigFile> configFiles;
 
   public String getName() {

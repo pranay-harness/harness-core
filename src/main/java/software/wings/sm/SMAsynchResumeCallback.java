@@ -3,15 +3,14 @@
  */
 package software.wings.sm;
 
-import java.io.Serializable;
-import java.util.Map;
-
 import software.wings.app.WingsBootstrap;
 import software.wings.waitNotify.NotifyCallback;
 
+import java.io.Serializable;
+import java.util.Map;
+
 /**
  * @author Rishi
- *
  */
 public class SMAsynchResumeCallback implements NotifyCallback {
   private static final long serialVersionUID = 1L;

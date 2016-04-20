@@ -4,12 +4,8 @@ import static software.wings.common.UUIDGenerator.getUUID;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SSHExecutor.ExecutorType.PASSWORD;
 
-import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Singleton;
-
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.beans.Host;
@@ -20,6 +16,9 @@ import software.wings.core.ssh.executors.SSHExecutorFactory;
 import software.wings.core.ssh.executors.SSHSessionConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 @Singleton
 public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {

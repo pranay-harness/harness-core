@@ -2,37 +2,25 @@ package software.wings.service;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import java.util.Collections;
-
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
-import software.wings.dl.MongoConfig;
-import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.RoleServiceImpl;
-import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
+import java.util.Collections;
 import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 3/9/16.
  */
-
 public class UserServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;

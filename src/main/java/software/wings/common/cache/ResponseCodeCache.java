@@ -1,16 +1,15 @@
 package software.wings.common.cache;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.commons.lang3.text.StrSubstitutor;
-
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.exception.WingsException;
 import software.wings.utils.Misc;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Properties;
 
 public class ResponseCodeCache {
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
@@ -50,6 +49,15 @@ public class ResponseCodeCache {
     }
     return getResponseMessage(errorCode, message);
   }
+
+  private ResponseMessage getResponseMessage(String errorCode, String message) {
+    ResponseMessage responseMessage = new ResponseMessage();
+    responseMessage.setCode(errorCode);
+    responseMessage.setMessage(message);
+    responseMessage.setErrorType(ResponseTypeEnum.ERROR);
+    return responseMessage;
+  }
+
   public ResponseMessage getResponseMessage(String errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode);
     if (message == null) {
@@ -57,12 +65,5 @@ public class ResponseCodeCache {
     }
     message = StrSubstitutor.replace(message, params);
     return getResponseMessage(errorCode, message);
-  }
-  private ResponseMessage getResponseMessage(String errorCode, String message) {
-    ResponseMessage responseMessage = new ResponseMessage();
-    responseMessage.setCode(errorCode);
-    responseMessage.setMessage(message);
-    responseMessage.setErrorType(ResponseTypeEnum.ERROR);
-    return responseMessage;
   }
 }

@@ -1,23 +1,14 @@
 package software.wings.service;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Host;
 import software.wings.beans.Tag;
-import software.wings.dl.MongoConfig;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.intfc.InfraService;
 
 import javax.inject.Inject;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Created by anubhaw on 3/30/16.

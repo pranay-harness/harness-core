@@ -1,7 +1,12 @@
 package software.wings.dl;
 
+import static com.mongodb.client.model.Filters.eq;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.service.intfc.FileService.FileBucket.LOGS;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -20,14 +25,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-import static com.mongodb.client.model.Filters.eq;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.service.intfc.FileService.FileBucket.LOGS;
-
 /**
  * Created by anubhaw on 3/3/16.
  */
-
 @Singleton
 public class GridFSDBFileExt {
   @Inject private WingsPersistence wingsPersistence;

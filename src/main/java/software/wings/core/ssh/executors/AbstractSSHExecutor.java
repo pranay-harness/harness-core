@@ -27,7 +27,6 @@ import static software.wings.utils.Misc.quietSleep;
 /**
  * Created by anubhaw on 2/10/16.
  */
-
 public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
   protected Session session;
@@ -184,7 +183,6 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
   }
 
   /**** SCP ****/
-
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
     try {

@@ -1,17 +1,27 @@
 /* -*-mode:java; c-basic-offset:2; indent-tabs-mode:nil -*- */
 /**
- * This program will demonstrate remote exec.
- *   $ CLASSPATH=.:../build javac Exec.java
- *   $ CLASSPATH=.:../build java Exec
- * You will be asked username, hostname, displayname, passwd and command.
- * If everything works fine, given command will be invoked
- * on the remote side and outputs will be printed out.
- *
+ * This program will demonstrate remote exec. $ CLASSPATH=.:../build javac Exec.java $
+ * CLASSPATH=.:../build java Exec You will be asked username, hostname, displayname, passwd and
+ * command. If everything works fine, given command will be invoked on the remote side and outputs
+ * will be printed out.
  */
-import com.jcraft.jsch.*;
-import java.awt.*;
-import javax.swing.*;
-import java.io.*;
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.UIKeyboardInteractive;
+import com.jcraft.jsch.UserInfo;
+
+import java.awt.Container;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.io.InputStream;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 public class Exec {
   public static void main(String[] arg) {
@@ -84,25 +94,20 @@ public class Exec {
   }
 
   public static class MyUserInfo implements UserInfo, UIKeyboardInteractive {
-    public String getPassword() {
-      return passwd;
-    }
-    public boolean promptYesNo(String str) {
-      Object[] options = {"yes", "no"};
-      int foo = JOptionPane.showOptionDialog(
-          null, str, "Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
-      return foo == 0;
-    }
-
+    final GridBagConstraints gbc = new GridBagConstraints(
+        0, 0, 1, 1, 1, 1, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
     String passwd;
     JTextField passwordField = (JTextField) new JPasswordField(20);
+    private Container panel;
 
     public String getPassphrase() {
       return null;
     }
-    public boolean promptPassphrase(String message) {
-      return true;
+
+    public String getPassword() {
+      return passwd;
     }
+
     public boolean promptPassword(String message) {
       Object[] ob = {passwordField};
       int result = JOptionPane.showConfirmDialog(null, ob, message, JOptionPane.OK_CANCEL_OPTION);
@@ -113,12 +118,22 @@ public class Exec {
         return false;
       }
     }
+
+    public boolean promptPassphrase(String message) {
+      return true;
+    }
+
+    public boolean promptYesNo(String str) {
+      Object[] options = {"yes", "no"};
+      int foo = JOptionPane.showOptionDialog(
+          null, str, "Warning", JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[0]);
+      return foo == 0;
+    }
+
     public void showMessage(String message) {
       JOptionPane.showMessageDialog(null, message);
     }
-    final GridBagConstraints gbc = new GridBagConstraints(
-        0, 0, 1, 1, 1, 1, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
-    private Container panel;
+
     public String[] promptKeyboardInteractive(
         String destination, String name, String instruction, String[] prompt, boolean[] echo) {
       panel = new JPanel();

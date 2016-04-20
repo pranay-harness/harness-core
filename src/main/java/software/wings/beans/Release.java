@@ -1,44 +1,37 @@
 package software.wings.beans;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 /**
- *  Release bean class.
- *
+ * Release bean class.
  *
  * @author Rishi
- *
  */
 @Entity(value = "releases", noClassnameStored = true)
 public class Release extends Base {
-  public enum Status {
-    ACTIVE,
-    INACTIVE,
-    FINALIZED;
-  }
-
   @Indexed @Reference(idOnly = true) private Application application;
 
   private String releaseName;
   private String description;
-
   private Map<String, ArtifactSource> artifactSources = new HashMap<>();
-
   private Map<String, String> svcArtifactSourceMap = new HashMap<>();
-
   private Map<String, String> svcPlatformMap = new HashMap<>();
-
   private Status status = Status.ACTIVE;
 
   public String getReleaseName() {
     return releaseName;
+  }
+
+  public void setReleaseName(String releaseName) {
+    this.releaseName = releaseName;
   }
 
   public Application getApplication() {
@@ -47,10 +40,6 @@ public class Release extends Base {
 
   public void setApplication(Application application) {
     this.application = application;
-  }
-
-  public void setReleaseName(String releaseName) {
-    this.releaseName = releaseName;
   }
 
   public String getDescription() {
@@ -99,6 +88,12 @@ public class Release extends Base {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), application, releaseName, description, artifactSources, svcArtifactSourceMap,
+        svcPlatformMap, status);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -114,12 +109,6 @@ public class Release extends Base {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), application, releaseName, description, artifactSources, svcArtifactSourceMap,
-        svcPlatformMap, status);
-  }
-
-  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("application", application)
@@ -130,6 +119,12 @@ public class Release extends Base {
         .add("svcPlatformMap", svcPlatformMap)
         .add("status", status)
         .toString();
+  }
+
+  public enum Status {
+    ACTIVE,
+    INACTIVE,
+    FINALIZED;
   }
 
   public static class Builder {
@@ -149,75 +144,6 @@ public class Release extends Base {
 
     private Builder() {}
 
-    public static Builder aRelease() {
-      return new Builder();
-    }
-
-    public Builder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public Builder withReleaseName(String releaseName) {
-      this.releaseName = releaseName;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withArtifactSources(Map<String, ArtifactSource> artifactSources) {
-      this.artifactSources = artifactSources;
-      return this;
-    }
-
-    public Builder withSvcArtifactSourceMap(Map<String, String> svcArtifactSourceMap) {
-      this.svcArtifactSourceMap = svcArtifactSourceMap;
-      return this;
-    }
-
-    public Builder withSvcPlatformMap(Map<String, String> svcPlatformMap) {
-      this.svcPlatformMap = svcPlatformMap;
-      return this;
-    }
-
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return aRelease()
           .withApplication(application)
@@ -233,6 +159,75 @@ public class Release extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withSvcPlatformMap(Map<String, String> svcPlatformMap) {
+      this.svcPlatformMap = svcPlatformMap;
+      return this;
+    }
+
+    public Builder withSvcArtifactSourceMap(Map<String, String> svcArtifactSourceMap) {
+      this.svcArtifactSourceMap = svcArtifactSourceMap;
+      return this;
+    }
+
+    public Builder withArtifactSources(Map<String, ArtifactSource> artifactSources) {
+      this.artifactSources = artifactSources;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withReleaseName(String releaseName) {
+      this.releaseName = releaseName;
+      return this;
+    }
+
+    public Builder withApplication(Application application) {
+      this.application = application;
+      return this;
+    }
+
+    public static Builder aRelease() {
+      return new Builder();
     }
 
     public Release build() {

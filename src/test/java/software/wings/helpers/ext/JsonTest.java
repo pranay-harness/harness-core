@@ -3,7 +3,6 @@ package software.wings.helpers.ext;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.Test;
-
 import software.wings.beans.Deployment;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
@@ -52,10 +51,8 @@ public class JsonTest {
     , @JsonSubTypes.Type(value = BaseB.class, name = "B"), @JsonSubTypes.Type(value = BaseC.class, name = "C")
   })
   public static class Base {
-    public enum BaseType { A, B, C }
-    ;
-
     private BaseType baseType;
+    ;
 
     public BaseType getBaseType() {
       return baseType;
@@ -64,6 +61,8 @@ public class JsonTest {
     public void setBaseType(BaseType baseType) {
       this.baseType = baseType;
     }
+
+    public enum BaseType { A, B, C }
   }
 
   public static class BaseA extends Base {

@@ -1,18 +1,16 @@
 package software.wings.dl;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+
 /**
  * Created by anubhaw on 3/18/16.
  */
-
 public class GenericDBCache {
   @Inject private WingsPersistence wingsPersistence;
 

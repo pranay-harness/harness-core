@@ -1,15 +1,13 @@
 package software.wings.app;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import io.dropwizard.Configuration;
 import software.wings.dl.MongoConfig;
 
 /**
- *  Used to load all the application configuration
+ * Used to load all the application configuration.
  *
  * @author Rishi
- *
  */
 public class MainConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;

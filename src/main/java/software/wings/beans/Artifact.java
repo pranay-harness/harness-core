@@ -1,34 +1,31 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.utils.validation.Create;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 import javax.validation.constraints.NotNull;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.util.Objects;
-
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
- *  Artifact bean class.
- *
+ * Artifact bean class.
  *
  * @author Rishi
- *
  */
 @Entity(value = "artifacts", noClassnameStored = true)
 @Artifact.ValidArtifact
 public class Artifact extends Base {
-  public enum Status { NEW, RUNNING, QUEUED, WAITING, READY, ABORTED, FAILED, ERROR }
-
   @Indexed @Reference(idOnly = true) @NotNull private Application application;
 
   @Indexed @Reference(idOnly = true) @NotNull private Release release;
@@ -42,7 +39,6 @@ public class Artifact extends Base {
   @Indexed @NotNull(groups = Create.class) private String revision;
 
   private ArtifactFile artifactFile;
-
   @Indexed private Status status;
 
   public Application getApplication() {
@@ -110,6 +106,12 @@ public class Artifact extends Base {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), application, release, compName, artifactSourceName, displayName, revision,
+        artifactFile, status);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -126,12 +128,6 @@ public class Artifact extends Base {
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), application, release, compName, artifactSourceName, displayName, revision,
-        artifactFile, status);
-  }
-
-  @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("application", application)
@@ -143,6 +139,33 @@ public class Artifact extends Base {
         .add("artifactFile", artifactFile)
         .add("status", status)
         .toString();
+  }
+
+  public enum Status { NEW, RUNNING, QUEUED, WAITING, READY, ABORTED, FAILED, ERROR }
+
+  /**
+   * Created by peeyushaggarwal on 4/4/16.
+   */
+  @Retention(RetentionPolicy.RUNTIME)
+  @Constraint(validatedBy = ValidArtifact.Validator.class)
+  public static @interface ValidArtifact {
+    String
+    message() default "bean isNotBlank(bean.getApplication().getUuid()) have id for updating and application id is not same.";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
+
+    public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
+      @Override
+      public void initialize(final ValidArtifact validateForUpdate) {}
+
+      @Override
+      public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
+        return bean.getApplication() != null && isNotBlank(bean.getApplication().getUuid())
+            && isNotBlank(bean.getRelease().getUuid());
+      }
+    }
   }
 
   public static class Builder {
@@ -163,80 +186,6 @@ public class Artifact extends Base {
 
     private Builder() {}
 
-    public static Builder anArtifact() {
-      return new Builder();
-    }
-
-    public Builder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public Builder withRelease(Release release) {
-      this.release = release;
-      return this;
-    }
-
-    public Builder withCompName(String compName) {
-      this.compName = compName;
-      return this;
-    }
-
-    public Builder withArtifactSourceName(String artifactSourceName) {
-      this.artifactSourceName = artifactSourceName;
-      return this;
-    }
-
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
-      return this;
-    }
-
-    public Builder withRevision(String revision) {
-      this.revision = revision;
-      return this;
-    }
-
-    public Builder withArtifactFile(ArtifactFile artifactFile) {
-      this.artifactFile = artifactFile;
-      return this;
-    }
-
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return anArtifact()
           .withApplication(application)
@@ -253,6 +202,80 @@ public class Artifact extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withArtifactFile(ArtifactFile artifactFile) {
+      this.artifactFile = artifactFile;
+      return this;
+    }
+
+    public Builder withRevision(String revision) {
+      this.revision = revision;
+      return this;
+    }
+
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
+    public Builder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
+      return this;
+    }
+
+    public Builder withCompName(String compName) {
+      this.compName = compName;
+      return this;
+    }
+
+    public Builder withRelease(Release release) {
+      this.release = release;
+      return this;
+    }
+
+    public Builder withApplication(Application application) {
+      this.application = application;
+      return this;
+    }
+
+    public static Builder anArtifact() {
+      return new Builder();
     }
 
     public Artifact build() {
@@ -272,32 +295,6 @@ public class Artifact extends Base {
       artifact.setLastUpdatedAt(lastUpdatedAt);
       artifact.setActive(active);
       return artifact;
-    }
-  }
-
-  /**
-   * Created by peeyushaggarwal on 4/4/16.
-   */
-
-  @Retention(RetentionPolicy.RUNTIME)
-  @Constraint(validatedBy = ValidArtifact.Validator.class)
-  public static @interface ValidArtifact {
-    String
-    message() default "bean isNotBlank(bean.getApplication().getUuid()) have id for updating and application id is not same.";
-
-    Class<?>[] groups() default {};
-
-    Class<? extends Payload>[] payload() default {};
-
-    public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
-      @Override
-      public void initialize(final ValidArtifact validateForUpdate) {}
-
-      @Override
-      public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
-        return bean.getApplication() != null && isNotBlank(bean.getApplication().getUuid())
-            && isNotBlank(bean.getRelease().getUuid());
-      }
     }
   }
 }

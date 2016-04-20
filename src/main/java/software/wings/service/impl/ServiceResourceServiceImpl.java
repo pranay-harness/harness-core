@@ -19,7 +19,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 /**
  * Created by anubhaw on 3/25/16.
  */
-
 public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject FileService fileService;

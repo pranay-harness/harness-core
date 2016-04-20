@@ -28,7 +28,6 @@ import static software.wings.beans.ErrorConstants.*;
 /**
  * Created by anubhaw on 3/11/16.
  */
-
 @Priority(AUTHENTICATION)
 @AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {

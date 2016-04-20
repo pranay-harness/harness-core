@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
+
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
+
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
@@ -12,8 +15,6 @@ import software.wings.service.intfc.FileService;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Objects;
-
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 public class JenkinsArtifactSource extends ArtifactSource {
   @Inject private FileService fileService;

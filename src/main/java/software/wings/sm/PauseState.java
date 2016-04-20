@@ -5,9 +5,10 @@ package software.wings.sm;
 
 /**
  * @author Rishi
- *
  */
 public class PauseState extends State {
+  private static final long serialVersionUID = 1L;
+
   /**
    * @param name
    * @param stateType
@@ -23,6 +24,4 @@ public class PauseState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     return null;
   }
-
-  private static final long serialVersionUID = 1L;
 }

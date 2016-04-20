@@ -1,12 +1,16 @@
 package software.wings.dl;
 
+import static java.lang.System.currentTimeMillis;
+
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+
 import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import io.dropwizard.lifecycle.Managed;
+import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -18,12 +22,12 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
 import software.wings.security.UserThreadLocal;
 
-import javax.inject.Inject;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import static java.lang.System.currentTimeMillis;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
@@ -156,6 +160,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public GridFSBucket createGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
+  }
+
+  @Override
+  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
+    GridFSBucket gridFSBucket =
+        GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
+    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
+    return fileId.toHexString();
   }
 
   @Override

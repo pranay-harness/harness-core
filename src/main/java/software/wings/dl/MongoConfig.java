@@ -1,17 +1,15 @@
 package software.wings.dl;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 /**
- *  MongoConfig is used to store the MongoDB connection related configuration.
- *
+ * MongoConfig is used to store the MongoDB connection related configuration.
  *
  * @author Rishi
- *
  */
 public class MongoConfig {
   @NotEmpty private String host = "localhost";

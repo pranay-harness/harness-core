@@ -1,37 +1,40 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.google.common.base.MoreObjects;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
-
 /**
- *  Application bean class.
- *
+ * Application bean class.
  *
  * @author Rishi
- *
  */
 @Entity(value = "applications", noClassnameStored = true)
 public class Application extends Base {
   private String name;
   private String description;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments;
 
   public String getName() {
     return name;
   }
+
   public void setName(String name) {
     this.name = name;
   }
+
   public String getDescription() {
     return description;
   }
+
   public void setDescription(String description) {
     this.description = description;
   }
@@ -39,9 +42,11 @@ public class Application extends Base {
   public List<Service> getServices() {
     return services;
   }
+
   public void setServices(List<Service> services) {
     this.services = services;
   }
+
   public void addService(Service service) {
     if (this.services == null) {
       this.services = new ArrayList<>();
@@ -52,9 +57,11 @@ public class Application extends Base {
   public List<Environment> getEnvironments() {
     return environments;
   }
+
   public void setEnvironments(List<Environment> environments) {
     this.environments = environments;
   }
+
   public void addEnvironment(Environment environment) {
     if (this.environments == null) {
       this.environments = new ArrayList<>();

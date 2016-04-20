@@ -18,7 +18,6 @@ import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 /**
  * Created by anubhaw on 4/15/16.
  */
-
 public class HostFileHelper {
   public static final String[] CSVHeader = {"HOST", "OS", "ACCESS_TYPE", "TAGS", "CREATED_BY", "CREATED_AT"};
 

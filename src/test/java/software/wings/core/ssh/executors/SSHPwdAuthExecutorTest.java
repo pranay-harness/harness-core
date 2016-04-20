@@ -1,10 +1,10 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.common.UUIDGenerator.getUUID;
+
 import org.junit.Test;
 import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
-
-import static software.wings.common.UUIDGenerator.getUUID;
 
 /**
  * Created by anubhaw on 2/10/16.

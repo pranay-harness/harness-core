@@ -11,6 +11,8 @@ import java.util.List;
  */
 public interface EnvironmentService {
   public List<Environment> listEnvironments(String appID);
+
   public Environment getEnvironments(String applicationId, String envName);
+
   public Environment createEnvironment(String applicationId, Environment environment);
 }

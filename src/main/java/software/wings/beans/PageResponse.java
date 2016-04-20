@@ -3,11 +3,9 @@ package software.wings.beans;
 import java.util.List;
 
 /**
- *  PageResponse bean class.
- *
+ * PageResponse bean class.
  *
  * @author Rishi
- *
  */
 public class PageResponse<T> extends PageRequest<T> {
   private List<T> response;
@@ -18,15 +16,19 @@ public class PageResponse<T> extends PageRequest<T> {
   public PageResponse(PageRequest<T> req) {
     super(req);
   }
+
   public List<T> getResponse() {
     return response;
   }
+
   public void setResponse(List<T> response) {
     this.response = response;
   }
+
   public long getTotal() {
     return total;
   }
+
   public void setTotal(long total) {
     this.total = total;
   }

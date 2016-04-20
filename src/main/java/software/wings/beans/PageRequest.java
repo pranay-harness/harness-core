@@ -1,26 +1,22 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.beans.SearchFilter.OP;
+import software.wings.beans.SortOrder.OrderType;
+import software.wings.utils.Misc;
+
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import software.wings.beans.SearchFilter.OP;
-import software.wings.beans.SortOrder.OrderType;
-import software.wings.utils.Misc;
-
 /**
- *  PageRequest bean class.
- *
+ * PageRequest bean class.
  *
  * @author Rishi
- *
  */
 public class PageRequest<T> {
   public static final String UNLIMITED = "UNLIMITED";
@@ -56,18 +52,6 @@ public class PageRequest<T> {
     this.fieldsExcluded = req.fieldsExcluded;
   }
 
-  public List<SearchFilter> getFilters() {
-    return filters;
-  }
-  public void setFilters(List<SearchFilter> filters) {
-    this.filters = filters;
-  }
-  public List<SortOrder> getOrders() {
-    return orders;
-  }
-  public void setOrders(List<SortOrder> orders) {
-    this.orders = orders;
-  }
   public UriInfo getUriInfo() {
     return uriInfo;
   }
@@ -79,24 +63,31 @@ public class PageRequest<T> {
   public String getOffset() {
     return offset;
   }
+
   public void setOffset(String offset) {
     this.offset = offset;
   }
+
   public String getLimit() {
     return limit;
   }
+
   public void setLimit(String limit) {
     this.limit = limit;
   }
+
   public int getPageSize() {
     return Misc.asInt(limit, DEFAULT_PAGE_SIZE);
   }
+
   public int getStart() {
     return Misc.asInt(offset);
   }
+
   public boolean isOR() {
     return isOR;
   }
+
   public void setOR(boolean isOR) {
     this.isOR = isOR;
   }
@@ -161,6 +152,22 @@ public class PageRequest<T> {
       order.setOrderType(OrderType.valueOf(map.getFirst(key + "[direction]").toUpperCase()));
       getOrders().add(order);
     }
+  }
+
+  public List<SearchFilter> getFilters() {
+    return filters;
+  }
+
+  public void setFilters(List<SearchFilter> filters) {
+    this.filters = filters;
+  }
+
+  public List<SortOrder> getOrders() {
+    return orders;
+  }
+
+  public void setOrders(List<SortOrder> orders) {
+    this.orders = orders;
   }
 
   public void addFilter(String fieldName, Object fieldValue, OP op) {

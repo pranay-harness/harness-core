@@ -1,6 +1,11 @@
 package software.wings.core.queue;
 
-import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.PrePersist;
 import software.wings.common.UUIDGenerator;
 
 import java.util.Date;
@@ -40,44 +45,44 @@ public abstract class Queuable {
     return id;
   }
 
-  public boolean isRunning() {
-    return running;
-  }
-
-  public Date getResetTimestamp() {
-    return resetTimestamp;
-  }
-
-  public Date getEarliestGet() {
-    return earliestGet;
-  }
-
-  public double getPriority() {
-    return priority;
-  }
-
-  public Date getCreated() {
-    return created;
-  }
-
   public void setId(String id) {
     this.id = id;
+  }
+
+  public boolean isRunning() {
+    return running;
   }
 
   public void setRunning(boolean running) {
     this.running = running;
   }
 
+  public Date getResetTimestamp() {
+    return resetTimestamp;
+  }
+
   public void setResetTimestamp(Date resetTimestamp) {
     this.resetTimestamp = resetTimestamp;
+  }
+
+  public Date getEarliestGet() {
+    return earliestGet;
   }
 
   public void setEarliestGet(Date earliestGet) {
     this.earliestGet = earliestGet;
   }
 
+  public double getPriority() {
+    return priority;
+  }
+
   public void setPriority(double priority) {
     this.priority = priority;
+  }
+
+  public Date getCreated() {
+    return created;
   }
 
   public void setCreated(Date created) {

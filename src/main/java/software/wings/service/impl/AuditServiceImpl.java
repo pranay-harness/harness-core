@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import com.google.inject.Singleton;
+
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.bson.Document;
 import org.mongodb.morphia.query.Query;
@@ -16,15 +18,12 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import javax.inject.Inject;
 
 /**
- *  Audit Service Implementation class.
- *
+ * Audit Service Implementation class.
  *
  * @author Rishi
- *
  */
 @Singleton
 public class AuditServiceImpl implements AuditService {

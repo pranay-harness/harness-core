@@ -3,15 +3,8 @@
  */
 package software.wings.waitNotify;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
@@ -20,13 +13,19 @@ import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.CollectionUtils;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.inject.Inject;
+
 /**
- * This is meant to cleanup notifyResponse objects that have already been used to callback waiting instances, or have
- * expired.
- * @author Rishi
+ * This is meant to cleanup notifyResponse objects that have already been used to callback waiting
+ * instances, or have expired.
  *
+ * @author Rishi
  */
 public class NotifyResponseCleanupHandler implements Runnable {
+  private static Logger logger = LoggerFactory.getLogger(NotifyResponseCleanupHandler.class);
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
@@ -76,6 +75,4 @@ public class NotifyResponseCleanupHandler implements Runnable {
       logger.error("Error in NotifyResponseCleanupHandler", e);
     }
   }
-
-  private static Logger logger = LoggerFactory.getLogger(NotifyResponseCleanupHandler.class);
 }

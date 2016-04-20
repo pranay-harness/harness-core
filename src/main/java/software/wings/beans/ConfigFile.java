@@ -5,7 +5,6 @@ import org.mongodb.morphia.annotations.*;
 /**
  * Created by anubhaw on 4/12/16.
  */
-
 @Entity(value = "configFiles", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("serviceID")
                            , @Field("name") }, options = @IndexOptions(unique = true)))

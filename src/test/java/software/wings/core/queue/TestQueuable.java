@@ -1,6 +1,7 @@
 package software.wings.core.queue;
 
 import com.google.common.base.MoreObjects;
+
 import org.junit.Ignore;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -22,6 +23,7 @@ public class TestQueuable extends Queuable {
     super();
     this.data = data;
   }
+
   public TestQueuable(TestQueuable other) {
     super(other);
   }
@@ -35,6 +37,11 @@ public class TestQueuable extends Queuable {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(data);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -42,11 +49,6 @@ public class TestQueuable extends Queuable {
       return false;
     TestQueuable that = (TestQueuable) o;
     return data == that.data;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(data);
   }
 
   @Override

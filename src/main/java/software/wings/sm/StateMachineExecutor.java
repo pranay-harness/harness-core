@@ -3,44 +3,37 @@
  */
 package software.wings.sm;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-
-import javax.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Singleton;
-
 import software.wings.beans.ErrorConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.waitNotify.NotifyCallback;
 import software.wings.waitNotify.WaitNotifyEngine;
 
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
+
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class StateMachineExecutor {
+  private static Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
   @Inject private ExecutorService executorService;
-
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void execute(StateMachine sm) {
     execute(sm, new HashMap<String, Serializable>());
   }
 
-  public void execute(String smId, Map<String, Serializable> arguments) {
-    execute(wingsPersistence.get(StateMachine.class, smId), arguments);
-  }
   public void execute(StateMachine sm, Map<String, Serializable> arguments) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
@@ -62,11 +55,6 @@ public class StateMachineExecutor {
   }
 
   public void execute(
-      String smId, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
-    execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
-  }
-
-  public void execute(
       StateMachine sm, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
     SMInstance smInstance = new SMInstance();
     smInstance.setContext(context);
@@ -77,6 +65,15 @@ public class StateMachineExecutor {
     smInstance = wingsPersistence.saveAndGet(SMInstance.class, smInstance);
 
     executorService.submit(new SMExecutionDispatcher(sm, this, smInstance));
+  }
+
+  public void execute(String smId, Map<String, Serializable> arguments) {
+    execute(wingsPersistence.get(StateMachine.class, smId), arguments);
+  }
+
+  public void execute(
+      String smId, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
+    execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
   }
 
   public void execute(SMInstance smInstance) {
@@ -226,9 +223,8 @@ public class StateMachineExecutor {
     context.setDirty(false);
   }
 
-  private static Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
-
   static class SMExecutionDispatcher implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
     private SMInstance smInstance;
     private StateMachine sm;
     private StateMachineExecutor stateMachineExecutor;
@@ -250,6 +246,5 @@ public class StateMachineExecutor {
     public void run() {
       stateMachineExecutor.execute(sm, smInstance);
     }
-    private static final Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
   }
 }

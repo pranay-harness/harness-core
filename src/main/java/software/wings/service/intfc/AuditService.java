@@ -7,11 +7,9 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.User;
 
 /**
- *  HttpAuditService.
- *
+ * HttpAuditService.
  *
  * @author Rishi
- *
  */
 public interface AuditService {
   public AuditHeader create(AuditHeader header);

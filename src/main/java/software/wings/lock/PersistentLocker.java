@@ -1,30 +1,22 @@
 package software.wings.lock;
 
-import java.net.InetAddress;
-import java.util.Date;
-
-import javax.inject.Inject;
+import com.google.inject.Singleton;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Singleton;
-
-import software.wings.beans.PageRequest;
-import software.wings.beans.SearchFilter;
-import software.wings.dl.WingsPersistence;
+import javax.inject.Inject;
 
 /**
- *  Persistent Locker implementation using Mongo DB.
- *
+ * Persistent Locker implementation using Mongo DB.
  *
  * @author Rishi
- *
  */
 @Singleton
 public class PersistentLocker implements Locker {
+  private static Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
   @Inject private DistributedLockSvc distributedLockSvc;
 
   @Override
@@ -64,6 +56,4 @@ public class PersistentLocker implements Locker {
       return false;
     }
   }
-
-  private static Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
 }

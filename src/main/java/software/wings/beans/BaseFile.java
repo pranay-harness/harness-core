@@ -7,7 +7,6 @@ import static software.wings.beans.ChecksumType.MD5;
 /**
  * Created by anubhaw on 4/13/16.
  */
-
 public class BaseFile extends Base {
   private String fileUUID;
   private String name;

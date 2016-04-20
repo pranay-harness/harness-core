@@ -1,64 +1,42 @@
 package software.wings.audit;
 
+import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Application;
+import software.wings.beans.Base;
+import software.wings.beans.Environment;
+import software.wings.beans.HTTPMethod;
+import software.wings.beans.Service;
+import software.wings.beans.User;
+
 import java.util.Date;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.*;
-
 /**
- *  HttpAuditHeader bean class.
- *
+ * HttpAuditHeader bean class.
  *
  * @author Rishi
- *
  */
 @Entity(value = "audits", noClassnameStored = true)
 public class AuditHeader extends Base {
-  public enum RequestType { REQUEST, RESPONSE }
-
-  public enum ResponseType { SUCCESS, FAILED }
-
-  private String url;
-
-  private String resourcePath;
-
-  private String queryParams;
-
-  private HTTPMethod requestMethod;
-
-  private String headerString;
-
-  private ResponseType responseType;
-
-  private Integer responseStatusCode;
-
-  private String errorCode;
-
-  private String remoteHostName;
-
-  private Integer remoteHostPort;
-
-  private String remoteIpAddress;
-
   protected User remoteUser;
-
-  private String localHostName;
-
-  private String localIpAddress;
-
-  private String requestPayloadUUID;
-
-  private String responsePayloadUUID;
-
   protected Application application;
-
   protected Service component;
-
   protected Environment environment;
-
+  private String url;
+  private String resourcePath;
+  private String queryParams;
+  private HTTPMethod requestMethod;
+  private String headerString;
+  private ResponseType responseType;
+  private Integer responseStatusCode;
+  private String errorCode;
+  private String remoteHostName;
+  private Integer remoteHostPort;
+  private String remoteIpAddress;
+  private String localHostName;
+  private String localIpAddress;
+  private String requestPayloadUuid;
+  private String responsePayloadUuid;
   private Date requestTime;
-
   private Date responseTime;
 
   public String getQueryParams() {
@@ -213,20 +191,20 @@ public class AuditHeader extends Base {
     this.headerString = headerString;
   }
 
-  public String getRequestPayloadUUID() {
-    return requestPayloadUUID;
+  public String getRequestPayloadUuid() {
+    return requestPayloadUuid;
   }
 
-  public void setRequestPayloadUUID(String requestPayloadUUID) {
-    this.requestPayloadUUID = requestPayloadUUID;
+  public void setRequestPayloadUuid(String requestPayloadUuid) {
+    this.requestPayloadUuid = requestPayloadUuid;
   }
 
-  public String getResponsePayloadUUID() {
-    return responsePayloadUUID;
+  public String getResponsePayloadUuid() {
+    return responsePayloadUuid;
   }
 
-  public void setResponsePayloadUUID(String responsePayloadUUID) {
-    this.responsePayloadUUID = responsePayloadUUID;
+  public void setResponsePayloadUuid(String responsePayloadUuid) {
+    this.responsePayloadUuid = responsePayloadUuid;
   }
 
   @Override
@@ -239,4 +217,8 @@ public class AuditHeader extends Base {
         + ", localIpAddress=" + localIpAddress + ", application=" + application + ", component=" + component
         + ", environment=" + environment + ", requestTime=" + requestTime + ", responseTime=" + responseTime + "]";
   }
+
+  public enum RequestType { REQUEST, RESPONSE }
+
+  public enum ResponseType { SUCCESS, FAILED }
 }

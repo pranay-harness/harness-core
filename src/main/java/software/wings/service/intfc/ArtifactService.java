@@ -1,11 +1,10 @@
 package software.wings.service.intfc;
 
-import java.io.File;
-
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 
+import java.io.File;
 import javax.validation.Valid;
 
 public interface ArtifactService {

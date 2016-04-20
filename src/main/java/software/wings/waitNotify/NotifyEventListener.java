@@ -1,5 +1,8 @@
 package software.wings.waitNotify;
 
+import static java.util.stream.Collectors.toList;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -12,16 +15,13 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static java.util.stream.Collectors.toList;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.

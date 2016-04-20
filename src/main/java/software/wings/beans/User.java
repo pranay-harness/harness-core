@@ -1,44 +1,57 @@
 package software.wings.beans;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
-import javax.security.auth.Subject;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+import javax.security.auth.Subject;
 
 /**
- *  User bean class.
- *
+ * User bean class.
  *
  * @author Rishi
- *
  */
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
 public class User extends Base implements Principal {
   private String name;
+
   @Indexed(unique = true) private String email;
+
   @JsonIgnore private String passwordHash;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
+
   private long lastLogin;
 
   @Transient private String password;
   @Transient private String token;
 
+  public static User getPublicUser(User fullUser) {
+    User publicUser = new User();
+    publicUser.setUuid(fullUser.getUuid());
+    publicUser.setName(fullUser.getName());
+    publicUser.setEmail(fullUser.getEmail());
+    return publicUser;
+  }
+
   @Override
   public String getName() {
     return name;
   }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   @Override
   public boolean implies(Subject subject) {
     return false;
@@ -47,49 +60,48 @@ public class User extends Base implements Principal {
   public String getEmail() {
     return email;
   }
+
   public void setEmail(String email) {
     this.email = email;
   }
+
   public String getPasswordHash() {
     return passwordHash;
   }
+
   public void setPasswordHash(String passwordHash) {
     this.passwordHash = passwordHash;
   }
-  public void setLastLogin(long lastLogin) {
-    this.lastLogin = lastLogin;
-  }
+
   public long getLastLogin() {
     return lastLogin;
   }
-  public void setName(String name) {
-    this.name = name;
+
+  public void setLastLogin(long lastLogin) {
+    this.lastLogin = lastLogin;
   }
+
   public String getToken() {
     return token;
   }
+
   public void setToken(String token) {
     this.token = token;
   }
+
   public List<Role> getRoles() {
     return roles;
   }
+
   public void setRoles(List<Role> roles) {
     this.roles = roles;
   }
+
   public void addRole(Role role) {
     if (roles == null) {
       roles = new ArrayList<>();
     }
     roles.add(role);
-  }
-
-  public static User getPublicUser(User fullUser) {
-    User publicUser = new User();
-    publicUser.setUuid(fullUser.getUuid());
-    publicUser.setName(fullUser.getName());
-    publicUser.setEmail(fullUser.getEmail());
-    return publicUser;
   }
 
   public String getPassword() {
@@ -117,75 +129,6 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
-    public static Builder anUser() {
-      return new Builder();
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withEmail(String email) {
-      this.email = email;
-      return this;
-    }
-
-    public Builder withPasswordHash(String passwordHash) {
-      this.passwordHash = passwordHash;
-      return this;
-    }
-
-    public Builder withRoles(List<Role> roles) {
-      this.roles = roles;
-      return this;
-    }
-
-    public Builder withLastLogin(long lastLogin) {
-      this.lastLogin = lastLogin;
-      return this;
-    }
-
-    public Builder withPassword(String password) {
-      this.password = password;
-      return this;
-    }
-
-    public Builder withToken(String token) {
-      this.token = token;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return anUser()
           .withName(name)
@@ -201,6 +144,75 @@ public class User extends Base implements Principal {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withToken(String token) {
+      this.token = token;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withLastLogin(long lastLogin) {
+      this.lastLogin = lastLogin;
+      return this;
+    }
+
+    public Builder withRoles(List<Role> roles) {
+      this.roles = roles;
+      return this;
+    }
+
+    public Builder withPasswordHash(String passwordHash) {
+      this.passwordHash = passwordHash;
+      return this;
+    }
+
+    public Builder withEmail(String email) {
+      this.email = email;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public static Builder anUser() {
+      return new Builder();
     }
 
     public User build() {

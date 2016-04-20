@@ -1,35 +1,46 @@
 package software.wings.resources;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.ArtifactSource.SourceType.HTTP;
+import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.*;
+import software.wings.beans.Application;
 import software.wings.beans.ArtifactSource.SourceType;
+import software.wings.beans.FileUploadSource;
+import software.wings.beans.FileUrlSource;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.PlatformSoftware;
+import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.BoundedInputStream;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
 import java.io.InputStream;
 import java.util.List;
-
-import static com.google.common.collect.ImmutableMap.of;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.ArtifactSource.SourceType.HTTP;
-import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
+import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 /**
- *  Application Resource class
- *
+ * Application Resource class
  *
  * @author Rishi
- *
  */
-
 @Path("/apps")
 @AuthRule
 @Produces("application/json")
@@ -82,8 +93,9 @@ public class AppResource {
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
-        urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
+    PlatformSoftware platformSoftware =
+        createPlatformSoftwareFromRequest(appID, fileName, version, md5, description, urlString, standard, sourceType,
+            uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
     String fileId = appService.savePlatformSoftware(platformSoftware, uploadedInputStream, PLATFORMS);
@@ -100,8 +112,9 @@ public class AppResource {
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    PlatformSoftware platformSoftware = createPlatformSoftwareFromRequest(appID, fileName, version, md5, description,
-        urlString, standard, sourceType, uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
+    PlatformSoftware platformSoftware =
+        createPlatformSoftwareFromRequest(appID, fileName, version, md5, description, urlString, standard, sourceType,
+            uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
     String fileId = appService.updatePlatformSoftware(platformID, platformSoftware, uploadedInputStream, PLATFORMS);

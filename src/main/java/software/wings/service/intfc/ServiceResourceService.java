@@ -12,11 +12,18 @@ import java.util.List;
  */
 public interface ServiceResourceService {
   List<Service> list(String appID);
+
   Service save(String appID, Service service);
+
   Service findByUUID(String uuid);
+
   Service update(Service service);
+
   List<ConfigFile> getConfigs(String serviceID);
+
   String saveFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs);
+
   ConfigFile getConfig(String configID);
+
   void updateFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs);
 }

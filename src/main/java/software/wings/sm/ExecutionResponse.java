@@ -10,7 +10,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class ExecutionResponse {
   private boolean asynch;
@@ -22,30 +21,39 @@ public class ExecutionResponse {
   public boolean isAsynch() {
     return asynch;
   }
+
   public void setAsynch(boolean asynch) {
     this.asynch = asynch;
   }
+
   public List<String> getCorrelationIds() {
     return correlationIds;
   }
+
   public void setCorrelationIds(List<String> correlationIds) {
     this.correlationIds = correlationIds;
   }
+
   public Map<String, ? extends Serializable> getResponse() {
     return response;
   }
+
   public void setResponse(Map<String, ? extends Serializable> response) {
     this.response = response;
   }
+
   public ExecutionStatus getExecutionStatus() {
     return executionStatus;
   }
+
   public void setExecutionStatus(ExecutionStatus executionStatus) {
     this.executionStatus = executionStatus;
   }
+
   public String getErrorMessage() {
     return errorMessage;
   }
+
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
   }

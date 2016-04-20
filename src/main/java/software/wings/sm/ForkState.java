@@ -3,16 +3,15 @@
  */
 package software.wings.sm;
 
+import software.wings.app.WingsBootstrap;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import software.wings.app.WingsBootstrap;
-
 /**
  * @author Rishi
- *
  */
 public class ForkState extends State {
   private static final long serialVersionUID = 1L;
@@ -22,6 +21,7 @@ public class ForkState extends State {
   public ForkState(String name) {
     super(name, StateType.FORK.name());
   }
+
   /* (non-Javadoc)
    * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
    */
@@ -54,9 +54,11 @@ public class ForkState extends State {
     }
     return executionResponse;
   }
+
   public List<String> getForkStateNames() {
     return forkStateNames;
   }
+
   public void setForkStateNames(List<String> forkStateNames) {
     this.forkStateNames = forkStateNames;
   }

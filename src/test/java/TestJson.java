@@ -1,10 +1,10 @@
-import java.util.HashMap;
-import java.util.Map;
-
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.common.JsonUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestJson {
   public static void main(String[] args) {

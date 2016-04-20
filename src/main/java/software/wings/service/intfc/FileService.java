@@ -16,6 +16,7 @@ import java.util.List;
 
 public interface FileService {
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
+
   String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket);
 
   void deleteFile(String fileID, FileBucket fileBucket);

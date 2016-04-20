@@ -8,7 +8,6 @@ import java.io.IOException;
 /**
  * Created by anubhaw on 4/20/16.
  */
-
 public class AuthResponseFilter implements ContainerResponseFilter {
   @Override
   public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)

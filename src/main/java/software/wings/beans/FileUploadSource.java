@@ -16,13 +16,8 @@ public class FileUploadSource extends ArtifactSource {
 
     private Builder() {}
 
-    public static Builder aFileUploadSource() {
-      return new Builder();
-    }
-
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
+    public Builder but() {
+      return aFileUploadSource().withSourceName(sourceName).withArtifactType(artifactType);
     }
 
     public Builder withArtifactType(ArtifactType artifactType) {
@@ -30,8 +25,13 @@ public class FileUploadSource extends ArtifactSource {
       return this;
     }
 
-    public Builder but() {
-      return aFileUploadSource().withSourceName(sourceName).withArtifactType(artifactType);
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
+    public static Builder aFileUploadSource() {
+      return new Builder();
     }
 
     public FileUploadSource build() {

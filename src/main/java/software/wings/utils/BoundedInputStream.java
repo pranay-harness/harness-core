@@ -14,7 +14,6 @@ import static software.wings.beans.ErrorConstants.INVALID_URL;
 /**
  * Created by anubhaw on 4/14/16.
  */
-
 public class BoundedInputStream extends InputStream {
   private final InputStream inputStream;
   private final long size;

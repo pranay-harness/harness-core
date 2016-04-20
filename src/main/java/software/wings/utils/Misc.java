@@ -3,11 +3,9 @@ package software.wings.utils;
 import java.io.Closeable;
 
 /**
- *  Miscellaneous utility class.
- *
+ * Miscellaneous utility class.
  *
  * @author Rishi
- *
  */
 public class Misc {
   public static void quietSleep(int delay) {
@@ -30,6 +28,7 @@ public class Misc {
   public static int asInt(String value) {
     return asInt(value, 0);
   }
+
   public static int asInt(String value, int defaultValue) {
     try {
       return Integer.parseInt(value);

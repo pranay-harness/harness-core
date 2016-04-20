@@ -10,7 +10,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 2/17/16.
  */
-
 @Singleton
 public class ExecutionLogs {
   private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionLogs.class);
