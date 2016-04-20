@@ -21,7 +21,7 @@ public class ApplicationTest {
     final String desc = "TestAppDesc-" + System.currentTimeMillis();
     app.setName(appName);
     app.setDescription(desc);
-    app.onUpdate();
+    app.onSave();
     logger.debug("TestApp : " + app);
 
     String json = JsonUtils.asJson(app);

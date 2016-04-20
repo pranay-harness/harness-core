@@ -40,9 +40,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);
     User user = authToken.getUser();
-    requestContext.setProperty("USER", user);
-    if (null != user) {
-      updateUserInAuditRecord(user); // Set for FIXME: find better place
+    if (user != null) {
+      requestContext.setProperty("USER", user);
+      updateUserInAuditRecord(user); // FIXME: find better place
+      UserThreadLocal.set(user);
     }
     List<PermissionAttr> permissionAttrs = getAccessTypes();
     authorizeRequest(requestContext.getUriInfo(), user, permissionAttrs);
@@ -137,11 +138,13 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuthToken extractToken(ContainerRequestContext requestContext) {
     String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
     if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(ErrorConstants.INVALID_TOKEN);
+      throw new WingsException(INVALID_TOKEN);
     }
     String tokenString = authorizationHeader.substring("Bearer".length()).trim();
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
-    if (null != authToken && authToken.getExpireAt() < System.currentTimeMillis()) {
+    if (authToken == null) {
+      throw new WingsException(INVALID_TOKEN);
+    } else if (authToken.getExpireAt() < System.currentTimeMillis()) {
       throw new WingsException(EXPIRED_TOKEN);
     }
     return authToken;

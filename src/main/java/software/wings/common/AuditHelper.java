@@ -2,11 +2,12 @@ package software.wings.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.app.WingsBootstrap;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
+
+import javax.inject.Inject;
 
 /**
  *  AuditHelper uses threadlocal to stitch both request and response pay-load with the common http header entries.
@@ -17,7 +18,6 @@ import software.wings.service.intfc.AuditService;
  */
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
-
   private static AuditHelper instance = new AuditHelper();
 
   private AuditHelper() {}
@@ -56,7 +56,8 @@ public class AuditHelper {
       AuditService auditService = WingsBootstrap.lookup(AuditService.class);
       auditService.create(header, requestType, httpBody);
     } catch (RuntimeException rException) {
-      logger.error("Exception occurred while trying to save payload - headerId" + header.getUuid());
+      logger.error(
+          "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null));
       throw rException;
     }
   }

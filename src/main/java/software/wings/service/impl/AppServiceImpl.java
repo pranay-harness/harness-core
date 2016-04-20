@@ -39,11 +39,7 @@ public class AppServiceImpl implements AppService {
   @Override
   @Metered
   public Application save(Application app) {
-    Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
-    UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
-                                                   .set("name", app.getName())
-                                                   .set("description", app.getDescription());
-    return wingsPersistence.get(Application.class, app.getUuid());
+    return wingsPersistence.saveAndGet(Application.class, app);
   }
 
   @Override
@@ -65,7 +61,16 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public Application update(Application app) {
-    return save(app);
+    Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
+    UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
+                                                   .set("name", app.getName())
+                                                   .set("description", app.getDescription())
+                                                   .set("lastUpdatedAt", System.currentTimeMillis());
+    if (app.getLastUpdatedBy() != null) {
+      operations.set("lastUpdatedBy", app.getLastUpdatedBy());
+    }
+    wingsPersistence.update(query, operations);
+    return wingsPersistence.get(Application.class, app.getUuid());
   }
 
   @Override

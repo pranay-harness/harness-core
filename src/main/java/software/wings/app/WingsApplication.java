@@ -27,10 +27,12 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.filter.ResponseMessageResolver;
 import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
+import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.waitNotify.Notifier;
@@ -88,6 +90,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+    environment.jersey().register(AuditRequestFilter.class);
 
     registerJerseyProviders(environment);
 
@@ -117,6 +120,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                                .buildAuthFilter()));
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
       environment.jersey().register(AuthRuleFilter.class);
+      environment.jersey().register(AuthResponseFilter.class);
     }
   }
 

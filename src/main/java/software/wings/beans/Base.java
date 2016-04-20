@@ -7,9 +7,13 @@ import org.mongodb.morphia.annotations.PrePersist;
 
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.common.UUIDGenerator;
+import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import javax.validation.constraints.NotNull;
+
+import static java.lang.System.currentTimeMillis;
+import static software.wings.common.UUIDGenerator.getUUID;
 
 /**
  *  The Base class is used to extend all the bean classes that requires persistence. The base class includes
@@ -93,14 +97,19 @@ public class Base {
     return true;
   }
   @PrePersist
-  public void onUpdate() {
-    lastUpdatedAt = System.currentTimeMillis();
+  public void onSave() {
     if (uuid == null) {
-      uuid = UUIDGenerator.getUUID();
+      uuid = getUUID();
     }
     if (createdAt == 0) {
-      createdAt = System.currentTimeMillis();
+      createdAt = currentTimeMillis();
     }
+    if (createdBy == null) {
+      createdBy = UserThreadLocal.get();
+    }
+
+    lastUpdatedAt = currentTimeMillis();
+    lastUpdatedBy = UserThreadLocal.get();
   }
 
   @Override

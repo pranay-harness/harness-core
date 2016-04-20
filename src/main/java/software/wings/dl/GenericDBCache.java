@@ -35,12 +35,12 @@ public class GenericDBCache {
   }
 
   public <T> T get(Class<T> cls, String objKey) {
+    Object obj = null;
     try {
-      Object obj = cache.get(makeCacheKey(cls, objKey));
-      return (T) obj;
-    } catch (ExecutionException e) {
+      obj = cache.get(makeCacheKey(cls, objKey));
+    } catch (Exception e) {
     } // do nothing
-    return null;
+    return (T) obj;
   }
 
   private String makeCacheKey(Class cls, String objKey) {
