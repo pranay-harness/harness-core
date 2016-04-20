@@ -2,7 +2,6 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.common.collect.ImmutableMap;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
@@ -15,12 +14,10 @@ import software.wings.utils.BoundedInputStream;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
-import static com.google.common.collect.ImmutableMap.*;
+import static com.google.common.collect.ImmutableMap.of;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;

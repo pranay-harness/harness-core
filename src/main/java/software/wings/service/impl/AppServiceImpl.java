@@ -39,7 +39,11 @@ public class AppServiceImpl implements AppService {
   @Override
   @Metered
   public Application save(Application app) {
-    return wingsPersistence.saveAndGet(Application.class, app);
+    Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
+    UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
+                                                   .set("name", app.getName())
+                                                   .set("description", app.getDescription());
+    return wingsPersistence.get(Application.class, app.getUuid());
   }
 
   @Override
