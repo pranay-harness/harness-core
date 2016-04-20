@@ -5,9 +5,15 @@ package software.wings.sm;
 
 /**
  * @author Rishi
- *
  */
 public class ExecState extends State {
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
+  String path;
+  boolean embeded;
+
   /**
    * @param name
    * @param stateType
@@ -15,13 +21,6 @@ public class ExecState extends State {
   public ExecState(String name, StateType stateType) {
     super(name, stateType.name());
   }
-
-  /**
-   *
-   */
-  private static final long serialVersionUID = 1L;
-  String path;
-  boolean embeded;
 
   /* (non-Javadoc)
    * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)

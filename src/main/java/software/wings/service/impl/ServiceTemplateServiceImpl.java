@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import com.google.inject.Inject;
-import software.wings.beans.Host;
+
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ServiceTemplate;
@@ -13,7 +13,6 @@ import javax.inject.Singleton;
 /**
  * Created by anubhaw on 4/4/16.
  */
-
 @Singleton
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;

@@ -5,11 +5,9 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
 
 /**
- *  ReleaseService.
- *
+ * ReleaseService.
  *
  * @author Rishi
- *
  */
 public interface ReleaseService {
   public PageResponse<Release> list(PageRequest<Release> req);

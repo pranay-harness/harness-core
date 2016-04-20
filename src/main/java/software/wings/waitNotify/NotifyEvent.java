@@ -1,8 +1,8 @@
 package software.wings.waitNotify;
 
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
 import software.wings.core.queue.Queuable;
 
 import java.util.Date;
@@ -62,55 +62,6 @@ public class NotifyEvent extends Queuable {
 
     private Builder() {}
 
-    public static Builder aNotifyEvent() {
-      return new Builder();
-    }
-
-    public Builder withWaitInstanceId(String waitInstanceId) {
-      this.waitInstanceId = waitInstanceId;
-      return this;
-    }
-
-    public Builder withCorrelationIds(List<String> correlationIds) {
-      this.correlationIds = correlationIds;
-      return this;
-    }
-
-    public Builder withId(String id) {
-      this.id = id;
-      return this;
-    }
-
-    public Builder withRunning(boolean running) {
-      this.running = running;
-      return this;
-    }
-
-    public Builder withResetTimestamp(Date resetTimestamp) {
-      this.resetTimestamp = resetTimestamp;
-      return this;
-    }
-
-    public Builder withEarliestGet(Date earliestGet) {
-      this.earliestGet = earliestGet;
-      return this;
-    }
-
-    public Builder withPriority(double priority) {
-      this.priority = priority;
-      return this;
-    }
-
-    public Builder withCreated(Date created) {
-      this.created = created;
-      return this;
-    }
-
-    public Builder withRetries(int retries) {
-      this.retries = retries;
-      return this;
-    }
-
     public Builder but() {
       return aNotifyEvent()
           .withWaitInstanceId(waitInstanceId)
@@ -122,6 +73,55 @@ public class NotifyEvent extends Queuable {
           .withPriority(priority)
           .withCreated(created)
           .withRetries(retries);
+    }
+
+    public Builder withRetries(int retries) {
+      this.retries = retries;
+      return this;
+    }
+
+    public Builder withCreated(Date created) {
+      this.created = created;
+      return this;
+    }
+
+    public Builder withPriority(double priority) {
+      this.priority = priority;
+      return this;
+    }
+
+    public Builder withEarliestGet(Date earliestGet) {
+      this.earliestGet = earliestGet;
+      return this;
+    }
+
+    public Builder withResetTimestamp(Date resetTimestamp) {
+      this.resetTimestamp = resetTimestamp;
+      return this;
+    }
+
+    public Builder withRunning(boolean running) {
+      this.running = running;
+      return this;
+    }
+
+    public Builder withId(String id) {
+      this.id = id;
+      return this;
+    }
+
+    public Builder withCorrelationIds(List<String> correlationIds) {
+      this.correlationIds = correlationIds;
+      return this;
+    }
+
+    public Builder withWaitInstanceId(String waitInstanceId) {
+      this.waitInstanceId = waitInstanceId;
+      return this;
+    }
+
+    public static Builder aNotifyEvent() {
+      return new Builder();
     }
 
     public NotifyEvent build() {

@@ -1,27 +1,11 @@
 package software.wings.app;
 
-import java.util.EnumSet;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-import javax.servlet.DispatcherType;
-import javax.ws.rs.Path;
-
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.model.Resource;
-import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.dropwizard.Application;
 import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -32,6 +16,11 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.reflections.Reflections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.beans.User;
@@ -47,13 +36,22 @@ import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.waitNotify.Notifier;
 
+import java.util.EnumSet;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import javax.servlet.DispatcherType;
+import javax.ws.rs.Path;
+
 /**
- *  The main application - entry point for the entire Wings Application
+ * The main application - entry point for the entire Wings Application.
  *
  * @author Rishi
- *
  */
 public class WingsApplication extends Application<MainConfiguration> {
+  private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
+
   public static void main(String[] args) throws Exception {
     new WingsApplication().run(args);
   }
@@ -105,31 +103,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Starting app done");
   }
 
-  /**
-   * @param injector
-   */
-  private void startPlugins(Injector injector) {
-    PluginManager pluginManager = injector.getInstance(PluginManager.class);
-    pluginManager.loadPlugins();
-    pluginManager.startPlugins();
-  }
-
-  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
-    if (configuration.isEnableAuth()) {
-      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                                                               .setAuthenticator(new BasicAuthAuthenticator())
-                                                               .buildAuthFilter()));
-      environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
-      environment.jersey().register(AuthRuleFilter.class);
-    }
-  }
-
-  private void registerJerseyProviders(Environment environment) {
-    environment.jersey().register(ResponseMessageResolver.class);
-    environment.jersey().register(MultiPartFeature.class);
-    environment.jersey().register(WingsExceptionMapper.class);
-  }
-
   private void registerResources(Environment environment, Injector injector) {
     Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
 
@@ -139,6 +112,17 @@ public class WingsApplication extends Application<MainConfiguration> {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+  }
+
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
+    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
+    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
+    environment.lifecycle().manage(
+        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
+    environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
   }
 
   private void registerQueueListeners(Injector injector) {
@@ -158,16 +142,25 @@ public class WingsApplication extends Application<MainConfiguration> {
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30000L, TimeUnit.MILLISECONDS);
   }
 
-  private void registerManagedBeans(Environment environment, Injector injector) {
-    environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
-    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer"))));
-    environment.lifecycle().manage(
-        (Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier"))));
-    environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
+  private void registerJerseyProviders(Environment environment) {
+    environment.jersey().register(ResponseMessageResolver.class);
+    environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(WingsExceptionMapper.class);
   }
 
-  private static Logger logger = LoggerFactory.getLogger(WingsApplication.class);
+  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
+    if (configuration.isEnableAuth()) {
+      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                                                               .setAuthenticator(new BasicAuthAuthenticator())
+                                                               .buildAuthFilter()));
+      environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+      environment.jersey().register(AuthRuleFilter.class);
+    }
+  }
+
+  private void startPlugins(Injector injector) {
+    PluginManager pluginManager = injector.getInstance(PluginManager.class);
+    pluginManager.loadPlugins();
+    pluginManager.startPlugins();
+  }
 }

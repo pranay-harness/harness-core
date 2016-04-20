@@ -1,5 +1,13 @@
 package software.wings.resources;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Artifact.Builder.anArtifact;
+
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -15,12 +23,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Artifact.Builder.anArtifact;
 
 /**
  * Created by peeyushaggarwal on 4/1/16.

@@ -1,5 +1,14 @@
 package software.wings.core.queue;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import com.ifesdjeen.timer.HashedWheelTimer;
 import com.ifesdjeen.timer.WaitStrategy;
 import org.junit.Before;
@@ -9,14 +18,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mongodb.morphia.Datastore;
 import software.wings.WingsBaseTest;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.
@@ -26,11 +32,6 @@ public class QueueListenerTest extends WingsBaseTest {
   private TestQueuableListener listener;
 
   @Inject @Named("primaryDatastore") private Datastore datastore;
-
-  private static class TestQueuableListener extends AbstractQueueListener<TestQueuable> {
-    @Override
-    protected void onMessage(TestQueuable message) throws Exception {}
-  }
 
   @Before
   public void setup() throws UnknownHostException {
@@ -152,5 +153,10 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(listener).onMessage(message);
     verify(listener).onException(exception, message);
     verify(queue, times(0)).requeue(message);
+  }
+
+  private static class TestQueuableListener extends AbstractQueueListener<TestQueuable> {
+    @Override
+    protected void onMessage(TestQueuable message) throws Exception {}
   }
 }

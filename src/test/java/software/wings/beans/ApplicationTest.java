@@ -1,4 +1,3 @@
-
 package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -6,14 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.common.JsonUtils;
+
 /**
  * Test case
- * @author Rishi
  *
+ * @author Rishi
  */
 public class ApplicationTest {
+  private static Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
+
   @Test
   public void testSerializeDeserialize() {
     Application app = new Application();
@@ -30,6 +31,4 @@ public class ApplicationTest {
     Application app2 = JsonUtils.asObject(json, Application.class);
     assertThat(app2).isEqualToComparingFieldByField(app);
   }
-
-  private static Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
 }

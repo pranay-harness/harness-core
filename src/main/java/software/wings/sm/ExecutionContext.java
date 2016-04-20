@@ -10,7 +10,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class ExecutionContext implements Serializable {
   private static final long serialVersionUID = 1L;
@@ -26,43 +25,55 @@ public class ExecutionContext implements Serializable {
   public Map<String, Serializable> getParams() {
     return params;
   }
+
   public void setParams(Map<String, Serializable> params) {
     this.params = params;
     dirty = true;
   }
+
   public void setParam(String paramName, Serializable paramValue) {
     params.put(paramName, paramValue);
     dirty = true;
   }
+
   public Map<String, Serializable> getSummary() {
     return summary;
   }
+
   public void setSummary(Map<String, Serializable> summary) {
     this.summary = summary;
     dirty = true;
   }
+
   public String getStateMachineId() {
     return stateMachineId;
   }
+
   public void setStateMachineId(String stateMachineId) {
     this.stateMachineId = stateMachineId;
   }
+
   public Map<String, StateExecutionData> getStateExecutionMap() {
     return stateExecutionMap;
   }
+
   public void setStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
     this.stateExecutionMap = stateExecutionMap;
     dirty = true;
   }
+
   public SMInstance getSmInstance() {
     return smInstance;
   }
+
   public void setSmInstance(SMInstance smInstance) {
     this.smInstance = smInstance;
   }
+
   public Map<RepeatElementType, RepeatElement> getRepeatElementMap() {
     return repeatElementMap;
   }
+
   public void setRepeatElementMap(Map<RepeatElementType, RepeatElement> repeatElementMap) {
     this.repeatElementMap = repeatElementMap;
   }

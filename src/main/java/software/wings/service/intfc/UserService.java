@@ -9,14 +9,18 @@ import software.wings.beans.User;
  */
 public interface UserService {
   public User register(User user);
+
   public boolean matchPassword(String password, String hash);
 
   public User addRole(String userID, String roleID);
 
   public User update(User user);
+
   public PageResponse<User> list(PageRequest<User> pageRequest);
 
   public void delete(String userID);
+
   public User get(String userID);
+
   public User revokeRole(String userID, String roleID);
 }

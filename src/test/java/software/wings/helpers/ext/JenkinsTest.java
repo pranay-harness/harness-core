@@ -1,17 +1,16 @@
 package software.wings.helpers.ext;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import org.apache.commons.io.IOUtils;
+import org.junit.Test;
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class JenkinsTest {
   @Test

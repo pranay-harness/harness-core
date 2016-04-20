@@ -1,40 +1,28 @@
-/**
- *
- */
 package software.wings.app;
 
 import static software.wings.common.thread.ThreadPool.create;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Morphia;
-
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+
+import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
+import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-
+import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Morphia;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ReadPref;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
-import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -76,7 +64,16 @@ import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitNotify.NotifyEvent;
 import software.wings.waitNotify.NotifyEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 /**
+ * Guice Module for initializing all beans.
+ *
  * @author Rishi
  */
 public class WingsModule extends AbstractModule {
@@ -89,8 +86,11 @@ public class WingsModule extends AbstractModule {
   private DistributedLockSvc distributedLockSvc;
 
   private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
+
   /**
-   * @param configuration
+   * Creates a guice module for portal app.
+   *
+   * @param configuration Dropwizard configuration
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
@@ -101,9 +101,9 @@ public class WingsModule extends AbstractModule {
     for (String host : hosts) {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
-    Morphia m = new Morphia();
+    Morphia morphia = new Morphia();
     MongoClient mongoClient = new MongoClient(serverAddresses);
-    this.primaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
+    this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     distributedLockSvc = new ManagedDistributedLockSvc(
         new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
             .getLockSvc());
@@ -111,7 +111,7 @@ public class WingsModule extends AbstractModule {
     if (hosts.size() > 1) {
       mongoClient = new MongoClient(serverAddresses);
       mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
-      this.secondaryDatastore = m.createDatastore(mongoClient, mongoConfig.getDb());
+      this.secondaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     } else {
       this.secondaryDatastore = primaryDatastore;
     }
@@ -120,9 +120,6 @@ public class WingsModule extends AbstractModule {
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
-  /* (non-Javadoc)
-   * @see com.google.inject.AbstractModule#configure()
-   */
   @Override
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);

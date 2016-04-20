@@ -1,22 +1,7 @@
 package software.wings.resources;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.GeneralSecurityException;
-
-import javax.inject.Inject;
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -25,16 +10,26 @@ import software.wings.beans.SearchFilter;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.utils.Validator;
 
-import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.Release.Builder.aRelease;
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
- *  ArtifactResource.
- *
+ * ArtifactResource.
  *
  * @author Rishi
- *
  */
 @Path("/artifacts")
 public class ArtifactResource {
@@ -86,27 +81,27 @@ public class ArtifactResource {
   }
 
   /*
-  @POST
-  @Consumes(MediaType.MULTIPART_FORM_DATA)
-  @Produces(MediaType.APPLICATION_JSON)
-  @Path("upload")
-  public RestResponse<String> uploadArtifact(
-          @FormDataParam("part") InputStream uploadedInputStream,
-          @FormDataParam("part") FormDataContentDisposition fileDetail) {
+    @POST
+        @Consumes(MediaType.MULTIPART_FORM_DATA)
+        @Produces(MediaType.APPLICATION_JSON)
+        @Path("upload")
+        public RestResponse<String> uploadArtifact(
+                @FormDataParam("part") InputStream uploadedInputStream,
+                @FormDataParam("part") FormDataContentDisposition fileDetail) {
 
-//		logger.debug("uploadedInputStream :" + uploadedInputStream);
-//		logger.debug("fileDetail :" + fileDetail);
-//
-//		String filename = fileDetail.getFileName();
-//		logger.debug("filename Received :" + filename);
-//
-//		// save it
-//		String uploadedFilename = dumpFile(uploadedInputStream);
-//		logger.debug("File uploaded to : " + uploadedFilename);
-//
-//		return new RestResponse<String>(uploadedFilename);
-          return new RestResponse<String>(null);
-  }*/
+  //		logger.debug("uploadedInputStream :" + uploadedInputStream);
+  //		logger.debug("fileDetail :" + fileDetail);
+  //
+  //		String filename = fileDetail.getFileName();
+  //		logger.debug("filename Received :" + filename);
+  //
+  //		// save it
+  //		String uploadedFilename = dumpFile(uploadedInputStream);
+  //		logger.debug("File uploaded to : " + uploadedFilename);
+  //
+  //		return new RestResponse<String>(uploadedFilename);
+                return new RestResponse<String>(null);
+        }*/
 
   @GET
   @Path("download/{applicationId}/{artifactId}")

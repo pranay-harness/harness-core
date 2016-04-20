@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.ArtifactSource.ArtifactType;
@@ -10,18 +11,16 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *  Component bean class.
- *
+ * Component bean class.
  *
  * @author Rishi
- *
  */
-
 @Entity(value = "services", noClassnameStored = true)
 public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
+
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
 
   public String getName() {
@@ -64,6 +63,11 @@ public class Service extends Base {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), name, description, artifactType, platformSoftwares);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -74,11 +78,6 @@ public class Service extends Base {
     Service service = (Service) o;
     return Objects.equals(name, service.name) && Objects.equals(description, service.description)
         && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), name, description, artifactType, platformSoftwares);
   }
 
   @Override
@@ -105,60 +104,6 @@ public class Service extends Base {
 
     private Builder() {}
 
-    public static Builder aService() {
-      return new Builder();
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
-      return this;
-    }
-
-    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
-      this.platformSoftwares = platformSoftwares;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return aService()
           .withName(name)
@@ -171,6 +116,60 @@ public class Service extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
+      this.platformSoftwares = platformSoftwares;
+      return this;
+    }
+
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public static Builder aService() {
+      return new Builder();
     }
 
     public Service build() {

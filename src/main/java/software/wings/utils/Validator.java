@@ -1,13 +1,11 @@
 package software.wings.utils;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import software.wings.beans.ErrorConstants;
 import software.wings.exception.WingsException;
 
-import javax.validation.ConstraintViolationException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class Validator {
   public static void notNullCheck(String name, Object value) {

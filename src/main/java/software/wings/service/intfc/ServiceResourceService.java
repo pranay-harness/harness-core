@@ -9,7 +9,10 @@ import software.wings.beans.Service;
  */
 public interface ServiceResourceService {
   public PageResponse<Service> list(PageRequest<Service> pageRequest);
+
   public Service save(Service service);
+
   public Service findByUUID(String uuid);
+
   public Service update(Service service);
 }

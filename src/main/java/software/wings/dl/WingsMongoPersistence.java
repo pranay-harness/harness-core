@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import com.google.inject.Singleton;
+
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
@@ -17,11 +18,11 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
@@ -50,16 +51,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, String id) {
-    return get(cls, id, ReadPref.NORMAL);
-  }
-
-  @Override
-  public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
-    return datastoreMap.get(readPref).get(cls, id);
-  }
-
-  @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
     return get(cls, req, ReadPref.NORMAL);
   }
@@ -71,6 +62,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return null;
     }
     return res.getResponse().get(0);
+  }
+
+  @Override
+  public <T extends Base> T get(Class<T> cls, String id) {
+    return get(cls, id, ReadPref.NORMAL);
+  }
+
+  @Override
+  public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
+    return datastoreMap.get(readPref).get(cls, id);
   }
 
   @Override
@@ -127,11 +128,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
-    return primaryDatastore.createUpdateOperations(cls);
-  }
-
-  @Override
   public <T> Query<T> createQuery(Class<T> cls) {
     return createQuery(cls, ReadPref.NORMAL);
   }
@@ -139,6 +135,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
     return datastoreMap.get(readPref).createQuery(cls);
+  }
+
+  @Override
+  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
+    return primaryDatastore.createUpdateOperations(cls);
   }
 
   @Override

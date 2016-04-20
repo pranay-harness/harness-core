@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import javax.inject.Inject;
-
 import com.google.inject.Singleton;
 
 import software.wings.beans.PageRequest;
@@ -9,6 +7,8 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.PlatformSoftware;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PlatformService;
+
+import javax.inject.Inject;
 
 @Singleton
 public class PlatformServiceImpl implements PlatformService {

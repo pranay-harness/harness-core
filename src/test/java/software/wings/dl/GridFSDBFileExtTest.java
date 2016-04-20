@@ -1,13 +1,11 @@
 package software.wings.dl;
 
 import com.mongodb.MongoClient;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * Created by anubhaw on 3/4/16.

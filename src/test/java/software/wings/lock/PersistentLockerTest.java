@@ -1,17 +1,7 @@
 package software.wings.lock;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
-import software.wings.dl.MongoConfig;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
 
 import javax.inject.Inject;
 

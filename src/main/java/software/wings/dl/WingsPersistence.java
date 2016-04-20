@@ -1,20 +1,18 @@
 package software.wings.dl;
 
-import java.io.InputStream;
-import java.util.List;
-
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
-
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-
 import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
+
+import java.io.InputStream;
+import java.util.List;
 
 public interface WingsPersistence {
   public <T extends Base> List<T> list(Class<T> cls);

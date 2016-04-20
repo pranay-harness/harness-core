@@ -1,14 +1,12 @@
 package software.wings.core.ssh.executors;
 
-import org.junit.Test;
-import software.wings.common.UUIDGenerator;
-
 import static software.wings.common.UUIDGenerator.getUUID;
+
+import org.junit.Test;
 
 /**
  * Created by anubhaw on 2/5/16.
  */
-
 public class SSHSudoExecutorTest {
   @Test
   public void testExecute() throws Exception {

@@ -9,6 +9,8 @@ import software.wings.beans.PageResponse;
  */
 public interface EnvironmentService {
   public PageResponse<Environment> listEnvironments(PageRequest<Environment> req);
+
   public Environment getEnvironments(String applicationId, String envName);
+
   public Environment createEnvironment(String applicationId, Environment environment);
 }

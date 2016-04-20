@@ -1,14 +1,11 @@
 package software.wings.core.queue;
 
-import com.google.common.collect.Lists;
 import io.dropwizard.lifecycle.Managed;
 
-import javax.inject.Singleton;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
+import javax.inject.Singleton;
 
 /**
  * Created by peeyushaggarwal on 4/14/16.

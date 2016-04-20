@@ -1,14 +1,16 @@
 package software.wings.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import io.dropwizard.testing.junit.ResourceTestRule;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AppService;

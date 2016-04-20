@@ -1,11 +1,5 @@
 package software.wings.common;
 
-import java.io.IOException;
-import java.util.Collection;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -13,9 +7,15 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Collection;
 
 public class JsonUtils {
   private static final ObjectMapper mapper;
+  private static Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
   static {
     mapper = new ObjectMapper();
@@ -83,6 +83,4 @@ public class JsonUtils {
       throws JsonParseException, JsonMappingException, IOException {
     mapper.readValue(jsonString, valueTypeRef);
   }
-
-  private static Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 }

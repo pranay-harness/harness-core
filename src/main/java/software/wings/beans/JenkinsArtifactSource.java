@@ -1,56 +1,28 @@
 package software.wings.beans;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.util.Objects;
-
 import com.google.common.base.MoreObjects;
-import org.apache.commons.io.IOUtils;
 
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
-
 import software.wings.app.WingsBootstrap;
 import software.wings.service.intfc.FileService;
 
-public class JenkinsArtifactSource extends ArtifactSource {
-  public JenkinsArtifactSource() {
-    super(SourceType.JENKINS);
-  }
+import java.io.InputStream;
+import java.net.URI;
+import java.util.Objects;
 
+public class JenkinsArtifactSource extends ArtifactSource {
   private String jenkinsURL;
   private String username;
   private String password;
-
   private String jobname;
   private String artifactPathRegex;
 
-  @Override
-  public ArtifactFile collect(Object[] params) {
-    try {
-      JenkinsServer jenkins = new JenkinsServer(new URI(jenkinsURL), username, password);
-      JobWithDetails jobDetails = jenkins.getJob(jobname);
-      Build build = jobDetails.getLastBuild();
-      BuildWithDetails buildWithDetails = build.details();
-      Artifact buildArtifact = buildWithDetails.getArtifacts().get(0);
-      InputStream in = buildWithDetails.downloadArtifact(buildArtifact);
-
-      FileService fileService = WingsBootstrap.lookup(FileService.class);
-      FileMetadata fileMetadata = new FileMetadata();
-      fileMetadata.setFileName(buildArtifact.getFileName());
-      String uuid = fileService.saveFile(fileMetadata, in);
-      ArtifactFile artifactFile = new ArtifactFile();
-      artifactFile.setFileUUID(uuid);
-      artifactFile.setFileName(buildArtifact.getFileName());
-      in.close();
-      return artifactFile;
-    } catch (Exception e) {
-      return null;
-    }
+  public JenkinsArtifactSource() {
+    super(SourceType.JENKINS);
   }
 
   public String getJenkinsURL() {
@@ -102,6 +74,35 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   @Override
+  public ArtifactFile collect(Object[] params) {
+    try {
+      JenkinsServer jenkins = new JenkinsServer(new URI(jenkinsURL), username, password);
+      JobWithDetails jobDetails = jenkins.getJob(jobname);
+      Build build = jobDetails.getLastBuild();
+      BuildWithDetails buildWithDetails = build.details();
+      Artifact buildArtifact = buildWithDetails.getArtifacts().get(0);
+      InputStream in = buildWithDetails.downloadArtifact(buildArtifact);
+
+      FileService fileService = WingsBootstrap.lookup(FileService.class);
+      FileMetadata fileMetadata = new FileMetadata();
+      fileMetadata.setFileName(buildArtifact.getFileName());
+      String uuid = fileService.saveFile(fileMetadata, in);
+      ArtifactFile artifactFile = new ArtifactFile();
+      artifactFile.setFileUUID(uuid);
+      artifactFile.setFileName(buildArtifact.getFileName());
+      in.close();
+      return artifactFile;
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), jenkinsURL, username, password, jobname, artifactPathRegex);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -126,11 +127,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
         .toString();
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), jenkinsURL, username, password, jobname, artifactPathRegex);
-  }
-
   public static class Builder {
     private ArtifactType artifactType;
     private String sourceName;
@@ -142,45 +138,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
 
     private Builder() {}
 
-    public static Builder aJenkinsArtifactSource() {
-      return new Builder();
-    }
-
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
-      return this;
-    }
-
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
-    public Builder withArtifactPathRegex(String artifactPathRegex) {
-      this.artifactPathRegex = artifactPathRegex;
-      return this;
-    }
-
-    public Builder withJobname(String jobname) {
-      this.jobname = jobname;
-      return this;
-    }
-
-    public Builder withPassword(String password) {
-      this.password = password;
-      return this;
-    }
-
-    public Builder withUsername(String username) {
-      this.username = username;
-      return this;
-    }
-
-    public Builder withJenkinsURL(String jenkinsURL) {
-      this.jenkinsURL = jenkinsURL;
-      return this;
-    }
-
     public Builder but() {
       return aJenkinsArtifactSource()
           .withArtifactType(artifactType)
@@ -190,6 +147,45 @@ public class JenkinsArtifactSource extends ArtifactSource {
           .withPassword(password)
           .withUsername(username)
           .withJenkinsURL(jenkinsURL);
+    }
+
+    public Builder withJenkinsURL(String jenkinsURL) {
+      this.jenkinsURL = jenkinsURL;
+      return this;
+    }
+
+    public Builder withUsername(String username) {
+      this.username = username;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withJobname(String jobname) {
+      this.jobname = jobname;
+      return this;
+    }
+
+    public Builder withArtifactPathRegex(String artifactPathRegex) {
+      this.artifactPathRegex = artifactPathRegex;
+      return this;
+    }
+
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
+
+    public static Builder aJenkinsArtifactSource() {
+      return new Builder();
     }
 
     public JenkinsArtifactSource build() {

@@ -1,13 +1,7 @@
 package software.wings.service.impl;
 
-import java.util.List;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Role;
@@ -16,16 +10,18 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
+import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
 /**
  * Created by anubhaw on 3/23/16.
  */
-
 @Singleton
 public class RoleServiceImpl implements RoleService {
+  private static Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
-
-  private static Logger logger = LoggerFactory.getLogger(RoleServiceImpl.class);
 
   public PageResponse<Role> list(PageRequest<Role> pageRequest) {
     return wingsPersistence.query(Role.class, pageRequest);

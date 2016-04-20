@@ -12,7 +12,6 @@ import javax.inject.Singleton;
 /**
  * Created by anubhaw on 4/1/16.
  */
-
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;

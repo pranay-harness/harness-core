@@ -1,11 +1,14 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.*;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 
 /**
  * Created by anubhaw on 3/30/16.
  */
-
 @Entity(value = "tags", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("type")
                            , @Field("name"), @Field("envID") }, options = @IndexOptions(unique = true)))

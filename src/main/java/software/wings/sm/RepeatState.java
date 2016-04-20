@@ -3,25 +3,22 @@
  */
 package software.wings.sm;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.app.WingsBootstrap;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import software.wings.app.WingsBootstrap;
-
 /**
  * @author Rishi
- *
  */
 public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
-
-  public enum RepeatStrategy { SERIAL, PARALLEL }
+  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
   ;
 
   private RepeatElementType repeatElementType;
@@ -145,6 +142,7 @@ public class RepeatState extends State {
   public RepeatStrategy getRepeatStrategy() {
     return repeatStrategy;
   }
+
   public void setRepeatStrategy(RepeatStrategy repeatStrategy) {
     this.repeatStrategy = repeatStrategy;
   }
@@ -165,5 +163,5 @@ public class RepeatState extends State {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
+  public enum RepeatStrategy { SERIAL, PARALLEL }
 }

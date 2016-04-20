@@ -9,8 +9,12 @@ import software.wings.beans.Role;
  */
 public interface RoleService {
   public PageResponse<Role> list(PageRequest<Role> pageRequest);
+
   public Role save(Role role);
+
   public Role findByUUID(String uuid);
+
   public Role update(Role role);
+
   public void delete(String roleID);
 }

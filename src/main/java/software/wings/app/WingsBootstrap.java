@@ -1,33 +1,28 @@
 package software.wings.app;
 
+import com.google.inject.Injector;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Injector;
 /**
- *  This class is used initialize all the resources such as Mongo DB Connection Pool, Service registry etc.
- *
+ * Used initialize all the resources such as Mongo DB ConnectionPool, Serviceregistry etc.
  *
  * @author Rishi
- *
  */
 public class WingsBootstrap {
-  public static <T> T lookup(Class<T> cls) {
-    return guiceInjector.getInstance(cls);
-  }
+  private static final Logger logger = LoggerFactory.getLogger(WingsBootstrap.class);
+  private static Injector guiceInjector;
 
   public static MainConfiguration getConfig() {
     return lookup(MainConfiguration.class);
   }
 
-  private static final Logger logger = LoggerFactory.getLogger(WingsBootstrap.class);
+  public static <T> T lookup(Class<T> cls) {
+    return guiceInjector.getInstance(cls);
+  }
 
-  /**
-   * @param injector
-   */
   public static void initialize(Injector injector) {
     guiceInjector = injector;
   }
-
-  private static Injector guiceInjector;
 }

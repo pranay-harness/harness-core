@@ -3,6 +3,14 @@
  */
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.Serialized;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
+import software.wings.beans.ErrorConstants;
+import software.wings.exception.WingsException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,22 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
-import org.mongodb.morphia.annotations.Transient;
-
-import software.wings.beans.Base;
-import software.wings.beans.ErrorConstants;
-import software.wings.exception.WingsException;
-
 /**
  * @author Rishi
- *
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
 public class StateMachine extends Base {
   @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
+
   private String initialStateName;
 
   @Serialized private List<State> states;
@@ -39,12 +38,19 @@ public class StateMachine extends Base {
   public String getInitialStateName() {
     return initialStateName;
   }
+
   public void setInitialStateName(String initialStateName) {
     this.initialStateName = initialStateName;
   }
+
   public List<State> getStates() {
     return states;
   }
+
+  public void setStates(List<State> states) {
+    this.states = states;
+  }
+
   public State addState(State state) {
     if (states == null) {
       states = new ArrayList<>();
@@ -52,12 +58,15 @@ public class StateMachine extends Base {
     states.add(state);
     return state;
   }
-  public void setStates(List<State> states) {
-    this.states = states;
-  }
+
   public List<Transition> getTransitions() {
     return transitions;
   }
+
+  public void setTransitions(List<Transition> transitions) {
+    this.transitions = transitions;
+  }
+
   public Transition addTransition(Transition transition) {
     if (transitions == null) {
       transitions = new ArrayList<>();
@@ -65,29 +74,38 @@ public class StateMachine extends Base {
     transitions.add(transition);
     return transition;
   }
-  public void setTransitions(List<Transition> transitions) {
-    this.transitions = transitions;
-  }
 
   public State getInitialState() {
     Map<String, State> statesMap = getStatesMap();
     return statesMap.get(initialStateName);
   }
 
+  public Map<String, State> getStatesMap() {
+    if (cachedStatesMap != null && cachedStatesMap.size() > 0) {
+      return cachedStatesMap;
+    }
+    Map<String, State> statesMap = new HashMap<>();
+    HashSet<String> dupNames = new HashSet<>();
+
+    for (State state : states) {
+      if (statesMap.get(state.getName()) != null) {
+        dupNames.add(state.getName());
+      } else {
+        statesMap.put(state.getName(), state);
+      }
+    }
+    if (dupNames.size() > 0) {
+      Map<String, Object> params = new HashMap<>();
+      params.put("dupStateNames", dupNames.toString());
+      throw new WingsException(params, ErrorConstants.DUPLICATE_STATE_NAMES);
+    }
+
+    cachedStatesMap = statesMap;
+    return statesMap;
+  }
+
   public State getSuccessTransition(String fromStateName) {
     return getNextState(fromStateName, TransitionType.SUCCESS);
-  }
-
-  public State getFailureTransition(String fromStateName) {
-    return getNextState(fromStateName, TransitionType.FAILURE);
-  }
-
-  public State getState(String stateName) {
-    Map<String, State> statesMap = getStatesMap();
-    if (statesMap == null) {
-      return null;
-    }
-    return statesMap.get(stateName);
   }
 
   public State getNextState(String fromStateName, TransitionType transitionType) {
@@ -97,6 +115,7 @@ public class StateMachine extends Base {
     }
     return nextStates.get(0);
   }
+
   public List<State> getNextStates(String fromStateName, TransitionType transitionType) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
     if (transitionFlowMap == null || transitionFlowMap.get(fromStateName) == null) {
@@ -105,19 +124,9 @@ public class StateMachine extends Base {
     return transitionFlowMap.get(fromStateName).get(transitionType);
   }
 
-  public boolean validate() {
-    Map<String, State> statesMap = getStatesMap();
-    if (initialStateName == null || statesMap.get(initialStateName) == null) {
-      throw new WingsException(ErrorConstants.INITIAL_STATE_NOT_DEFINED);
-    }
-    getTransitionFlowMap();
-    return true;
-  }
-
   /**
    * @param statesMap
    * @return
-   *
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() == 0) {
@@ -227,33 +236,30 @@ public class StateMachine extends Base {
     return flowMap;
   }
 
-  public Map<String, State> getStatesMap() {
-    if (cachedStatesMap != null && cachedStatesMap.size() > 0) {
-      return cachedStatesMap;
-    }
-    Map<String, State> statesMap = new HashMap<>();
-    HashSet<String> dupNames = new HashSet<>();
+  public State getFailureTransition(String fromStateName) {
+    return getNextState(fromStateName, TransitionType.FAILURE);
+  }
 
-    for (State state : states) {
-      if (statesMap.get(state.getName()) != null) {
-        dupNames.add(state.getName());
-      } else {
-        statesMap.put(state.getName(), state);
-      }
+  public State getState(String stateName) {
+    Map<String, State> statesMap = getStatesMap();
+    if (statesMap == null) {
+      return null;
     }
-    if (dupNames.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("dupStateNames", dupNames.toString());
-      throw new WingsException(params, ErrorConstants.DUPLICATE_STATE_NAMES);
-    }
-
-    cachedStatesMap = statesMap;
-    return statesMap;
+    return statesMap.get(stateName);
   }
 
   @PostLoad
   public void afterLoad() {
     validate();
+  }
+
+  public boolean validate() {
+    Map<String, State> statesMap = getStatesMap();
+    if (initialStateName == null || statesMap.get(initialStateName) == null) {
+      throw new WingsException(ErrorConstants.INITIAL_STATE_NOT_DEFINED);
+    }
+    getTransitionFlowMap();
+    return true;
   }
 
   @Override

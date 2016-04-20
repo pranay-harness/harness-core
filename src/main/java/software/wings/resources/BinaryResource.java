@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -23,13 +21,6 @@ public class BinaryResource {
     return downloadFileFromResource("wings_main.pl");
   }
 
-  @GET
-  @Path("sample")
-  @Encoded
-  public Response sample() throws IOException, GeneralSecurityException {
-    return downloadFileFromResource("sample.tar.gz");
-  }
-
   private Response downloadFileFromResource(String filename) {
     try {
       URL url = this.getClass().getResource("/" + filename);
@@ -39,5 +30,12 @@ public class BinaryResource {
     } catch (URISyntaxException e) {
       return Response.noContent().build();
     }
+  }
+
+  @GET
+  @Path("sample")
+  @Encoded
+  public Response sample() throws IOException, GeneralSecurityException {
+    return downloadFileFromResource("sample.tar.gz");
   }
 }

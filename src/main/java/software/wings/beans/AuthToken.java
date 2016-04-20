@@ -1,21 +1,17 @@
 package software.wings.beans;
 
-import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
-import software.wings.utils.CryptoUtil;
-
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
+
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 
 /**
  * Created by anubhaw on 3/14/16.
  */
-
 @Entity(value = "authTokens", noClassnameStored = true)
 public class AuthToken extends Base {
   @Reference(idOnly = true) private User user;
+
   private long expireAt;
 
   public AuthToken() {}
@@ -29,12 +25,15 @@ public class AuthToken extends Base {
   public User getUser() {
     return user;
   }
+
   public void setUser(User user) {
     this.user = user;
   }
+
   public long getExpireAt() {
     return expireAt;
   }
+
   public void setExpireAt(long expireAt) {
     this.expireAt = expireAt;
   }

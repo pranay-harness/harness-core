@@ -2,13 +2,12 @@ package software.wings.security;
 
 import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
 
-import org.mindrot.jbcrypt.BCrypt;
-
 import com.google.common.base.Optional;
 
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
+import org.mindrot.jbcrypt.BCrypt;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;

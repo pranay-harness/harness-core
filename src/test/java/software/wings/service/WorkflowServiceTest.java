@@ -2,10 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.inject.Inject;
-
 import org.junit.Test;
-
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
@@ -15,13 +12,14 @@ import software.wings.sm.StateMachineTest;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 
+import javax.inject.Inject;
+
 /**
  *
  */
 
 /**
  * @author Rishi
- *
  */
 public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
@@ -57,6 +55,36 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return sm;
   }
 
+  @Test
+  public void testRead() throws InterruptedException {
+    StateMachine sm = createSynchSM(workflowService);
+    String smId = sm.getUuid();
+    sm = wingsPersistence.get(StateMachine.class, smId);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+    System.out.println("All Done!");
+  }
+
+  @Test
+  public void testTrigger() throws InterruptedException {
+    StateMachine sm = createSynchSM(workflowService);
+    String smId = sm.getUuid();
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(smId);
+
+    Thread.sleep(5000);
+  }
+
+  @Test
+  public void testTriggerAsynch() throws InterruptedException {
+    StateMachine sm = createAsynchSM(workflowService);
+    String smId = sm.getUuid();
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(smId);
+
+    Thread.sleep(30000);
+  }
+
   /**
    * @param svc
    * @return
@@ -86,35 +114,5 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm).isNotNull();
     assertThat(sm.getUuid()).isNotNull();
     return sm;
-  }
-
-  @Test
-  public void testRead() throws InterruptedException {
-    StateMachine sm = createSynchSM(workflowService);
-    String smId = sm.getUuid();
-    sm = wingsPersistence.get(StateMachine.class, smId);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
-    System.out.println("All Done!");
-  }
-
-  @Test
-  public void testTrigger() throws InterruptedException {
-    StateMachine sm = createSynchSM(workflowService);
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
-
-    Thread.sleep(5000);
-  }
-
-  @Test
-  public void testTriggerAsynch() throws InterruptedException {
-    StateMachine sm = createAsynchSM(workflowService);
-    String smId = sm.getUuid();
-    System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
-
-    Thread.sleep(30000);
   }
 }

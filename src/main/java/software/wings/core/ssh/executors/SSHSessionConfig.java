@@ -5,7 +5,6 @@ import software.wings.core.ssh.executors.SSHExecutor.ExecutorType;
 /**
  * Created by anubhaw on 2/8/16.
  */
-
 public class SSHSessionConfig {
   private ExecutorType executorType;
   private String executionID;
@@ -39,12 +38,67 @@ public class SSHSessionConfig {
     this.jumpboxConfig = builder.jumpboxConfig;
   }
 
-  public static class SSHSessionConfigBuilder {
-    private Integer SSHConnectionTimeout = 10000; // 10 seconds
+  public Integer getSSHConnectionTimeout() {
+    return SSHConnectionTimeout;
+  }
 
+  public Integer getSSHSessionTimeout() {
+    return SSHSessionTimeout;
+  }
+
+  public Integer getRetryInterval() {
+    return retryInterval;
+  }
+
+  public ExecutorType getExecutorType() {
+    return executorType;
+  }
+
+  public String getExecutionID() {
+    return executionID;
+  }
+
+  public String getHost() {
+    return host;
+  }
+
+  public Integer getPort() {
+    return port;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public String getKeyPassphrase() {
+    return keyPassphrase;
+  }
+
+  public String getKeyPath() {
+    return keyPath;
+  }
+
+  public String getSudoUserName() {
+    return sudoUserName;
+  }
+
+  public String getSudoUserPassword() {
+    return sudoUserPassword;
+  }
+
+  public SSHSessionConfig getJumpboxConfig() {
+    return jumpboxConfig;
+  }
+
+  public static class SSHSessionConfigBuilder {
+    public String executionID;
+    private Integer SSHConnectionTimeout = 10000; // 10 seconds
     private Integer retryInterval = 1000;
     private ExecutorType executorType;
-    public String executionID;
     private String host;
     private Integer port;
     private String user;
@@ -129,60 +183,5 @@ public class SSHSessionConfig {
     public SSHSessionConfig build() {
       return new SSHSessionConfig(this);
     }
-  }
-
-  public Integer getSSHConnectionTimeout() {
-    return SSHConnectionTimeout;
-  }
-
-  public Integer getSSHSessionTimeout() {
-    return SSHSessionTimeout;
-  }
-
-  public Integer getRetryInterval() {
-    return retryInterval;
-  }
-
-  public ExecutorType getExecutorType() {
-    return executorType;
-  }
-
-  public String getExecutionID() {
-    return executionID;
-  }
-
-  public String getHost() {
-    return host;
-  }
-
-  public Integer getPort() {
-    return port;
-  }
-
-  public String getUser() {
-    return user;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public String getKeyPassphrase() {
-    return keyPassphrase;
-  }
-
-  public String getKeyPath() {
-    return keyPath;
-  }
-
-  public String getSudoUserName() {
-    return sudoUserName;
-  }
-  public String getSudoUserPassword() {
-    return sudoUserPassword;
-  }
-
-  public SSHSessionConfig getJumpboxConfig() {
-    return jumpboxConfig;
   }
 }

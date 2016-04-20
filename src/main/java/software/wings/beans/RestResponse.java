@@ -12,12 +12,15 @@ public class RestResponse<T> extends RestRequest<T> {
   public RestResponse() {
     this(null);
   }
+
   public RestResponse(T resource) {
     super(resource);
   }
+
   public List<ResponseMessage> getResponseMessages() {
     return responseMessages;
   }
+
   public void setResponseMessages(List<ResponseMessage> responseMessages) {
     this.responseMessages = responseMessages;
   }
@@ -34,12 +37,12 @@ public class RestResponse<T> extends RestRequest<T> {
 
     private Builder() {}
 
-    public static Builder aRestResponse() {
-      return new Builder();
+    public Builder but() {
+      return aRestResponse().withResponseMessages(responseMessages).withMetaData(metaData).withResource(resource);
     }
 
-    public Builder withResponseMessages(List<ResponseMessage> responseMessages) {
-      this.responseMessages = responseMessages;
+    public Builder withResource(T resource) {
+      this.resource = resource;
       return this;
     }
 
@@ -48,13 +51,13 @@ public class RestResponse<T> extends RestRequest<T> {
       return this;
     }
 
-    public Builder withResource(T resource) {
-      this.resource = resource;
+    public Builder withResponseMessages(List<ResponseMessage> responseMessages) {
+      this.responseMessages = responseMessages;
       return this;
     }
 
-    public Builder but() {
-      return aRestResponse().withResponseMessages(responseMessages).withMetaData(metaData).withResource(resource);
+    public static Builder aRestResponse() {
+      return new Builder();
     }
 
     public RestResponse build() {

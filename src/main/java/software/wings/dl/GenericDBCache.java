@@ -1,18 +1,16 @@
 package software.wings.dl;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
+
 /**
  * Created by anubhaw on 3/18/16.
  */
-
 public class GenericDBCache {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -34,6 +32,10 @@ public class GenericDBCache {
     cache.put(makeCacheKey(cls, objKey), value);
   }
 
+  private String makeCacheKey(Class cls, String objKey) {
+    return cls.getCanonicalName() + "~" + objKey;
+  }
+
   public <T> T get(Class<T> cls, String objKey) {
     try {
       Object obj = cache.get(makeCacheKey(cls, objKey));
@@ -41,9 +43,5 @@ public class GenericDBCache {
     } catch (ExecutionException e) {
     } // do nothing
     return null;
-  }
-
-  private String makeCacheKey(Class cls, String objKey) {
-    return cls.getCanonicalName() + "~" + objKey;
   }
 }

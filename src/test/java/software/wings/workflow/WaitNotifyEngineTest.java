@@ -1,21 +1,26 @@
 package software.wings.workflow;
 
+import static com.google.common.collect.ImmutableMap.of;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
-import software.wings.waitNotify.*;
+import software.wings.waitNotify.NotifyCallback;
+import software.wings.waitNotify.NotifyEvent;
+import software.wings.waitNotify.NotifyResponse;
+import software.wings.waitNotify.WaitInstance;
+import software.wings.waitNotify.WaitNotifyEngine;
+import software.wings.waitNotify.WaitQueue;
 
-import javax.inject.Inject;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.google.common.collect.ImmutableMap.of;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
+import javax.inject.Inject;
 
 public class WaitNotifyEngineTest extends WingsBaseTest {
   private static AtomicInteger callCount;

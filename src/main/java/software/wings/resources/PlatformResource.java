@@ -1,11 +1,7 @@
 package software.wings.resources;
 
-import javax.inject.Inject;
-import javax.ws.rs.*;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -14,6 +10,15 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PlatformService;
+
+import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 @Path("/platforms")
 @Timed

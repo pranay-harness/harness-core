@@ -3,14 +3,6 @@
  */
 package software.wings.service.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
 import com.google.inject.Singleton;
 
 import ro.fortsoft.pf4j.PluginManager;
@@ -22,9 +14,15 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import javax.inject.Inject;
+
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class WorkflowServiceImpl implements WorkflowService {
@@ -64,6 +62,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public void trigger(String smId) {
     trigger(smId, null);
   }
+
   @Override
   public void trigger(String smId, Map<String, Serializable> arguments) {
     trigger(smId, arguments, null);

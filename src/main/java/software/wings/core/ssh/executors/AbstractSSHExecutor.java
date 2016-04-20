@@ -1,5 +1,22 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_KEYPATH_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.INVALID_KEYPATH_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_MSG;
+import static software.wings.core.ssh.ExecutionLogs.getInstance;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
+import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
+import static software.wings.utils.Misc.quietSleep;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -8,29 +25,25 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
-import software.wings.beans.Execution;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.intfc.FileService;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 
-import static software.wings.beans.ErrorConstants.*;
-import static software.wings.core.ssh.ExecutionLogs.getInstance;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
-import static software.wings.utils.Misc.quietSleep;
-
 /**
  * Created by anubhaw on 2/10/16.
  */
-
 public abstract class AbstractSSHExecutor implements SSHExecutor {
+  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
   protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
   protected Session session;
   protected Channel channel;
@@ -38,8 +51,6 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
   protected OutputStream outputStream;
   protected InputStream inputStream;
   protected ExecutionLogs executionLogs = getInstance();
-
-  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   public void init(SSHSessionConfig config) {
     if (null == config.getExecutionID() || config.getExecutionID().length() == 0) {
@@ -102,89 +113,9 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     }
   }
 
-  public void destroy() {
-    LOGGER.info("Disconnecting ssh session");
-    if (null != channel) {
-      channel.disconnect();
-    }
-    if (null != session) {
-      session.disconnect();
-    }
-  }
-
-  public void abort() {
-    try {
-      outputStream.write(3); // Send ^C command
-      outputStream.flush();
-    } catch (IOException e) {
-      LOGGER.error("Abort command failed " + e.getStackTrace());
-    }
-  }
-
-  public abstract Session getSession(SSHSessionConfig config) throws JSchException;
-
-  public void postChannelConnect(){};
-
-  protected class SSHException {
-    private String code;
-    private String msg;
-
-    private SSHException(String code, String cause) {
-      this.code = code;
-      this.msg = cause;
-    }
-
-    public String getCode() {
-      return code;
-    }
-
-    public String getMsg() {
-      return msg;
-    }
-  }
-
-  protected SSHException extractSSHException(JSchException jSchException) {
-    String message = jSchException.getMessage();
-    Throwable cause = jSchException.getCause();
-
-    String customMessage = null;
-    String customCode = null;
-
-    if (null != cause) {
-      if (cause instanceof NoRouteToHostException || cause instanceof UnknownHostException) {
-        customMessage = UNKNOWN_HOST_ERROR_MSG;
-        customCode = UNKNOWN_HOST_ERROR_CODE;
-      } else if (cause instanceof SocketTimeoutException) {
-        customMessage = UNKNOWN_HOST_ERROR_MSG;
-        customCode = UNKNOWN_HOST_ERROR_CODE;
-      } else if (cause instanceof SocketException) {
-        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
-        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
-      } else if (cause instanceof FileNotFoundException) {
-        customMessage = INVALID_KEYPATH_ERROR_CODE;
-        customCode = INVALID_KEYPATH_ERROR_MSG;
-      } else {
-        customMessage = UNKNOWN_ERROR_CODE;
-        customCode = UNKNOWN_ERROR_MEG;
-      }
-    } else {
-      if (message.startsWith("invalid privatekey")) {
-        customMessage = INVALID_KEY_ERROR_MSG;
-        customCode = INVALID_KEY_ERROR_CODE;
-      } else if (message.contains("Auth fail") || message.contains("Auth cancel")
-          || message.contains("USERAUTH fail")) {
-        customMessage = INVALID_CREDENTIAL_ERROR_MSG;
-        customCode = INVALID_CREDENTIAL_ERROR_CODE;
-      } else if (message.startsWith("timeout: socket is not established")) {
-        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
-        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
-      }
-    }
-    return new SSHException(customCode, customMessage);
-  }
-
-  /**** SCP ****/
-
+  /****
+   * SCP
+   ****/
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
     try {
@@ -242,6 +173,25 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
     return SUCCESS;
   }
 
+  public void abort() {
+    try {
+      outputStream.write(3); // Send ^C command
+      outputStream.flush();
+    } catch (IOException e) {
+      LOGGER.error("Abort command failed " + e.getStackTrace());
+    }
+  }
+
+  public void destroy() {
+    LOGGER.info("Disconnecting ssh session");
+    if (null != channel) {
+      channel.disconnect();
+    }
+    if (null != session) {
+      session.disconnect();
+    }
+  }
+
   int checkAck(InputStream in) throws IOException {
     int b = in.read();
     // b may be 0 for success,
@@ -269,6 +219,70 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       }
       LOGGER.error(sb.toString());
       return 0;
+    }
+  }
+
+  ;
+
+  public abstract Session getSession(SSHSessionConfig config) throws JSchException;
+
+  protected SSHException extractSSHException(JSchException jSchException) {
+    String message = jSchException.getMessage();
+    Throwable cause = jSchException.getCause();
+
+    String customMessage = null;
+    String customCode = null;
+
+    if (null != cause) {
+      if (cause instanceof NoRouteToHostException || cause instanceof UnknownHostException) {
+        customMessage = UNKNOWN_HOST_ERROR_MSG;
+        customCode = UNKNOWN_HOST_ERROR_CODE;
+      } else if (cause instanceof SocketTimeoutException) {
+        customMessage = UNKNOWN_HOST_ERROR_MSG;
+        customCode = UNKNOWN_HOST_ERROR_CODE;
+      } else if (cause instanceof SocketException) {
+        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
+        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+      } else if (cause instanceof FileNotFoundException) {
+        customMessage = INVALID_KEYPATH_ERROR_CODE;
+        customCode = INVALID_KEYPATH_ERROR_MSG;
+      } else {
+        customMessage = UNKNOWN_ERROR_CODE;
+        customCode = UNKNOWN_ERROR_MEG;
+      }
+    } else {
+      if (message.startsWith("invalid privatekey")) {
+        customMessage = INVALID_KEY_ERROR_MSG;
+        customCode = INVALID_KEY_ERROR_CODE;
+      } else if (message.contains("Auth fail") || message.contains("Auth cancel")
+          || message.contains("USERAUTH fail")) {
+        customMessage = INVALID_CREDENTIAL_ERROR_MSG;
+        customCode = INVALID_CREDENTIAL_ERROR_CODE;
+      } else if (message.startsWith("timeout: socket is not established")) {
+        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
+        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+      }
+    }
+    return new SSHException(customCode, customMessage);
+  }
+
+  public void postChannelConnect() {}
+
+  protected class SSHException {
+    private String code;
+    private String msg;
+
+    private SSHException(String code, String cause) {
+      this.code = code;
+      this.msg = cause;
+    }
+
+    public String getCode() {
+      return code;
+    }
+
+    public String getMsg() {
+      return msg;
     }
   }
 }

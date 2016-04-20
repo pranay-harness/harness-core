@@ -1,5 +1,16 @@
 package software.wings.resources;
 
+import com.codahale.metrics.annotation.ExceptionMetered;
+import com.codahale.metrics.annotation.Timed;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.RestResponse;
+import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -9,27 +20,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-
-import software.wings.beans.Application;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
-import software.wings.beans.RestResponse;
-import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.AppService;
-
 /**
- *  Application Resource class
- *
+ * Application Resource class
  *
  * @author Rishi
- *
  */
-
 @Path("/apps")
 @AuthRule
 @Produces("application/json")

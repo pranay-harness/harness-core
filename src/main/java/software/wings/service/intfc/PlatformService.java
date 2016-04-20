@@ -5,11 +5,9 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.PlatformSoftware;
 
 /**
- *  PlatformService.
- *
+ * PlatformService.
  *
  * @author Rishi
- *
  */
 public interface PlatformService {
   public PageResponse<PlatformSoftware> list(PageRequest<PlatformSoftware> req);

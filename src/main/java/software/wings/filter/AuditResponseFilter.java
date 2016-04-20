@@ -1,8 +1,12 @@
 package software.wings.filter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.audit.AuditHeader;
+import software.wings.common.AuditHelper;
+
 import java.io.IOException;
 import java.sql.Timestamp;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -12,21 +16,17 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import software.wings.audit.AuditHeader;
-import software.wings.common.AuditHelper;
-
 /**
- *  AuditResponseFilter preserves the http response details.
- *
+ * AuditResponseFilter preserves the http response details.
  *
  * @author Rishi
- *
  */
 public class AuditResponseFilter implements Filter {
+  private static Logger logger = LoggerFactory.getLogger(AuditResponseFilter.class);
   AuditHelper auditHelper = AuditHelper.getInstance();
+
+  @Override
+  public void init(FilterConfig arg0) throws ServletException {}
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -56,9 +56,4 @@ public class AuditResponseFilter implements Filter {
 
   @Override
   public void destroy() {}
-
-  @Override
-  public void init(FilterConfig arg0) throws ServletException {}
-
-  private static Logger logger = LoggerFactory.getLogger(AuditResponseFilter.class);
 }

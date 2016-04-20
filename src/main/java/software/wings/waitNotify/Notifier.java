@@ -1,5 +1,9 @@
 package software.wings.waitNotify;
 
+import static java.util.stream.Collectors.toList;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static software.wings.waitNotify.NotifyEvent.Builder.aNotifyEvent;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
@@ -10,18 +14,11 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 
-import javax.inject.Inject;
 import java.util.List;
-
-import static java.util.stream.Collectors.toList;
-import static software.wings.waitNotify.NotifyEvent.Builder.aNotifyEvent;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
+import javax.inject.Inject;
 
 /**
- *
- *
  * @author Rishi
- *
  */
 public class Notifier implements Runnable {
   @Inject private WingsPersistence wingsPersistence;

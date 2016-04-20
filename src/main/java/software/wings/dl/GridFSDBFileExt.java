@@ -1,5 +1,8 @@
 package software.wings.dl;
 
+import static com.mongodb.client.model.Filters.and;
+import static com.mongodb.client.model.Filters.eq;
+
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
@@ -19,13 +22,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-import static com.mongodb.client.model.Filters.and;
-import static com.mongodb.client.model.Filters.eq;
-
 /**
  * Created by anubhaw on 3/3/16.
  */
-
 public class GridFSDBFileExt {
   private MongoDatabase mongodb;
   private GridFSBucket gridFSBucket;
@@ -72,19 +71,15 @@ public class GridFSDBFileExt {
     }
   }
 
-  private void updateFileMetaData(GridFSFile file, int length) {
-    mongodb.getCollection(fileCollectionName)
-        .updateOne(
-            eq("_id", ((BsonObjectId) file.getId()).getValue()), new Document("$inc", new Document("length", length)));
-  }
-
-  private void saveNewChunk(GridFSFile file, int chunkIdx, String content) {
-    Document doc = new Document()
-                       .append("files_id", file.getId())
-                       .append("n", chunkIdx)
-                       .append("data", new Binary(content.getBytes()));
-    mongodb.getCollection(chunkCollectionName).insertOne(doc);
-    updateFileMetaData(file, content.length());
+  public void put(String fileName, String content) {
+    InputStream streamToUploadFrom;
+    try {
+      streamToUploadFrom = new ByteArrayInputStream(content.getBytes("UTF-8"));
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException("String to stream conversion failed", e.getCause());
+    }
+    gridFSBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
+    LOGGER.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
   private void appendToExistingChunk(GridFSFile file, int existingChunksCount, String substring) {
@@ -102,15 +97,19 @@ public class GridFSDBFileExt {
     updateFileMetaData(file, substring.length());
   }
 
-  public void put(String fileName, String content) {
-    InputStream streamToUploadFrom;
-    try {
-      streamToUploadFrom = new ByteArrayInputStream(content.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new WingsException("String to stream conversion failed", e.getCause());
-    }
-    gridFSBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
-    LOGGER.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
+  private void saveNewChunk(GridFSFile file, int chunkIdx, String content) {
+    Document doc = new Document()
+                       .append("files_id", file.getId())
+                       .append("n", chunkIdx)
+                       .append("data", new Binary(content.getBytes()));
+    mongodb.getCollection(chunkCollectionName).insertOne(doc);
+    updateFileMetaData(file, content.length());
+  }
+
+  private void updateFileMetaData(GridFSFile file, int length) {
+    mongodb.getCollection(fileCollectionName)
+        .updateOne(
+            eq("_id", ((BsonObjectId) file.getId()).getValue()), new Document("$inc", new Document("length", length)));
   }
 
   public GridFSFile get(String fileName) {

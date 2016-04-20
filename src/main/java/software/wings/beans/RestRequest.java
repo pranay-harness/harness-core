@@ -13,6 +13,7 @@ public class RestRequest<T> {
   public RestRequest() {
     this(null);
   }
+
   public RestRequest(T resource) {
     this.resource = resource;
     metaData = new HashMap<String, Object>();
@@ -21,12 +22,15 @@ public class RestRequest<T> {
   public Map<String, Object> getMetaData() {
     return metaData;
   }
+
   public void setMetaData(Map<String, Object> metaData) {
     this.metaData = metaData;
   }
+
   public T getResource() {
     return resource;
   }
+
   public void setResource(T resource) {
     this.resource = resource;
   }

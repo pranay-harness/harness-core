@@ -1,15 +1,15 @@
 package software.wings.helpers.ext;
 
-import java.io.OutputStream;
-import java.net.URI;
-
+import com.offbytwo.jenkins.JenkinsServer;
+import com.offbytwo.jenkins.model.JobWithDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.offbytwo.jenkins.JenkinsServer;
-import com.offbytwo.jenkins.model.JobWithDetails;
+import java.io.OutputStream;
+import java.net.URI;
 
 public class Jenkins {
+  private static Logger logger = LoggerFactory.getLogger(Jenkins.class);
   private String jenkinsURL;
   private String username;
   private String password;
@@ -60,6 +60,4 @@ public class Jenkins {
   public void downloadArtifact(String jobname, String artifactpathRegex, OutputStream os) {}
 
   public void downloadArtifact(String jobname, String buildNo, String artifactpathRegex, OutputStream os) {}
-
-  private static Logger logger = LoggerFactory.getLogger(Jenkins.class);
 }

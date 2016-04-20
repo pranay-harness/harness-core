@@ -1,5 +1,9 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.utils.Misc.quietSleep;
+
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import software.wings.exception.WingsException;
@@ -7,14 +11,9 @@ import software.wings.exception.WingsException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
-import static software.wings.utils.Misc.quietSleep;
-
 /**
  * Created by anubhaw on 2/4/16.
  */
-
 public class SSHSudoExecutor extends AbstractSSHExecutor {
   @Override
   public Session getSession(SSHSessionConfig config) throws JSchException {

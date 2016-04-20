@@ -1,11 +1,20 @@
 package software.wings.filter;
 
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.audit.AuditHeader;
+import software.wings.audit.AuditHeader.RequestType;
+import software.wings.beans.HTTPMethod;
+import software.wings.common.AuditHelper;
+import software.wings.exception.WingsException;
+import software.wings.utils.Misc;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.Timestamp;
-
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -15,29 +24,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import software.wings.audit.AuditHeader;
-import software.wings.audit.AuditHeader.RequestType;
-import software.wings.beans.HTTPMethod;
-import software.wings.common.AuditHelper;
-import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
-
 /**
- *  AuditRequestFilter preserves the rest endpoint header and payload.
- *
+ * AuditRequestFilter preserves the rest endpoint header and payload.
  *
  * @author Rishi
- *
  */
 @Provider
 @Priority(1)
 public class AuditRequestFilter implements ContainerRequestFilter {
+  private static Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
   @Context private ResourceContext resourceContext;
-
   private AuditHelper auditHelper = AuditHelper.getInstance();
 
   @Override
@@ -89,22 +85,6 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     }
   }
 
-  private String getQueryParams(MultivaluedMap<String, String> queryParameters) {
-    String queryParams = "";
-    for (String key : queryParameters.keySet()) {
-      String temp = "";
-      for (String value : queryParameters.get(key)) {
-        temp += "&" + key + "=" + value;
-      }
-      queryParams += "&" + temp.substring(1);
-    }
-    if (queryParams.equals("")) {
-      return null;
-    } else {
-      return queryParams.substring(1);
-    }
-  }
-
   private String getHeaderString(MultivaluedMap<String, String> headers) {
     if (headers == null || headers.isEmpty()) {
       return "";
@@ -127,5 +107,19 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     }
   }
 
-  private static Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
+  private String getQueryParams(MultivaluedMap<String, String> queryParameters) {
+    String queryParams = "";
+    for (String key : queryParameters.keySet()) {
+      String temp = "";
+      for (String value : queryParameters.get(key)) {
+        temp += "&" + key + "=" + value;
+      }
+      queryParams += "&" + temp.substring(1);
+    }
+    if (queryParams.equals("")) {
+      return null;
+    } else {
+      return queryParams.substring(1);
+    }
+  }
 }

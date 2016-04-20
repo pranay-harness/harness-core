@@ -2,23 +2,22 @@ package software.wings.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.app.WingsBootstrap;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
 /**
- *  AuditHelper uses threadlocal to stitch both request and response pay-load with the common http header entries.
- *
+ * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http
+ * header entries.
  *
  * @author Rishi
- *
  */
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
 
   private static AuditHelper instance = new AuditHelper();
+  private static Logger logger = LoggerFactory.getLogger(AuditHelper.class);
 
   private AuditHelper() {}
 
@@ -42,8 +41,6 @@ public class AuditHelper {
       throw rException;
     }
   }
-
-  private static Logger logger = LoggerFactory.getLogger(AuditHelper.class);
 
   public void finalizeAudit(AuditHeader header, byte[] payload) {
     AuditService auditService = WingsBootstrap.lookup(AuditService.class);

@@ -1,19 +1,17 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.Objects;
 
 /**
- *  Application bean class.
- *
+ * Application bean class.
  *
  * @author Rishi
- *
  */
-
 @Entity(value = "platforms", noClassnameStored = true)
 public class PlatformSoftware extends Base {
   @Reference(idOnly = true) private Application application;
@@ -92,6 +90,12 @@ public class PlatformSoftware extends Base {
   }
 
   @Override
+  public int hashCode() {
+    return Objects.hash(
+        super.hashCode(), application, standard, name, version, description, md5, source, binaryDocumentId);
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o)
       return true;
@@ -104,12 +108,6 @@ public class PlatformSoftware extends Base {
         && Objects.equals(version, that.version) && Objects.equals(description, that.description)
         && Objects.equals(md5, that.md5) && Objects.equals(source, that.source)
         && Objects.equals(binaryDocumentId, that.binaryDocumentId);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-        super.hashCode(), application, standard, name, version, description, md5, source, binaryDocumentId);
   }
 
   @Override
@@ -144,80 +142,6 @@ public class PlatformSoftware extends Base {
 
     private Builder() {}
 
-    public static Builder aPlatformSoftware() {
-      return new Builder();
-    }
-
-    public Builder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public Builder withStandard(boolean standard) {
-      this.standard = standard;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder withVersion(String version) {
-      this.version = version;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withMd5(String md5) {
-      this.md5 = md5;
-      return this;
-    }
-
-    public Builder withSource(ArtifactSource source) {
-      this.source = source;
-      return this;
-    }
-
-    public Builder withBinaryDocumentId(String binaryDocumentId) {
-      this.binaryDocumentId = binaryDocumentId;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
     public Builder but() {
       return aPlatformSoftware()
           .withApplication(application)
@@ -234,6 +158,80 @@ public class PlatformSoftware extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withBinaryDocumentId(String binaryDocumentId) {
+      this.binaryDocumentId = binaryDocumentId;
+      return this;
+    }
+
+    public Builder withSource(ArtifactSource source) {
+      this.source = source;
+      return this;
+    }
+
+    public Builder withMd5(String md5) {
+      this.md5 = md5;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withStandard(boolean standard) {
+      this.standard = standard;
+      return this;
+    }
+
+    public Builder withApplication(Application application) {
+      this.application = application;
+      return this;
+    }
+
+    public static Builder aPlatformSoftware() {
+      return new Builder();
     }
 
     public PlatformSoftware build() {

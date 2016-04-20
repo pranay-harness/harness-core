@@ -1,18 +1,10 @@
 package software.wings.service.impl;
 
-import java.io.File;
-import java.util.concurrent.ExecutorService;
-
-import javax.inject.Inject;
-import javax.validation.Valid;
-import javax.validation.executable.ValidateOnExecution;
+import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.inject.Singleton;
-
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
@@ -26,9 +18,15 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.FileUtils;
+import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
-import software.wings.utils.Validator;
+
+import java.io.File;
+import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
@@ -102,6 +100,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   static class ArtifactCollector implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
     private WingsPersistence wingsPersistence;
     private Release release;
     private Artifact artifact;
@@ -131,7 +130,5 @@ public class ArtifactServiceImpl implements ArtifactService {
         wingsPersistence.update(artifact, ops);
       }
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
   }
 }

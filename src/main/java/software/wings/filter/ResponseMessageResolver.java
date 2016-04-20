@@ -1,21 +1,21 @@
 package software.wings.filter;
 
-import java.util.List;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 
+import java.util.List;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+
 public class ResponseMessageResolver<T> implements ExceptionMapper<Throwable> {
+  private static Logger logger = LoggerFactory.getLogger(ResponseMessageResolver.class);
+
   @Override
   public Response toResponse(Throwable exception) {
     logger.error("Exception occured", exception);
@@ -57,6 +57,4 @@ public class ResponseMessageResolver<T> implements ExceptionMapper<Throwable> {
     }
     return null;
   }
-
-  private static Logger logger = LoggerFactory.getLogger(ResponseMessageResolver.class);
 }

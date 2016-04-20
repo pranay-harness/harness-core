@@ -1,24 +1,22 @@
 package software.wings.resources;
 
-import java.io.InputStream;
+import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.ChecksumType;
+import software.wings.beans.FileMetadata;
+import software.wings.beans.RestResponse;
+import software.wings.service.intfc.FileService;
 
+import java.io.InputStream;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.lang3.StringUtils;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import software.wings.beans.ChecksumType;
-import software.wings.beans.FileMetadata;
-import software.wings.beans.RestResponse;
-import software.wings.service.intfc.FileService;
 
 public class FileResource {
   private static final Logger logger = LoggerFactory.getLogger(FileResource.class);

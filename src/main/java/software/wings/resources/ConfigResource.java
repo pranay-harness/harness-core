@@ -1,11 +1,13 @@
 package software.wings.resources;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,14 +16,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 /**
- *  Application Resource class
- *
+ * Application Resource class
  *
  * @author Rishi
- *
  */
 @Path("/configs")
 public class ConfigResource {

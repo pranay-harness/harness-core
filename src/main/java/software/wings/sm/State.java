@@ -8,7 +8,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public abstract class State implements Serializable {
   protected static final long serialVersionUID = 1L;

@@ -1,15 +1,12 @@
 package software.wings.health;
 
 import com.codahale.metrics.health.HealthCheck;
-
 import software.wings.app.MainConfiguration;
 
 /**
- *  HealthCheck class for the Wings Application
- *
+ * HealthCheck class for the Wings Application
  *
  * @author Rishi
- *
  */
 public class WingsHealthCheck extends HealthCheck {
   private MainConfiguration configuration;

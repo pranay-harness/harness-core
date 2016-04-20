@@ -1,19 +1,16 @@
 package software.wings.health;
 
+import com.codahale.metrics.health.HealthCheck;
+import com.mongodb.MongoClient;
+import jersey.repackaged.com.google.common.collect.Lists;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import com.codahale.metrics.health.HealthCheck;
-import com.mongodb.MongoClient;
-
-import jersey.repackaged.com.google.common.collect.Lists;
-
 /**
- *  HealthCheck class for the MongoDB
- *
+ * HealthCheck class for the MongoDB
  *
  * @author Rishi
- *
  */
 public class MongoConnectionHealth extends HealthCheck {
   private final MongoClient mongo;
