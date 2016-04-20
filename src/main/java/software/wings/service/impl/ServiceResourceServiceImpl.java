@@ -46,9 +46,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   public Service findByUUID(String uuid) {
     return wingsPersistence.get(Service.class, uuid);
   }
+
   public Service update(Service service) {
-    wingsPersistence.save(service);
-    return service;
+    Query<Service> query = wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(service.getUuid());
+    UpdateOperations<Service> operations = wingsPersistence.createUpdateOperations(Service.class)
+                                               .set("name", service.getName())
+                                               .set("description", service.getDescription())
+                                               .set("artifactType", service.getArtifactType())
+                                               .set("lastUpdatedAt", System.currentTimeMillis());
+    if (service.getLastUpdatedBy() != null) {
+      operations.set("lastUpdatedBy", service.getLastUpdatedBy());
+    }
+    wingsPersistence.update(query, operations);
+    return wingsPersistence.get(Service.class, service.getUuid());
   }
 
   @Override
