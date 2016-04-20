@@ -24,7 +24,7 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Infra createInfra(Infra infra, String envID) {
-    infra.setEnvID(envID);
+    infra.setEnvId(envID);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
@@ -46,13 +46,13 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Host updateHost(String infraID, Host host) {
-    host.setInfraID(infraID);
+    host.setInfraId(infraID);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public Tag createTag(String envID, Tag tag) {
-    tag.setEnvID(envID);
+    tag.setEnvId(envID);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 

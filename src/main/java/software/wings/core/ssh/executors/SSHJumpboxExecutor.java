@@ -5,9 +5,9 @@ import com.jcraft.jsch.Session;
 /**
  * Created by anubhaw on 2/5/16.
  */
-public class SSHJumpboxExecutor extends AbstractSSHExecutor {
+public class SshJumpboxExecutor extends AbstractSshExecutor {
   @Override
-  public Session getSession(SSHSessionConfig config) {
+  public Session getSession(SshSessionConfig config) {
     return SSHSessionFactory.getSSHSessionWithJumpbox(config);
   }
 }

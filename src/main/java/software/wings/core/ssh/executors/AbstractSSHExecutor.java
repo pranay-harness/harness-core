@@ -13,8 +13,8 @@ import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_CODE;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_MSG;
 import static software.wings.core.ssh.ExecutionLogs.getInstance;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.FAILURE;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.Channel;
@@ -42,17 +42,17 @@ import java.net.UnknownHostException;
 /**
  * Created by anubhaw on 2/10/16.
  */
-public abstract class AbstractSSHExecutor implements SSHExecutor {
+public abstract class AbstractSshExecutor implements SshExecutor {
   public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
-  protected final Logger LOGGER = LoggerFactory.getLogger(getClass());
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
   protected Session session;
   protected Channel channel;
-  protected SSHSessionConfig config;
+  protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
   protected ExecutionLogs executionLogs = getInstance();
 
-  public void init(SSHSessionConfig config) {
+  public void init(SshSessionConfig config) {
     if (null == config.getExecutionID() || config.getExecutionID().length() == 0) {
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("INVALID_EXECUTION_ID"));
     }
@@ -66,7 +66,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       outputStream = channel.getOutputStream();
       inputStream = channel.getInputStream();
     } catch (JSchException e) {
-      LOGGER.error("Failed to initialize executor");
+      logger.error("Failed to initialize executor");
       SSHException shEx = extractSSHException(e);
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
     } catch (IOException e) {
@@ -103,10 +103,10 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       }
     } catch (JSchException e) {
       SSHException shEx = extractSSHException(e);
-      LOGGER.error("Command execution failed with error " + e.getMessage());
+      logger.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
     } catch (IOException e) {
-      LOGGER.error("Exception in reading InputStream");
+      logger.error("Exception in reading InputStream");
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
     } finally {
       destroy();
@@ -129,7 +129,7 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       channel.connect();
 
       if (checkAck(in) != 0) {
-        LOGGER.error("SCP connection initiation failed");
+        logger.error("SCP connection initiation failed");
         return FAILURE;
       }
       FileService fileService = WingsBootstrap.lookup(FileService.class);
@@ -153,21 +153,21 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       out.flush();
 
       if (checkAck(in) != 0) {
-        LOGGER.error("SCP connection initiation failed");
+        logger.error("SCP connection initiation failed");
         return FAILURE;
       }
       out.close();
       channel.disconnect();
       session.disconnect();
     } catch (FileNotFoundException ex) {
-      LOGGER.error("file [" + localFilePath + "] could not be found");
+      logger.error("file [" + localFilePath + "] could not be found");
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
     } catch (IOException e) {
-      LOGGER.error("Exception in reading InputStream");
+      logger.error("Exception in reading InputStream");
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
     } catch (JSchException e) {
       SSHException shEx = extractSSHException(e);
-      LOGGER.error("Command execution failed with error " + e.getMessage());
+      logger.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.getCode(), shEx.getMsg(), e.getCause());
     }
     return SUCCESS;
@@ -178,12 +178,12 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       outputStream.write(3); // Send ^C command
       outputStream.flush();
     } catch (IOException e) {
-      LOGGER.error("Abort command failed " + e.getStackTrace());
+      logger.error("Abort command failed " + e.getStackTrace());
     }
   }
 
   public void destroy() {
-    LOGGER.info("Disconnecting ssh session");
+    logger.info("Disconnecting ssh session");
     if (null != channel) {
       channel.disconnect();
     }
@@ -217,14 +217,14 @@ public abstract class AbstractSSHExecutor implements SSHExecutor {
       if (b <= 2) {
         throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable(sb.toString()));
       }
-      LOGGER.error(sb.toString());
+      logger.error(sb.toString());
       return 0;
     }
   }
 
   ;
 
-  public abstract Session getSession(SSHSessionConfig config) throws JSchException;
+  public abstract Session getSession(SshSessionConfig config) throws JSchException;
 
   protected SSHException extractSSHException(JSchException jSchException) {
     String message = jSchException.getMessage();

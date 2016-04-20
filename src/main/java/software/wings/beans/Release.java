@@ -94,14 +94,17 @@ public class Release extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(obj)) {
       return false;
-    Release release = (Release) o;
+    }
+    Release release = (Release) obj;
     return Objects.equals(application, release.application) && Objects.equals(releaseName, release.releaseName)
         && Objects.equals(description, release.description) && Objects.equals(artifactSources, release.artifactSources)
         && Objects.equals(svcArtifactSourceMap, release.svcArtifactSourceMap)
@@ -144,6 +147,10 @@ public class Release extends Base {
 
     private Builder() {}
 
+    /**
+     * creates a copy of this builder object.
+     * @return builder object copy.
+     */
     public Builder but() {
       return aRelease()
           .withApplication(application)
@@ -230,6 +237,10 @@ public class Release extends Base {
       return new Builder();
     }
 
+    /**
+     * Builds Release object.
+     * @return Release object.
+     */
     public Release build() {
       Release release = new Release();
       release.setApplication(application);

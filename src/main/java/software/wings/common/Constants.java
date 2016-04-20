@@ -1,9 +1,7 @@
-/**
- *
- */
 package software.wings.common;
 
 /**
+ * Common constants across application.
  * @author Rishi
  */
-public interface Constants { public static final String CATALOG_STENCILS = "STENCILS"; }
+public interface Constants { String CATALOG_STENCILS = "STENCILS"; }

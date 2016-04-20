@@ -77,7 +77,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public File download(String applicationId, String artifactId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);
     if (artifact == null || artifact.getStatus() != Status.READY || artifact.getArtifactFile() == null
-        || artifact.getArtifactFile().getFileUUID() == null) {
+        || artifact.getArtifactFile().getFileUuid() == null) {
       return null;
     }
 
@@ -90,7 +90,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     File artifactFile = new File(tempDir, fileName);
 
     FileService fileService = WingsBootstrap.lookup(FileService.class);
-    fileService.download(artifact.getArtifactFile().getFileUUID(), artifactFile);
+    fileService.download(artifact.getArtifactFile().getFileUuid(), artifactFile);
     return artifactFile;
   }
 

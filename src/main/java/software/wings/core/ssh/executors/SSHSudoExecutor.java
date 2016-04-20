@@ -14,9 +14,9 @@ import java.io.IOException;
 /**
  * Created by anubhaw on 2/4/16.
  */
-public class SSHSudoExecutor extends AbstractSSHExecutor {
+public class SshSudoExecutor extends AbstractSshExecutor {
   @Override
-  public Session getSession(SSHSessionConfig config) throws JSchException {
+  public Session getSession(SshSessionConfig config) throws JSchException {
     return SSHSessionFactory.getSSHSession(config);
   }
 
@@ -39,7 +39,7 @@ public class SSHSudoExecutor extends AbstractSSHExecutor {
         outputStream.flush();
       }
     } catch (IOException e) {
-      LOGGER.error("Reading writing to output/input stream failed");
+      logger.error("Reading writing to output/input stream failed");
       throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
     }
   }

@@ -9,19 +9,19 @@ import java.util.List;
  */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 public class ServiceTemplate extends Base {
-  private String serviceID;
+  private String serviceId;
   private String name;
   private String description;
   private List<Tag> tags;
   private List<Host> hosts;
-  private String envID;
+  private String envId;
 
-  public String getServiceID() {
-    return serviceID;
+  public String getServiceId() {
+    return serviceId;
   }
 
-  public void setServiceID(String serviceID) {
-    this.serviceID = serviceID;
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
   }
 
   public String getName() {
@@ -56,11 +56,11 @@ public class ServiceTemplate extends Base {
     this.hosts = hosts;
   }
 
-  public String getEnvID() {
-    return envID;
+  public String getEnvId() {
+    return envId;
   }
 
-  public void setEnvID(String envID) {
-    this.envID = envID;
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 }

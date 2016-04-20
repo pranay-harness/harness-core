@@ -89,18 +89,23 @@ public class Base {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     Base other = (Base) obj;
     if (uuid == null) {
-      if (other.uuid != null)
+      if (other.uuid != null) {
         return false;
-    } else if (!uuid.equals(other.uuid))
+      }
+    } else if (!uuid.equals(other.uuid)) {
       return false;
+    }
     return true;
   }
 
@@ -116,6 +121,9 @@ public class Base {
         .toString();
   }
 
+  /**
+   * callback for before storing object in mongo.
+   */
   @PrePersist
   public void onUpdate() {
     lastUpdatedAt = System.currentTimeMillis();

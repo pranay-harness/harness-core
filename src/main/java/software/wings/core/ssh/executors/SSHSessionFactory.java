@@ -5,7 +5,7 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
+import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -13,14 +13,14 @@ import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilde
 public class SSHSessionFactory {
   private final static Logger LOGGER = LoggerFactory.getLogger(SSHSessionFactory.class);
 
-  public static Session getSSHSessionWithJumpbox(SSHSessionConfig config) {
+  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
       Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
       LOGGER.info("portforwarding port " + forwardingPort);
 
-      SSHSessionConfig newConfig = new SSHSessionConfigBuilder()
+      SshSessionConfig newConfig = new SshSessionConfigBuilder()
                                        .user(config.getUser())
                                        .password(config.getPassword())
                                        .keyPath(config.getKeyPath())
@@ -34,7 +34,7 @@ public class SSHSessionFactory {
     return session;
   }
 
-  public static Session getSSHSession(SSHSessionConfig config) throws JSchException {
+  public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
     Session session = null;
     if ("KEY".equals(getSessionType(config))) {
@@ -54,7 +54,7 @@ public class SSHSessionFactory {
     return session;
   }
 
-  private static String getSessionType(SSHSessionConfig config) {
+  private static String getSessionType(SshSessionConfig config) {
     return config.getKeyPath() != null && config.getKeyPath().length() > 0 ? "KEY" : "PASSWORD";
   }
 }

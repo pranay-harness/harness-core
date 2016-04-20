@@ -1,11 +1,11 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.core.ssh.executors.SSHExecutor.ExecutorType;
+import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
-public class SSHSessionConfig {
+public class SshSessionConfig {
   private ExecutorType executorType;
   private String executionID;
   private Integer SSHConnectionTimeout;
@@ -19,9 +19,9 @@ public class SSHSessionConfig {
   private String keyPassphrase;
   private String sudoUserName;
   private String sudoUserPassword;
-  private SSHSessionConfig jumpboxConfig;
+  private SshSessionConfig jumpboxConfig;
 
-  public SSHSessionConfig(SSHSessionConfigBuilder builder) {
+  public SshSessionConfig(SshSessionConfigBuilder builder) {
     this.executorType = builder.executorType;
     this.executionID = builder.executionID;
     this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
@@ -90,11 +90,11 @@ public class SSHSessionConfig {
     return sudoUserPassword;
   }
 
-  public SSHSessionConfig getJumpboxConfig() {
+  public SshSessionConfig getJumpboxConfig() {
     return jumpboxConfig;
   }
 
-  public static class SSHSessionConfigBuilder {
+  public static class SshSessionConfigBuilder {
     public String executionID;
     private Integer SSHConnectionTimeout = 10000; // 10 seconds
     private Integer retryInterval = 1000;
@@ -108,80 +108,80 @@ public class SSHSessionConfig {
     private Integer SSHSessionTimeout = 10000; // 10 minutes
     private String sudoUserName;
     private String sudoUserPassword;
-    private SSHSessionConfig jumpboxConfig;
+    private SshSessionConfig jumpboxConfig;
 
-    public SSHSessionConfigBuilder SSHConnectionTimeout(Integer sshConnectionTimeout) {
+    public SshSessionConfigBuilder SSHConnectionTimeout(Integer sshConnectionTimeout) {
       this.SSHConnectionTimeout = sshConnectionTimeout;
       return this;
     }
 
-    public SSHSessionConfigBuilder SSHSessionTimeout(Integer sshSessionTimeout) {
+    public SshSessionConfigBuilder SSHSessionTimeout(Integer sshSessionTimeout) {
       this.SSHSessionTimeout = sshSessionTimeout;
       return this;
     }
 
-    public SSHSessionConfigBuilder retryInterval(Integer retryInterval) {
+    public SshSessionConfigBuilder retryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
       return this;
     }
 
-    public SSHSessionConfigBuilder executionType(ExecutorType executorType) {
+    public SshSessionConfigBuilder executionType(ExecutorType executorType) {
       this.executorType = executorType;
       return this;
     }
 
-    public SSHSessionConfigBuilder executionID(String executionID) {
+    public SshSessionConfigBuilder executionID(String executionID) {
       this.executionID = executionID;
       return this;
     }
 
-    public SSHSessionConfigBuilder host(String host) {
+    public SshSessionConfigBuilder host(String host) {
       this.host = host;
       return this;
     }
 
-    public SSHSessionConfigBuilder port(Integer port) {
+    public SshSessionConfigBuilder port(Integer port) {
       this.port = port;
       return this;
     }
 
-    public SSHSessionConfigBuilder user(String user) {
+    public SshSessionConfigBuilder user(String user) {
       this.user = user;
       return this;
     }
 
-    public SSHSessionConfigBuilder password(String password) {
+    public SshSessionConfigBuilder password(String password) {
       this.password = password;
       return this;
     }
 
-    public SSHSessionConfigBuilder keyPath(String key) {
+    public SshSessionConfigBuilder keyPath(String key) {
       this.keyPath = key;
       return this;
     }
 
-    public SSHSessionConfigBuilder keyPassphrase(String keyPassphrase) {
+    public SshSessionConfigBuilder keyPassphrase(String keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }
 
-    public SSHSessionConfigBuilder sudoUserName(String sudoUserName) {
+    public SshSessionConfigBuilder sudoUserName(String sudoUserName) {
       this.sudoUserName = sudoUserName;
       return this;
     }
 
-    public SSHSessionConfigBuilder sudoUserPassword(String sudoUserPassword) {
+    public SshSessionConfigBuilder sudoUserPassword(String sudoUserPassword) {
       this.sudoUserPassword = sudoUserPassword;
       return this;
     }
 
-    public SSHSessionConfigBuilder jumpboxConfig(SSHSessionConfig jumpboxConfig) {
+    public SshSessionConfigBuilder jumpboxConfig(SshSessionConfig jumpboxConfig) {
       this.jumpboxConfig = jumpboxConfig;
       return this;
     }
 
-    public SSHSessionConfig build() {
-      return new SSHSessionConfig(this);
+    public SshSessionConfig build() {
+      return new SshSessionConfig(this);
     }
   }
 }

@@ -96,14 +96,17 @@ public class PlatformSoftware extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(obj)) {
       return false;
-    PlatformSoftware that = (PlatformSoftware) o;
+    }
+    PlatformSoftware that = (PlatformSoftware) obj;
     return standard == that.standard && Objects.equals(application, that.application) && Objects.equals(name, that.name)
         && Objects.equals(version, that.version) && Objects.equals(description, that.description)
         && Objects.equals(md5, that.md5) && Objects.equals(source, that.source)
@@ -142,6 +145,10 @@ public class PlatformSoftware extends Base {
 
     private Builder() {}
 
+    /**
+     * creates a copy of builder.
+     * @return builder object copy.
+     */
     public Builder but() {
       return aPlatformSoftware()
           .withApplication(application)
@@ -234,6 +241,10 @@ public class PlatformSoftware extends Base {
       return new Builder();
     }
 
+    /**
+     * builds PlatformSoftware object.
+     * @return PlatformSoftware object.
+     */
     public PlatformSoftware build() {
       PlatformSoftware platformSoftware = new PlatformSoftware();
       platformSoftware.setApplication(application);

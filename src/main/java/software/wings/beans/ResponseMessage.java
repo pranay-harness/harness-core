@@ -4,8 +4,6 @@ import com.google.common.base.MoreObjects;
 
 public class ResponseMessage {
   private String code;
-  ;
-
   private ResponseTypeEnum errorType;
   private String message;
 

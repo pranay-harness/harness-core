@@ -7,8 +7,6 @@ package software.wings.beans;
  */
 public class SortOrder {
   private String fieldName;
-  ;
-
   private OrderType orderType;
 
   public String getFieldName() {

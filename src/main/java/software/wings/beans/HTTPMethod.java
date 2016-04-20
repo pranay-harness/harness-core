@@ -1,11 +1,11 @@
 package software.wings.beans;
 
 /**
- * HTTPMethod bean class.
+ * HttpMethod bean class.
  *
  * @author Rishi
  */
-public enum HTTPMethod {
+public enum HttpMethod {
   HEAD,
   GET,
   POST,

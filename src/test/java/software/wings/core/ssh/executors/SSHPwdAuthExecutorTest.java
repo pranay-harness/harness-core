@@ -3,13 +3,13 @@ package software.wings.core.ssh.executors;
 import static software.wings.common.UUIDGenerator.getUUID;
 
 import org.junit.Test;
-import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
-import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
+import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
+import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/10/16.
  */
-public class SSHPwdAuthExecutorTest {
+public class SshPwdAuthExecutorTest {
   private String host = "192.168.1.56";
   private Integer port = 22;
   private String user = "osboxes";
@@ -18,7 +18,7 @@ public class SSHPwdAuthExecutorTest {
 
   @Test
   public void testExecuteFailureScenarios() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfigBuilder()
+    SshSessionConfig config = new SshSessionConfigBuilder()
                                   .host(host)
                                   .port(port)
                                   .user(user)
@@ -27,14 +27,14 @@ public class SSHPwdAuthExecutorTest {
                                   .keyPassphrase("wings123")
                                   .build();
 
-    SSHExecutor executor = new SSHPwdAuthExecutor();
+    SshExecutor executor = new SshPwdAuthExecutor();
     executor.init(config);
     executor.execute("ls && whoami");
   }
 
   @Test
   public void testSCP() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
+    SshSessionConfig config = new SshSessionConfigBuilder()
                                   .executionID(getUUID())
                                   .SSHConnectionTimeout(100000)
                                   .SSHSessionTimeout(100000)
@@ -44,7 +44,7 @@ public class SSHPwdAuthExecutorTest {
                                   .password("osboxes.org")
                                   .build();
 
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     String fileName = "mvim";
     ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     System.out.println(result);
@@ -52,10 +52,10 @@ public class SSHPwdAuthExecutorTest {
 
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig config =
-        new SSHSessionConfigBuilder().host("localhost").port(3333).user("osboxes").password("osboxes.org").build();
+    SshSessionConfig config =
+        new SshSessionConfigBuilder().host("localhost").port(3333).user("osboxes").password("osboxes.org").build();
 
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     //
     //        Thread thread1 = new Thread(()->{

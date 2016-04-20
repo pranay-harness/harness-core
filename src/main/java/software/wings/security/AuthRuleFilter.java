@@ -146,10 +146,10 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
-    return reqEnv && "ALL".equals(permission.getEnvID()) || (environment.getName().equals(permission.getEnvID()));
+    return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getName().equals(permission.getEnvId()));
   }
 
   private boolean forApplication(Application application, boolean reqApp, Permission permission) {
-    return reqApp && ("ALL".equals(permission.getServiceID()) || (application.equals(permission.getServiceID())));
+    return reqApp && ("ALL".equals(permission.getServiceId()) || (application.equals(permission.getServiceId())));
   }
 }

@@ -36,12 +36,13 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         log().trace("Waiting for message");
         message = queue.get();
         log().trace("got message {}", message);
-      } catch (Exception e) {
-        if (e.getCause() != null && e.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
-          log().info("Thread interrupted, shutting down for queue {}, Exception: " + e, queue.name());
+      } catch (Exception exception) {
+        if (exception.getCause() != null
+            && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
+          log().info("Thread interrupted, shutting down for queue {}, Exception: " + exception, queue.name());
           run = false;
         } else {
-          log().error("Exception happened while fetching message from queue " + queue.name(), e);
+          log().error("Exception happened while fetching message from queue " + queue.name(), exception);
         }
       }
 
@@ -54,8 +55,8 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         try {
           onMessage(message);
           queue.ack(message);
-        } catch (Exception e) {
-          onException(e, message);
+        } catch (Exception exception) {
+          onException(exception, message);
         } finally {
           future.cancel(true);
         }
@@ -69,8 +70,8 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
   protected abstract void onMessage(T message) throws Exception;
 
-  protected void onException(Exception e, T message) {
-    log().error("Exception happened while processing message " + message, e);
+  protected void onException(Exception exception, T message) {
+    log().error("Exception happened while processing message " + message, exception);
     if (message.getRetries() > 0) {
       message.setRetries(message.getRetries() - 1);
       queue.requeue(message);

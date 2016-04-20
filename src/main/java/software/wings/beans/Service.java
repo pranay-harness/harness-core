@@ -55,6 +55,10 @@ public class Service extends Base {
     this.platformSoftwares = platformSoftwares;
   }
 
+  /**
+   * Adds a platform software to service.
+   * @param platformSoftware PlatformSoftware to add.
+   */
   public void addPlatformSoftware(PlatformSoftware platformSoftware) {
     if (platformSoftwares == null) {
       platformSoftwares = new ArrayList<>();
@@ -68,14 +72,17 @@ public class Service extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(obj)) {
       return false;
-    Service service = (Service) o;
+    }
+    Service service = (Service) obj;
     return Objects.equals(name, service.name) && Objects.equals(description, service.description)
         && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
   }
@@ -104,6 +111,9 @@ public class Service extends Base {
 
     private Builder() {}
 
+    /**
+     * @return copy of Builder object.
+     */
     public Builder but() {
       return aService()
           .withName(name)
@@ -172,6 +182,9 @@ public class Service extends Base {
       return new Builder();
     }
 
+    /**
+     * @return new Service object.
+     */
     public Service build() {
       Service service = new Service();
       service.setName(name);

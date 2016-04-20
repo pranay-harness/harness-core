@@ -4,7 +4,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.HTTPMethod;
+import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 
@@ -24,7 +24,7 @@ public class AuditHeader extends Base {
   private String url;
   private String resourcePath;
   private String queryParams;
-  private HTTPMethod requestMethod;
+  private HttpMethod requestMethod;
   private String headerString;
   private ResponseType responseType;
   private Integer responseStatusCode;
@@ -47,11 +47,11 @@ public class AuditHeader extends Base {
     this.queryParams = queryParams;
   }
 
-  public HTTPMethod getRequestMethod() {
+  public HttpMethod getRequestMethod() {
     return requestMethod;
   }
 
-  public void setRequestMethod(HTTPMethod requestMethod) {
+  public void setRequestMethod(HttpMethod requestMethod) {
     this.requestMethod = requestMethod;
   }
 

@@ -24,13 +24,16 @@ public class ResponseCodeCache {
     try {
       in = getClass().getResourceAsStream(RESPONSE_MESSAGE_FILE);
       messages.load(in);
-    } catch (IOException e) {
-      throw new WingsException(e);
+    } catch (IOException exception) {
+      throw new WingsException(exception);
     } finally {
       Misc.quietClose(in);
     }
   }
 
+  /**
+   * @return singleton instance for the cache.
+   */
   public static ResponseCodeCache getInstance() {
     if (instance == null) {
       synchronized (ResponseCodeCache.class) {
@@ -42,6 +45,11 @@ public class ResponseCodeCache {
     return instance;
   }
 
+  /**
+   * Converts error code into ResponseMessage object.
+   * @param errorCode errorCode for which message is needed.
+   * @return ResponseMessage Object.
+   */
   public ResponseMessage getResponseMessage(String errorCode) {
     String message = messages.getProperty(errorCode);
     if (message == null) {
@@ -58,6 +66,12 @@ public class ResponseCodeCache {
     return responseMessage;
   }
 
+  /**
+   * Converts error code and map of key value pairs for substitution into ResponseMessage object .
+   * @param errorCode errorCode for which message is needed.
+   * @param params for substituting in ResponseMessage
+   * @return ResponseMessage object.
+   */
   public ResponseMessage getResponseMessage(String errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode);
     if (message == null) {

@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 public class FileMetadata {
-  private String fileUUID;
+  private String fileUuid;
   private String fileName;
   private String mimeType;
   private String fileDataType;
@@ -9,12 +9,12 @@ public class FileMetadata {
   private ChecksumType checksumType;
   private String checksum;
 
-  public String getFileUUID() {
-    return fileUUID;
+  public String getFileUuid() {
+    return fileUuid;
   }
 
-  public void setFileUUID(String fileUUID) {
-    this.fileUUID = fileUUID;
+  public void setFileUuid(String fileUuid) {
+    this.fileUuid = fileUuid;
   }
 
   public String getFileName() {

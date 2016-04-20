@@ -35,6 +35,11 @@ public class User extends Base implements Principal {
   @Transient private String password;
   @Transient private String token;
 
+  /**
+   * Return partial user object without sensitive information.
+   * @param fullUser Full User object.
+   * @return Partial User object without sensitive information.
+   */
   public static User getPublicUser(User fullUser) {
     User publicUser = new User();
     publicUser.setUuid(fullUser.getUuid());
@@ -97,6 +102,10 @@ public class User extends Base implements Principal {
     this.roles = roles;
   }
 
+  /**
+   * Adds role to User object.
+   * @param role role to assign to User.
+   */
   public void addRole(Role role) {
     if (roles == null) {
       roles = new ArrayList<>();
@@ -129,6 +138,9 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
+    /**
+     * @return copy of builder object.
+     */
     public Builder but() {
       return anUser()
           .withName(name)
@@ -215,6 +227,9 @@ public class User extends Base implements Principal {
       return new Builder();
     }
 
+    /**
+     * @return Newly built User object.
+     */
     public User build() {
       User user = new User();
       user.setName(name);

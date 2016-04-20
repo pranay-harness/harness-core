@@ -37,6 +37,9 @@ public class RestResponse<T> extends RestRequest<T> {
 
     private Builder() {}
 
+    /**
+     * @return copy of Builder object.
+     */
     public Builder but() {
       return aRestResponse().withResponseMessages(responseMessages).withMetaData(metaData).withResource(resource);
     }
@@ -60,6 +63,10 @@ public class RestResponse<T> extends RestRequest<T> {
       return new Builder();
     }
 
+    /**
+     * Builds a RestResponse object.
+     * @return RestResponse object.
+     */
     public RestResponse build() {
       RestResponse restResponse = new RestResponse();
       restResponse.setResponseMessages(responseMessages);

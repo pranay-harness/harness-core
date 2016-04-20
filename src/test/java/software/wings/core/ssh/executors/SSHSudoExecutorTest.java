@@ -3,14 +3,15 @@ package software.wings.core.ssh.executors;
 import static software.wings.common.UUIDGenerator.getUUID;
 
 import org.junit.Test;
+import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/5/16.
  */
-public class SSHSudoExecutorTest {
+public class SshSudoExecutorTest {
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
+    SshSessionConfig config = new SshSessionConfigBuilder()
                                   .executionID(getUUID())
                                   .host("localhost")
                                   .port(2222)
@@ -20,7 +21,7 @@ public class SSHSudoExecutorTest {
                                   .sudoUserPassword("osboxes.org")
                                   .build();
 
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     executor.execute("sudo su - vagrant  -c 'ls && whoami'");
   }
 }

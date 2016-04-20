@@ -6,9 +6,9 @@ import com.jcraft.jsch.Session;
 /**
  * Created by anubhaw on 2/8/16.
  */
-public class SSHPubKeyAuthExecutor extends AbstractSSHExecutor {
+public class SshPubKeyAuthExecutor extends AbstractSshExecutor {
   @Override
-  public Session getSession(SSHSessionConfig config) throws JSchException {
+  public Session getSession(SshSessionConfig config) throws JSchException {
     return SSHSessionFactory.getSSHSession(config);
   }
 }

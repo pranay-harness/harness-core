@@ -16,6 +16,10 @@ public class AuthToken extends Base {
 
   public AuthToken() {}
 
+  /**
+   * creates an auth token for given user.
+   * @param user for which auth token is created.
+   */
   public AuthToken(User user) {
     this.user = user;
     setUuid(secureRandAlphaNumString(32));

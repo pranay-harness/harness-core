@@ -3,8 +3,8 @@ package software.wings.core.ssh.executors;
 /**
  * Created by anubhaw on 2/4/16.
  */
-public interface SSHExecutor {
-  void init(SSHSessionConfig config);
+public interface SshExecutor {
+  void init(SshSessionConfig config);
 
   ExecutionResult execute(String command);
 

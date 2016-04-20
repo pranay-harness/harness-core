@@ -1,16 +1,16 @@
 package software.wings.beans;
 
 public class ArtifactFile {
-  private String fileUUID;
+  private String fileUuid;
   private String fileName;
   private String mimeType;
 
-  public String getFileUUID() {
-    return fileUUID;
+  public String getFileUuid() {
+    return fileUuid;
   }
 
-  public void setFileUUID(String fileUUID) {
-    this.fileUUID = fileUUID;
+  public void setFileUuid(String fileUuid) {
+    this.fileUuid = fileUuid;
   }
 
   public String getFileName() {
