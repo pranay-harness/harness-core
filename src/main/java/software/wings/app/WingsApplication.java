@@ -34,7 +34,7 @@ import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
-import software.wings.waitNotify.Notifier;
+import software.wings.waitnotify.Notifier;
 
 import java.util.EnumSet;
 import java.util.Set;

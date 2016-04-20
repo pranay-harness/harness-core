@@ -1,7 +1,5 @@
 package software.wings.sm;
-/**
- *
- */
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
@@ -11,14 +9,11 @@ import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
-import software.wings.waitNotify.WaitNotifyEngine;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Rishi
- */
 public class StateMachineTest {
   @Test
   public void testValidate() {
@@ -48,8 +43,8 @@ public class StateMachineTest {
       sm.addState(state);
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
-    } catch (WingsException e) {
-      assertThat(e).hasMessage(ErrorConstants.DUPLICATE_STATE_NAMES);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorConstants.DUPLICATE_STATE_NAMES);
     }
   }
 
@@ -58,8 +53,9 @@ public class StateMachineTest {
     private int duration;
 
     /**
-     * @param uuid
-     * @param duration
+     * Creates a new Notifier object.
+     * @param uuid uuid of notifier.
+     * @param duration duration to sleep for.
      */
     public Notifier(String uuid, int duration) {
       this.uuid = uuid;

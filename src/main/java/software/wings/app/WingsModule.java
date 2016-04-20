@@ -61,8 +61,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
-import software.wings.waitNotify.NotifyEvent;
-import software.wings.waitNotify.NotifyEventListener;
+import software.wings.waitnotify.NotifyEvent;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.List;

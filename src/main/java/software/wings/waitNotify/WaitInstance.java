@@ -1,4 +1,4 @@
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Serialized;
@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
  * @author Rishi
  */
 @Entity(value = "waitInstances", noClassnameStored = true)
@@ -27,6 +28,12 @@ public class WaitInstance extends Base {
     this(0, callback, correlationIds);
   }
 
+  /**
+   * Creates a WaitInstance object.
+   * @param timeoutMsec duration to wait for in milliseconds.
+   * @param callback Callback function whenever all waitInstances are done.
+   * @param correlationIds List of ids to wait for.
+   */
   public WaitInstance(long timeoutMsec, NotifyCallback callback, String[] correlationIds) {
     this.timeoutMsec = timeoutMsec;
     this.callback = callback;

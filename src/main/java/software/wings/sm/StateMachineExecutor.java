@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.waitNotify.NotifyCallback;
-import software.wings.waitNotify.WaitNotifyEngine;
+import software.wings.waitnotify.NotifyCallback;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.Serializable;
 import java.util.HashMap;

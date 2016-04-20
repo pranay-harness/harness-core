@@ -9,12 +9,12 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
-import software.wings.waitNotify.NotifyCallback;
-import software.wings.waitNotify.NotifyEvent;
-import software.wings.waitNotify.NotifyResponse;
-import software.wings.waitNotify.WaitInstance;
-import software.wings.waitNotify.WaitNotifyEngine;
-import software.wings.waitNotify.WaitQueue;
+import software.wings.waitnotify.NotifyCallback;
+import software.wings.waitnotify.NotifyEvent;
+import software.wings.waitnotify.NotifyResponse;
+import software.wings.waitnotify.WaitInstance;
+import software.wings.waitnotify.WaitNotifyEngine;
+import software.wings.waitnotify.WaitQueue;
 
 import java.io.Serializable;
 import java.util.HashMap;

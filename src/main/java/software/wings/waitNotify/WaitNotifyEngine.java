@@ -1,7 +1,7 @@
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
-import static software.wings.waitNotify.NotifyEvent.Builder.aNotifyEvent;
+import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
@@ -20,13 +20,13 @@ import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
- * WaitNotifyEngine
+ * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
  *
  * @author Rishi
  */
 @Singleton
 public class WaitNotifyEngine {
-  private static final long NO_TIMEOUT = 0l;
+  private static final long NO_TIMEOUT = 0L;
   private static WaitNotifyEngine instance;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -37,6 +37,13 @@ public class WaitNotifyEngine {
     return waitForAll(NO_TIMEOUT, callback, correlationIds);
   }
 
+  /**
+   * Allows a task to register a callback to wait for when given correlationIds and done.
+   * @param timeoutMsec timeout for wait in milliseconds.
+   * @param callback function to be executed when all correlationIds are completed.
+   * @param correlationIds list of ids to wait for.
+   * @return id of WaitInstance.
+   */
   public String waitForAll(long timeoutMsec, NotifyCallback callback, String... correlationIds) {
     Preconditions.checkArgument(isNotEmpty(correlationIds), "correlationIds are null or empty");
 
@@ -55,6 +62,13 @@ public class WaitNotifyEngine {
     return LoggerFactory.getLogger(WaitNotifyEngine.class);
   }
 
+  /**
+   * Notifies WaitNotifyEngine when a correlationId is finished.
+   * @param correlationId id which is finished.
+   * @param response response object for the task.
+   * @param <T> ResponseObject type should be serializable.
+   * @return id of notification response object.
+   */
   public <T extends Serializable> String notify(String correlationId, T response) {
     Preconditions.checkArgument(StringUtils.isNotEmpty(correlationId), "correlationId is null or empty");
 

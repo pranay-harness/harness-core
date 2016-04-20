@@ -1,4 +1,4 @@
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import com.google.common.base.MoreObjects;
 
@@ -19,6 +19,10 @@ public class NotifyEvent extends Queuable {
 
   public NotifyEvent() {}
 
+  /**
+   * Copy constructor.
+   * @param other NotifyEvent to create copy for.
+   */
   public NotifyEvent(NotifyEvent other) {
     super(other);
     this.waitInstanceId = other.waitInstanceId;
@@ -62,6 +66,9 @@ public class NotifyEvent extends Queuable {
 
     private Builder() {}
 
+    /**
+     * @return copy of Builder object.
+     */
     public Builder but() {
       return aNotifyEvent()
           .withWaitInstanceId(waitInstanceId)
@@ -124,6 +131,9 @@ public class NotifyEvent extends Queuable {
       return new Builder();
     }
 
+    /**
+     * @return new NotifyEvent object.
+     */
     public NotifyEvent build() {
       NotifyEvent notifyEvent = new NotifyEvent();
       notifyEvent.setWaitInstanceId(waitInstanceId);

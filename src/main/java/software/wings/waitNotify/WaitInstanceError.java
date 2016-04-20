@@ -1,7 +1,4 @@
-/**
- *
- */
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Serialized;
@@ -11,6 +8,7 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * Represents errors thrown by callback of wait instance.
  * @author Rishi
  */
 @Entity(value = "waitInstanceErrors", noClassnameStored = true)

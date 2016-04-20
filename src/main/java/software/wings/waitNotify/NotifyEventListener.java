@@ -1,4 +1,4 @@
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
@@ -68,7 +68,8 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
       if (!isEmpty(missingCorrelationIds)) {
-        log().warn("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
+        log().warn("Some of the correlationIds still needs to be waited, "
+                + "waitInstanceId: [{}], correlationIds: {}",
             waitInstanceId, missingCorrelationIds);
         return;
       }
@@ -77,11 +78,11 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
     Map<String, Serializable> responseMap = new HashMap<>();
 
-    PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     SearchFilter searchFilter = new SearchFilter();
     searchFilter.setFieldName("uuid");
     searchFilter.setFieldValues(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()));
     searchFilter.setOp(SearchFilter.OP.IN);
+    PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     notifyResponseReq.setFilters(Collections.singletonList(searchFilter));
     PageResponse<NotifyResponse> notifyResponses = wingsPersistence.query(NotifyResponse.class, notifyResponseReq);
 
@@ -93,8 +94,8 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIds.contains(s))
                                                .collect(toList());
-      log().error(
-          "notifyResponses for the correlationIds: {} not found. skipping the callback for the waitInstanceId: [{}]",
+      log().error("notifyResponses for the correlationIds: {} not found."
+              + " skipping the callback for the waitInstanceId: [{}]",
           missingCorrelationIds, waitInstanceId);
       return;
     }
@@ -117,14 +118,14 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
       if (callback != null) {
         try {
           callback.notify(responseMap);
-        } catch (Exception e) {
+        } catch (Exception exception) {
           status = ExecutionStatus.ERROR;
-          log().error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, e);
+          log().error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
           try {
             WaitInstanceError waitInstanceError = new WaitInstanceError();
             waitInstanceError.setWaitInstanceId(waitInstanceId);
             waitInstanceError.setResponseMap(responseMap);
-            waitInstanceError.setErrorStackTrace(ExceptionUtils.getStackTrace(e));
+            waitInstanceError.setErrorStackTrace(ExceptionUtils.getStackTrace(exception));
 
             wingsPersistence.save(waitInstanceError);
           } catch (Exception e2) {
@@ -138,8 +139,8 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
         UpdateOperations<WaitInstance> waitInstanceUpdate =
             wingsPersistence.createUpdateOperations(WaitInstance.class).set("status", status);
         wingsPersistence.update(waitInstance, waitInstanceUpdate);
-      } catch (Exception e) {
-        log().error("Error in waitInstanceUpdate", e);
+      } catch (Exception exception) {
+        log().error("Error in waitInstanceUpdate", exception);
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
@@ -148,8 +149,8 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
         try {
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
-        } catch (Exception e) {
-          log().error("Error in waitQueue cleanup", e);
+        } catch (Exception exception) {
+          log().error("Error in waitQueue cleanup", exception);
         }
       }
     } finally {

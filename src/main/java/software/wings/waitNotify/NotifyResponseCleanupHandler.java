@@ -1,7 +1,4 @@
-/**
- *
- */
-package software.wings.waitNotify;
+package software.wings.waitnotify;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +45,11 @@ public class NotifyResponseCleanupHandler implements Runnable {
       List<String> correlationIds = CollectionUtils.fields(String.class, notifyPageResponses.getResponse(), "uuid");
 
       // Get wait queue entries
-      PageRequest<WaitQueue> req = new PageRequest<>();
       SearchFilter filter = new SearchFilter();
       filter.setFieldName("correlationId");
       filter.setFieldValues(correlationIds);
       filter.setOp(OP.IN);
+      PageRequest<WaitQueue> req = new PageRequest<>();
       req.getFilters().add(filter);
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
@@ -71,8 +68,8 @@ public class NotifyResponseCleanupHandler implements Runnable {
 
         wingsPersistence.delete(notifyResponse);
       }
-    } catch (Exception e) {
-      logger.error("Error in NotifyResponseCleanupHandler", e);
+    } catch (Exception exception) {
+      logger.error("Error in NotifyResponseCleanupHandler", exception);
     }
   }
 }

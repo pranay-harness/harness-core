@@ -4,7 +4,7 @@
 package software.wings.sm;
 
 import software.wings.app.WingsBootstrap;
-import software.wings.waitNotify.NotifyCallback;
+import software.wings.waitnotify.NotifyCallback;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -22,7 +22,7 @@ public class SMAsynchResumeCallback implements NotifyCallback {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.waitNotify.NotifyCallback#notify(java.util.Map)
+   * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
    */
   @Override
   public void notify(Map<String, ? extends Serializable> response) {
