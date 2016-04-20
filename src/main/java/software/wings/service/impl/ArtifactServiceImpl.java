@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import com.google.common.io.Files;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
@@ -17,7 +18,6 @@ import software.wings.beans.Release;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
-import software.wings.utils.FileUtils;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
@@ -81,7 +81,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return null;
     }
 
-    File tempDir = FileUtils.createTempDirPath();
+    File tempDir = Files.createTempDir();
     String fileName = artifact.getArtifactFile().getFileName();
     if (fileName == null) {
       fileName = DEFAULT_ARTIFACT_FILE_NAME;

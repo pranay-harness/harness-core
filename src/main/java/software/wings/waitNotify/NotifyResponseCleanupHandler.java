@@ -1,5 +1,8 @@
 package software.wings.waitnotify;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
@@ -42,7 +45,8 @@ public class NotifyResponseCleanupHandler implements Runnable {
         return;
       }
 
-      List<String> correlationIds = CollectionUtils.fields(String.class, notifyPageResponses.getResponse(), "uuid");
+      List<String> correlationIds =
+          notifyPageResponses.getResponse().stream().map(NotifyResponse::getUuid).collect(toList());
 
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
