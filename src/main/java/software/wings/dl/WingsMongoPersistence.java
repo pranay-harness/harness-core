@@ -16,11 +16,14 @@ import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
+import software.wings.security.UserThreadLocal;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static java.lang.System.currentTimeMillis;
 
 @Singleton
 public class WingsMongoPersistence implements WingsPersistence, Managed {
@@ -94,6 +97,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
+    ops.set("lastUpdatedAt", currentTimeMillis());
+    if (UserThreadLocal.get() != null) {
+      ops.set("lastUpdatedBy", UserThreadLocal.get());
+    }
     return primaryDatastore.update(ent, ops);
   }
 

@@ -64,11 +64,7 @@ public class AppServiceImpl implements AppService {
     Query<Application> query = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(app.getUuid());
     UpdateOperations<Application> operations = wingsPersistence.createUpdateOperations(Application.class)
                                                    .set("name", app.getName())
-                                                   .set("description", app.getDescription())
-                                                   .set("lastUpdatedAt", System.currentTimeMillis());
-    if (app.getLastUpdatedBy() != null) {
-      operations.set("lastUpdatedBy", app.getLastUpdatedBy());
-    }
+                                                   .set("description", app.getDescription());
     wingsPersistence.update(query, operations);
     return wingsPersistence.get(Application.class, app.getUuid());
   }

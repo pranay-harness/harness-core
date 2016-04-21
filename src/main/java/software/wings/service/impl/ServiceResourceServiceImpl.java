@@ -52,11 +52,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     UpdateOperations<Service> operations = wingsPersistence.createUpdateOperations(Service.class)
                                                .set("name", service.getName())
                                                .set("description", service.getDescription())
-                                               .set("artifactType", service.getArtifactType())
-                                               .set("lastUpdatedAt", System.currentTimeMillis());
-    if (service.getLastUpdatedBy() != null) {
-      operations.set("lastUpdatedBy", service.getLastUpdatedBy());
-    }
+                                               .set("artifactType", service.getArtifactType());
     wingsPersistence.update(query, operations);
     return wingsPersistence.get(Service.class, service.getUuid());
   }
