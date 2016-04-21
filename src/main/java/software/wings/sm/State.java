@@ -1,12 +1,10 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * Represents a state object.
  * @author Rishi
  */
 public abstract class State implements Serializable {
@@ -48,6 +46,12 @@ public abstract class State implements Serializable {
     return "State [name=" + name + ", stateType=" + stateType + "]";
   }
 
+  /**
+   * Callback for handing responses from states that this state was waiting on.
+   * @param context Context of execution.
+   * @param response map of responses this state was waiting on.
+   * @return Response from handling this state.
+   */
   public ExecutionResponse handleAsynchResponse(
       ExecutionContext context, Map<String, ? extends Serializable> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();

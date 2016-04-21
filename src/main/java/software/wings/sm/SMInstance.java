@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -9,10 +6,11 @@ import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
 
 /**
+ * Represents State Machine Instance.
  * @author Rishi
  */
 @Entity(value = "smInstances", noClassnameStored = true)
-public class SMInstance extends Base {
+public class SmInstance extends Base {
   private String stateMachineId;
   private String stateName;
 

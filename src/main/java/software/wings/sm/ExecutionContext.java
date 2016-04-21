@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
@@ -9,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Describes execution context for a state machine execution.
  * @author Rishi
  */
 public class ExecutionContext implements Serializable {
@@ -19,7 +17,7 @@ public class ExecutionContext implements Serializable {
   private Map<String, StateExecutionData> stateExecutionMap;
   private Map<RepeatElementType, RepeatElement> repeatElementMap = new HashMap<>();
 
-  private transient SMInstance smInstance;
+  private transient SmInstance smInstance;
   private boolean dirty = false;
 
   public Map<String, Serializable> getParams() {
@@ -62,11 +60,11 @@ public class ExecutionContext implements Serializable {
     dirty = true;
   }
 
-  public SMInstance getSmInstance() {
+  public SmInstance getSmInstance() {
     return smInstance;
   }
 
-  public void setSmInstance(SMInstance smInstance) {
+  public void setSmInstance(SmInstance smInstance) {
     this.smInstance = smInstance;
   }
 

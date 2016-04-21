@@ -1,22 +1,18 @@
-/**
- *
- */
 package software.wings.sm;
 
 /**
+ * Execution type state.
  * @author Rishi
  */
 public class ExecState extends State {
-  /**
-   *
-   */
   private static final long serialVersionUID = 1L;
   String path;
   boolean embeded;
 
   /**
-   * @param name
-   * @param stateType
+   * Creates a new Exec State.
+   * @param name state name.
+   * @param stateType Type of state.
    */
   public ExecState(String name, StateType stateType) {
     super(name, stateType.name());

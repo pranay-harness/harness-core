@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import com.google.common.base.Charsets;
@@ -16,6 +13,7 @@ import java.net.URL;
 import java.util.HashMap;
 
 /**
+ * Represents type of state.
  * @author Rishi
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -48,8 +46,8 @@ public enum StateType implements StateTypeDescriptor {
       URL url = this.getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
-    } catch (Exception e) {
-      WingsException ex = new WingsException("Error in initializing StateType", e);
+    } catch (Exception exception) {
+      WingsException ex = new WingsException("Error in initializing StateType", exception);
       logger.error(ex.getMessage(), ex);
       throw ex;
     }

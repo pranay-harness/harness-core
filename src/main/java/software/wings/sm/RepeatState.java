@@ -58,7 +58,7 @@ public class RepeatState extends State {
 
     context.setParam("repeatElements", (Serializable) repeatElements);
 
-    SMInstance smInstance = context.getSmInstance();
+    SmInstance smInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
 
     if (repeatStrategy == RepeatStrategy.PARALLEL) {
@@ -104,7 +104,7 @@ public class RepeatState extends State {
       executionResponse.setExecutionStatus(executionStatus);
       return executionResponse;
     } else {
-      SMInstance smInstance = context.getSmInstance();
+      SmInstance smInstance = context.getSmInstance();
       Integer repeatElementIndex = (Integer) context.getParams().get(REPEAT_ELEMENT_INDEX);
       repeatElementIndex++;
       context.setParam(REPEAT_ELEMENT_INDEX, repeatElementIndex);

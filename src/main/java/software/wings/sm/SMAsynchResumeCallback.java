@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import software.wings.app.WingsBootstrap;
@@ -10,14 +7,15 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
+ * Callback method for handling notify callback from wait notify engine.
  * @author Rishi
  */
-public class SMAsynchResumeCallback implements NotifyCallback {
+public class SmAsynchResumeCallback implements NotifyCallback {
   private static final long serialVersionUID = 1L;
 
   private String smInstanceId;
 
-  public SMAsynchResumeCallback(String smInstanceId) {
+  public SmAsynchResumeCallback(String smInstanceId) {
     this.smInstanceId = smInstanceId;
   }
 

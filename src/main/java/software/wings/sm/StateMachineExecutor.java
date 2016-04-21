@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import com.google.inject.Singleton;
@@ -21,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 /**
+ * Class responsible for executing state machine.
  * @author Rishi
  */
 @Singleton
@@ -34,6 +32,11 @@ public class StateMachineExecutor {
     execute(sm, new HashMap<String, Serializable>());
   }
 
+  /**
+   * Starts execution of a state machine with given arguments.
+   * @param sm StateMachine to execute.
+   * @param arguments context arguments.
+   */
   public void execute(StateMachine sm, Map<String, Serializable> arguments) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
@@ -54,17 +57,25 @@ public class StateMachineExecutor {
     execute(sm, stateName, context, null, null);
   }
 
+  /**
+   * Executes a given state for a state machine
+   * @param sm StateMachine to execute.
+   * @param stateName state name to execute.
+   * @param context context for the execution.
+   * @param parentInstanceId parent instance for this execution.
+   * @param notifyId id to notify on.
+   */
   public void execute(
       StateMachine sm, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
-    SMInstance smInstance = new SMInstance();
+    SmInstance smInstance = new SmInstance();
     smInstance.setContext(context);
     smInstance.setStateName(stateName);
     smInstance.setParentInstanceId(parentInstanceId);
     smInstance.setStateMachineId(context.getStateMachineId());
     smInstance.setNotifyId(notifyId);
-    smInstance = wingsPersistence.saveAndGet(SMInstance.class, smInstance);
+    smInstance = wingsPersistence.saveAndGet(SmInstance.class, smInstance);
 
-    executorService.submit(new SMExecutionDispatcher(sm, this, smInstance));
+    executorService.submit(new SmExecutionDispatcher(sm, this, smInstance));
   }
 
   public void execute(String smId, Map<String, Serializable> arguments) {
@@ -76,18 +87,25 @@ public class StateMachineExecutor {
     execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
   }
 
-  public void execute(SMInstance smInstance) {
+  public void execute(SmInstance smInstance) {
     StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
     execute(sm, smInstance);
   }
 
-  public void execute(StateMachine sm, SMInstance smInstance) {
-    NotifyCallback callback = new SMAsynchResumeCallback(smInstance.getUuid());
+  public void execute(StateMachine sm, SmInstance smInstance) {
+    NotifyCallback callback = new SmAsynchResumeCallback(smInstance.getUuid());
     execute(sm, smInstance, waitNotifyEngine, callback);
   }
 
+  /**
+   * Executes a state machine instance for a state machine.
+   * @param sm StateMachine to execute.
+   * @param smInstance stateMachine instance to execute.
+   * @param waitNotifyEngine waitNotify instance module.
+   * @param callback callback to execute on notify.
+   */
   public void execute(
-      StateMachine sm, SMInstance smInstance, WaitNotifyEngine waitNotifyEngine, NotifyCallback callback) {
+      StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine, NotifyCallback callback) {
     updateStatus(smInstance, ExecutionStatus.RUNNING, "startTs");
 
     State currentState = null;
@@ -95,23 +113,34 @@ public class StateMachineExecutor {
       currentState = sm.getState(smInstance.getStateName());
       ExecutionResponse executionResponse = currentState.execute(smInstance.getContext());
       handleExecuteResponse(sm, smInstance, waitNotifyEngine, callback, currentState, executionResponse);
-    } catch (Exception e) {
-      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, e);
+    } catch (Exception exeception) {
+      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, exeception);
     }
   }
 
   /**
-   * @param sm
-   * @param smInstance
-   * @param waitNotifyEngine
-   * @param currentState
-   * @param e
+   * Resumes execution of a StateMachineInstance.
+   * @param smInstanceId stateMachineInstance to resume.
+   * @param response map of responses from state machine instances this state was waiting on.
    */
-  private void handleExecuteResponseException(
-      StateMachine sm, SMInstance smInstance, WaitNotifyEngine waitNotifyEngine, State currentState, Exception e) {
+  public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
+    SmInstance smInstance = wingsPersistence.get(SmInstance.class, smInstanceId);
+    StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
+    State currentState = sm.getState(smInstance.getStateName());
+    try {
+      ExecutionResponse executionResponse = currentState.handleAsynchResponse(smInstance.getContext(), response);
+      NotifyCallback callback = new SmAsynchResumeCallback(smInstance.getUuid());
+      handleExecuteResponse(sm, smInstance, waitNotifyEngine, callback, currentState, executionResponse);
+    } catch (Exception execution) {
+      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, execution);
+    }
+  }
+
+  private void handleExecuteResponseException(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
+      State currentState, Exception exception) {
     logger.info("Error seen in the state execution  - currentState : " + currentState.getName()
             + ", smInstanceId: " + smInstance.getUuid(),
-        e);
+        exception);
     try {
       updateContext(smInstance);
       failedTransition(waitNotifyEngine, sm, smInstance);
@@ -120,15 +149,7 @@ public class StateMachineExecutor {
     }
   }
 
-  /**
-   * @param sm
-   * @param smInstance
-   * @param waitNotifyEngine
-   * @param callback
-   * @param currentState
-   * @param executionResponse
-   */
-  private void handleExecuteResponse(StateMachine sm, SMInstance smInstance, WaitNotifyEngine waitNotifyEngine,
+  private void handleExecuteResponse(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
       NotifyCallback callback, State currentState, ExecutionResponse executionResponse) {
     updateContext(smInstance);
     if (executionResponse.isAsynch()) {
@@ -149,25 +170,7 @@ public class StateMachineExecutor {
     }
   }
 
-  public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
-    SMInstance smInstance = wingsPersistence.get(SMInstance.class, smInstanceId);
-    StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
-    State currentState = sm.getState(smInstance.getStateName());
-    try {
-      ExecutionResponse executionResponse = currentState.handleAsynchResponse(smInstance.getContext(), response);
-      NotifyCallback callback = new SMAsynchResumeCallback(smInstance.getUuid());
-      handleExecuteResponse(sm, smInstance, waitNotifyEngine, callback, currentState, executionResponse);
-    } catch (Exception e) {
-      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, e);
-    }
-  }
-
-  /**
-   * @param waitNotifyEngine
-   * @param sm
-   * @param smInstance
-   */
-  private void successTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SMInstance smInstance) {
+  private void successTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SmInstance smInstance) {
     updateStatus(smInstance, ExecutionStatus.SUCCESS, "endTs");
 
     State nextState = sm.getSuccessTransition(smInstance.getStateName());
@@ -183,12 +186,7 @@ public class StateMachineExecutor {
     }
   }
 
-  /**
-   * @param waitNotifyEngine
-   * @param sm
-   * @param smInstance
-   */
-  private void failedTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SMInstance smInstance) {
+  private void failedTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SmInstance smInstance) {
     updateStatus(smInstance, ExecutionStatus.FAILED, "endTs");
 
     State nextState = sm.getFailureTransition(smInstance.getStateName());
@@ -204,36 +202,37 @@ public class StateMachineExecutor {
     }
   }
 
-  private void updateStatus(SMInstance smInstance, ExecutionStatus status, String tsField) {
-    UpdateOperations<SMInstance> ops = wingsPersistence.createUpdateOperations(SMInstance.class);
+  private void updateStatus(SmInstance smInstance, ExecutionStatus status, String tsField) {
+    UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);
     ops.set("status", status);
     ops.set(tsField, System.currentTimeMillis());
 
     wingsPersistence.update(smInstance, ops);
   }
 
-  private void updateContext(SMInstance smInstance) {
+  private void updateContext(SmInstance smInstance) {
     ExecutionContext context = smInstance.getContext();
     if (!context.isDirty()) {
       return;
     }
-    UpdateOperations<SMInstance> ops = wingsPersistence.createUpdateOperations(SMInstance.class);
+    UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);
     ops.set("context", smInstance.getContext());
     wingsPersistence.update(smInstance, ops);
     context.setDirty(false);
   }
 
-  static class SMExecutionDispatcher implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(SMExecutionDispatcher.class);
-    private SMInstance smInstance;
+  static class SmExecutionDispatcher implements Runnable {
+    private static final Logger logger = LoggerFactory.getLogger(SmExecutionDispatcher.class);
+    private SmInstance smInstance;
     private StateMachine sm;
     private StateMachineExecutor stateMachineExecutor;
 
     /**
-     * @param sm
-     * @param smInstance
+     * Creates a new SmExecutionDispatcher.
+     * @param sm stateMachine for dispatcher.
+     * @param smInstance stateMachineInstance to dispatch.
      */
-    public SMExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SMInstance smInstance) {
+    public SmExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SmInstance smInstance) {
       this.sm = sm;
       this.stateMachineExecutor = stateMachineExecutor;
       this.smInstance = smInstance;

@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
@@ -9,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Describes response of an execution.
  * @author Rishi
  */
 public class ExecutionResponse {

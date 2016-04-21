@@ -395,7 +395,7 @@
                     <logViolationsToConsole>true</logViolationsToConsole>
                     <failOnViolation>true</failOnViolation>
                     <failsOnError>true</failsOnError>
-                    <configLocation>google_checks.xml</configLocation>
+                    <configLocation>${basedir}/codeStyle/google_checks.xml</configLocation>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                 </configuration>
                 <dependencies>
