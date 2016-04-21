@@ -6,9 +6,11 @@ import software.wings.beans.Base;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Represents errors thrown by callback of wait instance.
+ *
  * @author Rishi
  */
 @Entity(value = "waitInstanceErrors", noClassnameStored = true)
@@ -41,5 +43,26 @@ public class WaitInstanceError extends Base {
 
   public void setErrorStackTrace(String errorStackTrace) {
     this.errorStackTrace = errorStackTrace;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    WaitInstanceError that = (WaitInstanceError) obj;
+    return Objects.equals(waitInstanceId, that.waitInstanceId) && Objects.equals(responseMap, that.responseMap)
+        && Objects.equals(errorStackTrace, that.errorStackTrace);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), waitInstanceId, responseMap, errorStackTrace);
   }
 }

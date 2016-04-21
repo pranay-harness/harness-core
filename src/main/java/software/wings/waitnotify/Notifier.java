@@ -43,6 +43,7 @@ public class Notifier implements Runnable {
 
       if (notifyPageResponses == null || isEmpty(notifyPageResponses.getResponse())) {
         log().debug("There are no NotifyResponse entries to process");
+        return;
       }
 
       List<NotifyResponse> notifyResponses = notifyPageResponses.getResponse();

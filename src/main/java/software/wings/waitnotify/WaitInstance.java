@@ -7,9 +7,11 @@ import software.wings.sm.ExecutionStatus;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
+ *
  * @author Rishi
  */
 @Entity(value = "waitInstances", noClassnameStored = true)
@@ -30,8 +32,9 @@ public class WaitInstance extends Base {
 
   /**
    * Creates a WaitInstance object.
-   * @param timeoutMsec duration to wait for in milliseconds.
-   * @param callback Callback function whenever all waitInstances are done.
+   *
+   * @param timeoutMsec    duration to wait for in milliseconds.
+   * @param callback       Callback function whenever all waitInstances are done.
    * @param correlationIds List of ids to wait for.
    */
   public WaitInstance(long timeoutMsec, NotifyCallback callback, String[] correlationIds) {
@@ -70,5 +73,26 @@ public class WaitInstance extends Base {
 
   public void setStatus(ExecutionStatus status) {
     this.status = status;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    WaitInstance that = (WaitInstance) obj;
+    return timeoutMsec == that.timeoutMsec && Objects.equals(correlationIds, that.correlationIds)
+        && Objects.equals(callback, that.callback) && status == that.status;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), correlationIds, callback, timeoutMsec, status);
   }
 }

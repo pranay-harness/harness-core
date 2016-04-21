@@ -31,6 +31,9 @@ public abstract class Queuable {
 
   protected Queuable() {}
 
+  /**
+   * @param other Queueable to copy from.
+   */
   public Queuable(Queuable other) {
     id = other.id;
     running = other.running;
@@ -58,19 +61,19 @@ public abstract class Queuable {
   }
 
   public Date getResetTimestamp() {
-    return resetTimestamp;
+    return new Date(resetTimestamp.getTime());
   }
 
   public void setResetTimestamp(Date resetTimestamp) {
-    this.resetTimestamp = resetTimestamp;
+    this.resetTimestamp = new Date(resetTimestamp.getTime());
   }
 
   public Date getEarliestGet() {
-    return earliestGet;
+    return new Date(earliestGet.getTime());
   }
 
   public void setEarliestGet(Date earliestGet) {
-    this.earliestGet = earliestGet;
+    this.earliestGet = new Date(earliestGet.getTime());
   }
 
   public double getPriority() {
@@ -82,11 +85,11 @@ public abstract class Queuable {
   }
 
   public Date getCreated() {
-    return created;
+    return new Date(created.getTime());
   }
 
   public void setCreated(Date created) {
-    this.created = created;
+    this.created = new Date(created.getTime());
   }
 
   public int getRetries() {
@@ -97,6 +100,9 @@ public abstract class Queuable {
     this.retries = retries;
   }
 
+  /**
+   * pre save hook for mongo.
+   */
   @PrePersist
   public void onUpdate() {
     if (id == null) {
