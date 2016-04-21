@@ -18,13 +18,13 @@ public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Infra> listInfra(String envID, PageRequest<Infra> req) {
+  public PageResponse<Infra> listInfra(String envId, PageRequest<Infra> req) {
     return wingsPersistence.query(Infra.class, req);
   }
 
   @Override
-  public Infra createInfra(Infra infra, String envID) {
-    infra.setEnvId(envID);
+  public Infra createInfra(Infra infra, String envId) {
+    infra.setEnvId(envId);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
@@ -34,34 +34,34 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public Host getHost(String infraID, String hostID) {
-    return wingsPersistence.get(Host.class, hostID);
+  public Host getHost(String infraId, String hostId) {
+    return wingsPersistence.get(Host.class, hostId);
   }
 
   @Override
-  public Host createHost(String infraID, Host host) {
-    host.setApplicationId(infraID);
+  public Host createHost(String infraId, Host host) {
+    host.setApplicationId(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public Host updateHost(String infraID, Host host) {
-    host.setInfraId(infraID);
+  public Host updateHost(String infraId, Host host) {
+    host.setInfraId(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public Tag createTag(String envID, Tag tag) {
-    tag.setEnvId(envID);
+  public Tag createTag(String envId, Tag tag) {
+    tag.setEnvId(envId);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 
   @Override
-  public Host applyTag(String hostID, String tagID) {
+  public Host applyTag(String hostId, String tagID) {
     Tag tag = wingsPersistence.get(Tag.class, tagID);
-    Host host = wingsPersistence.get(Host.class, hostID);
+    Host host = wingsPersistence.get(Host.class, hostId);
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
     wingsPersistence.update(host, updateOp);
-    return wingsPersistence.get(Host.class, hostID);
+    return wingsPersistence.get(Host.class, hostId);
   }
 }

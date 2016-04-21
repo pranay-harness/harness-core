@@ -12,7 +12,7 @@ public interface ServiceResourceService {
 
   public Service save(Service service);
 
-  public Service findByUUID(String uuid);
+  public Service findByUuid(String uuid);
 
   public Service update(Service service);
 }

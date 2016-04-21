@@ -10,15 +10,15 @@ import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilde
 /**
  * Created by anubhaw on 2/8/16.
  */
-public class SSHSessionFactory {
-  private final static Logger LOGGER = LoggerFactory.getLogger(SSHSessionFactory.class);
+public class SshSessionFactory {
+  private final static Logger logger = LoggerFactory.getLogger(SshSessionFactory.class);
 
-  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
+  public static Session getSshSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
-      Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
+      Session jumpboxSession = getSshSession(config.getJumpboxConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
-      LOGGER.info("portforwarding port " + forwardingPort);
+      logger.info("portforwarding port " + forwardingPort);
 
       SshSessionConfig newConfig = new SshSessionConfigBuilder()
                                        .user(config.getUser())
@@ -27,14 +27,14 @@ public class SSHSessionFactory {
                                        .host("127.0.0.1")
                                        .port(forwardingPort)
                                        .build();
-      session = getSSHSession(newConfig);
+      session = getSshSession(newConfig);
     } catch (JSchException e) {
       e.printStackTrace();
     }
     return session;
   }
 
-  public static Session getSSHSession(SshSessionConfig config) throws JSchException {
+  public static Session getSshSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
     Session session = null;
     if ("KEY".equals(getSessionType(config))) {
@@ -49,8 +49,8 @@ public class SSHSessionFactory {
       session.setPassword(config.getPassword());
     }
     session.setConfig("StrictHostKeyChecking", "no");
-    session.connect(config.getSSHConnectionTimeout());
-    session.setTimeout(config.getSSHSessionTimeout());
+    session.connect(config.getSshConnectionTimeout());
+    session.setTimeout(config.getSshSessionTimeout());
     return session;
   }
 

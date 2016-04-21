@@ -67,7 +67,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       inputStream = channel.getInputStream();
     } catch (JSchException e) {
       logger.error("Failed to initialize executor");
-      SSHException shEx = extractSSHException(e);
+      SshException shEx = extractSshException(e);
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
     } catch (IOException e) {
       e.printStackTrace();
@@ -102,7 +102,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         quietSleep(1000);
       }
     } catch (JSchException e) {
-      SSHException shEx = extractSSHException(e);
+      SshException shEx = extractSshException(e);
       logger.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.code, shEx.msg, e.getCause());
     } catch (IOException e) {
@@ -166,7 +166,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.error("Exception in reading InputStream");
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
     } catch (JSchException e) {
-      SSHException shEx = extractSSHException(e);
+      SshException shEx = extractSshException(e);
       logger.error("Command execution failed with error " + e.getMessage());
       throw new WingsException(shEx.getCode(), shEx.getMsg(), e.getCause());
     }
@@ -226,7 +226,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   public abstract Session getSession(SshSessionConfig config) throws JSchException;
 
-  protected SSHException extractSSHException(JSchException jSchException) {
+  protected SshException extractSshException(JSchException jSchException) {
     String message = jSchException.getMessage();
     Throwable cause = jSchException.getCause();
 
@@ -263,16 +263,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
       }
     }
-    return new SSHException(customCode, customMessage);
+    return new SshException(customCode, customMessage);
   }
 
   public void postChannelConnect() {}
 
-  protected class SSHException {
+  protected class SshException {
     private String code;
     private String msg;
 
-    private SSHException(String code, String cause) {
+    private SshException(String code, String cause) {
       this.code = code;
       this.msg = cause;
     }

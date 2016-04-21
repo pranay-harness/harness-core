@@ -25,7 +25,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
   @Override
   public void run() {
-    String threadName = queue.name() + "-handler-" + UUIDGenerator.getUUID();
+    String threadName = queue.name() + "-handler-" + UUIDGenerator.getUuid();
     log().debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 

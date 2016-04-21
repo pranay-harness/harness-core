@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.common.UUIDGenerator.getUUID;
+import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
@@ -35,9 +35,9 @@ public class SshPwdAuthExecutorTest {
   @Test
   public void testSCP() throws Exception {
     SshSessionConfig config = new SshSessionConfigBuilder()
-                                  .executionID(getUUID())
-                                  .SSHConnectionTimeout(100000)
-                                  .SSHSessionTimeout(100000)
+                                  .executionId(getUuid())
+                                  .SshConnectionTimeout(100000)
+                                  .SshSessionTimeout(100000)
                                   .host("192.168.43.163")
                                   .port(22)
                                   .user("osboxes")

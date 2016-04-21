@@ -1,30 +1,31 @@
 package software.wings.service.impl;
 
-import static software.wings.common.UUIDGenerator.getUUID;
+import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
 
-import com.google.inject.Singleton;
+import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Singleton;
+
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.beans.Host;
 import software.wings.core.ssh.ExecutionLogs;
+import software.wings.core.ssh.executors.SSHExecutorFactory;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
-import software.wings.core.ssh.executors.SSHExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
 
-import javax.inject.Inject;
-
 @Singleton
 public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {
-  private Logger LOGGER = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SSHNodeSetExecutorServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -69,7 +70,7 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
 
     return new SshSessionConfigBuilder()
         .executionType(PASSWORD)
-        .executionID(getUUID())
+        .executionId(getUuid())
         .host(hostName)
         .port(sshPort)
         .user(sshUser)

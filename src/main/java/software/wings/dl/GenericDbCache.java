@@ -11,7 +11,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 3/18/16.
  */
-public class GenericDBCache {
+public class GenericDbCache {
   @Inject private WingsPersistence wingsPersistence;
 
   private LoadingCache<String, Object> cache =

@@ -115,7 +115,7 @@ public class StateMachineTest {
      */
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
-      String uuid = UUIDGenerator.getUUID();
+      String uuid = UUIDGenerator.getUuid();
 
       System.out.println("Executing ..." + StateAsynch.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
       ExecutionResponse response = new ExecutionResponse();

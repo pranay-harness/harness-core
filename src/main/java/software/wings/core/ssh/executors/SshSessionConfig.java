@@ -7,9 +7,9 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
  */
 public class SshSessionConfig {
   private ExecutorType executorType;
-  private String executionID;
-  private Integer SSHConnectionTimeout;
-  private Integer SSHSessionTimeout;
+  private String executionId;
+  private Integer SshConnectionTimeout;
+  private Integer SshSessionTimeout;
   private Integer retryInterval;
   private String host;
   private Integer port;
@@ -23,9 +23,9 @@ public class SshSessionConfig {
 
   public SshSessionConfig(SshSessionConfigBuilder builder) {
     this.executorType = builder.executorType;
-    this.executionID = builder.executionID;
-    this.SSHConnectionTimeout = builder.SSHConnectionTimeout;
-    this.SSHSessionTimeout = builder.SSHSessionTimeout;
+    this.executionId = builder.executionId;
+    this.SshConnectionTimeout = builder.SshConnectionTimeout;
+    this.SshSessionTimeout = builder.SshSessionTimeout;
     retryInterval = builder.retryInterval;
     this.host = builder.host;
     this.port = builder.port;
@@ -38,12 +38,12 @@ public class SshSessionConfig {
     this.jumpboxConfig = builder.jumpboxConfig;
   }
 
-  public Integer getSSHConnectionTimeout() {
-    return SSHConnectionTimeout;
+  public Integer getSshConnectionTimeout() {
+    return SshConnectionTimeout;
   }
 
-  public Integer getSSHSessionTimeout() {
-    return SSHSessionTimeout;
+  public Integer getSshSessionTimeout() {
+    return SshSessionTimeout;
   }
 
   public Integer getRetryInterval() {
@@ -55,7 +55,7 @@ public class SshSessionConfig {
   }
 
   public String getExecutionID() {
-    return executionID;
+    return executionId;
   }
 
   public String getHost() {
@@ -95,8 +95,8 @@ public class SshSessionConfig {
   }
 
   public static class SshSessionConfigBuilder {
-    public String executionID;
-    private Integer SSHConnectionTimeout = 10000; // 10 seconds
+    public String executionId;
+    private Integer SshConnectionTimeout = 10000; // 10 seconds
     private Integer retryInterval = 1000;
     private ExecutorType executorType;
     private String host;
@@ -105,18 +105,18 @@ public class SshSessionConfig {
     private String password;
     private String keyPath;
     private String keyPassphrase;
-    private Integer SSHSessionTimeout = 10000; // 10 minutes
+    private Integer SshSessionTimeout = 10000; // 10 minutes
     private String sudoUserName;
     private String sudoUserPassword;
     private SshSessionConfig jumpboxConfig;
 
-    public SshSessionConfigBuilder SSHConnectionTimeout(Integer sshConnectionTimeout) {
-      this.SSHConnectionTimeout = sshConnectionTimeout;
+    public SshSessionConfigBuilder SshConnectionTimeout(Integer sshConnectionTimeout) {
+      this.SshConnectionTimeout = sshConnectionTimeout;
       return this;
     }
 
-    public SshSessionConfigBuilder SSHSessionTimeout(Integer sshSessionTimeout) {
-      this.SSHSessionTimeout = sshSessionTimeout;
+    public SshSessionConfigBuilder SshSessionTimeout(Integer sshSessionTimeout) {
+      this.SshSessionTimeout = sshSessionTimeout;
       return this;
     }
 
@@ -130,8 +130,8 @@ public class SshSessionConfig {
       return this;
     }
 
-    public SshSessionConfigBuilder executionID(String executionID) {
-      this.executionID = executionID;
+    public SshSessionConfigBuilder executionId(String executionId) {
+      this.executionId = executionId;
       return this;
     }
 

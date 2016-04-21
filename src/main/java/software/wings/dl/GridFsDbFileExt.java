@@ -3,49 +3,51 @@ package software.wings.dl;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
-import com.mongodb.MongoGridFSException;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import com.mongodb.MongoGridFSException;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+
+import software.wings.exception.WingsException;
 
 /**
  * Created by anubhaw on 3/3/16.
  */
-public class GridFSDBFileExt {
+public class GridFsDbFileExt {
   private MongoDatabase mongodb;
-  private GridFSBucket gridFSBucket;
+  private GridFSBucket gridFsBucket;
   private String fileCollectionName;
   private String chunkCollectionName;
   private int chunkSize;
 
-  private Logger LOGGER = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(GridFsDbFileExt.class);
 
-  public GridFSDBFileExt(MongoDatabase mongodb, String bucketName, int chunkSize) {
+  public GridFsDbFileExt(MongoDatabase mongodb, String bucketName, int chunkSize) {
     this.mongodb = mongodb;
     this.chunkSize = chunkSize;
-    gridFSBucket = GridFSBuckets.create(mongodb, bucketName);
+    gridFsBucket = GridFSBuckets.create(mongodb, bucketName);
     fileCollectionName = bucketName + ".files";
     chunkCollectionName = bucketName + ".chunks";
   }
 
   public void appendToFile(String fileName, String content) {
-    GridFSFile file = gridFSBucket.find(eq("filename", fileName)).first();
+    GridFSFile file = gridFsBucket.find(eq("filename", fileName)).first();
     if (null == file) { // Write first chunk
-      LOGGER.info(
+      logger.info(
           String.format("No file found with name [%s]. Creating new file and writing initial chunks", fileName));
       put(fileName, content);
     } else {
@@ -78,8 +80,8 @@ public class GridFSDBFileExt {
     } catch (UnsupportedEncodingException e) {
       throw new WingsException("String to stream conversion failed", e.getCause());
     }
-    gridFSBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
-    LOGGER.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
+    gridFsBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
+    logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
   private void appendToExistingChunk(GridFSFile file, int existingChunksCount, String substring) {
@@ -113,15 +115,15 @@ public class GridFSDBFileExt {
   }
 
   public GridFSFile get(String fileName) {
-    return gridFSBucket.find(eq("filename", fileName)).first();
+    return gridFsBucket.find(eq("filename", fileName)).first();
   }
 
   public void downloadToStream(String fileName, FileOutputStream fileOutputStream) {
     try {
-      gridFSBucket.downloadToStreamByName(fileName, fileOutputStream);
+      gridFsBucket.downloadToStreamByName(fileName, fileOutputStream);
     } catch (MongoGridFSException e) {
       if (!e.getMessage().startsWith("Chunk size data length is not the expected size")) { // TODO: Fixit
-        LOGGER.error(e.getMessage());
+        logger.error(e.getMessage());
         throw e;
       }
     }

@@ -7,19 +7,19 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Tag;
 
 public interface InfraService {
-  PageResponse<Infra> listInfra(String envID, PageRequest<Infra> pageRequest);
+  PageResponse<Infra> listInfra(String envId, PageRequest<Infra> pageRequest);
 
-  public Infra createInfra(Infra infra, String envID);
+  public Infra createInfra(Infra infra, String envId);
 
   public PageResponse<Host> listHosts(PageRequest<Host> req);
 
-  public Host getHost(String infraID, String hostID);
+  public Host getHost(String infraId, String hostId);
 
-  public Host createHost(String infraID, Host host);
+  public Host createHost(String infraId, Host host);
 
-  public Host updateHost(String infraID, Host host);
+  public Host updateHost(String infraId, Host host);
 
-  public Tag createTag(String envID, Tag tag);
+  public Tag createTag(String envId, Tag tag);
 
-  public Host applyTag(String hostID, String tagID);
+  public Host applyTag(String hostId, String tagID);
 }

@@ -32,12 +32,12 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private GridFSBucket gridFSBucket;
+  private GridFSBucket gridFsBucket;
 
   @Inject
   public AuditServiceImpl(WingsPersistence wingsPersistence) {
     this.wingsPersistence = wingsPersistence;
-    this.gridFSBucket = wingsPersistence.createGridFSBucket(AUDIT_BUCKET);
+    this.gridFsBucket = wingsPersistence.createGridFSBucket(AUDIT_BUCKET);
   }
 
   @Override
@@ -94,7 +94,7 @@ public class AuditServiceImpl implements AuditService {
     metadata.append("requestType", requestType == null ? null : requestType.name());
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
     ObjectId fileId =
-        gridFSBucket.uploadFromStream(requestType + "-" + headerId, new ByteArrayInputStream(httpBody), options);
+        gridFsBucket.uploadFromStream(requestType + "-" + headerId, new ByteArrayInputStream(httpBody), options);
     return fileId.toHexString();
   }
 }

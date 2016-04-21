@@ -10,8 +10,8 @@ import java.io.FileOutputStream;
 /**
  * Created by anubhaw on 3/4/16.
  */
-public class GridFSDBFileExtTest {
-  GridFSDBFileExt gridFSDBFileExt = new GridFSDBFileExt(new MongoClient("localhost").getDatabase("wings"), "logs", 6);
+public class GridFsDbFileExtTest {
+  GridFsDbFileExt gridFSDBFileExt = new GridFsDbFileExt(new MongoClient("localhost").getDatabase("wings"), "logs", 6);
 
   @Test
   public void testAppendToFile() throws Exception {

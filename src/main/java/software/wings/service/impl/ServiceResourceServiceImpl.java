@@ -22,7 +22,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return wingsPersistence.saveAndGet(Service.class, service);
   }
 
-  public Service findByUUID(String uuid) {
+  public Service findByUuid(String uuid) {
     return wingsPersistence.get(Service.class, uuid);
   }
 

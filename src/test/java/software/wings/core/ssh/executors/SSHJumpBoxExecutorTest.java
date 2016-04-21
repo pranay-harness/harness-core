@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.common.UUIDGenerator.getUUID;
+import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
@@ -12,7 +12,7 @@ public class SSHJumpBoxExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SshSessionConfig jumpboxConfig = new SshSessionConfigBuilder()
-                                         .executionID(getUUID())
+                                         .executionId(getUuid())
                                          .host("192.168.43.163")
                                          .port(22)
                                          .user("osboxes")
@@ -20,7 +20,7 @@ public class SSHJumpBoxExecutorTest {
                                          .build();
 
     SshSessionConfig config = new SshSessionConfigBuilder()
-                                  .executionID(getUUID())
+                                  .executionId(getUuid())
                                   .host("192.168.43.8")
                                   .port(22)
                                   .user("vagrant")

@@ -51,15 +51,15 @@ public class UserResource {
   }
 
   @DELETE
-  @Path("{userID}")
-  public void delete(@PathParam("userID") String userID) {
-    userService.delete(userID);
+  @Path("{userId}")
+  public void delete(@PathParam("userId") String userId) {
+    userService.delete(userId);
   }
 
   @GET
-  @Path("{userID}")
-  public RestResponse<User> get(@PathParam("userID") String userID) {
-    return new RestResponse<>(userService.get(userID));
+  @Path("{userId}")
+  public RestResponse<User> get(@PathParam("userId") String userId) {
+    return new RestResponse<>(userService.get(userId));
   }
 
   @GET
@@ -69,14 +69,14 @@ public class UserResource {
   }
 
   @PUT
-  @Path("{userID}/role/{roleID}")
-  public RestResponse<User> assignRole(@PathParam("userID") String userID, @PathParam("roleID") String roleID) {
-    return new RestResponse<>(userService.addRole(userID, roleID));
+  @Path("{userId}/role/{roleId}")
+  public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
+    return new RestResponse<>(userService.addRole(userId, roleId));
   }
 
   @DELETE
-  @Path("{userID}/role/{roleID}")
-  public RestResponse<User> revokeRole(@PathParam("userID") String userID, @PathParam("roleID") String roleID) {
-    return new RestResponse<>(userService.revokeRole(userID, roleID));
+  @Path("{userId}/role/{roleId}")
+  public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
+    return new RestResponse<>(userService.revokeRole(userId, roleId));
   }
 }

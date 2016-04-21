@@ -45,7 +45,7 @@ public class PlatformResource {
   @Path("{applicationId}")
   public RestResponse<PlatformSoftware> save(
       @PathParam("applicationId") String applicationId, PlatformSoftware platform) {
-    platform.setApplication(WingsBootstrap.lookup(AppService.class).findByUUID(applicationId));
+    platform.setApplication(WingsBootstrap.lookup(AppService.class).findByUuid(applicationId));
     return new RestResponse<>(platformService.create(platform));
   }
 }

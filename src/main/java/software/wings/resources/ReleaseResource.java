@@ -50,7 +50,7 @@ public class ReleaseResource {
   @ExceptionMetered
   @Produces("application/json")
   public RestResponse<Release> save(@PathParam("applicationId") String applicationId, Release release) {
-    release.setApplication(WingsBootstrap.lookup(AppService.class).findByUUID(applicationId));
+    release.setApplication(WingsBootstrap.lookup(AppService.class).findByUuid(applicationId));
     return new RestResponse<Release>(releaseService.create(release));
   }
 }

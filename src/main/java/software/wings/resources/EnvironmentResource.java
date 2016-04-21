@@ -33,16 +33,16 @@ public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 
   @GET
-  @Path("{appID}")
+  @Path("{appId}")
   public RestResponse<PageResponse<Environment>> listEnvironments(
-      @PathParam("appID") String appID, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("appID", appID, SearchFilter.OP.EQ);
+      @PathParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
+    pageRequest.addFilter("appId", appId, SearchFilter.OP.EQ);
     return new RestResponse<PageResponse<Environment>>(envService.listEnvironments(pageRequest));
   }
 
   @POST
-  @Path("{appID}")
-  public RestResponse<Environment> createEnvironment(@PathParam("appID") String appID, Environment environment) {
-    return new RestResponse<>(envService.createEnvironment(appID, environment));
+  @Path("{appId}")
+  public RestResponse<Environment> createEnvironment(@PathParam("appId") String appId, Environment environment) {
+    return new RestResponse<>(envService.createEnvironment(appId, environment));
   }
 }

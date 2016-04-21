@@ -15,7 +15,7 @@ import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.GenericDBCache;
+import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AuditService;
@@ -40,7 +40,7 @@ import javax.ws.rs.core.UriInfo;
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   private AuditService auditService = WingsBootstrap.lookup(AuditService.class);
-  private GenericDBCache dbCache = WingsBootstrap.lookup(GenericDBCache.class);
+  private GenericDbCache dbCache = WingsBootstrap.lookup(GenericDbCache.class);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -107,8 +107,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Application application = null;
     Environment environment = null;
     if (pathParameters.containsKey("app_id")) {
-      String appID = pathParameters.getFirst("app_id");
-      application = dbCache.get(Application.class, appID);
+      String appId = pathParameters.getFirst("app_id");
+      application = dbCache.get(Application.class, appId);
     }
     if (pathParameters.containsKey("env_id")) {
       String env = pathParameters.getFirst("env_id");

@@ -17,7 +17,7 @@ import java.io.IOException;
 public class SshSudoExecutor extends AbstractSshExecutor {
   @Override
   public Session getSession(SshSessionConfig config) throws JSchException {
-    return SSHSessionFactory.getSSHSession(config);
+    return SshSessionFactory.getSshSession(config);
   }
 
   @Override

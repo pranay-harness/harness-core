@@ -56,8 +56,8 @@ public class AppResource {
   }
 
   @GET
-  @Path("{appID}")
-  public RestResponse<Application> get(@PathParam("appID") String appID) {
-    return new RestResponse<>(appService.findByUUID(appID));
+  @Path("{appId}")
+  public RestResponse<Application> get(@PathParam("appId") String appId) {
+    return new RestResponse<>(appService.findByUuid(appId));
   }
 }

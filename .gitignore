@@ -9,3 +9,5 @@ target
 .settings
 .project
 dependency-reduced-pom.xml
+.checkstyle
+plugins

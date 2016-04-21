@@ -128,7 +128,7 @@ public class Base {
   public void onUpdate() {
     lastUpdatedAt = System.currentTimeMillis();
     if (uuid == null) {
-      uuid = UUIDGenerator.getUUID();
+      uuid = UUIDGenerator.getUuid();
     }
     if (createdAt == 0) {
       createdAt = System.currentTimeMillis();

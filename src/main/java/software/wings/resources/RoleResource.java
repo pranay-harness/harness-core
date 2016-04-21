@@ -50,14 +50,14 @@ public class RoleResource {
   }
 
   @DELETE
-  @Path("{roleID}")
-  public void delete(@PathParam("{roleID}") String roleID) {
-    roleService.delete(roleID);
+  @Path("{roleId}")
+  public void delete(@PathParam("{roleId}") String roleId) {
+    roleService.delete(roleId);
   }
 
   @GET
-  @Path("{roleID}")
-  public RestResponse<Role> get(@PathParam("roleID") String roleID) {
-    return new RestResponse<>(roleService.findByUUID(roleID));
+  @Path("{roleId}")
+  public RestResponse<Role> get(@PathParam("roleId") String roleId) {
+    return new RestResponse<>(roleService.findByUuid(roleId));
   }
 }

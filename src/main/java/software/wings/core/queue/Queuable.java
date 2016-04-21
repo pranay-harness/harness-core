@@ -100,7 +100,7 @@ public abstract class Queuable {
   @PrePersist
   public void onUpdate() {
     if (id == null) {
-      id = UUIDGenerator.getUUID();
+      id = UUIDGenerator.getUuid();
     }
   }
 }

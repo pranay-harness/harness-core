@@ -40,7 +40,7 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application findByUUID(String uuid) {
+  public Application findByUuid(String uuid) {
     return wingsPersistence.get(Application.class, uuid);
   }
 

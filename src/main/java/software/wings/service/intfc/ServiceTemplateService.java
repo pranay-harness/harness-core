@@ -8,9 +8,9 @@ import software.wings.beans.ServiceTemplate;
  * Created by anubhaw on 4/4/16.
  */
 public interface ServiceTemplateService {
-  PageResponse<ServiceTemplate> list(String envID, PageRequest<ServiceTemplate> pageRequest);
+  PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest);
 
-  ServiceTemplate createServiceTemplate(String envID, ServiceTemplate serviceTemplate);
+  ServiceTemplate createServiceTemplate(String envId, ServiceTemplate serviceTemplate);
 
-  ServiceTemplate updateServiceTemplate(String envID, ServiceTemplate serviceTemplate);
+  ServiceTemplate updateServiceTemplate(String envId, ServiceTemplate serviceTemplate);
 }

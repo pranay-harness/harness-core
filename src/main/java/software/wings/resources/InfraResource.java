@@ -33,54 +33,54 @@ public class InfraResource {
   @Inject private InfraService infraService;
 
   @GET
-  @Path("envID")
+  @Path("envId")
   public RestResponse<PageResponse<Infra>> listInfra(
-      @PathParam("envID") String envID, @BeanParam PageRequest<Infra> pageRequest) {
-    pageRequest.addFilter("envID", envID, SearchFilter.OP.EQ);
-    return new RestResponse<>(infraService.listInfra(envID, pageRequest));
+      @PathParam("envId") String envId, @BeanParam PageRequest<Infra> pageRequest) {
+    pageRequest.addFilter("envId", envId, SearchFilter.OP.EQ);
+    return new RestResponse<>(infraService.listInfra(envId, pageRequest));
   }
 
   @POST
-  @Path("envID")
-  public RestResponse<Infra> createInfra(@PathParam("envID") String envID, Infra infra) {
-    return new RestResponse<>(infraService.createInfra(infra, envID));
+  @Path("envId")
+  public RestResponse<Infra> createInfra(@PathParam("envId") String envId, Infra infra) {
+    return new RestResponse<>(infraService.createInfra(infra, envId));
   }
 
   @GET
-  @Path("/{infraID}/hosts")
+  @Path("/{infraId}/hosts")
   public RestResponse<PageResponse<Host>> listHosts(
-      @PathParam("infraID") String infraID, @BeanParam PageRequest<Host> pageRequest) {
-    pageRequest.addFilter("infraID", infraID, SearchFilter.OP.EQ);
+      @PathParam("infraId") String infraId, @BeanParam PageRequest<Host> pageRequest) {
+    pageRequest.addFilter("infraId", infraId, SearchFilter.OP.EQ);
     return new RestResponse<PageResponse<Host>>(infraService.listHosts(pageRequest));
   }
 
   @GET
-  @Path("{infraID}/hosts/{hostID}")
-  public RestResponse<Host> listHosts(@PathParam("infraID") String infraID, @PathParam("hostID") String hostID) {
-    return new RestResponse<>(infraService.getHost(infraID, hostID));
+  @Path("{infraId}/hosts/{hostId}")
+  public RestResponse<Host> listHosts(@PathParam("infraId") String infraId, @PathParam("hostId") String hostId) {
+    return new RestResponse<>(infraService.getHost(infraId, hostId));
   }
 
   @POST
-  @Path("{infraID}/hosts")
-  public RestResponse<Host> createHost(@PathParam("infraID") String infraID, Host host) {
-    return new RestResponse<Host>(infraService.createHost(infraID, host));
+  @Path("{infraId}/hosts")
+  public RestResponse<Host> createHost(@PathParam("infraId") String infraId, Host host) {
+    return new RestResponse<Host>(infraService.createHost(infraId, host));
   }
 
   @PUT
-  @Path("{infraID}/hosts")
-  public RestResponse<Host> updateHost(@PathParam("infraID") String infraID, Host host) {
-    return new RestResponse<Host>(infraService.updateHost(infraID, host));
+  @Path("{infraId}/hosts")
+  public RestResponse<Host> updateHost(@PathParam("infraId") String infraId, Host host) {
+    return new RestResponse<Host>(infraService.updateHost(infraId, host));
   }
 
   @POST
-  @Path("tags/{envID}")
-  public RestResponse<Tag> saveTag(@PathParam("envID") String envID, Tag tag) {
-    return new RestResponse<>(infraService.createTag(envID, tag));
+  @Path("tags/{envId}")
+  public RestResponse<Tag> saveTag(@PathParam("envId") String envId, Tag tag) {
+    return new RestResponse<>(infraService.createTag(envId, tag));
   }
 
   @PUT
-  @Path("hosts/{hostID}/tag/{tagID}")
-  public RestResponse<Host> applyTag(@PathParam("hostID") String hostID, @PathParam("tagID") String tagID) {
-    return new RestResponse<>(infraService.applyTag(hostID, tagID));
+  @Path("hosts/{hostId}/tag/{tagID}")
+  public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagID") String tagID) {
+    return new RestResponse<>(infraService.applyTag(hostId, tagID));
   }
 }
