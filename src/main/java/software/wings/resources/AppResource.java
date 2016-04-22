@@ -74,7 +74,7 @@ public class AppResource {
   @GET
   @Path("{appId}")
   public RestResponse<Application> get(@PathParam("appId") String appId) {
-    return new RestResponse<>(appService.findByUUID(appId));
+    return new RestResponse<>(appService.findByUuid(appId));
   }
 
   @DELETE

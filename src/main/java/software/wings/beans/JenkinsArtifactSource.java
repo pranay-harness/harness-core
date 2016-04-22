@@ -44,7 +44,7 @@ public class JenkinsArtifactSource extends ArtifactSource {
       fileMetadata.setFileName(buildArtifact.getFileName());
       String uuid = fileService.saveFile(fileMetadata, in, ARTIFACTS);
       ArtifactFile artifactFile = new ArtifactFile();
-      artifactFile.setFileUUID(uuid);
+      artifactFile.setFileUuid(uuid);
       artifactFile.setFileName(buildArtifact.getFileName());
       in.close();
       return artifactFile;

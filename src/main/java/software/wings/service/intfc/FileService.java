@@ -19,7 +19,7 @@ public interface FileService {
 
   String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket);
 
-  void deleteFile(String fileID, FileBucket fileBucket);
+  void deleteFile(String fileId, FileBucket fileBucket);
 
   File download(String fileId, File file, FileBucket fileBucket);
 

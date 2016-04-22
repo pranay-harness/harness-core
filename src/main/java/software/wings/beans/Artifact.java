@@ -112,14 +112,14 @@ public class Artifact extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj)
       return true;
-    if (o == null || getClass() != o.getClass())
+    if (obj == null || getClass() != obj.getClass())
       return false;
-    if (!super.equals(o))
+    if (!super.equals(obj))
       return false;
-    Artifact artifact = (Artifact) o;
+    Artifact artifact = (Artifact) obj;
     return Objects.equals(application, artifact.application) && Objects.equals(release, artifact.release)
         && Objects.equals(compName, artifact.compName)
         && Objects.equals(artifactSourceName, artifact.artifactSourceName)

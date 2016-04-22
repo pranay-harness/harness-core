@@ -10,7 +10,7 @@ import java.util.List;
  * Created by anubhaw on 4/1/16.
  */
 public interface EnvironmentService {
-  public List<Environment> listEnvironments(String appID);
+  public List<Environment> listEnvironments(String appId);
 
   public Environment getEnvironments(String applicationId, String envName);
 

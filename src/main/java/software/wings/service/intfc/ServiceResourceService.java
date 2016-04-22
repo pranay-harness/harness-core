@@ -11,19 +11,19 @@ import java.util.List;
  * Created by anubhaw on 3/28/16.
  */
 public interface ServiceResourceService {
-  List<Service> list(String appID);
+  List<Service> list(String appId);
 
-  Service save(String appID, Service service);
+  Service save(String appId, Service service);
 
-  Service findByUUID(String uuid);
+  Service findByUuid(String uuid);
 
   Service update(Service service);
 
-  List<ConfigFile> getConfigs(String serviceID);
+  List<ConfigFile> getConfigs(String serviceId);
 
   String saveFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs);
 
-  ConfigFile getConfig(String configID);
+  ConfigFile getConfig(String configId);
 
   void updateFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs);
 }

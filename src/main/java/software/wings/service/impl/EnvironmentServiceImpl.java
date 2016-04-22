@@ -23,10 +23,10 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public List<Environment> listEnvironments(String appID) {
+  public List<Environment> listEnvironments(String appId) {
     Application application = wingsPersistence.createQuery(Application.class)
                                   .field(ID_KEY)
-                                  .equal(appID)
+                                  .equal(appId)
                                   .retrievedFields(true, "environments")
                                   .get();
     return application.getEnvironments();

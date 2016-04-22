@@ -19,13 +19,13 @@ public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Infra> listInfra(String envID, PageRequest<Infra> req) {
+  public PageResponse<Infra> listInfra(String envId, PageRequest<Infra> req) {
     return wingsPersistence.query(Infra.class, req);
   }
 
   @Override
-  public Infra createInfra(Infra infra, String envID) {
-    infra.setEnvID(envID);
+  public Infra createInfra(Infra infra, String envId) {
+    infra.setEnvID(envId);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
@@ -35,48 +35,48 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public Host getHost(String infraID, String hostID) {
-    return wingsPersistence.get(Host.class, hostID);
+  public Host getHost(String infraId, String hostId) {
+    return wingsPersistence.get(Host.class, hostId);
   }
 
   @Override
-  public Host createHost(String infraID, Host host) {
-    host.setInfraID(infraID);
+  public Host createHost(String infraId, Host host) {
+    host.setInfraID(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public Host updateHost(String infraID, Host host) {
-    host.setInfraID(infraID);
+  public Host updateHost(String infraId, Host host) {
+    host.setInfraID(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public Tag createTag(String envID, Tag tag) {
-    tag.setEnvID(envID);
+  public Tag createTag(String envId, Tag tag) {
+    tag.setEnvID(envId);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 
   @Override
-  public Host applyTag(String hostID, String tagID) {
-    Tag tag = wingsPersistence.get(Tag.class, tagID);
-    Host host = wingsPersistence.get(Host.class, hostID);
+  public Host applyTag(String hostId, String tagId) {
+    Tag tag = wingsPersistence.get(Tag.class, tagId);
+    Host host = wingsPersistence.get(Host.class, hostId);
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
     wingsPersistence.update(host, updateOp);
-    return wingsPersistence.get(Host.class, hostID);
+    return wingsPersistence.get(Host.class, hostId);
   }
 
   @Override
-  public Integer importHosts(String infraID, InputStream inputStream, HostFileType fileType) {
-    Infra infra = wingsPersistence.get(Infra.class, infraID); // TODO: validate infra
-    List<Host> hosts = HostFileHelper.parseHosts(inputStream, infraID, fileType);
+  public Integer importHosts(String infraId, InputStream inputStream, HostFileType fileType) {
+    Infra infra = wingsPersistence.get(Infra.class, infraId); // TODO: validate infra
+    List<Host> hosts = HostFileHelper.parseHosts(inputStream, infraId, fileType);
     List<String> IDs = wingsPersistence.save(hosts);
     return IDs.size();
   }
 
   @Override
-  public File exportHosts(String infraID, HostFileType fileType) {
-    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraID).asList();
+  public File exportHosts(String infraId, HostFileType fileType) {
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraId).asList();
     return HostFileHelper.createHostsFile(hosts, fileType);
   }
 }

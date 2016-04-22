@@ -70,14 +70,17 @@ public class Application extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (!super.equals(o))
+    }
+    if (!super.equals(obj)) {
       return false;
-    Application that = (Application) o;
+    }
+    Application that = (Application) obj;
     return Objects.equals(name, that.name) && Objects.equals(description, that.description)
         && Objects.equals(services, that.services);
   }

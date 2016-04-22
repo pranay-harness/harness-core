@@ -45,7 +45,7 @@ public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService 
 
     if (SUCCESS == result) {
       executor = SshExecutorFactory.getExecutor(config);
-      result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUUID(), "wings/downloads/");
+      result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUuid(), "wings/downloads/");
       executionLogs.appendLogs(config.getExecutionId(), String.format("File transfer finished with %s\n", result));
 
       if (SUCCESS == result) {

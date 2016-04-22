@@ -12,9 +12,9 @@ public interface RoleService {
 
   public Role save(Role role);
 
-  public Role findByUUID(String uuid);
+  public Role findByUuid(String uuid);
 
   public Role update(Role role);
 
-  public void delete(String roleID);
+  public void delete(String roleId);
 }

@@ -116,8 +116,8 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
-  public void deleteFile(String fileID, FileBucket fileBucket) {
-    fileBucket.getGridFSBucket().delete(new ObjectId(fileID));
+  public void deleteFile(String fileId, FileBucket fileBucket) {
+    fileBucket.getGridFSBucket().delete(new ObjectId(fileId));
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {

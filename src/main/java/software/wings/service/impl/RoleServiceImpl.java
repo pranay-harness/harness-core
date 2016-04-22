@@ -31,7 +31,7 @@ public class RoleServiceImpl implements RoleService {
     return wingsPersistence.saveAndGet(Role.class, role);
   }
 
-  public Role findByUUID(String uuid) {
+  public Role findByUuid(String uuid) {
     return wingsPersistence.get(Role.class, uuid);
   }
 
@@ -39,12 +39,12 @@ public class RoleServiceImpl implements RoleService {
     return save(role);
   }
 
-  public void delete(String roleID) {
-    wingsPersistence.delete(Role.class, roleID);
+  public void delete(String roleId) {
+    wingsPersistence.delete(Role.class, roleId);
     List<User> users =
-        wingsPersistence.createQuery(User.class).disableValidation().field("roles").equal(roleID).asList();
+        wingsPersistence.createQuery(User.class).disableValidation().field("roles").equal(roleId).asList();
     for (User user : users) {
-      userService.revokeRole(user.getUuid(), roleID);
+      userService.revokeRole(user.getUuid(), roleId);
     }
   }
 }

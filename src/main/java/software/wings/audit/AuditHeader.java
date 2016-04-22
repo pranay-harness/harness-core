@@ -1,10 +1,14 @@
 package software.wings.audit;
 
-import java.util.Date;
-
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.*;
+import software.wings.beans.Application;
+import software.wings.beans.Base;
+import software.wings.beans.Environment;
+import software.wings.beans.HttpMethod;
+import software.wings.beans.Service;
+import software.wings.beans.User;
+
+import java.util.Date;
 
 /**
  * HttpAuditHeader bean class.
@@ -205,13 +209,16 @@ public class AuditHeader extends Base {
 
   @Override
   public String toString() {
-    return "AuditHeader [url=" + url + ", resourcePath=" + resourcePath + ", queryParams=" + queryParams
-        + ", requestMethod=" + requestMethod + ", headerString=" + headerString + ", responseType=" + responseType
-        + ", responseStatusCode=" + responseStatusCode + ", errorCode=" + errorCode
-        + ", remoteHostName=" + remoteHostName + ", remoteHostPort=" + remoteHostPort
-        + ", remoteIpAddress=" + remoteIpAddress + ", remoteUser=" + remoteUser + ", localHostName=" + localHostName
-        + ", localIpAddress=" + localIpAddress + ", application=" + application + ", component=" + component
-        + ", environment=" + environment + ", requestTime=" + requestTime + ", responseTime=" + responseTime + "]";
+    return "AuditHeader{"
+        + "remoteUser=" + remoteUser + ", application=" + application + ", component=" + component
+        + ", environment=" + environment + ", url='" + url + '\'' + ", resourcePath='" + resourcePath + '\''
+        + ", queryParams='" + queryParams + '\'' + ", requestMethod=" + requestMethod + ", headerString='"
+        + headerString + '\'' + ", responseType=" + responseType + ", responseStatusCode=" + responseStatusCode
+        + ", errorCode='" + errorCode + '\'' + ", remoteHostName='" + remoteHostName + '\''
+        + ", remoteHostPort=" + remoteHostPort + ", remoteIpAddress='" + remoteIpAddress + '\'' + ", localHostName='"
+        + localHostName + '\'' + ", localIpAddress='" + localIpAddress + '\'' + ", requestPayloadUuid='"
+        + requestPayloadUuid + '\'' + ", responsePayloadUuid='" + responsePayloadUuid + '\''
+        + ", requestTime=" + requestTime + ", responseTime=" + responseTime + '}';
   }
 
   public enum RequestType { REQUEST, RESPONSE }

@@ -14,11 +14,11 @@ import software.wings.beans.User;
 public interface AuditService {
   public AuditHeader create(AuditHeader header);
 
+  public String create(AuditHeader header, RequestType requestType, byte[] httpBody);
+
   public void finalize(AuditHeader header, byte[] payload);
 
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req);
-
-  public String create(AuditHeader header, RequestType requestType, byte[] httpBody);
 
   public void updateUser(AuditHeader header, User user);
 }

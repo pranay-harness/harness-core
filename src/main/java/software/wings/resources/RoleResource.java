@@ -58,6 +58,6 @@ public class RoleResource {
   @GET
   @Path("{roleId}")
   public RestResponse<Role> get(@PathParam("roleId") String roleId) {
-    return new RestResponse<>(roleService.findByUUID(roleId));
+    return new RestResponse<>(roleService.findByUuid(roleId));
   }
 }

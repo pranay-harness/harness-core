@@ -24,25 +24,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject FileService fileService;
 
   @Override
-  public List<Service> list(String appID) {
+  public List<Service> list(String appId) {
     Application application = wingsPersistence.createQuery(Application.class)
                                   .field(ID_KEY)
-                                  .equal(appID)
+                                  .equal(appId)
                                   .retrievedFields(true, "services")
                                   .get();
     return application.getServices();
   }
 
-  public Service save(String appID, Service service) {
+  public Service save(String appId, Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
     UpdateOperations<Application> updateOperations =
         wingsPersistence.createUpdateOperations(Application.class).add("services", savedService);
-    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appID);
+    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appId);
     wingsPersistence.update(updateQuery, updateOperations);
     return savedService;
   }
 
-  public Service findByUUID(String uuid) {
+  public Service findByUuid(String uuid) {
     return wingsPersistence.get(Service.class, uuid);
   }
 
@@ -57,8 +57,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public List<ConfigFile> getConfigs(String serviceID) {
-    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class).field("serviceID").equal(serviceID);
+  public List<ConfigFile> getConfigs(String serviceId) {
+    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class).field("serviceID").equal(serviceId);
     return query.asList();
   }
 
@@ -75,8 +75,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public ConfigFile getConfig(String configID) {
-    return wingsPersistence.get(ConfigFile.class, configID);
+  public ConfigFile getConfig(String configId) {
+    return wingsPersistence.get(ConfigFile.class, configId);
   }
 
   @Override

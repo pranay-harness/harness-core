@@ -53,7 +53,7 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public Application findByUUID(String uuid) {
+  public Application findByUuid(String uuid) {
     return wingsPersistence.get(Application.class, uuid);
   }
 
@@ -76,8 +76,8 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public String updatePlatformSoftware(
-      String platformID, PlatformSoftware platformSoftware, InputStream in, FileBucket fileBucket) {
-    PlatformSoftware storedPlatformSoftware = wingsPersistence.get(PlatformSoftware.class, platformID);
+      String platformId, PlatformSoftware platformSoftware, InputStream in, FileBucket fileBucket) {
+    PlatformSoftware storedPlatformSoftware = wingsPersistence.get(PlatformSoftware.class, platformId);
     if (newPlatformSoftwareBinaryUploaded(storedPlatformSoftware, platformSoftware)) {
       String fileID = fileService.saveFile(platformSoftware, in, fileBucket);
       platformSoftware.setFileUUID(fileID);
@@ -88,35 +88,35 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public List<PlatformSoftware> getPlatforms(String appID) {
-    Query<PlatformSoftware> query = wingsPersistence.createQuery(PlatformSoftware.class).field("appID").equal(appID);
+  public List<PlatformSoftware> getPlatforms(String appId) {
+    Query<PlatformSoftware> query = wingsPersistence.createQuery(PlatformSoftware.class).field("appID").equal(appId);
     return query.asList();
   }
 
   @Override
-  public PlatformSoftware getPlatform(String appID, String platformID) {
-    return wingsPersistence.get(PlatformSoftware.class, platformID);
+  public PlatformSoftware getPlatform(String appId, String platformId) {
+    return wingsPersistence.get(PlatformSoftware.class, platformId);
   }
 
   @Override
-  public void deletePlatform(String appID, String platformID) {
+  public void deletePlatform(String appId, String platformId) {
     Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
     for (Service service : application.getServices()) {
       for (PlatformSoftware platformSoftware : service.getPlatformSoftwares()) {
-        if (platformSoftware.getUuid().equals(platformID)) {
+        if (platformSoftware.getUuid().equals(platformId)) {
           throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
         }
       }
     }
     // safe to delete
-    PlatformSoftware platformSoftware = wingsPersistence.get(PlatformSoftware.class, platformID);
-    wingsPersistence.delete(PlatformSoftware.class, platformID);
+    PlatformSoftware platformSoftware = wingsPersistence.get(PlatformSoftware.class, platformId);
+    wingsPersistence.delete(PlatformSoftware.class, platformId);
     fileService.deleteFile(platformSoftware.getFileUUID(), PLATFORMS);
   }
 
   @Override
-  public void deleteApp(String appID) {
-    wingsPersistence.delete(Application.class, appID);
+  public void deleteApp(String appId) {
+    wingsPersistence.delete(Application.class, appId);
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(

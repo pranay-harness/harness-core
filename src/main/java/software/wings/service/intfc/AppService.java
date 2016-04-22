@@ -23,7 +23,7 @@ public interface AppService {
 
   PageResponse<Application> list(PageRequest<Application> req);
 
-  Application findByUUID(String uuid);
+  Application findByUuid(String uuid);
 
   Application update(Application app);
 
@@ -31,13 +31,13 @@ public interface AppService {
       PlatformSoftware platformSoftware, InputStream uploadedInputStream, FileBucket fileBucket);
 
   String updatePlatformSoftware(
-      String platformID, PlatformSoftware platformSoftware, InputStream uploadedInputStream, FileBucket softwares);
+      String platformId, PlatformSoftware platformSoftware, InputStream uploadedInputStream, FileBucket softwares);
 
-  List<PlatformSoftware> getPlatforms(String appID);
+  List<PlatformSoftware> getPlatforms(String appId);
 
-  PlatformSoftware getPlatform(String appID, String platformID);
+  PlatformSoftware getPlatform(String appId, String platformId);
 
-  void deletePlatform(String appID, String platformID);
+  void deletePlatform(String appId, String platformId);
 
-  void deleteApp(String appID);
+  void deleteApp(String appId);
 }

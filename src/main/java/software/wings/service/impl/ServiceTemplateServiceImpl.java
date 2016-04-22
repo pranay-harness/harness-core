@@ -18,18 +18,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<ServiceTemplate> list(String envID, PageRequest<ServiceTemplate> pageRequest) {
+  public PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest) {
     return wingsPersistence.query(ServiceTemplate.class, pageRequest);
   }
 
   @Override
-  public ServiceTemplate createServiceTemplate(String envID, ServiceTemplate serviceTemplate) {
-    serviceTemplate.setEnvId(envID);
+  public ServiceTemplate createServiceTemplate(String envId, ServiceTemplate serviceTemplate) {
+    serviceTemplate.setEnvId(envId);
     return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
   }
 
   @Override
-  public ServiceTemplate updateServiceTemplate(String envID, ServiceTemplate serviceTemplate) {
+  public ServiceTemplate updateServiceTemplate(String envId, ServiceTemplate serviceTemplate) {
     return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
   }
 }

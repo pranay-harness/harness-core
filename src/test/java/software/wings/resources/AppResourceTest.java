@@ -36,10 +36,10 @@ public class AppResourceTest {
 
   @Test
   public void testFindByName() {
-    when(appService.findByUUID(TEST_UUID)).thenReturn(testApp);
+    when(appService.findByUuid(TEST_UUID)).thenReturn(testApp);
     RestResponse<Application> actual =
         resources.client().target("/apps/" + TEST_UUID).request().get(new GenericType<RestResponse<Application>>() {});
     assertThat(actual.getResource()).isEqualTo(testApp);
-    verify(appService).findByUUID(TEST_UUID);
+    verify(appService).findByUuid(TEST_UUID);
   }
 }

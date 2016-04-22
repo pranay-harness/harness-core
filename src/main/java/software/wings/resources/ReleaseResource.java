@@ -10,7 +10,6 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
 
@@ -53,7 +52,7 @@ public class ReleaseResource {
   @ExceptionMetered
   @Produces("application/json")
   public RestResponse<Release> save(@PathParam("applicationId") String applicationId, Release release) {
-    release.setApplication(WingsBootstrap.lookup(AppService.class).findByUUID(applicationId));
+    release.setApplication(WingsBootstrap.lookup(AppService.class).findByUuid(applicationId));
     return new RestResponse<Release>(releaseService.create(release));
   }
 }
