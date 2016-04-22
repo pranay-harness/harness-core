@@ -209,13 +209,16 @@ public class AuditHeader extends Base {
 
   @Override
   public String toString() {
-    return "AuditHeader [url=" + url + ", resourcePath=" + resourcePath + ", queryParams=" + queryParams
-        + ", requestMethod=" + requestMethod + ", headerString=" + headerString + ", responseType=" + responseType
-        + ", responseStatusCode=" + responseStatusCode + ", errorCode=" + errorCode
-        + ", remoteHostName=" + remoteHostName + ", remoteHostPort=" + remoteHostPort
-        + ", remoteIpAddress=" + remoteIpAddress + ", remoteUser=" + remoteUser + ", localHostName=" + localHostName
-        + ", localIpAddress=" + localIpAddress + ", application=" + application + ", component=" + component
-        + ", environment=" + environment + ", requestTime=" + requestTime + ", responseTime=" + responseTime + "]";
+    return "AuditHeader{"
+        + "remoteUser=" + remoteUser + ", application=" + application + ", component=" + component
+        + ", environment=" + environment + ", url='" + url + '\'' + ", resourcePath='" + resourcePath + '\''
+        + ", queryParams='" + queryParams + '\'' + ", requestMethod=" + requestMethod + ", headerString='"
+        + headerString + '\'' + ", responseType=" + responseType + ", responseStatusCode=" + responseStatusCode
+        + ", errorCode='" + errorCode + '\'' + ", remoteHostName='" + remoteHostName + '\''
+        + ", remoteHostPort=" + remoteHostPort + ", remoteIpAddress='" + remoteIpAddress + '\'' + ", localHostName='"
+        + localHostName + '\'' + ", localIpAddress='" + localIpAddress + '\'' + ", requestPayloadUuid='"
+        + requestPayloadUuid + '\'' + ", responsePayloadUuid='" + responsePayloadUuid + '\''
+        + ", requestTime=" + requestTime + ", responseTime=" + responseTime + '}';
   }
 
   public enum RequestType { REQUEST, RESPONSE }

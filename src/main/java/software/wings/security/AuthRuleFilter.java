@@ -3,6 +3,7 @@ package software.wings.security;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static software.wings.beans.ErrorConstants.ACCESS_DENIED;
 import static software.wings.beans.ErrorConstants.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorConstants.INVALID_TOKEN;
 
 import com.google.common.collect.Lists;
 
@@ -47,58 +48,20 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);
     User user = authToken.getUser();
-    requestContext.setProperty("USER", user);
-    if (null != user) {
-      updateUserInAuditRecord(user); // Set for FIXME: find better place
+    if (user != null) {
+      requestContext.setProperty("USER", user);
+      updateUserInAuditRecord(user); // FIXME: find better place
+      UserThreadLocal.set(user);
     }
     List<PermissionAttr> permissionAttrs = getAccessTypes();
     authorizeRequest(requestContext.getUriInfo(), user, permissionAttrs);
-  }
-
-  private AuthToken extractToken(ContainerRequestContext requestContext) {
-    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
-    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-      throw new WingsException(ErrorConstants.INVALID_TOKEN);
-    }
-    String tokenString = authorizationHeader.substring("Bearer".length()).trim();
-    AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
-    if (null != authToken && authToken.getExpireAt() < System.currentTimeMillis()) {
-      throw new WingsException(EXPIRED_TOKEN);
-    }
-    return authToken;
-  }
-
-  private void updateUserInAuditRecord(User user) {
-    auditService.updateUser(AuditHelper.getInstance().get(), User.getPublicUser(user));
-  }
-
-  private List<PermissionAttr> getAccessTypes() {
-    List<PermissionAttr> permissionAttrs = new ArrayList<>();
-    List<PermissionAttr> methodPermissionAttrs = new ArrayList<>();
-    List<PermissionAttr> classPermissionAttrs = new ArrayList<>();
-
-    Method resourceMethod = resourceInfo.getResourceMethod();
-    AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
-    if (null != methodAnnotations && methodAnnotations.value().length > 0) {
-      methodPermissionAttrs.addAll(Lists.newArrayList(methodAnnotations.value()));
-    }
-
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
-    if (null != classAnnotations && classAnnotations.value().length > 0) {
-      classPermissionAttrs.addAll(Lists.newArrayList(classAnnotations.value()));
-    }
-    permissionAttrs.addAll(methodPermissionAttrs);
-    permissionAttrs.removeAll(classPermissionAttrs);
-    permissionAttrs.addAll(classPermissionAttrs);
-    return permissionAttrs;
   }
 
   private void authorizeRequest(UriInfo uriInfo, User user, List<PermissionAttr> permissionAttrs) {
     MultivaluedMap<String, String> pathParameters = uriInfo.getPathParameters();
     for (PermissionAttr permissionAttr : permissionAttrs) {
       if (!authorizeAccessType(pathParameters, permissionAttr, user.getRoles())) {
-        throw new WingsException(String.valueOf(ACCESS_DENIED));
+        throw new WingsException(ACCESS_DENIED);
       }
     }
   }
@@ -108,8 +71,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     Application application = null;
     Environment environment = null;
     if (pathParameters.containsKey("app_id")) {
-      String appId = pathParameters.getFirst("app_id");
-      application = dbCache.get(Application.class, appId);
+      String appID = pathParameters.getFirst("app_id");
+      application = dbCache.get(Application.class, appID);
     }
     if (pathParameters.containsKey("env_id")) {
       String env = pathParameters.getFirst("env_id");
@@ -138,19 +101,60 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return false;
   }
 
-  private boolean hasResourceAccess(String reqResource, Permission permission) {
-    return "ALL".equals(permission.getResource()) || (reqResource.equals(permission.getResource()));
-  }
-
-  private boolean canPerformAction(String reqAction, Permission permission) {
-    return "ALL".equals(permission.getAction()) || (reqAction.equals(permission.getAction()));
+  private boolean forApplication(Application application, boolean reqApp, Permission permission) {
+    return reqApp && ("ALL".equals(permission.getServiceId()) || (application.equals(permission.getServiceId())));
   }
 
   private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
     return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getName().equals(permission.getEnvId()));
   }
 
-  private boolean forApplication(Application application, boolean reqApp, Permission permission) {
-    return reqApp && ("ALL".equals(permission.getServiceId()) || (application.equals(permission.getServiceId())));
+  private boolean canPerformAction(String reqAction, Permission permission) {
+    return "ALL".equals(permission.getAction()) || (reqAction.equals(permission.getAction()));
+  }
+
+  private boolean hasResourceAccess(String reqResource, Permission permission) {
+    return "ALL".equals(permission.getResource()) || (reqResource.equals(permission.getResource()));
+  }
+
+  private List<PermissionAttr> getAccessTypes() {
+    List<PermissionAttr> permissionAttrs = new ArrayList<>();
+    List<PermissionAttr> methodPermissionAttrs = new ArrayList<>();
+    List<PermissionAttr> classPermissionAttrs = new ArrayList<>();
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
+    if (null != methodAnnotations && methodAnnotations.value().length > 0) {
+      methodPermissionAttrs.addAll(Lists.newArrayList(methodAnnotations.value()));
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
+    if (null != classAnnotations && classAnnotations.value().length > 0) {
+      classPermissionAttrs.addAll(Lists.newArrayList(classAnnotations.value()));
+    }
+    permissionAttrs.addAll(methodPermissionAttrs);
+    permissionAttrs.removeAll(classPermissionAttrs);
+    permissionAttrs.addAll(classPermissionAttrs);
+    return permissionAttrs;
+  }
+
+  private void updateUserInAuditRecord(User user) {
+    auditService.updateUser(AuditHelper.getInstance().get(), User.getPublicUser(user));
+  }
+
+  private AuthToken extractToken(ContainerRequestContext requestContext) {
+    String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+      throw new WingsException(INVALID_TOKEN);
+    }
+    String tokenString = authorizationHeader.substring("Bearer".length()).trim();
+    AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
+    if (authToken == null) {
+      throw new WingsException(INVALID_TOKEN);
+    } else if (authToken.getExpireAt() < System.currentTimeMillis()) {
+      throw new WingsException(EXPIRED_TOKEN);
+    }
+    return authToken;
   }
 }

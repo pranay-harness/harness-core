@@ -6,7 +6,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.ArtifactSource.ArtifactType;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +21,8 @@ public class Service extends Base {
   private ArtifactType artifactType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
+
+  @Reference(idOnly = true, ignoreMissing = true) private List<ConfigFile> configFiles;
 
   public String getName() {
     return name;
@@ -55,36 +56,30 @@ public class Service extends Base {
     this.platformSoftwares = platformSoftwares;
   }
 
-  /**
-   * Adds a platform software to service.
-   * @param platformSoftware PlatformSoftware to add.
-   */
-  public void addPlatformSoftware(PlatformSoftware platformSoftware) {
-    if (platformSoftwares == null) {
-      platformSoftwares = new ArrayList<>();
-    }
-    platformSoftwares.add(platformSoftware);
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
+  }
+
+  public void setConfigFiles(List<ConfigFile> configFiles) {
+    this.configFiles = configFiles;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    if (!super.equals(o))
+      return false;
+    Service service = (Service) o;
+    return Objects.equals(name, service.name) && Objects.equals(description, service.description)
+        && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), name, description, artifactType, platformSoftwares);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    Service service = (Service) obj;
-    return Objects.equals(name, service.name) && Objects.equals(description, service.description)
-        && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
   }
 
   @Override
@@ -102,6 +97,7 @@ public class Service extends Base {
     private String description;
     private ArtifactType artifactType;
     private List<PlatformSoftware> platformSoftwares;
+    private List<ConfigFile> configFiles;
     private String uuid;
     private User createdBy;
     private long createdAt;
@@ -111,9 +107,65 @@ public class Service extends Base {
 
     private Builder() {}
 
-    /**
-     * @return copy of Builder object.
-     */
+    public static Builder aService() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
+      this.platformSoftwares = platformSoftwares;
+      return this;
+    }
+
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
+      this.configFiles = configFiles;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
     public Builder but() {
       return aService()
           .withName(name)
@@ -128,63 +180,6 @@ public class Service extends Base {
           .withActive(active);
     }
 
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
-      this.platformSoftwares = platformSoftwares;
-      return this;
-    }
-
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public static Builder aService() {
-      return new Builder();
-    }
-
-    /**
-     * @return new Service object.
-     */
     public Service build() {
       Service service = new Service();
       service.setName(name);
@@ -192,6 +187,7 @@ public class Service extends Base {
       service.setArtifactType(artifactType);
       service.setPlatformSoftwares(platformSoftwares);
       service.setUuid(uuid);
+      service.setConfigFiles(configFiles);
       service.setCreatedBy(createdBy);
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);

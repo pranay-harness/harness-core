@@ -1,7 +1,10 @@
 package software.wings.dl;
 
+import static java.lang.System.currentTimeMillis;
+
 import com.google.inject.Singleton;
 
+import com.mongodb.DBCollection;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
@@ -17,8 +20,10 @@ import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
+import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
@@ -51,6 +56,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
+  public <T extends Base> T get(Class<T> cls, String id) {
+    return get(cls, id, ReadPref.NORMAL);
+  }
+
+  @Override
+  public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
+    return datastoreMap.get(readPref).get(cls, id);
+  }
+
+  @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
     return get(cls, req, ReadPref.NORMAL);
   }
@@ -65,19 +80,17 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, String id) {
-    return get(cls, id, ReadPref.NORMAL);
-  }
-
-  @Override
-  public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref) {
-    return datastoreMap.get(readPref).get(cls, id);
-  }
-
-  @Override
   public <T extends Base> String save(T t) {
     Key<T> key = primaryDatastore.save(t);
     return (String) key.getId();
+  }
+
+  @Override
+  public <T extends Base> List<String> save(List<T> ts) {
+    Iterable<Key<T>> keys = primaryDatastore.save(ts);
+    List<String> IDs = new ArrayList<>();
+    keys.forEach(tKey -> IDs.add((String) tKey.getId()));
+    return IDs;
   }
 
   @Override
@@ -88,6 +101,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
+    ops.set("lastUpdatedAt", currentTimeMillis());
+    if (UserThreadLocal.get() != null) {
+      ops.set("lastUpdatedBy", UserThreadLocal.get());
+    }
     return primaryDatastore.update(ent, ops);
   }
 
@@ -120,11 +137,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
-    GridFSBucket gridFSBucket =
-        GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
-    return fileId.toHexString();
+  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
+    return primaryDatastore.createUpdateOperations(cls);
   }
 
   @Override
@@ -135,11 +149,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
     return datastoreMap.get(readPref).createQuery(cls);
-  }
-
-  @Override
-  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
-    return primaryDatastore.createUpdateOperations(cls);
   }
 
   @Override
@@ -154,6 +163,14 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
+  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
+    GridFSBucket gridFSBucket =
+        GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
+    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
+    return fileId.toHexString();
+  }
+
+  @Override
   public Datastore getDatastore() {
     return primaryDatastore;
   }
@@ -164,6 +181,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
+  public DBCollection getCollection(String collectionName) {
+    return primaryDatastore.getDB().getCollection(collectionName);
+  }
+
   public void start() throws Exception {
     // Do nothing
   }

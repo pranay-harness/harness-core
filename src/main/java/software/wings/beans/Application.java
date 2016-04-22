@@ -21,6 +21,8 @@ public class Application extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
 
+  @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments;
+
   public String getName() {
     return name;
   }
@@ -45,21 +47,26 @@ public class Application extends Base {
     this.services = services;
   }
 
-  /**
-   * Adds a service to application.
-   *
-   * @param service service to be added to application.
-   */
   public void addService(Service service) {
-    if (services == null) {
-      services = new ArrayList<>();
+    if (this.services == null) {
+      this.services = new ArrayList<>();
     }
-    services.add(service);
+    this.services.add(service);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), name, description, services);
+  public List<Environment> getEnvironments() {
+    return environments;
+  }
+
+  public void setEnvironments(List<Environment> environments) {
+    this.environments = environments;
+  }
+
+  public void addEnvironment(Environment environment) {
+    if (this.environments == null) {
+      this.environments = new ArrayList<>();
+    }
+    this.environments.add(environment);
   }
 
   @Override
@@ -76,6 +83,11 @@ public class Application extends Base {
     Application that = (Application) obj;
     return Objects.equals(name, that.name) && Objects.equals(description, that.description)
         && Objects.equals(services, that.services);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), name, description, services);
   }
 
   @Override
@@ -106,10 +118,55 @@ public class Application extends Base {
 
     private Builder() {}
 
-    /**
-     * copy method for the builder.
-     * @return a copy of the builder.
-     */
+    public static Builder anApplication() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .withName(name)
@@ -123,59 +180,6 @@ public class Application extends Base {
           .withActive(active);
     }
 
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withServices(List<Service> services) {
-      this.services = services;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public static Builder anApplication() {
-      return new Builder();
-    }
-
-    /**
-     * builds an application object.
-     * @return newly created application object.
-     */
     public Application build() {
       Application application = new Application();
       application.setName(name);

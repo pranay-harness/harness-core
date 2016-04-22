@@ -113,15 +113,12 @@ public class Artifact extends Base {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
+    if (this == obj)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass())
       return false;
-    }
-    if (!super.equals(obj)) {
+    if (!super.equals(obj))
       return false;
-    }
     Artifact artifact = (Artifact) obj;
     return Objects.equals(application, artifact.application) && Objects.equals(release, artifact.release)
         && Objects.equals(compName, artifact.compName)
@@ -150,36 +147,24 @@ public class Artifact extends Base {
    * Created by peeyushaggarwal on 4/4/16.
    */
   @Retention(RetentionPolicy.RUNTIME)
-  @Constraint(validatedBy = Validator.class)
-  public @interface ValidArtifact {
-    /**
-     * message for formatting error.
-     * @return message string.
-     */
-    String message() default "bean isNotBlank(bean.getApplication().getUuid()) "
-        + "have id for updating and application id is not same.";
+  @Constraint(validatedBy = ValidArtifact.Validator.class)
+  public static @interface ValidArtifact {
+    String
+    message() default "bean isNotBlank(bean.getApplication().getUuid()) have id for updating and application id is not same.";
 
-    /**
-     * groups for which to apply method.
-     * @return list of classes as groups.
-     */
     Class<?>[] groups() default {};
 
-    /**
-     * List of payloads to check.
-     * @return payloads.
-     */
     Class<? extends Payload>[] payload() default {};
-  }
 
-  public static class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
-    @Override
-    public void initialize(final ValidArtifact validateForUpdate) {}
+    public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
+      @Override
+      public void initialize(final ValidArtifact validateForUpdate) {}
 
-    @Override
-    public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
-      return bean.getApplication() != null && isNotBlank(bean.getApplication().getUuid())
-          && isNotBlank(bean.getRelease().getUuid());
+      @Override
+      public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
+        return bean.getApplication() != null && isNotBlank(bean.getApplication().getUuid())
+            && isNotBlank(bean.getRelease().getUuid());
+      }
     }
   }
 
@@ -201,10 +186,6 @@ public class Artifact extends Base {
 
     private Builder() {}
 
-    /**
-     * creates a copy of builder.
-     * @return copy of builder.
-     */
     public Builder but() {
       return anArtifact()
           .withApplication(application)
@@ -297,10 +278,6 @@ public class Artifact extends Base {
       return new Builder();
     }
 
-    /**
-     * builds an artifact object.
-     * @return artifact object.
-     */
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setApplication(application);

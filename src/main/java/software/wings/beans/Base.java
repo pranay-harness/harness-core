@@ -1,12 +1,14 @@
 package software.wings.beans;
 
+import static java.lang.System.currentTimeMillis;
+
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.common.UUIDGenerator;
+import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import javax.validation.constraints.NotNull;
@@ -89,24 +91,35 @@ public class Base {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) {
+    if (this == obj)
       return true;
-    }
-    if (obj == null) {
+    if (obj == null)
       return false;
-    }
-    if (getClass() != obj.getClass()) {
+    if (getClass() != obj.getClass())
       return false;
-    }
     Base other = (Base) obj;
     if (uuid == null) {
-      if (other.uuid != null) {
+      if (other.uuid != null)
         return false;
-      }
-    } else if (!uuid.equals(other.uuid)) {
+    } else if (!uuid.equals(other.uuid))
       return false;
-    }
     return true;
+  }
+
+  @PrePersist
+  public void onSave() {
+    if (uuid == null) {
+      uuid = getUuid();
+    }
+    if (createdAt == 0) {
+      createdAt = currentTimeMillis();
+    }
+    if (createdBy == null) {
+      createdBy = UserThreadLocal.get();
+    }
+
+    lastUpdatedAt = currentTimeMillis();
+    lastUpdatedBy = UserThreadLocal.get();
   }
 
   @Override
@@ -119,19 +132,5 @@ public class Base {
         .add("lastUpdatedAt", lastUpdatedAt)
         .add("active", active)
         .toString();
-  }
-
-  /**
-   * callback for before storing object in mongo.
-   */
-  @PrePersist
-  public void onUpdate() {
-    lastUpdatedAt = System.currentTimeMillis();
-    if (uuid == null) {
-      uuid = UUIDGenerator.getUuid();
-    }
-    if (createdAt == 0) {
-      createdAt = System.currentTimeMillis();
-    }
   }
 }

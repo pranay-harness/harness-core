@@ -7,6 +7,8 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
+import javax.inject.Inject;
+
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http
  * header entries.
@@ -15,7 +17,6 @@ import software.wings.service.intfc.AuditService;
  */
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
-
   private static AuditHelper instance = new AuditHelper();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -58,7 +59,8 @@ public class AuditHelper {
       AuditService auditService = WingsBootstrap.lookup(AuditService.class);
       auditService.create(header, requestType, httpBody);
     } catch (RuntimeException exception) {
-      logger.error("Exception occurred while trying to save payload - headerId" + header.getUuid());
+      logger.error(
+          "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null));
       throw exception;
     }
   }

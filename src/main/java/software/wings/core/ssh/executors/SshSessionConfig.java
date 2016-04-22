@@ -54,7 +54,7 @@ public class SshSessionConfig {
     return executorType;
   }
 
-  public String getExecutionID() {
+  public String getExecutionId() {
     return executionId;
   }
 
@@ -130,8 +130,8 @@ public class SshSessionConfig {
       return this;
     }
 
-    public SshSessionConfigBuilder executionId(String executionId) {
-      this.executionId = executionId;
+    public SshSessionConfigBuilder executionId(String executionID) {
+      this.executionId = executionID;
       return this;
     }
 

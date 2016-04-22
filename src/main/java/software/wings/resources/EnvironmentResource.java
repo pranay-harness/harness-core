@@ -4,16 +4,12 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
 import software.wings.beans.Environment;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.EnvironmentService;
 
-import javax.ws.rs.BeanParam;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -24,7 +20,7 @@ import javax.ws.rs.Produces;
 /**
  * Created by anubhaw on 4/1/16.
  */
-@Path("/env")
+@Path("/environments")
 @AuthRule
 @Timed
 @ExceptionMetered
@@ -35,10 +31,8 @@ public class EnvironmentResource {
 
   @GET
   @Path("{appId}")
-  public RestResponse<PageResponse<Environment>> listEnvironments(
-      @PathParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    return new RestResponse<PageResponse<Environment>>(envService.listEnvironments(pageRequest));
+  public RestResponse<List<Environment>> listEnvironments(@PathParam("appId") String appId) {
+    return new RestResponse<List<Environment>>(envService.listEnvironments(appId));
   }
 
   @POST

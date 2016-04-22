@@ -35,7 +35,6 @@ public class JsonUtils {
 
       // No filters used in this.
       return mapper.writer(filterProvider).writeValueAsString(obj);
-
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);

@@ -23,4 +23,4 @@ mongo:
 portal:
   url: http://192.168.1.15:9090/wings
 
-enableAuth: false
+enableAuth: true

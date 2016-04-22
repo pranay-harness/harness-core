@@ -28,10 +28,12 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
 import software.wings.filter.ResponseMessageResolver;
 import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
+import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.waitnotify.Notifier;
@@ -46,7 +48,7 @@ import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
 /**
- * The main application - entry point for the entire Wings Application.
+ * The main application - entry point for the entire Wings Application.n
  *
  * @author Rishi
  */
@@ -91,6 +93,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+    environment.jersey().register(AuditRequestFilter.class);
 
     registerJerseyProviders(environment);
 
@@ -132,12 +135,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     Set<Class<? extends AbstractQueueListener>> queueListeners = reflections.getSubTypesOf(AbstractQueueListener.class);
     for (Class<? extends AbstractQueueListener> queueListener : queueListeners) {
-      try {
-        logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
-        injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListener), 5);
-      } catch (Exception e) {
-        logger.warn("Error in guice injection... proceeding");
-      }
+      //      try {
+      logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
+      injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListener), 5);
+      //      } catch (Exception e) {
+      //        logger.warn("Error in guice injection... proceeding");
+      //      }
     }
   }
 
@@ -160,6 +163,7 @@ public class WingsApplication extends Application<MainConfiguration> {
                                                                .buildAuthFilter()));
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
       environment.jersey().register(AuthRuleFilter.class);
+      environment.jersey().register(AuthResponseFilter.class);
     }
   }
 

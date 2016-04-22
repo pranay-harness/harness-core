@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 /**
- * Application Resource class
+ * Application Resource class.
  *
  * @author Rishi
  */

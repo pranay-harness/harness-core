@@ -1,21 +1,11 @@
 package software.wings.beans;
 
 public class FileMetadata {
-  private String fileUuid;
   private String fileName;
   private String mimeType;
-  private String fileDataType;
-  private String fileRefId;
   private ChecksumType checksumType;
   private String checksum;
-
-  public String getFileUuid() {
-    return fileUuid;
-  }
-
-  public void setFileUuid(String fileUuid) {
-    this.fileUuid = fileUuid;
-  }
+  private String relativePath;
 
   public String getFileName() {
     return fileName;
@@ -33,22 +23,6 @@ public class FileMetadata {
     this.mimeType = mimeType;
   }
 
-  public String getFileDataType() {
-    return fileDataType;
-  }
-
-  public void setFileDataType(String fileDataType) {
-    this.fileDataType = fileDataType;
-  }
-
-  public String getFileRefId() {
-    return fileRefId;
-  }
-
-  public void setFileRefId(String fileRefId) {
-    this.fileRefId = fileRefId;
-  }
-
   public ChecksumType getChecksumType() {
     return checksumType;
   }
@@ -63,5 +37,13 @@ public class FileMetadata {
 
   public void setChecksum(String checksum) {
     this.checksum = checksum;
+  }
+
+  public String getRelativePath() {
+    return relativePath;
+  }
+
+  public void setRelativePath(String relativePath) {
+    this.relativePath = relativePath;
   }
 }

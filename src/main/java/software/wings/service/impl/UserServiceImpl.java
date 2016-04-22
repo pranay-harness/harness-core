@@ -52,20 +52,20 @@ public class UserServiceImpl implements UserService {
     return wingsPersistence.query(User.class, pageRequest);
   }
 
-  public void delete(String userId) {
-    wingsPersistence.delete(User.class, userId);
+  public void delete(String userID) {
+    wingsPersistence.delete(User.class, userID);
   }
 
-  public User get(String userId) {
-    return wingsPersistence.get(User.class, userId);
+  public User get(String userID) {
+    return wingsPersistence.get(User.class, userID);
   }
 
-  public User revokeRole(String userId, String roleId) {
+  public User revokeRole(String userID, String roleID) {
     Role role = new Role();
-    role.setUuid(roleId);
+    role.setUuid(roleID);
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).removeAll("roles", role);
-    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userID);
     wingsPersistence.update(updateQuery, updateOp);
-    return wingsPersistence.get(User.class, userId);
+    return wingsPersistence.get(User.class, userID);
   }
 }

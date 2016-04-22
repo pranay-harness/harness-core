@@ -5,6 +5,10 @@ import software.wings.beans.Infra;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Tag;
+import software.wings.utils.HostFileHelper.HostFileType;
+
+import java.io.File;
+import java.io.InputStream;
 
 public interface InfraService {
   PageResponse<Infra> listInfra(String envId, PageRequest<Infra> pageRequest);
@@ -22,4 +26,8 @@ public interface InfraService {
   public Tag createTag(String envId, Tag tag);
 
   public Host applyTag(String hostId, String tagId);
+
+  Integer importHosts(String infraId, InputStream uploadedInputStream, HostFileType sourceType);
+
+  File exportHosts(String infraId, HostFileType fileType);
 }

@@ -11,14 +11,14 @@ import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilde
  * Created by anubhaw on 2/8/16.
  */
 public class SshSessionFactory {
-  private final static Logger logger = LoggerFactory.getLogger(SshSessionFactory.class);
+  private final static Logger LOGGER = LoggerFactory.getLogger(SshSessionFactory.class);
 
-  public static Session getSshSessionWithJumpbox(SshSessionConfig config) {
+  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
-      Session jumpboxSession = getSshSession(config.getJumpboxConfig());
+      Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
-      logger.info("portforwarding port " + forwardingPort);
+      LOGGER.info("portforwarding port " + forwardingPort);
 
       SshSessionConfig newConfig = new SshSessionConfigBuilder()
                                        .user(config.getUser())
@@ -27,14 +27,14 @@ public class SshSessionFactory {
                                        .host("127.0.0.1")
                                        .port(forwardingPort)
                                        .build();
-      session = getSshSession(newConfig);
-    } catch (JSchException ex) {
-      logger.error(ex.getMessage(), ex);
+      session = getSSHSession(newConfig);
+    } catch (JSchException e) {
+      e.printStackTrace();
     }
     return session;
   }
 
-  public static Session getSshSession(SshSessionConfig config) throws JSchException {
+  public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
     Session session = null;
     if ("KEY".equals(getSessionType(config))) {

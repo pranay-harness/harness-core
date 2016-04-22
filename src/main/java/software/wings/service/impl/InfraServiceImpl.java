@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import javax.inject.Inject;
+
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
@@ -10,8 +12,12 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Tag;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfraService;
+import software.wings.utils.HostFileHelper;
+import software.wings.utils.HostFileHelper.HostFileType;
 
-import javax.inject.Inject;
+import java.io.File;
+import java.io.InputStream;
+import java.util.List;
 
 @Singleton
 public class InfraServiceImpl implements InfraService {
@@ -24,7 +30,7 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Infra createInfra(Infra infra, String envId) {
-    infra.setEnvId(envId);
+    infra.setEnvID(envId);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
@@ -40,19 +46,19 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Host createHost(String infraId, Host host) {
-    host.setApplicationId(infraId);
+    host.setInfraID(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public Host updateHost(String infraId, Host host) {
-    host.setInfraId(infraId);
+    host.setInfraID(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public Tag createTag(String envId, Tag tag) {
-    tag.setEnvId(envId);
+    tag.setEnvID(envId);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 
@@ -63,5 +69,19 @@ public class InfraServiceImpl implements InfraService {
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
     wingsPersistence.update(host, updateOp);
     return wingsPersistence.get(Host.class, hostId);
+  }
+
+  @Override
+  public Integer importHosts(String infraId, InputStream inputStream, HostFileType fileType) {
+    Infra infra = wingsPersistence.get(Infra.class, infraId); // TODO: validate infra
+    List<Host> hosts = HostFileHelper.parseHosts(inputStream, infraId, fileType);
+    List<String> IDs = wingsPersistence.save(hosts);
+    return IDs.size();
+  }
+
+  @Override
+  public File exportHosts(String infraId, HostFileType fileType) {
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraId).asList();
+    return HostFileHelper.createHostsFile(hosts, fileType);
   }
 }

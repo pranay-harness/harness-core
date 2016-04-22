@@ -8,7 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "infras", noClassnameStored = true)
 public class Infra extends Base {
   private InfraType infraType;
-  private String envId;
+  private String envID;
 
   public InfraType getInfraType() {
     return infraType;
@@ -18,12 +18,12 @@ public class Infra extends Base {
     this.infraType = infraType;
   }
 
-  public String getEnvId() {
-    return envId;
+  public String getEnvID() {
+    return envID;
   }
 
-  public void setEnvId(String envId) {
-    this.envId = envId;
+  public void setEnvID(String envID) {
+    this.envID = envID;
   }
 
   public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }

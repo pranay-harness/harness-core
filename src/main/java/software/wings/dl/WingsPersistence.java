@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.mongodb.morphia.Datastore;
@@ -26,6 +27,8 @@ public interface WingsPersistence {
   public <T extends Base> T get(Class<T> cls, String id);
 
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
+
+  public <T extends Base> List<String> save(List<T> tList);
 
   public <T extends Base> String save(T t);
 
@@ -54,6 +57,8 @@ public interface WingsPersistence {
   public GridFSBucket createGridFSBucket(String bucketName);
 
   public Datastore getDatastore();
+
+  public DBCollection getCollection(String collectionName);
 
   public void close();
 }

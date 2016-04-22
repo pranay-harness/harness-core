@@ -1,11 +1,15 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -17,8 +21,13 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Environment> listEnvironments(PageRequest<Environment> req) {
-    return wingsPersistence.query(Environment.class, req);
+  public List<Environment> listEnvironments(String appId) {
+    Application application = wingsPersistence.createQuery(Application.class)
+                                  .field(ID_KEY)
+                                  .equal(appId)
+                                  .retrievedFields(true, "environments")
+                                  .get();
+    return application.getEnvironments();
   }
 
   @Override
@@ -28,7 +37,11 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public Environment createEnvironment(String applicationId, Environment environment) {
-    environment.setApplicationId(applicationId);
-    return wingsPersistence.saveAndGet(Environment.class, environment);
+    Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
+    UpdateOperations<Application> updateOperations =
+        wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);
+    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(applicationId);
+    wingsPersistence.update(updateQuery, updateOperations);
+    return savedEnv;
   }
 }

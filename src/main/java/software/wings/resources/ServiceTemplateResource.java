@@ -1,10 +1,11 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
@@ -38,7 +39,7 @@ public class ServiceTemplateResource {
   @Path("{envId}")
   public RestResponse<PageResponse<ServiceTemplate>> list(
       @PathParam("envId") String envId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
-    pageRequest.addFilter("envId", envId, SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", envId, EQ);
     return new RestResponse<>(serviceTemplateService.list(envId, pageRequest));
   }
 

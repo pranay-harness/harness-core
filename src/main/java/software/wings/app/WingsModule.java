@@ -116,6 +116,12 @@ public class WingsModule extends AbstractModule {
       this.secondaryDatastore = primaryDatastore;
     }
 
+    morphia.mapPackage("software.wings.beans");
+    this.primaryDatastore.ensureIndexes();
+    if (hosts.size() > 1) {
+      this.secondaryDatastore.ensureIndexes();
+    }
+
     datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }

@@ -10,7 +10,6 @@ import org.mongodb.morphia.annotations.Indexed;
  */
 @Entity(value = "environments", noClassnameStored = true)
 public class Environment extends Base {
-  @Indexed private String applicationId;
   private String name;
   private String description;
 
@@ -28,13 +27,5 @@ public class Environment extends Base {
 
   public void setDescription(String description) {
     this.description = description;
-  }
-
-  public String getApplicationId() {
-    return applicationId;
-  }
-
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
   }
 }

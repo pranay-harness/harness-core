@@ -11,13 +11,13 @@ import org.mongodb.morphia.annotations.Indexes;
  */
 @Entity(value = "tags", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("type")
-                           , @Field("name"), @Field("envId") }, options = @IndexOptions(unique = true)))
+                           , @Field("name"), @Field("envID") }, options = @IndexOptions(unique = true)))
 public class Tag extends Base {
   private String type;
   private String name;
   private String description;
   private String autoTaggingRule;
-  private String envId;
+  private String envID;
 
   public Tag() {}
 
@@ -53,11 +53,15 @@ public class Tag extends Base {
     this.autoTaggingRule = autoTaggingRule;
   }
 
-  public String getEnvId() {
-    return envId;
+  public String getEnvID() {
+    return envID;
   }
 
-  public void setEnvId(String envId) {
-    this.envId = envId;
+  public void setEnvID(String envID) {
+    this.envID = envID;
+  }
+
+  public String getTagString() {
+    return type + ":" + name;
   }
 }

@@ -17,6 +17,7 @@ import java.util.Objects;
 @JsonSubTypes({ @Type(value = JenkinsArtifactSource.class, name = "JENKINS") })
 public abstract class ArtifactSource {
   private String sourceName;
+
   private SourceType sourceType;
   private ArtifactType artifactType;
 
@@ -56,14 +57,12 @@ public abstract class ArtifactSource {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    ArtifactSource that = (ArtifactSource) obj;
+    ArtifactSource that = (ArtifactSource) o;
     return Objects.equals(sourceName, that.sourceName) && sourceType == that.sourceType
         && artifactType == that.artifactType;
   }

@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
-import com.google.common.io.Files;
-import com.google.inject.Singleton;
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -18,25 +17,28 @@ import software.wings.beans.Release;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
+import software.wings.utils.FileUtils;
 import software.wings.utils.Validator;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.io.File;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
-  private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifatcFile";
+  private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
 
   @Inject private ExecutorService executorService;
 
   @Inject private WingsPersistence wingsPersistence;
+
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
 
   @Override
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
@@ -82,7 +84,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       return null;
     }
 
-    File tempDir = Files.createTempDir();
+    File tempDir = FileUtils.createTempDirPath();
     String fileName = artifact.getArtifactFile().getFileName();
     if (fileName == null) {
       fileName = DEFAULT_ARTIFACT_FILE_NAME;
@@ -91,7 +93,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     File artifactFile = new File(tempDir, fileName);
 
     FileService fileService = WingsBootstrap.lookup(FileService.class);
-    fileService.download(artifact.getArtifactFile().getFileUuid(), artifactFile);
+    fileService.download(artifact.getArtifactFile().getFileUuid(), artifactFile, ARTIFACTS);
     return artifactFile;
   }
 
@@ -101,7 +103,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   static class ArtifactCollector implements Runnable {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private WingsPersistence wingsPersistence;
     private Release release;
     private Artifact artifact;

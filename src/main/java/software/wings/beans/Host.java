@@ -5,24 +5,38 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity(value = "hosts", noClassnameStored = true)
 public class Host extends Base {
+  public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
+
   @Indexed private String applicationId;
 
   @Indexed(unique = true) private String hostName;
 
+  private String osType;
+
   private String ipAddress;
+
   private int sshPort;
+
   private String hostAlias;
   private String envUuid;
-  private String dcUuid;
-  private String ozUuid;
   private AccessType accessType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
-  private String infraId;
+  private String infraID;
+
+  public Host() {}
+
+  public Host(String infraID, String hostName, String osType, AccessType accessType) {
+    this.infraID = infraID;
+    this.hostName = hostName;
+    this.osType = osType;
+    this.accessType = accessType;
+  }
 
   public String getHostName() {
     return hostName;
@@ -56,22 +70,6 @@ public class Host extends Base {
     this.envUuid = envUuid;
   }
 
-  public String getDcUuid() {
-    return dcUuid;
-  }
-
-  public void setDcUuid(String dcUuid) {
-    this.dcUuid = dcUuid;
-  }
-
-  public String getOzUuid() {
-    return ozUuid;
-  }
-
-  public void setOzUuid(String ozUuid) {
-    this.ozUuid = ozUuid;
-  }
-
   public AccessType getAccessType() {
     return accessType;
   }
@@ -96,12 +94,12 @@ public class Host extends Base {
     this.applicationId = applicationId;
   }
 
-  public String getInfraId() {
-    return infraId;
+  public String getInfraID() {
+    return infraID;
   }
 
-  public void setInfraId(String infraId) {
-    this.infraId = infraId;
+  public void setInfraID(String infraID) {
+    this.infraID = infraID;
   }
 
   public List<Tag> getTags() {
@@ -112,5 +110,15 @@ public class Host extends Base {
     this.tags = tags;
   }
 
-  public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
+  public String getOsType() {
+    return osType;
+  }
+
+  public void setOsType(String osType) {
+    this.osType = osType;
+  }
+
+  public String getTagsString() {
+    return tags.stream().map(Tag::getTagString).collect(Collectors.joining(","));
+  }
 }
