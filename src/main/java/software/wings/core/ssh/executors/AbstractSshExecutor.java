@@ -17,16 +17,6 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAIL
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.NoRouteToHostException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +30,16 @@ import software.wings.app.WingsBootstrap;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.NoRouteToHostException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -91,8 +91,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       while (true) {
         while (inputStream.available() > 0) {
           int i = inputStream.read(tmp, 0, 1024);
-          if (i < 0)
+          if (i < 0) {
             break;
+          }
           String line = new String(tmp, 0, i);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
             outputStream.write((config.getSudoUserPassword() + "\n").getBytes());

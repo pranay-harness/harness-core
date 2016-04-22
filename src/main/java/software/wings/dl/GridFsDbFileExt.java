@@ -29,7 +29,7 @@ import software.wings.exception.WingsException;
  */
 public class GridFsDbFileExt {
   private MongoDatabase mongodb;
-  private GridFSBucket gridFsBucket;
+  private GridFSBucket gridFSBucket;
   private String fileCollectionName;
   private String chunkCollectionName;
   private int chunkSize;
@@ -39,13 +39,13 @@ public class GridFsDbFileExt {
   public GridFsDbFileExt(MongoDatabase mongodb, String bucketName, int chunkSize) {
     this.mongodb = mongodb;
     this.chunkSize = chunkSize;
-    gridFsBucket = GridFSBuckets.create(mongodb, bucketName);
+    gridFSBucket = GridFSBuckets.create(mongodb, bucketName);
     fileCollectionName = bucketName + ".files";
     chunkCollectionName = bucketName + ".chunks";
   }
 
   public void appendToFile(String fileName, String content) {
-    GridFSFile file = gridFsBucket.find(eq("filename", fileName)).first();
+    GridFSFile file = gridFSBucket.find(eq("filename", fileName)).first();
     if (null == file) { // Write first chunk
       logger.info(
           String.format("No file found with name [%s]. Creating new file and writing initial chunks", fileName));
@@ -80,7 +80,7 @@ public class GridFsDbFileExt {
     } catch (UnsupportedEncodingException e) {
       throw new WingsException("String to stream conversion failed", e.getCause());
     }
-    gridFsBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
+    gridFSBucket.uploadFromStream(fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
     logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
@@ -115,12 +115,12 @@ public class GridFsDbFileExt {
   }
 
   public GridFSFile get(String fileName) {
-    return gridFsBucket.find(eq("filename", fileName)).first();
+    return gridFSBucket.find(eq("filename", fileName)).first();
   }
 
   public void downloadToStream(String fileName, FileOutputStream fileOutputStream) {
     try {
-      gridFsBucket.downloadToStreamByName(fileName, fileOutputStream);
+      gridFSBucket.downloadToStreamByName(fileName, fileOutputStream);
     } catch (MongoGridFSException e) {
       if (!e.getMessage().startsWith("Chunk size data length is not the expected size")) { // TODO: Fixit
         logger.error(e.getMessage());

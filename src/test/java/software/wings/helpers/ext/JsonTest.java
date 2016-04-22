@@ -53,7 +53,6 @@ public class JsonTest {
   })
   public static class Base {
     private BaseType baseType;
-    ;
 
     public BaseType getBaseType() {
       return baseType;

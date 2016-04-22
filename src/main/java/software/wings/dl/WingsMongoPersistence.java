@@ -121,9 +121,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
-    GridFSBucket gridFsBucket =
+    GridFSBucket gridFSBucket =
         GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-    ObjectId fileId = gridFsBucket.uploadFromStream(filename, in, options);
+    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
     return fileId.toHexString();
   }
 

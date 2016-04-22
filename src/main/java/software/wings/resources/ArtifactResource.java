@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -13,6 +14,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Encoded;
@@ -81,27 +83,24 @@ public class ArtifactResource {
   }
 
   /*
-    @POST
-        @Consumes(MediaType.MULTIPART_FORM_DATA)
-        @Produces(MediaType.APPLICATION_JSON)
-        @Path("upload")
-        public RestResponse<String> uploadArtifact(
-                @FormDataParam("part") InputStream uploadedInputStream,
-                @FormDataParam("part") FormDataContentDisposition fileDetail) {
-
-  //		logger.debug("uploadedInputStream :" + uploadedInputStream);
-  //		logger.debug("fileDetail :" + fileDetail);
-  //
-  //		String filename = fileDetail.getFileName();
-  //		logger.debug("filename Received :" + filename);
-  //
-  //		// save it
-  //		String uploadedFilename = dumpFile(uploadedInputStream);
-  //		logger.debug("File uploaded to : " + uploadedFilename);
-  //
-  //		return new RestResponse<String>(uploadedFilename);
-                return new RestResponse<String>(null);
-        }*/
+   * @POST
+   *
+   * @Consumes(MediaType.MULTIPART_FORM_DATA)
+   *
+   * @Produces(MediaType.APPLICATION_JSON)
+   *
+   * @Path("upload") public RestResponse<String> uploadArtifact(
+   *
+   * @FormDataParam("part") InputStream uploadedInputStream,
+   *
+   * @FormDataParam("part") FormDataContentDisposition fileDetail) {
+   *
+   * // logger.debug("uploadedInputStream :" + uploadedInputStream); // logger.debug("fileDetail :"
+   * + fileDetail); // // String filename = fileDetail.getFileName(); // logger.debug(
+   * "filename Received :" + filename); // // // save it // String uploadedFilename =
+   * dumpFile(uploadedInputStream); // logger.debug("File uploaded to : " + uploadedFilename); // //
+   * return new RestResponse<String>(uploadedFilename); return new RestResponse<String>(null); }
+   */
 
   @GET
   @Path("download/{applicationId}/{artifactId}")
