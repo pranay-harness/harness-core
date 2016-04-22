@@ -36,7 +36,7 @@ public class ConfigResource {
       ResponseBuilder response = Response.ok(new File(url.toURI()), MediaType.APPLICATION_OCTET_STREAM);
       response.header("Content-Disposition", "attachment; filename=app.config");
       return response.build();
-    } catch (URISyntaxException e) {
+    } catch (URISyntaxException ex) {
       return Response.noContent().build();
     }
   }

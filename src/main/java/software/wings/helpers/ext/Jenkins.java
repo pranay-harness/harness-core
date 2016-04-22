@@ -31,8 +31,8 @@ public class Jenkins {
       if (jobDetails != null) {
         return true;
       }
-    } catch (Exception e) {
-      logger.error(e.getMessage(), e);
+    } catch (Exception ex) {
+      logger.error(ex.getMessage(), ex);
     }
     return false;
   }

@@ -66,12 +66,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       ((ChannelExec) channel).setErrStream(System.err, true);
       outputStream = channel.getOutputStream();
       inputStream = channel.getInputStream();
-    } catch (JSchException e) {
+    } catch (JSchException ex) {
       logger.error("Failed to initialize executor");
-      SshException shEx = extractSshException(e);
-      throw new WingsException(shEx.code, shEx.msg, e.getCause());
-    } catch (IOException e) {
-      e.printStackTrace();
+      SshException shEx = extractSshException(ex);
+      throw new WingsException(shEx.code, shEx.msg, ex.getCause());
+    } catch (IOException ex) {
+      ex.printStackTrace();
     }
   }
 
@@ -103,13 +103,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         }
         quietSleep(1000);
       }
-    } catch (JSchException e) {
-      SshException shEx = extractSshException(e);
-      logger.error("Command execution failed with error " + e.getMessage());
-      throw new WingsException(shEx.code, shEx.msg, e.getCause());
-    } catch (IOException e) {
+    } catch (JSchException ex) {
+      SshException shEx = extractSshException(ex);
+      logger.error("Command execution failed with error " + ex.getMessage());
+      throw new WingsException(shEx.code, shEx.msg, ex.getCause());
+    } catch (IOException ex) {
       logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
     } finally {
       destroy();
     }
@@ -165,13 +165,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     } catch (FileNotFoundException ex) {
       logger.error("file [" + localFilePath + "] could not be found");
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
-    } catch (IOException e) {
+    } catch (IOException ex) {
       logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, e.getCause());
-    } catch (JSchException e) {
-      SshException shEx = extractSshException(e);
-      logger.error("Command execution failed with error " + e.getMessage());
-      throw new WingsException(shEx.getCode(), shEx.getMsg(), e.getCause());
+      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
+    } catch (JSchException ex) {
+      SshException shEx = extractSshException(ex);
+      logger.error("Command execution failed with error ", ex);
+      throw new WingsException(shEx.getCode(), shEx.getMsg(), ex.getCause());
     }
     return SUCCESS;
   }
@@ -181,8 +181,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     try {
       outputStream.write(3); // Send ^C command
       outputStream.flush();
-    } catch (IOException e) {
-      logger.error("Abort command failed ", e);
+    } catch (IOException ex) {
+      logger.error("Abort command failed ", ex);
     }
   }
 

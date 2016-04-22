@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
@@ -125,8 +124,8 @@ public class ArtifactServiceImpl implements ArtifactService {
                                              .set("status", Status.READY);
         wingsPersistence.update(artifact, ops);
         logger.info("Artifact collection completed - artifactId : " + artifact.getUuid());
-      } catch (Exception e) {
-        logger.error(e.getMessage(), e);
+      } catch (Exception ex) {
+        logger.error(ex.getMessage(), ex);
         UpdateOperations<Artifact> ops =
             wingsPersistence.createUpdateOperations(Artifact.class).set("status", Status.FAILED);
         wingsPersistence.update(artifact, ops);

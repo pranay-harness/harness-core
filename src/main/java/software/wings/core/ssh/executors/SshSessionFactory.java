@@ -28,8 +28,8 @@ public class SshSessionFactory {
                                        .port(forwardingPort)
                                        .build();
       session = getSshSession(newConfig);
-    } catch (JSchException e) {
-      e.printStackTrace();
+    } catch (JSchException ex) {
+      logger.error(ex.getMessage(), ex);
     }
     return session;
   }

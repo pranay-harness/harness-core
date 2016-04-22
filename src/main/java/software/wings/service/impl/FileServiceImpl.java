@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
 import javax.inject.Inject;
 
 @Singleton
@@ -61,8 +62,8 @@ public class FileServiceImpl implements FileService {
       gridFSBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
       streamToDownload.close();
       return file;
-    } catch (IOException e) {
-      logger.error("Error in download", e);
+    } catch (IOException ex) {
+      logger.error("Error in download", ex);
       return null;
     }
   }

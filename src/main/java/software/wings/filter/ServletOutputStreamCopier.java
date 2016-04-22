@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 
@@ -31,7 +32,7 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
     try {
       outputStream.write(b);
       copy.write(b);
-    } catch (IOException e) {
+    } catch (IOException ex) {
     }
   }
 

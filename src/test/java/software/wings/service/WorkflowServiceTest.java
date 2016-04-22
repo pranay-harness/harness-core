@@ -32,10 +32,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     System.out.println("All Done!");
   }
 
-  /**
-   * @param svc
-   * @return
-   */
   private StateMachine createSynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateA();
@@ -85,10 +81,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Thread.sleep(30000);
   }
 
-  /**
-   * @param svc
-   * @return
-   */
   private StateMachine createAsynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateA();

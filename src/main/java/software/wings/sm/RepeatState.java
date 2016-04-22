@@ -4,15 +4,14 @@
 
 package software.wings.sm;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.app.WingsBootstrap;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import software.wings.app.WingsBootstrap;
 
 /**
  * @author Rishi
@@ -47,8 +46,8 @@ public class RepeatState extends State {
           repeatElements = context.evaluateRepeatExpression(repeatElementType, repeatElementExpression);
         }
       }
-    } catch (Exception e) {
-      logger.error("Error in getting repeat elements", e);
+    } catch (Exception ex) {
+      logger.error("Error in getting repeat elements", ex);
     }
 
     if (repeatElements == null || repeatElements.size() == 0) {
