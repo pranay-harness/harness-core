@@ -1,17 +1,15 @@
-/**
- *
- */
 package software.wings.sm;
 
 /**
+ * dummy implementation for wait state.
  * @author Rishi
  */
 public class WaitState extends State {
   private static final long serialVersionUID = 1L;
 
   /**
-   * @param name
-   * @param stateType
+   * Creates a new wait state.
+   * @param name state name
    */
   public WaitState(String name) {
     super(name, StateType.WAIT.name());

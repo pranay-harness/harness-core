@@ -18,7 +18,7 @@ public class GridFSTest {
   @Test
   public void testGridFS() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);
-    GridFSBucket gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
+    GridFSBucket gridFsBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
 
     // Get the input stream
     InputStream streamToUploadFrom = new FileInputStream(new File("/Users/rishi/Desktop/FullSizeRender.png"));
@@ -27,7 +27,7 @@ public class GridFSTest {
     GridFSUploadOptions options =
         new GridFSUploadOptions().chunkSizeBytes(16 * 1024).metadata(new Document("type", "presentation"));
 
-    ObjectId fileId = gridFSBucket.uploadFromStream("mongodb-tutorial", streamToUploadFrom, options);
+    ObjectId fileId = gridFsBucket.uploadFromStream("mongodb-tutorial", streamToUploadFrom, options);
     System.out.println(fileId.toHexString());
     streamToUploadFrom.close();
   }
@@ -35,11 +35,11 @@ public class GridFSTest {
   @Test
   public void getData() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);
-    GridFSBucket gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
+    GridFSBucket gridFsBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
 
     FileOutputStream streamToDownloadTo = new FileOutputStream("/Users/rishi/abc-" + System.currentTimeMillis());
 
-    gridFSBucket.downloadToStream(new ObjectId("5677ddb1b5f9222e9569ca9d"), streamToDownloadTo);
+    gridFsBucket.downloadToStream(new ObjectId("5677ddb1b5f9222e9569ca9d"), streamToDownloadTo);
     streamToDownloadTo.close();
     System.out.println(streamToDownloadTo.toString());
   }

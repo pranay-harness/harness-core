@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.service.intfc;
 
 import software.wings.sm.StateMachine;

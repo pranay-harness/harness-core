@@ -17,6 +17,12 @@ public class Role extends Base {
 
   public Role() {}
 
+  /**
+   * Creates a role object.
+   * @param name role name.
+   * @param description role description.
+   * @param permissions permissions associated with role.
+   */
   public Role(String name, String description, List<Permission> permissions) {
     this.name = name;
     this.description = description;
@@ -47,6 +53,10 @@ public class Role extends Base {
     this.permissions = permissions;
   }
 
+  /**
+   * Adds permission to role.
+   * @param permission permission to add.
+   */
   public void addPermission(Permission permission) {
     if (permissions == null) {
       permissions = new ArrayList<>();

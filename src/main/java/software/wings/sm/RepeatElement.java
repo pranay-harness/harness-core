@@ -1,15 +1,13 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
 
 /**
+ * Interface for all RepeatElements.
  * @author Rishi
  */
 public interface RepeatElement extends Serializable {
-  public RepeatElementType getRepeatElementType();
+  RepeatElementType getRepeatElementType();
 
-  public String getRepeatElementName();
+  String getRepeatElementName();
 }

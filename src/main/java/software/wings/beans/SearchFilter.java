@@ -9,8 +9,6 @@ import java.util.List;
  */
 public class SearchFilter {
   private String fieldName;
-  ;
-
   private Object fieldValue;
   private List<String> fieldValues;
   private OP op;

@@ -9,16 +9,23 @@ import org.mongodb.morphia.annotations.Embedded;
 public class Permission {
   private String resource;
   private String action;
-  private String envID;
-  private String serviceID;
+  private String envId;
+  private String serviceId;
 
   public Permission() {}
 
-  public Permission(String resource, String action, String envID, String serviceID) {
+  /**
+   * Create a permission object with fields.
+   * @param resource resource name.
+   * @param action allowed action.
+   * @param envId environment id.
+   * @param serviceId service id.
+   */
+  public Permission(String resource, String action, String envId, String serviceId) {
     this.resource = resource;
     this.action = action;
-    this.envID = envID;
-    this.serviceID = serviceID;
+    this.envId = envId;
+    this.serviceId = serviceId;
   }
 
   public String getResource() {
@@ -37,19 +44,19 @@ public class Permission {
     this.action = action.toUpperCase();
   }
 
-  public String getEnvID() {
-    return envID;
+  public String getEnvId() {
+    return envId;
   }
 
-  public void setEnvID(String envID) {
-    this.envID = envID;
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 
-  public String getServiceID() {
-    return serviceID;
+  public String getServiceId() {
+    return serviceId;
   }
 
-  public void setServiceID(String serviceID) {
-    this.serviceID = serviceID;
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
   }
 }

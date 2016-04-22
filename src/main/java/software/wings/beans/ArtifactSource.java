@@ -17,7 +17,6 @@ import java.util.Objects;
 @JsonSubTypes({ @Type(value = JenkinsArtifactSource.class, name = "JENKINS") })
 public abstract class ArtifactSource {
   private String sourceName;
-  ;
 
   private SourceType sourceType;
   private ArtifactType artifactType;

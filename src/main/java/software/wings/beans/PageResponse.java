@@ -33,6 +33,10 @@ public class PageResponse<T> extends PageRequest<T> {
     this.total = total;
   }
 
+  /**
+   * returns number of page for the collection.
+   * @return page number.
+   */
   public long getCurrentPage() {
     if (getPageSize() == 0) {
       return 0;

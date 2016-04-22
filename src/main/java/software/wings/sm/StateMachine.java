@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -19,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Describes a StateMachine.
  * @author Rishi
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
@@ -51,6 +49,11 @@ public class StateMachine extends Base {
     this.states = states;
   }
 
+  /**
+   * Adds a state to state machine.
+   * @param state state to be added.
+   * @return state after saving.
+   */
   public State addState(State state) {
     if (states == null) {
       states = new ArrayList<>();
@@ -67,6 +70,11 @@ public class StateMachine extends Base {
     this.transitions = transitions;
   }
 
+  /**
+   * Adds transition to state machine.
+   * @param transition transition to be added.
+   * @return transition after add.
+   */
   public Transition addTransition(Transition transition) {
     if (transitions == null) {
       transitions = new ArrayList<>();
@@ -80,6 +88,9 @@ public class StateMachine extends Base {
     return statesMap.get(initialStateName);
   }
 
+  /**
+   * @return  map to state to stateNames.
+   */
   public Map<String, State> getStatesMap() {
     if (cachedStatesMap != null && cachedStatesMap.size() > 0) {
       return cachedStatesMap;
@@ -108,6 +119,12 @@ public class StateMachine extends Base {
     return getNextState(fromStateName, TransitionType.SUCCESS);
   }
 
+  /**
+   * Returns next state given start state and transition type.
+   * @param fromStateName start state.
+   * @param transitionType transition type to look state from.
+   * @return first next state if any or null.
+   */
   public State getNextState(String fromStateName, TransitionType transitionType) {
     List<State> nextStates = getNextStates(fromStateName, transitionType);
     if (nextStates == null || nextStates.size() == 0) {
@@ -116,6 +133,12 @@ public class StateMachine extends Base {
     return nextStates.get(0);
   }
 
+  /**
+   * Returns list of next states given start state and transition type.
+   * @param fromStateName start state.
+   * @param transitionType transition type to look state from.
+   * @return list of next states or null.
+   */
   public List<State> getNextStates(String fromStateName, TransitionType transitionType) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
     if (transitionFlowMap == null || transitionFlowMap.get(fromStateName) == null) {
@@ -125,8 +148,7 @@ public class StateMachine extends Base {
   }
 
   /**
-   * @param statesMap
-   * @return
+   * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() == 0) {
@@ -240,6 +262,11 @@ public class StateMachine extends Base {
     return getNextState(fromStateName, TransitionType.FAILURE);
   }
 
+  /**
+   * Get state based on name.
+   * @param stateName name of state to lookup for.
+   * @return state object if found or null.
+   */
   public State getState(String stateName) {
     Map<String, State> statesMap = getStatesMap();
     if (statesMap == null) {
@@ -253,6 +280,10 @@ public class StateMachine extends Base {
     validate();
   }
 
+  /**
+   * Validates a state machine.
+   * @return true if valid.
+   */
   public boolean validate() {
     Map<String, State> statesMap = getStatesMap();
     if (initialStateName == null || statesMap.get(initialStateName) == null) {

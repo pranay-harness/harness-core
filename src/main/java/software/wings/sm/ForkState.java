@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import software.wings.app.WingsBootstrap;
@@ -11,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Describes a ForkState by which we can fork execution to multiple threads in state machine.
  * @author Rishi
  */
 public class ForkState extends State {
@@ -27,7 +25,7 @@ public class ForkState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    SMInstance smInstance = context.getSmInstance();
+    SmInstance smInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
     for (String state : forkStateNames) {
       String notifyId = smInstance.getUuid() + "-forkTo-" + state;

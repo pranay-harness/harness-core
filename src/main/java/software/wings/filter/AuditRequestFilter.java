@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
-import software.wings.beans.HTTPMethod;
+import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
 import software.wings.utils.Misc;
@@ -48,7 +48,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     String query = getQueryParams(requestContext.getUriInfo().getQueryParameters());
     header.setQueryParams(query);
 
-    HTTPMethod method = HTTPMethod.valueOf(requestContext.getMethod());
+    HttpMethod method = HttpMethod.valueOf(requestContext.getMethod());
     header.setRequestMethod(method);
     header.setResourcePath(requestContext.getUriInfo().getPath());
     header.setRequestTime(new Timestamp(System.currentTimeMillis()));

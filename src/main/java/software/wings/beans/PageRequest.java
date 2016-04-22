@@ -36,10 +36,14 @@ public class PageRequest<T> {
 
   @JsonIgnore @Context private UriInfo uriInfo;
 
-  @JsonIgnore private boolean isOR = false;
+  @JsonIgnore private boolean isOr = false;
 
   public PageRequest() {}
 
+  /**
+   * Copy Constructor for PageRequest
+   * @param req PageRequest to copy.
+   */
   public PageRequest(PageRequest<T> req) {
     this.offset = req.offset;
     this.pageSize = req.pageSize;
@@ -47,7 +51,7 @@ public class PageRequest<T> {
     this.limit = req.limit;
     this.filters = req.filters;
     this.orders = req.orders;
-    this.isOR = req.isOR;
+    this.isOr = req.isOr;
     this.fieldsIncluded = req.fieldsIncluded;
     this.fieldsExcluded = req.fieldsExcluded;
   }
@@ -84,12 +88,12 @@ public class PageRequest<T> {
     return Misc.asInt(offset);
   }
 
-  public boolean isOR() {
-    return isOR;
+  public boolean isOr() {
+    return isOr;
   }
 
-  public void setOR(boolean isOR) {
-    this.isOR = isOR;
+  public void setOr(boolean isOr) {
+    this.isOr = isOr;
   }
 
   public List<String> getFieldsIncluded() {
@@ -108,6 +112,9 @@ public class PageRequest<T> {
     this.fieldsExcluded = fieldsExcluded;
   }
 
+  /**
+   * Converts the filter to morphia form.
+   */
   public void populateFilters() {
     if (uriInfo == null) {
       return;
@@ -126,7 +133,7 @@ public class PageRequest<T> {
         String searchLogic = map.getFirst("searchLogic");
         searchLogic = searchLogic == null ? "" : searchLogic.trim();
         if (searchLogic.equals("OR")) {
-          isOR = true;
+          isOr = true;
         }
       }
     }
@@ -137,9 +144,9 @@ public class PageRequest<T> {
       if (map.containsKey(key + "[op]")) {
         filter.setOp(OP.valueOf(map.getFirst(key + "[op]")));
       }
-      //			if(map.containsKey(key + "[dataType]")){
-      //				filter.setDataType(map.getFirst(key + "[dataType]"));
-      //			}
+      // if(map.containsKey(key + "[dataType]")){
+      //  filter.setDataType(map.getFirst(key + "[dataType]"));
+      //}
       if (map.containsKey(key + "[value]")) {
         filter.setFieldValue(map.getFirst(key + "[value]"));
       }
@@ -170,6 +177,12 @@ public class PageRequest<T> {
     this.orders = orders;
   }
 
+  /**
+   * Creates and adds a new search filter to PageRequest
+   * @param fieldName name of field to apply filter on.
+   * @param fieldValue value for RHS.
+   * @param op Operator for filter.
+   */
   public void addFilter(String fieldName, Object fieldValue, OP op) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);

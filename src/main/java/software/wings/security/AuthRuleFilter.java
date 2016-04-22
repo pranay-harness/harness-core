@@ -1,29 +1,37 @@
 package software.wings.security;
 
+import static javax.ws.rs.Priorities.AUTHENTICATION;
+import static software.wings.beans.ErrorConstants.ACCESS_DENIED;
+import static software.wings.beans.ErrorConstants.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorConstants.INVALID_TOKEN;
+
 import com.google.common.collect.Lists;
-import org.mongodb.morphia.Datastore;
+
 import software.wings.app.WingsBootstrap;
-import software.wings.beans.*;
 import software.wings.beans.Application;
+import software.wings.beans.AuthToken;
+import software.wings.beans.Environment;
+import software.wings.beans.ErrorConstants;
+import software.wings.beans.Permission;
+import software.wings.beans.Role;
+import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.GenericDBCache;
+import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AuditService;
 
-import javax.annotation.Priority;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import static javax.ws.rs.Priorities.AUTHENTICATION;
-import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
-import static software.wings.beans.ErrorConstants.*;
+import javax.annotation.Priority;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ResourceInfo;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -33,7 +41,7 @@ import static software.wings.beans.ErrorConstants.*;
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   private AuditService auditService = WingsBootstrap.lookup(AuditService.class);
-  private GenericDBCache dbCache = WingsBootstrap.lookup(GenericDBCache.class);
+  private GenericDbCache dbCache = WingsBootstrap.lookup(GenericDbCache.class);
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -93,11 +101,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean forApplication(Application application, boolean reqApp, Permission permission) {
-    return reqApp && ("ALL".equals(permission.getServiceID()) || (application.equals(permission.getServiceID())));
+    return reqApp && ("ALL".equals(permission.getServiceId()) || (application.equals(permission.getServiceId())));
   }
 
   private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
-    return reqEnv && "ALL".equals(permission.getEnvID()) || (environment.getName().equals(permission.getEnvID()));
+    return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getName().equals(permission.getEnvId()));
   }
 
   private boolean canPerformAction(String reqAction, Permission permission) {

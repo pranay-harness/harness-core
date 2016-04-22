@@ -1,9 +1,9 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.common.UUIDGenerator.getUUID;
+import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
-import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilder;
+import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/5/16.
@@ -11,16 +11,16 @@ import software.wings.core.ssh.executors.SSHSessionConfig.SSHSessionConfigBuilde
 public class SSHJumpBoxExecutorTest {
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig jumpboxConfig = new SSHSessionConfigBuilder()
-                                         .executionID(getUUID())
+    SshSessionConfig jumpboxConfig = new SshSessionConfigBuilder()
+                                         .executionId(getUuid())
                                          .host("192.168.43.163")
                                          .port(22)
                                          .user("osboxes")
                                          .password("osboxes.org")
                                          .build();
 
-    SSHSessionConfig config = new SSHSessionConfigBuilder()
-                                  .executionID(getUUID())
+    SshSessionConfig config = new SshSessionConfigBuilder()
+                                  .executionId(getUuid())
                                   .host("192.168.43.8")
                                   .port(22)
                                   .user("vagrant")
@@ -28,10 +28,10 @@ public class SSHJumpBoxExecutorTest {
                                   .jumpboxConfig(jumpboxConfig)
                                   .build();
 
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     //        executor.execute("ls && whoami");
     String fileName = "mvim";
-    SSHExecutor.ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
+    SshExecutor.ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     System.out.println(result);
   }
 }

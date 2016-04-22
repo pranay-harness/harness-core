@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import static java.lang.System.currentTimeMillis;
-import static software.wings.common.UUIDGenerator.getUUID;
 
 import com.google.common.base.MoreObjects;
 
@@ -110,7 +109,7 @@ public class Base {
   @PrePersist
   public void onSave() {
     if (uuid == null) {
-      uuid = getUUID();
+      uuid = getUuid();
     }
     if (createdAt == 0) {
       createdAt = currentTimeMillis();

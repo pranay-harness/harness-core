@@ -13,6 +13,8 @@ import software.wings.common.JsonUtils;
  * @author Rishi
  */
 public class ApplicationTest {
+  private static Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
+
   @Test
   public void testSerializeDeserialize() {
     Application app = new Application();
@@ -29,6 +31,4 @@ public class ApplicationTest {
     Application app2 = JsonUtils.asObject(json, Application.class);
     assertThat(app2).isEqualToComparingFieldByField(app);
   }
-
-  private static Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
 }

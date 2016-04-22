@@ -24,7 +24,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public ServiceTemplate createServiceTemplate(String envID, ServiceTemplate serviceTemplate) {
-    serviceTemplate.setEnvID(envID);
+    serviceTemplate.setEnvId(envID);
     return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
   }
 

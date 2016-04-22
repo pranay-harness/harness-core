@@ -36,7 +36,7 @@ import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
-import software.wings.waitNotify.Notifier;
+import software.wings.waitnotify.Notifier;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -47,7 +47,7 @@ import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
 /**
- * The main application - entry point for the entire Wings Application.
+ * The main application - entry point for the entire Wings Application.n
  *
  * @author Rishi
  */
@@ -92,7 +92,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.servlets()
         .addFilter("AuditResponseFilter", new AuditResponseFilter())
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-
     environment.jersey().register(AuditRequestFilter.class);
 
     registerJerseyProviders(environment);
@@ -109,22 +108,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerResources(Environment environment, Injector injector) {
     Reflections reflections = new Reflections(AppResource.class.getPackage().getName());
+
     Set<Class<? extends Object>> resourceClasses = reflections.getTypesAnnotatedWith(Path.class);
     for (Class<?> resource : resourceClasses) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
-    }
-  }
-
-  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
-    if (configuration.isEnableAuth()) {
-      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                                                               .setAuthenticator(new BasicAuthAuthenticator())
-                                                               .buildAuthFilter()));
-      environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
-      environment.jersey().register(AuthRuleFilter.class);
-      environment.jersey().register(AuthResponseFilter.class);
     }
   }
 
@@ -160,6 +149,17 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(ResponseMessageResolver.class);
     environment.jersey().register(MultiPartFeature.class);
     environment.jersey().register(WingsExceptionMapper.class);
+  }
+
+  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
+    if (configuration.isEnableAuth()) {
+      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                                                               .setAuthenticator(new BasicAuthAuthenticator())
+                                                               .buildAuthFilter()));
+      environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+      environment.jersey().register(AuthRuleFilter.class);
+      environment.jersey().register(AuthResponseFilter.class);
+    }
   }
 
   private void startPlugins(Injector injector) {

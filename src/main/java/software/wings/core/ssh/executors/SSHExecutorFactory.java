@@ -6,17 +6,17 @@ import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
 import software.wings.exception.WingsException;
 
 public class SSHExecutorFactory {
-  public static SSHExecutor getExecutor(SSHSessionConfig config) {
-    SSHExecutor executor;
+  public static SshExecutor getExecutor(SshSessionConfig config) {
+    SshExecutor executor;
     switch (config.getExecutorType()) {
       case PASSWORD:
-        executor = new SSHPwdAuthExecutor();
+        executor = new SshPwdAuthExecutor();
         break;
       case SSHKEY:
-        executor = new SSHPubKeyAuthExecutor();
+        executor = new SshPubKeyAuthExecutor();
         break;
       case JUMPBOX:
-        executor = new SSHJumpboxExecutor();
+        executor = new SshJumpboxExecutor();
         break;
       default:
         throw new WingsException(

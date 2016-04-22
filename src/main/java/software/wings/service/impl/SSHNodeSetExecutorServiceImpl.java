@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
-import static software.wings.common.UUIDGenerator.getUUID;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutionResult.SUCCESS;
-import static software.wings.core.ssh.executors.SSHExecutor.ExecutorType.PASSWORD;
+import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +10,10 @@ import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.beans.Host;
 import software.wings.core.ssh.ExecutionLogs;
-import software.wings.core.ssh.executors.SSHExecutor;
-import software.wings.core.ssh.executors.SSHExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SSHExecutorFactory;
-import software.wings.core.ssh.executors.SSHSessionConfig;
+import software.wings.core.ssh.executors.SshExecutor;
+import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
+import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SSHNodeSetExecutorService;
 
@@ -39,8 +39,8 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
     }
   }
 
-  public ExecutionResult deploy(Deployment deployment, SSHSessionConfig config) {
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+  public ExecutionResult deploy(Deployment deployment, SshSessionConfig config) {
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     ExecutionResult result = executor.execute(deployment.getSetupCommand());
     executionLogs.appendLogs(config.getExecutionID(), String.format("Setup finished with %s\n", result));
 
@@ -58,15 +58,15 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
     return result;
   }
 
-  private SSHSessionConfig getSshSessionConfig(Deployment deployment, Host host) {
+  private SshSessionConfig getSshSessionConfig(Deployment deployment, Host host) {
     String hostName = host.getHostName();
     int sshPort = host.getSshPort();
     String sshUser = deployment.getSshUser();
     String sshPassword = deployment.getSshPassword();
 
-    return new SSHSessionConfig.SSHSessionConfigBuilder()
+    return new SshSessionConfig.SshSessionConfigBuilder()
         .executionType(PASSWORD)
-        .executionID(getUUID())
+        .executionId(getUuid())
         .host(hostName)
         .port(sshPort)
         .user(sshUser)

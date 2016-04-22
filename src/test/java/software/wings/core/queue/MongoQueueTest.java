@@ -139,7 +139,7 @@ public class MongoQueueTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowNPEWhenTryToUpdateResetDurationForNullMessage() {
+  public void shouldThrowNpeWhenTryToUpdateResetDurationForNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null));
   }
 
@@ -225,7 +225,7 @@ public class MongoQueueTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowNPEWhenAckingNullMessage() {
+  public void shouldThrowNpeWhenAckingNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ack(null));
   }
 
@@ -263,12 +263,12 @@ public class MongoQueueTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowNPEWhenAckSendIsCalledWithNullMessage() {
+  public void shouldThrowNpeWhenAckSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(null, new TestQueuable(1)));
   }
 
   @Test
-  public void shouldThrowNPEWhenAckSendIsCalledWithNullReplacementMessage() {
+  public void shouldThrowNpeWhenAckSendIsCalledWithNullReplacementMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(new TestQueuable(1), null));
   }
 
@@ -307,17 +307,17 @@ public class MongoQueueTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowNPEWhenRequeueNullMessage() {
+  public void shouldThrowNpeWhenRequeueNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(null));
   }
 
   @Test
-  public void shouldThrowNPEWhenRequeuingWithNullEarliestGet() throws Exception {
+  public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() throws Exception {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new TestQueuable(1), null));
   }
 
   @Test
-  public void shouldThrowNPEWhenSendIsCalledWithNullMessage() {
+  public void shouldThrowNpeWhenSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.send(null));
   }
 
@@ -401,7 +401,7 @@ public class MongoQueueTest extends WingsBaseTest {
     @PrePersist
     public void onUpdate() {
       if (id == null) {
-        id = UUIDGenerator.getUUID();
+        id = UUIDGenerator.getUuid();
       }
     }
 

@@ -1,11 +1,9 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
 
 /**
+ * Represents transition between states.
  * @author Rishi
  */
 public class Transition implements Serializable {
@@ -16,6 +14,12 @@ public class Transition implements Serializable {
 
   public Transition() {}
 
+  /**
+   * creates a transition object to represent.
+   * @param fromState start state.
+   * @param transitionType return status of start state.
+   * @param toState end state.
+   */
   public Transition(State fromState, TransitionType transitionType, State toState) {
     this.fromState = fromState;
     this.transitionType = transitionType;

@@ -149,6 +149,10 @@ public class PlatformSoftware extends BaseFile {
           .withLastUpdatedAt(lastUpdatedAt);
     }
 
+    /**
+     * builds PlatformSoftware object.
+     * @return PlatformSoftware object.
+     */
     public PlatformSoftware build() {
       PlatformSoftware platformSoftware = new PlatformSoftware();
       platformSoftware.setActive(active);

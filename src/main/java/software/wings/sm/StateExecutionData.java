@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import java.io.Serializable;
@@ -8,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Represents state machine execution data.
  * @author Rishi
  */
 public class StateExecutionData implements Serializable {

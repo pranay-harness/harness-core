@@ -3,7 +3,7 @@ package software.wings.core.ssh;
 import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.GridFSDBFileExt;
+import software.wings.dl.GridFsDbFileExt;
 
 import javax.inject.Inject;
 
@@ -13,7 +13,7 @@ import javax.inject.Inject;
 @Singleton
 public class ExecutionLogs {
   private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionLogs.class);
-  @Inject private GridFSDBFileExt gridFSDBFileExt;
+  @Inject private GridFsDbFileExt gridFSDBFileExt;
 
   public void appendLogs(String executionID, String logs) {
     LOGGER.info("Saving log for execution ID: " + executionID);

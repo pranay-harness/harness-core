@@ -1,6 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import org.junit.Test;
+import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -8,7 +9,7 @@ import org.junit.Test;
 public class SSHPubKeyExecutorTest {
   @Test
   public void testExecute() throws Exception {
-    SSHSessionConfig config = new SSHSessionConfig.SSHSessionConfigBuilder()
+    SshSessionConfig config = new SshSessionConfigBuilder()
                                   .host("192.168.1.88")
                                   .port(22)
                                   .user("osboxes")
@@ -16,7 +17,7 @@ public class SSHPubKeyExecutorTest {
                                   //                        .keyPassphrase("wings123")
                                   .build();
 
-    SSHExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
     //        executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     executor.execute("ld && whoami");
   }

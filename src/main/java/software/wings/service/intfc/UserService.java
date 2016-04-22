@@ -12,15 +12,15 @@ public interface UserService {
 
   public boolean matchPassword(String password, String hash);
 
-  public User addRole(String userID, String roleID);
+  public User addRole(String userId, String roleId);
 
   public User update(User user);
 
   public PageResponse<User> list(PageRequest<User> pageRequest);
 
-  public void delete(String userID);
+  public void delete(String userId);
 
-  public User get(String userID);
+  public User get(String userId);
 
-  public User revokeRole(String userID, String roleID);
+  public User revokeRole(String userId, String roleId);
 }

@@ -11,15 +11,6 @@ import java.util.stream.Collectors;
 public class Host extends Base {
   public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
 
-  public Host() {}
-
-  public Host(String infraID, String hostName, String osType, AccessType accessType) {
-    this.infraID = infraID;
-    this.hostName = hostName;
-    this.osType = osType;
-    this.accessType = accessType;
-  }
-
   @Indexed private String applicationId;
 
   @Indexed(unique = true) private String hostName;
@@ -29,16 +20,23 @@ public class Host extends Base {
   private String ipAddress;
 
   private int sshPort;
+
   private String hostAlias;
   private String envUuid;
-
-  private String dcUuid;
-  private String ozUuid;
   private AccessType accessType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
   private String infraID;
+
+  public Host() {}
+
+  public Host(String infraID, String hostName, String osType, AccessType accessType) {
+    this.infraID = infraID;
+    this.hostName = hostName;
+    this.osType = osType;
+    this.accessType = accessType;
+  }
 
   public String getHostName() {
     return hostName;
@@ -70,22 +68,6 @@ public class Host extends Base {
 
   public void setEnvUuid(String envUuid) {
     this.envUuid = envUuid;
-  }
-
-  public String getDcUuid() {
-    return dcUuid;
-  }
-
-  public void setDcUuid(String dcUuid) {
-    this.dcUuid = dcUuid;
-  }
-
-  public String getOzUuid() {
-    return ozUuid;
-  }
-
-  public void setOzUuid(String ozUuid) {
-    this.ozUuid = ozUuid;
   }
 
   public AccessType getAccessType() {

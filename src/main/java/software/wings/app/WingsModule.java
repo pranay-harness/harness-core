@@ -61,8 +61,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
-import software.wings.waitNotify.NotifyEvent;
-import software.wings.waitNotify.NotifyEventListener;
+import software.wings.waitnotify.NotifyEvent;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,9 +101,6 @@ public class WingsModule extends AbstractModule {
     for (String host : hosts) {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
-
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
     Morphia morphia = new Morphia();
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());

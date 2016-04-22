@@ -16,26 +16,6 @@ import java.util.Map;
  * @author Rishi
  */
 public class CollectionUtils {
-  /**
-   * This method is used to extract specific field values from the list of objects
-   */
-  public static <T> List<T> fields(Class<T> cls, List list, String fieldName)
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    if (list == null) {
-      return null;
-    }
-    ArrayList<T> fieldList = new ArrayList<T>();
-    if (list.size() == 0) {
-      return fieldList;
-    }
-
-    Method readMethod = getReadMethod(list.get(0).getClass(), fieldName);
-    for (Object obj : list) {
-      fieldList.add((T) readMethod.invoke(obj));
-    }
-    return fieldList;
-  }
-
   private static Method getReadMethod(Class cls, String fieldName) throws IntrospectionException {
     PropertyDescriptor[] pds = Introspector.getBeanInfo(cls).getPropertyDescriptors();
     for (PropertyDescriptor pd : pds) {
@@ -47,7 +27,7 @@ public class CollectionUtils {
   }
 
   /**
-   * This method is used to create hierarchy by specific field value from the list of objects
+   * This method is used to create hierarchy by specific field value from the list of objects.
    */
   public static <T, F> Map<F, List<T>> hierarchy(List<T> list, String fieldName)
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {

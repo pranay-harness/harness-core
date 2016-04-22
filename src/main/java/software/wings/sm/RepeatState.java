@@ -19,7 +19,6 @@ public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
   private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
-  ;
 
   private RepeatElementType repeatElementType;
   private String repeatElementExpression;
@@ -58,7 +57,7 @@ public class RepeatState extends State {
 
     context.setParam("repeatElements", (Serializable) repeatElements);
 
-    SMInstance smInstance = context.getSmInstance();
+    SmInstance smInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
 
     if (repeatStrategy == RepeatStrategy.PARALLEL) {
@@ -104,7 +103,7 @@ public class RepeatState extends State {
       executionResponse.setExecutionStatus(executionStatus);
       return executionResponse;
     } else {
-      SMInstance smInstance = context.getSmInstance();
+      SmInstance smInstance = context.getSmInstance();
       Integer repeatElementIndex = (Integer) context.getParams().get(REPEAT_ELEMENT_INDEX);
       repeatElementIndex++;
       context.setParam(REPEAT_ELEMENT_INDEX, repeatElementIndex);

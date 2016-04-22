@@ -34,6 +34,10 @@ public class FileUploadSource extends ArtifactSource {
       return new Builder();
     }
 
+    /**
+     * creates a FileUploadSource Object.
+     * @return FileUploadSource object.
+     */
     public FileUploadSource build() {
       FileUploadSource fileUploadSource = new FileUploadSource();
       fileUploadSource.setSourceName(sourceName);
