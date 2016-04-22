@@ -18,7 +18,7 @@ import javax.servlet.WriteListener;
  * @author Rishi
  */
 public class ServletOutputStreamCopier extends ServletOutputStream {
-  private static Logger logger = LoggerFactory.getLogger(ServletOutputStreamCopier.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private OutputStream outputStream;
   private ByteArrayOutputStream copy;
 

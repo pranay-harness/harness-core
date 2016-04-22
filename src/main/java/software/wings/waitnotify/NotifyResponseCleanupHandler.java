@@ -1,7 +1,6 @@
 package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +15,7 @@ import software.wings.utils.CollectionUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**
@@ -25,7 +25,7 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class NotifyResponseCleanupHandler implements Runnable {
-  private static Logger logger = LoggerFactory.getLogger(NotifyResponseCleanupHandler.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)

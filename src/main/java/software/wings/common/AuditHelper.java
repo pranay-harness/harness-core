@@ -17,7 +17,7 @@ public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
 
   private static AuditHelper instance = new AuditHelper();
-  private static Logger logger = LoggerFactory.getLogger(AuditHelper.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private AuditHelper() {}
 

@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 /**
@@ -24,7 +25,7 @@ import javax.inject.Inject;
  */
 @Singleton
 public class StateMachineExecutor {
-  private static Logger logger = LoggerFactory.getLogger(StateMachineExecutor.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;

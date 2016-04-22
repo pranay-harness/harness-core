@@ -3,7 +3,6 @@ package software.wings.filter;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
@@ -34,7 +33,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(1)
 public class AuditRequestFilter implements ContainerRequestFilter {
-  private static Logger logger = LoggerFactory.getLogger(AuditRequestFilter.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Context private ResourceContext resourceContext;
   private AuditHelper auditHelper = AuditHelper.getInstance();
 

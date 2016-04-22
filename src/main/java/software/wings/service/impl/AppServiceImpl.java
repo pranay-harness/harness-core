@@ -10,6 +10,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -20,7 +21,7 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class AppServiceImpl implements AppService {
-  private static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 
   @Override

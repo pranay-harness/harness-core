@@ -16,7 +16,7 @@ import javax.inject.Inject;
  */
 @Singleton
 public class PersistentLocker implements Locker {
-  private static Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private DistributedLockSvc distributedLockSvc;
 
   @Override

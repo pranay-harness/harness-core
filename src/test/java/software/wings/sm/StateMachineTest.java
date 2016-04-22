@@ -54,15 +54,20 @@ public class StateMachineTest {
 
     /**
      * Creates a new Notifier object.
-     * @param uuid uuid of notifier.
-     * @param duration duration to sleep for.
+     *
+     * @param uuid
+     *          uuid of notifier.
+     * @param duration
+     *          duration to sleep for.
      */
     public Notifier(String uuid, int duration) {
       this.uuid = uuid;
       this.duration = duration;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see java.lang.Runnable#run()
      */
     @Override
@@ -86,7 +91,9 @@ public class StateMachineTest {
       super(StateA.class.getName(), StateType.HTTP.name());
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
      */
     @Override
@@ -110,7 +117,9 @@ public class StateMachineTest {
       this.duration = duration;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
      */
     @Override
@@ -136,7 +145,9 @@ public class StateMachineTest {
       super(StateB.class.getName(), StateType.HTTP.name());
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
      */
     @Override
@@ -156,7 +167,9 @@ public class StateMachineTest {
       super(StateC.class.getName(), StateType.HTTP.name());
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
      */
     @Override

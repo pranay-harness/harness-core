@@ -13,7 +13,7 @@ import software.wings.common.JsonUtils;
  * @author Rishi
  */
 public class ApplicationTest {
-  private static Logger logger = LoggerFactory.getLogger(ApplicationTest.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Test
   public void testSerializeDeserialize() {

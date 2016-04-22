@@ -6,11 +6,15 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ForkState;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -106,5 +110,76 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm).isNotNull();
     assertThat(sm.getUuid()).isNotNull();
     return sm;
+  }
+
+  @Test
+  public void testTriggerSimpleFork() throws InterruptedException {
+    StateMachine sm = new StateMachine();
+    State stateA = new StateMachineTest.StateA();
+    sm.addState(stateA);
+    StateMachineTest.StateB stateB = new StateMachineTest.StateB();
+    sm.addState(stateB);
+    StateMachineTest.StateC stateC = new StateMachineTest.StateC();
+    sm.addState(stateC);
+
+    ForkState fork1 = new ForkState("fork1");
+    List<String> forkStates = new ArrayList<String>();
+    forkStates.add(stateB.getName());
+    forkStates.add(stateC.getName());
+    fork1.setForkStateNames(forkStates);
+    sm.addState(fork1);
+
+    sm.setInitialStateName(StateMachineTest.StateA.class.getName());
+
+    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, fork1));
+
+    sm = workflowService.create(sm);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+
+    String smId = sm.getUuid();
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(smId);
+
+    Thread.sleep(30000);
+  }
+
+  @Test
+  public void testTriggerMixedFork() throws InterruptedException {
+    StateMachine sm = new StateMachine();
+    State stateA = new StateMachineTest.StateA();
+    sm.addState(stateA);
+    StateMachineTest.StateB stateB = new StateMachineTest.StateB();
+    sm.addState(stateB);
+    StateMachineTest.StateC stateC = new StateMachineTest.StateC();
+    sm.addState(stateC);
+
+    State stateAB = new StateMachineTest.StateAsynch("StateAB", 10000);
+    sm.addState(stateAB);
+    State stateBC = new StateMachineTest.StateAsynch("StateBC", 5000);
+    sm.addState(stateBC);
+
+    ForkState fork1 = new ForkState("fork1");
+    List<String> forkStates = new ArrayList<String>();
+    forkStates.add(stateB.getName());
+    forkStates.add(stateBC.getName());
+    fork1.setForkStateNames(forkStates);
+    sm.addState(fork1);
+
+    sm.setInitialStateName(StateMachineTest.StateA.class.getName());
+
+    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateAB));
+    sm.addTransition(new Transition(stateAB, TransitionType.SUCCESS, fork1));
+    sm.addTransition(new Transition(fork1, TransitionType.SUCCESS, stateC));
+
+    sm = workflowService.create(sm);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+
+    String smId = sm.getUuid();
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(smId);
+
+    Thread.sleep(30000);
   }
 }

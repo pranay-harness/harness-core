@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -37,7 +39,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     log().trace("Processing message {}", message);
     String waitInstanceId = message.getWaitInstanceId();
 
-    WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId);
+    WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
 
     if (waitInstance == null) {
       log().warn("waitInstance not found for waitInstanceId: {}", waitInstanceId);
@@ -51,7 +53,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
 
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("waitInstanceId", waitInstanceId, SearchFilter.Operator.EQ);
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
 
     if (waitQueuesResponse == null || isEmpty(waitQueuesResponse.getResponse())) {
       log().warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
@@ -84,7 +86,8 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     notifyResponseReq.setFilters(Collections.singletonList(searchFilter));
-    PageResponse<NotifyResponse> notifyResponses = wingsPersistence.query(NotifyResponse.class, notifyResponseReq);
+    PageResponse<NotifyResponse> notifyResponses =
+        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);
 
     correlationIds = notifyResponses.getResponse().stream().map(NotifyResponse::getUuid).collect(toList());
 

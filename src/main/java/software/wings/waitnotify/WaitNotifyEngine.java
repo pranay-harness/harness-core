@@ -11,12 +11,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 
 import java.io.Serializable;
 import java.util.Arrays;
+
 import javax.inject.Inject;
 
 /**
@@ -78,7 +80,7 @@ public class WaitNotifyEngine {
 
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
     waitQueuesResponse.getResponse().forEach(
         waitQueue -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).build()));
 

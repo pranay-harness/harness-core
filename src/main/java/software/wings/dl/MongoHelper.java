@@ -11,12 +11,11 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.service.impl.AppServiceImpl;
 
 import java.util.List;
 
 public class MongoHelper {
-  private static Logger logger = LoggerFactory.getLogger(AppServiceImpl.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static <T> PageResponse<T> queryPageRequest(
       Datastore datastore, Class<T> cls, PageRequest<T> req, String fieldName, String fieldValue) {

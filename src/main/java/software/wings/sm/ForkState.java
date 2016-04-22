@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 
 import java.io.Serializable;
@@ -13,6 +15,7 @@ import java.util.Map;
  */
 public class ForkState extends State {
   private static final long serialVersionUID = 1L;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private List<String> forkStateNames = new ArrayList<String>();
 
@@ -50,6 +53,8 @@ public class ForkState extends State {
         executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       }
     }
+    logger.info("Fork state execution completed - smInstanceId:{}, stateName:{}, executionStatus:{}",
+        context.getSmInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
     return executionResponse;
   }
 

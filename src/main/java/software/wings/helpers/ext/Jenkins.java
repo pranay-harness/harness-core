@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.net.URI;
 
 public class Jenkins {
-  private static Logger logger = LoggerFactory.getLogger(Jenkins.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private String jenkinsUrl;
   private String username;
   private String password;
