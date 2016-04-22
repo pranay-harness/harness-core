@@ -1,17 +1,19 @@
 package software.wings.filter;
 
+import java.util.List;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
-
-import java.util.List;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 
 public class ResponseMessageResolver<T> implements ExceptionMapper<Throwable> {
   private static Logger logger = LoggerFactory.getLogger(ResponseMessageResolver.class);
@@ -24,7 +26,7 @@ public class ResponseMessageResolver<T> implements ExceptionMapper<Throwable> {
     WingsException we = getWingsExceptionFromCause(exception);
     if (we != null) {
       List<ResponseMessage> responseMessageList = we.getResponseMessageList();
-      if (responseMessageList != null || responseMessageList.size() > 0) {
+      if (responseMessageList != null && responseMessageList.size() > 0) {
         for (ResponseMessage responseMessage : responseMessageList) {
           ResponseMessage rm =
               ResponseCodeCache.getInstance().getResponseMessage(responseMessage.getCode(), we.getParams());

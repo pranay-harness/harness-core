@@ -1,21 +1,23 @@
 package software.wings.sm;
 
-import com.google.inject.Singleton;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+
+import javax.inject.Inject;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.inject.Singleton;
+
 import software.wings.beans.ErrorConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
-
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
 
 /**
  * Class responsible for executing state machine.
@@ -138,9 +140,8 @@ public class StateMachineExecutor {
 
   private void handleExecuteResponseException(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
       State currentState, Exception exception) {
-    logger.info("Error seen in the state execution  - currentState : " + currentState.getName()
-            + ", smInstanceId: " + smInstance.getUuid(),
-        exception);
+    logger.info("Error seen in the state execution  - currentState : {}, smInstanceId: {}", currentState,
+        smInstance.getUuid(), exception);
     try {
       updateContext(smInstance);
       failedTransition(waitNotifyEngine, sm, smInstance);

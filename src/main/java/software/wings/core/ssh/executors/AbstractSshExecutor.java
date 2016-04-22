@@ -17,18 +17,6 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAIL
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
-import com.jcraft.jsch.Channel;
-import com.jcraft.jsch.ChannelExec;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
-import com.mongodb.client.gridfs.model.GridFSFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
-import software.wings.core.ssh.ExecutionLogs;
-import software.wings.exception.WingsException;
-import software.wings.service.intfc.FileService;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,6 +26,20 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.mongodb.client.gridfs.model.GridFSFile;
+
+import software.wings.app.WingsBootstrap;
+import software.wings.core.ssh.ExecutionLogs;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.FileService;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -52,6 +54,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected InputStream inputStream;
   protected ExecutionLogs executionLogs = getInstance();
 
+  @Override
   public void init(SshSessionConfig config) {
     if (null == config.getExecutionID() || config.getExecutionID().length() == 0) {
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("INVALID_EXECUTION_ID"));
@@ -74,6 +77,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  @Override
   public ExecutionResult execute(String command) {
     return genericExecute(command);
   }
@@ -116,6 +120,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   /****
    * SCP
    ****/
+  @Override
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
     try {
@@ -173,15 +178,17 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return SUCCESS;
   }
 
+  @Override
   public void abort() {
     try {
       outputStream.write(3); // Send ^C command
       outputStream.flush();
     } catch (IOException e) {
-      logger.error("Abort command failed " + e.getStackTrace());
+      logger.error("Abort command failed ", e);
     }
   }
 
+  @Override
   public void destroy() {
     logger.info("Disconnecting ssh session");
     if (null != channel) {
