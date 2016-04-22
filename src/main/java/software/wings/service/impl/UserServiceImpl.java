@@ -31,14 +31,14 @@ public class UserServiceImpl implements UserService {
     return BCrypt.checkpw(password, hash);
   }
 
-  public User addRole(String userID, String roleID) {
-    User user = wingsPersistence.get(User.class, userID);
-    Role role = wingsPersistence.get(Role.class, roleID);
+  public User addRole(String userId, String roleId) {
+    User user = wingsPersistence.get(User.class, userId);
+    Role role = wingsPersistence.get(Role.class, roleId);
     if (user != null && role != null) {
       UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
-      Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userID);
+      Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
       wingsPersistence.update(updateQuery, updateOp);
-      return wingsPersistence.get(User.class, userID);
+      return wingsPersistence.get(User.class, userId);
     }
     throw new WingsException(
         "Invalid operation. Either User or Role doesn't exist user = [" + user + "] role = [" + role + "]");

@@ -42,8 +42,8 @@ public class FileServiceImpl implements FileService {
       fileBucket.getGridFSBucket().downloadToStream(new ObjectId(fileId), streamToDownload);
       streamToDownload.close();
       return file;
-    } catch (IOException e) {
-      logger.error("Error in download", e);
+    } catch (IOException ex) {
+      logger.error("Error in download", ex);
       return null;
     }
   }
@@ -102,17 +102,16 @@ public class FileServiceImpl implements FileService {
   }
 
   @Override
-  public String saveFile(BaseFile baseFile, InputStream uploadedInputStream, FileBucket fileBucket) {
-    GridFSUploadOptions gridFSUploadOptions = new GridFSUploadOptions().chunkSizeBytes(fileBucket.getChunkSize());
-    String fileID = fileBucket.getGridFSBucket()
-                        .uploadFromStream(baseFile.getName(), uploadedInputStream, gridFSUploadOptions)
-                        .toHexString();
-    GridFSFile gridFsFile = getGridFsFile(fileID, fileBucket);
+  public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
+    GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
+    String fileId =
+        bucket.getGridFSBucket().uploadFromStream(baseFile.getName(), inputStream, gridFSOptions).toHexString();
+    GridFSFile gridFsFile = getGridFsFile(fileId, bucket);
     verifyFileIntegrity(baseFile, gridFsFile);
     baseFile.setChecksum(gridFsFile.getMD5());
-    baseFile.setFileUUID(fileID);
+    baseFile.setFileUUID(fileId);
     baseFile.setSize(gridFsFile.getLength());
-    return fileID;
+    return fileId;
   }
 
   @Override

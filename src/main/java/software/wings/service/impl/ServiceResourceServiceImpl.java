@@ -1,6 +1,9 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import com.google.inject.Inject;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
@@ -13,8 +16,6 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.io.InputStream;
 import java.util.List;
-
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 /**
  * Created by anubhaw on 3/25/16.

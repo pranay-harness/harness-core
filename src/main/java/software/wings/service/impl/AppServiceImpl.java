@@ -69,8 +69,8 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public String savePlatformSoftware(PlatformSoftware platformSoftware, InputStream in, FileBucket fileBucket) {
-    String fileID = fileService.saveFile(platformSoftware, in, fileBucket);
-    platformSoftware.setFileUUID(fileID);
+    String fileId = fileService.saveFile(platformSoftware, in, fileBucket);
+    platformSoftware.setFileUUID(fileId);
     return wingsPersistence.save(platformSoftware);
   }
 
@@ -79,8 +79,8 @@ public class AppServiceImpl implements AppService {
       String platformId, PlatformSoftware platformSoftware, InputStream in, FileBucket fileBucket) {
     PlatformSoftware storedPlatformSoftware = wingsPersistence.get(PlatformSoftware.class, platformId);
     if (newPlatformSoftwareBinaryUploaded(storedPlatformSoftware, platformSoftware)) {
-      String fileID = fileService.saveFile(platformSoftware, in, fileBucket);
-      platformSoftware.setFileUUID(fileID);
+      String fileId = fileService.saveFile(platformSoftware, in, fileBucket);
+      platformSoftware.setFileUUID(fileId);
     }
     platformSoftware.setAppID(storedPlatformSoftware.getAppID());
     platformSoftware.setUuid(storedPlatformSoftware.getUuid());
