@@ -37,6 +37,6 @@ public class AuditResource {
   @CacheControl(maxAge = 15, maxAgeUnit = TimeUnit.MINUTES)
   @Produces("application/json")
   public RestResponse<PageResponse<AuditHeader>> list(@BeanParam PageRequest<AuditHeader> pageRequest) {
-    return new RestResponse<PageResponse<AuditHeader>>(httpAuditService.list(pageRequest));
+    return new RestResponse<>(httpAuditService.list(pageRequest));
   }
 }

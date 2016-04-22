@@ -3,6 +3,8 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -13,10 +15,12 @@ import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.GeneralSecurityException;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -82,28 +86,27 @@ public class ArtifactResource {
     return new RestResponse<Artifact>(artifactService.update(artifact));
   }
 
-  /*
-    @POST
-        @Consumes(MediaType.MULTIPART_FORM_DATA)
-        @Produces(MediaType.APPLICATION_JSON)
-        @Path("upload")
-        public RestResponse<String> uploadArtifact(
-                @FormDataParam("part") InputStream uploadedInputStream,
-                @FormDataParam("part") FormDataContentDisposition fileDetail) {
-
-  //		logger.debug("uploadedInputStream :" + uploadedInputStream);
-  //		logger.debug("fileDetail :" + fileDetail);
+  //  @POST
+  //  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  //  @Produces(MediaType.APPLICATION_JSON)
+  //  @Path("upload")
+  //  public RestResponse<String> uploadArtifact(
+  //      @FormDataParam("part") InputStream uploadedInputStream,
+  //      @FormDataParam("part") FormDataContentDisposition fileDetail) {
   //
-  //		String filename = fileDetail.getFileName();
-  //		logger.debug("filename Received :" + filename);
+  //    logger.debug("uploadedInputStream :" + uploadedInputStream);
+  //    logger.debug("fileDetail :" + fileDetail);
   //
-  //		// save it
-  //		String uploadedFilename = dumpFile(uploadedInputStream);
-  //		logger.debug("File uploaded to : " + uploadedFilename);
+  //    String filename = fileDetail.getFileName();
+  //    logger.debug("filename Received :" + filename);
   //
-  //		return new RestResponse<String>(uploadedFilename);
-                return new RestResponse<String>(null);
-        }*/
+  //    // save it
+  //    String uploadedFilename = dumpFile(uploadedInputStream);
+  //    logger.debug("File uploaded to : " + uploadedFilename);
+  //
+  //    return new RestResponse<String>(uploadedFilename);
+  //    return new RestResponse<String>(null);
+  //  }
 
   @GET
   @Path("download/{applicationId}/{artifactId}")

@@ -1,26 +1,39 @@
 package software.wings.resources;
 
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.ArtifactSource.SourceType.HTTP;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.google.inject.Inject;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.beans.*;
 import software.wings.beans.ArtifactSource.SourceType;
+import software.wings.beans.Host;
+import software.wings.beans.Infra;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.RestResponse;
+import software.wings.beans.Tag;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfraService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostFileHelper.HostFileType;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.InputStream;
-
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.ArtifactSource.SourceType.HTTP;
-import static software.wings.beans.SearchFilter.Operator.EQ;
+import javax.inject.Inject;
+import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Encoded;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Path("/infra")
 @AuthRule
@@ -32,61 +45,61 @@ public class InfraResource {
   @Inject private InfraService infraService;
 
   @GET
-  @Path("envID")
+  @Path("envId")
   public RestResponse<PageResponse<Infra>> listInfra(
-      @PathParam("envID") String envID, @BeanParam PageRequest<Infra> pageRequest) {
-    pageRequest.addFilter("envID", envID, EQ);
-    return new RestResponse<>(infraService.listInfra(envID, pageRequest));
+      @PathParam("envId") String envId, @BeanParam PageRequest<Infra> pageRequest) {
+    pageRequest.addFilter("envId", envId, EQ);
+    return new RestResponse<>(infraService.listInfra(envId, pageRequest));
   }
 
   @POST
-  @Path("envID")
-  public RestResponse<Infra> createInfra(@PathParam("envID") String envID, Infra infra) {
-    return new RestResponse<>(infraService.createInfra(infra, envID));
+  @Path("envId")
+  public RestResponse<Infra> createInfra(@PathParam("envId") String envId, Infra infra) {
+    return new RestResponse<>(infraService.createInfra(infra, envId));
   }
 
   @GET
-  @Path("/{infraID}/hosts")
+  @Path("/{infraId}/hosts")
   public RestResponse<PageResponse<Host>> listHosts(
-      @PathParam("infraID") String infraID, @BeanParam PageRequest<Host> pageRequest) {
-    pageRequest.addFilter("infraID", infraID, EQ);
-    return new RestResponse<PageResponse<Host>>(infraService.listHosts(pageRequest));
+      @PathParam("infraId") String infraId, @BeanParam PageRequest<Host> pageRequest) {
+    pageRequest.addFilter("infraId", infraId, EQ);
+    return new RestResponse<>(infraService.listHosts(pageRequest));
   }
 
   @GET
-  @Path("{infraID}/hosts/{hostID}")
-  public RestResponse<Host> listHosts(@PathParam("infraID") String infraID, @PathParam("hostID") String hostID) {
-    return new RestResponse<>(infraService.getHost(infraID, hostID));
+  @Path("{infraId}/hosts/{hostId}")
+  public RestResponse<Host> listHosts(@PathParam("infraId") String infraId, @PathParam("hostId") String hostId) {
+    return new RestResponse<>(infraService.getHost(infraId, hostId));
   }
 
   @POST
-  @Path("{infraID}/hosts")
-  public RestResponse<Host> createHost(@PathParam("infraID") String infraID, Host host) {
-    return new RestResponse<Host>(infraService.createHost(infraID, host));
+  @Path("{infraId}/hosts")
+  public RestResponse<Host> createHost(@PathParam("infraId") String infraId, Host host) {
+    return new RestResponse<Host>(infraService.createHost(infraId, host));
   }
 
   @PUT
-  @Path("{infraID}/hosts")
-  public RestResponse<Host> updateHost(@PathParam("infraID") String infraID, Host host) {
-    return new RestResponse<Host>(infraService.updateHost(infraID, host));
+  @Path("{infraId}/hosts")
+  public RestResponse<Host> updateHost(@PathParam("infraId") String infraId, Host host) {
+    return new RestResponse<Host>(infraService.updateHost(infraId, host));
   }
 
   @POST
-  @Path("tags/{envID}")
-  public RestResponse<Tag> saveTag(@PathParam("envID") String envID, Tag tag) {
-    return new RestResponse<>(infraService.createTag(envID, tag));
+  @Path("tags/{envId}")
+  public RestResponse<Tag> saveTag(@PathParam("envId") String envId, Tag tag) {
+    return new RestResponse<>(infraService.createTag(envId, tag));
   }
 
   @PUT
-  @Path("hosts/{hostID}/tag/{tagID}")
-  public RestResponse<Host> applyTag(@PathParam("hostID") String hostID, @PathParam("tagID") String tagID) {
-    return new RestResponse<>(infraService.applyTag(hostID, tagID));
+  @Path("hosts/{hostId}/tag/{tagId}")
+  public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
+    return new RestResponse<>(infraService.applyTag(hostId, tagId));
   }
 
   @POST
-  @Path("{infraID}/hosts/import/{fileType}")
+  @Path("{infraId}/hosts/import/{fileType}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void importHosts(@PathParam("infraID") String infraID, @PathParam("fileType") HostFileType fileType,
+  public void importHosts(@PathParam("infraId") String infraId, @PathParam("fileType") HostFileType fileType,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -94,14 +107,14 @@ public class InfraResource {
       uploadedInputStream =
           BoundedInputStream.getBoundedStreamForURL(urlString, 40 * 1000 * 1000); // TODO: read from config
     }
-    infraService.importHosts(infraID, uploadedInputStream, fileType);
+    infraService.importHosts(infraId, uploadedInputStream, fileType);
   }
 
   @GET
-  @Path("{infraID}/hosts/export/{fileType}")
+  @Path("{infraId}/hosts/export/{fileType}")
   @Encoded
-  public Response exportHosts(@PathParam("infraID") String infraID, @PathParam("fileType") HostFileType fileType) {
-    File hostsFile = infraService.exportHosts(infraID, fileType);
+  public Response exportHosts(@PathParam("infraId") String infraId, @PathParam("fileType") HostFileType fileType) {
+    File hostsFile = infraService.exportHosts(infraId, fileType);
     Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
     response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
     return response.build();

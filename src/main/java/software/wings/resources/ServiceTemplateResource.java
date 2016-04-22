@@ -36,22 +36,22 @@ public class ServiceTemplateResource {
   @Inject ServiceTemplateService serviceTemplateService;
 
   @GET
-  @Path("{envID}")
+  @Path("{envId}")
   public RestResponse<PageResponse<ServiceTemplate>> list(
-      @PathParam("envID") String envID, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
-    pageRequest.addFilter("envID", envID, EQ);
-    return new RestResponse<>(serviceTemplateService.list(envID, pageRequest));
+      @PathParam("envId") String envId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
+    pageRequest.addFilter("envId", envId, EQ);
+    return new RestResponse<>(serviceTemplateService.list(envId, pageRequest));
   }
 
   @POST
-  @Path("{envID}")
-  public RestResponse<ServiceTemplate> create(@PathParam("envID") String envID, ServiceTemplate serviceTemplate) {
-    return new RestResponse<>(serviceTemplateService.createServiceTemplate(envID, serviceTemplate));
+  @Path("{envId}")
+  public RestResponse<ServiceTemplate> create(@PathParam("envId") String envId, ServiceTemplate serviceTemplate) {
+    return new RestResponse<>(serviceTemplateService.createServiceTemplate(envId, serviceTemplate));
   }
 
   @PUT
-  @Path("{envID}")
-  public RestResponse<ServiceTemplate> update(@PathParam("envID") String envID, ServiceTemplate serviceTemplate) {
-    return new RestResponse<>(serviceTemplateService.updateServiceTemplate(envID, serviceTemplate));
+  @Path("{envId}")
+  public RestResponse<ServiceTemplate> update(@PathParam("envId") String envId, ServiceTemplate serviceTemplate) {
+    return new RestResponse<>(serviceTemplateService.updateServiceTemplate(envId, serviceTemplate));
   }
 }

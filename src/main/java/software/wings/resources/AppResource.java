@@ -37,7 +37,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 /**
- * Application Resource class
+ * Application Resource class.
  *
  * @author Rishi
  */
@@ -72,29 +72,29 @@ public class AppResource {
   }
 
   @GET
-  @Path("{appID}")
-  public RestResponse<Application> get(@PathParam("appID") String appID) {
-    return new RestResponse<>(appService.findByUUID(appID));
+  @Path("{appId}")
+  public RestResponse<Application> get(@PathParam("appId") String appId) {
+    return new RestResponse<>(appService.findByUUID(appId));
   }
 
   @DELETE
-  @Path("{appID}")
-  public RestResponse delete(@PathParam("appID") String appID) {
-    appService.deleteApp(appID);
+  @Path("{appId}")
+  public RestResponse delete(@PathParam("appId") String appId) {
+    appService.deleteApp(appId);
     return new RestResponse(of("status", "success"));
   }
 
   @POST
-  @Path("{appID}/platforms")
+  @Path("{appId}/platforms")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadPlatform(@PathParam("appID") String appID,
+  public RestResponse<String> uploadPlatform(@PathParam("appId") String appId,
       @FormDataParam("standard") boolean standard, @FormDataParam("fileName") String fileName,
       @FormDataParam("version") String version, @FormDataParam("description") String description,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     PlatformSoftware platformSoftware =
-        createPlatformSoftwareFromRequest(appID, fileName, version, md5, description, urlString, standard, sourceType,
+        createPlatformSoftwareFromRequest(appId, fileName, version, md5, description, urlString, standard, sourceType,
             uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
@@ -103,41 +103,41 @@ public class AppResource {
   }
 
   @PUT
-  @Path("{appID}/platforms/{platformID}")
+  @Path("{appId}/platforms/{platformId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> updatePlatform(@PathParam("appID") String appID,
-      @PathParam("platformID") String platformID, @FormDataParam("standard") boolean standard,
+  public RestResponse<String> updatePlatform(@PathParam("appId") String appId,
+      @PathParam("platformId") String platformId, @FormDataParam("standard") boolean standard,
       @FormDataParam("fileName") String fileName, @FormDataParam("version") String version,
       @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     PlatformSoftware platformSoftware =
-        createPlatformSoftwareFromRequest(appID, fileName, version, md5, description, urlString, standard, sourceType,
+        createPlatformSoftwareFromRequest(appId, fileName, version, md5, description, urlString, standard, sourceType,
             uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
-    String fileId = appService.updatePlatformSoftware(platformID, platformSoftware, uploadedInputStream, PLATFORMS);
+    String fileId = appService.updatePlatformSoftware(platformId, platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
 
   @GET
-  @Path("{appID}/platforms")
-  public RestResponse<List<PlatformSoftware>> fetchPlatforms(@PathParam("appID") String appID) {
-    return new RestResponse<>(appService.getPlatforms(appID));
+  @Path("{appId}/platforms")
+  public RestResponse<List<PlatformSoftware>> fetchPlatforms(@PathParam("appId") String appId) {
+    return new RestResponse<>(appService.getPlatforms(appId));
   }
 
   @GET
-  @Path("{appID}/platforms/{platformID}")
+  @Path("{appId}/platforms/{platformId}")
   public RestResponse<PlatformSoftware> fetchPlatform(
-      @PathParam("appID") String appID, @PathParam("platformID") String platformID) {
-    return new RestResponse<>(appService.getPlatform(appID, platformID));
+      @PathParam("appId") String appId, @PathParam("platformId") String platformId) {
+    return new RestResponse<>(appService.getPlatform(appId, platformId));
   }
 
   @DELETE
-  @Path("{appID}/platforms/{platformID}")
-  public void deletePlatform(@PathParam("appID") String appID, @PathParam("platformID") String platformID) {
-    appService.deletePlatform(appID, platformID);
+  @Path("{appId}/platforms/{platformId}")
+  public void deletePlatform(@PathParam("appId") String appId, @PathParam("platformId") String platformId) {
+    appService.deletePlatform(appId, platformId);
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
@@ -148,10 +148,10 @@ public class AppResource {
     return inputStream;
   }
 
-  private PlatformSoftware createPlatformSoftwareFromRequest(String appID, String fileName, String version, String md5,
+  private PlatformSoftware createPlatformSoftwareFromRequest(String appId, String fileName, String version, String md5,
       String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
     PlatformSoftware platformSoftware = new PlatformSoftware(fileName, md5);
-    platformSoftware.setAppID(appID);
+    platformSoftware.setAppID(appId);
     platformSoftware.setStandard(standard);
     platformSoftware.setDescription(description);
     if (sourceType.equals(HTTP)) {

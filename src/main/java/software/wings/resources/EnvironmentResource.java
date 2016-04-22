@@ -30,14 +30,14 @@ public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 
   @GET
-  @Path("{appID}")
-  public RestResponse<List<Environment>> listEnvironments(@PathParam("appID") String appID) {
-    return new RestResponse<List<Environment>>(envService.listEnvironments(appID));
+  @Path("{appId}")
+  public RestResponse<List<Environment>> listEnvironments(@PathParam("appId") String appId) {
+    return new RestResponse<List<Environment>>(envService.listEnvironments(appId));
   }
 
   @POST
-  @Path("{appID}")
-  public RestResponse<Environment> createEnvironment(@PathParam("appID") String appID, Environment environment) {
-    return new RestResponse<>(envService.createEnvironment(appID, environment));
+  @Path("{appId}")
+  public RestResponse<Environment> createEnvironment(@PathParam("appId") String appId, Environment environment) {
+    return new RestResponse<>(envService.createEnvironment(appId, environment));
   }
 }
