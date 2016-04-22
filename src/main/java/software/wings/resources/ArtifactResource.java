@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+
 import software.wings.beans.Artifact;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -13,6 +14,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Encoded;
@@ -47,7 +49,7 @@ public class ArtifactResource {
   @Produces("application/json")
   public RestResponse<PageResponse<Artifact>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Artifact>>(artifactService.list(pageRequest));
   }
 

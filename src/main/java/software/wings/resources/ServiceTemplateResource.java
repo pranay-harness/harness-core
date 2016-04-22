@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -37,7 +39,7 @@ public class ServiceTemplateResource {
   @Path("{envID}")
   public RestResponse<PageResponse<ServiceTemplate>> list(
       @PathParam("envID") String envID, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
-    pageRequest.addFilter("envID", envID, SearchFilter.OP.EQ);
+    pageRequest.addFilter("envID", envID, EQ);
     return new RestResponse<>(serviceTemplateService.list(envID, pageRequest));
   }
 

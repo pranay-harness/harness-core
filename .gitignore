@@ -11,4 +11,4 @@ target
 dependency-reduced-pom.xml
 .checkstyle
 plugins
-tmp
+wingsui

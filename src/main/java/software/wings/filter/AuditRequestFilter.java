@@ -3,6 +3,7 @@ package software.wings.filter;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.Timestamp;
+
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;

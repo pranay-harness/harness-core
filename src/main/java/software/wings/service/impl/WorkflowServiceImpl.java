@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.service.impl;
 
 import com.google.inject.Singleton;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**
@@ -32,7 +34,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Inject private PluginManager pluginManager;
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)
    */
   @Override
@@ -41,7 +45,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.service.intfc.WorkflowService#update(software.wings.sm.StateMachine)
    */
   @Override
@@ -50,7 +56,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return null;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.service.intfc.WorkflowService#read(software.wings.sm.StateMachine)
    */
   @Override

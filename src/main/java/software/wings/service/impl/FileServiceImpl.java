@@ -1,11 +1,6 @@
 package software.wings.service.impl;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorConstants.FILE_INTEGRITY_CHECK_FAILED;
-
 import com.google.inject.Singleton;
-
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.GridFSFindIterable;
@@ -23,17 +18,17 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.beans.ErrorConstants.FILE_INTEGRITY_CHECK_FAILED;
+
 @Singleton
 public class FileServiceImpl implements FileService {
-  private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {

@@ -1,0 +1,8 @@
+<FindBugsFilter>
+    <Match>
+        <Class name="~.*Builder" />
+        <Method name="~with.*" />
+        <Bug pattern="EI_EXPOSE_REP2" />
+    </Match>
+</FindBugsFilter>
+

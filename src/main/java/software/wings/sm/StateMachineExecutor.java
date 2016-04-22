@@ -17,14 +17,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import javax.inject.Inject;
-
 /**
  * Class responsible for executing state machine.
+ *
  * @author Rishi
  */
 @Singleton
@@ -40,7 +35,8 @@ public class StateMachineExecutor {
 
   /**
    * Starts execution of a state machine with given arguments.
-   * @param sm StateMachine to execute.
+   *
+   * @param sm        StateMachine to execute.
    * @param arguments context arguments.
    */
   public void execute(StateMachine sm, Map<String, Serializable> arguments) {
@@ -65,11 +61,12 @@ public class StateMachineExecutor {
 
   /**
    * Executes a given state for a state machine
-   * @param sm StateMachine to execute.
-   * @param stateName state name to execute.
-   * @param context context for the execution.
+   *
+   * @param sm               StateMachine to execute.
+   * @param stateName        state name to execute.
+   * @param context          context for the execution.
    * @param parentInstanceId parent instance for this execution.
-   * @param notifyId id to notify on.
+   * @param notifyId         id to notify on.
    */
   public void execute(
       StateMachine sm, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
@@ -105,10 +102,11 @@ public class StateMachineExecutor {
 
   /**
    * Executes a state machine instance for a state machine.
-   * @param sm StateMachine to execute.
-   * @param smInstance stateMachine instance to execute.
+   *
+   * @param sm               StateMachine to execute.
+   * @param smInstance       stateMachine instance to execute.
    * @param waitNotifyEngine waitNotify instance module.
-   * @param callback callback to execute on notify.
+   * @param callback         callback to execute on notify.
    */
   public void execute(
       StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine, NotifyCallback callback) {
@@ -126,8 +124,9 @@ public class StateMachineExecutor {
 
   /**
    * Resumes execution of a StateMachineInstance.
+   *
    * @param smInstanceId stateMachineInstance to resume.
-   * @param response map of responses from state machine instances this state was waiting on.
+   * @param response     map of responses from state machine instances this state was waiting on.
    */
   public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
     SmInstance smInstance = wingsPersistence.get(SmInstance.class, smInstanceId);
@@ -144,9 +143,8 @@ public class StateMachineExecutor {
 
   private void handleExecuteResponseException(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
       State currentState, Exception exception) {
-    logger.info("Error seen in the state execution  - currentState : " + currentState.getName()
-            + ", smInstanceId: " + smInstance.getUuid(),
-        exception);
+    logger.info("Error seen in the state execution  - currentState : {}, smInstanceId: {}", currentState,
+        smInstance.getUuid(), exception);
     try {
       updateContext(smInstance);
       failedTransition(waitNotifyEngine, sm, smInstance);
@@ -228,14 +226,15 @@ public class StateMachineExecutor {
   }
 
   static class SmExecutionDispatcher implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(SmExecutionDispatcher.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private SmInstance smInstance;
     private StateMachine sm;
     private StateMachineExecutor stateMachineExecutor;
 
     /**
      * Creates a new SmExecutionDispatcher.
-     * @param sm stateMachine for dispatcher.
+     *
+     * @param sm         stateMachine for dispatcher.
      * @param smInstance stateMachineInstance to dispatch.
      */
     public SmExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SmInstance smInstance) {

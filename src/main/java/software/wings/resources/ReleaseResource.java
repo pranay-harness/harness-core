@@ -1,7 +1,10 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -40,7 +43,7 @@ public class ReleaseResource {
   @Produces("application/json")
   public RestResponse<PageResponse<Release>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Release> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("application", applicationId, EQ);
     return new RestResponse<PageResponse<Release>>(releaseService.list(pageRequest));
   }
 

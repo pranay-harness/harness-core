@@ -12,12 +12,13 @@ import javax.inject.Inject;
  */
 @Singleton
 public class ExecutionLogs {
-  private static final Logger LOGGER = LoggerFactory.getLogger(ExecutionLogs.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Inject private GridFsDbFileExt gridFSDBFileExt;
 
   public void appendLogs(String executionID, String logs) {
-    LOGGER.info("Saving log for execution ID: " + executionID);
+    logger.info("Saving log for execution ID: " + executionID);
     gridFSDBFileExt.appendToFile(executionID, logs);
-    LOGGER.info("Saved following log text in GridFS: " + logs);
+    logger.info("Saved following log text in GridFS: " + logs);
   }
 }

@@ -20,6 +20,7 @@ import java.io.InputStream;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 @Path("/infra")
 @AuthRule
@@ -34,7 +35,7 @@ public class InfraResource {
   @Path("envID")
   public RestResponse<PageResponse<Infra>> listInfra(
       @PathParam("envID") String envID, @BeanParam PageRequest<Infra> pageRequest) {
-    pageRequest.addFilter("envID", envID, SearchFilter.OP.EQ);
+    pageRequest.addFilter("envID", envID, EQ);
     return new RestResponse<>(infraService.listInfra(envID, pageRequest));
   }
 
@@ -48,7 +49,7 @@ public class InfraResource {
   @Path("/{infraID}/hosts")
   public RestResponse<PageResponse<Host>> listHosts(
       @PathParam("infraID") String infraID, @BeanParam PageRequest<Host> pageRequest) {
-    pageRequest.addFilter("infraID", infraID, SearchFilter.OP.EQ);
+    pageRequest.addFilter("infraID", infraID, EQ);
     return new RestResponse<PageResponse<Host>>(infraService.listHosts(pageRequest));
   }
 

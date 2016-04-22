@@ -11,7 +11,7 @@ public class SearchFilter {
   private String fieldName;
   private Object fieldValue;
   private List<String> fieldValues;
-  private OP op;
+  private Operator op;
 
   public String getFieldName() {
     return fieldName;
@@ -29,11 +29,11 @@ public class SearchFilter {
     this.fieldValue = fieldValue;
   }
 
-  public OP getOp() {
+  public Operator getOp() {
     return op;
   }
 
-  public void setOp(OP op) {
+  public void setOp(Operator op) {
     this.op = op;
   }
 
@@ -45,5 +45,5 @@ public class SearchFilter {
     this.fieldValues = fieldValues;
   }
 
-  public enum OP { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
+  public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
 }

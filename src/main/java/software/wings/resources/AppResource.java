@@ -58,7 +58,7 @@ import javax.ws.rs.Produces;
 @Timed
 @ExceptionMetered
 public class AppResource {
-  private static final Logger logger = LoggerFactory.getLogger(AppResource.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private AppService appService;
 

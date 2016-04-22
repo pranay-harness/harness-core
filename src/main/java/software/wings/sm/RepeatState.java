@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.sm;
 
 import org.slf4j.Logger;
@@ -18,7 +19,7 @@ import java.util.Map;
 public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
-  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private RepeatElementType repeatElementType;
   private String repeatElementExpression;
@@ -32,7 +33,9 @@ public class RepeatState extends State {
     super(name, StateType.REPEAT.name());
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
    */
   @Override
@@ -43,8 +46,8 @@ public class RepeatState extends State {
           repeatElements = context.evaluateRepeatExpression(repeatElementType, repeatElementExpression);
         }
       }
-    } catch (Exception e) {
-      logger.error("Error in getting repeat elements", e);
+    } catch (Exception ex) {
+      logger.error("Error in getting repeat elements", ex);
     }
 
     if (repeatElements == null || repeatElements.size() == 0) {
@@ -97,8 +100,7 @@ public class RepeatState extends State {
       }
     }
     if (repeatStrategy == RepeatStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
-        || (context.getParams().get(REPEAT_ELEMENT_INDEX) != null
-               && (Integer) context.getParams().get(REPEAT_ELEMENT_INDEX) == repeatElements.size())) {
+        || indexReachedMax(context, repeatElements)) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
       return executionResponse;
@@ -120,6 +122,11 @@ public class RepeatState extends State {
       executionResponse.setCorrelationIds(correlationIds);
       return executionResponse;
     }
+  }
+
+  private boolean indexReachedMax(ExecutionContext context, List<RepeatElement> repeatElements) {
+    return context.getParams().get(REPEAT_ELEMENT_INDEX) != null
+        && (Integer) context.getParams().get(REPEAT_ELEMENT_INDEX) == repeatElements.size();
   }
 
   public RepeatElementType getRepeatElementType() {

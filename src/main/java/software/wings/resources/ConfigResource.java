@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -23,7 +24,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 @Path("/configs")
 public class ConfigResource {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigResource.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @GET
   @Path("download/{applicationId}")

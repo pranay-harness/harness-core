@@ -6,6 +6,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 
+import java.util.Objects;
+
 /**
  * Represents WaitQueue.
  * @author Rishi
@@ -51,5 +53,26 @@ public class WaitQueue extends Base {
         .add("waitInstanceId", waitInstanceId)
         .add("correlationId", correlationId)
         .toString();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    WaitQueue waitQueue = (WaitQueue) obj;
+    return Objects.equals(waitInstanceId, waitQueue.waitInstanceId)
+        && Objects.equals(correlationId, waitQueue.correlationId);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), waitInstanceId, correlationId);
   }
 }

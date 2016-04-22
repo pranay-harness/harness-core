@@ -1,19 +1,20 @@
 package software.wings.sm;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
-import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.Base;
-import software.wings.beans.ErrorConstants;
-import software.wings.exception.WingsException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.Serialized;
+import org.mongodb.morphia.annotations.Transient;
+
+import software.wings.beans.Base;
+import software.wings.beans.ErrorConstants;
+import software.wings.exception.WingsException;
 
 /**
  * Describes a StateMachine.
@@ -184,13 +185,13 @@ public class StateMachine extends Base {
         }
         if (!invalidState) {
           if (transition.getTransitionType() == TransitionType.FORK
-              && !StateType.FORK.equals(fromState.getStateType())) {
+              && !StateType.FORK.name().equals(fromState.getStateType())) {
             nonForkStates.add(fromState.getName());
             continue;
           }
 
           if (transition.getTransitionType() == TransitionType.REPEAT
-              && !StateType.REPEAT.equals(fromState.getStateType())) {
+              && !StateType.REPEAT.name().equals(fromState.getStateType())) {
             nonRepeatStates.add(fromState.getName());
             continue;
           }

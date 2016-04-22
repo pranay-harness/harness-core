@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.OP;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.service.impl.AppServiceImpl;
@@ -26,7 +26,7 @@ public class MongoHelper {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
     filter.setFieldValue(fieldValue);
-    filter.setOp(OP.EQ);
+    filter.setOp(Operator.EQ);
     req.getFilters().add(filter);
 
     return queryPageRequest(datastore, cls, req);
@@ -79,9 +79,9 @@ public class MongoHelper {
   }
 
   private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
-    OP op = filter.getOp();
+    Operator op = filter.getOp();
     if (op == null) {
-      op = OP.EQ;
+      op = Operator.EQ;
     }
     switch (op) {
       case LT:

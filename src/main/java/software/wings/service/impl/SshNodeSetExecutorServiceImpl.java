@@ -10,19 +10,18 @@ import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.beans.Host;
 import software.wings.core.ssh.ExecutionLogs;
-import software.wings.core.ssh.executors.SSHExecutorFactory;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
+import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.SSHNodeSetExecutorService;
+import software.wings.service.intfc.SshNodeSetExecutorService;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
-@Singleton
-public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService {
-  private Logger LOGGER = LoggerFactory.getLogger(getClass());
+@javax.inject.Singleton
+public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionLogs executionLogs;
@@ -33,28 +32,28 @@ public class SSHNodeSetExecutorServiceImpl implements SSHNodeSetExecutorService 
     for (String hostInstanceMapping : deployment.getHostInstanceMappings()) {
       //			Host host = wingsPersistence.get(HostInstanceMapping.class,
       //hostInstanceMapping).getHost(); 			ExecutionResult result = deploy(deployment,
-      //getSshSessionConfig(deployment, host)); 			LOGGER.info(String.format("Deployment [%s] on
+      //getSshSessionConfig(deployment, host)); 			logger.info(String.format("Deployment [%s] on
       //Host [id: %s, ip:%s] finished with status [%S]", deployment.getUuid(), host.getUuid(), host.getIpAddress(),
       //result));
     }
   }
 
   public ExecutionResult deploy(Deployment deployment, SshSessionConfig config) {
-    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     ExecutionResult result = executor.execute(deployment.getSetupCommand());
-    executionLogs.appendLogs(config.getExecutionID(), String.format("Setup finished with %s\n", result));
+    executionLogs.appendLogs(config.getExecutionId(), String.format("Setup finished with %s\n", result));
 
     if (SUCCESS == result) {
-      executor = SSHExecutorFactory.getExecutor(config);
+      executor = SshExecutorFactory.getExecutor(config);
       result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUUID(), "wings/downloads/");
-      executionLogs.appendLogs(config.getExecutionID(), String.format("File transfer finished with %s\n", result));
+      executionLogs.appendLogs(config.getExecutionId(), String.format("File transfer finished with %s\n", result));
 
       if (SUCCESS == result) {
-        executor = SSHExecutorFactory.getExecutor(config);
+        executor = SshExecutorFactory.getExecutor(config);
         result = executor.execute(deployment.getDeployCommand());
       }
     }
-    executionLogs.appendLogs(config.getExecutionID(), String.format("Deploy command finished with %s\n", result));
+    executionLogs.appendLogs(config.getExecutionId(), String.format("Deploy command finished with %s\n", result));
     return result;
   }
 

@@ -1,9 +1,10 @@
 package software.wings.helpers.ext;
 
+import org.junit.Test;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.junit.Test;
-import software.wings.beans.Deployment;
+
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.common.JsonUtils;
@@ -42,7 +43,7 @@ public class JsonTest {
 
   @Test
   public void testJson3() {
-    Deployment deployment = new Deployment();
+    //    Deployment deployment = new Deployment();
   }
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
@@ -52,7 +53,6 @@ public class JsonTest {
   })
   public static class Base {
     private BaseType baseType;
-    ;
 
     public BaseType getBaseType() {
       return baseType;

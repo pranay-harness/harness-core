@@ -8,6 +8,10 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachineExecutionCallback;
+import software.wings.sm.StateTypeDescriptor;
+
 /**
  * @author Rishi
  */
