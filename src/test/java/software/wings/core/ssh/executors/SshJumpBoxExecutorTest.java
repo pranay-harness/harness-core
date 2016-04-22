@@ -3,12 +3,13 @@ package software.wings.core.ssh.executors;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
+
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/5/16.
  */
-public class SSHJumpBoxExecutorTest {
+public class SshJumpBoxExecutorTest {
   @Test
   public void testExecute() throws Exception {
     SshSessionConfig jumpboxConfig = new SshSessionConfigBuilder()
@@ -28,7 +29,7 @@ public class SSHJumpBoxExecutorTest {
                                   .jumpboxConfig(jumpboxConfig)
                                   .build();
 
-    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     //        executor.execute("ls && whoami");
     String fileName = "mvim";
     SshExecutor.ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);

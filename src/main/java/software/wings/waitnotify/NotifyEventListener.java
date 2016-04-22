@@ -50,7 +50,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     }
 
     PageRequest<WaitQueue> req = new PageRequest<>();
-    req.addFilter("waitInstanceId", waitInstanceId, SearchFilter.OP.EQ);
+    req.addFilter("waitInstanceId", waitInstanceId, SearchFilter.Operator.EQ);
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
 
     if (waitQueuesResponse == null || isEmpty(waitQueuesResponse.getResponse())) {
@@ -81,7 +81,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     SearchFilter searchFilter = new SearchFilter();
     searchFilter.setFieldName("uuid");
     searchFilter.setFieldValues(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()));
-    searchFilter.setOp(SearchFilter.OP.IN);
+    searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     notifyResponseReq.setFilters(Collections.singletonList(searchFilter));
     PageResponse<NotifyResponse> notifyResponses = wingsPersistence.query(NotifyResponse.class, notifyResponseReq);

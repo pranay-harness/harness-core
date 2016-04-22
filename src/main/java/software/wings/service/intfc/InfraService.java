@@ -21,5 +21,5 @@ public interface InfraService {
 
   public Tag createTag(String envId, Tag tag);
 
-  public Host applyTag(String hostId, String tagID);
+  public Host applyTag(String hostId, String tagId);
 }

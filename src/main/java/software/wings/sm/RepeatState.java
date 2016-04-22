@@ -20,7 +20,7 @@ import software.wings.app.WingsBootstrap;
 public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
-  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private RepeatElementType repeatElementType;
   private String repeatElementExpression;

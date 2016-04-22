@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 public class FileResource {
-  private static final Logger logger = LoggerFactory.getLogger(FileResource.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private FileService fileService;
 

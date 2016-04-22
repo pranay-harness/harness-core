@@ -13,7 +13,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.SearchFilter.OP;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
@@ -36,7 +36,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     wingsPersistence.save(notifyResponse);
 
     PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-    reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, OP.EQ);
+    reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
     reqNotifyRes.setLimit(PageRequest.UNLIMITED);
     reqNotifyRes.getFieldsIncluded().add("uuid");
     PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);

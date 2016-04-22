@@ -3,26 +3,24 @@ package software.wings.dl;
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.bson.BsonObjectId;
-import org.bson.Document;
-import org.bson.types.Binary;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-
+import org.apache.commons.lang.ArrayUtils;
+import org.bson.BsonObjectId;
+import org.bson.Document;
+import org.bson.types.Binary;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by anubhaw on 3/3/16.
@@ -34,7 +32,7 @@ public class GridFsDbFileExt {
   private String chunkCollectionName;
   private int chunkSize;
 
-  private static final Logger logger = LoggerFactory.getLogger(GridFsDbFileExt.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public GridFsDbFileExt(MongoDatabase mongodb, String bucketName, int chunkSize) {
     this.mongodb = mongodb;

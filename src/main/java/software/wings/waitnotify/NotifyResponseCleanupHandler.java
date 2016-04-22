@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.OP;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.CollectionUtils;
@@ -35,7 +35,7 @@ public class NotifyResponseCleanupHandler implements Runnable {
   public void run() {
     try {
       PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-      reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, OP.EQ);
+      reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
       reqNotifyRes.setLimit(PageRequest.UNLIMITED);
       reqNotifyRes.getFieldsIncluded().add("uuid");
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
@@ -52,7 +52,7 @@ public class NotifyResponseCleanupHandler implements Runnable {
       SearchFilter filter = new SearchFilter();
       filter.setFieldName("correlationId");
       filter.setFieldValues(correlationIds);
-      filter.setOp(OP.IN);
+      filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
       req.getFilters().add(filter);
 

@@ -38,7 +38,7 @@ public class PlatformResource {
   @Path("{applicationId}")
   public RestResponse<PageResponse<PlatformSoftware>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<PlatformSoftware> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
     return new RestResponse<>(platformService.list(pageRequest));
   }
 

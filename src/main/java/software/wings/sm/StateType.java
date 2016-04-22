@@ -32,7 +32,7 @@ public enum StateType implements StateTypeDescriptor {
   private static final String stencilsPath = "/templates/stencils/";
   private static final String jsonSchemaSuffix = "-JSONSchema.json";
   private static final String uiSchemaSuffix = "-UISchema.json";
-  private static final Logger logger = LoggerFactory.getLogger(StateType.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private Object jsonSchema;
   private Object uiSchema;
 

@@ -57,8 +57,8 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public Host applyTag(String hostId, String tagID) {
-    Tag tag = wingsPersistence.get(Tag.class, tagID);
+  public Host applyTag(String hostId, String tagId) {
+    Tag tag = wingsPersistence.get(Tag.class, tagId);
     Host host = wingsPersistence.get(Host.class, hostId);
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
     wingsPersistence.update(host, updateOp);

@@ -12,12 +12,14 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
+
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -63,7 +65,7 @@ public class MongoQueueTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldReturnMessageBasedONPriority() {
+  public void shouldReturnMessageBasedOnPriority() {
     TestQueuable messageOne = new TestQueuable(1);
     messageOne.setPriority(0.5);
     TestQueuable messageTwo = new TestQueuable(2);

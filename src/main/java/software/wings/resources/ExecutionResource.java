@@ -21,7 +21,7 @@ import javax.ws.rs.Produces;
 
 @Path("/executions")
 public class ExecutionResource {
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionResource.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private DeploymentService deploymentService;
 

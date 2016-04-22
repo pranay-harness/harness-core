@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import software.wings.beans.SearchFilter.OP;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;
 
@@ -142,7 +142,7 @@ public class PageRequest<T> {
       SearchFilter filter = new SearchFilter();
       filter.setFieldName(map.getFirst(key + "[field]"));
       if (map.containsKey(key + "[op]")) {
-        filter.setOp(OP.valueOf(map.getFirst(key + "[op]")));
+        filter.setOp(Operator.valueOf(map.getFirst(key + "[op]")));
       }
       // if(map.containsKey(key + "[dataType]")){
       //  filter.setDataType(map.getFirst(key + "[dataType]"));
@@ -183,7 +183,7 @@ public class PageRequest<T> {
    * @param fieldValue value for RHS.
    * @param op Operator for filter.
    */
-  public void addFilter(String fieldName, Object fieldValue, OP op) {
+  public void addFilter(String fieldName, Object fieldValue, Operator op) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
     filter.setFieldValue(fieldValue);

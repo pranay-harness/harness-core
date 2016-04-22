@@ -5,7 +5,7 @@ import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
 
 import software.wings.exception.WingsException;
 
-public class SSHExecutorFactory {
+public class SshExecutorFactory {
   public static SshExecutor getExecutor(SshSessionConfig config) {
     SshExecutor executor;
     switch (config.getExecutorType()) {

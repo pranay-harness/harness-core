@@ -9,7 +9,7 @@ import software.wings.dl.GridFsDbFileExt;
  * Created by anubhaw on 2/17/16.
  */
 public class ExecutionLogs {
-  private static final Logger logger = LoggerFactory.getLogger(ExecutionLogs.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private static final GridFsDbFileExt gridFSDBFIleExt =
       new GridFsDbFileExt(new MongoClient("localhost").getDatabase("wings"), "logs", 6);
   // TODO: Read from config

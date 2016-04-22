@@ -37,7 +37,7 @@ public class InfraResource {
   @Path("envId")
   public RestResponse<PageResponse<Infra>> listInfra(
       @PathParam("envId") String envId, @BeanParam PageRequest<Infra> pageRequest) {
-    pageRequest.addFilter("envId", envId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("envId", envId, SearchFilter.Operator.EQ);
     return new RestResponse<>(infraService.listInfra(envId, pageRequest));
   }
 
@@ -51,7 +51,7 @@ public class InfraResource {
   @Path("/{infraId}/hosts")
   public RestResponse<PageResponse<Host>> listHosts(
       @PathParam("infraId") String infraId, @BeanParam PageRequest<Host> pageRequest) {
-    pageRequest.addFilter("infraId", infraId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("infraId", infraId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Host>>(infraService.listHosts(pageRequest));
   }
 
@@ -80,8 +80,8 @@ public class InfraResource {
   }
 
   @PUT
-  @Path("hosts/{hostId}/tag/{tagID}")
-  public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagID") String tagID) {
-    return new RestResponse<>(infraService.applyTag(hostId, tagID));
+  @Path("hosts/{hostId}/tag/{tagId}")
+  public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
+    return new RestResponse<>(infraService.applyTag(hostId, tagId));
   }
 }

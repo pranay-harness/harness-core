@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 @Path("/configs")
 public class ConfigResource {
-  private static final Logger logger = LoggerFactory.getLogger(ConfigResource.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @GET
   @Path("download/{applicationId}")

@@ -37,7 +37,7 @@ public class EnvironmentResource {
   @Path("{appId}")
   public RestResponse<PageResponse<Environment>> listEnvironments(
       @PathParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
-    pageRequest.addFilter("appId", appId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Environment>>(envService.listEnvironments(pageRequest));
   }
 

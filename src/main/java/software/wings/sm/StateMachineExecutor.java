@@ -223,7 +223,7 @@ public class StateMachineExecutor {
   }
 
   static class SmExecutionDispatcher implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(SmExecutionDispatcher.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private SmInstance smInstance;
     private StateMachine sm;
     private StateMachineExecutor stateMachineExecutor;

@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
+
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
@@ -44,7 +45,7 @@ public class SshPwdAuthExecutorTest {
                                   .password("osboxes.org")
                                   .build();
 
-    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     String fileName = "mvim";
     ExecutionResult result = executor.transferFile("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     System.out.println(result);
@@ -55,7 +56,7 @@ public class SshPwdAuthExecutorTest {
     SshSessionConfig config =
         new SshSessionConfigBuilder().host("localhost").port(3333).user("osboxes").password("osboxes.org").build();
 
-    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     executor.execute("seq 100000 > numbers && sort numbers | wc -l && rm numbers");
     //
     //        Thread thread1 = new Thread(()->{

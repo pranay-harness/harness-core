@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import static software.wings.common.UUIDGenerator.getUuid;
 
 import org.junit.Test;
+
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
@@ -21,7 +22,7 @@ public class SshSudoExecutorTest {
                                   .sudoUserPassword("osboxes.org")
                                   .build();
 
-    SshExecutor executor = SSHExecutorFactory.getExecutor(config);
+    SshExecutor executor = SshExecutorFactory.getExecutor(config);
     executor.execute("sudo su - vagrant  -c 'ls && whoami'");
   }
 }

@@ -26,7 +26,7 @@ import javax.inject.Inject;
 @Singleton
 public class FileServiceImpl implements FileService {
   private static final String FILE_BUCKET = "lob";
-  private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   private GridFSBucket gridFSBucket;
 

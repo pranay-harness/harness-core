@@ -17,15 +17,13 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAIL
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
@@ -91,9 +89,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       while (true) {
         while (inputStream.available() > 0) {
           int i = inputStream.read(tmp, 0, 1024);
-          if (i < 0) {
+          if (i < 0)
             break;
-          }
           String line = new String(tmp, 0, i);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
             outputStream.write((config.getSudoUserPassword() + "\n").getBytes());

@@ -49,7 +49,7 @@ public class ArtifactResource {
   @Produces("application/json")
   public RestResponse<PageResponse<Artifact>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Artifact>>(artifactService.list(pageRequest));
   }
 

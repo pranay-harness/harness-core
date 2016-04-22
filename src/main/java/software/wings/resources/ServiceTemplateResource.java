@@ -38,7 +38,7 @@ public class ServiceTemplateResource {
   @Path("{envId}")
   public RestResponse<PageResponse<ServiceTemplate>> list(
       @PathParam("envId") String envId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
-    pageRequest.addFilter("envId", envId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("envId", envId, SearchFilter.Operator.EQ);
     return new RestResponse<>(serviceTemplateService.list(envId, pageRequest));
   }
 

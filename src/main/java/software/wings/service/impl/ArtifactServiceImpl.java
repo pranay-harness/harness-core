@@ -102,7 +102,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   static class ArtifactCollector implements Runnable {
-    private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private WingsPersistence wingsPersistence;
     private Release release;
     private Artifact artifact;

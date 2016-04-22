@@ -77,7 +77,7 @@ public class WaitNotifyEngine {
     String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
 
     PageRequest<WaitQueue> req = new PageRequest<>();
-    req.addFilter("correlationId", correlationId, SearchFilter.OP.EQ);
+    req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
     waitQueuesResponse.getResponse().forEach(
         waitQueue -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).build()));

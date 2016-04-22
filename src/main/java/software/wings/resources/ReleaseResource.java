@@ -41,7 +41,7 @@ public class ReleaseResource {
   @Produces("application/json")
   public RestResponse<PageResponse<Release>> list(
       @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Release> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.OP.EQ);
+    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Release>>(releaseService.list(pageRequest));
   }
 
