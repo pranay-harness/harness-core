@@ -1,10 +1,8 @@
 package software.wings.service.impl;
 
+import com.codahale.metrics.annotation.Metered;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.codahale.metrics.annotation.Metered;
-
 import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -12,7 +10,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

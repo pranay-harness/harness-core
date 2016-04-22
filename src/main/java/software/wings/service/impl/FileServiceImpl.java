@@ -29,10 +29,10 @@ public class FileServiceImpl implements FileService {
   private static final String FILE_BUCKET = "lob";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-  private GridFSBucket gridFSBucket;
+  private GridFSBucket gridFsBucket;
 
   public FileServiceImpl() {
-    this.gridFSBucket = wingsPersistence.createGridFSBucket(FILE_BUCKET);
+    this.gridFsBucket = wingsPersistence.createGridFSBucket(FILE_BUCKET);
   }
 
   @Override
@@ -51,7 +51,7 @@ public class FileServiceImpl implements FileService {
 
     GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
 
-    ObjectId fileId = gridFSBucket.uploadFromStream(fileMetadata.getFileName(), in, options);
+    ObjectId fileId = gridFsBucket.uploadFromStream(fileMetadata.getFileName(), in, options);
     return fileId.toHexString();
   }
 
@@ -59,7 +59,7 @@ public class FileServiceImpl implements FileService {
   public File download(String fileId, File file) {
     try {
       FileOutputStream streamToDownload = new FileOutputStream(file);
-      gridFSBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
+      gridFsBucket.downloadToStream(new ObjectId(fileId), streamToDownload);
       streamToDownload.close();
       return file;
     } catch (IOException ex) {
@@ -70,12 +70,12 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public void downloadToStream(String fileId, OutputStream outputStream) {
-    gridFSBucket.downloadToStream(new ObjectId(fileId), outputStream);
+    gridFsBucket.downloadToStream(new ObjectId(fileId), outputStream);
   }
 
   @Override
   public GridFSFile getGridFsFile(String fileId) {
-    GridFSFindIterable filemetaData = gridFSBucket.find(Filters.eq("_id", new ObjectId(fileId)));
+    GridFSFindIterable filemetaData = gridFsBucket.find(Filters.eq("_id", new ObjectId(fileId)));
     return filemetaData.first();
   }
 }

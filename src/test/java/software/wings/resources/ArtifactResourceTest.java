@@ -42,10 +42,10 @@ public class ArtifactResourceTest {
 
   @Before
   public void setUp() {
-    PageResponse pageResponse = mock(PageResponse.class);
     reset(ARTIFACT_SERVICE);
     when(ARTIFACT_SERVICE.create(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.update(any(Artifact.class))).thenReturn(ACTUAL);
+    PageResponse pageResponse = mock(PageResponse.class);
     when(ARTIFACT_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
   }
 
