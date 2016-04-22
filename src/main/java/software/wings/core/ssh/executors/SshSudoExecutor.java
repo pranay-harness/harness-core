@@ -38,9 +38,9 @@ public class SshSudoExecutor extends AbstractSshExecutor {
         outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
         outputStream.flush();
       }
-    } catch (IOException e) {
-      logger.error("Reading writing to output/input stream failed");
-      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, e.getCause());
+    } catch (IOException ex) {
+      logger.error("Reading writing to output/input stream failed", ex);
+      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, ex.getCause());
     }
   }
 }

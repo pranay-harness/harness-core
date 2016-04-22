@@ -17,6 +17,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.io.InputStream;
+
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -88,8 +89,8 @@ public class Exec {
       }
       channel.disconnect();
       session.disconnect();
-    } catch (Exception e) {
-      System.out.println(e);
+    } catch (Exception ex) {
+      System.out.println(ex);
     }
   }
 
@@ -97,17 +98,20 @@ public class Exec {
     final GridBagConstraints gbc = new GridBagConstraints(
         0, 0, 1, 1, 1, 1, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, new Insets(0, 0, 0, 0), 0, 0);
     String passwd;
-    JTextField passwordField = (JTextField) new JPasswordField(20);
+    JTextField passwordField = new JPasswordField(20);
     private Container panel;
 
+    @Override
     public String getPassphrase() {
       return null;
     }
 
+    @Override
     public String getPassword() {
       return passwd;
     }
 
+    @Override
     public boolean promptPassword(String message) {
       Object[] ob = {passwordField};
       int result = JOptionPane.showConfirmDialog(null, ob, message, JOptionPane.OK_CANCEL_OPTION);
@@ -119,10 +123,12 @@ public class Exec {
       }
     }
 
+    @Override
     public boolean promptPassphrase(String message) {
       return true;
     }
 
+    @Override
     public boolean promptYesNo(String str) {
       Object[] options = {"yes", "no"};
       int foo = JOptionPane.showOptionDialog(
@@ -130,10 +136,12 @@ public class Exec {
       return foo == 0;
     }
 
+    @Override
     public void showMessage(String message) {
       JOptionPane.showMessageDialog(null, message);
     }
 
+    @Override
     public String[] promptKeyboardInteractive(
         String destination, String name, String instruction, String[] prompt, boolean[] echo) {
       panel = new JPanel();

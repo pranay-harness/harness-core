@@ -126,8 +126,8 @@ public class ArtifactServiceImpl implements ArtifactService {
                                              .set("status", Status.READY);
         wingsPersistence.update(artifact, ops);
         logger.info("Artifact collection completed - artifactId : " + artifact.getUuid());
-      } catch (Exception e) {
-        logger.error(e.getMessage(), e);
+      } catch (Exception ex) {
+        logger.error(ex.getMessage(), ex);
         UpdateOperations<Artifact> ops =
             wingsPersistence.createUpdateOperations(Artifact.class).set("status", Status.FAILED);
         wingsPersistence.update(artifact, ops);

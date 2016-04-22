@@ -27,7 +27,7 @@ public class MongoConnectionHealth extends HealthCheck {
       messageMap.put("addresses", String.valueOf(mongo.getAllAddress()));
       messageMap.put("databaseNames", String.valueOf(Lists.newArrayList(mongo.listDatabaseNames())));
       return Result.healthy(messageMap.toString());
-    } catch (Exception e) {
+    } catch (Exception ex) {
       return Result.unhealthy("Cannot connect to " + mongo.getAllAddress());
     }
   }

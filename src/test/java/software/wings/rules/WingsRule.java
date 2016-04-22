@@ -137,24 +137,24 @@ public class WingsRule implements MethodRule {
       ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
       executorService.shutdownNow();
       log().info("Stopped timer...");
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
     try {
       log().info("Stopping queue listener controller...");
       injector.getInstance(QueueListenerController.class).stop();
       log().info("Stopped queue listener controller...");
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
     try {
       log().info("Stopping distributed lock service...");
       ((Managed) distributedLockSvc).stop();
       log().info("Stopped distributed lock service...");
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
     try {
@@ -162,8 +162,8 @@ public class WingsRule implements MethodRule {
       ((Managed) injector.getInstance(WingsPersistence.class)).stop();
       log().info("Stopped WingsPersistance...");
       log().info("Stopped distributed lock service...");
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Exception ex) {
+      ex.printStackTrace();
     }
 
     log().info("Stopping Mongo server...");

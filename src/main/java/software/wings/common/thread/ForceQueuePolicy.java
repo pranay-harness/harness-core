@@ -19,13 +19,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ForceQueuePolicy implements RejectedExecutionHandler {
   private static Logger logger = LoggerFactory.getLogger(ForceQueuePolicy.class);
 
+  @Override
   public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
     try {
       logger.debug("rejectedExecution occured - will force the threadpool to icrease pool size");
       executor.getQueue().put(r);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException ex) {
       // should never happen since we never wait
-      throw new RejectedExecutionException(e);
+      throw new RejectedExecutionException(ex);
     }
   }
 }

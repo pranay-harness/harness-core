@@ -29,8 +29,8 @@ public class PersistentLocker implements Locker {
     DistributedLock lock = distributedLockSvc.create(entityType + "-" + entityId);
     try {
       return lock.tryLock();
-    } catch (Exception e) {
-      logger.debug("acquireLock failed - entityType: " + entityType + ", entityId: " + entityId, e);
+    } catch (Exception ex) {
+      logger.debug("acquireLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
       return false;
     }
   }
@@ -47,8 +47,8 @@ public class PersistentLocker implements Locker {
     if (lock.isLocked()) {
       try {
         lock.unlock();
-      } catch (Exception e) {
-        logger.debug("releaseLock failed - entityType: " + entityType + ", entityId: " + entityId, e);
+      } catch (Exception ex) {
+        logger.debug("releaseLock failed - entityType: " + entityType + ", entityId: " + entityId, ex);
         return false;
       }
       return true;
