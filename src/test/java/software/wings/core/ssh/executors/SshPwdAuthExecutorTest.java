@@ -37,8 +37,8 @@ public class SshPwdAuthExecutorTest {
   public void testSCP() throws Exception {
     SshSessionConfig config = new SshSessionConfigBuilder()
                                   .executionId(getUuid())
-                                  .SshConnectionTimeout(100000)
-                                  .SshSessionTimeout(100000)
+                                  .sshConnectionTimeout(100000)
+                                  .sshSessionTimeout(100000)
                                   .host("192.168.43.163")
                                   .port(22)
                                   .user("osboxes")

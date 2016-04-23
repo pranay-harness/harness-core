@@ -1,7 +1,12 @@
 package software.wings.dl;
 
+import static com.mongodb.client.model.Filters.eq;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.service.intfc.FileService.FileBucket.LOGS;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -20,10 +25,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
-import static com.mongodb.client.model.Filters.eq;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.service.intfc.FileService.FileBucket.LOGS;
-
 /**
  * Created by anubhaw on 3/3/16.
  */
@@ -35,13 +36,12 @@ public class GridFsDbFileExt {
   private String chunkCollectionName = LOGS.getName() + ".chunks";
   private int chunkSize = (int) LOGS.getChunkSize();
 
-  private Logger LOGGER = LoggerFactory.getLogger(getClass());
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public void appendToFile(String fileName, String content) {
     GridFSFile file = LOGS.getGridFSBucket().find(eq("filename", fileName)).first();
     if (null == file) { // Write first chunk
-      LOGGER.info(
-          String.format("No file found with name [%s]. Creating new file and writing initial chunks", fileName));
+      logger.info("No file found with name {}. Create new file and write initial chunks", fileName);
       put(fileName, content);
     } else {
       long fileLength = file.getLength();
@@ -105,12 +105,12 @@ public class GridFsDbFileExt {
     InputStream streamToUploadFrom;
     try {
       streamToUploadFrom = new ByteArrayInputStream(content.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new WingsException("String to stream conversion failed", e.getCause());
+    } catch (UnsupportedEncodingException ex) {
+      throw new WingsException("String to stream conversion failed", ex.getCause());
     }
     LOGS.getGridFSBucket().uploadFromStream(
         fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
-    LOGGER.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
+    logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
   public GridFSFile get(String fileName) {
@@ -120,10 +120,10 @@ public class GridFsDbFileExt {
   public void downloadToStream(String fileName, FileOutputStream fileOutputStream) {
     try {
       LOGS.getGridFSBucket().downloadToStreamByName(fileName, fileOutputStream);
-    } catch (MongoGridFSException e) {
-      if (!e.getMessage().startsWith("Chunk size data length is not the expected size")) { // TODO: Fixit
-        LOGGER.error(e.getMessage());
-        throw e;
+    } catch (MongoGridFSException ex) {
+      if (!ex.getMessage().startsWith("Chunk size data length is not the expected size")) { // TODO: Fixit
+        logger.error(ex.getMessage());
+        throw ex;
       }
     }
   }

@@ -14,11 +14,11 @@ import java.util.Objects;
  * @author Rishi
  */
 @Indexes(
-    @Index(fields = { @Field("appID")
+    @Index(fields = { @Field("appId")
                       , @Field("name"), @Field("version") }, options = @IndexOptions(unique = true)))
 @Entity(value = "platforms", noClassnameStored = true)
 public class PlatformSoftware extends BaseFile {
-  private String appID;
+  private String appId;
   private boolean standard;
   private String version;
   private String description;
@@ -30,12 +30,12 @@ public class PlatformSoftware extends BaseFile {
     super(fileName, md5);
   }
 
-  public String getAppID() {
-    return appID;
+  public String getAppId() {
+    return appId;
   }
 
-  public void setAppID(String appID) {
-    this.appID = appID;
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   public boolean isStandard() {
@@ -71,27 +71,31 @@ public class PlatformSoftware extends BaseFile {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    if (!super.equals(o))
-      return false;
-    PlatformSoftware that = (PlatformSoftware) o;
-    return standard == that.standard && Objects.equals(appID, that.appID) && Objects.equals(version, that.version)
-        && Objects.equals(description, that.description) && Objects.equals(source, that.source);
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(appId, standard, version, description, source);
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), appID, standard, version, description, source);
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final PlatformSoftware other = (PlatformSoftware) obj;
+    return Objects.equals(this.appId, other.appId) && Objects.equals(this.standard, other.standard)
+        && Objects.equals(this.version, other.version) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.source, other.source);
   }
 
   @Override
   public String toString() {
     return "PlatformSoftware{"
-        + "appID='" + appID + '\'' + ", standard=" + standard + ", version='" + version + '\'' + ", description='"
+        + "appId='" + appId + '\'' + ", standard=" + standard + ", version='" + version + '\'' + ", description='"
         + description + '\'' + ", source=" + source + '}';
   }
 

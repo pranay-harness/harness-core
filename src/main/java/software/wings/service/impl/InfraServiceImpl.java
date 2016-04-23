@@ -1,9 +1,5 @@
 package software.wings.service.impl;
 
-import javax.inject.Inject;
-
-import com.google.inject.Singleton;
-
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -18,8 +14,8 @@ import software.wings.utils.HostFileHelper.HostFileType;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
+import javax.inject.Inject;
 
-@Singleton
 public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -30,7 +26,7 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Infra createInfra(Infra infra, String envId) {
-    infra.setEnvID(envId);
+    infra.setEnvId(envId);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
@@ -46,19 +42,19 @@ public class InfraServiceImpl implements InfraService {
 
   @Override
   public Host createHost(String infraId, Host host) {
-    host.setInfraID(infraId);
+    host.setInfraId(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public Host updateHost(String infraId, Host host) {
-    host.setInfraID(infraId);
+    host.setInfraId(infraId);
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
   public Tag createTag(String envId, Tag tag) {
-    tag.setEnvID(envId);
+    tag.setEnvId(envId);
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 

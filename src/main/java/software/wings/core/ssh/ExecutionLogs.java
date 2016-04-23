@@ -16,9 +16,9 @@ public class ExecutionLogs {
 
   @Inject private GridFsDbFileExt gridFSDBFileExt;
 
-  public void appendLogs(String executionID, String logs) {
-    logger.info("Saving log for execution ID: " + executionID);
-    gridFSDBFileExt.appendToFile(executionID, logs);
+  public void appendLogs(String executionId, String logs) {
+    logger.info("Saving log for execution ID: " + executionId);
+    gridFSDBFileExt.appendToFile(executionId, logs);
     logger.info("Saved following log text in GridFS: " + logs);
   }
 }

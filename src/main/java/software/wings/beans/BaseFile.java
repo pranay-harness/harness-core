@@ -1,14 +1,18 @@
 package software.wings.beans;
 
+import static software.wings.beans.ChecksumType.MD5;
+
+import com.google.common.base.MoreObjects;
+
 import org.apache.commons.lang3.StringUtils;
 
-import static software.wings.beans.ChecksumType.MD5;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 4/13/16.
  */
 public class BaseFile extends Base {
-  private String fileUUID;
+  private String fileUuid;
   private String name;
   private String mimeType;
   private long size;
@@ -25,12 +29,12 @@ public class BaseFile extends Base {
     }
   }
 
-  public String getFileUUID() {
-    return fileUUID;
+  public String getFileUuid() {
+    return fileUuid;
   }
 
-  public void setFileUUID(String fileUUID) {
-    this.fileUUID = fileUUID;
+  public void setFileUuid(String fileUuid) {
+    this.fileUuid = fileUuid;
   }
 
   public String getName() {
@@ -71,5 +75,39 @@ public class BaseFile extends Base {
 
   public void setChecksum(String checksum) {
     this.checksum = checksum;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(fileUuid, name, mimeType, size, checksumType, checksum);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final BaseFile other = (BaseFile) obj;
+    return Objects.equals(this.fileUuid, other.fileUuid) && Objects.equals(this.name, other.name)
+        && Objects.equals(this.mimeType, other.mimeType) && Objects.equals(this.size, other.size)
+        && Objects.equals(this.checksumType, other.checksumType) && Objects.equals(this.checksum, other.checksum);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("fileUuid", fileUuid)
+        .add("name", name)
+        .add("mimeType", mimeType)
+        .add("size", size)
+        .add("checksumType", checksumType)
+        .add("checksum", checksum)
+        .toString();
   }
 }

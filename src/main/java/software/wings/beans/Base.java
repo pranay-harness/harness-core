@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Reference;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -83,27 +84,21 @@ public class Base {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
-    return result;
+    return Objects.hash(uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (getClass() != obj.getClass())
-      return false;
-    Base other = (Base) obj;
-    if (uuid == null) {
-      if (other.uuid != null)
-        return false;
-    } else if (!uuid.equals(other.uuid))
-      return false;
-    return true;
+    }
+    final Base other = (Base) obj;
+    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.createdBy, other.createdBy)
+        && Objects.equals(this.createdAt, other.createdAt) && Objects.equals(this.lastUpdatedBy, other.lastUpdatedBy)
+        && Objects.equals(this.lastUpdatedAt, other.lastUpdatedAt) && Objects.equals(this.active, other.active);
   }
 
   @PrePersist

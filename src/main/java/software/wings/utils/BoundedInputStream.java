@@ -1,15 +1,15 @@
 package software.wings.utils;
 
+import static java.lang.String.format;
+import static software.wings.beans.ErrorConstants.FILE_DOWNLOAD_FAILED;
+import static software.wings.beans.ErrorConstants.INVALID_URL;
+
 import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static java.lang.String.format;
-import static software.wings.beans.ErrorConstants.FILE_DOWNLOAD_FAILED;
-import static software.wings.beans.ErrorConstants.INVALID_URL;
 
 /**
  * Created by anubhaw on 4/14/16.
@@ -44,22 +44,22 @@ public class BoundedInputStream extends InputStream {
   }
 
   @Override
-  public int read(byte b[]) throws IOException {
-    return read(b, 0, b.length);
+  public int read(byte bytes[]) throws IOException {
+    return read(bytes, 0, bytes.length);
   }
 
   @Override
-  public int read(byte b[], int off, int len) throws IOException {
-    return updateTotalBytesRead(inputStream.read(b, off, len));
+  public int read(byte bytes[], int off, int len) throws IOException {
+    return updateTotalBytesRead(inputStream.read(bytes, off, len));
   }
 
-  public static BoundedInputStream getBoundedStreamForURL(String urlString, int size) {
+  public static BoundedInputStream getBoundedStreamForUrl(String urlString, int size) {
     try {
       URL url = new URL(urlString);
       return new BoundedInputStream(url.openStream(), size);
-    } catch (MalformedURLException e) {
+    } catch (MalformedURLException ex) {
       throw new WingsException(INVALID_URL);
-    } catch (IOException e) {
+    } catch (IOException ex) {
       throw new WingsException(FILE_DOWNLOAD_FAILED);
     }
   }

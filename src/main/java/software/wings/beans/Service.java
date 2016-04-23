@@ -65,21 +65,26 @@ public class Service extends Base {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    if (!super.equals(o))
-      return false;
-    Service service = (Service) o;
-    return Objects.equals(name, service.name) && Objects.equals(description, service.description)
-        && artifactType == service.artifactType && Objects.equals(platformSoftwares, service.platformSoftwares);
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, platformSoftwares, configFiles);
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), name, description, artifactType, platformSoftwares);
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Service other = (Service) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.artifactType, other.artifactType)
+        && Objects.equals(this.platformSoftwares, other.platformSoftwares)
+        && Objects.equals(this.configFiles, other.configFiles);
   }
 
   @Override

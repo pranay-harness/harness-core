@@ -7,15 +7,15 @@ public class FileUtils {
   public static File createTempDirPath() {
     String tempDirPath = System.getProperty("java.io.tmpdir");
 
-    File f = null;
+    File file = null;
     boolean created = false;
     do {
-      Random r = new Random(1000);
-      f = new File(tempDirPath, System.currentTimeMillis() + "-" + r.nextInt(1000));
-      if (!f.exists()) {
-        created = f.mkdirs();
+      Random random = new Random(1000);
+      file = new File(tempDirPath, System.currentTimeMillis() + "-" + random.nextInt(1000));
+      if (!file.exists()) {
+        created = file.mkdirs();
       }
     } while (!created);
-    return f;
+    return file;
   }
 }

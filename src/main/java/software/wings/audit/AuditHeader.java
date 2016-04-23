@@ -1,5 +1,7 @@
 package software.wings.audit;
 
+import com.google.common.base.Objects;
+
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -209,16 +211,29 @@ public class AuditHeader extends Base {
 
   @Override
   public String toString() {
-    return "AuditHeader{"
-        + "remoteUser=" + remoteUser + ", application=" + application + ", component=" + component
-        + ", environment=" + environment + ", url='" + url + '\'' + ", resourcePath='" + resourcePath + '\''
-        + ", queryParams='" + queryParams + '\'' + ", requestMethod=" + requestMethod + ", headerString='"
-        + headerString + '\'' + ", responseType=" + responseType + ", responseStatusCode=" + responseStatusCode
-        + ", errorCode='" + errorCode + '\'' + ", remoteHostName='" + remoteHostName + '\''
-        + ", remoteHostPort=" + remoteHostPort + ", remoteIpAddress='" + remoteIpAddress + '\'' + ", localHostName='"
-        + localHostName + '\'' + ", localIpAddress='" + localIpAddress + '\'' + ", requestPayloadUuid='"
-        + requestPayloadUuid + '\'' + ", responsePayloadUuid='" + responsePayloadUuid + '\''
-        + ", requestTime=" + requestTime + ", responseTime=" + responseTime + '}';
+    return Objects.toStringHelper(this)
+        .add("remoteUser", remoteUser)
+        .add("application", application)
+        .add("component", component)
+        .add("environment", environment)
+        .add("url", url)
+        .add("resourcePath", resourcePath)
+        .add("queryParams", queryParams)
+        .add("requestMethod", requestMethod)
+        .add("headerString", headerString)
+        .add("responseType", responseType)
+        .add("responseStatusCode", responseStatusCode)
+        .add("errorCode", errorCode)
+        .add("remoteHostName", remoteHostName)
+        .add("remoteHostPort", remoteHostPort)
+        .add("remoteIpAddress", remoteIpAddress)
+        .add("localHostName", localHostName)
+        .add("localIpAddress", localIpAddress)
+        .add("requestPayloadUuid", requestPayloadUuid)
+        .add("responsePayloadUuid", responsePayloadUuid)
+        .add("requestTime", requestTime)
+        .add("responseTime", responseTime)
+        .toString();
   }
 
   public enum RequestType { REQUEST, RESPONSE }

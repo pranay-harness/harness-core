@@ -27,12 +27,12 @@ public class Host extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
-  private String infraID;
+  private String infraId;
 
   public Host() {}
 
-  public Host(String infraID, String hostName, String osType, AccessType accessType) {
-    this.infraID = infraID;
+  public Host(String infraId, String hostName, String osType, AccessType accessType) {
+    this.infraId = infraId;
     this.hostName = hostName;
     this.osType = osType;
     this.accessType = accessType;
@@ -94,12 +94,12 @@ public class Host extends Base {
     this.applicationId = applicationId;
   }
 
-  public String getInfraID() {
-    return infraID;
+  public String getInfraId() {
+    return infraId;
   }
 
-  public void setInfraID(String infraID) {
-    this.infraID = infraID;
+  public void setInfraId(String infraId) {
+    this.infraId = infraId;
   }
 
   public List<Tag> getTags() {

@@ -4,6 +4,9 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
@@ -13,6 +16,7 @@ import javax.inject.Inject;
  */
 public class GenericDbCache {
   @Inject private WingsPersistence wingsPersistence;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private LoadingCache<String, Object> cache =
       CacheBuilder.newBuilder()
@@ -40,8 +44,10 @@ public class GenericDbCache {
     try {
       Object obj = cache.get(makeCacheKey(cls, objKey));
       return (T) obj;
-    } catch (ExecutionException e) {
-    } // do nothing
+    } catch (ExecutionException ex) {
+      logger.error("Exception occured in fetching key {}, {}", cls.getSimpleName(), objKey);
+      logger.error(ex.getMessage());
+    }
     return null;
   }
 }

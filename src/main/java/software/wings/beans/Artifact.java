@@ -107,24 +107,27 @@ public class Artifact extends Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), application, release, compName, artifactSourceName, displayName, revision,
-        artifactFile, status);
+    return 31 * super.hashCode()
+        + Objects.hash(application, release, compName, artifactSourceName, displayName, revision, artifactFile, status);
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null || getClass() != obj.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    if (!super.equals(obj))
+    }
+    if (!super.equals(obj)) {
       return false;
-    Artifact artifact = (Artifact) obj;
-    return Objects.equals(application, artifact.application) && Objects.equals(release, artifact.release)
-        && Objects.equals(compName, artifact.compName)
-        && Objects.equals(artifactSourceName, artifact.artifactSourceName)
-        && Objects.equals(displayName, artifact.displayName) && Objects.equals(revision, artifact.revision)
-        && Objects.equals(artifactFile, artifact.artifactFile) && status == artifact.status;
+    }
+    final Artifact other = (Artifact) obj;
+    return Objects.equals(this.application, other.application) && Objects.equals(this.release, other.release)
+        && Objects.equals(this.compName, other.compName)
+        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
+        && Objects.equals(this.displayName, other.displayName) && Objects.equals(this.revision, other.revision)
+        && Objects.equals(this.artifactFile, other.artifactFile) && Objects.equals(this.status, other.status);
   }
 
   @Override
@@ -155,7 +158,6 @@ public class Artifact extends Base {
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
-
     public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
       @Override
       public void initialize(final ValidArtifact validateForUpdate) {}

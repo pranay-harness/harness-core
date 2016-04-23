@@ -109,7 +109,7 @@ public class FileServiceImpl implements FileService {
     GridFSFile gridFsFile = getGridFsFile(fileId, bucket);
     verifyFileIntegrity(baseFile, gridFsFile);
     baseFile.setChecksum(gridFsFile.getMD5());
-    baseFile.setFileUUID(fileId);
+    baseFile.setFileUuid(fileId);
     baseFile.setSize(gridFsFile.getLength());
     return fileId;
   }

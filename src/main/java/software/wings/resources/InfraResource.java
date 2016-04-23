@@ -4,6 +4,8 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -22,7 +24,6 @@ import software.wings.utils.HostFileHelper.HostFileType;
 
 import java.io.File;
 import java.io.InputStream;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Encoded;
@@ -105,7 +106,7 @@ public class InfraResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     if (sourceType.equals(HTTP)) {
       uploadedInputStream =
-          BoundedInputStream.getBoundedStreamForURL(urlString, 40 * 1000 * 1000); // TODO: read from config
+          BoundedInputStream.getBoundedStreamForUrl(urlString, 40 * 1000 * 1000); // TODO: read from config
     }
     infraService.importHosts(infraId, uploadedInputStream, fileType);
   }

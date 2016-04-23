@@ -1,19 +1,23 @@
 package software.wings.utils;
 
+import static org.apache.commons.csv.CSVFormat.DEFAULT;
+import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.utils.HostFileHelper.HostFileType.CSV;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import software.wings.beans.Host;
 import software.wings.exception.WingsException;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.apache.commons.csv.CSVFormat.DEFAULT;
-import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
-import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 /**
  * Created by anubhaw on 4/15/16.
@@ -23,7 +27,7 @@ public class HostFileHelper {
 
   public static enum HostFileType { CSV, PROPERTIES, XML }
 
-  public static List<Host> parseHosts(InputStream inputStream, String infraID, HostFileType fileType) {
+  public static List<Host> parseHosts(InputStream inputStream, String infraId, HostFileType fileType) {
     List<Host> hosts = new ArrayList<>();
     if (fileType.equals(CSV)) { // TODO: Generalize for other types as well
       try {
@@ -31,11 +35,11 @@ public class HostFileHelper {
         List<CSVRecord> records = csvParser.getRecords();
         for (CSVRecord record : records) {
           String hostName = record.get("HOST");
-          String OSType = record.get("OS");
+          String osType = record.get("OS");
           Host.AccessType accessType = Host.AccessType.valueOf(record.get("ACCESS_TYPE"));
-          hosts.add(new Host(infraID, hostName, OSType, accessType));
+          hosts.add(new Host(infraId, hostName, osType, accessType));
         }
-      } catch (IOException e) {
+      } catch (IOException ex) {
         throw new WingsException(INVALID_CSV_FILE);
       }
     }
@@ -60,12 +64,12 @@ public class HostFileHelper {
           row.add(host.getCreatedAt());
           try {
             csvPrinter.printRecord(row);
-          } catch (IOException e) {
+          } catch (IOException ex) {
             throw new WingsException(UNKNOWN_ERROR_MEG);
           }
         });
         fileWriter.flush();
-      } catch (IOException e) {
+      } catch (IOException ex) {
         throw new WingsException(UNKNOWN_ERROR_MEG);
       } finally {
         try {

@@ -13,7 +13,7 @@ public class TestJson {
     rel.setDescription("Rel1.0");
     Map<String, ArtifactSource> artifactSources = new HashMap<String, ArtifactSource>();
     JenkinsArtifactSource sampleJob = new JenkinsArtifactSource();
-    sampleJob.setJenkinsURL("http://localhost:8080/jenkins/");
+    sampleJob.setJenkinsUrl("http://localhost:8080/jenkins/");
     sampleJob.setJobname("test-freestyle");
     sampleJob.setArtifactPathRegex("sample.tar.gz");
     sampleJob.setUsername("user1");

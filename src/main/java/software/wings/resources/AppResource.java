@@ -143,7 +143,7 @@ public class AppResource {
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
     if (sourceType.equals(HTTP)) {
       inputStream =
-          BoundedInputStream.getBoundedStreamForURL(urlString, 4 * 1000 * 1000 * 1000); // TODO: read from config
+          BoundedInputStream.getBoundedStreamForUrl(urlString, 4 * 1000 * 1000 * 1000); // TODO: read from config
     }
     return inputStream;
   }
@@ -151,7 +151,7 @@ public class AppResource {
   private PlatformSoftware createPlatformSoftwareFromRequest(String appId, String fileName, String version, String md5,
       String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
     PlatformSoftware platformSoftware = new PlatformSoftware(fileName, md5);
-    platformSoftware.setAppID(appId);
+    platformSoftware.setAppId(appId);
     platformSoftware.setStandard(standard);
     platformSoftware.setDescription(description);
     if (sourceType.equals(HTTP)) {

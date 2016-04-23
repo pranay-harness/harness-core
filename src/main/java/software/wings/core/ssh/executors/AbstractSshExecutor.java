@@ -1,6 +1,23 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_KEYPATH_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_CODE;
+import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_MSG;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
+import static software.wings.utils.Misc.quietSleep;
+
 import com.google.inject.Inject;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -12,17 +29,15 @@ import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-
-import static software.wings.beans.ErrorConstants.*;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
-import static software.wings.utils.Misc.quietSleep;
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -74,10 +89,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       byte[] tmp = new byte[1024]; // FIXME: Improve stream reading/writing logic
       while (true) {
         while (inputStream.available() > 0) {
-          int i = inputStream.read(tmp, 0, 1024);
-          if (i < 0)
+          int numOfBytesRead = inputStream.read(tmp, 0, 1024);
+          if (numOfBytesRead < 0) {
             break;
-          String line = new String(tmp, 0, i);
+          }
+          String line = new String(tmp, 0, numOfBytesRead);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
             outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
             outputStream.flush();
@@ -115,8 +131,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     try {
       outputStream.write(3); // Send ^C command
       outputStream.flush();
-    } catch (IOException e) {
-      logger.error("Abort command failed " + e.getStackTrace());
+    } catch (IOException ex) {
+      logger.error("Abort command failed " + ex.getStackTrace());
     }
   }
 
@@ -142,9 +158,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
-  protected SshException extractSshException(JSchException jSchException) {
-    String message = jSchException.getMessage();
-    Throwable cause = jSchException.getCause();
+  protected SshException extractSshException(JSchException jschexception) {
+    String message = jschexception.getMessage();
+    Throwable cause = jschexception.getCause();
 
     String customMessage = null;
     String customCode = null;
@@ -160,8 +176,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
         customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
       } else if (cause instanceof FileNotFoundException) {
-        customMessage = INVALID_KEYPATH_ERROR_CODE;
-        customCode = INVALID_KEYPATH_ERROR_MSG;
+        customMessage = INVALID_KEYPATH_ERROR_MSG;
+        customCode = INVALID_KEY_ERROR_CODE;
       } else {
         customMessage = UNKNOWN_ERROR_CODE;
         customCode = UNKNOWN_ERROR_MEG;
@@ -182,7 +198,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return new SshException(customCode, customMessage);
   }
 
-  /**** SCP ****/
+  /**** SCP. ****/
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
     try {
@@ -245,11 +261,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     //          1 for error,
     //          2 for fatal error,
     //          -1
-    if (b == 0)
+    if (b == 0) {
       return b;
-    else if (b == -1)
+    } else if (b == -1) {
       return b;
-    else { // error or echoed string on session initiation from remote host
+    } else { // error or echoed string on session initiation from remote host
       StringBuilder sb = new StringBuilder();
       if (b > 2) {
         sb.append((char) b);

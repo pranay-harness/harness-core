@@ -2,8 +2,6 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import com.google.inject.Inject;
-
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
@@ -16,13 +14,14 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.io.InputStream;
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 3/25/16.
  */
 public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject FileService fileService;
+  @Inject private FileService fileService;
 
   @Override
   public List<Service> list(String appId) {
@@ -70,7 +69,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).add("configFiles", configFile);
     Query<Service> updateQuery =
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(configFile.getServiceID());
+        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(configFile.getServiceId());
     wingsPersistence.update(updateQuery, updateOperations);
     return configFileId;
   }

@@ -30,7 +30,7 @@ public class JsonTest {
     Release rel = new Release();
     rel.setReleaseName("TestRel");
     JenkinsArtifactSource jenkins = new JenkinsArtifactSource();
-    jenkins.setJenkinsURL("http://localhost:8080/jenkins");
+    jenkins.setJenkinsUrl("http://localhost:8080/jenkins");
     jenkins.setUsername("user1");
     jenkins.setPassword("user1");
     jenkins.setJobname("test-freestyle");
