@@ -32,7 +32,7 @@ public class EnvironmentResource {
   @GET
   @Path("{appId}")
   public RestResponse<List<Environment>> listEnvironments(@PathParam("appId") String appId) {
-    return new RestResponse<List<Environment>>(envService.listEnvironments(appId));
+    return new RestResponse<>(envService.listEnvironments(appId));
   }
 
   @POST

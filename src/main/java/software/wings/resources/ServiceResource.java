@@ -1,21 +1,15 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.io.InputStream;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -54,41 +48,5 @@ public class ServiceResource {
       @PathParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
     service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
-  }
-
-  @POST
-  @Path("{serviceId}/configs")
-  @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadConfig(@PathParam("serviceId") String serviceId,
-      @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
-      @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = new ConfigFile(serviceId, fileName, relativePath, md5);
-    String fileId = srs.saveFile(configFile, uploadedInputStream, CONFIGS);
-    return new RestResponse<>(fileId);
-  }
-
-  @GET
-  @Path("{serviceId}/configs")
-  public RestResponse<List<ConfigFile>> fetchConfigs(@PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(srs.getConfigs(serviceId));
-  }
-
-  @GET
-  @Path("{serviceId}/configs/{configId}")
-  public RestResponse<ConfigFile> fetchConfig(@PathParam("configId") String configId) {
-    return new RestResponse<>(srs.getConfig(configId));
-  }
-
-  @PUT
-  @Path("{serviceId}/configs/{configId}")
-  @Consumes(MULTIPART_FORM_DATA)
-  public void updateConfig(@PathParam("serviceId") String serviceId, @PathParam("configId") String configId,
-      @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
-      @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = new ConfigFile(serviceId, fileName, relativePath, md5);
-    configFile.setUuid(configId);
-    srs.updateFile(configFile, uploadedInputStream, CONFIGS);
   }
 }

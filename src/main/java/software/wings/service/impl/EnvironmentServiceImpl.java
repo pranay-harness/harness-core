@@ -6,6 +6,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.TagType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 
@@ -38,6 +39,8 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Override
   public Environment createEnvironment(String applicationId, Environment environment) {
     Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
+    wingsPersistence.save(new TagType("hierarchy", savedEnv.getUuid()));
+
     UpdateOperations<Application> updateOperations =
         wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);
     Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(applicationId);

@@ -22,8 +22,6 @@ public class Service extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<ConfigFile> configFiles;
-
   public String getName() {
     return name;
   }
@@ -56,17 +54,9 @@ public class Service extends Base {
     this.platformSoftwares = platformSoftwares;
   }
 
-  public List<ConfigFile> getConfigFiles() {
-    return configFiles;
-  }
-
-  public void setConfigFiles(List<ConfigFile> configFiles) {
-    this.configFiles = configFiles;
-  }
-
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, platformSoftwares, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, platformSoftwares);
   }
 
   @Override
@@ -83,8 +73,7 @@ public class Service extends Base {
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.artifactType, other.artifactType)
-        && Objects.equals(this.platformSoftwares, other.platformSoftwares)
-        && Objects.equals(this.configFiles, other.configFiles);
+        && Objects.equals(this.platformSoftwares, other.platformSoftwares);
   }
 
   @Override
@@ -97,12 +86,11 @@ public class Service extends Base {
         .toString();
   }
 
-  public static class Builder {
+  public static final class ServiceBuilder {
     private String name;
     private String description;
     private ArtifactType artifactType;
     private List<PlatformSoftware> platformSoftwares;
-    private List<ConfigFile> configFiles;
     private String uuid;
     private User createdBy;
     private long createdAt;
@@ -110,68 +98,63 @@ public class Service extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private Builder() {}
+    private ServiceBuilder() {}
 
-    public static Builder aService() {
-      return new Builder();
+    public static ServiceBuilder aService() {
+      return new ServiceBuilder();
     }
 
-    public Builder withName(String name) {
+    public ServiceBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
-    public Builder withDescription(String description) {
+    public ServiceBuilder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    public Builder withArtifactType(ArtifactType artifactType) {
+    public ServiceBuilder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
-    public Builder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
+    public ServiceBuilder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
       this.platformSoftwares = platformSoftwares;
       return this;
     }
 
-    public Builder withConfigFiles(List<ConfigFile> configFiles) {
-      this.configFiles = configFiles;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
+    public ServiceBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withCreatedBy(User createdBy) {
+    public ServiceBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public ServiceBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public ServiceBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public ServiceBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withActive(boolean active) {
+    public ServiceBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    public Builder but() {
+    public ServiceBuilder but() {
       return aService()
           .withName(name)
           .withDescription(description)
@@ -192,7 +175,6 @@ public class Service extends Base {
       service.setArtifactType(artifactType);
       service.setPlatformSoftwares(platformSoftwares);
       service.setUuid(uuid);
-      service.setConfigFiles(configFiles);
       service.setCreatedBy(createdBy);
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);

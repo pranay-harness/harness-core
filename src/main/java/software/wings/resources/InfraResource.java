@@ -87,12 +87,6 @@ public class InfraResource {
     return new RestResponse<Host>(infraService.updateHost(infraId, host));
   }
 
-  @POST
-  @Path("tags/{envId}")
-  public RestResponse<Tag> saveTag(@PathParam("envId") String envId, Tag tag) {
-    return new RestResponse<>(infraService.createTag(envId, tag));
-  }
-
   @PUT
   @Path("hosts/{hostId}/tag/{tagId}")
   public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {

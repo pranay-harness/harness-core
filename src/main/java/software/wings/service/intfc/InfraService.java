@@ -23,9 +23,7 @@ public interface InfraService {
 
   public Host updateHost(String infraId, Host host);
 
-  public Tag createTag(String envId, Tag tag);
-
-  public Host applyTag(String hostId, String tagId);
+  Host applyTag(String hostId, String tagId);
 
   Integer importHosts(String infraId, InputStream uploadedInputStream, HostFileType sourceType);
 

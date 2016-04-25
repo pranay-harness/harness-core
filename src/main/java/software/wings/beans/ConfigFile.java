@@ -11,27 +11,28 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 4/12/16.
  */
+
 @Entity(value = "configFiles", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("serviceId")
+@Indexes(@Index(fields = { @Field("entityId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class ConfigFile extends BaseFile {
-  private String serviceId;
+  private String entityId;
   private String relativePath;
 
   public ConfigFile() {}
 
-  public ConfigFile(String serviceId, String fileName, String relativePath, String md5) {
+  public ConfigFile(String entityId, String fileName, String relativePath, String md5) {
     super(fileName, md5);
-    this.serviceId = serviceId;
     this.relativePath = relativePath;
+    this.entityId = entityId;
   }
 
-  public String getServiceId() {
-    return serviceId;
+  public String getEntityId() {
+    return entityId;
   }
 
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
+  public void setEntityId(String entityId) {
+    this.entityId = entityId;
   }
 
   public String getRelativePath() {
@@ -44,7 +45,7 @@ public class ConfigFile extends BaseFile {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(serviceId, relativePath);
+    return 31 * super.hashCode() + Objects.hash(entityId, relativePath);
   }
 
   @Override
@@ -59,6 +60,6 @@ public class ConfigFile extends BaseFile {
       return false;
     }
     final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.relativePath, other.relativePath);
+    return Objects.equals(this.entityId, other.entityId) && Objects.equals(this.relativePath, other.relativePath);
   }
 }

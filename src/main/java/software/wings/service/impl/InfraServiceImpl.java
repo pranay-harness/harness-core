@@ -53,12 +53,6 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public Tag createTag(String envId, Tag tag) {
-    tag.setEnvId(envId);
-    return wingsPersistence.saveAndGet(Tag.class, tag);
-  }
-
-  @Override
   public Host applyTag(String hostId, String tagId) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
     Host host = wingsPersistence.get(Host.class, hostId);

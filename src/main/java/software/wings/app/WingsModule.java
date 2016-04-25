@@ -30,6 +30,7 @@ import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
+import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
@@ -41,11 +42,13 @@ import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.SshNodeSetExecutorServiceImpl;
+import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
@@ -57,6 +60,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SshNodeSetExecutorService;
+import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.ManagedExecutorService;
@@ -163,5 +167,7 @@ public class WingsModule extends AbstractModule {
         .annotatedWith(Names.named("notifier"))
         .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
     bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
+    bind(TagService.class).to(TagServiceImpl.class);
+    bind(ConfigService.class).to(ConfigServiceImpl.class);
   }
 }
