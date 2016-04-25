@@ -506,7 +506,10 @@
         <profile>
             <id>build-ui</id>
             <activation>
-                <activeByDefault>true</activeByDefault>
+                <property>
+                    <name>buildUI</name>
+                    <value>true</value>
+                </property>
             </activation>
             <build>
                 <plugins>
