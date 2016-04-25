@@ -51,9 +51,9 @@ public class AuditServiceImpl implements AuditService {
     if (fileUuid != null) {
       UpdateOperations<AuditHeader> ops = wingsPersistence.createUpdateOperations(AuditHeader.class);
       if (requestType == RequestType.RESPONSE) {
-        ops = ops.set("responsePayloadUUID", fileUuid);
+        ops = ops.set("responsePayloadUuid", fileUuid);
       } else {
-        ops = ops.set("requestPayloadUUID", fileUuid);
+        ops = ops.set("requestPayloadUuid", fileUuid);
       }
       wingsPersistence.update(header, ops);
     }
@@ -88,7 +88,7 @@ public class AuditServiceImpl implements AuditService {
                                             .set("responseStatusCode", header.getResponseStatusCode())
                                             .set("responseTime", header.getResponseTime());
     if (fileUuid != null) {
-      ops = ops.set("responsePayloadUUID", fileUuid);
+      ops = ops.set("responsePayloadUuid", fileUuid);
     }
     wingsPersistence.update(auditHeader, ops);
   }
