@@ -50,8 +50,10 @@ public class ServiceTemplateResource {
   }
 
   @PUT
-  @Path("{envId}")
-  public RestResponse<ServiceTemplate> update(@PathParam("envId") String envId, ServiceTemplate serviceTemplate) {
+  @Path("{envId}/{templateId}")
+  public RestResponse<ServiceTemplate> update(@PathParam("envId") String envId,
+      @PathParam("templateId") String serviceTemplateId, ServiceTemplate serviceTemplate) {
+    serviceTemplate.setUuid(serviceTemplateId);
     return new RestResponse<>(serviceTemplateService.updateServiceTemplate(envId, serviceTemplate));
   }
 }
