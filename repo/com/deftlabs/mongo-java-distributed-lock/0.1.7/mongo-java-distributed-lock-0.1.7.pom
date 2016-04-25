@@ -17,7 +17,6 @@
         </license>
     </licenses>
 
-
     <scm>
         <url>https://github.com/deftlabs</url>
     </scm>
@@ -26,7 +25,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>3.2.0</version>
+            <version>[3.2.0,)</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -42,29 +41,12 @@
         </dependency>
     </dependencies>
     <distributionManagement>
-        <snapshotRepository>
-            <id>repo.wings</id>
-            <url>s3://repo.wings/snapshot</url>
-        </snapshotRepository>
-        <repository>
-            <id>repo.wings</id>
-            <url>s3://repo.wings/release</url>
-        </repository>
+      <repository>
+        <id>ossrh</id>
+        <url>file:///Users/peeyushaggarwal/workdata/wings/repo</url>
+      </repository>
     </distributionManagement>
-    <repositories>
-        <repository>
-            <id>repo.wings</id>
-            <url>s3://repo.wings/release</url>
-        </repository>
-    </repositories>
     <build>
-        <extensions>
-            <extension>
-                <groupId>org.kuali.maven.wagons</groupId>
-                <artifactId>maven-s3-wagon</artifactId>
-                <version>1.2.1</version>
-            </extension>
-        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -88,11 +70,8 @@
                 </executions>
                 <configuration>
                     <ignoreMissingFile>true</ignoreMissingFile>
-                    <file>src/main/java/com/deftlabs/lock/mongo/DistributedLockSvcOptions.java
-                    </file>
-                    <outputFile>
-                        src/main/java/com/deftlabs/lock/mongo/DistributedLockSvcOptions.java
-                    </outputFile>
+                    <file>src/main/java/com/deftlabs/lock/mongo/DistributedLockSvcOptions.java</file>
+                    <outputFile>src/main/java/com/deftlabs/lock/mongo/DistributedLockSvcOptions.java</outputFile>
                     <regex>false</regex>
                     <token>@LIB_VERSION@</token>
                     <value>${project.version}</value>
@@ -100,7 +79,6 @@
             </plugin>
         </plugins>
     </build>
-
 
     <developers>
         <developer>
