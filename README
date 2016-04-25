@@ -10,8 +10,11 @@ Wings Project Setup instructions :
 
 5) Import the project in the eclipse.
 5a) Under Window/Preferences select Java/Code Style/Formatter. Import the settings file codeStyle/eclipse-java-google-style.xml by selecting Import.
+5b) Import codeStyle/eclipse-java-google-style.xml in eclipse.
 
 6) Intellij Setup:
 6a) Import portal in intellij as maven project.
-6b) Import codeStyle/eclipse-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
+6b) Import codeStyle/intellij-java-google-style.xml in intellij Settings/Editor/CodeStyle/Manage.
+
+7) to build project along with ui, Run "mvn package -DbuildUI=true" 
 
