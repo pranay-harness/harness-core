@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -55,17 +54,16 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     req.addFilter("waitInstanceId", waitInstanceId, SearchFilter.Operator.EQ);
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
 
-    if (waitQueuesResponse == null || isEmpty(waitQueuesResponse.getResponse())) {
+    if (isEmpty(waitQueuesResponse)) {
       log().warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
       return;
     }
 
-    List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
     List<String> correlationIds = message.getCorrelationIds();
     final List<String> finalCorrelationIdsForLambda = correlationIds;
 
     if (!isEmpty(correlationIds)) {
-      List<String> missingCorrelationIds = waitQueues.stream()
+      List<String> missingCorrelationIds = waitQueuesResponse.stream()
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
@@ -82,18 +80,18 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
 
     SearchFilter searchFilter = new SearchFilter();
     searchFilter.setFieldName("uuid");
-    searchFilter.setFieldValues(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()));
+    searchFilter.setFieldValues(waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()));
     searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
     notifyResponseReq.setFilters(Collections.singletonList(searchFilter));
     PageResponse<NotifyResponse> notifyResponses =
         wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);
 
-    correlationIds = notifyResponses.getResponse().stream().map(NotifyResponse::getUuid).collect(toList());
+    correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
     final List<String> finalCorrelationIds = correlationIds;
-    if (notifyResponses.getResponse().size() != waitQueues.size()) {
-      List<String> missingCorrelationIds = waitQueues.stream()
+    if (notifyResponses.size() != waitQueuesResponse.size()) {
+      List<String> missingCorrelationIds = waitQueuesResponse.stream()
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIds.contains(s))
                                                .collect(toList());
@@ -103,7 +101,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
       return;
     }
 
-    notifyResponses.getResponse().forEach(notifyResponse -> {
+    notifyResponses.forEach(notifyResponse -> {
       responseMap.put(notifyResponse.getUuid(), notifyResponse.getResponse());
       notifyResponseMap.put(notifyResponse.getUuid(), notifyResponse);
     });
@@ -148,7 +146,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
           wingsPersistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
-      for (WaitQueue waitQueue : waitQueues) {
+      for (WaitQueue waitQueue : waitQueuesResponse) {
         try {
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);

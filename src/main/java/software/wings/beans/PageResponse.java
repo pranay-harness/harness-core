@@ -1,13 +1,25 @@
 package software.wings.beans;
 
+import org.eclipse.jetty.util.LazyList;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 /**
  * PageResponse bean class.
  *
  * @author Rishi
  */
-public class PageResponse<T> extends PageRequest<T> {
+public class PageResponse<T> extends PageRequest<T> implements List<T> {
   private List<T> response;
   private long total;
 
@@ -22,7 +34,7 @@ public class PageResponse<T> extends PageRequest<T> {
   }
 
   public void setResponse(List<T> response) {
-    this.response = response;
+    this.response = LazyList.isEmpty(response) ? Collections.emptyList() : response;
   }
 
   public long getTotal() {
@@ -35,6 +47,7 @@ public class PageResponse<T> extends PageRequest<T> {
 
   /**
    * returns number of page for the collection.
+   *
    * @return page number.
    */
   public long getCurrentPage() {
@@ -46,5 +59,165 @@ public class PageResponse<T> extends PageRequest<T> {
       pageno++;
     }
     return pageno;
+  }
+
+  @Override
+  public int size() {
+    return response.size();
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return response.isEmpty();
+  }
+
+  @Override
+  public boolean contains(Object item) {
+    return response.contains(item);
+  }
+
+  @Override
+  public Iterator<T> iterator() {
+    return response.iterator();
+  }
+
+  @Override
+  public Object[] toArray() {
+    return response.toArray();
+  }
+
+  @Override
+  public <T1> T1[] toArray(T1[] array) {
+    return response.toArray(array);
+  }
+
+  @Override
+  public boolean add(T item) {
+    return response.add(item);
+  }
+
+  @Override
+  public void add(int index, T element) {
+    response.add(index, element);
+  }
+
+  @Override
+  public boolean remove(Object item) {
+    return response.remove(item);
+  }
+
+  @Override
+  public T remove(int index) {
+    return response.remove(index);
+  }
+
+  @Override
+  public boolean containsAll(Collection<?> collection) {
+    return response.containsAll(collection);
+  }
+
+  @Override
+  public boolean addAll(Collection<? extends T> collection) {
+    return response.addAll(collection);
+  }
+
+  @Override
+  public boolean addAll(int index, Collection<? extends T> collection) {
+    return response.addAll(index, collection);
+  }
+
+  @Override
+  public boolean removeAll(Collection<?> collection) {
+    return response.removeAll(collection);
+  }
+
+  @Override
+  public boolean retainAll(Collection<?> collection) {
+    return response.retainAll(collection);
+  }
+
+  @Override
+  public void replaceAll(UnaryOperator<T> operator) {
+    response.replaceAll(operator);
+  }
+
+  @Override
+  public void sort(Comparator<? super T> comparator) {
+    response.sort(comparator);
+  }
+
+  @Override
+  public void clear() {
+    response.clear();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return response.equals(other);
+  }
+
+  @Override
+  public int hashCode() {
+    return response.hashCode();
+  }
+
+  @Override
+  public T get(int index) {
+    return response.get(index);
+  }
+
+  @Override
+  public T set(int index, T element) {
+    return response.set(index, element);
+  }
+
+  @Override
+  public int indexOf(Object item) {
+    return response.indexOf(item);
+  }
+
+  @Override
+  public int lastIndexOf(Object item) {
+    return response.lastIndexOf(item);
+  }
+
+  @Override
+  public ListIterator<T> listIterator() {
+    return response.listIterator();
+  }
+
+  @Override
+  public ListIterator<T> listIterator(int index) {
+    return response.listIterator(index);
+  }
+
+  @Override
+  public List<T> subList(int fromIndex, int toIndex) {
+    return response.subList(fromIndex, toIndex);
+  }
+
+  @Override
+  public Spliterator<T> spliterator() {
+    return response.spliterator();
+  }
+
+  @Override
+  public boolean removeIf(Predicate<? super T> filter) {
+    return response.removeIf(filter);
+  }
+
+  @Override
+  public Stream<T> stream() {
+    return response.stream();
+  }
+
+  @Override
+  public Stream<T> parallelStream() {
+    return response.parallelStream();
+  }
+
+  @Override
+  public void forEach(Consumer<? super T> action) {
+    response.forEach(action);
   }
 }

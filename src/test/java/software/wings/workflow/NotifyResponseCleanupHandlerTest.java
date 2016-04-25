@@ -6,10 +6,7 @@ package software.wings.workflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.inject.Inject;
-
 import org.junit.Test;
-
 import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -20,7 +17,10 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.NotifyResponse;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
 
+import javax.inject.Inject;
+
 /**
+ * Test for checking notify cleanup handler.
  * @author Rishi
  */
 public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
@@ -40,14 +40,18 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     reqNotifyRes.setLimit(PageRequest.UNLIMITED);
     reqNotifyRes.getFieldsIncluded().add("uuid");
     PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
-    assertThat(notifyPageResponses).as("NotifyResponsesWithSuccessStatus").isNotNull();
-    assertThat(notifyPageResponses.getResponse()).as("NotifyResponsesWithSuccessStatus").isNotNull();
-    assertThat(notifyPageResponses.getResponse().size()).as("NotifyResponsesWithSuccessStatusSize").isEqualTo(1);
+    assertThat(notifyPageResponses)
+        .as("NotifyResponsesWithSuccessStatus")
+        .isNotNull()
+        .as("NotifyResponsesWithSuccessStatusSize")
+        .hasSize(1);
     notifyResponseCleanupHandler.run();
 
     notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
-    assertThat(notifyPageResponses).as("NotifyResponsesWithSuccessStatus").isNotNull();
-    assertThat(notifyPageResponses.getResponse()).as("NotifyResponsesWithSuccessStatus").isNotNull();
-    assertThat(notifyPageResponses.getResponse().size()).as("NotifyResponsesWithSuccessStatusSize").isEqualTo(0);
+    assertThat(notifyPageResponses)
+        .as("NotifyResponsesWithSuccessStatus")
+        .isNotNull()
+        .as("NotifyResponsesWithSuccessStatusSize")
+        .hasSize(0);
   }
 }

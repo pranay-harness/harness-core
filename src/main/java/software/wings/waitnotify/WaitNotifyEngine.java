@@ -18,7 +18,6 @@ import software.wings.dl.WingsPersistence;
 
 import java.io.Serializable;
 import java.util.Arrays;
-
 import javax.inject.Inject;
 
 /**
@@ -41,8 +40,9 @@ public class WaitNotifyEngine {
 
   /**
    * Allows a task to register a callback to wait for when given correlationIds and done.
-   * @param timeoutMsec timeout for wait in milliseconds.
-   * @param callback function to be executed when all correlationIds are completed.
+   *
+   * @param timeoutMsec    timeout for wait in milliseconds.
+   * @param callback       function to be executed when all correlationIds are completed.
    * @param correlationIds list of ids to wait for.
    * @return id of WaitInstance.
    */
@@ -66,9 +66,10 @@ public class WaitNotifyEngine {
 
   /**
    * Notifies WaitNotifyEngine when a correlationId is finished.
+   *
    * @param correlationId id which is finished.
-   * @param response response object for the task.
-   * @param <T> ResponseObject type should be serializable.
+   * @param response      response object for the task.
+   * @param <T>           ResponseObject type should be serializable.
    * @return id of notification response object.
    */
   public <T extends Serializable> String notify(String correlationId, T response) {
@@ -81,7 +82,7 @@ public class WaitNotifyEngine {
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
-    waitQueuesResponse.getResponse().forEach(
+    waitQueuesResponse.forEach(
         waitQueue -> notifyQueue.send(aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).build()));
 
     return notificationId;

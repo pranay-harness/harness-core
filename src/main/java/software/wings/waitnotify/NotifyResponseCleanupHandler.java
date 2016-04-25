@@ -1,6 +1,7 @@
 package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,14 +40,12 @@ public class NotifyResponseCleanupHandler implements Runnable {
       reqNotifyRes.setLimit(PageRequest.UNLIMITED);
       reqNotifyRes.getFieldsIncluded().add("uuid");
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
-      if (notifyPageResponses == null || notifyPageResponses.getResponse() == null
-          || notifyPageResponses.getResponse().size() == 0) {
+      if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
       }
 
-      List<String> correlationIds =
-          notifyPageResponses.getResponse().stream().map(NotifyResponse::getUuid).collect(toList());
+      List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
@@ -58,13 +57,11 @@ public class NotifyResponseCleanupHandler implements Runnable {
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
-      if (waitQueuesResponse != null && waitQueuesResponse.getResponse() != null
-          && waitQueuesResponse.getResponse().size() > 0) {
-        List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
-        waitQueueMap = CollectionUtils.hierarchy(waitQueues, "correlationId");
+      if (isEmpty(waitQueuesResponse)) {
+        waitQueueMap = CollectionUtils.hierarchy(waitQueuesResponse, "correlationId");
       }
 
-      for (NotifyResponse notifyResponse : notifyPageResponses.getResponse()) {
+      for (NotifyResponse notifyResponse : notifyPageResponses) {
         if (waitQueueMap.get(notifyResponse.getUuid()) != null) {
           logger.info("Some wait queues still present .. skiping notifyResponse : " + notifyResponse.getUuid());
           continue;

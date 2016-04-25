@@ -19,6 +19,7 @@ import javax.inject.Inject;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
+ *
  * @author Rishi
  */
 public class Notifier implements Runnable {
@@ -41,13 +42,12 @@ public class Notifier implements Runnable {
       reqNotifyRes.getFieldsIncluded().add("uuid");
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
 
-      if (notifyPageResponses == null || isEmpty(notifyPageResponses.getResponse())) {
+      if (isEmpty(notifyPageResponses)) {
         log().debug("There are no NotifyResponse entries to process");
         return;
       }
 
-      List<NotifyResponse> notifyResponses = notifyPageResponses.getResponse();
-      List<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
+      List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
@@ -59,14 +59,13 @@ public class Notifier implements Runnable {
 
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
 
-      if (waitQueuesResponse == null || isEmpty(waitQueuesResponse.getResponse())) {
+      if (isEmpty(waitQueuesResponse)) {
         log().warn("No entry in the waitQueue found for the correlationIds: {} skipping ...", correlationIds);
         return;
       }
 
-      List<WaitQueue> waitQueues = waitQueuesResponse.getResponse();
       // process distinct set of wait instanceIds
-      waitQueues.stream()
+      waitQueuesResponse.stream()
           .map(WaitQueue::getWaitInstanceId)
           .forEach(waitInstanceId
               -> notifyQueue.send(

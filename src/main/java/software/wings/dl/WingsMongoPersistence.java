@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import com.google.inject.Singleton;
 
@@ -36,6 +37,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   private Map<ReadPref, Datastore> datastoreMap;
 
+  /**
+   * Creates a new object for wings mongo persistence.
+   * @param primaryDatastore primary datastore for critical reads and writes.
+   * @param secondaryDatastore replica of primary for non critical reads.
+   * @param datastoreMap datastore map based on read preference to datastore.
+   */
   @Inject
   public WingsMongoPersistence(@Named("primaryDatastore") Datastore primaryDatastore,
       @Named("secondaryDatastore") Datastore secondaryDatastore,
@@ -73,30 +80,35 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     PageResponse<T> res = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
-    if (res == null || res.getResponse() == null || res.getResponse().size() == 0) {
+    if (isEmpty(res)) {
       return null;
     }
-    return res.getResponse().get(0);
+    return res.get(0);
   }
 
   @Override
-  public <T extends Base> String save(T t) {
-    Key<T> key = primaryDatastore.save(t);
+  public <T extends Base> String save(T object) {
+    Key<T> key = primaryDatastore.save(object);
     return (String) key.getId();
   }
 
   @Override
   public <T extends Base> List<String> save(List<T> ts) {
     Iterable<Key<T>> keys = primaryDatastore.save(ts);
-    List<String> IDs = new ArrayList<>();
-    keys.forEach(tKey -> IDs.add((String) tKey.getId()));
-    return IDs;
+    List<String> ids = new ArrayList<>();
+    keys.forEach(tKey -> ids.add((String) tKey.getId()));
+    return ids;
   }
 
   @Override
-  public <T extends Base> T saveAndGet(Class<T> cls, T t) {
-    Object id = save(t);
+  public <T extends Base> T saveAndGet(Class<T> cls, T object) {
+    Object id = save(object);
     return primaryDatastore.get(cls, id);
+  }
+
+  @Override
+  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+    primaryDatastore.update(updateQuery, updateOperations);
   }
 
   @Override
@@ -118,8 +130,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T extends Base> boolean delete(T t) {
-    WriteResult result = primaryDatastore.delete(t);
+  public <T extends Base> boolean delete(T object) {
+    WriteResult result = primaryDatastore.delete(object);
     if (result == null || result.getN() == 0) {
       return false;
     }
@@ -152,11 +164,6 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
-    primaryDatastore.update(updateQuery, updateOperations);
-  }
-
-  @Override
   public GridFSBucket createGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
@@ -164,9 +171,9 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in) {
-    GridFSBucket gridFSBucket =
+    GridFSBucket gridFsBucket =
         GridFSBuckets.create(primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
-    ObjectId fileId = gridFSBucket.uploadFromStream(filename, in, options);
+    ObjectId fileId = gridFsBucket.uploadFromStream(filename, in, options);
     return fileId.toHexString();
   }
 
