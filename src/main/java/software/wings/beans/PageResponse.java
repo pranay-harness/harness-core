@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import org.eclipse.jetty.util.LazyList;
 
 import java.util.Collection;
@@ -19,6 +21,7 @@ import java.util.stream.Stream;
  *
  * @author Rishi
  */
+@JsonFormat(shape = Shape.OBJECT)
 public class PageResponse<T> extends PageRequest<T> implements List<T> {
   private List<T> response;
   private long total;
