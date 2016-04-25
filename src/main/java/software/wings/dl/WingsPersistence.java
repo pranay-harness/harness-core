@@ -14,6 +14,7 @@ import software.wings.beans.ReadPref;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
 public interface WingsPersistence {
   public <T extends Base> List<T> list(Class<T> cls);
@@ -34,7 +35,17 @@ public interface WingsPersistence {
 
   public <T extends Base> T saveAndGet(Class<T> cls, T t);
 
+  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
+
   public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops);
+
+  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
+
+  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
+
+  public <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object);
+
+  public <T> void deleteFromList(Class<T> cls, String entityId, String listFieldName, Object object);
 
   public <T extends Base> boolean delete(Class<T> cls, String uuid);
 
@@ -49,10 +60,6 @@ public interface WingsPersistence {
   public <T> Query<T> createQuery(Class<T> cls);
 
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
-
-  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
-
-  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 
   public GridFSBucket createGridFSBucket(String bucketName);
 

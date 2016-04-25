@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import static java.lang.System.currentTimeMillis;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Singleton;
 
@@ -14,6 +15,7 @@ import io.dropwizard.lifecycle.Managed;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -21,12 +23,14 @@ import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
+import software.wings.beans.Service;
 import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -39,9 +43,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   /**
    * Creates a new object for wings mongo persistence.
-   * @param primaryDatastore primary datastore for critical reads and writes.
+   *
+   * @param primaryDatastore   primary datastore for critical reads and writes.
    * @param secondaryDatastore replica of primary for non critical reads.
-   * @param datastoreMap datastore map based on read preference to datastore.
+   * @param datastoreMap       datastore map based on read preference to datastore.
    */
   @Inject
   public WingsMongoPersistence(@Named("primaryDatastore") Datastore primaryDatastore,
@@ -108,6 +113,10 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+    updateOperations.set("lastUpdatedAt", currentTimeMillis());
+    if (UserThreadLocal.get() != null) {
+      updateOperations.set("lastUpdatedBy", UserThreadLocal.get());
+    }
     primaryDatastore.update(updateQuery, updateOperations);
   }
 
@@ -118,6 +127,30 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       ops.set("lastUpdatedBy", UserThreadLocal.get());
     }
     return primaryDatastore.update(ent, ops);
+  }
+
+  @Override
+  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
+    UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
+    for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
+      operations.set(entry.getKey(), entry.getValue());
+    }
+    update(query, operations);
+  }
+
+  @Override
+  public <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object) {
+    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
+    UpdateOperations<T> operation = primaryDatastore.createUpdateOperations(cls).add(listFieldName, object);
+    update(query, operation);
+  }
+
+  @Override
+  public <T> void deleteFromList(Class<T> cls, String entityId, String listFieldName, Object obj) {
+    Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
+    UpdateOperations<T> operation = primaryDatastore.createUpdateOperations(cls).removeAll(listFieldName, obj);
+    update(query, operation);
   }
 
   @Override

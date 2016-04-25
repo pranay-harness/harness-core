@@ -2,8 +2,9 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Service;
@@ -35,10 +36,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
 
   public Service save(String appId, Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
-    UpdateOperations<Application> updateOperations =
-        wingsPersistence.createUpdateOperations(Application.class).add("services", savedService);
-    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appId);
-    wingsPersistence.update(updateQuery, updateOperations);
+    wingsPersistence.addToList(Application.class, appId, "services", savedService);
     return savedService;
   }
 
@@ -47,12 +45,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   public Service update(Service service) {
-    Query<Service> query = wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(service.getUuid());
-    UpdateOperations<Service> operations = wingsPersistence.createUpdateOperations(Service.class)
-                                               .set("name", service.getName())
-                                               .set("description", service.getDescription())
-                                               .set("artifactType", service.getArtifactType());
-    wingsPersistence.update(query, operations);
+    wingsPersistence.updateFields(Service.class, service.getUuid(),
+        ImmutableMap.of("name", service.getName(), "description", service.getDescription(), "artifactType",
+            service.getArtifactType()));
     return wingsPersistence.get(Service.class, service.getUuid());
   }
 
@@ -66,11 +61,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   public String saveFile(ConfigFile configFile, InputStream uploadedInputStream, FileBucket configs) {
     fileService.saveFile(configFile, uploadedInputStream, configs);
     String configFileId = wingsPersistence.save(configFile);
-    UpdateOperations<Service> updateOperations =
-        wingsPersistence.createUpdateOperations(Service.class).add("configFiles", configFile);
-    Query<Service> updateQuery =
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(configFile.getServiceId());
-    wingsPersistence.update(updateQuery, updateOperations);
+    wingsPersistence.addToList(Service.class, configFile.getServiceId(), "configFiles", ImmutableMap.of());
     return configFileId;
   }
 
