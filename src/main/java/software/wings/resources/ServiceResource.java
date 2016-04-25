@@ -49,8 +49,10 @@ public class ServiceResource {
   }
 
   @PUT
-  @Path("{appId}")
-  public RestResponse<Service> update(Service service) {
+  @Path("{appId}/{serviceId}")
+  public RestResponse<Service> update(
+      @PathParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
+    service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
   }
 

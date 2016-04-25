@@ -45,7 +45,9 @@ public class RoleResource {
   }
 
   @PUT
-  public RestResponse<Role> update(Role role) {
+  @Path("{roleId}")
+  public RestResponse<Role> update(@PathParam("roleId") String roleId, Role role) {
+    role.setUuid(roleId);
     return new RestResponse<>(roleService.update(role));
   }
 

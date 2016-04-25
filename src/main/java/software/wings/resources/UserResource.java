@@ -23,7 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Users Resource class
+ * Users Resource class.
  *
  * @author Rishi
  */
@@ -46,7 +46,9 @@ public class UserResource {
   }
 
   @PUT
-  public RestResponse<User> update(User user) {
+  @Path("{userId}")
+  public RestResponse<User> update(@PathParam("userId") String userId, User user) {
+    user.setUuid(userId);
     return new RestResponse<>(userService.update(user));
   }
 

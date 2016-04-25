@@ -82,7 +82,8 @@ public class ArtifactResource {
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Artifact> update(Artifact artifact) {
+  public RestResponse<Artifact> update(@PathParam("artifactId") String artifactId, Artifact artifact) {
+    artifact.setUuid(artifactId);
     return new RestResponse<Artifact>(artifactService.update(artifact));
   }
 

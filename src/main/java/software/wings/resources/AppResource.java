@@ -67,7 +67,9 @@ public class AppResource {
   }
 
   @PUT
-  public RestResponse<Application> update(Application app) {
+  @Path("{appId}")
+  public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
+    app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
   }
 

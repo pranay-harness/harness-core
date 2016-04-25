@@ -80,8 +80,10 @@ public class InfraResource {
   }
 
   @PUT
-  @Path("{infraId}/hosts")
-  public RestResponse<Host> updateHost(@PathParam("infraId") String infraId, Host host) {
+  @Path("{infraId}/hosts/{hostId}")
+  public RestResponse<Host> updateHost(
+      @PathParam("infraId") String infraId, @PathParam("hostId") String hostId, Host host) {
+    host.setUuid(hostId);
     return new RestResponse<Host>(infraService.updateHost(infraId, host));
   }
 
