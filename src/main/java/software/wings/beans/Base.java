@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
@@ -101,10 +102,13 @@ public class Base {
         && Objects.equals(this.lastUpdatedAt, other.lastUpdatedAt) && Objects.equals(this.active, other.active);
   }
 
+  /**
+   * Invoked before inserting document in mongo by morphia.
+   */
   @PrePersist
   public void onSave() {
     if (uuid == null) {
-      uuid = getUuid();
+      uuid = UUIDGenerator.getUuid();
     }
     if (createdAt == 0) {
       createdAt = currentTimeMillis();
