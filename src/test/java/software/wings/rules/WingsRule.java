@@ -48,6 +48,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CurrentThreadExecutor;
 import software.wings.utils.ManagedScheduledExecutorService;
+import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 
@@ -55,11 +56,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
-
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by peeyushaggarwal on 4/5/16.
@@ -124,14 +121,27 @@ public class WingsRule implements MethodRule {
         bind(ScheduledExecutorService.class)
             .annotatedWith(Names.named("timer"))
             .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        bind(ScheduledExecutorService.class)
+            .annotatedWith(Names.named("notifier"))
+            .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
         bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
+    registerScheduledJobs(injector);
     WingsBootstrap.initialize(injector);
   }
 
   protected void after() {
+    try {
+      log().info("Stopping notifier...");
+      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))).stop();
+      executorService.shutdownNow();
+      log().info("Stopped notifier...");
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
     try {
       log().info("Stopping timer...");
       ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
@@ -169,6 +179,12 @@ public class WingsRule implements MethodRule {
     log().info("Stopping Mongo server...");
     mongoServer.shutdown();
     log().info("Stopped Mongo server...");
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    log().info("Initializing scheduledJobs...");
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 5000L, TimeUnit.MILLISECONDS);
   }
 
   private Logger log() {

@@ -10,7 +10,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.ifesdjeen.timer.HashedWheelTimer;
-import com.ifesdjeen.timer.WaitStrategy;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
@@ -39,8 +38,7 @@ public class QueueListenerTest extends WingsBaseTest {
     listener = new TestQueuableListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
-    listener.setTimer(new HashedWheelTimer(
-        HashedWheelTimer.DEFAULT_RESOLUTION, HashedWheelTimer.DEFAULT_WHEEL_SIZE, new WaitStrategy.YieldingWait()));
+    listener.setTimer(new HashedWheelTimer());
     listener = spy(listener);
   }
 
