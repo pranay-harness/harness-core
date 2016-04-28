@@ -5,7 +5,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.WingsBaseTest;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
@@ -21,7 +21,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 3/9/16.
  */
-public class UserServiceTest extends WingsBaseTest {
+public class UserServiceTest extends WingsBaseUnitTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private RoleService roleService;

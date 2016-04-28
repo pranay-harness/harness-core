@@ -9,7 +9,7 @@ import static software.wings.beans.User.Builder.anUser;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseTest;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.exception.WingsException;
@@ -21,7 +21,7 @@ import javax.validation.ConstraintViolationException;
 /**
  * Created by peeyushaggarwal on 4/4/16.
  */
-public class ArtifactServiceTest extends WingsBaseTest {
+public class ArtifactServiceTest extends WingsBaseUnitTest {
   @Inject private ArtifactService artifactService;
 
   private Artifact.Builder builder = anArtifact()

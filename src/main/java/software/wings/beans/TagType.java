@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Indexes(@Index(fields = { @Field("name")
                            , @Field("envId") }, options = @IndexOptions(unique = true)))
 public class TagType extends Base {
+  public static final String HierarchyTagName = "hierarchy";
   public String name;
   private String envId;
 

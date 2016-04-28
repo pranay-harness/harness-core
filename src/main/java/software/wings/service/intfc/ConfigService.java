@@ -18,4 +18,6 @@ public interface ConfigService {
   void update(ConfigFile configFile, InputStream inputStream);
 
   void delete(String configId);
+
+  List<ConfigFile> getConfigFilesByEntityId(String entityId);
 }

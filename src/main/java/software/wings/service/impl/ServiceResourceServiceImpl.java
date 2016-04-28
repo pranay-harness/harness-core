@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -19,6 +20,7 @@ import javax.inject.Inject;
 public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
+  @Inject private ConfigService configService;
 
   @Override
   public List<Service> list(String appId) {
@@ -37,7 +39,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   public Service findByUuid(String uuid) {
-    return wingsPersistence.get(Service.class, uuid);
+    Service service = wingsPersistence.get(Service.class, uuid);
+    service.setConfigFiles(configService.getConfigFilesByEntityId(service.getUuid()));
+    return service;
   }
 
   public Service update(Service service) {
@@ -45,5 +49,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
         ImmutableMap.of("name", service.getName(), "description", service.getDescription(), "artifactType",
             service.getArtifactType()));
     return wingsPersistence.get(Service.class, service.getUuid());
+  }
+
+  @Override
+  public Service get(String appId, String serviceId) {
+    return findByUuid(serviceId);
   }
 }

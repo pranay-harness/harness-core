@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
@@ -21,12 +22,14 @@ import java.security.GeneralSecurityException;
 import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -38,6 +41,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 
 @Path("/configs/{entityId}")
+@Produces("application/json")
 public class ConfigResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ConfigService configService;
@@ -50,10 +54,17 @@ public class ConfigResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> uploadConfig(@PathParam("entityId") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @FormDataParam("templateId") String templateId,
       @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = new ConfigFile(entityId, fileName, relativePath, md5);
+    ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
+                                .withEntityId(entityId)
+                                .withTemplateId(templateId)
+                                .withName(fileName)
+                                .withRelativePath(relativePath)
+                                .withChecksum(md5)
+                                .build();
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }
@@ -71,8 +82,13 @@ public class ConfigResource {
       @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = new ConfigFile(entityId, fileName, relativePath, md5);
-    configFile.setUuid(configId);
+    ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
+                                .withUuid(configId)
+                                .withEntityId(entityId)
+                                .withName(fileName)
+                                .withRelativePath(relativePath)
+                                .withChecksum(md5)
+                                .build();
     configService.update(configFile, uploadedInputStream);
   }
 

@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,11 +11,11 @@ import java.util.List;
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 public class ServiceTemplate extends Base {
   private String serviceId;
+  private String envId;
   private String name;
   private String description;
   private List<Tag> tags;
   private List<Host> hosts;
-  private String envId;
 
   public String getServiceId() {
     return serviceId;
@@ -48,12 +49,26 @@ public class ServiceTemplate extends Base {
     this.tags = tags;
   }
 
+  public void addTag(Tag tag) {
+    if (this.tags == null) {
+      this.tags = new ArrayList<>();
+    }
+    this.tags.add(tag);
+  }
+
   public List<Host> getHosts() {
     return hosts;
   }
 
   public void setHosts(List<Host> hosts) {
     this.hosts = hosts;
+  }
+
+  public void addHost(Host host) {
+    if (this.hosts == null) {
+      this.hosts = new ArrayList<>();
+    }
+    this.hosts.add(host);
   }
 
   public String getEnvId() {

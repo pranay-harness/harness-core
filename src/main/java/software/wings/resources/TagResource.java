@@ -10,9 +10,12 @@ import software.wings.beans.TagType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TagService;
 
+import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 /**
@@ -37,5 +40,17 @@ public class TagResource {
   @Path("/types")
   public RestResponse<TagType> saveTagType(TagType tagType) {
     return new RestResponse<>(tagService.createTagType(tagType));
+  }
+
+  @POST
+  @Path("{tagId}/link/{childTag}")
+  public RestResponse<Tag> linkTags(@PathParam("tagId") String tagId, @PathParam("childTag") String childTagId) {
+    return new RestResponse<>(tagService.linkTags(tagId, childTagId));
+  }
+
+  @GET
+  @Path("env/{envId}")
+  public RestResponse<List<Tag>> getRootTags(@PathParam("envId") String envId) {
+    return new RestResponse<>(tagService.getRootConfigTags(envId));
   }
 }

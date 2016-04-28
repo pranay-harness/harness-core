@@ -3,6 +3,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +29,8 @@ public class Host extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
 
   private String infraId;
+
+  @Transient private List<ConfigFile> configFiles;
 
   public Host() {}
 
@@ -116,6 +119,14 @@ public class Host extends Base {
 
   public void setOsType(String osType) {
     this.osType = osType;
+  }
+
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
+  }
+
+  public void setConfigFiles(List<ConfigFile> configFiles) {
+    this.configFiles = configFiles;
   }
 
   public String getTagsString() {

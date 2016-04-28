@@ -4,7 +4,6 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
@@ -29,9 +28,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
     fileService.saveFile(configFile, inputStream, CONFIGS);
-    String configFileId = wingsPersistence.save(configFile);
-    wingsPersistence.addToList(Service.class, configFile.getEntityId(), "configFiles", configFile);
-    return configFileId;
+    return wingsPersistence.save(configFile);
   }
 
   @Override
@@ -41,7 +38,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public void update(ConfigFile configFile, InputStream uploadedInputStream) {
     fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
-    wingsPersistence.save(configFile);
+    wingsPersistence.save(configFile); // FIXME: selective field update
   }
 
   @Override
@@ -49,5 +46,10 @@ public class ConfigServiceImpl implements ConfigService {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, configId);
     fileService.deleteFile(configFile.getFileUuid(), CONFIGS);
     wingsPersistence.delete(configFile);
+  }
+
+  @Override
+  public List<ConfigFile> getConfigFilesByEntityId(String entID) {
+    return wingsPersistence.createQuery(ConfigFile.class).field("entityId").equal(entID).asList();
   }
 }

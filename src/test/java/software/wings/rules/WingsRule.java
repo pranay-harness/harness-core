@@ -37,13 +37,19 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.ConfigServiceImpl;
+import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CurrentThreadExecutor;
@@ -62,12 +68,19 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 4/5/16.
  */
 public class WingsRule implements MethodRule {
+  public static enum TestType { UNIT, INTEGRATION }
+
+  private TestType testType;
   private Injector injector;
   private MongoServer mongoServer;
   private Datastore datastore;
   private DistributedLockSvc distributedLockSvc;
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
+
+  public WingsRule(TestType testType) {
+    this.testType = testType;
+  }
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
@@ -86,15 +99,20 @@ public class WingsRule implements MethodRule {
   }
 
   protected void before() throws Throwable {
-    mongoServer = new MongoServer(new MemoryBackend());
-    mongoServer.bind("localhost", port);
-    InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-    final MongoClient client = new MongoClient(new ServerAddress(serverAddress));
+    MongoClient mongoClient;
+    if (testType.equals(TestType.UNIT)) {
+      mongoServer = new MongoServer(new MemoryBackend());
+      mongoServer.bind("localhost", port);
+      InetSocketAddress serverAddress = mongoServer.getLocalAddress();
+      mongoClient = new MongoClient(new ServerAddress(serverAddress));
+    } else {
+      mongoClient = new MongoClient("localhost", 27017);
+    }
 
     Morphia morphia = new Morphia();
-    datastore = morphia.createDatastore(client, "wings");
+    datastore = morphia.createDatastore(mongoClient, "wings");
     distributedLockSvc = new ManagedDistributedLockSvc(
-        new DistributedLockSvcFactory(new DistributedLockSvcOptions(client, "wings", "locks")).getLockSvc());
+        new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, "wings", "locks")).getLockSvc());
     if (!distributedLockSvc.isRunning()) {
       distributedLockSvc.startup();
     }
@@ -115,7 +133,7 @@ public class WingsRule implements MethodRule {
         bind(ExecutorService.class).toInstance(executorService);
         bind(InfraService.class).to(InfraServiceImpl.class);
         bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
-        bind(MongoClient.class).toInstance(client);
+        bind(MongoClient.class).toInstance(mongoClient);
         bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore));
         bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
         bind(ScheduledExecutorService.class)
@@ -125,6 +143,9 @@ public class WingsRule implements MethodRule {
             .annotatedWith(Names.named("notifier"))
             .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
         bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
+        bind(TagService.class).to(TagServiceImpl.class);
+        bind(FileService.class).to(FileServiceImpl.class);
+        bind(ConfigService.class).to(ConfigServiceImpl.class);
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);

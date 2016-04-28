@@ -7,7 +7,7 @@ package software.wings.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import software.wings.WingsBaseTest;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter.Operator;
@@ -23,7 +23,7 @@ import javax.inject.Inject;
  * Test for checking notify cleanup handler.
  * @author Rishi
  */
-public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
+public class NotifyResponseCleanupHandlerTest extends WingsBaseUnitTest {
   @Inject private NotifyResponseCleanupHandler notifyResponseCleanupHandler;
 
   @Inject private WingsPersistence wingsPersistence;

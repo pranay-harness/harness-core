@@ -15,4 +15,6 @@ public interface ServiceResourceService {
   Service findByUuid(String uuid);
 
   Service update(Service service);
+
+  Service get(String appId, String serviceId);
 }
