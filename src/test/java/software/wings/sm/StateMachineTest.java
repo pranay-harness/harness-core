@@ -8,6 +8,7 @@ import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
+import software.wings.service.StaticMap;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
@@ -17,13 +18,13 @@ public class StateMachineTest {
   @Test
   public void testValidate() {
     StateMachine sm = new StateMachine();
-    State state = new StateA();
+    State state = new StateSynch("StateA");
     sm.addState(state);
-    state = new StateB();
+    state = new StateSynch("StateB");
     sm.addState(state);
-    state = new StateC();
+    state = new StateSynch("StateC");
     sm.addState(state);
-    sm.setInitialStateName(StateA.class.getName());
+    sm.setInitialStateName("StateA");
     assertThat(true).as("Validate result").isEqualTo(sm.validate());
   }
 
@@ -31,14 +32,14 @@ public class StateMachineTest {
   public void testValidateDup() {
     try {
       StateMachine sm = new StateMachine();
-      State state = new StateA();
+      State state = new StateSynch("StateA");
       sm.addState(state);
-      state = new StateB();
+      state = new StateSynch("StateB");
       sm.addState(state);
-      state = new StateC();
+      state = new StateSynch("StateC");
       sm.addState(state);
-      sm.setInitialStateName(StateA.class.getName());
-      state = new StateB();
+      sm.setInitialStateName("StateA");
+      state = new StateSynch("StateB");
       sm.addState(state);
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -85,9 +86,9 @@ public class StateMachineTest {
   /**
    * @author Rishi
    */
-  public static class StateA extends State {
-    public StateA() {
-      super(StateA.class.getName(), StateType.HTTP.name());
+  public static class StateSynch extends State {
+    public StateSynch(String name) {
+      super(name, StateType.HTTP.name());
     }
 
     /*
@@ -98,7 +99,8 @@ public class StateMachineTest {
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
       System.out.println("Executing ..." + getClass());
-      context.setParam("StateA", StateA.class.getName());
+      context.setParam(getName(), System.currentTimeMillis());
+      StaticMap.putValue(getName(), System.currentTimeMillis());
       System.out.println("context params:" + context.getParams());
       return new ExecutionResponse();
     }
@@ -108,7 +110,6 @@ public class StateMachineTest {
    * @author Rishi
    */
   public static class StateAsynch extends State {
-    private String name;
     private int duration;
 
     public StateAsynch(String name, int duration) {
@@ -133,50 +134,6 @@ public class StateMachineTest {
       response.setCorrelationIds(correlationIds);
       ThreadPool.execute(new Notifier(uuid, duration));
       return response;
-    }
-  }
-
-  /**
-   * @author Rishi
-   */
-  public static class StateB extends State {
-    public StateB() {
-      super(StateB.class.getName(), StateType.HTTP.name());
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-     */
-    @Override
-    public ExecutionResponse execute(ExecutionContext context) {
-      context.setParam("StateB", StateB.class.getName());
-      System.out.println("Executing ..." + getClass());
-      System.out.println("context params:" + context.getParams());
-      return new ExecutionResponse();
-    }
-  }
-
-  /**
-   * @author Rishi
-   */
-  public static class StateC extends State {
-    public StateC() {
-      super(StateC.class.getName(), StateType.HTTP.name());
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-     */
-    @Override
-    public ExecutionResponse execute(ExecutionContext context) {
-      context.setParam("StateC", StateC.class.getName());
-      System.out.println("Executing ..." + getClass());
-      System.out.println("context params:" + context.getParams());
-      return new ExecutionResponse();
     }
   }
 }
