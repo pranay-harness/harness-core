@@ -3,7 +3,7 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import software.wings.WingsBaseTest;
+import software.wings.WingsBaseUnitTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ForkState;
@@ -25,7 +25,7 @@ import javax.inject.Inject;
 /**
  * @author Rishi
  */
-public class WorkflowServiceTest extends WingsBaseTest {
+public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Inject private WorkflowService workflowService;
 
   @Inject private WingsPersistence wingsPersistence;
