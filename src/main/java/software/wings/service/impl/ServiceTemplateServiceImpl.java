@@ -6,6 +6,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import org.eclipse.jetty.util.ArrayQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -36,6 +38,7 @@ import javax.inject.Singleton;
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TagService tagService;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest) {
@@ -80,25 +83,29 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> serviceConfigFiles = getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid());
     List<ConfigFile> envConfigFiles = getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, environment.getUuid());
 
-    // Env overrides
+    // env overrides
+    logger.info("Apply env config.");
     List<ConfigFile> envComputedConfigFiles = computeOverride(serviceConfigFiles, envConfigFiles);
 
     // Tag overrides
+    logger.info("Flatten Tag hierarchy and apply config overrides");
     List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
 
     // Host override
-
+    logger.info("Apply host overrides");
     Map<String, List<ConfigFile>> computedHostConfigs = new HashMap<>();
 
     // Untagged hosts override: env->host
+    logger.info("Apply host overrides for untagged hosts");
     for (Host host : serviceTemplate.getHosts()) {
       List<ConfigFile> configFiles = getConfigFilesForEntity(templateId, host.getUuid());
       computedHostConfigs.put(host.getUuid(), computeOverride(envConfigFiles, configFiles));
     }
 
     // Tagged hosts
+    logger.info("Apply host overrides for tagged hosts");
     for (Tag tag : leafTagNodes) {
-      List<Host> taggedHosts = wingsPersistence.createQuery(Host.class).field("tags").hasThisElement(tag).asList();
+      List<Host> taggedHosts = wingsPersistence.createQuery(Host.class).field("tags").equal(tag.getUuid()).asList();
       for (Host host : taggedHosts) {
         computedHostConfigs.put(host.getUuid(), computeOverride(tag.getConfigFiles(), host.getConfigFiles()));
       }
@@ -127,11 +134,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private List<ConfigFile> computeOverride(List<ConfigFile> existingFiles, List<ConfigFile> newFiles) {
+    logger.info("Config files before overrides [{}]", existingFiles.toString());
+    logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
     if (newFiles != null && !newFiles.isEmpty()) {
       existingFiles = Stream.concat(existingFiles.stream(), newFiles.stream())
                           .filter(new TreeSet<>(Comparator.comparing(ConfigFile::getName))::add)
                           .collect(Collectors.toList());
     }
+    logger.info("Config files after overrides [{}]", existingFiles.toString());
     return existingFiles;
   }
 

@@ -5,6 +5,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,11 +27,11 @@ public class Host extends Base {
   private String envUuid;
   private AccessType accessType;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
   private String infraId;
 
-  @Transient private List<ConfigFile> configFiles;
+  @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   public Host() {}
 

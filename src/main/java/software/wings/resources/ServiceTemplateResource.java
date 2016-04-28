@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
@@ -15,6 +16,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -62,5 +64,11 @@ public class ServiceTemplateResource {
   public RestResponse<ServiceTemplate> mapHosts(@PathParam("templateId") String serviceTemplateId,
       @FormDataParam("tags") List<String> tagIds, @FormDataParam("hosts") List<String> hostIds) {
     return new RestResponse<>(serviceTemplateService.updateHostAndTags(serviceTemplateId, tagIds, hostIds));
+  }
+
+  @GET
+  @Path("{templateId}/host_configs")
+  public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@PathParam("templateId") String templateId) {
+    return new RestResponse<>(serviceTemplateService.computedConfigFiles(templateId));
   }
 }
