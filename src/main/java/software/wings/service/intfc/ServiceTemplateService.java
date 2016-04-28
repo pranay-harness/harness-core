@@ -1,8 +1,12 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.ConfigFile;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ServiceTemplate;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by anubhaw on 4/4/16.
@@ -10,7 +14,11 @@ import software.wings.beans.ServiceTemplate;
 public interface ServiceTemplateService {
   PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest);
 
-  ServiceTemplate createServiceTemplate(String envId, ServiceTemplate serviceTemplate);
+  ServiceTemplate createServiceTemplate(ServiceTemplate serviceTemplate);
 
-  ServiceTemplate updateServiceTemplate(String envId, ServiceTemplate serviceTemplate);
+  ServiceTemplate updateServiceTemplate(ServiceTemplate serviceTemplate);
+
+  ServiceTemplate updateHostAndTags(String serviceTemplateId, List<String> tagIds, List<String> hostIds);
+
+  Map<String, List<ConfigFile>> computedConfigFiles(String templateId);
 }

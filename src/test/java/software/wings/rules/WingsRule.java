@@ -37,24 +37,25 @@ import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.ConfigServiceImpl;
+import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CurrentThreadExecutor;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
-
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
@@ -125,6 +126,9 @@ public class WingsRule implements MethodRule {
             .annotatedWith(Names.named("timer"))
             .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
         bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
+        bind(TagService.class).to(TagServiceImpl.class);
+        bind(FileService.class).to(FileServiceImpl.class);
+        bind(ConfigService.class).to(ConfigServiceImpl.class);
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);

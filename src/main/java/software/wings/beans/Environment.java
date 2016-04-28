@@ -1,6 +1,9 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
+
+import java.util.List;
 
 /**
  * Environment bean class.
@@ -11,6 +14,7 @@ import org.mongodb.morphia.annotations.Entity;
 public class Environment extends Base {
   private String name;
   private String description;
+  @Transient private List<ConfigFile> configFiles;
 
   public String getName() {
     return name;
@@ -26,5 +30,9 @@ public class Environment extends Base {
 
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  public void setConfigFiles(List<ConfigFile> configFiles) {
+    this.configFiles = configFiles;
   }
 }

@@ -22,7 +22,7 @@ import javax.ws.rs.Produces;
 /**
  * Created by anubhaw on 3/25/16.
  */
-@Path("/services")
+@Path("services")
 @Timed
 @ExceptionMetered
 @Consumes(APPLICATION_JSON)
@@ -34,6 +34,12 @@ public class ServiceResource {
   @Path("{appId}")
   public RestResponse<List<Service>> list(@PathParam("appId") String appId) {
     return new RestResponse<>(srs.list(appId));
+  }
+
+  @GET
+  @Path("{appId}/{serviceId}")
+  public RestResponse<Service> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(srs.get(appId, serviceId));
   }
 
   @POST
