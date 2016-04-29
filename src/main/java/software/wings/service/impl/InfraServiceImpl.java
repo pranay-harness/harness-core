@@ -20,12 +20,12 @@ public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Infra> listInfra(String envId, PageRequest<Infra> req) {
+  public PageResponse<Infra> list(String envId, PageRequest<Infra> req) {
     return wingsPersistence.query(Infra.class, req);
   }
 
   @Override
-  public Infra createInfra(Infra infra, String envId) {
+  public Infra save(Infra infra, String envId) {
     infra.setEnvId(envId);
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
@@ -53,7 +53,7 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public Host applyTag(String hostId, String tagId) {
+  public Host tagHost(String hostId, String tagId) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
     Host host = wingsPersistence.get(Host.class, hostId);
     UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);

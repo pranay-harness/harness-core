@@ -19,5 +19,5 @@ public interface ConfigService {
 
   void delete(String configId);
 
-  List<ConfigFile> getConfigFilesByEntityId(String entityId);
+  List<ConfigFile> getConfigFilesByEntityId(String templateId, String entityId);
 }

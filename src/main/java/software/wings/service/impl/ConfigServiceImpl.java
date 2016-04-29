@@ -49,7 +49,12 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public List<ConfigFile> getConfigFilesByEntityId(String entID) {
-    return wingsPersistence.createQuery(ConfigFile.class).field("entityId").equal(entID).asList();
+  public List<ConfigFile> getConfigFilesByEntityId(String templateId, String entityId) {
+    return wingsPersistence.createQuery(ConfigFile.class)
+        .field("templateId")
+        .equal(templateId)
+        .field("entityId")
+        .equal(entityId)
+        .asList();
   }
 }

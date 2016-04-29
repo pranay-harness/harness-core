@@ -14,11 +14,13 @@ import java.util.Map;
 public interface ServiceTemplateService {
   PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest);
 
-  ServiceTemplate createServiceTemplate(ServiceTemplate serviceTemplate);
+  ServiceTemplate save(ServiceTemplate serviceTemplate);
 
-  ServiceTemplate updateServiceTemplate(ServiceTemplate serviceTemplate);
+  ServiceTemplate update(ServiceTemplate serviceTemplate);
 
   ServiceTemplate updateHostAndTags(String serviceTemplateId, List<String> tagIds, List<String> hostIds);
 
   Map<String, List<ConfigFile>> computedConfigFiles(String templateId);
+
+  List<ConfigFile> getConfigFilesForEntity(String templateId, String uuid);
 }

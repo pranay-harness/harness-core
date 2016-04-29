@@ -48,7 +48,7 @@ public class ServiceTemplateResource {
 
   @POST
   public RestResponse<ServiceTemplate> create(ServiceTemplate serviceTemplate) {
-    return new RestResponse<>(serviceTemplateService.createServiceTemplate(serviceTemplate));
+    return new RestResponse<>(serviceTemplateService.save(serviceTemplate));
   }
 
   @PUT
@@ -56,7 +56,7 @@ public class ServiceTemplateResource {
   public RestResponse<ServiceTemplate> update(
       @PathParam("templateId") String serviceTemplateId, ServiceTemplate serviceTemplate) {
     serviceTemplate.setUuid(serviceTemplateId);
-    return new RestResponse<>(serviceTemplateService.updateServiceTemplate(serviceTemplate));
+    return new RestResponse<>(serviceTemplateService.update(serviceTemplate));
   }
 
   @PUT

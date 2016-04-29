@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -40,7 +41,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
 
   public Service findByUuid(String uuid) {
     Service service = wingsPersistence.get(Service.class, uuid);
-    service.setConfigFiles(configService.getConfigFilesByEntityId(service.getUuid()));
+    service.setConfigFiles(configService.getConfigFilesByEntityId(DEFAULT_TEMPLATE_ID, service.getUuid()));
     return service;
   }
 

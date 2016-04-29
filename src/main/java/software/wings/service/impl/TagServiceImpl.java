@@ -55,15 +55,8 @@ public class TagServiceImpl implements TagService {
   public List<Tag> getRootConfigTags(String envId) {
     TagType tagType = wingsPersistence.createQuery(TagType.class).field("name").equal(HierarchyTagName).get();
     List<Tag> tags = wingsPersistence.createQuery(Tag.class).field("tagType").equal(tagType).asList();
-    fetchConfigFiles(tags);
     filterRootTags(tags);
     return tags;
-  }
-
-  private void fetchConfigFiles(List<Tag> tags) {
-    for (Tag tag : tags) {
-      tag.setConfigFiles(configService.getConfigFilesByEntityId(tag.getUuid()));
-    }
   }
 
   private void filterRootTags(List<Tag> tags) {

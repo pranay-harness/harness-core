@@ -46,12 +46,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public ServiceTemplate createServiceTemplate(ServiceTemplate serviceTemplate) {
+  public ServiceTemplate save(ServiceTemplate serviceTemplate) {
     return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
   }
 
   @Override
-  public ServiceTemplate updateServiceTemplate(ServiceTemplate serviceTemplate) {
+  public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
         ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription()));
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid());
@@ -81,15 +81,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     /* override order(left to right): Service -> Env -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles = getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid());
-    List<ConfigFile> envConfigFiles = getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, environment.getUuid());
+    List<ConfigFile> envConfigFiles = getConfigFilesForEntity(templateId, environment.getUuid());
 
-    // env overrides
+    // service -> env overrides
     logger.info("Apply env config.");
     List<ConfigFile> envComputedConfigFiles = computeOverride(serviceConfigFiles, envConfigFiles);
 
-    // Tag overrides
+    // flatten tag hierarchy and [tag -> tag] overrides
     logger.info("Flatten Tag hierarchy and apply config overrides");
     List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
+
+    // env->tag override
+    logger.info("Apply tag override on tags");
+    for (Tag tag : leafTagNodes) {
+      tag.setConfigFiles(computeOverride(envComputedConfigFiles, tag.getConfigFiles()));
+    }
 
     // Host override
     logger.info("Apply host overrides");
@@ -107,7 +113,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     for (Tag tag : leafTagNodes) {
       List<Host> taggedHosts = wingsPersistence.createQuery(Host.class).field("tags").equal(tag.getUuid()).asList();
       for (Host host : taggedHosts) {
-        computedHostConfigs.put(host.getUuid(), computeOverride(tag.getConfigFiles(), host.getConfigFiles()));
+        computedHostConfigs.put(
+            host.getUuid(), computeOverride(tag.getConfigFiles(), getConfigFilesForEntity(templateId, host.getUuid())));
       }
     }
     return computedHostConfigs;
@@ -116,18 +123,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {
     List<Tag> leafTagNodes = new ArrayList<>();
     List<Tag> rootTags = tagService.getRootConfigTags(serviceTemplate.getEnvId());
+    for (Tag tag : rootTags) {
+      tag.getConfigFiles().addAll(getConfigFilesForEntity(serviceTemplate.getUuid(), tag.getUuid()));
+    }
 
     Queue<Tag> queue = new ArrayQueue<>();
     queue.addAll(rootTags);
 
     while (!queue.isEmpty()) {
       Tag root = queue.poll();
-      if (root.getLinkedTags() == null || root.getLinkedTags().isEmpty()) {
-        leafTagNodes.add(root);
-      } else {
-        for (Tag child : root.getLinkedTags()) {
-          child.setConfigFiles(computeOverride(root.getConfigFiles(), child.getConfigFiles()));
-        }
+      leafTagNodes.add(root);
+      for (Tag child : root.getLinkedTags()) {
+        child.getConfigFiles().addAll(getConfigFilesForEntity(serviceTemplate.getUuid(), child.getUuid()));
+        child.setConfigFiles(computeOverride(root.getConfigFiles(), child.getConfigFiles()));
+        queue.add(child);
       }
     }
     return leafTagNodes;
@@ -137,7 +146,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     logger.info("Config files before overrides [{}]", existingFiles.toString());
     logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
     if (newFiles != null && !newFiles.isEmpty()) {
-      existingFiles = Stream.concat(existingFiles.stream(), newFiles.stream())
+      existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
                           .filter(new TreeSet<>(Comparator.comparing(ConfigFile::getName))::add)
                           .collect(Collectors.toList());
     }
@@ -145,12 +154,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return existingFiles;
   }
 
-  private List<ConfigFile> getConfigFilesForEntity(String templateId, String uuid) {
-    return wingsPersistence.createQuery(ConfigFile.class)
-        .field("templateId")
-        .equal(templateId)
-        .field("entityId")
-        .equal(uuid)
-        .asList();
+  @Override
+  public List<ConfigFile> getConfigFilesForEntity(String templateId, String uuid) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .field("entityId")
+                                       .equal(uuid)
+                                       .asList();
+    return configFiles != null ? configFiles : new ArrayList<>();
   }
 }

@@ -25,7 +25,7 @@ public class InfraServiceTest extends WingsBaseUnitTest {
     Host host = new Host();
     host = infraService.createHost("ff329r", host);
 
-    Host host1 = infraService.applyTag(host.getUuid(), tag.getUuid());
+    Host host1 = infraService.tagHost(host.getUuid(), tag.getUuid());
     //    assertThat(host1.getTags()).hasSize(1).extracting(Tag::getUuid).containsExactly(tag.getUuid());
   }
 }

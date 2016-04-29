@@ -49,13 +49,13 @@ public class InfraResource {
   public RestResponse<PageResponse<Infra>> listInfra(
       @PathParam("envId") String envId, @BeanParam PageRequest<Infra> pageRequest) {
     pageRequest.addFilter("envId", envId, EQ);
-    return new RestResponse<>(infraService.listInfra(envId, pageRequest));
+    return new RestResponse<>(infraService.list(envId, pageRequest));
   }
 
   @POST
   @Path("envId")
   public RestResponse<Infra> createInfra(@PathParam("envId") String envId, Infra infra) {
-    return new RestResponse<>(infraService.createInfra(infra, envId));
+    return new RestResponse<>(infraService.save(infra, envId));
   }
 
   @GET
@@ -89,7 +89,7 @@ public class InfraResource {
   @PUT
   @Path("hosts/{hostId}/tags/{tagId}")
   public RestResponse<Host> applyTag(@PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
-    return new RestResponse<>(infraService.applyTag(hostId, tagId));
+    return new RestResponse<>(infraService.tagHost(hostId, tagId));
   }
 
   @POST
