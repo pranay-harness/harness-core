@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
-  private static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
+  static final String REPEAT_ELEMENT_INDEX = "repeatElementIndex";
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private RepeatElementType repeatElementType;
@@ -40,6 +40,10 @@ public class RepeatState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    return execute(context, WingsBootstrap.lookup(StateMachineExecutor.class));
+  }
+
+  ExecutionResponse execute(ExecutionContext context, StateMachineExecutor stateMachineExecutor) {
     try {
       if (repeatElements == null || repeatElements.size() == 0) {
         if (repeatElementExpression != null) {
@@ -67,9 +71,8 @@ public class RepeatState extends State {
       for (RepeatElement repeatElement : repeatElements) {
         context.getRepeatElementMap().put(repeatElementType, repeatElement);
         String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-        WingsBootstrap.lookup(StateMachineExecutor.class)
-            .execute(
-                smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+        stateMachineExecutor.execute(
+            smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
         correlationIds.add(notifyId);
       }
     } else {
@@ -78,8 +81,8 @@ public class RepeatState extends State {
       RepeatElement repeatElement = repeatElements.get(repeatElementIndex);
       context.getRepeatElementMap().put(repeatElementType, repeatElement);
       String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-      WingsBootstrap.lookup(StateMachineExecutor.class)
-          .execute(smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+      stateMachineExecutor.execute(
+          smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
       correlationIds.add(notifyId);
     }
 
@@ -92,6 +95,11 @@ public class RepeatState extends State {
   @Override
   public ExecutionResponse handleAsynchResponse(
       ExecutionContext context, Map<String, ? extends Serializable> response) {
+    return handleAsynchResponse(context, response, WingsBootstrap.lookup(StateMachineExecutor.class));
+  }
+
+  ExecutionResponse handleAsynchResponse(ExecutionContext context, Map<String, ? extends Serializable> response,
+      StateMachineExecutor stateMachineExecutor) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Serializable status : response.values()) {
       executionStatus = (ExecutionStatus) status;
@@ -112,8 +120,8 @@ public class RepeatState extends State {
       RepeatElement repeatElement = repeatElements.get(repeatElementIndex);
       context.getRepeatElementMap().put(repeatElementType, repeatElement);
       String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getRepeatElementName();
-      WingsBootstrap.lookup(StateMachineExecutor.class)
-          .execute(smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
+      stateMachineExecutor.execute(
+          smInstance.getStateMachineId(), repeatTransitionStateName, context, smInstance.getUuid(), notifyId);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(notifyId);
 
