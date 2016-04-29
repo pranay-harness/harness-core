@@ -12,8 +12,8 @@ import java.util.Map;
 public class ExecutionContext implements Serializable {
   private static final long serialVersionUID = 1L;
   private String stateMachineId;
-  private Map<String, Serializable> params;
-  private Map<String, Serializable> summary;
+  private Map<String, Serializable> params = new HashMap<>();
+  private Map<String, Serializable> summary = new HashMap<>();
   private Map<String, StateExecutionData> stateExecutionMap;
   private Map<RepeatElementType, RepeatElement> repeatElementMap = new HashMap<>();
 
@@ -68,6 +68,9 @@ public class ExecutionContext implements Serializable {
     this.smInstance = smInstance;
   }
 
+  public RepeatElement getRepeatElement(RepeatElementType repeatElementType) {
+    return repeatElementMap.get(repeatElementType);
+  }
   public Map<RepeatElementType, RepeatElement> getRepeatElementMap() {
     return repeatElementMap;
   }

@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 import software.wings.WingsBaseUnitTest;
@@ -21,10 +20,6 @@ import java.util.Random;
 import javax.inject.Inject;
 
 /**
- *
- */
-
-/**
  * @author Rishi
  */
 public class WorkflowServiceTest extends WingsBaseUnitTest {
@@ -33,7 +28,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Test
-  public void testRead() throws InterruptedException {
+  public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
@@ -58,7 +53,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   }
 
   @Test
-  public void testTrigger() throws InterruptedException {
+  public void shouldTrigger() throws InterruptedException {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
@@ -80,26 +75,26 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
     workflowService.trigger(smId);
     Thread.sleep(5000);
 
-    assertNotNull(StaticMap.getValue(stateA.getName()));
-    assertNotNull(StaticMap.getValue(stateB.getName()));
-    assertNotNull(StaticMap.getValue(stateC.getName()));
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
 
-    assertThat(true)
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()))
         .as("StateA executed before StateB")
-        .isEqualTo((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()));
-    assertThat(true)
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateC.getName()))
         .as("StateB executed before StateC")
-        .isEqualTo((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateC.getName()));
+        .isEqualTo(true);
   }
 
   @Test
-  public void testTriggerAsynch() throws InterruptedException {
+  public void shouldTriggerAsynch() throws InterruptedException {
     StateMachine sm = createAsynchSM(workflowService);
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
     workflowService.trigger(smId);
 
-    Thread.sleep(30000);
+    Thread.sleep(10000);
   }
 
   private StateMachine createAsynchSM(WorkflowService svc) {
@@ -111,9 +106,9 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
     StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB", 10000);
+    State stateAB = new StateMachineTest.StateAsynch("StateAB", 5000);
     sm.addState(stateAB);
-    State stateBC = new StateMachineTest.StateAsynch("StateBC", 5000);
+    State stateBC = new StateMachineTest.StateAsynch("StateBC", 2000);
     sm.addState(stateBC);
 
     sm.setInitialStateName(stateA.getName());
@@ -130,7 +125,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   }
 
   @Test
-  public void testTriggerSimpleFork() throws InterruptedException {
+  public void shouldTriggerSimpleFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
@@ -162,7 +157,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   }
 
   @Test
-  public void testTriggerMixedFork() throws InterruptedException {
+  public void shouldTriggerMixedFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);

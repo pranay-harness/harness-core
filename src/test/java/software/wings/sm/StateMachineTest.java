@@ -16,7 +16,7 @@ import java.util.List;
 
 public class StateMachineTest {
   @Test
-  public void testValidate() {
+  public void shouldValidate() {
     StateMachine sm = new StateMachine();
     State state = new StateSynch("StateA");
     sm.addState(state);
@@ -29,7 +29,7 @@ public class StateMachineTest {
   }
 
   @Test
-  public void testValidateDup() {
+  public void shouldThowDupErrorCode() {
     try {
       StateMachine sm = new StateMachine();
       State state = new StateSynch("StateA");
