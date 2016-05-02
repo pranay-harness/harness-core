@@ -1,14 +1,14 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.beans.Service;
-
-import java.util.List;
 
 /**
  * Created by anubhaw on 3/28/16.
  */
 public interface ServiceResourceService {
-  List<Service> list(String appId);
+  PageResponse<Service> list(String appId, PageRequest<Service> pageRequest);
 
   Service save(String appId, Service service);
 

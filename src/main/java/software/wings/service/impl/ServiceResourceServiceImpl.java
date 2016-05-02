@@ -1,18 +1,18 @@
 package software.wings.service.impl;
 
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.Application;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -24,13 +24,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject private ConfigService configService;
 
   @Override
-  public List<Service> list(String appId) {
-    Application application = wingsPersistence.createQuery(Application.class)
-                                  .field(ID_KEY)
-                                  .equal(appId)
-                                  .retrievedFields(true, "services")
-                                  .get();
-    return application.getServices();
+  public PageResponse<Service> list(String appId, PageRequest<Service> request) {
+    //    request.setFieldsIncluded(Arrays.asList("services"));
+    //    Application application =
+    //        wingsPersistence
+    //            .createQuery(Application.class)
+    //            .field(ID_KEY)
+    //            .equal(appId)
+    //            .retrievedFields(true, "services")
+    //            .get();
+    //    return application.getServices();
+    return wingsPersistence.query(Service.class, request);
   }
 
   public Service save(String appId, Service service) {
