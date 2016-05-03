@@ -5,7 +5,9 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Entity(value = "hosts", noClassnameStored = true)
@@ -26,11 +28,11 @@ public class Host extends Base {
   private String envUuid;
   private AccessType accessType;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
   private String infraId;
 
-  @Transient private List<ConfigFile> configFiles;
+  @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   public Host() {}
 
@@ -131,5 +133,186 @@ public class Host extends Base {
 
   public String getTagsString() {
     return tags.stream().map(Tag::getTagString).collect(Collectors.joining(","));
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(applicationId, hostName, osType, ipAddress, sshPort, hostAlias, envUuid, accessType, tags,
+              infraId, configFiles);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Host other = (Host) obj;
+    return Objects.equals(this.applicationId, other.applicationId) && Objects.equals(this.hostName, other.hostName)
+        && Objects.equals(this.osType, other.osType) && Objects.equals(this.ipAddress, other.ipAddress)
+        && Objects.equals(this.sshPort, other.sshPort) && Objects.equals(this.hostAlias, other.hostAlias)
+        && Objects.equals(this.envUuid, other.envUuid) && Objects.equals(this.accessType, other.accessType)
+        && Objects.equals(this.tags, other.tags) && Objects.equals(this.infraId, other.infraId)
+        && Objects.equals(this.configFiles, other.configFiles);
+  }
+
+  public static final class HostBuilder {
+    private String applicationId;
+    private String hostName;
+    private String osType;
+    private String ipAddress;
+    private int sshPort;
+    private String hostAlias;
+    private String envUuid;
+    private AccessType accessType;
+    private List<Tag> tags = new ArrayList<>();
+    private String infraId;
+    private List<ConfigFile> configFiles = new ArrayList<>();
+    private String uuid;
+    private User createdBy;
+    private long createdAt;
+    private User lastUpdatedBy;
+    private long lastUpdatedAt;
+    private boolean active = true;
+
+    private HostBuilder() {}
+
+    public static HostBuilder aHost() {
+      return new HostBuilder();
+    }
+
+    public HostBuilder withApplicationId(String applicationId) {
+      this.applicationId = applicationId;
+      return this;
+    }
+
+    public HostBuilder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    public HostBuilder withOsType(String osType) {
+      this.osType = osType;
+      return this;
+    }
+
+    public HostBuilder withIpAddress(String ipAddress) {
+      this.ipAddress = ipAddress;
+      return this;
+    }
+
+    public HostBuilder withSshPort(int sshPort) {
+      this.sshPort = sshPort;
+      return this;
+    }
+
+    public HostBuilder withHostAlias(String hostAlias) {
+      this.hostAlias = hostAlias;
+      return this;
+    }
+
+    public HostBuilder withEnvUuid(String envUuid) {
+      this.envUuid = envUuid;
+      return this;
+    }
+
+    public HostBuilder withAccessType(AccessType accessType) {
+      this.accessType = accessType;
+      return this;
+    }
+
+    public HostBuilder withTags(List<Tag> tags) {
+      this.tags = tags;
+      return this;
+    }
+
+    public HostBuilder withInfraId(String infraId) {
+      this.infraId = infraId;
+      return this;
+    }
+
+    public HostBuilder withConfigFiles(List<ConfigFile> configFiles) {
+      this.configFiles = configFiles;
+      return this;
+    }
+
+    public HostBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public HostBuilder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public HostBuilder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public HostBuilder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public HostBuilder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public HostBuilder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public HostBuilder but() {
+      return aHost()
+          .withApplicationId(applicationId)
+          .withHostName(hostName)
+          .withOsType(osType)
+          .withIpAddress(ipAddress)
+          .withSshPort(sshPort)
+          .withHostAlias(hostAlias)
+          .withEnvUuid(envUuid)
+          .withAccessType(accessType)
+          .withTags(tags)
+          .withInfraId(infraId)
+          .withConfigFiles(configFiles)
+          .withUuid(uuid)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withActive(active);
+    }
+
+    public Host build() {
+      Host host = new Host();
+      host.setApplicationId(applicationId);
+      host.setHostName(hostName);
+      host.setOsType(osType);
+      host.setIpAddress(ipAddress);
+      host.setSshPort(sshPort);
+      host.setHostAlias(hostAlias);
+      host.setEnvUuid(envUuid);
+      host.setAccessType(accessType);
+      host.setTags(tags);
+      host.setInfraId(infraId);
+      host.setConfigFiles(configFiles);
+      host.setUuid(uuid);
+      host.setCreatedBy(createdBy);
+      host.setCreatedAt(createdAt);
+      host.setLastUpdatedBy(lastUpdatedBy);
+      host.setLastUpdatedAt(lastUpdatedAt);
+      host.setActive(active);
+      return host;
+    }
   }
 }

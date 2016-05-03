@@ -4,16 +4,15 @@ import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.Tag;
 import software.wings.utils.HostFileHelper.HostFileType;
 
 import java.io.File;
 import java.io.InputStream;
 
 public interface InfraService {
-  PageResponse<Infra> listInfra(String envId, PageRequest<Infra> pageRequest);
+  PageResponse<Infra> list(String envId, PageRequest<Infra> pageRequest);
 
-  public Infra createInfra(Infra infra, String envId);
+  public Infra save(Infra infra, String envId);
 
   public PageResponse<Host> listHosts(PageRequest<Host> req);
 
@@ -23,7 +22,7 @@ public interface InfraService {
 
   public Host updateHost(String infraId, Host host);
 
-  Host applyTag(String hostId, String tagId);
+  Host tagHost(String hostId, String tagId);
 
   Integer importHosts(String infraId, InputStream uploadedInputStream, HostFileType sourceType);
 

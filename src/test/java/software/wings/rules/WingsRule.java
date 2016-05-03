@@ -1,5 +1,7 @@
 package software.wings.rules;
 
+import static software.wings.rules.WingsRule.TestType.INTEGRATION;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -36,19 +38,27 @@ import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
+import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -146,6 +156,11 @@ public class WingsRule implements MethodRule {
         bind(TagService.class).to(TagServiceImpl.class);
         bind(FileService.class).to(FileServiceImpl.class);
         bind(ConfigService.class).to(ConfigServiceImpl.class);
+        bind(ServiceResourceService.class).to(ServiceResourceServiceImpl.class);
+        bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
+        bind(InfraService.class).to(InfraServiceImpl.class);
+        bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
+        bind(AppService.class).to(AppServiceImpl.class);
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
@@ -198,7 +213,9 @@ public class WingsRule implements MethodRule {
     }
 
     log().info("Stopping Mongo server...");
-    mongoServer.shutdown();
+    if (!testType.equals(INTEGRATION)) {
+      mongoServer.shutdown();
+    }
     log().info("Stopped Mongo server...");
   }
 

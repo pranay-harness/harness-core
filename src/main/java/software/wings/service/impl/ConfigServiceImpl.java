@@ -9,6 +9,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -49,7 +50,13 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public List<ConfigFile> getConfigFilesByEntityId(String entID) {
-    return wingsPersistence.createQuery(ConfigFile.class).field("entityId").equal(entID).asList();
+  public List<ConfigFile> getConfigFilesForEntity(String templateId, String entityId) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .field("entityId")
+                                       .equal(entityId)
+                                       .asList();
+    return configFiles != null ? configFiles : new ArrayList<>();
   }
 }

@@ -32,12 +32,12 @@ public class EnvironmentResource {
   @GET
   @Path("{appId}")
   public RestResponse<List<Environment>> listEnvironments(@PathParam("appId") String appId) {
-    return new RestResponse<>(envService.listEnvironments(appId));
+    return new RestResponse<>(envService.list(appId));
   }
 
   @POST
   @Path("{appId}")
   public RestResponse<Environment> createEnvironment(@PathParam("appId") String appId, Environment environment) {
-    return new RestResponse<>(envService.createEnvironment(appId, environment));
+    return new RestResponse<>(envService.save(appId, environment));
   }
 }

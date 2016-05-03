@@ -23,7 +23,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public List<Environment> listEnvironments(String appId) {
+  public List<Environment> list(String appId) {
     Application application = wingsPersistence.createQuery(Application.class)
                                   .field(ID_KEY)
                                   .equal(appId)
@@ -33,12 +33,12 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   @Override
-  public Environment getEnvironments(String applicationId, String envName) {
+  public Environment get(String applicationId, String envName) {
     return null;
   }
 
   @Override
-  public Environment createEnvironment(String applicationId, Environment environment) {
+  public Environment save(String applicationId, Environment environment) {
     Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
     wingsPersistence.save(new TagType(HierarchyTagName, savedEnv.getUuid()));
 
