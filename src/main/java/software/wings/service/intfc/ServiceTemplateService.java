@@ -12,7 +12,7 @@ import java.util.Map;
  * Created by anubhaw on 4/4/16.
  */
 public interface ServiceTemplateService {
-  PageResponse<ServiceTemplate> list(String envId, PageRequest<ServiceTemplate> pageRequest);
+  PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest);
 
   ServiceTemplate save(ServiceTemplate serviceTemplate);
 
@@ -20,7 +20,7 @@ public interface ServiceTemplateService {
 
   ServiceTemplate updateHostAndTags(String serviceTemplateId, List<String> tagIds, List<String> hostIds);
 
-  Map<String, List<ConfigFile>> computedConfigFiles(String templateId);
+  List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles);
 
-  List<ConfigFile> getConfigFilesForEntity(String templateId, String uuid);
+  Map<String, List<ConfigFile>> computedConfigFiles(String templateId);
 }

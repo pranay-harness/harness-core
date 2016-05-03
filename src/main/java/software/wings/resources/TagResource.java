@@ -33,13 +33,13 @@ public class TagResource {
 
   @POST
   public RestResponse<Tag> saveTag(Tag tag) {
-    return new RestResponse<>(tagService.createTag(tag));
+    return new RestResponse<>(tagService.saveTag(tag));
   }
 
   @POST
   @Path("/types")
   public RestResponse<TagType> saveTagType(TagType tagType) {
-    return new RestResponse<>(tagService.createTagType(tagType));
+    return new RestResponse<>(tagService.saveTagType(tagType));
   }
 
   @POST

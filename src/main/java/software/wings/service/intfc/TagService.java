@@ -11,8 +11,8 @@ import java.util.List;
  * Created by anubhaw on 4/25/16.
  */
 public interface TagService {
-  Tag createTag(Tag tag);
-  TagType createTagType(TagType tagType);
+  Tag saveTag(Tag tag);
+  TagType saveTagType(TagType tagType);
 
   String saveFile(String tagId, ConfigFile configFile, InputStream inputStream);
 

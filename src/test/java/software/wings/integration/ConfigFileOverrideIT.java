@@ -84,18 +84,18 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     // create Tag hierarchy
     TagType tagType = wingsPersistence.createQuery(TagType.class).field("envId").equal(environment.getUuid()).get();
 
-    nc = tagService.createTag(aTag().withTagType(tagType).withName("NC").build());
-    ncOz1 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ1").build());
-    ncOz2 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ2").build());
-    ncOz3 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ3").build());
+    nc = tagService.saveTag(aTag().withTagType(tagType).withName("NC").build());
+    ncOz1 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ1").build());
+    ncOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ2").build());
+    ncOz3 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ3").build());
 
     tagService.linkTags(nc.getUuid(), ncOz1.getUuid());
     tagService.linkTags(nc.getUuid(), ncOz2.getUuid());
     tagService.linkTags(nc.getUuid(), ncOz3.getUuid());
 
-    or = tagService.createTag(aTag().withTagType(tagType).withName("OR").build());
-    orOz1 = tagService.createTag(aTag().withTagType(tagType).withName("OR_OZ1").build());
-    orOz2 = tagService.createTag(aTag().withTagType(tagType).withName("OR_OZ2").build());
+    or = tagService.saveTag(aTag().withTagType(tagType).withName("OR").build());
+    orOz1 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ1").build());
+    orOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ2").build());
 
     tagService.linkTags(or.getUuid(), orOz1.getUuid());
     tagService.linkTags(or.getUuid(), orOz2.getUuid());
@@ -145,16 +145,16 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
   }
 
   int appFileIdx = 1;

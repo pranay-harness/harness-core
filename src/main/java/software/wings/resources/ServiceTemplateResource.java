@@ -43,7 +43,7 @@ public class ServiceTemplateResource {
   public RestResponse<PageResponse<ServiceTemplate>> list(
       @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
     pageRequest.addFilter("envId", envId, EQ);
-    return new RestResponse<>(serviceTemplateService.list(envId, pageRequest));
+    return new RestResponse<>(serviceTemplateService.list(pageRequest));
   }
 
   @POST
