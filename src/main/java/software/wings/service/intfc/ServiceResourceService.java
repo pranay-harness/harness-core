@@ -17,4 +17,6 @@ public interface ServiceResourceService {
   Service update(Service service);
 
   Service get(String appId, String serviceId);
+
+  void delete(String serviceId);
 }

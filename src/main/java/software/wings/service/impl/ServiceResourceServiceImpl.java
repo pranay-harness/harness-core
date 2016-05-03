@@ -60,4 +60,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   public Service get(String appId, String serviceId) {
     return findByUuid(serviceId);
   }
+
+  @Override
+  public void delete(String serviceId) {
+    wingsPersistence.delete(Service.class, serviceId);
+  }
 }
