@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
@@ -15,6 +16,7 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -61,5 +63,12 @@ public class ServiceResource {
     service.setAppId(appId);
     service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
+  }
+
+  @DELETE
+  @Path("{appId}/{serviceId}")
+  public RestResponse<Service> delete(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    srs.delete(serviceId);
+    return new RestResponse(of("status", "success"));
   }
 }

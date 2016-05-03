@@ -36,7 +36,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
 
   public Service findByUuid(String uuid) {
     Service service = wingsPersistence.get(Service.class, uuid);
-    service.setConfigFiles(configService.getConfigFilesByEntityId(DEFAULT_TEMPLATE_ID, service.getUuid()));
+    service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
     return service;
   }
 
@@ -50,5 +50,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Override
   public Service get(String appId, String serviceId) {
     return findByUuid(serviceId);
+  }
+
+  @Override
+  public void delete(String serviceId) {
+    wingsPersistence.delete(Service.class, serviceId);
   }
 }

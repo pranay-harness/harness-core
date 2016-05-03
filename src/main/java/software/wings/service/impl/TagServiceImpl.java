@@ -27,12 +27,12 @@ public class TagServiceImpl implements TagService {
   @Inject private ConfigService configService;
 
   @Override
-  public Tag createTag(Tag tag) {
+  public Tag saveTag(Tag tag) {
     return wingsPersistence.saveAndGet(Tag.class, tag);
   }
 
   @Override
-  public TagType createTagType(TagType tagType) {
+  public TagType saveTagType(TagType tagType) {
     return wingsPersistence.saveAndGet(TagType.class, tagType);
   }
 

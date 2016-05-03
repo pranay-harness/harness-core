@@ -36,6 +36,7 @@ import software.wings.service.intfc.TagService;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,26 @@ import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/28/16.
+ */
+
+/**
+ * Test setup
+ * ------------------------
+ * Service
+ * |
+ * |....ENV
+ * |    |...NC
+ * |    |   |....NC_OZ1---[Host0, Host1, Host2]
+ * |    |   |....NC_OZ2
+ * |    |   |....NC_OZ3---[Host3, Host4, Host5]
+ * |    |
+ * |    |...OR
+ * |    |   |...OR_OZ1
+ * |    |   |...OR_OZ2
+ * |
+ * |...Host8
+ * |...Host9
+ * |
  */
 
 public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
@@ -84,18 +105,18 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     // create Tag hierarchy
     TagType tagType = wingsPersistence.createQuery(TagType.class).field("envId").equal(environment.getUuid()).get();
 
-    nc = tagService.createTag(aTag().withTagType(tagType).withName("NC").build());
-    ncOz1 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ1").build());
-    ncOz2 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ2").build());
-    ncOz3 = tagService.createTag(aTag().withTagType(tagType).withName("NC_OZ3").build());
+    nc = tagService.saveTag(aTag().withTagType(tagType).withName("NC").build());
+    ncOz1 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ1").build());
+    ncOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ2").build());
+    ncOz3 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ3").build());
 
     tagService.linkTags(nc.getUuid(), ncOz1.getUuid());
     tagService.linkTags(nc.getUuid(), ncOz2.getUuid());
     tagService.linkTags(nc.getUuid(), ncOz3.getUuid());
 
-    or = tagService.createTag(aTag().withTagType(tagType).withName("OR").build());
-    orOz1 = tagService.createTag(aTag().withTagType(tagType).withName("OR_OZ1").build());
-    orOz2 = tagService.createTag(aTag().withTagType(tagType).withName("OR_OZ2").build());
+    or = tagService.saveTag(aTag().withTagType(tagType).withName("OR").build());
+    orOz1 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ1").build());
+    orOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ2").build());
 
     tagService.linkTags(or.getUuid(), orOz1.getUuid());
     tagService.linkTags(or.getUuid(), orOz2.getUuid());
@@ -114,15 +135,74 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
                                         .withName("Catalog:8080")
                                         .build());
     log().info("Template id {}", template.getUuid());
-  }
 
-  @Test
-  public void configFileOverrideIT() throws FileNotFoundException {
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
     templateService.updateHostAndTags(template.getUuid(), selectedTags, selectedHosts);
+  }
 
+  @Test
+  public void shouldApplyServiceConfigFilesIT() throws IOException {
+    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+
+    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+
+    assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
+        .isEqualTo(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, template.getServiceId()));
+  }
+
+  @Test
+  public void shouldApplyEnvConfigFileOverride() throws IOException {
+    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
+
+    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+
+    assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
+  }
+
+  @Test
+  public void shouldApplyHostConfigsOverrideForTaggedHost() throws IOException {
+    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
+    attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
+    attacheConfigFileToEntity(hosts.get(0).getUuid(), template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+
+    assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
+  }
+
+  @Test
+  public void shouldApplyHostConfigsOverrideForUntaggedHost() throws IOException {
+    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
+    attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
+    attacheConfigFileToEntity(hosts.get(0).getUuid(), template.getUuid());
+
+    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+
+    assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
+  }
+
+  @Test
+  public void shouldApplyTagConfigFileOverride() throws IOException {
+    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
+    attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
+    attacheConfigFileToEntity(hosts.get(8).getUuid(), template.getUuid());
+
+    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+
+    assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
+  }
+
+  @Test
+  public void shouldOverrideConfigFilesInAllScenariosIT() throws IOException {
     // prepare config files
     attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
 
@@ -145,23 +225,23 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
-        .isEqualTo(templateService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
+        .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
   }
 
   int appFileIdx = 1;
   int cacheFileIdx = 1;
   String relativePath = System.getProperty("user.home") + "/data/config/";
 
-  private void attacheConfigFileToEntity(String entityId, String templateId) throws FileNotFoundException {
+  private void attacheConfigFileToEntity(String entityId, String templateId) throws IOException {
     String filePrefix = "app";
     String fileExt = ".properties";
     String filePath = relativePath + filePrefix + appFileIdx++ + fileExt;
@@ -174,14 +254,16 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   }
 
   private void saveConfigFile(String entityId, String templateId, String filePrefix, String fileExt, String filePath)
-      throws FileNotFoundException {
+      throws IOException {
     ConfigFile appConfigFile = aConfigFile()
                                    .withName(filePrefix + fileExt)
                                    .withTemplateId(templateId)
                                    .withEntityId(entityId)
                                    .withRelativePath(relativePath)
                                    .build();
-    configService.save(appConfigFile, new FileInputStream(filePath));
+    FileInputStream fileInputStream = new FileInputStream(filePath);
+    configService.save(appConfigFile, fileInputStream);
+    fileInputStream.close();
     log().info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
         entityId);
   }

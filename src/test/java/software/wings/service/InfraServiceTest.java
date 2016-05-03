@@ -20,7 +20,7 @@ public class InfraServiceTest extends WingsBaseUnitTest {
     Tag tag = new Tag();
     tag.setName("OS");
     tag.setDescription("Operating system types");
-    //    tag = infraService.createTag("ddn", tag);
+    //    tag = infraService.saveTag("ddn", tag);
 
     Host host = new Host();
     host = infraService.createHost("ff329r", host);
