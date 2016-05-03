@@ -8,7 +8,7 @@ import software.wings.beans.Service;
  * Created by anubhaw on 3/28/16.
  */
 public interface ServiceResourceService {
-  PageResponse<Service> list(String appId, PageRequest<Service> pageRequest);
+  PageResponse<Service> list(PageRequest<Service> pageRequest);
 
   Service save(String appId, Service service);
 

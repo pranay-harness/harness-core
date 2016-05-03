@@ -24,16 +24,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Inject private ConfigService configService;
 
   @Override
-  public PageResponse<Service> list(String appId, PageRequest<Service> request) {
-    //    request.setFieldsIncluded(Arrays.asList("services"));
-    //    Application application =
-    //        wingsPersistence
-    //            .createQuery(Application.class)
-    //            .field(ID_KEY)
-    //            .equal(appId)
-    //            .retrievedFields(true, "services")
-    //            .get();
-    //    return application.getServices();
+  public PageResponse<Service> list(PageRequest<Service> request) {
     return wingsPersistence.query(Service.class, request);
   }
 

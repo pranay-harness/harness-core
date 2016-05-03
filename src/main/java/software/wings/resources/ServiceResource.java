@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
@@ -36,7 +37,8 @@ public class ServiceResource {
   @Path("{appId}")
   public RestResponse<PageResponse<Service>> list(
       @PathParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
-    return new RestResponse<>(srs.list(appId, pageRequest));
+    pageRequest.addFilter("application", appId, EQ);
+    return new RestResponse<>(srs.list(pageRequest));
   }
 
   @GET
@@ -48,6 +50,7 @@ public class ServiceResource {
   @POST
   @Path("{appId}")
   public RestResponse<Service> save(@PathParam("appId") String appId, Service service) {
+    service.setAppId(appId);
     return new RestResponse<>(srs.save(appId, service));
   }
 
@@ -55,6 +58,7 @@ public class ServiceResource {
   @Path("{appId}/{serviceId}")
   public RestResponse<Service> update(
       @PathParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
+    service.setAppId(appId);
     service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
   }

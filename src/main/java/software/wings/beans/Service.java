@@ -16,6 +16,7 @@ import java.util.Objects;
 @Entity(value = "services", noClassnameStored = true)
 public class Service extends Base {
   private String name;
+  private String appId;
   private String description;
   private ArtifactType artifactType;
 
@@ -29,6 +30,14 @@ public class Service extends Base {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   public String getDescription() {
@@ -61,7 +70,7 @@ public class Service extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, platformSoftwares, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, appId, description, artifactType, platformSoftwares, configFiles);
   }
 
   @Override
@@ -76,14 +85,15 @@ public class Service extends Base {
       return false;
     }
     final Service other = (Service) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.artifactType, other.artifactType)
+    return Objects.equals(this.name, other.name) && Objects.equals(this.appId, other.appId)
+        && Objects.equals(this.description, other.description) && Objects.equals(this.artifactType, other.artifactType)
         && Objects.equals(this.platformSoftwares, other.platformSoftwares)
         && Objects.equals(this.configFiles, other.configFiles);
   }
 
   public static final class ServiceBuilder {
     private String name;
+    private String appId;
     private String description;
     private ArtifactType artifactType;
     private List<PlatformSoftware> platformSoftwares;
@@ -103,6 +113,11 @@ public class Service extends Base {
 
     public ServiceBuilder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    public ServiceBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -159,6 +174,7 @@ public class Service extends Base {
     public ServiceBuilder but() {
       return aService()
           .withName(name)
+          .withAppId(appId)
           .withDescription(description)
           .withArtifactType(artifactType)
           .withPlatformSoftwares(platformSoftwares)
@@ -174,6 +190,7 @@ public class Service extends Base {
     public Service build() {
       Service service = new Service();
       service.setName(name);
+      service.setAppId(appId);
       service.setDescription(description);
       service.setArtifactType(artifactType);
       service.setPlatformSoftwares(platformSoftwares);
