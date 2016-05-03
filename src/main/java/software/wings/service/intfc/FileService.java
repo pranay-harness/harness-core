@@ -63,7 +63,7 @@ public interface FileService {
     }
 
     public GridFSBucket getGridFSBucket() {
-      return gridFSBucket;
+      return WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(name);
     }
   }
 }
