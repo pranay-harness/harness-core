@@ -32,4 +32,10 @@ public class ManagedScheduledExecutorService extends ManagedExecutorService impl
   public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
     return ((ScheduledExecutorService) getExecutorService()).scheduleWithFixedDelay(command, initialDelay, delay, unit);
   }
+
+  @Override
+  public void stop() throws Exception {
+    shutdown();
+    awaitTermination(10000, TimeUnit.MILLISECONDS);
+  }
 }

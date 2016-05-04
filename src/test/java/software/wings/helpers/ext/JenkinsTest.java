@@ -5,7 +5,6 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,13 +12,13 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 public class JenkinsTest {
-  @Test
+  //@Test
   public void testJobExists() {
     Jenkins jenkins = new Jenkins("http://localhost:8080/jenkins"); //, "user1", "user1");
     System.out.println(jenkins.jobExists("test-freestyle"));
   }
 
-  @Test
+  //@Test
   public void testGetBuild() throws URISyntaxException, IOException {
     JenkinsServer jenkins = new JenkinsServer(new URI("http://localhost:8080/jenkins"));
 
