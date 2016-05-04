@@ -54,21 +54,21 @@ public class AppResource {
   }
 
   @PUT
-  @Path("{appId}")
-  public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
+  @Path("{app_id}")
+  public RestResponse<Application> update(@PathParam("app_id") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
   }
 
   @GET
-  @Path("{appId}")
-  public RestResponse<Application> get(@PathParam("appId") String appId) {
+  @Path("{app_id}")
+  public RestResponse<Application> get(@PathParam("app_id") String appId) {
     return new RestResponse<>(appService.findByUuid(appId));
   }
 
   @DELETE
-  @Path("{appId}")
-  public RestResponse delete(@PathParam("appId") String appId) {
+  @Path("{app_id}")
+  public RestResponse delete(@PathParam("app_id") String appId) {
     appService.deleteApp(appId);
     return new RestResponse(of("status", "success"));
   }
