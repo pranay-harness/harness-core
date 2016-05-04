@@ -3,7 +3,7 @@ machine:
     version: oraclejdk8
 test:
   override:
-    - mvn test
+    - mvn test -Dmaven.jacoco.skip=true
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
