@@ -23,6 +23,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by anubhaw on 3/25/16.
@@ -36,38 +37,33 @@ public class ServiceResource {
   @Inject private ServiceResourceService srs;
 
   @GET
-  @Path("{appId}")
   public RestResponse<PageResponse<Service>> list(
-      @PathParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
-    pageRequest.addFilter("application", appId, EQ);
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(srs.list(pageRequest));
   }
 
   @GET
-  @Path("{appId}/{serviceId}")
-  public RestResponse<Service> get(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(srs.get(appId, serviceId));
+  @Path("{serviceId}")
+  public RestResponse<Service> get(@PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(srs.get(serviceId));
   }
 
   @POST
-  @Path("{appId}")
-  public RestResponse<Service> save(@PathParam("appId") String appId, Service service) {
-    service.setAppId(appId);
-    return new RestResponse<>(srs.save(appId, service));
+  public RestResponse<Service> save(Service service) {
+    return new RestResponse<>(srs.save(service));
   }
 
   @PUT
-  @Path("{appId}/{serviceId}")
-  public RestResponse<Service> update(
-      @PathParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
-    service.setAppId(appId);
+  @Path("{serviceId}")
+  public RestResponse<Service> update(@PathParam("serviceId") String serviceId, Service service) {
     service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
   }
 
   @DELETE
-  @Path("{appId}/{serviceId}")
-  public RestResponse<Service> delete(@PathParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+  @Path("{serviceId}")
+  public RestResponse<Service> delete(@PathParam("serviceId") String serviceId) {
     srs.delete(serviceId);
     return new RestResponse(of("status", "success"));
   }

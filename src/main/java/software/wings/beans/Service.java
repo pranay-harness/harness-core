@@ -70,7 +70,7 @@ public class Service extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, appContainers, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, appId, description, artifactType, appContainers, configFiles);
   }
 
   @Override
@@ -85,8 +85,8 @@ public class Service extends Base {
       return false;
     }
     final Service other = (Service) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.artifactType, other.artifactType)
+    return Objects.equals(this.name, other.name) && Objects.equals(this.appId, other.appId)
+        && Objects.equals(this.description, other.description) && Objects.equals(this.artifactType, other.artifactType)
         && Objects.equals(this.appContainers, other.appContainers)
         && Objects.equals(this.configFiles, other.configFiles);
   }
@@ -131,7 +131,7 @@ public class Service extends Base {
       return this;
     }
 
-    public ServiceBuilder withPlatformSoftwares(List<AppContainer> appContainers) {
+    public ServiceBuilder withAppContainers(List<AppContainer> appContainers) {
       this.appContainers = appContainers;
       return this;
     }
@@ -174,9 +174,10 @@ public class Service extends Base {
     public ServiceBuilder but() {
       return aService()
           .withName(name)
+          .withAppId(appId)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withPlatformSoftwares(appContainers)
+          .withAppContainers(appContainers)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withCreatedBy(createdBy)

@@ -95,9 +95,9 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
-    Application application = appService.save(anApplication().withName("AppA").build());
-    Service service = srs.save(application.getUuid(), Service.ServiceBuilder.aService().withName("Catalog").build());
-    Environment environment = environmentService.save(application.getUuid(), anEnvironment().withName("DEV").build());
+    Application app = appService.save(anApplication().withName("AppA").build());
+    Service service = srs.save(Service.ServiceBuilder.aService().withAppId(app.getUuid()).withName("Catalog").build());
+    Environment environment = environmentService.save(app.getUuid(), anEnvironment().withName("DEV").build());
     Infra infra = infraService.save(anInfra().withInfraType(STATIC).build(), environment.getUuid());
 
     hosts = importAndGetHosts(infra); // FIXME split

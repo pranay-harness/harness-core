@@ -10,13 +10,11 @@ import software.wings.beans.Service;
 public interface ServiceResourceService {
   PageResponse<Service> list(PageRequest<Service> pageRequest);
 
-  Service save(String appId, Service service);
-
-  Service findByUuid(String uuid);
+  Service save(Service service);
 
   Service update(Service service);
 
-  Service get(String appId, String serviceId);
+  Service get(String serviceId);
 
   void delete(String serviceId);
 }
