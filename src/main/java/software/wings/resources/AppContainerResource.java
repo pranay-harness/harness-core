@@ -52,20 +52,20 @@ public class AppContainerResource {
 
   @GET
   public RestResponse<PageResponse<AppContainer>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<AppContainer> request) {
+      @QueryParam("app_id") String appId, @BeanParam PageRequest<AppContainer> request) {
     request.addFilter("appId", appId, EQ);
     return new RestResponse<>(appContainerService.list(request));
   }
 
   @GET
-  @Path("{appContainerId}")
-  public RestResponse<AppContainer> get(@PathParam("appContainerId") String appContainerId) {
+  @Path("{app_container_id}")
+  public RestResponse<AppContainer> get(@PathParam("app_container_id") String appContainerId) {
     return new RestResponse<>(appContainerService.get(appContainerId));
   }
 
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadPlatform(@QueryParam("appId") String appId,
+  public RestResponse<String> uploadPlatform(@QueryParam("app_id") String appId,
       @FormDataParam("standard") boolean standard, @FormDataParam("fileName") String fileName,
       @FormDataParam("version") String version, @FormDataParam("description") String description,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
@@ -81,10 +81,10 @@ public class AppContainerResource {
   }
 
   @PUT
-  @Path("app-containers/{appContainerId}")
+  @Path("app-containers/{app_container_id}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> updatePlatform(@QueryParam("appId") String appId,
-      @PathParam("appContainerId") String appContainerId, @FormDataParam("standard") boolean standard,
+  public RestResponse<String> updatePlatform(@QueryParam("app_id") String appId,
+      @PathParam("app_container_id") String appContainerId, @FormDataParam("standard") boolean standard,
       @FormDataParam("fileName") String fileName, @FormDataParam("version") String version,
       @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
@@ -100,8 +100,8 @@ public class AppContainerResource {
   }
 
   @DELETE
-  @Path("{appContainerId}")
-  public void deletePlatform(@PathParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+  @Path("{app_container_id}")
+  public void deletePlatform(@PathParam("app_id") String appId, @PathParam("app_container_id") String appContainerId) {
     appContainerService.delete(appContainerId);
   }
 
