@@ -5,6 +5,8 @@ import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
+import com.google.inject.Inject;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -23,7 +25,6 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.InputStream;
-import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
