@@ -66,13 +66,13 @@ public class AppContainerResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> uploadPlatform(@QueryParam("app_id") String appId,
-      @FormDataParam("standard") boolean standard, @FormDataParam("fileName") String fileName,
+      @FormDataParam("standard") boolean standard, @FormDataParam("name") String name,
       @FormDataParam("version") String version, @FormDataParam("description") String description,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     AppContainer appContainer =
-        createPlatformSoftwareFromRequest(appId, fileName, version, md5, description, urlString, standard, sourceType,
+        createPlatformSoftwareFromRequest(appId, name, version, md5, description, urlString, standard, sourceType,
             uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
@@ -85,13 +85,13 @@ public class AppContainerResource {
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> updatePlatform(@QueryParam("app_id") String appId,
       @PathParam("app_container_id") String appContainerId, @FormDataParam("standard") boolean standard,
-      @FormDataParam("fileName") String fileName, @FormDataParam("version") String version,
+      @FormDataParam("name") String name, @FormDataParam("version") String version,
       @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     AppContainer appContainer =
-        createPlatformSoftwareFromRequest(appId, fileName, version, md5, description, urlString, standard, sourceType,
+        createPlatformSoftwareFromRequest(appId, name, version, md5, description, urlString, standard, sourceType,
             uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
@@ -113,9 +113,9 @@ public class AppContainerResource {
     return inputStream;
   }
 
-  private AppContainer createPlatformSoftwareFromRequest(String appId, String fileName, String version, String md5,
+  private AppContainer createPlatformSoftwareFromRequest(String appId, String name, String version, String md5,
       String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
-    AppContainer appContainer = new AppContainer(fileName, md5);
+    AppContainer appContainer = new AppContainer(name, md5);
     appContainer.setAppId(appId);
     appContainer.setStandard(standard);
     appContainer.setDescription(description);
