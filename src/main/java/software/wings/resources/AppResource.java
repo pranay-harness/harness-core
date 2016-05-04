@@ -87,7 +87,7 @@ public class AppResource {
   }
 
   @POST
-  @Path("{appId}/platforms")
+  @Path("{appId}/app-containers")
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> uploadPlatform(@PathParam("appId") String appId,
       @FormDataParam("standard") boolean standard, @FormDataParam("fileName") String fileName,
@@ -105,10 +105,10 @@ public class AppResource {
   }
 
   @PUT
-  @Path("{appId}/platforms/{platformId}")
+  @Path("{appId}/app-containers/{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> updatePlatform(@PathParam("appId") String appId,
-      @PathParam("platformId") String platformId, @FormDataParam("standard") boolean standard,
+      @PathParam("appContainerId") String appContainerId, @FormDataParam("standard") boolean standard,
       @FormDataParam("fileName") String fileName, @FormDataParam("version") String version,
       @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
@@ -119,27 +119,27 @@ public class AppResource {
             uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, platformSoftware.getSource().getSourceType());
-    String fileId = appService.updatePlatformSoftware(platformId, platformSoftware, uploadedInputStream, PLATFORMS);
+    String fileId = appService.updatePlatformSoftware(appContainerId, platformSoftware, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
   }
 
   @GET
-  @Path("{appId}/platforms")
+  @Path("{appId}/app-containers")
   public RestResponse<List<PlatformSoftware>> fetchPlatforms(@PathParam("appId") String appId) {
     return new RestResponse<>(appService.getPlatforms(appId));
   }
 
   @GET
-  @Path("{appId}/platforms/{platformId}")
+  @Path("{appId}/app-containers/{appContainerId}")
   public RestResponse<PlatformSoftware> fetchPlatform(
-      @PathParam("appId") String appId, @PathParam("platformId") String platformId) {
-    return new RestResponse<>(appService.getPlatform(appId, platformId));
+      @PathParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+    return new RestResponse<>(appService.getPlatform(appId, appContainerId));
   }
 
   @DELETE
-  @Path("{appId}/platforms/{platformId}")
-  public void deletePlatform(@PathParam("appId") String appId, @PathParam("platformId") String platformId) {
-    appService.deletePlatform(appId, platformId);
+  @Path("{appId}/app-containers/{appContainerId}")
+  public void deletePlatform(@PathParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+    appService.deletePlatform(appId, appContainerId);
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
