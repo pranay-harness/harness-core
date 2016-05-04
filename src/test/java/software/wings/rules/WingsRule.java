@@ -15,6 +15,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
@@ -72,6 +73,7 @@ import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -148,10 +150,10 @@ public class WingsRule implements MethodRule {
         bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
         bind(ScheduledExecutorService.class)
             .annotatedWith(Names.named("timer"))
-            .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+            .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
         bind(ScheduledExecutorService.class)
             .annotatedWith(Names.named("notifier"))
-            .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+            .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
         bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
         bind(TagService.class).to(TagServiceImpl.class);
         bind(FileService.class).to(FileServiceImpl.class);
@@ -170,19 +172,17 @@ public class WingsRule implements MethodRule {
 
   protected void after() {
     try {
-      log().info("Stopping notifier...");
-      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))).stop();
+      log().info("Stopping executorService...");
       executorService.shutdownNow();
-      log().info("Stopped notifier...");
+      log().info("Stopped executorService...");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
 
     try {
-      log().info("Stopping timer...");
-      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
-      executorService.shutdownNow();
-      log().info("Stopped timer...");
+      log().info("Stopping notifier...");
+      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))).stop();
+      log().info("Stopped notifier...");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -191,6 +191,14 @@ public class WingsRule implements MethodRule {
       log().info("Stopping queue listener controller...");
       injector.getInstance(QueueListenerController.class).stop();
       log().info("Stopped queue listener controller...");
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    try {
+      log().info("Stopping timer...");
+      ((Managed) injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("timer")))).stop();
+      log().info("Stopped timer...");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -207,7 +215,6 @@ public class WingsRule implements MethodRule {
       log().info("Stopping WingsPersistance...");
       ((Managed) injector.getInstance(WingsPersistence.class)).stop();
       log().info("Stopped WingsPersistance...");
-      log().info("Stopped distributed lock service...");
     } catch (Exception ex) {
       ex.printStackTrace();
     }

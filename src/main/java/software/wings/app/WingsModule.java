@@ -73,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -160,12 +161,12 @@ public class WingsModule extends AbstractModule {
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("timer"))
-        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
     bind(new TypeLiteral<Queue<NotifyEvent>>() {})
         .toInstance(new MongoQueueImpl<>(NotifyEvent.class, primaryDatastore));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifier"))
-        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
     bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
     bind(TagService.class).to(TagServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);

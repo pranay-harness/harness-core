@@ -4,6 +4,7 @@ import io.dropwizard.lifecycle.Managed;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.stream.IntStream;
 import javax.inject.Singleton;
 
@@ -25,6 +26,8 @@ public class QueueListenerController implements Managed {
 
   @Override
   public void stop() throws Exception {
-    executorService.shutdownNow();
+    for (Runnable runnable : executorService.shutdownNow()) {
+      ((FutureTask<?>) runnable).get();
+    }
   }
 }
