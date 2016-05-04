@@ -19,7 +19,7 @@ public class Service extends Base {
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<PlatformSoftware> platformSoftwares;
+  @Reference(idOnly = true, ignoreMissing = true) private List<AppContainer> appContainers;
 
   @Transient private List<ConfigFile> configFiles;
 
@@ -47,12 +47,12 @@ public class Service extends Base {
     this.artifactType = artifactType;
   }
 
-  public List<PlatformSoftware> getPlatformSoftwares() {
-    return platformSoftwares;
+  public List<AppContainer> getAppContainers() {
+    return appContainers;
   }
 
-  public void setPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
-    this.platformSoftwares = platformSoftwares;
+  public void setAppContainers(List<AppContainer> appContainers) {
+    this.appContainers = appContainers;
   }
 
   public void setConfigFiles(List<ConfigFile> configFiles) {
@@ -61,7 +61,7 @@ public class Service extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, platformSoftwares, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, appContainers, configFiles);
   }
 
   @Override
@@ -78,7 +78,7 @@ public class Service extends Base {
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.artifactType, other.artifactType)
-        && Objects.equals(this.platformSoftwares, other.platformSoftwares)
+        && Objects.equals(this.appContainers, other.appContainers)
         && Objects.equals(this.configFiles, other.configFiles);
   }
 
@@ -86,7 +86,7 @@ public class Service extends Base {
     private String name;
     private String description;
     private ArtifactType artifactType;
-    private List<PlatformSoftware> platformSoftwares;
+    private List<AppContainer> appContainers;
     private List<ConfigFile> configFiles;
     private String uuid;
     private User createdBy;
@@ -116,8 +116,8 @@ public class Service extends Base {
       return this;
     }
 
-    public ServiceBuilder withPlatformSoftwares(List<PlatformSoftware> platformSoftwares) {
-      this.platformSoftwares = platformSoftwares;
+    public ServiceBuilder withPlatformSoftwares(List<AppContainer> appContainers) {
+      this.appContainers = appContainers;
       return this;
     }
 
@@ -161,7 +161,7 @@ public class Service extends Base {
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withPlatformSoftwares(platformSoftwares)
+          .withPlatformSoftwares(appContainers)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withCreatedBy(createdBy)
@@ -176,7 +176,7 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
-      service.setPlatformSoftwares(platformSoftwares);
+      service.setAppContainers(appContainers);
       service.setConfigFiles(configFiles);
       service.setUuid(uuid);
       service.setCreatedBy(createdBy);
