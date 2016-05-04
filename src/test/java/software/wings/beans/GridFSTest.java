@@ -6,7 +6,6 @@ import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class GridFSTest {
-  @Test
+  //@Test
   public void testGridFS() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);
     GridFSBucket gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
@@ -32,7 +31,7 @@ public class GridFSTest {
     streamToUploadFrom.close();
   }
 
-  @Test
+  //@Test
   public void getData() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);
     GridFSBucket gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase("test"), "artifacts");
