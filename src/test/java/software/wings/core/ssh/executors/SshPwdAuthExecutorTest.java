@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import static software.wings.common.UUIDGenerator.getUuid;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
@@ -10,6 +11,7 @@ import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilde
 /**
  * Created by anubhaw on 2/10/16.
  */
+@Ignore
 public class SshPwdAuthExecutorTest {
   private String host = "192.168.1.56";
   private Integer port = 22;

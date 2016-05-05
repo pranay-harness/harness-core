@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,6 +22,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 3/9/16.
  */
+@Ignore
 public class UserServiceTest extends WingsBaseUnitTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;

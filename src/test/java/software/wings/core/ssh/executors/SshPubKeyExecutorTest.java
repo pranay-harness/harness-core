@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
@@ -7,6 +8,7 @@ import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilde
 /**
  * Created by anubhaw on 2/8/16.
  */
+@Ignore
 public class SshPubKeyExecutorTest {
   @Test
   public void testExecute() throws Exception {
