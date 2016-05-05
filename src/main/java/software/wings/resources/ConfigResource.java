@@ -54,7 +54,7 @@ public class ConfigResource {
   public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entity_id") String entityId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
       @BeanParam PageRequest<ConfigFile> pageRequest) {
-    pageRequest.addFilter("template_id", templateId, EQ);
+    pageRequest.addFilter("templateId", templateId, EQ);
     pageRequest.addFilter("entityId", entityId, EQ);
     return new RestResponse<>(configService.list(pageRequest));
   }
