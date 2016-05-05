@@ -11,7 +11,6 @@ import com.google.inject.name.Names;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
 import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
-import com.ifesdjeen.timer.HashedWheelTimer;
 import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
@@ -27,6 +26,7 @@ import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
@@ -45,6 +45,7 @@ import software.wings.service.impl.SshNodeSetExecutorServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
@@ -73,6 +74,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -160,14 +162,15 @@ public class WingsModule extends AbstractModule {
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("timer"))
-        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
     bind(new TypeLiteral<Queue<NotifyEvent>>() {})
         .toInstance(new MongoQueueImpl<>(NotifyEvent.class, primaryDatastore));
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifier"))
-        .toInstance(new ManagedScheduledExecutorService(new HashedWheelTimer()));
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
     bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
     bind(TagService.class).to(TagServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);
+    bind(AppContainerService.class).to(AppContainerServiceImpl.class);
   }
 }

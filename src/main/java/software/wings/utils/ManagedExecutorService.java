@@ -99,6 +99,8 @@ public class ManagedExecutorService implements ExecutorService, Managed {
 
   @Override
   public void stop() throws Exception {
-    executorService.shutdownNow();
+    for (Runnable runnable : executorService.shutdownNow()) {
+      ((Future<?>) runnable).get();
+    }
   }
 }

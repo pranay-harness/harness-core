@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 
 import com.google.common.collect.Lists;
 
@@ -16,7 +16,7 @@ public class PageResponseTest {
     PageResponse pageResponse = new PageResponse();
     pageResponse.setResponse(Lists.newArrayList());
     pageResponse.setTotal(100);
-    assertThat(JsonUtils.asJson(pageResponse))
+    assertThatJson(JsonUtils.asJson(pageResponse))
         .isEqualTo("{\"offset\":null,\"start\":0,\"limit\":null,\"pageSize\":50,\"filters\":[],"
             + "\"orders\":[],\"fieldsIncluded\":[],\"fieldsExcluded\":[],\"response\":[],"
             + "\"total\":100,\"empty\":true,\"currentPage\":1,\"or\":false}");
