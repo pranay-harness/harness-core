@@ -6,6 +6,7 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -36,7 +37,7 @@ public class RepeatStateTest {
     String stateName = "test";
 
     ExpressionEvaluator evaluator = Mockito.mock(ExpressionEvaluator.class);
-    when(evaluator.evaluate("services()", null)).thenReturn(repeatElements);
+    when(evaluator.sanitizeAndEvaluate(anyString(), anyObject(), anyString())).thenReturn(repeatElements);
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, evaluator);
 
@@ -66,7 +67,7 @@ public class RepeatStateTest {
     String stateName = "test";
 
     ExpressionEvaluator evaluator = Mockito.mock(ExpressionEvaluator.class);
-    when(evaluator.evaluate("services()", null)).thenReturn(repeatElements);
+    when(evaluator.sanitizeAndEvaluate(anyString(), anyObject(), anyString())).thenReturn(repeatElements);
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, evaluator);
 
