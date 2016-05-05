@@ -63,13 +63,13 @@ public class ConfigResource {
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("entity_id") String entityId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
-      @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
+      @FormDataParam("name") String name, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
                                 .withEntityId(entityId)
                                 .withTemplateId(templateId)
-                                .withName(fileName)
+                                .withName(name)
                                 .withRelativePath(relativePath)
                                 .withChecksum(md5)
                                 .build();
@@ -86,13 +86,13 @@ public class ConfigResource {
   @PUT
   @Path("{config_id}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void update(@PathParam("config_id") String configId, @FormDataParam("fileName") String fileName,
+  public void update(@PathParam("config_id") String configId, @FormDataParam("name") String name,
       @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
                                 .withUuid(configId)
-                                .withName(fileName)
+                                .withName(name)
                                 .withRelativePath(relativePath)
                                 .withChecksum(md5)
                                 .build();
