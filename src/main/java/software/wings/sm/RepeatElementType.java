@@ -5,10 +5,21 @@ package software.wings.sm;
  * @author Rishi
  */
 public enum RepeatElementType {
-  SERVICE,
-  PHASE,
-  DATA_CENTER,
-  OZ,
-  HOST,
-  OTHER;
+  SERVICE("service"),
+  PHASE("phase"),
+  DATA_CENTER("dataCenter"),
+  OZ("operationalZone"),
+  HOST("host"),
+  OTHER("");
+
+  private String displayName;
+  RepeatElementType(String displayName) {
+    this.displayName = displayName;
+  }
+  public String getDisplayName() {
+    return displayName;
+  }
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
 }

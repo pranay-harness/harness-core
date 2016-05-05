@@ -37,7 +37,7 @@ public abstract class State implements Serializable {
 
   public abstract ExecutionResponse execute(ExecutionContext context);
 
-  public Transition handleEvent(ExecutionContext context, StateMachine sm, StateEvent event, Exception ex) {
+  public Transition handleEvent(ExecutionContextImpl context, StateMachine sm, StateEvent event, Exception ex) {
     return null;
   }
 
@@ -53,7 +53,7 @@ public abstract class State implements Serializable {
    * @return Response from handling this state.
    */
   public ExecutionResponse handleAsynchResponse(
-      ExecutionContext context, Map<String, ? extends Serializable> response) {
+      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;
   }

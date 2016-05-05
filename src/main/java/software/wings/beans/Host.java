@@ -4,6 +4,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.sm.RepeatElementType;
+import software.wings.sm.Repeatable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +13,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Entity(value = "hosts", noClassnameStored = true)
-public class Host extends Base {
+public class Host extends Base implements Repeatable {
   public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
 
   @Indexed private String applicationId;
@@ -314,5 +316,15 @@ public class Host extends Base {
       host.setActive(active);
       return host;
     }
+  }
+
+  @Override
+  public RepeatElementType getRepeatElementType() {
+    return RepeatElementType.HOST;
+  }
+
+  @Override
+  public String getName() {
+    return hostName;
   }
 }

@@ -99,10 +99,12 @@ public class StateMachineTest {
     @Override
     public ExecutionResponse execute(ExecutionContext context) {
       System.out.println("Executing ..." + getClass());
-      context.setParam(getName(), System.currentTimeMillis());
+      ExecutionResponse response = new ExecutionResponse();
+      StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
+      response.setStateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
-      System.out.println("context params:" + context.getParams());
-      return new ExecutionResponse();
+      System.out.println("stateExecutionData:" + stateExecutionData);
+      return response;
     }
   }
 
@@ -134,6 +136,41 @@ public class StateMachineTest {
       response.setCorrelationIds(correlationIds);
       ThreadPool.execute(new Notifier(uuid, duration));
       return response;
+    }
+  }
+
+  public static class TestStateExecutionData extends StateExecutionData {
+    private static final long serialVersionUID = -4839494609772157079L;
+    private String key;
+    private String value;
+
+    public TestStateExecutionData() {}
+
+    public TestStateExecutionData(String key, String value) {
+      super();
+      this.key = key;
+      this.value = value;
+    }
+
+    public String getKey() {
+      return key;
+    }
+
+    public void setKey(String key) {
+      this.key = key;
+    }
+
+    public String getValue() {
+      return value;
+    }
+
+    public void setValue(String value) {
+      this.value = value;
+    }
+
+    @Override
+    public String toString() {
+      return "TestStateExecutionData [key=" + key + ", value=" + value + "]";
     }
   }
 }

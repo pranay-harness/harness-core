@@ -10,16 +10,13 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -68,17 +65,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public void trigger(String smId) {
-    trigger(smId, null);
-  }
-
-  @Override
-  public void trigger(String smId, Map<String, Serializable> arguments) {
-    trigger(smId, arguments, null);
-  }
-
-  @Override
-  public void trigger(String smId, Map<String, Serializable> arguments, StateMachineExecutionCallback callback) {
-    stateMachineExecutor.execute(smId, arguments);
+    stateMachineExecutor.execute(smId);
   }
 
   @Override

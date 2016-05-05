@@ -123,4 +123,10 @@ public class JsonUtils {
       throws JsonParseException, JsonMappingException, IOException {
     mapper.readValue(jsonString, valueTypeRef);
   }
+
+  public static <T> T clone(T t, Class<T> cls) {
+    String json = asJson(t);
+    logger.debug("Cloning Object - json: {}", json);
+    return asObject(json, cls);
+  }
 }

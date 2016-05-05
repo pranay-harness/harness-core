@@ -1,8 +1,6 @@
 package software.wings.sm;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents state machine execution data.
@@ -11,10 +9,18 @@ import java.util.Map;
 public class StateExecutionData implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  private String stateName;
   private long startTs;
   private long endTs;
   private ExecutionStatus status;
-  private Map<String, ? extends Serializable> addlData = new HashMap<>();
+
+  public String getStateName() {
+    return stateName;
+  }
+
+  public void setStateName(String stateName) {
+    this.stateName = stateName;
+  }
 
   public long getStartTs() {
     return startTs;
@@ -38,13 +44,5 @@ public class StateExecutionData implements Serializable {
 
   public void setStatus(ExecutionStatus status) {
     this.status = status;
-  }
-
-  public Map<String, ? extends Serializable> getAddlData() {
-    return addlData;
-  }
-
-  public void setAddlData(Map<String, ? extends Serializable> addlData) {
-    this.addlData = addlData;
   }
 }

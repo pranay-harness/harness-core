@@ -27,7 +27,8 @@ public enum StateType implements StateTypeDescriptor {
   STOP,
   RESTART,
   DEPLOY,
-  STATE_MACHINE;
+  STATE_MACHINE,
+  EMAIL;
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String jsonSchemaSuffix = "-JSONSchema.json";

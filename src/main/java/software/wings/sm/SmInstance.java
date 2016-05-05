@@ -14,7 +14,7 @@ public class SmInstance extends Base {
   private String stateMachineId;
   private String stateName;
 
-  @Serialized private ExecutionContext context;
+  @Serialized private ExecutionContextImpl context;
   private String parentInstanceId;
   private String cloneInstanceId;
   private String notifyId;
@@ -23,11 +23,11 @@ public class SmInstance extends Base {
   private Long startTs;
   private Long endTs;
 
-  public ExecutionContext getContext() {
+  public ExecutionContextImpl getContext() {
     return context;
   }
 
-  public void setContext(ExecutionContext context) {
+  public void setContext(ExecutionContextImpl context) {
     this.context = context;
   }
 

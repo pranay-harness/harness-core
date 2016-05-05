@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 /**
  * Describes a ForkState by which we can fork execution to multiple threads in state machine.
+ *
  * @author Rishi
  */
 public class ForkState extends State {
@@ -23,17 +25,21 @@ public class ForkState extends State {
     super(name, StateType.FORK.name());
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
    */
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
+  public ExecutionResponse execute(ExecutionContext contextIntf) {
+    ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
     SmInstance smInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
     for (String state : forkStateNames) {
       String notifyId = smInstance.getUuid() + "-forkTo-" + state;
+      ExecutionContextImpl contextClone = SerializationUtils.clone(context);
       WingsBootstrap.lookup(StateMachineExecutor.class)
-          .execute(smInstance.getStateMachineId(), state, context, smInstance.getUuid(), notifyId);
+          .execute(smInstance.getStateMachineId(), state, contextClone, smInstance.getUuid(), notifyId);
       correlationIds.add(notifyId);
     }
 
@@ -45,7 +51,7 @@ public class ForkState extends State {
 
   @Override
   public ExecutionResponse handleAsynchResponse(
-      ExecutionContext context, Map<String, ? extends Serializable> response) {
+      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     for (Serializable status : response.values()) {
       ExecutionStatus executionStatus = (ExecutionStatus) status;

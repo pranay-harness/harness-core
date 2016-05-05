@@ -12,7 +12,8 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
@@ -31,32 +32,31 @@ public class StateMachineExecutor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   public void execute(StateMachine sm) {
-    execute(sm, new HashMap<String, Serializable>());
+    execute(sm, new ArrayList<>());
   }
 
   /**
    * Starts execution of a state machine with given arguments.
    *
    * @param sm        StateMachine to execute.
-   * @param arguments context arguments.
+   * @param arguments contextParams arguments.
    */
-  public void execute(StateMachine sm, Map<String, Serializable> arguments) {
+  public void execute(StateMachine sm, List<Repeatable> contextParams) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
     }
 
-    ExecutionContext context = new ExecutionContext();
-    if (arguments == null) {
-      arguments = new HashMap<>();
+    ExecutionContextImpl context = new ExecutionContextImpl();
+    if (contextParams != null) {
+      context.getContextElements().addAll(contextParams);
     }
-    context.setParams(arguments);
     context.setStateMachineId(sm.getUuid());
 
     execute(sm, sm.getInitialState().getName(), context);
   }
 
-  public void execute(StateMachine sm, String stateName, ExecutionContext context) {
+  public void execute(StateMachine sm, String stateName, ExecutionContextImpl context) {
     execute(sm, stateName, context, null, null);
   }
 
@@ -70,7 +70,7 @@ public class StateMachineExecutor {
    * @param notifyId         id to notify on.
    */
   public void execute(
-      StateMachine sm, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
+      StateMachine sm, String stateName, ExecutionContextImpl context, String parentInstanceId, String notifyId) {
     SmInstance smInstance = new SmInstance();
     smInstance.setContext(context);
     smInstance.setStateName(stateName);
@@ -82,12 +82,12 @@ public class StateMachineExecutor {
     executorService.submit(new SmExecutionDispatcher(sm, this, smInstance));
   }
 
-  public void execute(String smId, Map<String, Serializable> arguments) {
-    execute(wingsPersistence.get(StateMachine.class, smId), arguments);
+  public void execute(String smId) {
+    execute(wingsPersistence.get(StateMachine.class, smId));
   }
 
   public void execute(
-      String smId, String stateName, ExecutionContext context, String parentInstanceId, String notifyId) {
+      String smId, String stateName, ExecutionContextImpl context, String parentInstanceId, String notifyId) {
     execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
   }
 
@@ -147,7 +147,7 @@ public class StateMachineExecutor {
     logger.info("Error seen in the state execution  - currentState : {}, smInstanceId: {}", currentState,
         smInstance.getUuid(), exception);
     try {
-      updateContext(smInstance);
+      updateContext(smInstance, null);
       failedTransition(waitNotifyEngine, sm, smInstance);
     } catch (Exception e2) {
       logger.error("Error in transitioning to failure state", e2);
@@ -156,7 +156,7 @@ public class StateMachineExecutor {
 
   private void handleExecuteResponse(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
       NotifyCallback callback, State currentState, ExecutionResponse executionResponse) {
-    updateContext(smInstance);
+    updateContext(smInstance, executionResponse);
     if (executionResponse.isAsynch()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
@@ -215,10 +215,14 @@ public class StateMachineExecutor {
     wingsPersistence.update(smInstance, ops);
   }
 
-  private void updateContext(SmInstance smInstance) {
-    ExecutionContext context = smInstance.getContext();
-    if (!context.isDirty()) {
+  private void updateContext(SmInstance smInstance, ExecutionResponse executionResponse) {
+    ExecutionContextImpl context = smInstance.getContext();
+    if (!context.isDirty() && executionResponse.getStateExecutionData() == null) {
       return;
+    }
+
+    if (executionResponse.getStateExecutionData() != null) {
+      context.getStateExecutionMap().put(smInstance.getStateName(), executionResponse.getStateExecutionData());
     }
     UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);
     ops.set("context", smInstance.getContext());

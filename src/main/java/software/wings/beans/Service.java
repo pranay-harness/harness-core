@@ -4,6 +4,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ArtifactSource.ArtifactType;
+import software.wings.sm.RepeatElementType;
+import software.wings.sm.Repeatable;
 
 import java.util.List;
 import java.util.Objects;
@@ -14,7 +16,7 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "services", noClassnameStored = true)
-public class Service extends Base {
+public class Service extends Base implements Repeatable {
   private String name;
   private String description;
   private ArtifactType artifactType;
@@ -23,6 +25,7 @@ public class Service extends Base {
 
   @Transient private List<ConfigFile> configFiles;
 
+  @Override
   public String getName() {
     return name;
   }
@@ -186,5 +189,10 @@ public class Service extends Base {
       service.setActive(active);
       return service;
     }
+  }
+
+  @Override
+  public RepeatElementType getRepeatElementType() {
+    return RepeatElementType.SERVICE;
   }
 }

@@ -1,9 +1,6 @@
 package software.wings.sm;
 
-import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Describes response of an execution.
@@ -14,7 +11,7 @@ public class ExecutionResponse {
   private List<String> correlationIds;
   private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
   private String errorMessage;
-  private Map<String, ? extends Serializable> response = new HashMap<>();
+  private StateExecutionData stateExecutionData;
 
   public boolean isAsynch() {
     return asynch;
@@ -32,12 +29,12 @@ public class ExecutionResponse {
     this.correlationIds = correlationIds;
   }
 
-  public Map<String, ? extends Serializable> getResponse() {
-    return response;
+  public StateExecutionData getStateExecutionData() {
+    return stateExecutionData;
   }
 
-  public void setResponse(Map<String, ? extends Serializable> response) {
-    this.response = response;
+  public void setStateExecutionData(StateExecutionData stateExecutionData) {
+    this.stateExecutionData = stateExecutionData;
   }
 
   public ExecutionStatus getExecutionStatus() {
