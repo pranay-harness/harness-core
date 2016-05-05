@@ -16,7 +16,7 @@ public class BaseFile extends Base {
   private String name;
   private String mimeType;
   private long size;
-  private ChecksumType checksumType;
+  private ChecksumType checksumType = MD5;
   private String checksum;
 
   public BaseFile() {}
@@ -25,7 +25,6 @@ public class BaseFile extends Base {
     this.name = fileName;
     if (StringUtils.isNotBlank(md5)) {
       this.checksum = md5;
-      this.checksumType = MD5;
     }
   }
 

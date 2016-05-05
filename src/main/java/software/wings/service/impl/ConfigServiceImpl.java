@@ -2,15 +2,18 @@ package software.wings.service.impl;
 
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -21,9 +24,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private FileService fileService;
 
   @Override
-  public List<ConfigFile> list(String entityId) {
-    Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class).field("entityId").equal(entityId);
-    return query.asList();
+  public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {
+    return wingsPersistence.query(ConfigFile.class, request);
   }
 
   @Override
@@ -36,10 +38,20 @@ public class ConfigServiceImpl implements ConfigService {
   public ConfigFile get(String configId) {
     return wingsPersistence.get(ConfigFile.class, configId);
   }
+
   @Override
   public void update(ConfigFile configFile, InputStream uploadedInputStream) {
-    fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
-    wingsPersistence.save(configFile); // FIXME: selective field update
+    if (uploadedInputStream != null) {
+      fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
+    }
+
+    Map<String, Object> updateMap = new HashMap<>();
+    updateMap.put("name", configFile.getName());
+    updateMap.put("relativePath", configFile.getRelativePath());
+    if (configFile.getChecksum() != null) {
+      updateMap.put("checksum", configFile.getChecksum());
+    }
+    wingsPersistence.updateFields(ConfigFile.class, configFile.getEntityId(), updateMap);
   }
 
   @Override
