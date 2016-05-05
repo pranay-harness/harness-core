@@ -50,7 +50,8 @@ public class ServiceResource {
   }
 
   @POST
-  public RestResponse<Service> save(Service service) {
+  public RestResponse<Service> save(@QueryParam("app_id") String appId, Service service) {
+    service.setAppId(appId);
     return new RestResponse<>(srs.save(service));
   }
 
