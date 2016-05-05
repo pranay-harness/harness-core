@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseUnitTest;
 import software.wings.beans.Host;
@@ -11,7 +12,7 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 3/30/16.
  */
-
+@Ignore
 public class InfraServiceTest extends WingsBaseUnitTest {
   @Inject private InfraService infraService;
 
