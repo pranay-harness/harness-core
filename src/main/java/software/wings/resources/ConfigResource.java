@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
@@ -10,6 +11,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.ConfigService;
 
@@ -19,7 +22,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.List;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -30,6 +33,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -40,28 +44,32 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author Rishi
  */
 
-@Path("/configs/{entityId}")
+@Path("/configs")
 @Produces("application/json")
 public class ConfigResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ConfigService configService;
 
   @GET
-  public RestResponse<List<ConfigFile>> fetchConfigs(@PathParam("entityId") String entityId) {
-    return new RestResponse<>(configService.list(entityId));
+  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entity_id") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
+      @BeanParam PageRequest<ConfigFile> pageRequest) {
+    pageRequest.addFilter("templateId", templateId, EQ);
+    pageRequest.addFilter("entityId", entityId, EQ);
+    return new RestResponse<>(configService.list(pageRequest));
   }
 
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadConfig(@PathParam("entityId") String entityId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @FormDataParam("templateId") String templateId,
-      @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
+  public RestResponse<String> save(@QueryParam("entity_id") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
+      @FormDataParam("name") String name, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
                                 .withEntityId(entityId)
                                 .withTemplateId(templateId)
-                                .withName(fileName)
+                                .withName(name)
                                 .withRelativePath(relativePath)
                                 .withChecksum(md5)
                                 .build();
@@ -70,22 +78,21 @@ public class ConfigResource {
   }
 
   @GET
-  @Path("{configId}")
-  public RestResponse<ConfigFile> fetchConfig(@PathParam("configId") String configId) {
+  @Path("{config_id}")
+  public RestResponse<ConfigFile> get(@PathParam("config_id") String configId) {
     return new RestResponse<>(configService.get(configId));
   }
 
   @PUT
-  @Path("{configId}")
+  @Path("{config_id}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void updateConfig(@PathParam("entityId") String entityId, @PathParam("configId") String configId,
-      @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
-      @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
+  public void update(@PathParam("config_id") String configId, @FormDataParam("name") String name,
+      @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
                                 .withUuid(configId)
-                                .withEntityId(entityId)
-                                .withName(fileName)
+                                .withName(name)
                                 .withRelativePath(relativePath)
                                 .withChecksum(md5)
                                 .build();
@@ -93,8 +100,8 @@ public class ConfigResource {
   }
 
   @DELETE
-  @Path("{configId}")
-  public void delete(@PathParam("configId") String configId) {
+  @Path("{config_id}")
+  public void delete(@PathParam("config_id") String configId) {
     configService.delete(configId);
   }
 

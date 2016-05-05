@@ -57,18 +57,16 @@ public class AppContainerServiceImpl implements AppContainerService {
   }
 
   @Override
-  public void delete(String platformId) {
+  public void delete(String appContainerId) {
     Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
     for (Service service : application.getServices()) {
-      for (AppContainer appContainer : service.getAppContainers()) {
-        if (appContainer.getUuid().equals(platformId)) {
-          throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
-        }
+      if (service.getAppContainer().getUuid().equals(appContainerId)) {
+        throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
       }
     }
     // safe to delete
-    AppContainer appContainer = wingsPersistence.get(AppContainer.class, platformId);
-    wingsPersistence.delete(AppContainer.class, platformId);
+    AppContainer appContainer = wingsPersistence.get(AppContainer.class, appContainerId);
+    wingsPersistence.delete(AppContainer.class, appContainerId);
     fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
   }
 

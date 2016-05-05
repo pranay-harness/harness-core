@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.ConfigFile;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 
 import java.io.InputStream;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.List;
  * Created by anubhaw on 4/25/16.
  */
 public interface ConfigService {
-  List<ConfigFile> list(String entityId);
+  PageResponse<ConfigFile> list(PageRequest<ConfigFile> request);
 
   String save(ConfigFile configFile, InputStream inputStream);
 

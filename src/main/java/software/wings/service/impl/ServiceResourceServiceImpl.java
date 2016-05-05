@@ -35,7 +35,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
-    wingsPersistence.addToList(Application.class, service.getAppId(), "services", savedService);
+    wingsPersistence.addToList(Application.class, service.getAppId(), "services", savedService); // TODO: remove it
     return savedService;
   }
 
@@ -50,7 +50,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Override
   public Service get(String serviceId) {
     Service service = wingsPersistence.get(Service.class, serviceId);
-    service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+    if (service != null) {
+      service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+    }
     return service;
   }
 

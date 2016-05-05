@@ -22,7 +22,7 @@ public class Service extends Base implements Repeatable {
   private String description;
   private ArtifactType artifactType;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<AppContainer> appContainers;
+  @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
   @Transient private List<ConfigFile> configFiles;
 
@@ -59,21 +59,21 @@ public class Service extends Base implements Repeatable {
     this.artifactType = artifactType;
   }
 
-  public List<AppContainer> getAppContainers() {
-    return appContainers;
-  }
-
-  public void setAppContainers(List<AppContainer> appContainers) {
-    this.appContainers = appContainers;
-  }
-
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
 
+  public AppContainer getAppContainer() {
+    return appContainer;
+  }
+
+  public void setAppContainer(AppContainer appContainer) {
+    this.appContainer = appContainer;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, appId, description, artifactType, appContainers, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, appId, description, artifactType, appContainer, configFiles);
   }
 
   @Override
@@ -90,8 +90,12 @@ public class Service extends Base implements Repeatable {
     final Service other = (Service) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.appId, other.appId)
         && Objects.equals(this.description, other.description) && Objects.equals(this.artifactType, other.artifactType)
-        && Objects.equals(this.appContainers, other.appContainers)
-        && Objects.equals(this.configFiles, other.configFiles);
+        && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles);
+  }
+
+  @Override
+  public RepeatElementType getRepeatElementType() {
+    return RepeatElementType.SERVICE;
   }
 
   public static final class ServiceBuilder {
@@ -99,7 +103,7 @@ public class Service extends Base implements Repeatable {
     private String appId;
     private String description;
     private ArtifactType artifactType;
-    private List<AppContainer> appContainers;
+    private AppContainer appContainer;
     private List<ConfigFile> configFiles;
     private String uuid;
     private User createdBy;
@@ -134,8 +138,8 @@ public class Service extends Base implements Repeatable {
       return this;
     }
 
-    public ServiceBuilder withAppContainers(List<AppContainer> appContainers) {
-      this.appContainers = appContainers;
+    public ServiceBuilder withAppContainer(AppContainer appContainer) {
+      this.appContainer = appContainer;
       return this;
     }
 
@@ -180,7 +184,7 @@ public class Service extends Base implements Repeatable {
           .withAppId(appId)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withAppContainers(appContainers)
+          .withAppContainer(appContainer)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withCreatedBy(createdBy)
@@ -196,7 +200,7 @@ public class Service extends Base implements Repeatable {
       service.setAppId(appId);
       service.setDescription(description);
       service.setArtifactType(artifactType);
-      service.setAppContainers(appContainers);
+      service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
       service.setUuid(uuid);
       service.setCreatedBy(createdBy);
@@ -206,10 +210,5 @@ public class Service extends Base implements Repeatable {
       service.setActive(active);
       return service;
     }
-  }
-
-  @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.SERVICE;
   }
 }
