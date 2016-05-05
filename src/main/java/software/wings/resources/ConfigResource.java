@@ -51,15 +51,17 @@ public class ConfigResource {
   @Inject private ConfigService configService;
 
   @GET
-  public RestResponse<PageResponse<ConfigFile>> fetchConfigs(
-      @QueryParam("entity_id") String entityId, @BeanParam PageRequest<ConfigFile> pageRequest) {
+  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entity_id") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
+      @BeanParam PageRequest<ConfigFile> pageRequest) {
+    pageRequest.addFilter("template_id", templateId, EQ);
     pageRequest.addFilter("entityId", entityId, EQ);
     return new RestResponse<>(configService.list(pageRequest));
   }
 
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadConfig(@QueryParam("entity_id") String entityId,
+  public RestResponse<String> save(@QueryParam("entity_id") String entityId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
       @FormDataParam("fileName") String fileName, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
@@ -77,14 +79,14 @@ public class ConfigResource {
 
   @GET
   @Path("{config_id}")
-  public RestResponse<ConfigFile> fetchConfig(@PathParam("config_id") String configId) {
+  public RestResponse<ConfigFile> get(@PathParam("config_id") String configId) {
     return new RestResponse<>(configService.get(configId));
   }
 
   @PUT
   @Path("{config_id}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void updateConfig(@PathParam("config_id") String configId, @FormDataParam("fileName") String fileName,
+  public void update(@PathParam("config_id") String configId, @FormDataParam("fileName") String fileName,
       @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
