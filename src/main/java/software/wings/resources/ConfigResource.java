@@ -101,8 +101,9 @@ public class ConfigResource {
 
   @DELETE
   @Path("{config_id}")
-  public void delete(@PathParam("config_id") String configId) {
+  public RestResponse delete(@PathParam("config_id") String configId) {
     configService.delete(configId);
+    return new RestResponse();
   }
 
   @GET

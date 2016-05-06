@@ -54,8 +54,9 @@ public class UserResource {
 
   @DELETE
   @Path("{userId}")
-  public void delete(@PathParam("userId") String userId) {
+  public RestResponse delete(@PathParam("userId") String userId) {
     userService.delete(userId);
+    return new RestResponse();
   }
 
   @GET

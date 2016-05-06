@@ -1,7 +1,5 @@
 package software.wings.resources;
 
-import static com.google.common.collect.ImmutableMap.of;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.slf4j.Logger;
@@ -70,6 +68,6 @@ public class AppResource {
   @Path("{app_id}")
   public RestResponse delete(@PathParam("app_id") String appId) {
     appService.deleteApp(appId);
-    return new RestResponse(of("status", "success"));
+    return new RestResponse();
   }
 }
