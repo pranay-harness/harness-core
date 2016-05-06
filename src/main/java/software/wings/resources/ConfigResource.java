@@ -86,7 +86,7 @@ public class ConfigResource {
   @PUT
   @Path("{config_id}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void update(@PathParam("config_id") String configId, @FormDataParam("name") String name,
+  public RestResponse update(@PathParam("config_id") String configId, @FormDataParam("name") String name,
       @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -97,6 +97,7 @@ public class ConfigResource {
                                 .withChecksum(md5)
                                 .build();
     configService.update(configFile, uploadedInputStream);
+    return new RestResponse();
   }
 
   @DELETE
