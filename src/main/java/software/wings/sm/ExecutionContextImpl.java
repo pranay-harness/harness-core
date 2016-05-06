@@ -17,7 +17,7 @@ import java.util.Map;
 public class ExecutionContextImpl implements ExecutionContext, Serializable {
   private static final long serialVersionUID = 1L;
   private String stateMachineId;
-  private Map<String, Serializable> standardParams = new HashMap<>();
+  private ExecutionStandardParams standardParams;
   private Deque<Repeatable> contextElements = new ArrayDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
 
@@ -26,25 +26,6 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   private boolean dirty = false;
 
   private transient ExpressionEvaluator evaluator;
-
-  public Map<String, Serializable> getStandardParams() {
-    return standardParams;
-  }
-
-  public void setStandardParams(Map<String, Serializable> standardParams) {
-    this.standardParams = standardParams;
-    dirty = true;
-  }
-
-  public void putStandardParam(String standardParamName, Serializable standardParamValue) {
-    standardParams.put(standardParamName, standardParamValue);
-    dirty = true;
-  }
-
-  public void removeStandardParam(String standardParamName) {
-    standardParams.remove(standardParamName);
-    dirty = true;
-  }
 
   public Deque<Repeatable> getContextElements() {
     return contextElements;
@@ -112,7 +93,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return getEvaluator().sanitizeAndRender(expression, context, smInstance.getStateName());
+    return getEvaluator().merge(expression, context, smInstance.getStateName());
   }
 
   @Override
@@ -128,7 +109,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    return getEvaluator().sanitizeAndEvaluate(expression, context, smInstance.getStateName());
+    return getEvaluator().evaluate(expression, context, smInstance.getStateName());
   }
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
@@ -150,7 +131,9 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
     context.putAll(prepareContextParams());
 
     // add standard params
-    context.putAll(standardParams);
+    if (standardParams != null) {
+      context.putAll(standardParams.paramMap());
+    }
 
     return context;
   }

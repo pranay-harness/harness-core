@@ -5,14 +5,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.JsonUtils;
+import software.wings.WingsBaseUnitTest;
+import software.wings.utils.JsonUtils;
+
+import javax.inject.Inject;
 
 /**
  * Test case
  *
  * @author Rishi
  */
-public class ApplicationTest {
+public class ApplicationTest extends WingsBaseUnitTest {
+  @Inject private JsonUtils jsonUtils;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Test
@@ -25,10 +30,10 @@ public class ApplicationTest {
     app.onSave();
     logger.debug("TestApp : " + app);
 
-    String json = JsonUtils.asJson(app);
+    String json = jsonUtils.asJson(app);
     logger.debug("json : " + json);
 
-    Application app2 = JsonUtils.asObject(json, Application.class);
+    Application app2 = jsonUtils.asObject(json, Application.class);
     assertThat(app2).isEqualToComparingFieldByField(app);
   }
 }

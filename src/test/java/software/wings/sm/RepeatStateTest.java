@@ -6,7 +6,7 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +16,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.Service;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.RepeatState.RepeatStateExecutionData;
@@ -30,14 +31,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Rishi
  *
  */
-public class RepeatStateTest {
+public class RepeatStateTest extends WingsBaseUnitTest {
   @Test
   public void shouldExecuteSerial() {
     List<Repeatable> repeatElements = getTestRepeatElements();
     String stateName = "test";
 
     ExpressionEvaluator evaluator = Mockito.mock(ExpressionEvaluator.class);
-    when(evaluator.sanitizeAndEvaluate(anyString(), anyObject(), anyString())).thenReturn(repeatElements);
+    when(evaluator.evaluate(anyString(), anyMapOf(String.class, Object.class), anyString())).thenReturn(repeatElements);
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, evaluator);
 
@@ -67,7 +68,7 @@ public class RepeatStateTest {
     String stateName = "test";
 
     ExpressionEvaluator evaluator = Mockito.mock(ExpressionEvaluator.class);
-    when(evaluator.sanitizeAndEvaluate(anyString(), anyObject(), anyString())).thenReturn(repeatElements);
+    when(evaluator.evaluate(anyString(), anyMapOf(String.class, Object.class), anyString())).thenReturn(repeatElements);
 
     ExecutionContextImpl context = prepareExecutionContext(stateName, evaluator);
 

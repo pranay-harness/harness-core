@@ -1,26 +1,29 @@
 package software.wings.helpers.ext;
 
-import org.junit.Test;
-
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
+import org.junit.Test;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
-import software.wings.common.JsonUtils;
+import software.wings.utils.JsonUtils;
 
-public class JsonTest {
+import javax.inject.Inject;
+
+public class JsonTest extends WingsBaseUnitTest {
+  @Inject private JsonUtils jsonUtils;
+
   @Test
   public void testJson() {
     BaseA a = new BaseA();
-    String jsona = JsonUtils.asJson(a);
+    String jsona = jsonUtils.asJson(a);
     System.out.println(jsona);
     BaseB b = new BaseB();
-    String jsonb = JsonUtils.asJson(b);
+    String jsonb = jsonUtils.asJson(b);
     System.out.println(jsonb);
 
-    Base a2 = JsonUtils.asObject(jsona, Base.class);
-    Base b2 = JsonUtils.asObject(jsonb, Base.class);
+    Base a2 = jsonUtils.asObject(jsona, Base.class);
+    Base b2 = jsonUtils.asObject(jsonb, Base.class);
 
     System.out.println(b2.getBaseType());
   }
@@ -37,7 +40,7 @@ public class JsonTest {
     jenkins.setArtifactPathRegex("abc.war");
     rel.addArtifactSources("account", jenkins);
 
-    String json = JsonUtils.asJson(rel);
+    String json = jsonUtils.asJson(rel);
     System.out.println(json);
   }
 

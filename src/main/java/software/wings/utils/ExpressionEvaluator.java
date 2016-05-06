@@ -52,12 +52,12 @@ public class ExpressionEvaluator {
     return retValue;
   }
 
-  public Object sanitizeAndEvaluate(String expression, Map<String, Object> context, String prefixForUnknown) {
-    expression = sanitizeExpression(expression, context, prefixForUnknown);
+  public Object evaluate(String expression, Map<String, Object> context, String prefixForUnknown) {
+    expression = normalizePrefix(expression, context, prefixForUnknown);
     return evaluate(expression, context);
   }
 
-  private String sanitizeExpression(String expression, Map<String, Object> context, String prefixForUnknown) {
+  private String normalizePrefix(String expression, Map<String, Object> context, String prefixForUnknown) {
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
@@ -84,11 +84,11 @@ public class ExpressionEvaluator {
     return sb.toString();
   }
 
-  public String render(String expression, Map<String, Object> context) {
-    return sanitizeAndRender(expression, context, null);
+  public String merge(String expression, Map<String, Object> context) {
+    return merge(expression, context, null);
   }
 
-  public String sanitizeAndRender(String expression, Map<String, Object> context, String prefixForUnknown) {
+  public String merge(String expression, Map<String, Object> context, String prefixForUnknown) {
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
@@ -110,7 +110,7 @@ public class ExpressionEvaluator {
         }
       }
 
-      String evaluatedValue = (String) evaluate(variable, context);
+      String evaluatedValue = String.valueOf(evaluate(variable, context));
       matcher.appendReplacement(sb, evaluatedValue);
     }
     matcher.appendTail(sb);

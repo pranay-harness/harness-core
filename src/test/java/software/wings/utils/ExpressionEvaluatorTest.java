@@ -22,13 +22,13 @@ public class ExpressionEvaluatorTest extends WingsBaseUnitTest {
   @Inject private ExpressionEvaluator expressionEvaluator;
 
   @Test
-  public void shouldRenderHostUrl() {
+  public void shouldEvaluateHostUrl() {
     String expression = "http://${host.hostName}:8080/health/status";
     Host host = new Host();
     host.setHostName("app123.application.com");
     Map<String, Object> context = new HashMap<>();
     context.put("host", host);
-    String retValue = expressionEvaluator.render(expression, context);
+    String retValue = expressionEvaluator.merge(expression, context);
     assertThat(retValue).isEqualTo("http://app123.application.com:8080/health/status");
   }
 
