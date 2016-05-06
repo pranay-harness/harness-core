@@ -64,6 +64,9 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
     }
   };
 
+  /**
+   * setup for test.
+   */
   @Before
   public void setUp() {
     reset(APP_SERVICE, RELEASE_SERVICE);

@@ -4,8 +4,8 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-
-import software.wings.app.WingsBootstrap;
+import software.wings.beans.Application;
+import software.wings.beans.ArtifactSource;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
@@ -15,11 +15,15 @@ import software.wings.service.intfc.ReleaseService;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * ReleaseResource class.
@@ -30,29 +34,84 @@ import javax.ws.rs.Produces;
 public class ReleaseResource {
   private ReleaseService releaseService;
 
+  private AppService appService;
+
   @Inject
-  public ReleaseResource(ReleaseService releaseService) {
+  public ReleaseResource(ReleaseService releaseService, AppService appService) {
+    this.appService = appService;
     this.releaseService = releaseService;
   }
 
+  public void setReleaseService(ReleaseService releaseService) {
+    this.releaseService = releaseService;
+  }
+
+  public void setAppService(AppService appService) {
+    this.appService = appService;
+  }
+
   @GET
-  @Path("{applicationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<PageResponse<Release>> list(
+      @QueryParam("app_id") String applicationId, @BeanParam PageRequest<Release> pageRequest) {
+    pageRequest.addFilter("application", applicationId, EQ);
+    return new RestResponse<>(releaseService.list(pageRequest));
+  }
+
+  /**
+   * Endpoint to create a new release.
+   *
+   * @param applicationId QueryParam app_id.
+   * @param release       release to be created.
+   * @return newly created release.
+   */
+  @POST
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<PageResponse<Release>> list(
-      @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Release> pageRequest) {
-    pageRequest.addFilter("application", applicationId, EQ);
-    return new RestResponse<PageResponse<Release>>(releaseService.list(pageRequest));
+  public RestResponse<Release> save(@QueryParam("app_id") String applicationId, Release release) {
+    try {
+      Application application = appService.findByUuid(applicationId);
+      if (application == null) {
+        throw new NotFoundException("application with id " + applicationId + " not found.");
+      }
+      release.setApplication(application);
+      return new RestResponse<>(releaseService.create(release));
+    } catch (Exception exception) {
+      exception.printStackTrace();
+      throw exception;
+    }
+  }
+
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  @Path("{id}")
+  public RestResponse<Release> update(
+      @QueryParam("app_id") String applicationId, @PathParam("id") String releaseId, Release release) {
+    release.setUuid(releaseId);
+    return new RestResponse<>(releaseService.update(release));
   }
 
   @POST
-  @Path("{applicationId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Release> save(@PathParam("applicationId") String applicationId, Release release) {
-    release.setApplication(WingsBootstrap.lookup(AppService.class).findByUuid(applicationId));
-    return new RestResponse<Release>(releaseService.create(release));
+  @Path("{id}/artifactsources")
+  public RestResponse<Release> addArtifactSource(
+      @QueryParam("app_id") String applicationId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
+    return new RestResponse<>(releaseService.addArtifactSource(releaseId, artifactSource));
+  }
+
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  @Path("{id}/artifactsources")
+  public RestResponse<Release> deleteArtifactSource(@QueryParam("app_id") String applicationId,
+      @PathParam("id") String releaseId, @BeanParam ArtifactSource artifactSource) {
+    return new RestResponse<>(releaseService.deleteArtifactSource(releaseId, artifactSource));
   }
 }

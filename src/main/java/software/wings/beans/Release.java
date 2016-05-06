@@ -1,29 +1,36 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
+import static java.util.stream.Collectors.toSet;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.utils.validation.FutureDate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Release bean class.
  *
  * @author Rishi
  */
-@Entity(value = "releases", noClassnameStored = true)
+@Entity(value = "releases")
 public class Release extends Base {
-  @Indexed @Reference(idOnly = true) private Application application;
+  @Indexed @Reference(idOnly = true, ignoreMissing = true) private Application application;
 
-  private String releaseName;
-  private String description;
-  private Map<String, ArtifactSource> artifactSources = new HashMap<>();
-  private Map<String, String> svcArtifactSourceMap = new HashMap<>();
-  private Map<String, String> svcPlatformMap = new HashMap<>();
+  @NotEmpty private String releaseName;
+  @NotEmpty private String description;
+  @FutureDate private long targetDate;
+
+  private List<ArtifactSource> artifactSources = Lists.newArrayList();
+
   private Status status = Status.ACTIVE;
 
   public String getReleaseName() {
@@ -50,28 +57,20 @@ public class Release extends Base {
     this.description = description;
   }
 
-  public Map<String, ArtifactSource> getArtifactSources() {
+  public long getTargetDate() {
+    return targetDate;
+  }
+
+  public void setTargetDate(long targetDate) {
+    this.targetDate = targetDate;
+  }
+
+  public List<ArtifactSource> getArtifactSources() {
     return artifactSources;
   }
 
-  public void setArtifactSources(Map<String, ArtifactSource> artifactSources) {
+  public void setArtifactSources(List<ArtifactSource> artifactSources) {
     this.artifactSources = artifactSources;
-  }
-
-  public Map<String, String> getSvcArtifactSourceMap() {
-    return svcArtifactSourceMap;
-  }
-
-  public void setSvcArtifactSourceMap(Map<String, String> svcArtifactSourceMap) {
-    this.svcArtifactSourceMap = svcArtifactSourceMap;
-  }
-
-  public Map<String, String> getSvcPlatformMap() {
-    return svcPlatformMap;
-  }
-
-  public void setSvcPlatformMap(Map<String, String> svcPlatformMap) {
-    this.svcPlatformMap = svcPlatformMap;
   }
 
   public Status getStatus() {
@@ -82,15 +81,17 @@ public class Release extends Base {
     this.status = status;
   }
 
-  public void addArtifactSources(String svcName, ArtifactSource artifactSource) {
-    artifactSources.put(artifactSource.getSourceName(), artifactSource);
-    svcArtifactSourceMap.put(svcName, artifactSource.getSourceName());
+  @JsonProperty("serviceIds")
+  public Set<String> getServiceIds() {
+    return artifactSources.stream().flatMap(artifactSource -> artifactSource.getServiceIds().stream()).collect(toSet());
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), application, releaseName, description, artifactSources, svcArtifactSourceMap,
-        svcPlatformMap, status);
+  public ArtifactSource get(String artifactSourceName) {
+    return getArtifactSources()
+        .stream()
+        .filter(artifactSource -> artifactSource.getSourceName().equals(artifactSourceName))
+        .findFirst()
+        .orElse(null);
   }
 
   @Override
@@ -105,10 +106,14 @@ public class Release extends Base {
       return false;
     }
     Release release = (Release) obj;
-    return Objects.equals(application, release.application) && Objects.equals(releaseName, release.releaseName)
-        && Objects.equals(description, release.description) && Objects.equals(artifactSources, release.artifactSources)
-        && Objects.equals(svcArtifactSourceMap, release.svcArtifactSourceMap)
-        && Objects.equals(svcPlatformMap, release.svcPlatformMap) && status == release.status;
+    return targetDate == release.targetDate && Objects.equal(releaseName, release.releaseName)
+        && Objects.equal(description, release.description) && Objects.equal(artifactSources, release.artifactSources)
+        && status == release.status;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), releaseName, description, targetDate, artifactSources, status);
   }
 
   @Override
@@ -117,9 +122,8 @@ public class Release extends Base {
         .add("application", application)
         .add("releaseName", releaseName)
         .add("description", description)
+        .add("targetDate", targetDate)
         .add("artifactSources", artifactSources)
-        .add("svcArtifactSourceMap", svcArtifactSourceMap)
-        .add("svcPlatformMap", svcPlatformMap)
         .add("status", status)
         .toString();
   }
@@ -130,13 +134,12 @@ public class Release extends Base {
     FINALIZED;
   }
 
-  public static class Builder {
+  public static final class Builder {
     private Application application;
     private String releaseName;
     private String description;
-    private Map<String, ArtifactSource> artifactSources = new HashMap<>();
-    private Map<String, String> svcArtifactSourceMap = new HashMap<>();
-    private Map<String, String> svcPlatformMap = new HashMap<>();
+    private long targetDate;
+    private List<ArtifactSource> artifactSources = Lists.newArrayList();
     private Status status = Status.ACTIVE;
     private String uuid;
     private User createdBy;
@@ -147,18 +150,80 @@ public class Release extends Base {
 
     private Builder() {}
 
+    public static Builder aRelease() {
+      return new Builder();
+    }
+
+    public Builder withApplication(Application application) {
+      this.application = application;
+      return this;
+    }
+
+    public Builder withReleaseName(String releaseName) {
+      this.releaseName = releaseName;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withTargetDate(long targetDate) {
+      this.targetDate = targetDate;
+      return this;
+    }
+
+    public Builder withArtifactSources(List<ArtifactSource> artifactSources) {
+      this.artifactSources = artifactSources;
+      return this;
+    }
+
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
     /**
-     * creates a copy of this builder object.
-     * @return builder object copy.
+     * @return copy of this builder.
      */
     public Builder but() {
       return aRelease()
           .withApplication(application)
           .withReleaseName(releaseName)
           .withDescription(description)
+          .withTargetDate(targetDate)
           .withArtifactSources(artifactSources)
-          .withSvcArtifactSourceMap(svcArtifactSourceMap)
-          .withSvcPlatformMap(svcPlatformMap)
           .withStatus(status)
           .withUuid(uuid)
           .withCreatedBy(createdBy)
@@ -168,87 +233,16 @@ public class Release extends Base {
           .withActive(active);
     }
 
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    public Builder withSvcPlatformMap(Map<String, String> svcPlatformMap) {
-      this.svcPlatformMap = svcPlatformMap;
-      return this;
-    }
-
-    public Builder withSvcArtifactSourceMap(Map<String, String> svcArtifactSourceMap) {
-      this.svcArtifactSourceMap = svcArtifactSourceMap;
-      return this;
-    }
-
-    public Builder withArtifactSources(Map<String, ArtifactSource> artifactSources) {
-      this.artifactSources = artifactSources;
-      return this;
-    }
-
-    public Builder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    public Builder withReleaseName(String releaseName) {
-      this.releaseName = releaseName;
-      return this;
-    }
-
-    public Builder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public static Builder aRelease() {
-      return new Builder();
-    }
-
     /**
-     * Builds Release object.
-     * @return Release object.
+     * @return a new release object with given fields.
      */
     public Release build() {
       Release release = new Release();
       release.setApplication(application);
       release.setReleaseName(releaseName);
       release.setDescription(description);
+      release.setTargetDate(targetDate);
       release.setArtifactSources(artifactSources);
-      release.setSvcArtifactSourceMap(svcArtifactSourceMap);
-      release.setSvcPlatformMap(svcPlatformMap);
       release.setStatus(status);
       release.setUuid(uuid);
       release.setCreatedBy(createdBy);

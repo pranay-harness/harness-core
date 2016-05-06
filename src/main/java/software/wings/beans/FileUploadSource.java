@@ -1,8 +1,22 @@
 package software.wings.beans;
 
+import java.util.List;
+import java.util.Set;
+
 public class FileUploadSource extends ArtifactSource {
+  private Set<String> serviceIds;
+
   public FileUploadSource() {
     super(SourceType.FILE_UPLOAD);
+  }
+
+  @Override
+  public Set<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  public void setServiceIds(Set<String> serviceIds) {
+    this.serviceIds = serviceIds;
   }
 
   @Override
@@ -10,18 +24,19 @@ public class FileUploadSource extends ArtifactSource {
     return null;
   }
 
-  public static class Builder {
+  public static final class Builder {
+    private Set<String> serviceIds;
     private String sourceName;
     private ArtifactType artifactType;
 
     private Builder() {}
 
-    public Builder but() {
-      return aFileUploadSource().withSourceName(sourceName).withArtifactType(artifactType);
+    public static Builder aFileUploadSource() {
+      return new Builder();
     }
 
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
+    public Builder withServiceIds(Set<String> serviceIds) {
+      this.serviceIds = serviceIds;
       return this;
     }
 
@@ -30,16 +45,17 @@ public class FileUploadSource extends ArtifactSource {
       return this;
     }
 
-    public static Builder aFileUploadSource() {
-      return new Builder();
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
+      return this;
     }
 
     /**
-     * creates a FileUploadSource Object.
-     * @return FileUploadSource object.
+     * @return A new FileUploadSource object with given fields.
      */
     public FileUploadSource build() {
       FileUploadSource fileUploadSource = new FileUploadSource();
+      fileUploadSource.setServiceIds(serviceIds);
       fileUploadSource.setSourceName(sourceName);
       fileUploadSource.setArtifactType(artifactType);
       return fileUploadSource;

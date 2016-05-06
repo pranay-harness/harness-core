@@ -33,12 +33,9 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
-
-  @Inject private ExecutorService executorService;
-
-  @Inject private WingsPersistence wingsPersistence;
-
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
+  @Inject private ExecutorService executorService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
@@ -67,7 +64,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  @ValidationGroups(value = {Update.class})
+  @ValidationGroups(Update.class)
   public Artifact update(@Valid Artifact artifact) {
     Artifact dbArtifact = wingsPersistence.get(Artifact.class, artifact.getUuid());
     dbArtifact.setDisplayName(artifact.getDisplayName());
@@ -119,7 +116,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     @Override
     public void run() {
       try {
-        ArtifactFile artifactFile = release.getArtifactSources().get(artifactSourceName).collect(null);
+        ArtifactFile artifactFile = release.get(artifactSourceName).collect(null);
         UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class)
                                              .set("artifactFile", artifactFile)
                                              .set("status", Status.READY);

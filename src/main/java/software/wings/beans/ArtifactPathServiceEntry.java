@@ -84,6 +84,9 @@ public class ArtifactPathServiceEntry {
       return this;
     }
 
+    /**
+     * @return A new ArtifactPathServiceEntry object.
+     */
     public ArtifactPathServiceEntry build() {
       ArtifactPathServiceEntry artifactPathServiceEntry = new ArtifactPathServiceEntry();
       artifactPathServiceEntry.setArtifactPathRegex(artifactPathRegex);

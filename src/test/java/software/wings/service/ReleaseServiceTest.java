@@ -50,6 +50,9 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
 
   @Inject private ReleaseService releaseService;
 
+  /**
+   * setup for test.
+   */
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(anApplication().withUuid("APP_ID").build());

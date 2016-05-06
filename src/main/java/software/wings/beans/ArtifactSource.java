@@ -5,8 +5,12 @@ import com.google.common.base.MoreObjects;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.Objects;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * ArtifactSource bean class.
@@ -14,12 +18,18 @@ import java.util.Objects;
  * @author Rishi
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "sourceType")
-@JsonSubTypes({ @Type(value = JenkinsArtifactSource.class, name = "JENKINS") })
+@JsonSubTypes({
+  @Type(value = JenkinsArtifactSource.class, name = "JENKINS")
+  , @Type(value = FileUploadSource.class, name = "FILE_UPLOAD"), @Type(value = FileUrlSource.class, name = "HTTP")
+})
 public abstract class ArtifactSource {
-  private String sourceName;
+  @NotEmpty private String sourceName;
 
-  private SourceType sourceType;
-  private ArtifactType artifactType;
+  @NotNull private SourceType sourceType;
+
+  @NotNull private ArtifactType artifactType;
+
+  private Map<String, String> svcAppContainerMap = new HashMap<>();
 
   public ArtifactSource(SourceType sourceType) {
     this.sourceType = sourceType;
@@ -51,20 +61,24 @@ public abstract class ArtifactSource {
 
   public abstract ArtifactFile collect(Object[] params);
 
+  public abstract Set<String> getServiceIds();
+
   @Override
-  public int hashCode() {
-    return Objects.hash(sourceName, sourceType, artifactType);
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    ArtifactSource that = (ArtifactSource) obj;
+    return com.google.common.base.Objects.equal(sourceName, that.sourceName) && sourceType == that.sourceType
+        && artifactType == that.artifactType;
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    ArtifactSource that = (ArtifactSource) o;
-    return Objects.equals(sourceName, that.sourceName) && sourceType == that.sourceType
-        && artifactType == that.artifactType;
+  public int hashCode() {
+    return com.google.common.base.Objects.hashCode(sourceName, sourceType, artifactType);
   }
 
   @Override

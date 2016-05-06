@@ -34,14 +34,14 @@ public class ArtifactServiceTest extends WingsBaseUnitTest {
                                          .withCreatedAt(System.currentTimeMillis())
                                          .withCreatedBy(anUser().withUuid("USER_ID").build());
 
+  /**
+   * test setup.
+   */
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(anApplication().withUuid("APP_ID").build());
     wingsRule.getDatastore().save(
-        aRelease()
-            .withUuid("RELEASE_ID")
-            .withApplication(wingsRule.getDatastore().find(Application.class, "uuid", "APP_ID").get())
-            .build());
+        aRelease().withUuid("RELEASE_ID").withApplication(anApplication().withUuid("APP_ID").build()).build());
   }
 
   @Test

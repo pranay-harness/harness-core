@@ -45,6 +45,7 @@ import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
@@ -57,6 +58,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -163,6 +165,7 @@ public class WingsRule implements MethodRule {
         bind(InfraService.class).to(InfraServiceImpl.class);
         bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
         bind(AppService.class).to(AppServiceImpl.class);
+        bind(ReleaseService.class).to(ReleaseServiceImpl.class);
       }
     });
     injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);

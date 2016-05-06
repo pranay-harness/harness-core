@@ -14,9 +14,18 @@ import javax.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = FutureDateValidator.class)
 public @interface FutureDate {
+  /**
+   * @return Validation message or key to show.
+   */
   String message() default "{javax.validation.constraints.Future.message}";
 
+  /**
+   * @return List of groups on which this validation is part of.
+   */
   Class<?>[] groups() default {};
 
+  /**
+   * @return validation payload.
+   */
   Class<? extends Payload>[] payload() default {};
 }
