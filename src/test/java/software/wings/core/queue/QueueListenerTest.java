@@ -68,7 +68,7 @@ public class QueueListenerTest extends WingsBaseUnitTest {
     verify(listener, times(0)).onMessage(any(TestQueuable.class));
   }
 
-  @Test(timeout = 3000)
+  @Test(timeout = 5000)
   public void shouldExtendResetDuration() throws Exception {
     TestQueuable message = new TestQueuable(1);
     queue.send(message);
