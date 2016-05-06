@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
@@ -64,8 +63,8 @@ public class ServiceResource {
 
   @DELETE
   @Path("{service_id}")
-  public RestResponse<Service> delete(@PathParam("service_id") String serviceId) {
+  public RestResponse delete(@PathParam("service_id") String serviceId) {
     srs.delete(serviceId);
-    return new RestResponse(of("status", "success"));
+    return new RestResponse();
   }
 }

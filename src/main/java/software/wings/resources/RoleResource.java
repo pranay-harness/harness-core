@@ -53,8 +53,9 @@ public class RoleResource {
 
   @DELETE
   @Path("{roleId}")
-  public void delete(@PathParam("{roleId}") String roleId) {
+  public RestResponse delete(@PathParam("{roleId}") String roleId) {
     roleService.delete(roleId);
+    return new RestResponse();
   }
 
   @GET

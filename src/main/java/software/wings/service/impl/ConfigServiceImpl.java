@@ -51,7 +51,7 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFile.getChecksum() != null) {
       updateMap.put("checksum", configFile.getChecksum());
     }
-    wingsPersistence.updateFields(ConfigFile.class, configFile.getEntityId(), updateMap);
+    wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
   }
 
   @Override
