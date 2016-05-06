@@ -16,7 +16,7 @@ import java.util.Objects;
 @Indexes(
     @Index(fields = { @Field("appId")
                       , @Field("name"), @Field("version") }, options = @IndexOptions(unique = true)))
-@Entity(value = "platforms", noClassnameStored = true)
+@Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
   private String appId;
   private boolean standard;
