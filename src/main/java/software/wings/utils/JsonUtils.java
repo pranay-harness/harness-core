@@ -1,4 +1,4 @@
-package software.wings.common;
+package software.wings.utils;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -7,19 +7,76 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
+import com.jayway.jsonpath.spi.json.JacksonJsonProvider;
+import com.jayway.jsonpath.spi.json.JsonProvider;
+import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
+import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.Set;
 
+import javax.inject.Singleton;
+
+@Singleton
 public class JsonUtils {
-  private static final ObjectMapper mapper;
-  private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+  private final ObjectMapper mapper;
+  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 
   static {
+    // json-path initialization
+    Configuration.setDefaults(new Configuration.Defaults() {
+
+      private final JsonProvider jsonProvider = new JacksonJsonProvider();
+      private final MappingProvider mappingProvider = new JacksonMappingProvider();
+
+      @Override
+      public JsonProvider jsonProvider() {
+        return jsonProvider;
+      }
+
+      @Override
+      public MappingProvider mappingProvider() {
+        return mappingProvider;
+      }
+
+      @Override
+      public Set<Option> options() {
+        return EnumSet.noneOf(Option.class);
+      }
+    });
+  }
+
+  public JsonUtils() {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+  }
+
+  public DocumentContext parseJson(String json) {
+    return JsonPath.parse(json);
+  }
+
+  public <T> T jsonPath(DocumentContext ctx, String path) {
+    return ctx.read(path);
+  }
+
+  public <T> T jsonPath(DocumentContext ctx, String path, Class<T> cls) {
+    return ctx.read(path, cls);
+  }
+
+  public <T> T jsonPath(String json, String path) {
+    return JsonPath.read(json, path);
+  }
+
+  public <T> T jsonPath(String json, String path, Class<T> cls) {
+    return JsonPath.parse(json).read(path, cls);
   }
 
   /**
@@ -27,7 +84,7 @@ public class JsonUtils {
    * @param obj Object to be converted.
    * @return json string.
    */
-  public static String asJson(Object obj) {
+  public String asJson(Object obj) {
     try {
       SimpleFilterProvider filterProvider = new SimpleFilterProvider();
       // Do not fail if no filter is set
@@ -49,7 +106,7 @@ public class JsonUtils {
    * @return Deserialized object.
    */
   @JsonDeserialize
-  public static <T> T asObject(String jsonString, Class<T> classToConvert) {
+  public <T> T asObject(String jsonString, Class<T> classToConvert) {
     try {
       return mapper.readValue(jsonString, classToConvert);
     } catch (Exception exception) {
@@ -66,7 +123,7 @@ public class JsonUtils {
    * @return Deserialized object.
    */
   @JsonDeserialize
-  public static <T> T asObject(String jsonString, TypeReference<T> valueTypeRef) {
+  public <T> T asObject(String jsonString, TypeReference<T> valueTypeRef) {
     try {
       return mapper.readValue(jsonString, valueTypeRef);
     } catch (Exception exception) {
@@ -85,8 +142,7 @@ public class JsonUtils {
    * @return Deserialized Collection object.
    */
   @JsonDeserialize
-  public static <T extends Collection<U>, U> T asObject(
-      String jsonString, Class<T> collectionType, Class<U> classToConvert) {
+  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
     try {
       return mapper.readValue(
           jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
@@ -104,7 +160,7 @@ public class JsonUtils {
    * @return deserialized list.
    */
   @JsonDeserialize
-  public static <T> T asList(String jsonString, TypeReference<T> valueTypeRef) {
+  public <T> T asList(String jsonString, TypeReference<T> valueTypeRef) {
     try {
       return mapper.readValue(jsonString, valueTypeRef);
     } catch (Exception exception) {
@@ -119,12 +175,12 @@ public class JsonUtils {
    * @param valueTypeRef target class type.
    * @param <T> collection type.
    */
-  public static <T> void validateJson(String jsonString, TypeReference<T> valueTypeRef)
+  public <T> void validateJson(String jsonString, TypeReference<T> valueTypeRef)
       throws JsonParseException, JsonMappingException, IOException {
     mapper.readValue(jsonString, valueTypeRef);
   }
 
-  public static <T> T clone(T t, Class<T> cls) {
+  public <T> T clone(T t, Class<T> cls) {
     String json = asJson(t);
     logger.debug("Cloning Object - json: {}", json);
     return asObject(json, cls);

@@ -6,8 +6,9 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.common.JsonUtils;
+import software.wings.app.WingsBootstrap;
 import software.wings.exception.WingsException;
+import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
@@ -46,7 +47,8 @@ public enum StateType implements StateTypeDescriptor {
     try {
       URL url = this.getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
-      return JsonUtils.asObject(json, HashMap.class);
+      JsonUtils jsonUtils = WingsBootstrap.lookup(JsonUtils.class);
+      return jsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
       WingsException ex = new WingsException("Error in initializing StateType", exception);
       logger.error(ex.getMessage(), ex);
