@@ -15,6 +15,8 @@ import javax.inject.Named;
  * Created by peeyushaggarwal on 4/13/16.
  */
 public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
+  private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
+
   @Inject private Queue<T> queue;
 
   private boolean runOnce;
@@ -26,29 +28,29 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
   @Override
   public void run() {
     String threadName = queue.name() + "-handler-" + UUIDGenerator.getUuid();
-    log().debug("Setting thread name to {}", threadName);
+    logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
     boolean run = !runOnce;
     do {
       T message = null;
       try {
-        log().trace("Waiting for message");
+        logger.trace("Waiting for message");
         message = queue.get();
-        log().trace("got message {}", message);
+        logger.trace("got message {}", message);
       } catch (Exception exception) {
         if (exception.getCause() != null
             && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
-          log().info("Thread interrupted, shutting down for queue {}, Exception: " + exception, queue.name());
+          logger.info("Thread interrupted, shutting down for queue {}, Exception: " + exception, queue.name());
           run = false;
         } else {
-          log().error("Exception happened while fetching message from queue " + queue.name(), exception);
+          logger.error("Exception happened while fetching message from queue " + queue.name(), exception);
         }
       }
 
       if (message != null) {
         long timerInterval = queue.resetDurationMillis() - 500;
-        log().debug("Started timer thread for message {} every {} ms", message, timerInterval);
+        logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
         final T finalizedMessage = message;
         ScheduledFuture<?> future = timer.scheduleAtFixedRate(
             () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
@@ -64,14 +66,10 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     } while (run && !shouldStop.get());
   }
 
-  private Logger log() {
-    return LoggerFactory.getLogger(getClass());
-  }
-
   protected abstract void onMessage(T message) throws Exception;
 
   protected void onException(Exception exception, T message) {
-    log().error("Exception happened while processing message " + message, exception);
+    logger.error("Exception happened while processing message " + message, exception);
     if (message.getRetries() > 0) {
       message.setRetries(message.getRetries() - 1);
       queue.requeue(message);
