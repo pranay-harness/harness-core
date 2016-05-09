@@ -12,19 +12,19 @@ import java.util.Objects;
  */
 @Ignore
 @Entity(value = "testQueue", noClassnameStored = true)
-public class TestQueuable extends Queuable {
+public class QueuableObject extends Queuable {
   private int data;
 
-  public TestQueuable() {
+  public QueuableObject() {
     super();
   }
 
-  public TestQueuable(int data) {
+  public QueuableObject(int data) {
     super();
     this.data = data;
   }
 
-  public TestQueuable(TestQueuable other) {
+  public QueuableObject(QueuableObject other) {
     super(other);
   }
 
@@ -47,7 +47,7 @@ public class TestQueuable extends Queuable {
       return true;
     if (o == null || getClass() != o.getClass())
       return false;
-    TestQueuable that = (TestQueuable) o;
+    QueuableObject that = (QueuableObject) o;
     return data == that.data;
   }
 

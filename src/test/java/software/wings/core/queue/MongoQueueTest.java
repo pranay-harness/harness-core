@@ -29,18 +29,18 @@ import javax.inject.Named;
 public class MongoQueueTest extends WingsBaseUnitTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
-  private MongoQueueImpl<TestQueuable> queue;
+  private MongoQueueImpl<QueuableObject> queue;
 
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueueImpl<TestQueuable>(TestQueuable.class, datastore);
+    queue = new MongoQueueImpl<QueuableObject>(QueuableObject.class, datastore);
   }
 
   @Test
   public void shouldGetWithNegativeWait() {
     assertThat(queue.get(Integer.MIN_VALUE)).isNull();
 
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     assertThat(queue.get(Integer.MIN_VALUE)).isNotNull();
   }
@@ -49,14 +49,14 @@ public class MongoQueueTest extends WingsBaseUnitTest {
   public void shouldGetWhenNegativePoll() {
     assertThat(queue.get(100, Long.MIN_VALUE)).isNull();
 
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     assertThat(queue.get(100, Long.MIN_VALUE)).isNotNull();
   }
 
   @Test
   public void shouldNotGetMessageOnceAcquired() {
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     assertThat(queue.get()).isNotNull();
 
@@ -66,11 +66,11 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldReturnMessageBasedOnPriority() {
-    TestQueuable messageOne = new TestQueuable(1);
+    QueuableObject messageOne = new QueuableObject(1);
     messageOne.setPriority(0.5);
-    TestQueuable messageTwo = new TestQueuable(2);
+    QueuableObject messageTwo = new QueuableObject(2);
     messageTwo.setPriority(0.4);
-    TestQueuable messageThree = new TestQueuable(3);
+    QueuableObject messageThree = new QueuableObject(3);
     messageThree.setPriority(0.3);
 
     queue.send(messageOne);
@@ -84,9 +84,9 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldReturnMessageInTimeOrder() {
-    TestQueuable messageOne = new TestQueuable(1);
-    TestQueuable messageTwo = new TestQueuable(2);
-    TestQueuable messageThree = new TestQueuable(3);
+    QueuableObject messageOne = new QueuableObject(1);
+    QueuableObject messageTwo = new QueuableObject(2);
+    QueuableObject messageThree = new QueuableObject(3);
 
     queue.send(messageOne);
     queue.send(messageTwo);
@@ -110,7 +110,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
 
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     queue.get(3000);
 
@@ -119,7 +119,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
     message.setEarliestGet(new Date(System.currentTimeMillis() + 200));
     queue.send(message);
 
@@ -132,7 +132,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     queue.resetDuration(0);
     // sets resetTimestamp on messageOne
@@ -147,26 +147,26 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
     // sets resetTimestamp on messageOne
-    TestQueuable message = queue.get(0);
+    QueuableObject message = queue.get(0);
 
     queue.updateResetDuration(message);
 
-    TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
+    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
 
     assertThat(actual.getResetTimestamp()).isEqualTo(message.getResetTimestamp());
   }
 
   @Test
   public void shouldNotExtendResetTimestampOfMessageWhichIsNotRunning() {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
 
     queue.send(message);
 
     queue.updateResetDuration(message);
 
-    TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
+    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -174,10 +174,10 @@ public class MongoQueueTest extends WingsBaseUnitTest {
   @Test
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
     queue.resetDuration(10);
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     Date beforeGet = new Date();
-    TestQueuable message = queue.get();
+    QueuableObject message = queue.get();
 
     Date messageResetTimeStamp = message.getResetTimestamp();
 
@@ -185,7 +185,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
     queue.resetDuration(20);
     queue.updateResetDuration(message);
 
-    TestQueuable actual = datastore.get(TestQueuable.class, message.getId());
+    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getResetTimestamp());
 
     assertThat(actual.getResetTimestamp()).isAfter(messageResetTimeStamp);
@@ -199,7 +199,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
     assertThat(queue.count(false)).isEqualTo(0);
     assertThat(queue.count()).isEqualTo(0);
 
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(1));
 
     assertThat(queue.count(true)).isEqualTo(0);
     assertThat(queue.count(false)).isEqualTo(1);
@@ -214,16 +214,18 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldAckMessage() {
-    queue.send(new TestQueuable(0));
-    queue.send(new TestQueuable(1));
+    queue.send(new QueuableObject(0));
+    queue.send(new QueuableObject(1));
 
-    TestQueuable result = queue.get();
+    QueuableObject result = queue.get();
 
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(2);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(2);
 
-    datastore.getCollection(TestQueuable.class).find().forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
+    datastore.getCollection(QueuableObject.class)
+        .find()
+        .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
   }
 
   @Test
@@ -233,30 +235,30 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldReplaceMessageKeepingSameIdOnAckSend() {
-    TestQueuable message = new TestQueuable(0);
+    QueuableObject message = new QueuableObject(0);
 
     queue.send(message);
 
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
 
-    TestQueuable resultOne = queue.get();
+    QueuableObject resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
     Date timeBeforeAckSend = new Date();
-    TestQueuable toBeSent = new TestQueuable(1);
+    QueuableObject toBeSent = new QueuableObject(1);
     toBeSent.setEarliestGet(expectedEarliestGet);
     toBeSent.setPriority(expectedPriority);
     queue.ackSend(resultOne, toBeSent);
 
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
 
-    TestQueuable actual = datastore.find(TestQueuable.class).get();
+    QueuableObject actual = datastore.find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeAckSend).isBeforeOrEqualsTo(new Date());
 
-    TestQueuable expected = new TestQueuable(1);
+    QueuableObject expected = new QueuableObject(1);
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
@@ -266,35 +268,35 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(null, new TestQueuable(1)));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(null, new QueuableObject(1)));
   }
 
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullReplacementMessage() {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(new TestQueuable(1), null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(new QueuableObject(1), null));
   }
 
   @Test
   public void shouldRequeueMessage() throws Exception {
-    TestQueuable message = new TestQueuable(0);
+    QueuableObject message = new QueuableObject(0);
 
     queue.send(message);
 
-    TestQueuable resultOne = queue.get();
+    QueuableObject resultOne = queue.get();
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
     Date timeBeforeRequeue = new Date();
     queue.requeue(resultOne, expectedEarliestGet, expectedPriority);
 
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
 
-    TestQueuable actual = datastore.find(TestQueuable.class).get();
+    QueuableObject actual = datastore.find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeRequeue).isBeforeOrEqualsTo(new Date());
 
-    TestQueuable expected = new TestQueuable(0);
+    QueuableObject expected = new QueuableObject(0);
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
@@ -305,7 +307,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
   @Test
   public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() throws Exception {
     assertThatExceptionOfType(IllegalArgumentException.class)
-        .isThrownBy(() -> queue.requeue(new TestQueuable(1), new Date(), Double.NaN));
+        .isThrownBy(() -> queue.requeue(new QueuableObject(1), new Date(), Double.NaN));
   }
 
   @Test
@@ -315,7 +317,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() throws Exception {
-    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new TestQueuable(1), null));
+    assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new QueuableObject(1), null));
   }
 
   @Test
@@ -325,7 +327,7 @@ public class MongoQueueTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldSendMessage() {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
 
     Date expectedEarliestGet = new Date();
     double expectedPriority = 0.8;
@@ -334,14 +336,14 @@ public class MongoQueueTest extends WingsBaseUnitTest {
     message.setEarliestGet(expectedEarliestGet);
     queue.send(message);
 
-    assertThat(datastore.getCount(TestQueuable.class)).isEqualTo(1);
+    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
 
-    TestQueuable actual = datastore.find(TestQueuable.class).get();
+    QueuableObject actual = datastore.find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeSend).isBeforeOrEqualsTo(new Date());
 
-    TestQueuable expected = new TestQueuable(1);
+    QueuableObject expected = new QueuableObject(1);
     expected.setEarliestGet(expectedEarliestGet);
     expected.setPriority(expectedPriority);
     expected.setCreated(actualCreated);
