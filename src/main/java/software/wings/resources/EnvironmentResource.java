@@ -1,21 +1,28 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Operator.EQ;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import software.wings.beans.Environment;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.EnvironmentService;
 
-import java.util.List;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -30,14 +37,31 @@ public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 
   @GET
-  @Path("{appId}")
-  public RestResponse<List<Environment>> listEnvironments(@PathParam("appId") String appId) {
-    return new RestResponse<>(envService.list(appId));
+  public RestResponse<PageResponse<Environment>> list(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    return new RestResponse<>(envService.list(pageRequest));
   }
 
   @POST
-  @Path("{appId}")
-  public RestResponse<Environment> createEnvironment(@PathParam("appId") String appId, Environment environment) {
-    return new RestResponse<>(envService.save(appId, environment));
+  public RestResponse<Environment> save(@QueryParam("appId") String appId, Environment environment) {
+    environment.setAppId(appId);
+    return new RestResponse<>(envService.save(environment));
+  }
+
+  @PUT
+  @Path("{envId}")
+  public RestResponse<Environment> update(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, Environment environment) {
+    environment.setUuid(envId);
+    environment.setAppId(appId);
+    return new RestResponse<>(envService.update(environment));
+  }
+
+  @DELETE
+  @Path("{envId}")
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    envService.delete(envId);
+    return new RestResponse();
   }
 }
