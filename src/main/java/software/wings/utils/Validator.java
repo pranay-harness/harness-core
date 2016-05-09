@@ -24,13 +24,13 @@ public class Validator {
 
   /**
    * Checks whether 2 values are equal or not.
-   * @param applicationId value1
+   * @param appId value1
    * @param uuid value2
    */
-  public static void equalCheck(Object applicationId, Object uuid) {
-    if (!Objects.equals(applicationId, uuid)) {
+  public static void equalCheck(Object appId, Object uuid) {
+    if (!Objects.equals(appId, uuid)) {
       Map<String, Object> map = new HashMap<>();
-      map.put("applicationId", applicationId);
+      map.put("appId", appId);
       map.put("uuid", uuid);
       throw new WingsException(map, ErrorConstants.INVALID_ARGUMENT);
     }

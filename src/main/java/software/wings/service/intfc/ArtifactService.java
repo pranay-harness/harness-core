@@ -14,7 +14,7 @@ public interface ArtifactService {
 
   public Artifact update(@Valid Artifact artifact);
 
-  public File download(String applicationId, String artifactId);
+  public File download(String appId, String artifactId);
 
-  public Artifact get(String applicationId, String artifactId);
+  public Artifact get(String appId, String artifactId);
 }

@@ -6,7 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.beans.Artifact.ArtifactBuilder.anArtifact;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;

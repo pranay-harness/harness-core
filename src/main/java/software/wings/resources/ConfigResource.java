@@ -51,8 +51,8 @@ public class ConfigResource {
   @Inject private ConfigService configService;
 
   @GET
-  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entity_id") String entityId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
+  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entityId") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @BeanParam PageRequest<ConfigFile> pageRequest) {
     pageRequest.addFilter("templateId", templateId, EQ);
     pageRequest.addFilter("entityId", entityId, EQ);
@@ -61,8 +61,8 @@ public class ConfigResource {
 
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> save(@QueryParam("entity_id") String entityId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("template_id") String templateId,
+  public RestResponse<String> save(@QueryParam("entityId") String entityId,
+      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @FormDataParam("name") String name, @FormDataParam("relativePath") String relativePath,
       @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -78,15 +78,15 @@ public class ConfigResource {
   }
 
   @GET
-  @Path("{config_id}")
-  public RestResponse<ConfigFile> get(@PathParam("config_id") String configId) {
+  @Path("{configId}")
+  public RestResponse<ConfigFile> get(@PathParam("configId") String configId) {
     return new RestResponse<>(configService.get(configId));
   }
 
   @PUT
-  @Path("{config_id}")
+  @Path("{configId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse update(@PathParam("config_id") String configId, @FormDataParam("name") String name,
+  public RestResponse update(@PathParam("configId") String configId, @FormDataParam("name") String name,
       @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
@@ -101,17 +101,16 @@ public class ConfigResource {
   }
 
   @DELETE
-  @Path("{config_id}")
-  public RestResponse delete(@PathParam("config_id") String configId) {
+  @Path("{configId}")
+  public RestResponse delete(@PathParam("configId") String configId) {
     configService.delete(configId);
     return new RestResponse();
   }
 
   @GET
-  @Path("download/{applicationId}")
+  @Path("download/{appId}")
   @Encoded
-  public Response download(@PathParam("applicationId") String applicationId)
-      throws IOException, GeneralSecurityException {
+  public Response download(@PathParam("appId") String appId) throws IOException, GeneralSecurityException {
     try {
       URL url = this.getClass().getResource("/temp-config.txt");
       ResponseBuilder response = Response.ok(new File(url.toURI()), MediaType.APPLICATION_OCTET_STREAM);

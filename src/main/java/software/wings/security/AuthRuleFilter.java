@@ -11,7 +11,6 @@ import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorConstants;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
@@ -24,7 +23,6 @@ import software.wings.service.intfc.AuditService;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -70,8 +68,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       MultivaluedMap<String, String> pathParameters, PermissionAttr permissionAttr, List<Role> roles) {
     Application application = null;
     Environment environment = null;
-    if (pathParameters.containsKey("app_id")) {
-      String appID = pathParameters.getFirst("app_id");
+    if (pathParameters.containsKey("appId")) {
+      String appID = pathParameters.getFirst("appId");
       application = dbCache.get(Application.class, appID);
     }
     if (pathParameters.containsKey("env_id")) {

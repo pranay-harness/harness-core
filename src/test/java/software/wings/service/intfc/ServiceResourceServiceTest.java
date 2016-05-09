@@ -6,6 +6,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -17,7 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import software.wings.WingsBaseTest;
+import software.wings.WingsBaseUnitTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.PageRequest;
 import software.wings.beans.SearchFilter;
@@ -31,7 +32,7 @@ import java.util.ArrayList;
 /**
  * Created by anubhaw on 5/4/16.
  */
-public class ServiceResourceServiceTest extends WingsBaseTest {
+public class ServiceResourceServiceTest extends WingsBaseUnitTest {
   private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private ConfigService configService = mock(ConfigService.class);
   private ServiceResourceService srs = new ServiceResourceServiceImpl(wingsPersistence, configService);
@@ -41,7 +42,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                        .withAppId("APP_ID")
                                        .withName("SERVICE_NAME")
                                        .withDescription("SERVICE_DESC")
-                                       .withArtifactType(JAR);
+                                       .withArtifactType(JAR)
+                                       .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
   @Before
   public void setUp() throws Exception {
@@ -67,7 +69,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(service.getUuid()).isEqualTo("SERVICE_ID");
   }
 
-  //  @Test
+  @Test
   public void shouldFetchService() {
     when(wingsPersistence.get(Service.class, "SERVICE_ID")).thenReturn(builder.build());
     when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, "SERVICE_ID"))
@@ -78,13 +80,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateService() {
-    Service service =
-        builder.withName("UPDATED_SERVICE_NAME").withDescription("UPDATED_SERVICE_DESC").withArtifactType(WAR).build();
+    Service service = builder.withName("UPDATED_SERVICE_NAME")
+                          .withDescription("UPDATED_SERVICE_DESC")
+                          .withArtifactType(WAR)
+                          .withAppContainer(anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build())
+                          .build();
     srs.update(service);
     verify(wingsPersistence)
         .updateFields(Service.class, "SERVICE_ID",
-            ImmutableMap.of(
-                "name", "UPDATED_SERVICE_NAME", "description", "UPDATED_SERVICE_DESC", "artifactType", WAR));
+            ImmutableMap.of("name", "UPDATED_SERVICE_NAME", "description", "UPDATED_SERVICE_DESC", "artifactType", WAR,
+                "appContainer", anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build()));
   }
 
   @Test

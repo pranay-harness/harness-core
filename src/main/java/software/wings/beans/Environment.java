@@ -63,6 +63,7 @@ public class Environment extends Base {
     private String description;
     private List<ConfigFile> configFiles;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -92,6 +93,11 @@ public class Environment extends Base {
 
     public EnvironmentBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public EnvironmentBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -126,6 +132,7 @@ public class Environment extends Base {
           .withDescription(description)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -139,6 +146,7 @@ public class Environment extends Base {
       environment.setDescription(description);
       environment.setConfigFiles(configFiles);
       environment.setUuid(uuid);
+      environment.setAppId(appId);
       environment.setCreatedBy(createdBy);
       environment.setCreatedAt(createdAt);
       environment.setLastUpdatedBy(lastUpdatedBy);

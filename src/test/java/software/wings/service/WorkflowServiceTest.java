@@ -30,6 +30,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -55,6 +56,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldTrigger() throws InterruptedException {
     StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -90,6 +92,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldTriggerAsynch() throws InterruptedException {
     StateMachine sm = createAsynchSM(workflowService);
+    sm.setAppId("APP_ID");
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
     workflowService.trigger(smId);
@@ -99,6 +102,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
 
   private StateMachine createAsynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -127,6 +131,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldTriggerSimpleFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -159,6 +164,7 @@ public class WorkflowServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldTriggerMixedFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));

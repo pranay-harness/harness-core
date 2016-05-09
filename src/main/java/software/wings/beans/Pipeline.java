@@ -20,7 +20,6 @@ public class Pipeline extends Base {
   private List<String> services;
   private String cronSchedule;
 
-  private String applicationId;
   private String stateMachineId;
 
   @Transient private StateMachine stateMachine;
@@ -63,14 +62,6 @@ public class Pipeline extends Base {
 
   public void setCronSchedule(String cronSchedule) {
     this.cronSchedule = cronSchedule;
-  }
-
-  public String getApplicationId() {
-    return applicationId;
-  }
-
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
   }
 
   public String getStateMachineId() {

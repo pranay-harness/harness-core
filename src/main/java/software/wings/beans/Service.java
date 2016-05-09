@@ -18,7 +18,6 @@ import java.util.Objects;
 @Entity(value = "services", noClassnameStored = true)
 public class Service extends Base implements Repeatable {
   private String name;
-  private String appId;
   private String description;
   private ArtifactType artifactType;
 
@@ -33,14 +32,6 @@ public class Service extends Base implements Repeatable {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
   }
 
   public String getDescription() {
@@ -73,7 +64,7 @@ public class Service extends Base implements Repeatable {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, appId, description, artifactType, appContainer, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, appContainer, configFiles);
   }
 
   @Override
@@ -88,8 +79,8 @@ public class Service extends Base implements Repeatable {
       return false;
     }
     final Service other = (Service) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.appId, other.appId)
-        && Objects.equals(this.description, other.description) && Objects.equals(this.artifactType, other.artifactType)
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.artifactType, other.artifactType)
         && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles);
   }
 
@@ -100,12 +91,12 @@ public class Service extends Base implements Repeatable {
 
   public static final class ServiceBuilder {
     private String name;
-    private String appId;
     private String description;
     private ArtifactType artifactType;
     private AppContainer appContainer;
     private List<ConfigFile> configFiles;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -120,11 +111,6 @@ public class Service extends Base implements Repeatable {
 
     public ServiceBuilder withName(String name) {
       this.name = name;
-      return this;
-    }
-
-    public ServiceBuilder withAppId(String appId) {
-      this.appId = appId;
       return this;
     }
 
@@ -150,6 +136,11 @@ public class Service extends Base implements Repeatable {
 
     public ServiceBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public ServiceBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -181,12 +172,12 @@ public class Service extends Base implements Repeatable {
     public ServiceBuilder but() {
       return aService()
           .withName(name)
-          .withAppId(appId)
           .withDescription(description)
           .withArtifactType(artifactType)
           .withAppContainer(appContainer)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -197,12 +188,12 @@ public class Service extends Base implements Repeatable {
     public Service build() {
       Service service = new Service();
       service.setName(name);
-      service.setAppId(appId);
       service.setDescription(description);
       service.setArtifactType(artifactType);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
       service.setUuid(uuid);
+      service.setAppId(appId);
       service.setCreatedBy(createdBy);
       service.setCreatedAt(createdAt);
       service.setLastUpdatedBy(lastUpdatedBy);

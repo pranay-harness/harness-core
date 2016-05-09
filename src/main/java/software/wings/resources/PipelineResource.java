@@ -36,32 +36,31 @@ public class PipelineResource {
   @GET
   @Produces("application/json")
   public RestResponse<PageResponse<Pipeline>> list(
-      @QueryParam("applicationId") String applicationId, @BeanParam PageRequest<Pipeline> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
+    pageRequest.addFilter("application", appId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Pipeline>>(workflowService.listPipeline(pageRequest));
   }
 
   @GET
   @Path("{pipelineId}")
   @Produces("application/json")
-  public RestResponse<Pipeline> read(
-      @QueryParam("applicationId") String applicationId, @PathParam("pipelineId") String pipelineId) {
-    return new RestResponse<Pipeline>(workflowService.readPipeline(applicationId, pipelineId));
+  public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
+    return new RestResponse<Pipeline>(workflowService.readPipeline(appId, pipelineId));
   }
 
   @POST
   @Produces("application/json")
-  public RestResponse<Pipeline> create(@QueryParam("applicationId") String applicationId, Pipeline pipeline) {
-    pipeline.setApplicationId(applicationId);
+  public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
+    pipeline.setAppId(appId);
     return new RestResponse<Pipeline>(workflowService.createPipeline(pipeline));
   }
 
   @PUT
   @Path("{pipelineId}")
   @Produces("application/json")
-  public RestResponse<Pipeline> update(@QueryParam("applicationId") String applicationId,
-      @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
-    pipeline.setApplicationId(applicationId);
+  public RestResponse<Pipeline> update(
+      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    pipeline.setAppId(appId);
     return new RestResponse<Pipeline>(workflowService.updatePipeline(pipeline));
   }
 }

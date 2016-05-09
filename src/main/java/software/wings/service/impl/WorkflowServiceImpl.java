@@ -101,7 +101,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public Pipeline readPipeline(String applicationId, String pipelineId) {
-    return wingsPersistence.get(Pipeline.class, applicationId, pipelineId);
+  public Pipeline readPipeline(String appId, String pipelineId) {
+    return wingsPersistence.get(Pipeline.class, appId, pipelineId);
   }
 }

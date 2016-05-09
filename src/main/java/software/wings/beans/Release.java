@@ -134,7 +134,7 @@ public class Release extends Base {
     FINALIZED;
   }
 
-  public static final class Builder {
+  public static final class ReleaseBuilder {
     private Application application;
     private String releaseName;
     private String description;
@@ -142,82 +142,85 @@ public class Release extends Base {
     private List<ArtifactSource> artifactSources = Lists.newArrayList();
     private Status status = Status.ACTIVE;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private Builder() {}
+    private ReleaseBuilder() {}
 
-    public static Builder aRelease() {
-      return new Builder();
+    public static ReleaseBuilder aRelease() {
+      return new ReleaseBuilder();
     }
 
-    public Builder withApplication(Application application) {
+    public ReleaseBuilder withApplication(Application application) {
       this.application = application;
       return this;
     }
 
-    public Builder withReleaseName(String releaseName) {
+    public ReleaseBuilder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
-    public Builder withDescription(String description) {
+    public ReleaseBuilder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    public Builder withTargetDate(long targetDate) {
+    public ReleaseBuilder withTargetDate(long targetDate) {
       this.targetDate = targetDate;
       return this;
     }
 
-    public Builder withArtifactSources(List<ArtifactSource> artifactSources) {
+    public ReleaseBuilder withArtifactSources(List<ArtifactSource> artifactSources) {
       this.artifactSources = artifactSources;
       return this;
     }
 
-    public Builder withStatus(Status status) {
+    public ReleaseBuilder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
-    public Builder withUuid(String uuid) {
+    public ReleaseBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public Builder withCreatedBy(User createdBy) {
+    public ReleaseBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public ReleaseBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public Builder withCreatedAt(long createdAt) {
+    public ReleaseBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+    public ReleaseBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+    public ReleaseBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public Builder withActive(boolean active) {
+    public ReleaseBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * @return copy of this builder.
-     */
-    public Builder but() {
+    public ReleaseBuilder but() {
       return aRelease()
           .withApplication(application)
           .withReleaseName(releaseName)
@@ -226,6 +229,7 @@ public class Release extends Base {
           .withArtifactSources(artifactSources)
           .withStatus(status)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -233,9 +237,6 @@ public class Release extends Base {
           .withActive(active);
     }
 
-    /**
-     * @return a new release object with given fields.
-     */
     public Release build() {
       Release release = new Release();
       release.setApplication(application);
@@ -245,6 +246,7 @@ public class Release extends Base {
       release.setArtifactSources(artifactSources);
       release.setStatus(status);
       release.setUuid(uuid);
+      release.setAppId(appId);
       release.setCreatedBy(createdBy);
       release.setCreatedAt(createdAt);
       release.setLastUpdatedBy(lastUpdatedBy);
