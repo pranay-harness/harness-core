@@ -15,7 +15,6 @@ import io.dropwizard.lifecycle.Managed;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -23,7 +22,6 @@ import software.wings.beans.Base;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ReadPref;
-import software.wings.beans.Service;
 import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
@@ -31,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -70,6 +69,11 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T get(Class<T> cls, String id) {
     return get(cls, id, ReadPref.NORMAL);
+  }
+
+  @Override
+  public <T extends Base> T get(Class<T> cls, String applicationId, String id) {
+    return createQuery(cls).field("applicationId").equal(applicationId).field("uuid").equal(id).get();
   }
 
   @Override
@@ -225,6 +229,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return primaryDatastore.getDB().getCollection(collectionName);
   }
 
+  @Override
   public void start() throws Exception {
     // Do nothing
   }

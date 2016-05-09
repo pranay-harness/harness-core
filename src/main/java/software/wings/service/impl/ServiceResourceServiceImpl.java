@@ -43,7 +43,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   public Service update(Service service) {
     wingsPersistence.updateFields(Service.class, service.getUuid(),
         ImmutableMap.of("name", service.getName(), "description", service.getDescription(), "artifactType",
-            service.getArtifactType()));
+            service.getArtifactType(), "appContainer", service.getAppContainer()));
     return wingsPersistence.get(Service.class, service.getUuid());
   }
 

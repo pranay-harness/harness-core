@@ -7,6 +7,9 @@ package software.wings.service.impl;
 import com.google.inject.Singleton;
 
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.Pipeline;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachine;
@@ -19,11 +22,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * @author Rishi
  */
 @Singleton
+@ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService {
   @Inject private WingsPersistence wingsPersistence;
 
@@ -37,7 +43,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)
    */
   @Override
-  public StateMachine create(StateMachine stateMachine) {
+  public StateMachine create(@Valid StateMachine stateMachine) {
     stateMachine.validate();
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
   }
@@ -76,5 +82,26 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
     return stencils;
+  }
+
+  @Override
+  public PageResponse<Pipeline> listPipeline(PageRequest<Pipeline> req) {
+    return null;
+  }
+
+  @Override
+  public Pipeline createPipeline(Pipeline pipeline) {
+    return wingsPersistence.saveAndGet(Pipeline.class, pipeline);
+  }
+
+  @Override
+  public Pipeline updatePipeline(Pipeline pipeline) {
+    // create a new version of state machine
+    return null;
+  }
+
+  @Override
+  public Pipeline readPipeline(String applicationId, String pipelineId) {
+    return wingsPersistence.get(Pipeline.class, applicationId, pipelineId);
   }
 }

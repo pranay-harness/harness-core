@@ -40,10 +40,10 @@ public class CollectionUtils {
     }
     Method readMethod = getReadMethod(list.get(0).getClass(), fieldName);
     for (T obj : list) {
-      F fieldValue = (F) readMethod.invoke(obj);
+      @SuppressWarnings("unchecked") F fieldValue = (F) readMethod.invoke(obj);
       List<T> objList = map.get(fieldValue);
       if (objList == null) {
-        objList = new ArrayList();
+        objList = new ArrayList<T>();
         map.put(fieldValue, objList);
       }
       objList.add(obj);
