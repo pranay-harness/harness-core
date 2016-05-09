@@ -63,7 +63,6 @@ public class Environment extends Base {
     private String description;
     private List<ConfigFile> configFiles;
     private String uuid;
-    //@NotNull
     private String appId;
     private User createdBy;
     private long createdAt;

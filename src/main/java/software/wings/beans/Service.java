@@ -96,7 +96,6 @@ public class Service extends Base implements Repeatable {
     private AppContainer appContainer;
     private List<ConfigFile> configFiles;
     private String uuid;
-    //@NotNull
     private String appId;
     private User createdBy;
     private long createdAt;

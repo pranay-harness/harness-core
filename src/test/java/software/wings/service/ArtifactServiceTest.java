@@ -3,15 +3,14 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.Artifact.ArtifactBuilder.anArtifact;
+import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.User.Builder.anUser;
 
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseUnitTest;
-import software.wings.beans.Application;
-import software.wings.beans.Artifact;
+import software.wings.beans.Artifact.ArtifactBuilder;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ArtifactService;
 
@@ -24,15 +23,16 @@ import javax.validation.ConstraintViolationException;
 public class ArtifactServiceTest extends WingsBaseUnitTest {
   @Inject private ArtifactService artifactService;
 
-  private Artifact.Builder builder = anArtifact()
-                                         .withApplication(anApplication().withUuid("APP_ID").build())
-                                         .withRelease(aRelease().withUuid("RELEASE_ID").build())
-                                         .withArtifactSourceName("ARTIFACT_SOURCE")
-                                         .withCompName("COMP_NAME")
-                                         .withRevision("1.0")
-                                         .withDisplayName("DISPLAY_NAME")
-                                         .withCreatedAt(System.currentTimeMillis())
-                                         .withCreatedBy(anUser().withUuid("USER_ID").build());
+  private ArtifactBuilder builder = anArtifact()
+                                        .withApplication(anApplication().withUuid("APP_ID").build())
+                                        .withAppId("APP_ID")
+                                        .withRelease(aRelease().withUuid("RELEASE_ID").build())
+                                        .withArtifactSourceName("ARTIFACT_SOURCE")
+                                        .withCompName("COMP_NAME")
+                                        .withRevision("1.0")
+                                        .withDisplayName("DISPLAY_NAME")
+                                        .withCreatedAt(System.currentTimeMillis())
+                                        .withCreatedBy(anUser().withUuid("USER_ID").build());
 
   /**
    * test setup.

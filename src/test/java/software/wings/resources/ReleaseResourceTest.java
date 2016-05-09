@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
@@ -24,6 +24,7 @@ import software.wings.beans.ArtifactSource;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
+import software.wings.beans.Release.ReleaseBuilder;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
@@ -49,11 +50,11 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
   public static final String APP_ID = "APP_ID";
   public static final String RELEASE_ID = "RELEASE_ID";
 
-  public static final Release.Builder releaseBuilder = aRelease()
-                                                           .withReleaseName("REL1")
-                                                           .withApplication(anApplication().withUuid(APP_ID).build())
-                                                           .withDescription("RELEASE 1")
-                                                           .withTargetDate(System.currentTimeMillis() + 1000);
+  public static final ReleaseBuilder releaseBuilder = aRelease()
+                                                          .withReleaseName("REL1")
+                                                          .withApplication(anApplication().withUuid(APP_ID).build())
+                                                          .withDescription("RELEASE 1")
+                                                          .withTargetDate(System.currentTimeMillis() + 1000);
 
   @Rule
   public Verifier collector = new Verifier() {

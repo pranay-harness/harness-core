@@ -107,7 +107,6 @@ public class AppContainer extends BaseFile {
     private ChecksumType checksumType = MD5;
     private String checksum;
     private String uuid;
-    //@NotNull
     private String appId;
     private User createdBy;
     private long createdAt;

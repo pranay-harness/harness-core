@@ -26,9 +26,7 @@ import javax.validation.constraints.NotNull;
 public class Base {
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
-  @Indexed
-  //@NotNull
-  private String appId;
+  @Indexed @NotNull private String appId;
 
   @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 

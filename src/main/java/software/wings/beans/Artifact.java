@@ -170,7 +170,7 @@ public class Artifact extends Base {
     }
   }
 
-  public static class Builder {
+  public static final class ArtifactBuilder {
     private Application application;
     private Release release;
     private String compName;
@@ -180,15 +180,95 @@ public class Artifact extends Base {
     private ArtifactFile artifactFile;
     private Status status;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private Builder() {}
+    private ArtifactBuilder() {}
 
-    public Builder but() {
+    public static ArtifactBuilder anArtifact() {
+      return new ArtifactBuilder();
+    }
+
+    public ArtifactBuilder withApplication(Application application) {
+      this.application = application;
+      return this;
+    }
+
+    public ArtifactBuilder withRelease(Release release) {
+      this.release = release;
+      return this;
+    }
+
+    public ArtifactBuilder withCompName(String compName) {
+      this.compName = compName;
+      return this;
+    }
+
+    public ArtifactBuilder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
+      return this;
+    }
+
+    public ArtifactBuilder withDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
+    public ArtifactBuilder withRevision(String revision) {
+      this.revision = revision;
+      return this;
+    }
+
+    public ArtifactBuilder withArtifactFile(ArtifactFile artifactFile) {
+      this.artifactFile = artifactFile;
+      return this;
+    }
+
+    public ArtifactBuilder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
+    public ArtifactBuilder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public ArtifactBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public ArtifactBuilder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public ArtifactBuilder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public ArtifactBuilder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public ArtifactBuilder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public ArtifactBuilder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public ArtifactBuilder but() {
       return anArtifact()
           .withApplication(application)
           .withRelease(release)
@@ -199,85 +279,12 @@ public class Artifact extends Base {
           .withArtifactFile(artifactFile)
           .withStatus(status)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
-    }
-
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    public Builder withArtifactFile(ArtifactFile artifactFile) {
-      this.artifactFile = artifactFile;
-      return this;
-    }
-
-    public Builder withRevision(String revision) {
-      this.revision = revision;
-      return this;
-    }
-
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
-      return this;
-    }
-
-    public Builder withArtifactSourceName(String artifactSourceName) {
-      this.artifactSourceName = artifactSourceName;
-      return this;
-    }
-
-    public Builder withCompName(String compName) {
-      this.compName = compName;
-      return this;
-    }
-
-    public Builder withRelease(Release release) {
-      this.release = release;
-      return this;
-    }
-
-    public Builder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public static Builder anArtifact() {
-      return new Builder();
     }
 
     public Artifact build() {
@@ -291,6 +298,7 @@ public class Artifact extends Base {
       artifact.setArtifactFile(artifactFile);
       artifact.setStatus(status);
       artifact.setUuid(uuid);
+      artifact.setAppId(appId);
       artifact.setCreatedBy(createdBy);
       artifact.setCreatedAt(createdAt);
       artifact.setLastUpdatedBy(lastUpdatedBy);

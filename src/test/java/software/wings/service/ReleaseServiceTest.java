@@ -7,7 +7,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.ServiceBuilder.aService;
 
 import com.google.common.collect.Lists;
@@ -19,6 +19,7 @@ import software.wings.beans.ArtifactSource.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.PageRequest;
 import software.wings.beans.Release;
+import software.wings.beans.Release.ReleaseBuilder;
 import software.wings.service.intfc.ReleaseService;
 
 import java.util.List;
@@ -29,10 +30,11 @@ import javax.ws.rs.BadRequestException;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ReleaseServiceTest extends WingsBaseUnitTest {
-  private static final Release.Builder releaseBuilder = aRelease()
-                                                            .withReleaseName("REL1")
-                                                            .withApplication(anApplication().withUuid("APP_ID").build())
-                                                            .withDescription("RELEASE 1");
+  private static final ReleaseBuilder releaseBuilder = aRelease()
+                                                           .withAppId("APP_ID")
+                                                           .withReleaseName("REL1")
+                                                           .withApplication(anApplication().withUuid("APP_ID").build())
+                                                           .withDescription("RELEASE 1");
 
   private static final JenkinsArtifactSource artifactSource =
       aJenkinsArtifactSource()

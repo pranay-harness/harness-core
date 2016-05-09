@@ -175,7 +175,6 @@ public class Host extends Base implements Repeatable {
     private String infraId;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
-    //@NotNull
     private String appId;
     private User createdBy;
     private long createdAt;
