@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static java.util.stream.Collectors.toSet;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.JenkinsServer;
@@ -10,25 +13,31 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.service.intfc.FileService;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Objects;
+import java.util.List;
+import java.util.Set;
+import javax.validation.Valid;
 
 public class JenkinsArtifactSource extends ArtifactSource {
   @Inject private FileService fileService;
 
+  @NotEmpty private String jenkinsUrl;
+
+  @NotEmpty private String username;
+
+  @NotEmpty private String password;
+
+  @NotEmpty private String jobname;
+
+  @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+
   public JenkinsArtifactSource() {
     super(SourceType.JENKINS);
   }
-
-  private String jenkinsUrl;
-  private String username;
-  private String password;
-
-  private String jobname;
-  private String artifactPathRegex;
 
   @Override
   public ArtifactFile collect(Object[] params) {
@@ -51,6 +60,13 @@ public class JenkinsArtifactSource extends ArtifactSource {
     } catch (Exception ex) {
       return null;
     }
+  }
+
+  @Override
+  public Set<String> getServiceIds() {
+    return artifactPathServices.stream()
+        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
+        .collect(toSet());
   }
 
   public String getJenkinsUrl() {
@@ -85,26 +101,12 @@ public class JenkinsArtifactSource extends ArtifactSource {
     this.jobname = jobname;
   }
 
-  public String getArtifactPathRegex() {
-    return artifactPathRegex;
+  public List<ArtifactPathServiceEntry> getArtifactPathServices() {
+    return artifactPathServices;
   }
 
-  public void setArtifactPathRegex(String artifactPathRegex) {
-    this.artifactPathRegex = artifactPathRegex;
-  }
-
-  @Override
-  public String getSourceName() {
-    if (super.getSourceName() == null) {
-      setSourceName(jobname);
-    }
-    return super.getSourceName();
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(fileService, jenkinsUrl, username, password, jobname, artifactPathRegex);
+  public void setArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
+    this.artifactPathServices = artifactPathServices;
   }
 
   @Override
@@ -118,11 +120,23 @@ public class JenkinsArtifactSource extends ArtifactSource {
     if (!super.equals(obj)) {
       return false;
     }
-    final JenkinsArtifactSource other = (JenkinsArtifactSource) obj;
-    return Objects.equals(this.fileService, other.fileService) && Objects.equals(this.jenkinsUrl, other.jenkinsUrl)
-        && Objects.equals(this.username, other.username) && Objects.equals(this.password, other.password)
-        && Objects.equals(this.jobname, other.jobname)
-        && Objects.equals(this.artifactPathRegex, other.artifactPathRegex);
+    JenkinsArtifactSource that = (JenkinsArtifactSource) obj;
+    return Objects.equal(jenkinsUrl, that.jenkinsUrl) && Objects.equal(username, that.username)
+        && Objects.equal(password, that.password) && Objects.equal(jobname, that.jobname)
+        && Objects.equal(artifactPathServices, that.artifactPathServices);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(super.hashCode(), jenkinsUrl, username, password, jobname, artifactPathServices);
+  }
+
+  @Override
+  public String getSourceName() {
+    if (super.getSourceName() == null) {
+      setSourceName(jobname);
+    }
+    return super.getSourceName();
   }
 
   @Override
@@ -132,17 +146,18 @@ public class JenkinsArtifactSource extends ArtifactSource {
         .add("username", username)
         .add("password", password)
         .add("jobname", jobname)
-        .add("artifactPathRegex", artifactPathRegex)
+        .add("artifactPathServices", artifactPathServices)
+        .add("sourceName", getSourceName())
         .toString();
   }
 
-  public static class Builder {
-    private ArtifactType artifactType;
+  public static final class Builder {
     private String sourceName;
-    private String artifactPathRegex;
+    private ArtifactType artifactType;
     private String jobname;
-    private String password;
+    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
     private String username;
+    private String password;
     private String jenkinsUrl;
 
     private Builder() {}
@@ -151,18 +166,13 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return new Builder();
     }
 
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
-      return this;
-    }
-
     public Builder withSourceName(String sourceName) {
       this.sourceName = sourceName;
       return this;
     }
 
-    public Builder withArtifactPathRegex(String artifactPathRegex) {
-      this.artifactPathRegex = artifactPathRegex;
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
       return this;
     }
 
@@ -171,8 +181,8 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return this;
     }
 
-    public Builder withPassword(String password) {
-      this.password = password;
+    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
+      this.artifactPathServices = artifactPathServices;
       return this;
     }
 
@@ -181,30 +191,27 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return this;
     }
 
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
     public Builder withJenkinsUrl(String jenkinsUrl) {
       this.jenkinsUrl = jenkinsUrl;
       return this;
     }
 
-    public Builder but() {
-      return aJenkinsArtifactSource()
-          .withArtifactType(artifactType)
-          .withSourceName(sourceName)
-          .withArtifactPathRegex(artifactPathRegex)
-          .withJobname(jobname)
-          .withPassword(password)
-          .withUsername(username)
-          .withJenkinsUrl(jenkinsUrl);
-    }
-
+    /**
+     * @return a new JenkinsArtifactSource object with given fields.
+     */
     public JenkinsArtifactSource build() {
       JenkinsArtifactSource jenkinsArtifactSource = new JenkinsArtifactSource();
-      jenkinsArtifactSource.setArtifactType(artifactType);
       jenkinsArtifactSource.setSourceName(sourceName);
-      jenkinsArtifactSource.setArtifactPathRegex(artifactPathRegex);
+      jenkinsArtifactSource.setArtifactType(artifactType);
       jenkinsArtifactSource.setJobname(jobname);
-      jenkinsArtifactSource.setPassword(password);
+      jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
       jenkinsArtifactSource.setUsername(username);
+      jenkinsArtifactSource.setPassword(password);
       jenkinsArtifactSource.setJenkinsUrl(jenkinsUrl);
       return jenkinsArtifactSource;
     }

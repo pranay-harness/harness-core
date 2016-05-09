@@ -1,7 +1,9 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
+import static software.wings.beans.ChecksumType.MD5;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
@@ -81,7 +83,7 @@ public class AppContainerResource {
   }
 
   @PUT
-  @Path("app-containers/{app_container_id}")
+  @Path("{app_container_id}")
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> updatePlatform(@QueryParam("app_id") String appId,
       @PathParam("app_container_id") String appContainerId, @FormDataParam("standard") boolean standard,
@@ -115,10 +117,16 @@ public class AppContainerResource {
 
   private AppContainer createPlatformSoftwareFromRequest(String appId, String name, String version, String md5,
       String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
-    AppContainer appContainer = new AppContainer(name, md5);
-    appContainer.setAppId(appId);
-    appContainer.setStandard(standard);
-    appContainer.setDescription(description);
+    AppContainer appContainer = anAppContainer()
+                                    .withAppId(appId)
+                                    .withName(name)
+                                    .withDescription(description)
+                                    .withVersion(version)
+                                    .withChecksum(md5)
+                                    .withChecksumType(MD5)
+                                    .withStandard(standard)
+                                    .build();
+
     if (sourceType.equals(HTTP)) {
       FileUrlSource fileUrlSource = new FileUrlSource();
       fileUrlSource.setUrl(urlString);

@@ -1,6 +1,7 @@
 package software.wings.core.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
@@ -27,15 +28,15 @@ import javax.inject.Named;
  * Created by peeyushaggarwal on 4/13/16.
  */
 public class QueueListenerTest extends WingsBaseUnitTest {
-  private MongoQueueImpl<TestQueuable> queue;
-  private TestQueuableListener listener;
+  private MongoQueueImpl<QueuableObject> queue;
+  private QueuableObjectListener listener;
 
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
   @Before
   public void setup() throws UnknownHostException {
-    queue = spy(new MongoQueueImpl<>(TestQueuable.class, datastore));
-    listener = new TestQueuableListener();
+    queue = spy(new MongoQueueImpl<>(QueuableObject.class, datastore));
+    listener = new QueuableObjectListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
     listener.setTimer(new HashedWheelTimer());
@@ -44,7 +45,7 @@ public class QueueListenerTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldProcessWhenRecievedMessageFromQueue() throws Exception {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
     listener.run();
@@ -56,7 +57,7 @@ public class QueueListenerTest extends WingsBaseUnitTest {
   public void shouldStopOnInterruptedException() throws Exception {
     listener.setRunOnce(false);
 
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
 
@@ -65,12 +66,12 @@ public class QueueListenerTest extends WingsBaseUnitTest {
     listener.run();
 
     assertThat(queue.count()).isEqualTo(1);
-    verify(listener, times(0)).onMessage(any(TestQueuable.class));
+    verify(listener, times(0)).onMessage(any(QueuableObject.class));
   }
 
   @Test(timeout = 5000)
   public void shouldExtendResetDuration() throws Exception {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
 
@@ -92,7 +93,7 @@ public class QueueListenerTest extends WingsBaseUnitTest {
 
     assertThat(queue.count()).isEqualTo(0);
     verify(listener).onMessage(message);
-    verify(queue, atLeast(1)).updateResetDuration(any(TestQueuable.class));
+    verify(queue, atLeast(1)).updateResetDuration(any(QueuableObject.class));
   }
 
   @Test(timeout = 5000)
@@ -117,15 +118,14 @@ public class QueueListenerTest extends WingsBaseUnitTest {
     listener.shutDown();
     listenerThread.join();
 
-    verify(listener, times(0)).onMessage(any(TestQueuable.class));
+    verify(listener, times(0)).onMessage(any(QueuableObject.class));
   }
 
   @Test
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
-    TestQueuable message = new TestQueuable(1);
+    QueuableObject message = new QueuableObject(1);
     message.setRetries(1);
-    Exception exception = new Exception();
-    doThrow(exception).when(listener).onMessage(message);
+    listener.setThrowException(true);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
 
@@ -133,15 +133,14 @@ public class QueueListenerTest extends WingsBaseUnitTest {
 
     assertThat(queue.count()).isEqualTo(1);
     verify(listener).onMessage(message);
-    verify(listener).onException(exception, message);
+    verify(listener).onException(any(Exception.class), eq(message));
     verify(queue).requeue(message);
   }
 
   @Test
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
-    TestQueuable message = new TestQueuable(1);
-    Exception exception = new Exception();
-    doThrow(exception).when(listener).onMessage(message);
+    QueuableObject message = new QueuableObject(1);
+    listener.setThrowException(true);
     queue.send(message);
     assertThat(queue.count()).isEqualTo(1);
 
@@ -149,12 +148,22 @@ public class QueueListenerTest extends WingsBaseUnitTest {
 
     assertThat(queue.count()).isEqualTo(1);
     verify(listener).onMessage(message);
-    verify(listener).onException(exception, message);
+    verify(listener).onException(any(Exception.class), eq(message));
     verify(queue, times(0)).requeue(message);
   }
 
-  private static class TestQueuableListener extends AbstractQueueListener<TestQueuable> {
+  private static class QueuableObjectListener extends AbstractQueueListener<QueuableObject> {
+    private boolean throwException;
+
+    public void setThrowException(boolean throwException) {
+      this.throwException = throwException;
+    }
+
     @Override
-    protected void onMessage(TestQueuable message) throws Exception {}
+    protected void onMessage(QueuableObject message) throws Exception {
+      if (throwException) {
+        throw new Exception("Expected Exception In Test.");
+      }
+    }
   }
 }

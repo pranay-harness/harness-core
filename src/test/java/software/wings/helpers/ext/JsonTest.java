@@ -15,38 +15,17 @@ public class JsonTest extends WingsBaseUnitTest {
 
   @Test
   public void testJson() {
-    BaseA a = new BaseA();
-    String jsona = jsonUtils.asJson(a);
+    BaseA baseA = new BaseA();
+    String jsona = jsonUtils.asJson(baseA);
     System.out.println(jsona);
-    BaseB b = new BaseB();
-    String jsonb = jsonUtils.asJson(b);
+    BaseB baseB = new BaseB();
+    String jsonb = jsonUtils.asJson(baseB);
     System.out.println(jsonb);
 
-    Base a2 = jsonUtils.asObject(jsona, Base.class);
-    Base b2 = jsonUtils.asObject(jsonb, Base.class);
+    Base baseA2 = jsonUtils.asObject(jsona, Base.class);
+    Base baseB2 = jsonUtils.asObject(jsonb, Base.class);
 
-    System.out.println(b2.getBaseType());
-  }
-
-  @Test
-  public void testJson2() {
-    Release rel = new Release();
-    rel.setReleaseName("TestRel");
-    JenkinsArtifactSource jenkins = new JenkinsArtifactSource();
-    jenkins.setJenkinsUrl("http://localhost:8080/jenkins");
-    jenkins.setUsername("user1");
-    jenkins.setPassword("user1");
-    jenkins.setJobname("test-freestyle");
-    jenkins.setArtifactPathRegex("abc.war");
-    rel.addArtifactSources("account", jenkins);
-
-    String json = jsonUtils.asJson(rel);
-    System.out.println(json);
-  }
-
-  @Test
-  public void testJson3() {
-    //    Deployment deployment = new Deployment();
+    System.out.println(baseB2.getBaseType());
   }
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
