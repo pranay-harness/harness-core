@@ -72,8 +72,8 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, String applicationId, String id) {
-    return createQuery(cls).field("applicationId").equal(applicationId).field("uuid").equal(id).get();
+  public <T extends Base> T get(Class<T> cls, String appId, String id) {
+    return createQuery(cls).field("appId").equal(appId).field("uuid").equal(id).get();
   }
 
   @Override

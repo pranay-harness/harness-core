@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 public class Host extends Base implements Repeatable {
   public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
 
-  @Indexed private String applicationId;
-
   @Indexed(unique = true) private String hostName;
 
   private String osType;
@@ -93,14 +91,6 @@ public class Host extends Base implements Repeatable {
     this.sshPort = sshPort;
   }
 
-  public String getApplicationId() {
-    return applicationId;
-  }
-
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
-  }
-
   public String getInfraId() {
     return infraId;
   }
@@ -140,8 +130,8 @@ public class Host extends Base implements Repeatable {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(applicationId, hostName, osType, ipAddress, sshPort, hostAlias, envUuid, accessType, tags,
-              infraId, configFiles);
+        + Objects.hash(
+              hostName, osType, ipAddress, sshPort, hostAlias, envUuid, accessType, tags, infraId, configFiles);
   }
 
   @Override
@@ -156,16 +146,24 @@ public class Host extends Base implements Repeatable {
       return false;
     }
     final Host other = (Host) obj;
-    return Objects.equals(this.applicationId, other.applicationId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.osType, other.osType) && Objects.equals(this.ipAddress, other.ipAddress)
-        && Objects.equals(this.sshPort, other.sshPort) && Objects.equals(this.hostAlias, other.hostAlias)
-        && Objects.equals(this.envUuid, other.envUuid) && Objects.equals(this.accessType, other.accessType)
-        && Objects.equals(this.tags, other.tags) && Objects.equals(this.infraId, other.infraId)
-        && Objects.equals(this.configFiles, other.configFiles);
+    return Objects.equals(this.hostName, other.hostName) && Objects.equals(this.osType, other.osType)
+        && Objects.equals(this.ipAddress, other.ipAddress) && Objects.equals(this.sshPort, other.sshPort)
+        && Objects.equals(this.hostAlias, other.hostAlias) && Objects.equals(this.envUuid, other.envUuid)
+        && Objects.equals(this.accessType, other.accessType) && Objects.equals(this.tags, other.tags)
+        && Objects.equals(this.infraId, other.infraId) && Objects.equals(this.configFiles, other.configFiles);
+  }
+
+  @Override
+  public RepeatElementType getRepeatElementType() {
+    return RepeatElementType.HOST;
+  }
+
+  @Override
+  public String getName() {
+    return hostName;
   }
 
   public static final class HostBuilder {
-    private String applicationId;
     private String hostName;
     private String osType;
     private String ipAddress;
@@ -177,6 +175,8 @@ public class Host extends Base implements Repeatable {
     private String infraId;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
+    //@NotNull
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -187,11 +187,6 @@ public class Host extends Base implements Repeatable {
 
     public static HostBuilder aHost() {
       return new HostBuilder();
-    }
-
-    public HostBuilder withApplicationId(String applicationId) {
-      this.applicationId = applicationId;
-      return this;
     }
 
     public HostBuilder withHostName(String hostName) {
@@ -249,6 +244,11 @@ public class Host extends Base implements Repeatable {
       return this;
     }
 
+    public HostBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public HostBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -276,7 +276,6 @@ public class Host extends Base implements Repeatable {
 
     public HostBuilder but() {
       return aHost()
-          .withApplicationId(applicationId)
           .withHostName(hostName)
           .withOsType(osType)
           .withIpAddress(ipAddress)
@@ -288,6 +287,7 @@ public class Host extends Base implements Repeatable {
           .withInfraId(infraId)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -297,7 +297,6 @@ public class Host extends Base implements Repeatable {
 
     public Host build() {
       Host host = new Host();
-      host.setApplicationId(applicationId);
       host.setHostName(hostName);
       host.setOsType(osType);
       host.setIpAddress(ipAddress);
@@ -309,6 +308,7 @@ public class Host extends Base implements Repeatable {
       host.setInfraId(infraId);
       host.setConfigFiles(configFiles);
       host.setUuid(uuid);
+      host.setAppId(appId);
       host.setCreatedBy(createdBy);
       host.setCreatedAt(createdAt);
       host.setLastUpdatedBy(lastUpdatedBy);
@@ -316,15 +316,5 @@ public class Host extends Base implements Repeatable {
       host.setActive(active);
       return host;
     }
-  }
-
-  @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.HOST;
-  }
-
-  @Override
-  public String getName() {
-    return hostName;
   }
 }

@@ -47,38 +47,37 @@ public class ArtifactResource {
   }
 
   @GET
-  @Path("{applicationId}")
+  @Path("{appId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
   public RestResponse<PageResponse<Artifact>> list(
-      @PathParam("applicationId") String applicationId, @BeanParam PageRequest<Artifact> pageRequest) {
-    pageRequest.addFilter("application", applicationId, SearchFilter.Operator.EQ);
+      @PathParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
+    pageRequest.addFilter("application", appId, SearchFilter.Operator.EQ);
     return new RestResponse<PageResponse<Artifact>>(artifactService.list(pageRequest));
   }
 
   @GET
-  @Path("{applicationId}/{artifactId}")
+  @Path("{appId}/{artifactId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Artifact> get(
-      @PathParam("applicationId") String applicationId, @PathParam("artifactId") String artifactId) {
-    return new RestResponse<Artifact>(artifactService.get(applicationId, artifactId));
+  public RestResponse<Artifact> get(@PathParam("appId") String appId, @PathParam("artifactId") String artifactId) {
+    return new RestResponse<Artifact>(artifactService.get(appId, artifactId));
   }
 
   @POST
-  @Path("{applicationId}")
+  @Path("{appId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Artifact> save(@PathParam("applicationId") String applicationId, Artifact artifact) {
-    Validator.equalCheck(applicationId, artifact.getApplication().getUuid());
+  public RestResponse<Artifact> save(@PathParam("appId") String appId, Artifact artifact) {
+    Validator.equalCheck(appId, artifact.getApplication().getUuid());
     return new RestResponse<Artifact>(artifactService.create(artifact));
   }
 
   @PUT
-  @Path("{applicationId}/{artifactId}")
+  @Path("{appId}/{artifactId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
@@ -110,11 +109,11 @@ public class ArtifactResource {
   //  }
 
   @GET
-  @Path("download/{applicationId}/{artifactId}")
+  @Path("download/{appId}/{artifactId}")
   @Encoded
-  public Response download(@PathParam("applicationId") String applicationId, @PathParam("artifactId") String artifactId)
+  public Response download(@PathParam("appId") String appId, @PathParam("artifactId") String artifactId)
       throws IOException, GeneralSecurityException {
-    File artifactFile = artifactService.download(applicationId, artifactId);
+    File artifactFile = artifactService.download(appId, artifactId);
     ResponseBuilder response = Response.ok(artifactFile, MediaType.APPLICATION_OCTET_STREAM);
     response.header("Content-Disposition", "attachment; filename=" + artifactFile.getName());
     return response.build();

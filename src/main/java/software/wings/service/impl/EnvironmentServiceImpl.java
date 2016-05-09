@@ -33,18 +33,18 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   @Override
-  public Environment get(String applicationId, String envName) {
+  public Environment get(String appId, String envName) {
     return null;
   }
 
   @Override
-  public Environment save(String applicationId, Environment environment) {
+  public Environment save(String appId, Environment environment) {
     Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
     wingsPersistence.save(new TagType(HierarchyTagName, savedEnv.getUuid()));
 
     UpdateOperations<Application> updateOperations =
         wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);
-    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(applicationId);
+    Query<Application> updateQuery = wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(appId);
     wingsPersistence.update(updateQuery, updateOperations);
     return savedEnv;
   }

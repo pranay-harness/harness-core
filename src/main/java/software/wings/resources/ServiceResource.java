@@ -37,33 +37,33 @@ public class ServiceResource {
 
   @GET
   public RestResponse<PageResponse<Service>> list(
-      @QueryParam("app_id") String appId, @BeanParam PageRequest<Service> pageRequest) {
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(srs.list(pageRequest));
   }
 
   @GET
-  @Path("{service_id}")
-  public RestResponse<Service> get(@PathParam("service_id") String serviceId) {
+  @Path("{serviceId}")
+  public RestResponse<Service> get(@PathParam("serviceId") String serviceId) {
     return new RestResponse<>(srs.get(serviceId));
   }
 
   @POST
-  public RestResponse<Service> save(@QueryParam("app_id") String appId, Service service) {
+  public RestResponse<Service> save(@QueryParam("appId") String appId, Service service) {
     service.setAppId(appId);
     return new RestResponse<>(srs.save(service));
   }
 
   @PUT
-  @Path("{service_id}")
-  public RestResponse<Service> update(@PathParam("service_id") String serviceId, Service service) {
+  @Path("{serviceId}")
+  public RestResponse<Service> update(@PathParam("serviceId") String serviceId, Service service) {
     service.setUuid(serviceId);
     return new RestResponse<>(srs.update(service));
   }
 
   @DELETE
-  @Path("{service_id}")
-  public RestResponse delete(@PathParam("service_id") String serviceId) {
+  @Path("{serviceId}")
+  public RestResponse delete(@PathParam("serviceId") String serviceId) {
     srs.delete(serviceId);
     return new RestResponse();
   }

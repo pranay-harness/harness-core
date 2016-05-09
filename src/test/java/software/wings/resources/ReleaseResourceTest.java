@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
@@ -87,7 +86,7 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
 
     RestResponse<Release> restResponse =
         RESOURCES.client()
-            .target("/releases?app_id=" + APP_ID)
+            .target("/releases?appId=" + APP_ID)
             .request()
             .post(Entity.entity(release, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
@@ -101,7 +100,7 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
 
     RestResponse<Release> restResponse =
         RESOURCES.client()
-            .target("/releases/" + RELEASE_ID + "?app_id=" + APP_ID)
+            .target("/releases/" + RELEASE_ID + "?appId=" + APP_ID)
             .request()
             .put(Entity.entity(release, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
@@ -115,7 +114,7 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
     assertThatExceptionOfType(NotFoundException.class)
         .isThrownBy(()
                         -> RESOURCES.client()
-                               .target("/releases?app_id=BAD_APP_ID")
+                               .target("/releases?appId=BAD_APP_ID")
                                .request()
                                .post(Entity.entity(release, MediaType.APPLICATION_JSON),
                                    new GenericType<RestResponse<Release>>() {}));
@@ -126,7 +125,7 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
   public void shouldAddArtifactSource() {
     ArtifactSource jenkinsArtifactSource = aJenkinsArtifactSource().build();
     RestResponse<Release> restResponse = RESOURCES.client()
-                                             .target("/releases/" + RELEASE_ID + "/artifactsources?app_id=" + APP_ID)
+                                             .target("/releases/" + RELEASE_ID + "/artifactsources?appId=" + APP_ID)
                                              .request()
                                              .post(Entity.entity(jenkinsArtifactSource, MediaType.APPLICATION_JSON),
                                                  new GenericType<RestResponse<Release>>() {});

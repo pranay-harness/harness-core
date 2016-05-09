@@ -74,7 +74,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public File download(String applicationId, String artifactId) {
+  public File download(String appId, String artifactId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, artifactId);
     if (artifact == null || artifact.getStatus() != Status.READY || artifact.getArtifactFile() == null
         || artifact.getArtifactFile().getFileUuid() == null) {
@@ -95,7 +95,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   }
 
   @Override
-  public Artifact get(String applicationId, String artifactId) {
+  public Artifact get(String appId, String artifactId) {
     return wingsPersistence.get(Artifact.class, artifactId);
   }
 

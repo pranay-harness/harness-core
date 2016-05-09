@@ -10,7 +10,7 @@ import java.util.List;
 public interface EnvironmentService {
   public List<Environment> list(String appId);
 
-  public Environment get(String applicationId, String envName);
+  public Environment get(String appId, String envName);
 
-  public Environment save(String applicationId, Environment environment);
+  public Environment save(String appId, Environment environment);
 }

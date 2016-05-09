@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.ChecksumType.MD5;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -18,7 +20,6 @@ import java.util.Objects;
                       , @Field("name"), @Field("version") }, options = @IndexOptions(unique = true)))
 @Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
-  private String appId;
   private boolean standard;
   private String version;
   private String description;
@@ -29,14 +30,6 @@ public class AppContainer extends BaseFile {
 
   public AppContainer(String fileName, String md5) {
     super(fileName, md5);
-  }
-
-  public String getAppId() {
-    return appId;
-  }
-
-  public void setAppId(String appId) {
-    this.appId = appId;
   }
 
   public boolean isStandard() {
@@ -81,7 +74,7 @@ public class AppContainer extends BaseFile {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(appId, standard, version, description, source, standardUpload);
+    return 31 * super.hashCode() + Objects.hash(standard, version, description, source, standardUpload);
   }
 
   @Override
@@ -96,13 +89,12 @@ public class AppContainer extends BaseFile {
       return false;
     }
     final AppContainer other = (AppContainer) obj;
-    return Objects.equals(this.appId, other.appId) && Objects.equals(this.standard, other.standard)
-        && Objects.equals(this.version, other.version) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.source, other.source) && Objects.equals(this.standardUpload, other.standardUpload);
+    return Objects.equals(this.standard, other.standard) && Objects.equals(this.version, other.version)
+        && Objects.equals(this.description, other.description) && Objects.equals(this.source, other.source)
+        && Objects.equals(this.standardUpload, other.standardUpload);
   }
 
   public static final class AppContainerBuilder {
-    private String appId;
     private boolean standard;
     private String version;
     private String description;
@@ -112,9 +104,11 @@ public class AppContainer extends BaseFile {
     private String name;
     private String mimeType;
     private long size;
-    private ChecksumType checksumType;
+    private ChecksumType checksumType = MD5;
     private String checksum;
     private String uuid;
+    //@NotNull
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -125,11 +119,6 @@ public class AppContainer extends BaseFile {
 
     public static AppContainerBuilder anAppContainer() {
       return new AppContainerBuilder();
-    }
-
-    public AppContainerBuilder withAppId(String appId) {
-      this.appId = appId;
-      return this;
     }
 
     public AppContainerBuilder withStandard(boolean standard) {
@@ -192,6 +181,11 @@ public class AppContainer extends BaseFile {
       return this;
     }
 
+    public AppContainerBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public AppContainerBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
@@ -219,7 +213,6 @@ public class AppContainer extends BaseFile {
 
     public AppContainerBuilder but() {
       return anAppContainer()
-          .withAppId(appId)
           .withStandard(standard)
           .withVersion(version)
           .withDescription(description)
@@ -232,6 +225,7 @@ public class AppContainer extends BaseFile {
           .withChecksumType(checksumType)
           .withChecksum(checksum)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -241,7 +235,6 @@ public class AppContainer extends BaseFile {
 
     public AppContainer build() {
       AppContainer appContainer = new AppContainer();
-      appContainer.setAppId(appId);
       appContainer.setStandard(standard);
       appContainer.setVersion(version);
       appContainer.setDescription(description);
@@ -254,6 +247,7 @@ public class AppContainer extends BaseFile {
       appContainer.setChecksumType(checksumType);
       appContainer.setChecksum(checksum);
       appContainer.setUuid(uuid);
+      appContainer.setAppId(appId);
       appContainer.setCreatedBy(createdBy);
       appContainer.setCreatedAt(createdAt);
       appContainer.setLastUpdatedBy(lastUpdatedBy);

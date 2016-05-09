@@ -20,7 +20,7 @@ public interface WorkflowService {
 
   public Pipeline updatePipeline(Pipeline pipeline);
 
-  public Pipeline readPipeline(String applicationId, String pipelineId);
+  public Pipeline readPipeline(String appId, String pipelineId);
 
   public StateMachine create(@Valid StateMachine stateMachine);
 

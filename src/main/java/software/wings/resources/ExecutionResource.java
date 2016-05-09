@@ -29,7 +29,7 @@ public class ExecutionResource {
   }
 
   @GET
-  @Path("deploy/{applicationId}")
+  @Path("deploy/{appId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")
@@ -38,7 +38,7 @@ public class ExecutionResource {
   }
 
   @POST
-  @Path("deploy/{applicationId}")
+  @Path("deploy/{appId}")
   @Timed
   @ExceptionMetered
   @Produces("application/json")

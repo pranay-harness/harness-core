@@ -28,7 +28,7 @@ public class Base {
 
   @Indexed
   //@NotNull
-  private String applicationId;
+  private String appId;
 
   @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 
@@ -88,17 +88,17 @@ public class Base {
     this.active = active;
   }
 
-  public String getApplicationId() {
-    return applicationId;
+  public String getAppId() {
+    return appId;
   }
 
-  public void setApplicationId(String applicationId) {
-    this.applicationId = applicationId;
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(uuid, applicationId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
+    return Objects.hash(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
   }
 
   @Override
@@ -110,7 +110,7 @@ public class Base {
       return false;
     }
     final Base other = (Base) obj;
-    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.applicationId, other.applicationId)
+    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.appId, other.appId)
         && Objects.equals(this.createdBy, other.createdBy) && Objects.equals(this.createdAt, other.createdAt)
         && Objects.equals(this.lastUpdatedBy, other.lastUpdatedBy)
         && Objects.equals(this.lastUpdatedAt, other.lastUpdatedAt) && Objects.equals(this.active, other.active);

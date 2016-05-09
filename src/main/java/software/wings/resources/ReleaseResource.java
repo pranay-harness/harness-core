@@ -54,15 +54,15 @@ public class ReleaseResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<Release>> list(
-      @QueryParam("app_id") String applicationId, @BeanParam PageRequest<Release> pageRequest) {
-    pageRequest.addFilter("application", applicationId, EQ);
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Release> pageRequest) {
+    pageRequest.addFilter("application", appId, EQ);
     return new RestResponse<>(releaseService.list(pageRequest));
   }
 
   /**
    * Endpoint to create a new release.
    *
-   * @param applicationId QueryParam app_id.
+   * @param appId QueryParam app_id.
    * @param release       release to be created.
    * @return newly created release.
    */
@@ -70,11 +70,11 @@ public class ReleaseResource {
   @Timed
   @ExceptionMetered
   @Produces("application/json")
-  public RestResponse<Release> save(@QueryParam("app_id") String applicationId, Release release) {
+  public RestResponse<Release> save(@QueryParam("appId") String appId, Release release) {
     try {
-      Application application = appService.findByUuid(applicationId);
+      Application application = appService.findByUuid(appId);
       if (application == null) {
-        throw new NotFoundException("application with id " + applicationId + " not found.");
+        throw new NotFoundException("application with id " + appId + " not found.");
       }
       release.setApplication(application);
       return new RestResponse<>(releaseService.create(release));
@@ -90,7 +90,7 @@ public class ReleaseResource {
   @Produces("application/json")
   @Path("{id}")
   public RestResponse<Release> update(
-      @QueryParam("app_id") String applicationId, @PathParam("id") String releaseId, Release release) {
+      @QueryParam("appId") String appId, @PathParam("id") String releaseId, Release release) {
     release.setUuid(releaseId);
     return new RestResponse<>(releaseService.update(release));
   }
@@ -101,7 +101,7 @@ public class ReleaseResource {
   @Produces("application/json")
   @Path("{id}/artifactsources")
   public RestResponse<Release> addArtifactSource(
-      @QueryParam("app_id") String applicationId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
+      @QueryParam("appId") String appId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
     return new RestResponse<>(releaseService.addArtifactSource(releaseId, artifactSource));
   }
 
@@ -110,8 +110,8 @@ public class ReleaseResource {
   @ExceptionMetered
   @Produces("application/json")
   @Path("{id}/artifactsources")
-  public RestResponse<Release> deleteArtifactSource(@QueryParam("app_id") String applicationId,
-      @PathParam("id") String releaseId, @BeanParam ArtifactSource artifactSource) {
+  public RestResponse<Release> deleteArtifactSource(
+      @QueryParam("appId") String appId, @PathParam("id") String releaseId, @BeanParam ArtifactSource artifactSource) {
     return new RestResponse<>(releaseService.deleteArtifactSource(releaseId, artifactSource));
   }
 }
