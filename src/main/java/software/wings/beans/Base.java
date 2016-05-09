@@ -13,6 +13,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import java.util.Objects;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -24,6 +25,10 @@ import javax.validation.constraints.NotNull;
  */
 public class Base {
   @Id @NotNull(groups = {Update.class}) private String uuid;
+
+  @Indexed
+  //@NotNull
+  private String applicationId;
 
   @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
 
@@ -83,9 +88,17 @@ public class Base {
     this.active = active;
   }
 
+  public String getApplicationId() {
+    return applicationId;
+  }
+
+  public void setApplicationId(String applicationId) {
+    this.applicationId = applicationId;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(uuid, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
+    return Objects.hash(uuid, applicationId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
   }
 
   @Override
@@ -97,8 +110,9 @@ public class Base {
       return false;
     }
     final Base other = (Base) obj;
-    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.createdBy, other.createdBy)
-        && Objects.equals(this.createdAt, other.createdAt) && Objects.equals(this.lastUpdatedBy, other.lastUpdatedBy)
+    return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.applicationId, other.applicationId)
+        && Objects.equals(this.createdBy, other.createdBy) && Objects.equals(this.createdAt, other.createdAt)
+        && Objects.equals(this.lastUpdatedBy, other.lastUpdatedBy)
         && Objects.equals(this.lastUpdatedAt, other.lastUpdatedAt) && Objects.equals(this.active, other.active);
   }
 

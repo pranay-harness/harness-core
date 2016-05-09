@@ -27,6 +27,8 @@ public interface WingsPersistence {
 
   public <T extends Base> T get(Class<T> cls, String id);
 
+  public <T extends Base> T get(Class<T> cls, String applicationId, String id);
+
   public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
 
   public <T extends Base> List<String> save(List<T> tList);
