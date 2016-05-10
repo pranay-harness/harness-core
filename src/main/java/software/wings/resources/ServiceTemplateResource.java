@@ -30,7 +30,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 4/4/16.
  */
-@Path("/service_templates")
+@Path("/service-templates")
 @AuthRule
 @Timed
 @ExceptionMetered
