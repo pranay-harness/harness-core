@@ -54,6 +54,7 @@ public class Infra extends Base {
     private InfraType infraType;
     private String envId;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -78,6 +79,11 @@ public class Infra extends Base {
 
     public InfraBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public InfraBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -111,6 +117,7 @@ public class Infra extends Base {
           .withInfraType(infraType)
           .withEnvId(envId)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -123,6 +130,7 @@ public class Infra extends Base {
       infra.setInfraType(infraType);
       infra.setEnvId(envId);
       infra.setUuid(uuid);
+      infra.setAppId(appId);
       infra.setCreatedBy(createdBy);
       infra.setCreatedAt(createdAt);
       infra.setLastUpdatedBy(lastUpdatedBy);

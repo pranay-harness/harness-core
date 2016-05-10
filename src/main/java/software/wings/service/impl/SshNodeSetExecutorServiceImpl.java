@@ -30,11 +30,10 @@ public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService 
   public void execute(Execution execution) {
     Deployment deployment = (Deployment) execution;
     for (String hostInstanceMapping : deployment.getHostInstanceMappings()) {
-      //			Host host = wingsPersistence.get(HostInstanceMapping.class,
-      //hostInstanceMapping).getHost(); 			ExecutionResult result = deploy(deployment,
-      //getSshSessionConfig(deployment, host)); 			logger.info(String.format("Deployment [%s] on
-      //Host [id: %s, ip:%s] finished with status [%S]", deployment.getUuid(), host.getUuid(), host.getIpAddress(),
-      //result));
+      //			Host host = wingsPersistence.get(HostInstanceMapping.class, hostInstanceMapping).get();
+      //			ExecutionResult result = deploy(deployment, getSshSessionConfig(deployment, host));
+      //			logger.info(String.format("Deployment [%s] on Host [id: %s, ip:%s] finished with status
+      //[%S]", deployment.getUuid(), host.getUuid(), host.getIpAddress(), result));
     }
   }
 

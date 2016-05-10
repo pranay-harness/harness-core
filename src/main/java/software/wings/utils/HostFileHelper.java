@@ -3,6 +3,7 @@ package software.wings.utils;
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
 import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.apache.commons.csv.CSVParser;
@@ -27,7 +28,7 @@ public class HostFileHelper {
 
   public static enum HostFileType { CSV, PROPERTIES, XML }
 
-  public static List<Host> parseHosts(InputStream inputStream, String infraId, HostFileType fileType) {
+  public static List<Host> parseHosts(InputStream inputStream, String appId, String infraId, HostFileType fileType) {
     List<Host> hosts = new ArrayList<>();
     if (fileType.equals(CSV)) { // TODO: Generalize for other types as well
       try {
@@ -37,7 +38,13 @@ public class HostFileHelper {
           String hostName = record.get("HOST");
           String osType = record.get("OS");
           Host.AccessType accessType = Host.AccessType.valueOf(record.get("ACCESS_TYPE"));
-          hosts.add(new Host(infraId, hostName, osType, accessType));
+          hosts.add(aHost()
+                        .withAppId(appId)
+                        .withInfraId(infraId)
+                        .withHostName(hostName)
+                        .withOsType(osType)
+                        .withAccessType(accessType)
+                        .build());
         }
       } catch (IOException ex) {
         throw new WingsException(INVALID_CSV_FILE);

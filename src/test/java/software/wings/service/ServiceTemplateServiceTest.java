@@ -3,7 +3,6 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -28,6 +27,7 @@ import software.wings.beans.Tag;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -43,6 +43,8 @@ public class ServiceTemplateServiceTest {
   ServiceTemplateService templateService;
 
   private InfraService infraService = mock(InfraService.class);
+
+  private HostService hostService = mock(HostService.class);
 
   private TagService tagService = mock(TagService.class);
 
@@ -93,13 +95,13 @@ public class ServiceTemplateServiceTest {
   @Test
   public void shouldUpdateHostAndTags() {
     when(tagService.saveTag(any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
-    when(infraService.createHost(anyString(), any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
+    when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
     when(wingsPersistence.get(Tag.class, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
     when(wingsPersistence.get(Host.class, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
 
     ServiceTemplate template = builder.build();
     Tag tag = tagService.saveTag(any(Tag.class));
-    Host host = infraService.createHost(anyString(), any(Host.class));
+    Host host = hostService.save(any(Host.class));
     ServiceTemplate savedTemplate =
         templateService.updateHostAndTags(template.getUuid(), asList(tag.getUuid()), asList(host.getUuid()));
 
