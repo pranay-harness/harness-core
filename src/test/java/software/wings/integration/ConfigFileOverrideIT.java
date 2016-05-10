@@ -29,6 +29,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -76,6 +77,7 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   @Inject TagService tagService;
   @Inject ConfigService configService;
   @Inject EnvironmentService environmentService;
+  @Inject HostService hostService;
 
   ServiceTemplate template;
   List<Host> hosts;
@@ -98,7 +100,7 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.ServiceBuilder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Infra infra = infraService.save(anInfra().withInfraType(STATIC).build(), environment.getUuid());
+    Infra infra = infraService.save(anInfra().withEnvId(environment.getUuid()).withInfraType(STATIC).build());
 
     hosts = importAndGetHosts(infra); // FIXME split
 
@@ -122,12 +124,12 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     tagService.linkTags(or.getUuid(), orOz2.getUuid());
 
     // Tag hosts
-    infraService.tagHost(hosts.get(0).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(1).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(2).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(3).getUuid(), ncOz3.getUuid());
-    infraService.tagHost(hosts.get(4).getUuid(), ncOz3.getUuid());
-    infraService.tagHost(hosts.get(5).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(0).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(1).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(2).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(3).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(4).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(5).getUuid(), ncOz3.getUuid());
 
     template = templateService.save(aServiceTemplate()
                                         .withServiceId(service.getUuid())
@@ -269,11 +271,12 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   }
 
   private List<Host> importAndGetHosts(Infra infra) throws FileNotFoundException {
-    int numOfHostsImported = infraService.importHosts(
-        infra.getUuid(), new FileInputStream(System.getProperty("user.home") + "/data/hosts.csv"), CSV);
+    int numOfHostsImported = hostService.importHosts(infra.getAppId(), infra.getUuid(),
+        new FileInputStream(System.getProperty("user.home") + "/data/hosts.csv"), CSV);
     log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infra.getUuid(), EQ);
-    return infraService.listHosts(pageRequest).getResponse();
+    pageRequest.addFilter("appId", infra.getAppId(), EQ);
+    return hostService.list(pageRequest).getResponse();
   }
 }
