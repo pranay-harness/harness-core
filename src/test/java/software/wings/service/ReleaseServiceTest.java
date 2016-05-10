@@ -32,11 +32,8 @@ import javax.ws.rs.BadRequestException;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ReleaseServiceTest extends WingsBaseUnitTest {
-  private static final ReleaseBuilder releaseBuilder = aRelease()
-                                                           .withAppId("APP_ID")
-                                                           .withReleaseName("REL1")
-                                                           .withApplication(anApplication().withUuid("APP_ID").build())
-                                                           .withDescription("RELEASE 1");
+  private static final ReleaseBuilder releaseBuilder =
+      aRelease().withAppId("APP_ID").withReleaseName("REL1").withDescription("RELEASE 1");
 
   private static final JenkinsArtifactSource artifactSource =
       aJenkinsArtifactSource()
@@ -45,10 +42,11 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
           .withJobname("job1")
           .withUsername("username")
           .withPassword("password")
-          .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
-                                                           .withArtifactPathRegex("dist/svr-*.war")
-                                                           .withServiceIds(Lists.newArrayList("SERVICE_ID"))
-                                                           .build()))
+          .withArtifactPathServices(Lists.newArrayList(
+              anArtifactPathServiceEntry()
+                  .withArtifactPathRegex("dist/svr-*.war")
+                  .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId("APP_ID").build()))
+                  .build()))
           .withJenkinsUrl("http://jenkins")
           .build();
 

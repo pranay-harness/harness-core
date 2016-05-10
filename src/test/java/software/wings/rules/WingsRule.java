@@ -17,7 +17,16 @@ import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import de.flapdoodle.embed.mongo.MongodExecutable;
+import de.flapdoodle.embed.mongo.MongodProcess;
+import de.flapdoodle.embed.mongo.MongodStarter;
+import de.flapdoodle.embed.mongo.config.IMongodConfig;
+import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
+import de.flapdoodle.embed.mongo.config.Net;
+import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
+import org.apache.commons.lang.ArrayUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -71,7 +80,9 @@ import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 
+import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -82,26 +93,18 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 4/5/16.
  */
 public class WingsRule implements MethodRule {
-  public static enum TestType { UNIT, INTEGRATION }
+  private MongodExecutable mongodExecutable;
 
   private TestType testType;
   private Injector injector;
   private MongoServer mongoServer;
-  private Datastore datastore;
-  private DistributedLockSvc distributedLockSvc;
-  private int port = 0;
-  private ExecutorService executorService = new CurrentThreadExecutor();
-
-  public WingsRule(TestType testType) {
-    this.testType = testType;
-  }
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        WingsRule.this.before();
+        WingsRule.this.before(frameworkMethod.getAnnotations());
         injector.injectMembers(target);
         try {
           statement.evaluate();
@@ -111,14 +114,39 @@ public class WingsRule implements MethodRule {
       }
     };
   }
+  private Datastore datastore;
+  private DistributedLockSvc distributedLockSvc;
+  private int port = 0;
+  private ExecutorService executorService = new CurrentThreadExecutor();
 
-  protected void before() throws Throwable {
+  public WingsRule(TestType testType) {
+    this.testType = testType;
+  }
+
+  protected void before(Annotation[] annotations) throws Throwable {
     MongoClient mongoClient;
     if (testType.equals(TestType.UNIT)) {
-      mongoServer = new MongoServer(new MemoryBackend());
-      mongoServer.bind("localhost", port);
-      InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-      mongoClient = new MongoClient(new ServerAddress(serverAddress));
+      if (ArrayUtils.isNotEmpty(annotations)
+          && Arrays.stream(annotations)
+                 .filter(annotation -> GridFS.class.isInstance(annotation))
+                 .findFirst()
+                 .isPresent()) {
+        MongodStarter starter = MongodStarter.getDefaultInstance();
+
+        int port = Network.getFreeServerPort();
+        IMongodConfig mongodConfig = new MongodConfigBuilder()
+                                         .version(Version.Main.PRODUCTION)
+                                         .net(new Net(port, Network.localhostIsIPv6()))
+                                         .build();
+        mongodExecutable = starter.prepare(mongodConfig);
+        MongodProcess mongod = mongodExecutable.start();
+        mongoClient = new MongoClient("localhost", port);
+      } else {
+        mongoServer = new MongoServer(new MemoryBackend());
+        mongoServer.bind("localhost", port);
+        InetSocketAddress serverAddress = mongoServer.getLocalAddress();
+        mongoClient = new MongoClient(new ServerAddress(serverAddress));
+      }
     } else {
       mongoClient = new MongoClient("localhost", 27017);
     }
@@ -225,10 +253,17 @@ public class WingsRule implements MethodRule {
 
     log().info("Stopping Mongo server...");
     if (!testType.equals(INTEGRATION)) {
-      mongoServer.shutdown();
+      if (mongoServer != null) {
+        mongoServer.shutdown();
+      }
+      if (mongodExecutable != null) {
+        mongodExecutable.stop();
+      }
     }
     log().info("Stopped Mongo server...");
   }
+
+  public enum TestType { UNIT, INTEGRATION }
 
   private void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");

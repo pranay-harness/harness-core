@@ -1,9 +1,12 @@
 package software.wings.beans;
 
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
@@ -11,7 +14,8 @@ import software.wings.utils.validation.Create;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.Objects;
+import java.util.List;
+import java.util.Set;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -26,28 +30,17 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "artifacts", noClassnameStored = true)
 @Artifact.ValidArtifact
 public class Artifact extends Base {
-  @Indexed @Reference(idOnly = true) @NotNull private Application application;
-
-  @Indexed @Reference(idOnly = true) @NotNull private Release release;
-
-  @Indexed @NotNull(groups = Create.class) private String compName;
+  @Indexed @Reference(idOnly = true) @NotNull(groups = Create.class) private Release release;
 
   @Indexed @NotNull(groups = Create.class) private String artifactSourceName;
 
   @Indexed @NotNull private String displayName;
 
-  @Indexed @NotNull(groups = Create.class) private String revision;
+  @Indexed private String revision;
 
-  private ArtifactFile artifactFile;
+  private List<ArtifactFile> artifactFiles = Lists.newArrayList();
+
   @Indexed private Status status;
-
-  public Application getApplication() {
-    return application;
-  }
-
-  public void setApplication(Application application) {
-    this.application = application;
-  }
 
   public Release getRelease() {
     return release;
@@ -55,14 +48,6 @@ public class Artifact extends Base {
 
   public void setRelease(Release release) {
     this.release = release;
-  }
-
-  public String getCompName() {
-    return compName;
-  }
-
-  public void setCompName(String compName) {
-    this.compName = compName;
   }
 
   public String getDisplayName() {
@@ -97,49 +82,52 @@ public class Artifact extends Base {
     this.artifactSourceName = artifactSourceName;
   }
 
-  public ArtifactFile getArtifactFile() {
-    return artifactFile;
+  public List<ArtifactFile> getArtifactFiles() {
+    return artifactFiles;
   }
 
-  public void setArtifactFile(ArtifactFile artifactFile) {
-    this.artifactFile = artifactFile;
+  public void setArtifactFiles(List<ArtifactFile> artifactFiles) {
+    this.artifactFiles = artifactFiles;
+  }
+
+  @JsonProperty("services")
+  public Set<Service> getSevices() {
+    return artifactFiles.stream().flatMap(artifactFile -> artifactFile.getServices().stream()).collect(toSet());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    Artifact artifact = (Artifact) o;
+    return com.google.common.base.Objects.equal(release, artifact.release)
+        && com.google.common.base.Objects.equal(artifactSourceName, artifact.artifactSourceName)
+        && com.google.common.base.Objects.equal(displayName, artifact.displayName)
+        && com.google.common.base.Objects.equal(revision, artifact.revision)
+        && com.google.common.base.Objects.equal(artifactFiles, artifact.artifactFiles) && status == artifact.status;
   }
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(application, release, compName, artifactSourceName, displayName, revision, artifactFile, status);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Artifact other = (Artifact) obj;
-    return Objects.equals(this.application, other.application) && Objects.equals(this.release, other.release)
-        && Objects.equals(this.compName, other.compName)
-        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
-        && Objects.equals(this.displayName, other.displayName) && Objects.equals(this.revision, other.revision)
-        && Objects.equals(this.artifactFile, other.artifactFile) && Objects.equals(this.status, other.status);
+    return com.google.common.base.Objects.hashCode(
+        super.hashCode(), release, artifactSourceName, displayName, revision, artifactFiles, status);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("application", application)
         .add("release", release)
-        .add("compName", compName)
         .add("artifactSourceName", artifactSourceName)
         .add("displayName", displayName)
         .add("revision", revision)
-        .add("artifactFile", artifactFile)
+        .add("artifactFiles", artifactFiles)
         .add("status", status)
         .toString();
   }
@@ -164,20 +152,17 @@ public class Artifact extends Base {
 
       @Override
       public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
-        return bean.getApplication() != null && isNotBlank(bean.getApplication().getUuid())
-            && isNotBlank(bean.getRelease().getUuid());
+        return isNotBlank(bean.getAppId()) && isNotBlank(bean.getRelease().getUuid());
       }
     }
   }
 
-  public static final class ArtifactBuilder {
-    private Application application;
+  public static final class Builder {
     private Release release;
-    private String compName;
     private String artifactSourceName;
     private String displayName;
     private String revision;
-    private ArtifactFile artifactFile;
+    private List<ArtifactFile> artifactFiles = Lists.newArrayList();
     private Status status;
     private String uuid;
     private String appId;
@@ -187,96 +172,84 @@ public class Artifact extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ArtifactBuilder() {}
+    private Builder() {}
 
-    public static ArtifactBuilder anArtifact() {
-      return new ArtifactBuilder();
+    public static Builder anArtifact() {
+      return new Builder();
     }
 
-    public ArtifactBuilder withApplication(Application application) {
-      this.application = application;
-      return this;
-    }
-
-    public ArtifactBuilder withRelease(Release release) {
+    public Builder withRelease(Release release) {
       this.release = release;
       return this;
     }
 
-    public ArtifactBuilder withCompName(String compName) {
-      this.compName = compName;
-      return this;
-    }
-
-    public ArtifactBuilder withArtifactSourceName(String artifactSourceName) {
+    public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
-    public ArtifactBuilder withDisplayName(String displayName) {
+    public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
-    public ArtifactBuilder withRevision(String revision) {
+    public Builder withRevision(String revision) {
       this.revision = revision;
       return this;
     }
 
-    public ArtifactBuilder withArtifactFile(ArtifactFile artifactFile) {
-      this.artifactFile = artifactFile;
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
       return this;
     }
 
-    public ArtifactBuilder withStatus(Status status) {
+    public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
-    public ArtifactBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public ArtifactBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public ArtifactBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public ArtifactBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public ArtifactBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public ArtifactBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public ArtifactBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    public ArtifactBuilder but() {
+    public Builder but() {
       return anArtifact()
-          .withApplication(application)
           .withRelease(release)
-          .withCompName(compName)
           .withArtifactSourceName(artifactSourceName)
           .withDisplayName(displayName)
           .withRevision(revision)
-          .withArtifactFile(artifactFile)
+          .withArtifactFiles(artifactFiles)
           .withStatus(status)
           .withUuid(uuid)
           .withAppId(appId)
@@ -289,13 +262,11 @@ public class Artifact extends Base {
 
     public Artifact build() {
       Artifact artifact = new Artifact();
-      artifact.setApplication(application);
       artifact.setRelease(release);
-      artifact.setCompName(compName);
       artifact.setArtifactSourceName(artifactSourceName);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
-      artifact.setArtifactFile(artifactFile);
+      artifact.setArtifactFiles(artifactFiles);
       artifact.setStatus(status);
       artifact.setUuid(uuid);
       artifact.setAppId(appId);

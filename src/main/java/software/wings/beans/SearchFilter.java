@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import java.util.List;
 
 /**
@@ -46,4 +49,32 @@ public class SearchFilter {
   }
 
   public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SearchFilter that = (SearchFilter) o;
+    return Objects.equal(fieldName, that.fieldName) && Objects.equal(fieldValue, that.fieldValue)
+        && Objects.equal(fieldValues, that.fieldValues) && op == that.op;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(fieldName, fieldValue, fieldValues, op);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("fieldName", fieldName)
+        .add("fieldValue", fieldValue)
+        .add("fieldValues", fieldValues)
+        .add("op", op)
+        .toString();
+  }
 }

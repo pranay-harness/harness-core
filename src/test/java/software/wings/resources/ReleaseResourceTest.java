@@ -52,7 +52,8 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
 
   public static final ReleaseBuilder releaseBuilder = aRelease()
                                                           .withReleaseName("REL1")
-                                                          .withApplication(anApplication().withUuid(APP_ID).build())
+                                                          .withAppId(APP_ID)
+                                                          .withUuid(RELEASE_ID)
                                                           .withDescription("RELEASE 1")
                                                           .withTargetDate(System.currentTimeMillis() + 1000);
 
