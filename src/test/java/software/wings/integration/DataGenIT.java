@@ -1,14 +1,15 @@
 package software.wings.integration;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.Integer.MAX_VALUE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import org.assertj.core.api.Assertions;
 import org.glassfish.jersey.client.ClientConfig;
@@ -22,6 +23,7 @@ import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseIntegrationTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -50,9 +52,10 @@ import javax.ws.rs.core.Response;
  */
 @Path("/dataGen")
 public class DataGenIT extends WingsBaseIntegrationTest {
-  private static final int NUM_APPS = 6;
-  private static final int NUM_APP_CONTAINER_PER_APP = 10;
-  private static final int NUM_SERVICES_PER_APP = 6;
+  private static final int NUM_APPS = 100;
+  private static final int NUM_APP_CONTAINER_PER_APP = 100;
+  private static final int NUM_SERVICES_PER_APP = 10;
+  private static final int NUM_CONFIG_FILE_PER_SERVICE = 20;
   private static final int NUM_ENV_PER_APP = 4;
   private static final int NUM_HOSTS_PER_INFRA = 100;
   private Client client;
@@ -70,8 +73,7 @@ public class DataGenIT extends WingsBaseIntegrationTest {
   public void setUp() throws Exception {
     wingsPersistence.getDatastore().getDB().dropDatabase();
 
-    ClientConfig config = new ClientConfig(
-        new JacksonJaxbJsonProvider().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false));
+    ClientConfig config = new ClientConfig(new JacksonJaxbJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     client = ClientBuilder.newClient(config);
   }
@@ -80,12 +82,72 @@ public class DataGenIT extends WingsBaseIntegrationTest {
   public void populateDataIT() throws IOException {
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
+    Map<String, List<Service>> services = new HashMap<>();
 
     apps.forEach(application -> {
+      // add resources
       List<AppContainer> appContainers = addAppContainers(application.getUuid());
       containers.put(application.getUuid(), appContainers);
-      addServices(application.getUuid());
+      services.put(application.getUuid(), addServices(application.getUuid(), appContainers));
     });
+  }
+
+  private List<Application> createApplications() {
+    List<Application> apps = new ArrayList<>();
+
+    WebTarget target = client.target("http://localhost:9090/wings/apps/");
+
+    for (int i = 0; i < NUM_APPS; i++) {
+      String name = getName(appNames);
+      RestResponse<Application> response = target.request().post(
+          Entity.entity(anApplication().withName(name).withDescription(name).build(), APPLICATION_JSON),
+          new GenericType<RestResponse<Application>>() {});
+      Assertions.assertThat(response.getResource()).isInstanceOf(Application.class);
+      apps.add(response.getResource());
+    }
+    return apps;
+  }
+
+  private List<Service> addServices(String appId, List<AppContainer> appContainers) {
+    serviceNames = new ArrayList<String>(seedNames);
+    WebTarget target = client.target("http://localhost:9090/wings/services/?appId=" + appId);
+    List<Service> services = new ArrayList<>();
+
+    for (int i = 0; i < NUM_SERVICES_PER_APP; i++) {
+      String name = getName(serviceNames);
+      Map<String, Object> serviceMap = new HashMap<>();
+      serviceMap.put("name", name);
+      serviceMap.put("description", randomText(40));
+      serviceMap.put("appId", appId);
+      serviceMap.put("artifactType", WAR.name());
+      serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size())));
+      RestResponse<Service> response = target.request().post(
+          Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+      Assertions.assertThat(response.getResource()).isInstanceOf(Service.class);
+      services.add(response.getResource());
+      configFileNames = new ArrayList<String>(seedNames);
+      addConfigFilesToEntity(response.getResource(), DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE);
+    }
+    return services;
+  }
+
+  private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFiles) {
+    String entityId = entity.getUuid();
+    WebTarget target = client.target(
+        String.format("http://localhost:9090/wings/configs/?entityId=%s&templateId=%s", entityId, templateId));
+    try {
+      for (int i = 0; i < numConfigFiles; i++) {
+        File file = getTestFile(getName(configFileNames) + ".properties");
+        FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+        FormDataMultiPart multiPart =
+            new FormDataMultiPart().field("name", file.getName()).field("relativePath", "./configs/");
+        multiPart.bodyPart(filePart);
+        Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+        Assertions.assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+      }
+    } catch (IOException e) {
+      log().info(e.getMessage());
+    }
   }
 
   private List<AppContainer> addAppContainers(String appId) {
@@ -103,17 +165,14 @@ public class DataGenIT extends WingsBaseIntegrationTest {
       try {
         String version = (randomInt(1, 10)) + "." + randomInt(100);
         String name = containerNames.get(randomInt() % containerNames.size());
-        File file = testFolder.newFile("RandomFile" + randomInt());
-        BufferedWriter out = new BufferedWriter(new FileWriter(file));
-        out.write(randomInt());
-        out.close();
+        File file = getTestFile("AppContainer" + randomInt());
         FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-        FormDataMultiPart multiPart = new FormDataMultiPart();
-        multiPart.field("name", name)
-            .field("version", version)
-            .field("description", name)
-            .field("sourceType", "FILE_UPLOAD")
-            .field("standard", "false");
+        FormDataMultiPart multiPart = new FormDataMultiPart()
+                                          .field("name", name)
+                                          .field("version", version)
+                                          .field("description", randomText(20))
+                                          .field("sourceType", "FILE_UPLOAD")
+                                          .field("standard", "false");
         multiPart.bodyPart(filePart);
         Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
         Assertions.assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
@@ -128,40 +187,16 @@ public class DataGenIT extends WingsBaseIntegrationTest {
     return response.getResource().getResponse();
   }
 
-  private void addServices(String appId) {
-    WebTarget target = client.target("http://localhost:9090/wings/services/?appId=" + appId);
-
-    for (int i = 0; i < NUM_SERVICES_PER_APP; i++) {
-      String name = getName();
-      Map<String, String> serviceMap = new HashMap<>();
-      serviceMap.put("name", name);
-      serviceMap.put("description", name);
-      serviceMap.put("appId", appId);
-      serviceMap.put("artifactType", WAR.name());
-      RestResponse<Service> response = target.request().post(
-          Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
-      Assertions.assertThat(response.getResource()).isInstanceOf(Service.class);
-    }
+  private File getTestFile(String name) throws IOException {
+    File file = testFolder.newFile(name + randomInt());
+    BufferedWriter out = new BufferedWriter(new FileWriter(file));
+    out.write(randomText(100));
+    out.close();
+    return file;
   }
 
-  private List<Application> createApplications() {
-    List<Application> apps = new ArrayList<>();
-
-    WebTarget target = client.target("http://localhost:9090/wings/apps/");
-
-    for (int i = 0; i < NUM_APPS; i++) {
-      String name = getName();
-      RestResponse<Application> response = target.request().post(
-          Entity.entity(anApplication().withName(name).withDescription(name).build(), APPLICATION_JSON),
-          new GenericType<RestResponse<Application>>() {});
-      Assertions.assertThat(response.getResource()).isInstanceOf(Application.class);
-      apps.add(response.getResource());
-    }
-    return apps;
-  }
-
-  private String getName() {
-    int nameIdx = randomInt(0, names.size() - 1);
+  private String getName(List<String> names) {
+    int nameIdx = randomInt(0, names.size());
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
@@ -179,7 +214,13 @@ public class DataGenIT extends WingsBaseIntegrationTest {
     return randomInt(0, MAX_VALUE);
   }
 
-  private String randomString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
+  private String randomText(int length) {
+    int low = randomInt(50);
+    int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
+    return randomSeedString.substring(low, high);
+  }
+
+  private String randomSeedString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
       + "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, "
       + "when an unknown printer took a galley of type and scrambled it to make a type specimen book. "
       + "It has survived not only five centuries, but also the leap into electronic typesetting, "
@@ -187,21 +228,21 @@ public class DataGenIT extends WingsBaseIntegrationTest {
       + "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software "
       + "like Aldus PageMaker including versions of Lorem Ipsum";
 
-  private List<String> names = new ArrayList<String>(Arrays.asList("Achelois", "Achelous", "Acheron", "Achilles",
-      "Acidalia", "Adamanthea", "Adephagia", "Adonis", "Adrastea", "Adrasteia", "Aeacos", "Aeacus", "Aegaeon", "Aegina",
-      "Aegle", "Aello", "Aellopos", "Aeolos", "Aeolus", "Aer", "Aesculapius", "Aethalides", "Aether", "Aethon", "Aetna",
-      "Agave", "Agdistes", "Agdos", "Aglaea", "Aglaia", "Aglauros", "Aglaurus", "Agraulos", "Agrotara", "Agrotora",
-      "Aiakos", "Aigle", "Aiolos", "Air", "Aither", "Alcemana", "Alcides", "Alcmena", "Alcmene", "Alcyone",
-      "Alcyone(2)", "Alecto", "Alectrona", "Alexandra", "Alkyone", "Aloadae", "Alpheos", "Alpheus", "Amalthea",
-      "Amaltheia", "Amarynthia", "Ampelius", "Amphion", "Amphitrite", "Amphitryon", "Amymone", "Ananke", "Andromeda",
-      "Antaeus", "Antaios", "Anteros", "Anticlea", "Antiklia", "Antiope", "Apate", "Aphrodite", "Apollo", "Apollon",
-      "Arachne", "Arcas", "Areon", "Ares", "Arethusa", "Argeos", "Argus", "Ariadne", "Arion", "Arion(2)", "Aristaeus",
-      "Aristaios", "Aristeas", "Arkas", "Artemis", "Asclepius", "Asklepios", "Asopus", "Asteria", "Asterie", "Astraea",
-      "Astraeus", "Astraios", "Atalanta", "Ate", "Athamas", "Athamus", "Athena", "Athene", "Atlantides", "Atlas",
-      "Atropos", "Attis", "Attropus", "Augean Stables", "Augian Stables", "Aurai", "Autolycus", "Autolykos", "Auxesia",
-      "Bacchae", "Bacchantes", "Balios", "Balius", "Bellerophon", "Bia", "Bias", "Boreads", "Boreas", "Briareos",
-      "Briareus", "Bromios", "Cadmus", "Caeneus", "Caenis", "Calais", "Calchas", "Calliope", "Callisto", "Calypso",
-      "Cassandra", "Castor", "Cecrops", "Celaeno", "Celaeno(2)", "Celoneo", "Ceneus", "Cerberus", "Cercopes", "Cerigo",
+  private List<String> seedNames = Arrays.asList("Achelois", "Achelous", "Acheron", "Achilles", "Acidalia",
+      "Adamanthea", "Adephagia", "Adonis", "Adrastea", "Adrasteia", "Aeacos", "Aeacus", "Aegaeon", "Aegina", "Aegle",
+      "Aello", "Aellopos", "Aeolos", "Aeolus", "Aer", "Aesculapius", "Aethalides", "Aether", "Aethon", "Aetna", "Agave",
+      "Agdistes", "Agdos", "Aglaea", "Aglaia", "Aglauros", "Aglaurus", "Agraulos", "Agrotara", "Agrotora", "Aiakos",
+      "Aigle", "Aiolos", "Air", "Aither", "Alcemana", "Alcides", "Alcmena", "Alcmene", "Alcyone", "Alcyone(2)",
+      "Alecto", "Alectrona", "Alexandra", "Alkyone", "Aloadae", "Alpheos", "Alpheus", "Amalthea", "Amaltheia",
+      "Amarynthia", "Ampelius", "Amphion", "Amphitrite", "Amphitryon", "Amymone", "Ananke", "Andromeda", "Antaeus",
+      "Antaios", "Anteros", "Anticlea", "Antiklia", "Antiope", "Apate", "Aphrodite", "Apollo", "Apollon", "Arachne",
+      "Arcas", "Areon", "Ares", "Arethusa", "Argeos", "Argus", "Ariadne", "Arion", "Arion(2)", "Aristaeus", "Aristaios",
+      "Aristeas", "Arkas", "Artemis", "Asclepius", "Asklepios", "Asopus", "Asteria", "Asterie", "Astraea", "Astraeus",
+      "Astraios", "Atalanta", "Ate", "Athamas", "Athamus", "Athena", "Athene", "Atlantides", "Atlas", "Atropos",
+      "Attis", "Attropus", "Augean Stables", "Augian Stables", "Aurai", "Autolycus", "Autolykos", "Auxesia", "Bacchae",
+      "Bacchantes", "Balios", "Balius", "Bellerophon", "Bia", "Bias", "Boreads", "Boreas", "Briareos", "Briareus",
+      "Bromios", "Cadmus", "Caeneus", "Caenis", "Calais", "Calchas", "Calliope", "Callisto", "Calypso", "Cassandra",
+      "Castor", "Cecrops", "Celaeno", "Celaeno(2)", "Celoneo", "Ceneus", "Cerberus", "Cercopes", "Cerigo",
       "Cerynean Hind", "Ceryneian Hind", "Cerynitis", "Ceto", "Chaos", "Charites", "Charon", "Charybdis", "Cheiron",
       "Chelone", "Chimaera", "Chimera", "Chione", "Chiron", "Chloe", "Chloris", "Chronos", "Chronus", "Chthonia",
       "Circe", "Clio", "Clotho", "Clymene", "Coeus", "Coltus", "Comus", "Cottus", "Cotys", "Cotytto", "Cratus",
@@ -256,5 +297,8 @@ public class DataGenIT extends WingsBaseIntegrationTest {
       "Thamrys", "Thanatos", "Thanatus", "Thanotos", "Thaumas", "Thea", "Thebe", "Theia", "Thelxinoe", "Themis",
       "Theseus", "Thetis", "Thetys", "Three Fates", "Titanes", "Titanides", "Titans", "Tithonus", "Triptolemos",
       "Triptolemus", "Triton", "Tritones", "Tyche", "Tykhe", "Typhoeus", "Typhon", "Ulysses", "Urania", "Uranus",
-      "Xanthos", "Xanthus", "Zelos", "Zelus", "Zephyros", "Zephyrs", "Zephyrus", "Zetes", "Zethes", "Zethus", "Zeus"));
+      "Xanthos", "Xanthus", "Zelos", "Zelus", "Zephyros", "Zephyrs", "Zephyrus", "Zetes", "Zethes", "Zethus", "Zeus");
+  private List<String> appNames = new ArrayList<String>(seedNames);
+  private List<String> serviceNames;
+  private List<String> configFileNames;
 }
