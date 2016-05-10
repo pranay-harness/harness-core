@@ -30,6 +30,7 @@ import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
+import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
@@ -49,6 +50,7 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
+import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.EnvironmentService;
@@ -172,5 +174,6 @@ public class WingsModule extends AbstractModule {
     bind(TagService.class).to(TagServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
+    bind(CatalogService.class).to(CatalogServiceImpl.class);
   }
 }
