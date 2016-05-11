@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -63,6 +64,14 @@ public class ServiceTemplateResource {
     serviceTemplate.setEnvId(envId);
     serviceTemplate.setUuid(serviceTemplateId);
     return new RestResponse<>(serviceTemplateService.update(serviceTemplate));
+  }
+
+  @DELETE
+  @Path("{templateId}")
+  public RestResponse delete(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @PathParam("templateId") String serviceTemplateId) {
+    serviceTemplateService.delete(appId, envId, serviceTemplateId);
+    return new RestResponse();
   }
 
   @PUT

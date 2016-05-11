@@ -24,4 +24,6 @@ public interface ServiceTemplateService {
   List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles);
 
   Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId);
+
+  void delete(String appId, String envId, String serviceTemplateId);
 }
