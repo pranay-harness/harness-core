@@ -4,7 +4,7 @@ machine:
   java:
     version: oraclejdk8
   post:
-   - sudo service mongod stop    
+   - sudo service mongodb stop    
 dependencies:
   cache_directories:
     - "~/.embedmongo"
