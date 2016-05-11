@@ -3,8 +3,6 @@ machine:
     _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
   java:
     version: oraclejdk8
-  post:
-    - sudo service mongodb stop
 dependencies:
   cache_directories:
     - "~/.embedmongo"
