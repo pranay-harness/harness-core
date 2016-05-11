@@ -42,6 +42,14 @@ public class PipelineResource {
   }
 
   @GET
+  @Path("playbacks")
+  @Produces("application/json")
+  public RestResponse<PageResponse<Pipeline>> listPlaybacks(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
+    return null;
+  }
+
+  @GET
   @Path("{pipelineId}")
   @Produces("application/json")
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
