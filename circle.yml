@@ -8,6 +8,8 @@ machine:
 dependencies:
   cache_directories:
     - "~/.embedmongo"
+  post:
+    - mvn mongodb:start || true
 test:
   override:
     - mvn verify
