@@ -62,12 +62,12 @@ public class CatalogItem {
     public int compare(CatalogItem o1, CatalogItem o2) {
       if (o1.displayOrder == null && o2.displayOrder == null) {
         return 0;
+      } else if (o1.displayOrder != null && o2.displayOrder != null) {
+        return o1.displayOrder.compareTo(o2.displayOrder);
       } else if (o1.displayOrder == null && o2.displayOrder != null) {
         return -1;
-      } else if (o1.displayOrder != null && o2.displayOrder == null) {
-        return 1;
       } else {
-        return o1.displayOrder.compareTo(o2.displayOrder);
+        return 1;
       }
     }
   };

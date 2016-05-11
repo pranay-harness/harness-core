@@ -32,6 +32,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
+
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
@@ -142,7 +143,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
       file = artifactService.download(APP_ID, savedArtifact.getUuid(), SERVICE_ID);
       assertThat(file).isNotNull().hasContent("Dummy");
     } finally {
-      file.delete();
+      if (file != null) {
+        file.delete();
+      }
     }
   }
 
