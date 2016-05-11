@@ -7,10 +7,16 @@ CARD_VIEW_SORT_BY:
       value: alphabeticalDescending
       
 ARTIFACT_TYPE:
-    - name: WAR
-      value: WAR
+    - name: JAR
+      value: JAR
     - name: TAR
       value: TAR
+    - name: WAR
+      value: WAR
+    - name: ZIP
+      value: ZIP
+    - name: OTHER
+      value: OTHER
       
 DEPLOYMENT_STRATEGY:
     - name: SERIAL
@@ -18,5 +24,26 @@ DEPLOYMENT_STRATEGY:
     - name: PARALLEL
       value: PARALLEL
 
-    
-      
+OS_TYPE:
+    - name: Linux - RHL
+      value: RHL
+    - name: Linux - DEB
+      value: DEB
+
+CONNECTION_TYPE:
+    - name: SSH
+      value: SSH
+    - name: VPN
+      value: VPN
+
+ACCESS_TYPE:
+    - name: SSH
+      value: SSH
+    - name: SSH_KEY
+      value: SSH_KEY
+    - name: SSH_USER_PASSWD
+      value: SSH_USER_PASSWD
+    - name: SSH_SU_APP_ACCOUNT
+      value: SSH_SU_APP_ACCOUNT
+    - name: SSH_SUDO_APP_ACCOUNT
+      value: SSH_SUDO_APP_ACCOUNT
