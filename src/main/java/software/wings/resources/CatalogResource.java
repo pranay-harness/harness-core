@@ -38,13 +38,18 @@ public class CatalogResource {
   public RestResponse<Map<String, Object>> list(@QueryParam("catalogType") List<String> catalogTypes) {
     Map<String, Object> catalogs = new HashMap<>();
 
-    for (String catalogType : catalogTypes) {
-      switch (catalogType) {
-        case CatalogNames.ORCHESTRATION_STENCILS: {
-          catalogs.put(catalogType, workflowService.stencils());
-          break;
+    if (catalogTypes == null || catalogTypes.size() == 0) {
+      catalogs.put(CatalogNames.ORCHESTRATION_STENCILS, workflowService.stencils());
+      catalogs.putAll(catalogService.getCatalogs());
+    } else {
+      for (String catalogType : catalogTypes) {
+        switch (catalogType) {
+          case CatalogNames.ORCHESTRATION_STENCILS: {
+            catalogs.put(catalogType, workflowService.stencils());
+            break;
+          }
+          default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
-        default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
       }
     }
     return new RestResponse<>(catalogs);

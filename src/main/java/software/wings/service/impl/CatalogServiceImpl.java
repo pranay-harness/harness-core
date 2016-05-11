@@ -16,6 +16,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,9 @@ public class CatalogServiceImpl implements CatalogService {
       URL url = this.getClass().getResource("/configs/catalogs.yml");
       String yaml = Resources.toString(url, Charsets.UTF_8);
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
+      for (List<CatalogItem> catalogItems : catalogs.values()) {
+        Collections.sort(catalogItems, CatalogItem.displayOrderComparator);
+      }
     } catch (Exception e) {
       logger.error("Error in initializing catalog", e);
       throw new WingsException(e);
