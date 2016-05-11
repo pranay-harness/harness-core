@@ -6,7 +6,7 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
 import software.wings.common.UUIDGenerator;
 
@@ -14,7 +14,7 @@ import software.wings.common.UUIDGenerator;
  * @author Rishi
  *
  */
-public class HttpStateTest extends WingsBaseUnitTest {
+public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldAssertResponse() {
     ExecutionContextImpl context = new ExecutionContextImpl();

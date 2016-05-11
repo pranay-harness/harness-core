@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.PageRequest;
 import software.wings.beans.SearchFilter;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 /**
  * Created by anubhaw on 5/4/16.
  */
-public class ServiceResourceServiceTest extends WingsBaseUnitTest {
+public class ServiceResourceServiceTest extends WingsBaseTest {
   private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private ConfigService configService = mock(ConfigService.class);
   private ServiceResourceService srs = new ServiceResourceServiceImpl(wingsPersistence, configService);

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -30,7 +31,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 4/4/16.
  */
-@Path("/service_templates")
+@Path("/service-templates")
 @AuthRule
 @Timed
 @ExceptionMetered
@@ -40,35 +41,52 @@ public class ServiceTemplateResource {
   @Inject ServiceTemplateService serviceTemplateService;
 
   @GET
-  public RestResponse<PageResponse<ServiceTemplate>> list(
-      @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
+  public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
+      @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("envId", envId, EQ);
     return new RestResponse<>(serviceTemplateService.list(pageRequest));
   }
 
   @POST
-  public RestResponse<ServiceTemplate> create(ServiceTemplate serviceTemplate) {
+  public RestResponse<ServiceTemplate> create(
+      @QueryParam("envId") String envId, @QueryParam("appId") String appId, ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppId(appId);
+    serviceTemplate.setEnvId(envId);
     return new RestResponse<>(serviceTemplateService.save(serviceTemplate));
   }
 
   @PUT
   @Path("{templateId}")
-  public RestResponse<ServiceTemplate> update(
+  public RestResponse<ServiceTemplate> update(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppId(appId);
+    serviceTemplate.setEnvId(envId);
     serviceTemplate.setUuid(serviceTemplateId);
     return new RestResponse<>(serviceTemplateService.update(serviceTemplate));
   }
 
+  @DELETE
+  @Path("{templateId}")
+  public RestResponse delete(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @PathParam("templateId") String serviceTemplateId) {
+    serviceTemplateService.delete(appId, envId, serviceTemplateId);
+    return new RestResponse();
+  }
+
   @PUT
   @Path("{templateId}/map_hosts")
-  public RestResponse<ServiceTemplate> mapHosts(@PathParam("templateId") String serviceTemplateId,
-      @FormDataParam("tags") List<String> tagIds, @FormDataParam("hosts") List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHostAndTags(serviceTemplateId, tagIds, hostIds));
+  public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @PathParam("templateId") String serviceTemplateId, @FormDataParam("tags") List<String> tagIds,
+      @FormDataParam("hosts") List<String> hostIds) {
+    return new RestResponse<>(
+        serviceTemplateService.updateHostAndTags(appId, envId, serviceTemplateId, tagIds, hostIds));
   }
 
   @GET
   @Path("{templateId}/host_configs")
-  public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@PathParam("templateId") String templateId) {
-    return new RestResponse<>(serviceTemplateService.computedConfigFiles(templateId));
+  public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@QueryParam("envId") String envId,
+      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
+    return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
   }
 }

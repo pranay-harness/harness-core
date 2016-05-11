@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.sm.RepeatElementType;
@@ -16,16 +15,15 @@ import java.util.stream.Collectors;
 public class Host extends Base implements Repeatable {
   public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
 
-  @Indexed(unique = true) private String hostName;
+  private String hostName;
 
   private String osType;
 
   private String ipAddress;
 
-  private int sshPort;
+  private Integer sshPort;
 
   private String hostAlias;
-  private String envUuid;
   private AccessType accessType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
@@ -33,15 +31,6 @@ public class Host extends Base implements Repeatable {
   private String infraId;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
-
-  public Host() {}
-
-  public Host(String infraId, String hostName, String osType, AccessType accessType) {
-    this.infraId = infraId;
-    this.hostName = hostName;
-    this.osType = osType;
-    this.accessType = accessType;
-  }
 
   public String getHostName() {
     return hostName;
@@ -67,14 +56,6 @@ public class Host extends Base implements Repeatable {
     this.hostAlias = hostAlias;
   }
 
-  public String getEnvUuid() {
-    return envUuid;
-  }
-
-  public void setEnvUuid(String envUuid) {
-    this.envUuid = envUuid;
-  }
-
   public AccessType getAccessType() {
     return accessType;
   }
@@ -83,11 +64,11 @@ public class Host extends Base implements Repeatable {
     this.accessType = accessType;
   }
 
-  public int getSshPort() {
+  public Integer getSshPort() {
     return sshPort;
   }
 
-  public void setSshPort(int sshPort) {
+  public void setSshPort(Integer sshPort) {
     this.sshPort = sshPort;
   }
 
@@ -128,10 +109,19 @@ public class Host extends Base implements Repeatable {
   }
 
   @Override
+  public RepeatElementType getRepeatElementType() {
+    return RepeatElementType.HOST;
+  }
+
+  @Override
+  public String getName() {
+    return hostName;
+  }
+
+  @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(
-              hostName, osType, ipAddress, sshPort, hostAlias, envUuid, accessType, tags, infraId, configFiles);
+        + Objects.hash(hostName, osType, ipAddress, sshPort, hostAlias, accessType, tags, infraId, configFiles);
   }
 
   @Override
@@ -148,19 +138,9 @@ public class Host extends Base implements Repeatable {
     final Host other = (Host) obj;
     return Objects.equals(this.hostName, other.hostName) && Objects.equals(this.osType, other.osType)
         && Objects.equals(this.ipAddress, other.ipAddress) && Objects.equals(this.sshPort, other.sshPort)
-        && Objects.equals(this.hostAlias, other.hostAlias) && Objects.equals(this.envUuid, other.envUuid)
-        && Objects.equals(this.accessType, other.accessType) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.infraId, other.infraId) && Objects.equals(this.configFiles, other.configFiles);
-  }
-
-  @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.HOST;
-  }
-
-  @Override
-  public String getName() {
-    return hostName;
+        && Objects.equals(this.hostAlias, other.hostAlias) && Objects.equals(this.accessType, other.accessType)
+        && Objects.equals(this.tags, other.tags) && Objects.equals(this.infraId, other.infraId)
+        && Objects.equals(this.configFiles, other.configFiles);
   }
 
   public static final class HostBuilder {
@@ -169,7 +149,6 @@ public class Host extends Base implements Repeatable {
     private String ipAddress;
     private int sshPort;
     private String hostAlias;
-    private String envUuid;
     private AccessType accessType;
     private List<Tag> tags = new ArrayList<>();
     private String infraId;
@@ -210,11 +189,6 @@ public class Host extends Base implements Repeatable {
 
     public HostBuilder withHostAlias(String hostAlias) {
       this.hostAlias = hostAlias;
-      return this;
-    }
-
-    public HostBuilder withEnvUuid(String envUuid) {
-      this.envUuid = envUuid;
       return this;
     }
 
@@ -280,7 +254,6 @@ public class Host extends Base implements Repeatable {
           .withIpAddress(ipAddress)
           .withSshPort(sshPort)
           .withHostAlias(hostAlias)
-          .withEnvUuid(envUuid)
           .withAccessType(accessType)
           .withTags(tags)
           .withInfraId(infraId)
@@ -301,7 +274,6 @@ public class Host extends Base implements Repeatable {
       host.setIpAddress(ipAddress);
       host.setSshPort(sshPort);
       host.setHostAlias(hostAlias);
-      host.setEnvUuid(envUuid);
       host.setAccessType(accessType);
       host.setTags(tags);
       host.setInfraId(infraId);

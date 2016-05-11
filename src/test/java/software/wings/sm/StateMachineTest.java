@@ -3,7 +3,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
@@ -15,7 +15,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StateMachineTest extends WingsBaseUnitTest {
+public class StateMachineTest extends WingsBaseTest {
   @Test
   public void shouldValidate() {
     StateMachine sm = new StateMachine();

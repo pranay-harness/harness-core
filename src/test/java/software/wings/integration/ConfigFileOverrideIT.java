@@ -14,7 +14,7 @@ import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseIntegrationTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
@@ -26,9 +26,11 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.TagType;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -66,7 +68,8 @@ import javax.inject.Inject;
  * |
  */
 
-public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
+@Integration
+public class ConfigFileOverrideIT extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Inject AppService appService;
@@ -76,6 +79,7 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   @Inject TagService tagService;
   @Inject ConfigService configService;
   @Inject EnvironmentService environmentService;
+  @Inject HostService hostService;
 
   ServiceTemplate template;
   List<Host> hosts;
@@ -98,7 +102,7 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.ServiceBuilder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Infra infra = infraService.save(anInfra().withInfraType(STATIC).build(), environment.getUuid());
+    Infra infra = infraService.save(anInfra().withEnvId(environment.getUuid()).withInfraType(STATIC).build());
 
     hosts = importAndGetHosts(infra); // FIXME split
 
@@ -122,42 +126,42 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     tagService.linkTags(or.getUuid(), orOz2.getUuid());
 
     // Tag hosts
-    infraService.tagHost(hosts.get(0).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(1).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(2).getUuid(), ncOz1.getUuid());
-    infraService.tagHost(hosts.get(3).getUuid(), ncOz3.getUuid());
-    infraService.tagHost(hosts.get(4).getUuid(), ncOz3.getUuid());
-    infraService.tagHost(hosts.get(5).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(0).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(1).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(2).getUuid(), ncOz1.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(3).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(4).getUuid(), ncOz3.getUuid());
+    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(5).getUuid(), ncOz3.getUuid());
 
-    template = templateService.save(aServiceTemplate()
-                                        .withServiceId(service.getUuid())
-                                        .withEnvId(environment.getUuid())
-                                        .withName("Catalog:8080")
-                                        .build());
+    template = templateService.save(
+        aServiceTemplate().withService(service).withEnvId(environment.getUuid()).withName("Catalog:8080").build());
     log().info("Template id {}", template.getUuid());
 
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
-    templateService.updateHostAndTags(template.getUuid(), selectedTags, selectedHosts);
+    templateService.updateHostAndTags(
+        app.getUuid(), environment.getUuid(), template.getUuid(), selectedTags, selectedHosts);
   }
 
   @Test
   public void shouldApplyServiceConfigFilesIT() throws IOException {
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
 
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
-        .isEqualTo(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, template.getServiceId()));
+        .isEqualTo(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, template.getService().getUuid()));
   }
 
   @Test
   public void shouldApplyEnvConfigFileOverride() throws IOException {
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
     attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
 
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
@@ -165,11 +169,12 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
 
   @Test
   public void shouldApplyHostConfigsOverrideForTaggedHost() throws IOException {
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
     attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
     attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
     attacheConfigFileToEntity(hosts.get(0).getUuid(), template.getUuid());
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(1).getUuid()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
@@ -177,12 +182,13 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
 
   @Test
   public void shouldApplyHostConfigsOverrideForUntaggedHost() throws IOException {
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
     attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
     attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
     attacheConfigFileToEntity(hosts.get(0).getUuid(), template.getUuid());
 
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
@@ -190,12 +196,13 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
 
   @Test
   public void shouldApplyTagConfigFileOverride() throws IOException {
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
     attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
     attacheConfigFileToEntity(ncOz1.getUuid(), template.getUuid());
     attacheConfigFileToEntity(hosts.get(8).getUuid(), template.getUuid());
 
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(8).getUuid()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
@@ -204,7 +211,7 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   @Test
   public void shouldOverrideConfigFilesInAllScenariosIT() throws IOException {
     // prepare config files
-    attacheConfigFileToEntity(template.getServiceId(), DEFAULT_TEMPLATE_ID);
+    attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
 
     // env
     attacheConfigFileToEntity(template.getEnvId(), template.getUuid());
@@ -222,7 +229,8 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
     // untagged host
     attacheConfigFileToEntity(hosts.get(8).getUuid(), template.getUuid());
 
-    Map<String, List<ConfigFile>> hostConfigMapping = templateService.computedConfigFiles(template.getUuid());
+    Map<String, List<ConfigFile>> hostConfigMapping =
+        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
     assertThat(hostConfigMapping.get(hosts.get(0).getUuid()))
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
@@ -269,11 +277,12 @@ public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
   }
 
   private List<Host> importAndGetHosts(Infra infra) throws FileNotFoundException {
-    int numOfHostsImported = infraService.importHosts(
-        infra.getUuid(), new FileInputStream(System.getProperty("user.home") + "/data/hosts.csv"), CSV);
+    int numOfHostsImported = hostService.importHosts(infra.getAppId(), infra.getUuid(),
+        new FileInputStream(System.getProperty("user.home") + "/data/hosts.csv"), CSV);
     log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infra.getUuid(), EQ);
-    return infraService.listHosts(pageRequest).getResponse();
+    pageRequest.addFilter("appId", infra.getAppId(), EQ);
+    return hostService.list(pageRequest).getResponse();
   }
 }

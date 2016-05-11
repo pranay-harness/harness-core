@@ -7,7 +7,7 @@ import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.CatalogNames;
 
@@ -26,7 +26,7 @@ import javax.inject.Inject;
  * @author Rishi
  *
  */
-public class YamlUtilsTest extends WingsBaseUnitTest {
+public class YamlUtilsTest extends WingsBaseTest {
   @Inject private YamlUtils yamlUtils;
 
   @Test

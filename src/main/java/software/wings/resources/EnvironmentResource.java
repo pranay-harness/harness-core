@@ -12,6 +12,7 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -35,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Consumes("application/json")
 public class EnvironmentResource {
   @Inject private EnvironmentService envService;
+  @Inject private HostService hostService;
 
   @GET
   public RestResponse<PageResponse<Environment>> list(

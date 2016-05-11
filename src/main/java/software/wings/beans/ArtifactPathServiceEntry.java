@@ -1,15 +1,10 @@
 package software.wings.beans;
 
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.Service.ServiceBuilder.aService;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
@@ -21,7 +16,7 @@ import java.util.List;
 public class ArtifactPathServiceEntry {
   @NotEmpty private String artifactPathRegex;
 
-  @Property(value = "services") private List<String> serviceIds;
+  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private List<Service> services;
 
   public String getArtifactPathRegex() {
     return artifactPathRegex;
@@ -31,12 +26,12 @@ public class ArtifactPathServiceEntry {
     this.artifactPathRegex = artifactPathRegex;
   }
 
-  public List<String> getServiceIds() {
-    return serviceIds;
+  public List<Service> getServices() {
+    return services;
   }
 
-  public void setServiceIds(List<String> serviceIds) {
-    this.serviceIds = serviceIds;
+  public void setServices(List<Service> services) {
+    this.services = services;
   }
 
   @Override
@@ -48,25 +43,25 @@ public class ArtifactPathServiceEntry {
       return false;
     }
     ArtifactPathServiceEntry that = (ArtifactPathServiceEntry) obj;
-    return Objects.equal(artifactPathRegex, that.artifactPathRegex) && Objects.equal(serviceIds, that.serviceIds);
+    return Objects.equal(artifactPathRegex, that.artifactPathRegex) && Objects.equal(services, that.services);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(artifactPathRegex, serviceIds);
+    return Objects.hashCode(artifactPathRegex, services);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("serviceIds", serviceIds)
+        .add("serviceIds", services)
         .add("artifactPathRegex", artifactPathRegex)
         .toString();
   }
 
   public static final class Builder {
     private String artifactPathRegex;
-    private List<String> serviceIds;
+    private List<Service> services;
 
     private Builder() {}
 
@@ -79,8 +74,8 @@ public class ArtifactPathServiceEntry {
       return this;
     }
 
-    public Builder withServiceIds(List<String> serviceIds) {
-      this.serviceIds = serviceIds;
+    public Builder withServices(List<Service> services) {
+      this.services = services;
       return this;
     }
 
@@ -90,7 +85,7 @@ public class ArtifactPathServiceEntry {
     public ArtifactPathServiceEntry build() {
       ArtifactPathServiceEntry artifactPathServiceEntry = new ArtifactPathServiceEntry();
       artifactPathServiceEntry.setArtifactPathRegex(artifactPathRegex);
-      artifactPathServiceEntry.setServiceIds(serviceIds);
+      artifactPathServiceEntry.setServices(services);
       return artifactPathServiceEntry;
     }
   }

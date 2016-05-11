@@ -1,4 +1,4 @@
-CardviewSortBy:
+CARD_VIEW_SORT_BY:
     - name: Most Recent
       value: mostRecent
     - name: Alphabetical Ascending
@@ -6,11 +6,17 @@ CardviewSortBy:
     - name: Alphabetical Descending
       value: alphabeticalDescending
       
-ArtifactType:
+ARTIFACT_TYPE:
     - name: WAR
       value: WAR
     - name: TAR
       value: TAR
+      
+DEPLOYMENT_STRATEGY:
+    - name: SERIAL
+      value: SERIAL
+    - name: PARALLEL
+      value: PARALLEL
 
     
       

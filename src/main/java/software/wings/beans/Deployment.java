@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.app.WingsBootstrap;
 
 @Entity(value = "deployments", noClassnameStored = true)
 public class Deployment extends Execution {
@@ -49,15 +48,19 @@ public class Deployment extends Execution {
 
   @Override
   public String getCommand() {
-    // TODO - get from config
-    String portalUrl = WingsBootstrap.getConfig().getPortal().getUrl();
-    String fwUrl = portalUrl + "/bins/framework";
-    String params = String.format("%s/configs/download/%s %s %s", portalUrl, getRelease().getApplication().getUuid(),
-        getRelease().getUuid(), getArtifact().getUuid());
+    return null;
+    /*
+        //TODO - get from config
+        String portalUrl = WingsBootstrap.getConfig().getPortal().getUrl();
+        String fwUrl = portalUrl + "/bins/framework";
+        String params = String
+            .format("%s/configs/download/%s %s %s", portalUrl, getRelease().getApplication().getUuid(),
+                getRelease().getUuid(), getArtifact().getUuid());
 
-    return "mkdir -p $HOME/wings_temp && cd $HOME/wings_temp"
-        + " && curl -sk -o wings_main.pl " + fwUrl + " && chmod a+x wings_main.pl && ./wings_main.pl " + params
-        + " && echo \"SUCCESS\"";
+        return "mkdir -p $HOME/wings_temp && cd $HOME/wings_temp" + " && curl -sk -o wings_main.pl "
+            + fwUrl + " && chmod a+x wings_main.pl && ./wings_main.pl " + params
+            + " && echo \"SUCCESS\"";
+            */
   }
 
   public Release getRelease() {
@@ -78,15 +81,15 @@ public class Deployment extends Execution {
 
   @Override
   public String getSetupCommand() {
-    return "rm -rf wings && "
-        + "mkdir -p $HOME/wings && "
-        + "cd $HOME/wings && "
-        + "mkdir -p downloads"; // TODO: Read deployment dir location from config
+    return null;
+    /*return "rm -rf wings && " + "mkdir -p $HOME/wings && " + "cd $HOME/wings && " + "mkdir -p downloads"; //TODO: Read
+     * deployment dir location from config*/
   }
 
   @Override
   public String getDeployCommand() {
-    return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xvzf ../downloads/%s",
-        getArtifact().getArtifactFile().getFileName());
+    return null;
+    /*return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xvzf ../downloads/%s",
+     * getArtifact().getArtifactFile().getFileName());*/
   }
 }

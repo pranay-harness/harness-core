@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
@@ -14,7 +16,7 @@ import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.PageRequest;
@@ -29,12 +31,9 @@ import javax.ws.rs.BadRequestException;
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
-public class ReleaseServiceTest extends WingsBaseUnitTest {
-  private static final ReleaseBuilder releaseBuilder = aRelease()
-                                                           .withAppId("APP_ID")
-                                                           .withReleaseName("REL1")
-                                                           .withApplication(anApplication().withUuid("APP_ID").build())
-                                                           .withDescription("RELEASE 1");
+public class ReleaseServiceTest extends WingsBaseTest {
+  private static final ReleaseBuilder releaseBuilder =
+      aRelease().withAppId("APP_ID").withReleaseName("REL1").withDescription("RELEASE 1");
 
   private static final JenkinsArtifactSource artifactSource =
       aJenkinsArtifactSource()
@@ -43,12 +42,15 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
           .withJobname("job1")
           .withUsername("username")
           .withPassword("password")
-          .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
-                                                           .withArtifactPathRegex("dist/svr-*.war")
-                                                           .withServiceIds(Lists.newArrayList("SERVICE_ID"))
-                                                           .build()))
+          .withArtifactPathServices(Lists.newArrayList(
+              anArtifactPathServiceEntry()
+                  .withArtifactPathRegex("dist/svr-*.war")
+                  .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId("APP_ID").build()))
+                  .build()))
           .withJenkinsUrl("http://jenkins")
           .build();
+
+  private static final long futureOffset = MILLISECONDS.convert(10, MINUTES);
 
   @Inject private ReleaseService releaseService;
 
@@ -69,14 +71,15 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
 
   @Test
   public void shouldCreateValidRelease() {
-    assertThat(releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build()))
+    assertThat(
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build()))
         .isNotNull();
   }
 
   @Test
   public void shouldUpdateRelease() {
     Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build());
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
     assertThat(release.getDescription()).isEqualTo("RELEASE 1");
 
     Release updatedRelease =
@@ -87,10 +90,11 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldListAllReleases() {
     List<Release> releases = Lists.newArrayList();
-    releases.add(releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build()));
+    releases.add(
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build()));
 
     releases.add(releaseService.create(releaseBuilder.but()
-                                           .withTargetDate(System.currentTimeMillis() + 1000)
+                                           .withTargetDate(System.currentTimeMillis() + futureOffset)
                                            .withReleaseName("REL2")
                                            .withDescription("BUILD2")
                                            .build()));
@@ -101,7 +105,7 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldDeleteInactiveRelease() {
     Release release = releaseService.create(
-        releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).withActive(false).build());
+        releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).withActive(false).build());
     releaseService.delete(release.getUuid());
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
@@ -109,7 +113,7 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldNotDeleteActiveRelease() {
     Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build());
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
     releaseService.delete(release.getUuid());
     assertThat(releaseService.list(new PageRequest<>())).hasSize(1);
   }
@@ -117,7 +121,7 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldAddArtifactSource() {
     Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build());
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
     releaseService.addArtifactSource(release.getUuid(), artifactSource);
 
@@ -128,7 +132,7 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldNotAddArtifactSourceOfDifferentType() {
     Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build());
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
     releaseService.addArtifactSource(release.getUuid(), artifactSource);
 
@@ -145,7 +149,7 @@ public class ReleaseServiceTest extends WingsBaseUnitTest {
   @Test
   public void shouldDeleteArtifactSource() {
     Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + 1000).build());
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
     releaseService.addArtifactSource(release.getUuid(), artifactSource);
 

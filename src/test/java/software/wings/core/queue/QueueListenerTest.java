@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mongodb.morphia.Datastore;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
@@ -27,7 +27,7 @@ import javax.inject.Named;
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */
-public class QueueListenerTest extends WingsBaseUnitTest {
+public class QueueListenerTest extends WingsBaseTest {
   private MongoQueueImpl<QueuableObject> queue;
   private QueuableObjectListener listener;
 

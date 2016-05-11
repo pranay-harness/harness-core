@@ -54,7 +54,8 @@ public class JenkinsArtifactSource extends ArtifactSource {
       String uuid = fileService.saveFile(fileMetadata, in, ARTIFACTS);
       ArtifactFile artifactFile = new ArtifactFile();
       artifactFile.setFileUuid(uuid);
-      artifactFile.setFileName(buildArtifact.getFileName());
+      artifactFile.setName(buildArtifact.getFileName());
+      artifactFile.setServices(Lists.newArrayList(getServices()));
       in.close();
       return artifactFile;
     } catch (Exception ex) {
@@ -63,9 +64,9 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   @Override
-  public Set<String> getServiceIds() {
+  public Set<Service> getServices() {
     return artifactPathServices.stream()
-        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServiceIds().stream())
+        .flatMap(artifactPathServiceEntry -> artifactPathServiceEntry.getServices().stream())
         .collect(toSet());
   }
 

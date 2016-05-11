@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.Service.ServiceBuilder.aService;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -9,8 +10,6 @@ import com.google.common.collect.Lists;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Reference;
 import software.wings.utils.validation.FutureDate;
 
 import java.util.List;
@@ -23,8 +22,6 @@ import java.util.Set;
  */
 @Entity(value = "releases")
 public class Release extends Base {
-  @Indexed @Reference(idOnly = true, ignoreMissing = true) private Application application;
-
   @NotEmpty private String releaseName;
   @NotEmpty private String description;
   @FutureDate private long targetDate;
@@ -39,14 +36,6 @@ public class Release extends Base {
 
   public void setReleaseName(String releaseName) {
     this.releaseName = releaseName;
-  }
-
-  public Application getApplication() {
-    return application;
-  }
-
-  public void setApplication(Application application) {
-    this.application = application;
   }
 
   public String getDescription() {
@@ -81,9 +70,12 @@ public class Release extends Base {
     this.status = status;
   }
 
-  @JsonProperty("serviceIds")
-  public Set<String> getServiceIds() {
-    return artifactSources.stream().flatMap(artifactSource -> artifactSource.getServiceIds().stream()).collect(toSet());
+  @JsonProperty("services")
+  public Set<Service> getServices() {
+    return artifactSources.stream()
+        .flatMap(artifactSource -> artifactSource.getServices().stream())
+        .map(service -> aService().withUuid(service.getUuid()).withName(service.getName()).build())
+        .collect(toSet());
   }
 
   public ArtifactSource get(String artifactSourceName) {
@@ -119,7 +111,6 @@ public class Release extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("application", application)
         .add("releaseName", releaseName)
         .add("description", description)
         .add("targetDate", targetDate)
@@ -135,7 +126,6 @@ public class Release extends Base {
   }
 
   public static final class ReleaseBuilder {
-    private Application application;
     private String releaseName;
     private String description;
     private long targetDate;
@@ -153,11 +143,6 @@ public class Release extends Base {
 
     public static ReleaseBuilder aRelease() {
       return new ReleaseBuilder();
-    }
-
-    public ReleaseBuilder withApplication(Application application) {
-      this.application = application;
-      return this;
     }
 
     public ReleaseBuilder withReleaseName(String releaseName) {
@@ -222,7 +207,6 @@ public class Release extends Base {
 
     public ReleaseBuilder but() {
       return aRelease()
-          .withApplication(application)
           .withReleaseName(releaseName)
           .withDescription(description)
           .withTargetDate(targetDate)
@@ -239,7 +223,6 @@ public class Release extends Base {
 
     public Release build() {
       Release release = new Release();
-      release.setApplication(application);
       release.setReleaseName(releaseName);
       release.setDescription(description);
       release.setTargetDate(targetDate);
