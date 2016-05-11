@@ -61,7 +61,7 @@ public abstract class ArtifactSource {
 
   public abstract ArtifactFile collect(Object[] params);
 
-  public abstract Set<String> getServiceIds();
+  public abstract Set<Service> getServices();
 
   @Override
   public boolean equals(Object obj) {

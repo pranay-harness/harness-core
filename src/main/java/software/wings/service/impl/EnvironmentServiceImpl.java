@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Infra.InfraBuilder.anInfra;
+import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.TagType.HierarchyTagName;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +36,11 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   public Environment save(Environment environment) {
     Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
     wingsPersistence.save(new TagType(HierarchyTagName, savedEnv.getUuid()));
+    wingsPersistence.save(
+        anInfra().withAppId(savedEnv.getAppId()).withEnvId(savedEnv.getUuid()).withInfraType(STATIC).build()); // FIXME:
+                                                                                                               // stopgap
+                                                                                                               // for
+                                                                                                               // Allpha
 
     UpdateOperations<Application> updateOperations =
         wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);

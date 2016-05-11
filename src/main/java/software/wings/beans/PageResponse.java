@@ -1,7 +1,14 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.jetty.util.LazyList;
 
 import java.util.Collection;
@@ -22,6 +29,7 @@ import java.util.stream.Stream;
  * @author Rishi
  */
 @JsonFormat(shape = Shape.OBJECT)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PageResponse<T> extends PageRequest<T> implements List<T> {
   private List<T> response;
   private long total;
@@ -155,16 +163,6 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
   }
 
   @Override
-  public boolean equals(Object other) {
-    return response.equals(other);
-  }
-
-  @Override
-  public int hashCode() {
-    return response.hashCode();
-  }
-
-  @Override
   public T get(int index) {
     return response.get(index);
   }
@@ -222,5 +220,31 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
   @Override
   public void forEach(Consumer<? super T> action) {
     response.forEach(action);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    PageResponse<?> that = (PageResponse<?>) o;
+    return total == that.total && Objects.equal(response, that.response);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(response, total);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("response", response)
+        .add("total", total)
+        .add("currentPage", getCurrentPage())
+        .toString();
   }
 }

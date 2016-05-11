@@ -16,7 +16,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.RepeatState.RepeatStateExecutionData;
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Rishi
  *
  */
-public class RepeatStateTest extends WingsBaseUnitTest {
+public class RepeatStateTest extends WingsBaseTest {
   @Test
   public void shouldExecuteSerial() {
     List<Repeatable> repeatElements = getTestRepeatElements();

@@ -6,7 +6,7 @@ package software.wings.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
 
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import javax.inject.Inject;
  * @author Rishi
  *
  */
-public class ExpressionEvaluatorTest extends WingsBaseUnitTest {
+public class ExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private ExpressionEvaluator expressionEvaluator;
 
   @Test

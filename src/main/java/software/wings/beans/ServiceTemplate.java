@@ -5,26 +5,19 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 4/4/16.
  */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
 public class ServiceTemplate extends Base {
-  private String serviceId;
   private String envId;
   private String name;
   private String description;
+  @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
-
-  public String getServiceId() {
-    return serviceId;
-  }
-
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
-  }
 
   public String getName() {
     return name;
@@ -66,14 +59,45 @@ public class ServiceTemplate extends Base {
     this.envId = envId;
   }
 
+  public Service getService() {
+    return service;
+  }
+
+  public void setService(Service service) {
+    this.service = service;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ServiceTemplate other = (ServiceTemplate) obj;
+    return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
+        && Objects.equals(this.description, other.description) && Objects.equals(this.service, other.service)
+        && Objects.equals(this.tags, other.tags) && Objects.equals(this.hosts, other.hosts);
+  }
+
   public static final class ServiceTemplateBuilder {
-    private String serviceId;
     private String envId;
     private String name;
     private String description;
+    private Service service;
     private List<Tag> tags = new ArrayList<>();
     private List<Host> hosts = new ArrayList<>();
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -84,11 +108,6 @@ public class ServiceTemplate extends Base {
 
     public static ServiceTemplateBuilder aServiceTemplate() {
       return new ServiceTemplateBuilder();
-    }
-
-    public ServiceTemplateBuilder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
     }
 
     public ServiceTemplateBuilder withEnvId(String envId) {
@@ -106,6 +125,11 @@ public class ServiceTemplate extends Base {
       return this;
     }
 
+    public ServiceTemplateBuilder withService(Service service) {
+      this.service = service;
+      return this;
+    }
+
     public ServiceTemplateBuilder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
@@ -118,6 +142,11 @@ public class ServiceTemplate extends Base {
 
     public ServiceTemplateBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public ServiceTemplateBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -148,13 +177,14 @@ public class ServiceTemplate extends Base {
 
     public ServiceTemplateBuilder but() {
       return aServiceTemplate()
-          .withServiceId(serviceId)
           .withEnvId(envId)
           .withName(name)
           .withDescription(description)
+          .withService(service)
           .withTags(tags)
           .withHosts(hosts)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -164,13 +194,14 @@ public class ServiceTemplate extends Base {
 
     public ServiceTemplate build() {
       ServiceTemplate serviceTemplate = new ServiceTemplate();
-      serviceTemplate.setServiceId(serviceId);
       serviceTemplate.setEnvId(envId);
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
+      serviceTemplate.setService(service);
       serviceTemplate.setTags(tags);
       serviceTemplate.setHosts(hosts);
       serviceTemplate.setUuid(uuid);
+      serviceTemplate.setAppId(appId);
       serviceTemplate.setCreatedBy(createdBy);
       serviceTemplate.setCreatedAt(createdAt);
       serviceTemplate.setLastUpdatedBy(lastUpdatedBy);

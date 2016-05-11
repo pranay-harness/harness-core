@@ -1,6 +1,7 @@
 package software.wings.beans;
 
-import java.util.List;
+import org.mongodb.morphia.annotations.Reference;
+
 import java.util.Set;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Set;
 public class FileUrlSource extends ArtifactSource {
   private String url;
 
-  private Set<String> serviceIds;
+  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;
 
   public FileUrlSource() {
     super(SourceType.HTTP);
@@ -28,17 +29,18 @@ public class FileUrlSource extends ArtifactSource {
     this.url = url;
   }
 
-  public Set<String> getServiceIds() {
-    return serviceIds;
+  @Override
+  public Set<Service> getServices() {
+    return services;
   }
 
-  public void setServiceIds(Set<String> serviceIds) {
-    this.serviceIds = serviceIds;
+  public void setServices(Set<Service> services) {
+    this.services = services;
   }
 
   public static final class Builder {
     private String url;
-    private Set<String> serviceIds;
+    private Set<Service> services;
     private String sourceName;
     private ArtifactType artifactType;
 
@@ -53,8 +55,8 @@ public class FileUrlSource extends ArtifactSource {
       return this;
     }
 
-    public Builder withServices(Set<String> serviceIds) {
-      this.serviceIds = serviceIds;
+    public Builder withServices(Set<Service> serviceIds) {
+      this.services = serviceIds;
       return this;
     }
 
@@ -74,7 +76,7 @@ public class FileUrlSource extends ArtifactSource {
     public FileUrlSource build() {
       FileUrlSource fileUrlSource = new FileUrlSource();
       fileUrlSource.setUrl(url);
-      fileUrlSource.setServiceIds(serviceIds);
+      fileUrlSource.setServices(services);
       fileUrlSource.setSourceName(sourceName);
       fileUrlSource.setArtifactType(artifactType);
       return fileUrlSource;

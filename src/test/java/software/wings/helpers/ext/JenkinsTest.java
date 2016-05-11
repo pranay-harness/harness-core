@@ -1,37 +1,43 @@
 package software.wings.helpers.ext;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.JobWithDetails;
-import org.apache.commons.io.IOUtils;
+import org.junit.Ignore;
+import org.junit.Test;
+import software.wings.utils.JsonUtils;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
 public class JenkinsTest {
-  //@Test
-  public void testJobExists() {
-    Jenkins jenkins = new Jenkins("http://localhost:8080/jenkins"); //, "user1", "user1");
-    System.out.println(jenkins.jobExists("test-freestyle"));
+  @Ignore
+  @Test
+  public void testJobExists() throws URISyntaxException, IOException {
+    Jenkins jenkins = new Jenkins("http://localhost:8081", "admin", "admin"); //, "user1", "user1");
+    assertThat(jenkins.getJob("scheduler")).isTrue();
   }
 
-  //@Test
+  @Ignore
+  @Test
   public void testGetBuild() throws URISyntaxException, IOException {
-    JenkinsServer jenkins = new JenkinsServer(new URI("http://localhost:8080/jenkins"));
+    JenkinsServer jenkins = new JenkinsServer(new URI("http://localhost:8081"), "admin", "admin");
 
-    JobWithDetails jobDetails = jenkins.getJob("test-freestyle");
-    Build build = jobDetails.getBuildByNumber(4);
+    JobWithDetails jobDetails = jenkins.getJob("scheduler");
+    Build build = jobDetails.getBuildByNumber(8);
 
     //		QueueItem q = new QueueItem();
     //		q.setId(5l);
     //		Build build = jenkins.getBuild(q);
     BuildWithDetails details = build.details();
-    FileOutputStream fout = new FileOutputStream("/Users/rishi/abc.war");
-    long l = IOUtils.copy(details.downloadArtifact(details.getArtifacts().get(0)), fout);
-    fout.close();
-    System.out.println(details);
+    // FileOutputStream fout = new FileOutputStream("/Users/rishi/abc.war");
+    // long l = IOUtils.copy(details.downloadArtifact(details.getArtifacts().get(0)), fout);
+    // fout.close();
+    System.out.println(details.getId());
+    System.out.println(new JsonUtils().asJson(details.getActions()));
   }
 }

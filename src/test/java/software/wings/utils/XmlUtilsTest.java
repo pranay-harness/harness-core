@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import org.xml.sax.SAXException;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 
 import java.io.IOException;
 
@@ -19,7 +19,7 @@ import javax.xml.xpath.XPathExpressionException;
  * @author Rishi
  *
  */
-public class XmlUtilsTest extends WingsBaseUnitTest {
+public class XmlUtilsTest extends WingsBaseTest {
   @Inject private XmlUtils XmlUtils;
 
   @Test

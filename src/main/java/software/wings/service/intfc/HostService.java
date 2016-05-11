@@ -25,4 +25,6 @@ public interface HostService {
   Integer importHosts(String appId, String infraId, InputStream uploadedInputStream, HostFileType sourceType);
 
   File exportHosts(String appId, String infraId, HostFileType fileType);
+
+  String getInfraId(String envId, String appId);
 }

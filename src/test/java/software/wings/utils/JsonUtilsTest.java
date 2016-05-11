@@ -6,7 +6,7 @@ import com.jayway.jsonpath.DocumentContext;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -14,7 +14,7 @@ import javax.inject.Inject;
 /**
  * @author Rishi.
  */
-public class JsonUtilsTest extends WingsBaseUnitTest {
+public class JsonUtilsTest extends WingsBaseTest {
   @Inject private JsonUtils jsonUtils;
 
   private static final String json =

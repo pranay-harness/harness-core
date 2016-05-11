@@ -5,7 +5,8 @@ import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import com.google.common.collect.Lists;
 
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
+import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
@@ -13,7 +14,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 4/25/16.
  */
-public class PageResponseTest extends WingsBaseUnitTest {
+public class PageResponseTest extends WingsBaseTest {
   @Inject private JsonUtils jsonUtils;
 
   @Test

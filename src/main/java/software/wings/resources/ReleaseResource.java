@@ -76,7 +76,7 @@ public class ReleaseResource {
       if (application == null) {
         throw new NotFoundException("application with id " + appId + " not found.");
       }
-      release.setApplication(application);
+      release.setAppId(appId);
       return new RestResponse<>(releaseService.create(release));
     } catch (Exception exception) {
       exception.printStackTrace();

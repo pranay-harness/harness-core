@@ -19,7 +19,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Verifier;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
@@ -38,7 +38,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
-public class ReleaseResourceTest extends WingsBaseUnitTest {
+public class ReleaseResourceTest extends WingsBaseTest {
   public static final ReleaseService RELEASE_SERVICE = mock(ReleaseService.class);
   public static final AppService APP_SERVICE = mock(AppService.class);
 
@@ -52,7 +52,8 @@ public class ReleaseResourceTest extends WingsBaseUnitTest {
 
   public static final ReleaseBuilder releaseBuilder = aRelease()
                                                           .withReleaseName("REL1")
-                                                          .withApplication(anApplication().withUuid(APP_ID).build())
+                                                          .withAppId(APP_ID)
+                                                          .withUuid(RELEASE_ID)
                                                           .withDescription("RELEASE 1")
                                                           .withTargetDate(System.currentTimeMillis() + 1000);
 
