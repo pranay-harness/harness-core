@@ -81,6 +81,6 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public String getInfraId(String envId, String appId) {
-    return null;
+    return wingsPersistence.createQuery(Infra.class).field("envId").equal(envId).get().getUuid();
   }
 }

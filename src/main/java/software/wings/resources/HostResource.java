@@ -58,13 +58,16 @@ public class HostResource {
 
   @GET
   @Path("{hostId}")
-  public RestResponse<Host> get(
-      @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @PathParam("hostId") String hostId) {
+  public RestResponse<Host> get(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+      @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
+    infraId = hostService.getInfraId(envId, appId);
     return new RestResponse<>(hostService.get(appId, infraId, hostId));
   }
 
   @POST
-  public RestResponse<Host> save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId, Host host) {
+  public RestResponse<Host> save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+      @QueryParam("envId") String envId, Host host) {
+    infraId = hostService.getInfraId(envId, appId);
     host.setAppId(appId);
     host.setInfraId(infraId);
     return new RestResponse<Host>(hostService.save(host));
@@ -73,7 +76,8 @@ public class HostResource {
   @PUT
   @Path("{hostId}")
   public RestResponse<Host> updtae(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @PathParam("hostId") String hostId, Host host) {
+      @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
+    infraId = hostService.getInfraId(envId, appId);
     host.setUuid(hostId);
     host.setInfraId(infraId);
     host.setAppId(appId);
@@ -82,8 +86,9 @@ public class HostResource {
 
   @PUT
   @Path("{hostId}/tags/{tagId}")
-  public RestResponse<Host> tag(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
+  public RestResponse<Host> tag(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("infraId") String infraId, @PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
+    infraId = hostService.getInfraId(envId, appId);
     return new RestResponse<>(hostService.tag(appId, infraId, hostId, tagId));
   }
 
@@ -91,9 +96,11 @@ public class HostResource {
   @Path("import/{fileType}")
   @Consumes(MULTIPART_FORM_DATA)
   public void importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @PathParam("fileType") HostFileType fileType, @FormDataParam("sourceType") SourceType sourceType,
-      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
+      @QueryParam("envId") String envId, @PathParam("fileType") HostFileType fileType,
+      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
+    infraId = hostService.getInfraId(envId, appId);
     if (sourceType.equals(HTTP)) {
       uploadedInputStream =
           BoundedInputStream.getBoundedStreamForUrl(urlString, 40 * 1000 * 1000); // TODO: read from config
@@ -105,7 +112,8 @@ public class HostResource {
   @Path("export/{fileType}")
   @Encoded
   public Response exportHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @PathParam("fileType") HostFileType fileType) {
+      @QueryParam("envId") String envId, @PathParam("fileType") HostFileType fileType) {
+    infraId = hostService.getInfraId(envId, appId);
     File hostsFile = hostService.exportHosts(appId, infraId, fileType);
     Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
     response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
