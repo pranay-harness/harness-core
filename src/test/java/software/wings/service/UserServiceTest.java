@@ -6,7 +6,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Permission;
@@ -23,7 +23,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 3/9/16.
  */
 @Ignore
-public class UserServiceTest extends WingsBaseUnitTest {
+public class UserServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private RoleService roleService;

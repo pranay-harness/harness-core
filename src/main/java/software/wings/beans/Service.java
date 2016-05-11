@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
@@ -8,7 +10,6 @@ import software.wings.sm.RepeatElementType;
 import software.wings.sm.Repeatable;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Component bean class.
@@ -63,25 +64,39 @@ public class Service extends Base implements Repeatable {
   }
 
   @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, artifactType, appContainer, configFiles);
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    Service service = (Service) o;
+    return com.google.common.base.Objects.equal(name, service.name)
+        && com.google.common.base.Objects.equal(description, service.description)
+        && artifactType == service.artifactType
+        && com.google.common.base.Objects.equal(appContainer, service.appContainer)
+        && com.google.common.base.Objects.equal(configFiles, service.configFiles);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Service other = (Service) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.artifactType, other.artifactType)
-        && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles);
+  public int hashCode() {
+    return com.google.common.base.Objects.hashCode(
+        super.hashCode(), name, description, artifactType, appContainer, configFiles);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("description", description)
+        .add("artifactType", artifactType)
+        .add("configFiles", configFiles)
+        .add("repeatElementType", getRepeatElementType())
+        .toString();
   }
 
   @Override

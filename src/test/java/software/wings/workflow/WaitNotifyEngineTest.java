@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.waitnotify.NotifyCallback;
@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
-public class WaitNotifyEngineTest extends WingsBaseUnitTest {
+public class WaitNotifyEngineTest extends WingsBaseTest {
   private static AtomicInteger callCount;
   private static Map<String, Serializable> responseMap;
 

@@ -13,7 +13,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
 
 /**
@@ -96,7 +95,7 @@ public class Base {
 
   @Override
   public int hashCode() {
-    return Objects.hash(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, active);
+    return Objects.hash(uuid, appId, active);
   }
 
   @Override
@@ -109,9 +108,7 @@ public class Base {
     }
     final Base other = (Base) obj;
     return Objects.equals(this.uuid, other.uuid) && Objects.equals(this.appId, other.appId)
-        && Objects.equals(this.createdBy, other.createdBy) && Objects.equals(this.createdAt, other.createdAt)
-        && Objects.equals(this.lastUpdatedBy, other.lastUpdatedBy)
-        && Objects.equals(this.lastUpdatedAt, other.lastUpdatedAt) && Objects.equals(this.active, other.active);
+        && Objects.equals(this.active, other.active);
   }
 
   /**

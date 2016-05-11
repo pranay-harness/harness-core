@@ -14,7 +14,7 @@ import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseIntegrationTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
@@ -26,6 +26,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.TagType;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Integration;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -67,7 +68,8 @@ import javax.inject.Inject;
  * |
  */
 
-public class ConfigFileOverrideIT extends WingsBaseIntegrationTest {
+@Integration
+public class ConfigFileOverrideIT extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
 
   @Inject AppService appService;

@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -189,5 +192,41 @@ public class PageRequest<T> {
     filter.setFieldValue(fieldValue);
     filter.setOp(op);
     getFilters().add(filter);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    PageRequest<?> that = (PageRequest<?>) o;
+    return start == that.start && pageSize == that.pageSize && isOr == that.isOr && Objects.equal(offset, that.offset)
+        && Objects.equal(limit, that.limit) && Objects.equal(filters, that.filters)
+        && Objects.equal(orders, that.orders) && Objects.equal(fieldsIncluded, that.fieldsIncluded)
+        && Objects.equal(fieldsExcluded, that.fieldsExcluded);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(offset, start, limit, pageSize, filters, orders, fieldsIncluded, fieldsExcluded, isOr);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("isOr", isOr)
+        .add("uriInfo", uriInfo)
+        .add("fieldsExcluded", fieldsExcluded)
+        .add("fieldsIncluded", fieldsIncluded)
+        .add("orders", orders)
+        .add("filters", filters)
+        .add("pageSize", pageSize)
+        .add("limit", limit)
+        .add("start", start)
+        .add("offset", offset)
+        .toString();
   }
 }

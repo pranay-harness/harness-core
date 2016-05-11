@@ -1,22 +1,25 @@
 package software.wings.beans;
 
-import java.util.List;
+import com.google.common.collect.Sets;
+
+import org.mongodb.morphia.annotations.Reference;
+
 import java.util.Set;
 
 public class FileUploadSource extends ArtifactSource {
-  private Set<String> serviceIds;
+  @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;
 
   public FileUploadSource() {
     super(SourceType.FILE_UPLOAD);
   }
 
   @Override
-  public Set<String> getServiceIds() {
-    return serviceIds;
+  public Set<Service> getServices() {
+    return services;
   }
 
-  public void setServiceIds(Set<String> serviceIds) {
-    this.serviceIds = serviceIds;
+  public void setServices(Set<Service> services) {
+    this.services = services;
   }
 
   @Override
@@ -25,7 +28,7 @@ public class FileUploadSource extends ArtifactSource {
   }
 
   public static final class Builder {
-    private Set<String> serviceIds;
+    private Set<Service> services = Sets.newHashSet();
     private String sourceName;
     private ArtifactType artifactType;
 
@@ -35,8 +38,8 @@ public class FileUploadSource extends ArtifactSource {
       return new Builder();
     }
 
-    public Builder withServiceIds(Set<String> serviceIds) {
-      this.serviceIds = serviceIds;
+    public Builder withServices(Set<Service> services) {
+      this.services = services;
       return this;
     }
 
@@ -55,7 +58,7 @@ public class FileUploadSource extends ArtifactSource {
      */
     public FileUploadSource build() {
       FileUploadSource fileUploadSource = new FileUploadSource();
-      fileUploadSource.setServiceIds(serviceIds);
+      fileUploadSource.setServices(services);
       fileUploadSource.setSourceName(sourceName);
       fileUploadSource.setArtifactType(artifactType);
       return fileUploadSource;

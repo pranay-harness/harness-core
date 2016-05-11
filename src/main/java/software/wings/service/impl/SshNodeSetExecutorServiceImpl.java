@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
 
 import org.slf4j.Logger;
@@ -42,16 +41,19 @@ public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService 
     ExecutionResult result = executor.execute(deployment.getSetupCommand());
     executionLogs.appendLogs(config.getExecutionId(), String.format("Setup finished with %s\n", result));
 
-    if (SUCCESS == result) {
+    /*if (SUCCESS == result) {
       executor = SshExecutorFactory.getExecutor(config);
-      result = executor.transferFile(deployment.getArtifact().getArtifactFile().getFileUuid(), "wings/downloads/");
-      executionLogs.appendLogs(config.getExecutionId(), String.format("File transfer finished with %s\n", result));
+      result =
+          executor.transferFile(
+              deployment.getArtifact().getArtifactFile().getFileUuid(), "wings/downloads/");
+      executionLogs.appendLogs(
+          config.getExecutionId(), String.format("File transfer finished with %s\n", result));
 
       if (SUCCESS == result) {
         executor = SshExecutorFactory.getExecutor(config);
         result = executor.execute(deployment.getDeployCommand());
       }
-    }
+    }*/
     executionLogs.appendLogs(config.getExecutionId(), String.format("Deploy command finished with %s\n", result));
     return result;
   }

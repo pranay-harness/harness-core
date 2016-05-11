@@ -1,11 +1,11 @@
 package software.wings.lock;
 
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 
 import javax.inject.Inject;
 
-public class PersistentLockerTest extends WingsBaseUnitTest {
+public class PersistentLockerTest extends WingsBaseTest {
   @Inject private PersistentLocker persistentLocker;
 
   @Test

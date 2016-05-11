@@ -72,7 +72,7 @@ public class ServiceTemplateServiceTest {
     pageResponse.setResponse(asList(builder.build()));
     when(wingsPersistence.query(ServiceTemplate.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<ServiceTemplate> templates = templateService.list(pageRequest);
-    assertThat(templates).isEqualTo(asList(builder.build()));
+    assertThat(templates).containsAll(asList(builder.build()));
   }
 
   @Test
