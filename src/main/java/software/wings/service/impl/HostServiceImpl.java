@@ -78,4 +78,9 @@ public class HostServiceImpl implements HostService {
     List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraId).asList();
     return HostFileHelper.createHostsFile(hosts, fileType);
   }
+
+  @Override
+  public String getInfraId(String envId, String appId) {
+    return null;
+  }
 }

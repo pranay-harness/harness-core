@@ -61,12 +61,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
-        ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription()));
+        ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription(), "service",
+            serviceTemplate.getService()));
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid());
   }
 
   @Override
-  public ServiceTemplate updateHostAndTags(String serviceTemplateId, List<String> tagIds, List<String> hostIds) {
+  public ServiceTemplate updateHostAndTags(
+      String appId, String envId, String serviceTemplateId, List<String> tagIds, List<String> hostIds) {
     List<Tag> tags = new ArrayList<>();
     if (tagIds != null) {
       for (String tagId : tagIds) {
@@ -85,7 +87,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public Map<String, List<ConfigFile>> computedConfigFiles(String templateId) {
+  public Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
     if (serviceTemplate == null) {
       return new HashMap<>();
@@ -93,7 +95,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     /* override order(left to right): Service -> Env -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
-        configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, serviceTemplate.getServiceId());
+        configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
     List<ConfigFile> envConfigFiles = configService.getConfigFilesForEntity(templateId, serviceTemplate.getEnvId());
 
     // service -> env overrides

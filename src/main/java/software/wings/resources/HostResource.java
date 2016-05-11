@@ -49,7 +49,8 @@ public class HostResource {
 
   @GET
   public RestResponse<PageResponse<Host>> list(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @BeanParam PageRequest<Host> pageRequest) {
+      @QueryParam("envId") String envId, @BeanParam PageRequest<Host> pageRequest) {
+    infraId = hostService.getInfraId(envId, appId);
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("infraId", infraId, EQ);
     return new RestResponse<>(hostService.list(pageRequest));

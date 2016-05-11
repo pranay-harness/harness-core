@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Service.ServiceBuilder.aService;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.Tag.TagBuilder.aTag;
 
@@ -55,7 +56,7 @@ public class ServiceTemplateServiceTest {
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")
                                        .withEnvId("ENV_ID")
-                                       .withServiceId("SERVICE_ID")
+                                       .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
 
@@ -80,7 +81,7 @@ public class ServiceTemplateServiceTest {
         .thenReturn(builder.build());
     ServiceTemplate template = templateService.save(builder.build());
     assertThat(template.getName()).isEqualTo("TEMPLATE_NAME");
-    assertThat(template.getServiceId()).isEqualTo("SERVICE_ID");
+    assertThat(template.getService().getUuid()).isEqualTo("SERVICE_ID");
   }
 
   @Test
@@ -89,7 +90,8 @@ public class ServiceTemplateServiceTest {
     templateService.update(template);
     verify(wingsPersistence)
         .updateFields(ServiceTemplate.class, "TEMPLATE_ID",
-            ImmutableMap.of("name", "TEMPLATE_NAME", "description", "TEMPLATE_DESCRIPTION"));
+            ImmutableMap.of("name", "TEMPLATE_NAME", "description", "TEMPLATE_DESCRIPTION", "service",
+                aService().withUuid("SERVICE_ID").build()));
   }
 
   @Test
@@ -102,8 +104,8 @@ public class ServiceTemplateServiceTest {
     ServiceTemplate template = builder.build();
     Tag tag = tagService.saveTag(any(Tag.class));
     Host host = hostService.save(any(Host.class));
-    ServiceTemplate savedTemplate =
-        templateService.updateHostAndTags(template.getUuid(), asList(tag.getUuid()), asList(host.getUuid()));
+    ServiceTemplate savedTemplate = templateService.updateHostAndTags(
+        "APP_ID", "ENV_ID", template.getUuid(), asList(tag.getUuid()), asList(host.getUuid()));
 
     verify(wingsPersistence)
         .updateFields(
@@ -136,7 +138,8 @@ public class ServiceTemplateServiceTest {
     when(configService.getConfigFilesForEntity("TEMPLATE_ID", "HOST_ID_1"))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
 
-    Map<String, List<ConfigFile>> hostConfigFileMapping = templateService.computedConfigFiles("TEMPLATE_ID");
+    Map<String, List<ConfigFile>> hostConfigFileMapping =
+        templateService.computedConfigFiles("APP_ID", "ENV_ID", "TEMPLATE_ID");
     assertThat(hostConfigFileMapping.get("HOST_ID_1"))
         .isEqualTo(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
   }

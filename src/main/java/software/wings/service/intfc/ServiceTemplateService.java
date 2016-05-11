@@ -18,9 +18,10 @@ public interface ServiceTemplateService {
 
   ServiceTemplate update(ServiceTemplate serviceTemplate);
 
-  ServiceTemplate updateHostAndTags(String serviceTemplateId, List<String> tagIds, List<String> hostIds);
+  ServiceTemplate updateHostAndTags(
+      String appId, String envId, String serviceTemplateId, List<String> tagIds, List<String> hostIds);
 
   List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles);
 
-  Map<String, List<ConfigFile>> computedConfigFiles(String templateId);
+  Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId);
 }
