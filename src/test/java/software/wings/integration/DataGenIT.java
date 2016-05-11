@@ -1,7 +1,6 @@
 package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static java.lang.Integer.MAX_VALUE;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +8,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import com.google.inject.Inject;
 
@@ -30,6 +30,7 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Integration;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -40,8 +41,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-import javax.ws.rs.Path;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -52,7 +51,8 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/6/16.
  */
-@Path("/dataGen")
+
+@Integration
 public class DataGenIT extends WingsBaseTest {
   private static final int NUM_APPS = 10; // Max 1000
   private static final int NUM_APP_CONTAINER_PER_APP = 10; // Max 1000
@@ -61,7 +61,6 @@ public class DataGenIT extends WingsBaseTest {
   private static final int NUM_ENV_PER_APP = 4; // Max 10
   private static final int NUM_HOSTS_PER_INFRA = 100; // No limits
   private Client client;
-  private Random random = new Random();
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
@@ -113,6 +112,13 @@ public class DataGenIT extends WingsBaseTest {
       assertThat(response.getResource()).isInstanceOf(Environment.class);
       environments.add(response.getResource());
     }
+
+    // Hosts
+    //    target = client.target(String.format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", appId,
+    //    environment.getUuid())); environments.forEach(environment -> {
+
+    //    });
+    //
     return environments;
   }
 
@@ -215,18 +221,6 @@ public class DataGenIT extends WingsBaseTest {
     String name = names.get(nameIdx);
     names.remove(nameIdx);
     return name;
-  }
-
-  private int randomInt(int low, int high) {
-    return random.nextInt(high - low) + low;
-  }
-
-  private int randomInt(int high) {
-    return randomInt(0, high);
-  }
-
-  private int randomInt() {
-    return randomInt(0, MAX_VALUE);
   }
 
   private String randomText(int length) {
