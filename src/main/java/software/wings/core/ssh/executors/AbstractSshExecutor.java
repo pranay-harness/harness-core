@@ -55,6 +55,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
+  @Override
   public void init(SshSessionConfig config) {
     if (null == config.getExecutionId() || config.getExecutionId().length() == 0) {
       throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("INVALID_EXECUTION_ID"));
@@ -77,6 +78,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  @Override
   public ExecutionResult execute(String command) {
     return genericExecute(command);
   }
@@ -117,6 +119,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  @Override
   public void destroy() {
     logger.info("Disconnecting ssh session");
     if (null != channel) {
@@ -127,12 +130,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  @Override
   public void abort() {
     try {
       outputStream.write(3); // Send ^C command
       outputStream.flush();
     } catch (IOException ex) {
-      logger.error("Abort command failed " + ex.getStackTrace());
+      logger.error("Abort command failed " + ex);
     }
   }
 
@@ -199,6 +203,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   /**** SCP. ****/
+  @Override
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
     try {

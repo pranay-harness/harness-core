@@ -51,6 +51,12 @@ public class EnvironmentResource {
     return new RestResponse<>(envService.save(environment));
   }
 
+  @GET
+  @Path("{envId}")
+  public RestResponse<Environment> list(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
+    return new RestResponse<>(envService.get(appId, envId));
+  }
+
   @PUT
   @Path("{envId}")
   public RestResponse<Environment> update(

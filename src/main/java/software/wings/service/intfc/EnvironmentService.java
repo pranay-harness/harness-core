@@ -10,7 +10,7 @@ import software.wings.beans.PageResponse;
 public interface EnvironmentService {
   public PageResponse<Environment> list(PageRequest<Environment> request);
 
-  public Environment get(String envName);
+  public Environment get(String appId, String envName);
 
   public Environment save(Environment environment);
 

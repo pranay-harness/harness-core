@@ -395,7 +395,7 @@
                     <execution>
                         <id>integration-test</id>
                         <goals>
-                            <goal>integration-test</goal>
+                                <goal>integration-test</goal>
                         </goals>
                     </execution>
                     <execution>
@@ -552,6 +552,32 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.syncleus.maven.plugins</groupId>
+                <artifactId>maven-mongodb-plugin</artifactId>
+                <version>1.1.1</version>
+               <configuration>
+                     <version>3.2.0</version>
+                     <logging>file</logging>
+                     <logFile>${project.build.directory}/mongo.log</logFile>
+                     <bindIp>127.0.0.1</bindIp>
+                     <syncDelay>0</syncDelay>
+               </configuration>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

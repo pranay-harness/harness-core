@@ -13,7 +13,9 @@ import static software.wings.beans.Tag.TagBuilder.aTag;
 import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -36,8 +38,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -81,6 +85,8 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   @Inject EnvironmentService environmentService;
   @Inject HostService hostService;
 
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+
   ServiceTemplate template;
   List<Host> hosts;
 
@@ -93,7 +99,7 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   Tag orOz2;
 
   @Before
-  public void setUp() throws FileNotFoundException {
+  public void setUp() throws IOException {
     // DB cleanup
     Arrays.asList(Host.class, Tag.class, TagType.class, ConfigFile.class, ServiceTemplate.class, Service.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
@@ -245,44 +251,58 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
   }
 
-  int appFileIdx = 1;
-  int cacheFileIdx = 1;
-  String relativePath = System.getProperty("user.home") + "/data/config/";
-
   private void attacheConfigFileToEntity(String entityId, String templateId) throws IOException {
-    String filePrefix = "app";
-    String fileExt = ".properties";
-    String filePath = relativePath + filePrefix + appFileIdx++ + fileExt;
-    saveConfigFile(entityId, templateId, filePrefix, fileExt, filePath);
-
-    filePrefix = "cache";
-    fileExt = ".xml";
-    filePath = relativePath + filePrefix + cacheFileIdx++ + fileExt;
-    saveConfigFile(entityId, templateId, filePrefix, fileExt, filePath);
+    saveConfigFile(entityId, templateId, "app.properties");
+    saveConfigFile(entityId, templateId, "cache.xml");
   }
 
-  private void saveConfigFile(String entityId, String templateId, String filePrefix, String fileExt, String filePath)
-      throws IOException {
+  private void saveConfigFile(String entityId, String templateId, String fileName) throws IOException {
     ConfigFile appConfigFile = aConfigFile()
-                                   .withName(filePrefix + fileExt)
+                                   .withName(fileName)
                                    .withTemplateId(templateId)
                                    .withEntityId(entityId)
-                                   .withRelativePath(relativePath)
+                                   .withRelativePath("/configs/")
                                    .build();
-    FileInputStream fileInputStream = new FileInputStream(filePath);
+    FileInputStream fileInputStream = new FileInputStream(createRandomFile());
     configService.save(appConfigFile, fileInputStream);
     fileInputStream.close();
     log().info("Attached config file [{}, {}] to entity uuid = {}", appConfigFile.getUuid(), appConfigFile.getName(),
         entityId);
   }
 
-  private List<Host> importAndGetHosts(Infra infra) throws FileNotFoundException {
-    int numOfHostsImported = hostService.importHosts(infra.getAppId(), infra.getUuid(),
-        new FileInputStream(System.getProperty("user.home") + "/data/hosts.csv"), CSV);
+  private List<Host> importAndGetHosts(Infra infra) throws IOException {
+    int numOfHostsImported =
+        hostService.importHosts(infra.getAppId(), infra.getUuid(), new FileInputStream(createHostsFile()), CSV);
     log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infra.getUuid(), EQ);
     pageRequest.addFilter("appId", infra.getAppId(), EQ);
     return hostService.list(pageRequest).getResponse();
+  }
+
+  private File createRandomFile() throws IOException {
+    File file = testFolder.newFile("randomfile " + Math.random());
+    BufferedWriter out = new BufferedWriter(new FileWriter(file));
+    out.write("RandomText " + Math.random());
+    out.close();
+    return file;
+  }
+
+  private File createHostsFile() throws IOException {
+    File file = testFolder.newFile("hosts.csv");
+    BufferedWriter out = new BufferedWriter(new FileWriter(file));
+    out.write("HOST,OS,ACCESS_TYPE\n"
+        + "host1.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host2.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host3.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host4.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host5.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host6.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host7.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host8.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host9.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
+        + "host10.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"); // TODO: Autogenerate
+    out.close();
+    return file;
   }
 }

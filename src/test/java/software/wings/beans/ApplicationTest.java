@@ -6,7 +6,6 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;

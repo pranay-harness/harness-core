@@ -51,7 +51,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   @Override
-  public Environment get(String envId) {
+  public Environment get(String appId, String envId) {
     return wingsPersistence.get(Environment.class, envId);
   }
 
