@@ -1,6 +1,9 @@
 package software.wings.rules;
 
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -84,6 +87,7 @@ import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -103,7 +107,9 @@ public class WingsRule implements MethodRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        WingsRule.this.before(frameworkMethod.getAnnotations());
+        List<Annotation> annotations = Lists.newArrayList(Arrays.asList(frameworkMethod.getAnnotations()));
+        annotations.addAll(Arrays.asList(target.getClass().getAnnotations()));
+        WingsRule.this.before(annotations);
         injector.injectMembers(target);
         try {
           statement.evaluate();
@@ -118,19 +124,12 @@ public class WingsRule implements MethodRule {
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
 
-  protected void before(Annotation[] annotations) throws Throwable {
+  protected void before(List<Annotation> annotations) throws Throwable {
     MongoClient mongoClient;
-    if (Arrays.stream(annotations)
-            .filter(annotation -> Integration.class.isInstance(annotation))
-            .findFirst()
-            .isPresent()) {
+    if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
       mongoClient = new MongoClient("localhost", 27017);
     } else {
-      if (ArrayUtils.isNotEmpty(annotations)
-          && Arrays.stream(annotations)
-                 .filter(annotation -> RealMongo.class.isInstance(annotation))
-                 .findFirst()
-                 .isPresent()) {
+      if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
         MongodStarter starter = MongodStarter.getDefaultInstance();
 
         int port = Network.getFreeServerPort();
