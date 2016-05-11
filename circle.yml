@@ -8,7 +8,7 @@ dependencies:
     - "~/.embedmongo"
 test:
   override:
-    - mvn verify
+    - mvn test
   post:
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/ 
     - mkdir -p $CIRCLE_TEST_REPORTS/integration/ 
