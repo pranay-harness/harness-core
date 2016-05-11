@@ -128,7 +128,7 @@ public class WingsRule implements MethodRule {
     } else {
       if (ArrayUtils.isNotEmpty(annotations)
           && Arrays.stream(annotations)
-                 .filter(annotation -> GridFS.class.isInstance(annotation))
+                 .filter(annotation -> RealMongo.class.isInstance(annotation))
                  .findFirst()
                  .isPresent()) {
         MongodStarter starter = MongodStarter.getDefaultInstance();

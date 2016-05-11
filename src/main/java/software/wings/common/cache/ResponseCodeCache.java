@@ -14,7 +14,8 @@ import java.util.Properties;
 public class ResponseCodeCache {
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 
-  private static ResponseCodeCache instance;
+  private static ResponseCodeCache instance = new ResponseCodeCache();
+  ;
 
   private final Properties messages;
 
@@ -35,13 +36,6 @@ public class ResponseCodeCache {
    * @return singleton instance for the cache.
    */
   public static ResponseCodeCache getInstance() {
-    if (instance == null) {
-      synchronized (ResponseCodeCache.class) {
-        if (instance == null) {
-          instance = new ResponseCodeCache();
-        }
-      }
-    }
     return instance;
   }
 

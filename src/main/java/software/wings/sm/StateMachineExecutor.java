@@ -221,7 +221,7 @@ public class StateMachineExecutor {
       return;
     }
 
-    if (executionResponse.getStateExecutionData() != null) {
+    if (executionResponse != null && executionResponse.getStateExecutionData() != null) {
       context.getStateExecutionMap().put(smInstance.getStateName(), executionResponse.getStateExecutionData());
     }
     UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);

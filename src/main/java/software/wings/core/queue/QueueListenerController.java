@@ -27,7 +27,9 @@ public class QueueListenerController implements Managed {
   @Override
   public void stop() throws Exception {
     for (Runnable runnable : executorService.shutdownNow()) {
-      ((FutureTask<?>) runnable).get();
+      if (!((FutureTask<?>) runnable).isDone() || !((FutureTask<?>) runnable).isCancelled()) {
+        ((FutureTask<?>) runnable).cancel(true);
+      }
     }
   }
 }

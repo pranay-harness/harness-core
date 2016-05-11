@@ -3,6 +3,7 @@
  */
 package software.wings.sm;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,7 +11,8 @@ import java.util.Map;
  * @author Rishi
  *
  */
-public class ExecutionStandardParams {
+public class ExecutionStandardParams implements Serializable {
+  private static final long serialVersionUID = 247894502473046682L;
   private String appName;
   private String appDescription;
   private String releaseName;

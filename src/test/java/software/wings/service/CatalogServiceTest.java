@@ -6,10 +6,13 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
 import software.wings.beans.CatalogNames;
 import software.wings.service.intfc.CatalogService;
+import software.wings.utils.JsonUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +29,7 @@ public class CatalogServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCardviewSortBy() {
     List<CatalogItem> catalogItems = catalogService.getCatalogItems(CatalogNames.CARD_VIEW_SORT_BY);
+    logger.debug("catalogItems: {}", catalogItems);
     assertThat(catalogItems).isNotNull();
     assertThat(catalogItems.size()).isEqualTo(3);
   }
@@ -37,4 +41,6 @@ public class CatalogServiceTest extends WingsBaseTest {
     assertThat(catalogs).isNotNull();
     assertThat(catalogs.size()).isEqualTo(2);
   }
+
+  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 }

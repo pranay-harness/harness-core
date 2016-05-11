@@ -80,7 +80,9 @@ public class HostFileHelper {
         throw new WingsException(UNKNOWN_ERROR_MEG);
       } finally {
         try {
-          fileWriter.close();
+          if (fileWriter != null) {
+            fileWriter.close();
+          }
         } catch (IOException ignore) {
         }
       }
