@@ -5,7 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
+import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
@@ -15,7 +16,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-public class ApplicationTest extends WingsBaseUnitTest {
+public class ApplicationTest extends WingsBaseTest {
   @Inject private JsonUtils jsonUtils;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());

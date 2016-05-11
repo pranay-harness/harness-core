@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.PageRequest;
@@ -31,7 +31,7 @@ import javax.ws.rs.BadRequestException;
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
-public class ReleaseServiceTest extends WingsBaseUnitTest {
+public class ReleaseServiceTest extends WingsBaseTest {
   private static final ReleaseBuilder releaseBuilder =
       aRelease().withAppId("APP_ID").withReleaseName("REL1").withDescription("RELEASE 1");
 

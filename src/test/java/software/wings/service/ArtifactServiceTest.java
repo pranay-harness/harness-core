@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Builder;
 import software.wings.beans.Artifact.Status;
@@ -38,7 +38,7 @@ import javax.validation.ConstraintViolationException;
 /**
  * Created by peeyushaggarwal on 4/4/16.
  */
-public class ArtifactServiceTest extends WingsBaseUnitTest {
+public class ArtifactServiceTest extends WingsBaseTest {
   public static final String APP_ID = "APP_ID";
   public static final String RELEASE_ID = "RELEASE_ID";
   public static final String SERVICE_ID = "SERVICE_ID";

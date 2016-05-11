@@ -13,7 +13,8 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
 
-import software.wings.WingsBaseUnitTest;
+import software.wings.WingsBaseTest;
+import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
 import java.net.UnknownHostException;
@@ -26,7 +27,7 @@ import javax.inject.Named;
 /**
  * Created by peeyushaggarwal on 4/11/16.
  */
-public class MongoQueueTest extends WingsBaseUnitTest {
+public class MongoQueueTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
   private MongoQueueImpl<QueuableObject> queue;

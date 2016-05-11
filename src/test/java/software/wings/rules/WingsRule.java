@@ -1,7 +1,5 @@
 package software.wings.rules;
 
-import static software.wings.rules.WingsRule.TestType.INTEGRATION;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -24,6 +22,7 @@ import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.mongo.distribution.Version.Main;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
 import org.apache.commons.lang.ArrayUtils;
@@ -95,7 +94,6 @@ import java.util.concurrent.TimeUnit;
 public class WingsRule implements MethodRule {
   private MongodExecutable mongodExecutable;
 
-  private TestType testType;
   private Injector injector;
   private MongoServer mongoServer;
 
@@ -119,13 +117,14 @@ public class WingsRule implements MethodRule {
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
 
-  public WingsRule(TestType testType) {
-    this.testType = testType;
-  }
-
   protected void before(Annotation[] annotations) throws Throwable {
     MongoClient mongoClient;
-    if (testType.equals(TestType.UNIT)) {
+    if (Arrays.stream(annotations)
+            .filter(annotation -> Integration.class.isInstance(annotation))
+            .findFirst()
+            .isPresent()) {
+      mongoClient = new MongoClient("localhost", 27017);
+    } else {
       if (ArrayUtils.isNotEmpty(annotations)
           && Arrays.stream(annotations)
                  .filter(annotation -> GridFS.class.isInstance(annotation))
@@ -134,10 +133,8 @@ public class WingsRule implements MethodRule {
         MongodStarter starter = MongodStarter.getDefaultInstance();
 
         int port = Network.getFreeServerPort();
-        IMongodConfig mongodConfig = new MongodConfigBuilder()
-                                         .version(Version.Main.PRODUCTION)
-                                         .net(new Net(port, Network.localhostIsIPv6()))
-                                         .build();
+        IMongodConfig mongodConfig =
+            new MongodConfigBuilder().version(Main.V3_2).net(new Net(port, Network.localhostIsIPv6())).build();
         mongodExecutable = starter.prepare(mongodConfig);
         MongodProcess mongod = mongodExecutable.start();
         mongoClient = new MongoClient("localhost", port);
@@ -147,8 +144,6 @@ public class WingsRule implements MethodRule {
         InetSocketAddress serverAddress = mongoServer.getLocalAddress();
         mongoClient = new MongoClient(new ServerAddress(serverAddress));
       }
-    } else {
-      mongoClient = new MongoClient("localhost", 27017);
     }
 
     Morphia morphia = new Morphia();
@@ -252,18 +247,15 @@ public class WingsRule implements MethodRule {
     }
 
     log().info("Stopping Mongo server...");
-    if (!testType.equals(INTEGRATION)) {
-      if (mongoServer != null) {
-        mongoServer.shutdown();
-      }
-      if (mongodExecutable != null) {
-        mongodExecutable.stop();
-      }
+    if (mongoServer != null) {
+      mongoServer.shutdown();
     }
+    if (mongodExecutable != null) {
+      mongodExecutable.stop();
+    }
+
     log().info("Stopped Mongo server...");
   }
-
-  public enum TestType { UNIT, INTEGRATION }
 
   private void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");
