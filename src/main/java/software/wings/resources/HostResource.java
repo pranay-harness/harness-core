@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -82,6 +83,15 @@ public class HostResource {
     host.setInfraId(infraId);
     host.setAppId(appId);
     return new RestResponse<Host>(hostService.update(host));
+  }
+
+  @DELETE
+  @Path("{hostId}")
+  public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+      @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
+    infraId = hostService.getInfraId(envId, appId);
+    hostService.delete(appId, infraId, hostId);
+    return new RestResponse();
   }
 
   @PUT

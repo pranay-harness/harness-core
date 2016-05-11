@@ -15,22 +15,29 @@ import java.util.stream.Collectors;
 public class Host extends Base implements Repeatable {
   public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
 
+  public enum ConnectionType { SSH }
+
+  private String infraId;
+
   private String hostName;
 
   private String osType;
 
-  private String ipAddress;
-
-  private Integer sshPort;
-
-  private String hostAlias;
   private AccessType accessType;
+
+  private ConnectionType connectionType;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
-  private String infraId;
-
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+
+  public String getInfraId() {
+    return infraId;
+  }
+
+  public void setInfraId(String infraId) {
+    this.infraId = infraId;
+  }
 
   public String getHostName() {
     return hostName;
@@ -40,20 +47,12 @@ public class Host extends Base implements Repeatable {
     this.hostName = hostName;
   }
 
-  public String getIpAddress() {
-    return ipAddress;
+  public String getOsType() {
+    return osType;
   }
 
-  public void setIpAddress(String ipAddress) {
-    this.ipAddress = ipAddress;
-  }
-
-  public String getHostAlias() {
-    return hostAlias;
-  }
-
-  public void setHostAlias(String hostAlias) {
-    this.hostAlias = hostAlias;
+  public void setOsType(String osType) {
+    this.osType = osType;
   }
 
   public AccessType getAccessType() {
@@ -64,20 +63,12 @@ public class Host extends Base implements Repeatable {
     this.accessType = accessType;
   }
 
-  public Integer getSshPort() {
-    return sshPort;
+  public ConnectionType getConnectionType() {
+    return connectionType;
   }
 
-  public void setSshPort(Integer sshPort) {
-    this.sshPort = sshPort;
-  }
-
-  public String getInfraId() {
-    return infraId;
-  }
-
-  public void setInfraId(String infraId) {
-    this.infraId = infraId;
+  public void setConnectionType(ConnectionType connectionType) {
+    this.connectionType = connectionType;
   }
 
   public List<Tag> getTags() {
@@ -86,14 +77,6 @@ public class Host extends Base implements Repeatable {
 
   public void setTags(List<Tag> tags) {
     this.tags = tags;
-  }
-
-  public String getOsType() {
-    return osType;
-  }
-
-  public void setOsType(String osType) {
-    this.osType = osType;
   }
 
   public List<ConfigFile> getConfigFiles() {
@@ -121,7 +104,7 @@ public class Host extends Base implements Repeatable {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(hostName, osType, ipAddress, sshPort, hostAlias, accessType, tags, infraId, configFiles);
+        + Objects.hash(infraId, hostName, osType, accessType, connectionType, tags, configFiles);
   }
 
   @Override
@@ -136,22 +119,19 @@ public class Host extends Base implements Repeatable {
       return false;
     }
     final Host other = (Host) obj;
-    return Objects.equals(this.hostName, other.hostName) && Objects.equals(this.osType, other.osType)
-        && Objects.equals(this.ipAddress, other.ipAddress) && Objects.equals(this.sshPort, other.sshPort)
-        && Objects.equals(this.hostAlias, other.hostAlias) && Objects.equals(this.accessType, other.accessType)
-        && Objects.equals(this.tags, other.tags) && Objects.equals(this.infraId, other.infraId)
+    return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
+        && Objects.equals(this.osType, other.osType) && Objects.equals(this.accessType, other.accessType)
+        && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.tags, other.tags)
         && Objects.equals(this.configFiles, other.configFiles);
   }
 
   public static final class HostBuilder {
+    private String infraId;
     private String hostName;
     private String osType;
-    private String ipAddress;
-    private int sshPort;
-    private String hostAlias;
     private AccessType accessType;
+    private ConnectionType connectionType;
     private List<Tag> tags = new ArrayList<>();
-    private String infraId;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
     private String appId;
@@ -167,6 +147,11 @@ public class Host extends Base implements Repeatable {
       return new HostBuilder();
     }
 
+    public HostBuilder withInfraId(String infraId) {
+      this.infraId = infraId;
+      return this;
+    }
+
     public HostBuilder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
@@ -177,33 +162,18 @@ public class Host extends Base implements Repeatable {
       return this;
     }
 
-    public HostBuilder withIpAddress(String ipAddress) {
-      this.ipAddress = ipAddress;
-      return this;
-    }
-
-    public HostBuilder withSshPort(int sshPort) {
-      this.sshPort = sshPort;
-      return this;
-    }
-
-    public HostBuilder withHostAlias(String hostAlias) {
-      this.hostAlias = hostAlias;
-      return this;
-    }
-
     public HostBuilder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
-    public HostBuilder withTags(List<Tag> tags) {
-      this.tags = tags;
+    public HostBuilder withConnectionType(ConnectionType connectionType) {
+      this.connectionType = connectionType;
       return this;
     }
 
-    public HostBuilder withInfraId(String infraId) {
-      this.infraId = infraId;
+    public HostBuilder withTags(List<Tag> tags) {
+      this.tags = tags;
       return this;
     }
 
@@ -249,14 +219,12 @@ public class Host extends Base implements Repeatable {
 
     public HostBuilder but() {
       return aHost()
+          .withInfraId(infraId)
           .withHostName(hostName)
           .withOsType(osType)
-          .withIpAddress(ipAddress)
-          .withSshPort(sshPort)
-          .withHostAlias(hostAlias)
           .withAccessType(accessType)
+          .withConnectionType(connectionType)
           .withTags(tags)
-          .withInfraId(infraId)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
@@ -269,14 +237,12 @@ public class Host extends Base implements Repeatable {
 
     public Host build() {
       Host host = new Host();
+      host.setInfraId(infraId);
       host.setHostName(hostName);
       host.setOsType(osType);
-      host.setIpAddress(ipAddress);
-      host.setSshPort(sshPort);
-      host.setHostAlias(hostAlias);
       host.setAccessType(accessType);
+      host.setConnectionType(connectionType);
       host.setTags(tags);
-      host.setInfraId(infraId);
       host.setConfigFiles(configFiles);
       host.setUuid(uuid);
       host.setAppId(appId);

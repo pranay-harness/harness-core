@@ -27,4 +27,6 @@ public interface HostService {
   File exportHosts(String appId, String infraId, HostFileType fileType);
 
   String getInfraId(String envId, String appId);
+
+  void delete(String appId, String infraId, String hostId);
 }

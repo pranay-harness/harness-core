@@ -44,11 +44,8 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.updateFields(Host.class, host.getUuid(),
         ImmutableMap.<String, Object>builder()
             .put("hostName", host.getName())
-            .put("hostName", host.getName())
             .put("osType", host.getOsType())
-            .put("ipAddress", host.getIpAddress())
-            .put("sshPort", host.getSshPort())
-            .put("hostAlias", host.getHostAlias())
+            .put("connectionType", host.getConnectionType())
             .put("accessType", host.getAccessType())
             .put("tags", host.getTags())
             .build());
@@ -82,5 +79,10 @@ public class HostServiceImpl implements HostService {
   @Override
   public String getInfraId(String envId, String appId) {
     return wingsPersistence.createQuery(Infra.class).field("envId").equal(envId).get().getUuid();
+  }
+
+  @Override
+  public void delete(String appId, String infraId, String hostId) {
+    wingsPersistence.delete(Host.class, hostId);
   }
 }
