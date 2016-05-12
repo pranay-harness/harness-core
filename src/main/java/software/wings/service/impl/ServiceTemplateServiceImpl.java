@@ -142,6 +142,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
+  public ServiceTemplate get(String appId, String envId, String serviceTemplateId) {
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
   public List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles) {
     logger.info("Config files before overrides [{}]", existingFiles.toString());
     logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);

@@ -56,6 +56,13 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.save(serviceTemplate));
   }
 
+  @GET
+  @Path("{templateId}")
+  public RestResponse<ServiceTemplate> get(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @PathParam("templateId") String serviceTemplateId) {
+    return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId));
+  }
+
   @PUT
   @Path("{templateId}")
   public RestResponse<ServiceTemplate> update(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
