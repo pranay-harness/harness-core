@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,6 +33,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.TagType;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
@@ -58,12 +60,14 @@ import javax.ws.rs.core.Response;
 
 @Integration
 public class DataGenIT extends WingsBaseTest {
-  private static final int NUM_APPS = 10; // Max 1000
-  private static final int NUM_APP_CONTAINER_PER_APP = 10; // Max 1000
-  private static final int NUM_SERVICES_PER_APP = 5; // Max 1000
-  private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; // Max 100
-  private static final int NUM_ENV_PER_APP = 5; // Max 10
-  private static final int NUM_HOSTS_PER_INFRA = 100; // No limits
+  private static final int NUM_APPS = 10; /* Max 1000 */
+  private static final int NUM_APP_CONTAINER_PER_APP = 10; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
+  private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
+  private static final int NUM_ENV_PER_APP = 5; /* Max 10   */
+  private static final int NUM_HOSTS_PER_INFRA = 100; /* No limit */
+  private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
+  private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private Client client;
 
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
@@ -81,6 +85,8 @@ public class DataGenIT extends WingsBaseTest {
     assertThat(NUM_SERVICES_PER_APP).isBetween(1, 1000);
     assertThat(NUM_CONFIG_FILE_PER_SERVICE).isBetween(0, 100);
     assertThat(NUM_ENV_PER_APP).isBetween(1, 10);
+    assertThat(NUM_TAG_GROUPS_PER_ENV).isBetween(1, 10);
+    assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
     dropDBAndEnsureIndexes();
 
@@ -113,32 +119,6 @@ public class DataGenIT extends WingsBaseTest {
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
     }
-  }
-
-  private List<Environment> addEnvs(String appId) throws IOException {
-    List<Environment> environments = new ArrayList<>();
-    WebTarget target = client.target("http://localhost:9090/wings/environments?appId=" + appId);
-    for (int i = 0; i < NUM_ENV_PER_APP; i++) {
-      RestResponse<Environment> response = target.request().post(
-          Entity.entity(
-              anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
-              APPLICATION_JSON),
-          new GenericType<RestResponse<Environment>>() {});
-      assertThat(response.getResource()).isInstanceOf(Environment.class);
-      environments.add(response.getResource());
-      addHostsToEnv(response.getResource());
-    }
-    return environments;
-  }
-
-  private void addHostsToEnv(Environment environment) throws IOException {
-    WebTarget target = client.target(String.format("http://localhost:9090/wings/hosts/import/CSV?appId=%s&envId=%s",
-        environment.getAppId(), environment.getUuid()));
-    File file = createHostsFile(testFolder.newFile(environment.getUuid() + ".csv"), NUM_HOSTS_PER_INFRA);
-    FormDataMultiPart multiPart = new FormDataMultiPart().field("sourceType", "FILE_UPLOAD");
-    multiPart.bodyPart(new FileDataBodyPart("file", file));
-    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
-    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
   }
 
   private List<Application> createApplications() {
@@ -182,8 +162,8 @@ public class DataGenIT extends WingsBaseTest {
 
   private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFiles) {
     String entityId = entity.getUuid();
-    WebTarget target = client.target(
-        String.format("http://localhost:9090/wings/configs/?entityId=%s&templateId=%s", entityId, templateId));
+    WebTarget target =
+        client.target(format("http://localhost:9090/wings/configs/?entityId=%s&templateId=%s", entityId, templateId));
     try {
       for (int i = 0; i < numConfigFiles; i++) {
         File file = getTestFile(getName(configFileNames) + ".properties");
@@ -203,7 +183,7 @@ public class DataGenIT extends WingsBaseTest {
     WebTarget target = client.target("http://localhost:9090/wings/app-containers/?appId=" + appId);
     for (int i = 0; i < NUM_APP_CONTAINER_PER_APP; i++) {
       try {
-        String version = String.format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
+        String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
         String name = containerNames.get(randomInt() % containerNames.size());
         File file = getTestFile(name);
         FileDataBodyPart filePart = new FileDataBodyPart("file", file);
@@ -230,6 +210,43 @@ public class DataGenIT extends WingsBaseTest {
     return response.getResource().getResponse();
   }
 
+  private List<Environment> addEnvs(String appId) throws IOException {
+    List<Environment> environments = new ArrayList<>();
+    WebTarget target = client.target("http://localhost:9090/wings/environments?appId=" + appId);
+    for (int i = 0; i < NUM_ENV_PER_APP; i++) {
+      RestResponse<Environment> response = target.request().post(
+          Entity.entity(
+              anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
+              APPLICATION_JSON),
+          new GenericType<RestResponse<Environment>>() {});
+      assertThat(response.getResource()).isInstanceOf(Environment.class);
+      environments.add(response.getResource());
+      addHostsToEnv(response.getResource());
+      //      createAndTagHosts(response.getResource());
+    }
+    return environments;
+  }
+
+  private void createAndTagHosts(Environment environment) {
+    RestResponse<PageResponse<TagType>> response =
+        client
+            .target(format("http://localhost:9090/wings/tag-types?appId=%s&envId=%s", environment.getAppId(),
+                environment.getUuid()))
+            .request()
+            .get(new GenericType<RestResponse<PageResponse<TagType>>>() {});
+    log().info(response.getResource().getResponse().toString());
+  }
+
+  private void addHostsToEnv(Environment environment) throws IOException {
+    WebTarget target = client.target(format("http://localhost:9090/wings/hosts/import/CSV?appId=%s&envId=%s",
+        environment.getAppId(), environment.getUuid()));
+    File file = createHostsFile(testFolder.newFile(environment.getUuid() + ".csv"), NUM_HOSTS_PER_INFRA);
+    FormDataMultiPart multiPart = new FormDataMultiPart().field("sourceType", "FILE_UPLOAD");
+    multiPart.bodyPart(new FileDataBodyPart("file", file));
+    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+  }
+
   private File getTestFile(String name) throws IOException {
     File file = new File(testFolder.getRoot().getAbsolutePath() + "/" + name);
     if (!file.isFile()) {
@@ -248,11 +265,13 @@ public class DataGenIT extends WingsBaseTest {
     return name;
   }
 
-  private String randomText(int length) {
+  private String randomText(int length) { // TODO: choose words start to word end boundary
     int low = randomInt(50);
     int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
     return randomSeedString.substring(low, high);
   }
+
+  /* Seed data */
 
   private String randomSeedString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
       + "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, "
