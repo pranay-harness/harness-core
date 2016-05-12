@@ -1,13 +1,9 @@
 package software.wings.service.impl;
 
-import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
-import software.wings.beans.Host;
 import software.wings.core.ssh.ExecutionLogs;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
@@ -58,19 +54,19 @@ public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService 
     return result;
   }
 
-  private SshSessionConfig getSshSessionConfig(Deployment deployment, Host host) {
-    String hostName = host.getHostName();
-    int sshPort = host.getSshPort();
-    String sshUser = deployment.getSshUser();
-    String sshPassword = deployment.getSshPassword();
-
-    return new SshSessionConfig.SshSessionConfigBuilder()
-        .executionType(PASSWORD)
-        .executionId(getUuid())
-        .host(hostName)
-        .port(sshPort)
-        .user(sshUser)
-        .password(sshPassword)
-        .build();
-  }
+  //  private SshSessionConfig getSshSessionConfig(Deployment deployment, Host host) {
+  //    String hostName = host.getHostName();
+  //    int sshPort = host.getSshPort();
+  //    String sshUser = deployment.getSshUser();
+  //    String sshPassword = deployment.getSshPassword();
+  //
+  //    return new SshSessionConfig.SshSessionConfigBuilder()
+  //        .executionType(PASSWORD)
+  //        .executionId(getUuid())
+  //        .host(hostName)
+  //        .port(sshPort)
+  //        .user(sshUser)
+  //        .password(sshPassword)
+  //        .build();
+  //  }
 }
