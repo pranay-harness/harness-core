@@ -59,13 +59,13 @@ import javax.ws.rs.core.Response;
  */
 
 @Integration
-public class DataGenIT extends WingsBaseTest {
-  private static final int NUM_APPS = 10; /* Max 1000 */
-  private static final int NUM_APP_CONTAINER_PER_APP = 10; /* Max 1000 */
+public class DataGenUtil extends WingsBaseTest {
+  private static final int NUM_APPS = 100; /* Max 1000 */
+  private static final int NUM_APP_CONTAINER_PER_APP = 100; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 5; /* Max 10   */
-  private static final int NUM_HOSTS_PER_INFRA = 100; /* No limit */
+  private static final int NUM_HOSTS_PER_INFRA = 1000; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private Client client;
@@ -108,7 +108,7 @@ public class DataGenIT extends WingsBaseTest {
   }
 
   @Test
-  public void populateDataIT() throws IOException {
+  public void populateData() throws IOException {
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
     Map<String, List<Service>> services = new HashMap<>();
@@ -137,8 +137,8 @@ public class DataGenIT extends WingsBaseTest {
     return apps;
   }
 
-  private List<Service> addServices(String appId, List<AppContainer> appContainers) {
-    serviceNames = new ArrayList<String>(seedNames);
+  private List<Service> addServices(String appId, List<AppContainer> appContainers) throws IOException {
+    serviceNames = new ArrayList<>(seedNames);
     WebTarget target = client.target("http://localhost:9090/wings/services/?appId=" + appId);
     List<Service> services = new ArrayList<>();
 
@@ -154,60 +154,71 @@ public class DataGenIT extends WingsBaseTest {
           Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
       assertThat(response.getResource()).isInstanceOf(Service.class);
       services.add(response.getResource());
-      configFileNames = new ArrayList<String>(seedNames);
+      configFileNames = new ArrayList<>(seedNames);
       addConfigFilesToEntity(response.getResource(), DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE);
     }
     return services;
   }
 
-  private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFiles) {
-    String entityId = entity.getUuid();
-    WebTarget target =
-        client.target(format("http://localhost:9090/wings/configs/?entityId=%s&templateId=%s", entityId, templateId));
-    try {
-      for (int i = 0; i < numConfigFiles; i++) {
-        File file = getTestFile(getName(configFileNames) + ".properties");
-        FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-        FormDataMultiPart multiPart =
-            new FormDataMultiPart().field("name", file.getName()).field("relativePath", "./configs/");
-        multiPart.bodyPart(filePart);
-        Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
-        assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+  private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFilesToBeAdded) throws IOException {
+    while (numConfigFilesToBeAdded > 0) {
+      if (addOneConfigFileToEntity(templateId, entity.getUuid())) {
+        numConfigFilesToBeAdded--;
       }
-    } catch (IOException e) {
-      log().info(e.getMessage());
     }
   }
 
+  private boolean addOneConfigFileToEntity(String templateId, String entityId) throws IOException {
+    WebTarget target =
+        client.target(format("http://localhost:9090/wings/configs/?entityId=%s&templateId=%s", entityId, templateId));
+    File file = getTestFile(getName(configFileNames) + ".properties");
+    FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+    FormDataMultiPart multiPart =
+        new FormDataMultiPart().field("name", file.getName()).field("relativePath", "./configs/");
+    multiPart.bodyPart(filePart);
+    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+    return response.getStatus() == 200;
+  }
+
   private List<AppContainer> addAppContainers(String appId) {
-    WebTarget target = client.target("http://localhost:9090/wings/app-containers/?appId=" + appId);
-    for (int i = 0; i < NUM_APP_CONTAINER_PER_APP; i++) {
-      try {
-        String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
-        String name = containerNames.get(randomInt() % containerNames.size());
-        File file = getTestFile(name);
-        FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-        FormDataMultiPart multiPart = new FormDataMultiPart()
-                                          .field("name", name)
-                                          .field("version", version)
-                                          .field("description", randomText(20))
-                                          .field("sourceType", "FILE_UPLOAD")
-                                          .field("standard", "false");
-        multiPart.bodyPart(filePart);
-        Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
-        if (response.getStatus() != 200) {
-          log().error("Duplicate app container. Retry");
-          continue;
-        }
-      } catch (IOException e) {
-        log().info(e.getMessage());
+    int containersToBeAdded = NUM_APP_CONTAINER_PER_APP;
+    while (containersToBeAdded > 0) {
+      if (addOneAppContainer(appId)) {
+        containersToBeAdded--;
       }
     }
+    return getAppContainers(appId);
+  }
+
+  private List<AppContainer> getAppContainers(String appId) {
     RestResponse<PageResponse<AppContainer>> response =
         client.target("http://localhost:9090/wings/app-containers/?appId=" + appId)
             .request()
             .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
     return response.getResource().getResponse();
+  }
+
+  private boolean addOneAppContainer(String appId) {
+    WebTarget target = client.target("http://localhost:9090/wings/app-containers/?appId=" + appId);
+    String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
+    String name = containerNames.get(randomInt() % containerNames.size());
+
+    try {
+      File file = getTestFile(name);
+      FileDataBodyPart filePart = new FileDataBodyPart("file", file);
+      FormDataMultiPart multiPart = new FormDataMultiPart()
+                                        .field("name", name)
+                                        .field("version", version)
+                                        .field("description", randomText(20))
+                                        .field("sourceType", "FILE_UPLOAD")
+                                        .field("standard", "false");
+      multiPart.bodyPart(filePart);
+      Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+      return response.getStatus() == 200;
+    } catch (IOException e) {
+      log().info("Error occured in uploading app container" + e.getMessage());
+    }
+    return false;
   }
 
   private List<Environment> addEnvs(String appId) throws IOException {
