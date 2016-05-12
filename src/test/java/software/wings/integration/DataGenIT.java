@@ -8,6 +8,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.integration.IntegrationTestUtil.createHostsFile;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import com.google.inject.Inject;
@@ -21,6 +23,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mongodb.morphia.annotations.Embedded;
+import org.mongodb.morphia.utils.ReflectionUtils;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
@@ -36,6 +40,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,7 +63,7 @@ public class DataGenIT extends WingsBaseTest {
   private static final int NUM_APP_CONTAINER_PER_APP = 10; // Max 1000
   private static final int NUM_SERVICES_PER_APP = 5; // Max 1000
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; // Max 100
-  private static final int NUM_ENV_PER_APP = 4; // Max 10
+  private static final int NUM_ENV_PER_APP = 5; // Max 10
   private static final int NUM_HOSTS_PER_INFRA = 100; // No limits
   private Client client;
 
@@ -78,11 +83,23 @@ public class DataGenIT extends WingsBaseTest {
     assertThat(NUM_CONFIG_FILE_PER_SERVICE).isBetween(0, 100);
     assertThat(NUM_ENV_PER_APP).isBetween(1, 10);
 
-    wingsPersistence.getDatastore().getDB().dropDatabase();
+    dropDBAndEnsureIndexes();
 
     ClientConfig config = new ClientConfig(new JacksonJaxbJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     client = ClientBuilder.newClient(config);
+  }
+
+  private void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
+    wingsPersistence.getDatastore().getDB().dropDatabase();
+    for (final Class clazz : ReflectionUtils.getClasses("software.wings.beans", false)) {
+      final Embedded embeddedAnn = ReflectionUtils.getClassEmbeddedAnnotation(clazz);
+      final org.mongodb.morphia.annotations.Entity entityAnn = ReflectionUtils.getClassEntityAnnotation(clazz);
+      final boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+      if ((entityAnn != null || embeddedAnn != null) && !isAbstract) {
+        wingsPersistence.getDatastore().ensureIndexes(clazz);
+      }
+    }
   }
 
   @Test
@@ -92,15 +109,14 @@ public class DataGenIT extends WingsBaseTest {
     Map<String, List<Service>> services = new HashMap<>();
     Map<String, List<Environment>> appEnvs = new HashMap<>();
 
-    apps.forEach(application -> {
-      // add resources
+    for (Application application : apps) {
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-    });
+    }
   }
 
-  private List<Environment> addEnvs(String appId) {
+  private List<Environment> addEnvs(String appId) throws IOException {
     List<Environment> environments = new ArrayList<>();
     WebTarget target = client.target("http://localhost:9090/wings/environments?appId=" + appId);
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
@@ -111,15 +127,19 @@ public class DataGenIT extends WingsBaseTest {
           new GenericType<RestResponse<Environment>>() {});
       assertThat(response.getResource()).isInstanceOf(Environment.class);
       environments.add(response.getResource());
+      addHostsToEnv(response.getResource());
     }
-
-    // Hosts
-    //    target = client.target(String.format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", appId,
-    //    environment.getUuid())); environments.forEach(environment -> {
-
-    //    });
-    //
     return environments;
+  }
+
+  private void addHostsToEnv(Environment environment) throws IOException {
+    WebTarget target = client.target(String.format("http://localhost:9090/wings/hosts/import/CSV?appId=%s&envId=%s",
+        environment.getAppId(), environment.getUuid()));
+    File file = createHostsFile(testFolder.newFile(environment.getUuid() + ".csv"), NUM_HOSTS_PER_INFRA);
+    FormDataMultiPart multiPart = new FormDataMultiPart().field("sourceType", "FILE_UPLOAD");
+    multiPart.bodyPart(new FileDataBodyPart("file", file));
+    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
   }
 
   private List<Application> createApplications() {
@@ -184,7 +204,7 @@ public class DataGenIT extends WingsBaseTest {
     WebTarget target = client.target("http://localhost:9090/wings/app-containers/?appId=" + appId);
     for (int i = 0; i < NUM_APP_CONTAINER_PER_APP; i++) {
       try {
-        String version = String.format("%s.%s.%s", randomInt(1, 10), randomInt(100), randomInt(100));
+        String version = String.format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
         String name = containerNames.get(randomInt() % containerNames.size());
         File file = getTestFile("AppContainer" + randomInt());
         FileDataBodyPart filePart = new FileDataBodyPart("file", file);
@@ -196,7 +216,10 @@ public class DataGenIT extends WingsBaseTest {
                                           .field("standard", "false");
         multiPart.bodyPart(filePart);
         Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
-        assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+        if (response.getStatus() != 200) {
+          log().error("Duplicate app container. Retry");
+          continue;
+        }
       } catch (IOException e) {
         log().info(e.getMessage());
       }
@@ -209,7 +232,7 @@ public class DataGenIT extends WingsBaseTest {
   }
 
   private File getTestFile(String name) throws IOException {
-    File file = testFolder.newFile(name + randomInt());
+    File file = testFolder.newFile(name + getUuid());
     BufferedWriter out = new BufferedWriter(new FileWriter(file));
     out.write(randomText(100));
     out.close();
