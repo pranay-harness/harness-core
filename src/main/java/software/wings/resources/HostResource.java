@@ -105,7 +105,7 @@ public class HostResource {
   @POST
   @Path("import/{fileType}")
   @Consumes(MULTIPART_FORM_DATA)
-  public void importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("fileType") HostFileType fileType,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
@@ -116,6 +116,7 @@ public class HostResource {
           BoundedInputStream.getBoundedStreamForUrl(urlString, 40 * 1000 * 1000); // TODO: read from config
     }
     hostService.importHosts(appId, infraId, uploadedInputStream, fileType);
+    return new RestResponse();
   }
 
   @GET

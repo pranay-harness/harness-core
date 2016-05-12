@@ -26,4 +26,6 @@ public interface ServiceTemplateService {
   Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId);
 
   void delete(String appId, String envId, String serviceTemplateId);
+
+  ServiceTemplate get(String appId, String envId, String serviceTemplateId);
 }

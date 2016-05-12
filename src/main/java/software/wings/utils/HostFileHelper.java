@@ -10,6 +10,7 @@ import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import software.wings.beans.Host;
+import software.wings.beans.Host.ConnectionType;
 import software.wings.exception.WingsException;
 
 import java.io.File;
@@ -24,7 +25,8 @@ import java.util.List;
  * Created by anubhaw on 4/15/16.
  */
 public class HostFileHelper {
-  public static final String[] CSVHeader = {"HOST", "OS", "ACCESS_TYPE", "TAGS", "CREATED_BY", "CREATED_AT"};
+  public static final String[] CSVHeader = {
+      "HOST", "OS", "CONNECTION_TYPE", "ACCESS_TYPE", "TAGS", "CREATED_BY", "CREATED_AT"};
 
   public static enum HostFileType { CSV, PROPERTIES, XML }
 
@@ -37,12 +39,14 @@ public class HostFileHelper {
         for (CSVRecord record : records) {
           String hostName = record.get("HOST");
           String osType = record.get("OS");
+          ConnectionType connectionTYpe = Host.ConnectionType.valueOf(record.get("CONNECTION_TYPE"));
           Host.AccessType accessType = Host.AccessType.valueOf(record.get("ACCESS_TYPE"));
           hosts.add(aHost()
                         .withAppId(appId)
                         .withInfraId(infraId)
                         .withHostName(hostName)
                         .withOsType(osType)
+                        .withConnectionType(connectionTYpe)
                         .withAccessType(accessType)
                         .build());
         }

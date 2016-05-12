@@ -10,6 +10,8 @@ import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.Tag.TagBuilder.aTag;
+import static software.wings.integration.IntegrationTestUtil.createHostsFile;
+import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.junit.Before;
@@ -271,8 +273,8 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   }
 
   private List<Host> importAndGetHosts(Infra infra) throws IOException {
-    int numOfHostsImported =
-        hostService.importHosts(infra.getAppId(), infra.getUuid(), new FileInputStream(createHostsFile()), CSV);
+    int numOfHostsImported = hostService.importHosts(infra.getAppId(), infra.getUuid(),
+        new FileInputStream(createHostsFile(testFolder.newFile("host.csv"), 10)), CSV);
     log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infra.getUuid(), EQ);
@@ -281,27 +283,9 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   }
 
   private File createRandomFile() throws IOException {
-    File file = testFolder.newFile("randomfile " + Math.random());
+    File file = testFolder.newFile("randomfile " + randomInt());
     BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("RandomText " + Math.random());
-    out.close();
-    return file;
-  }
-
-  private File createHostsFile() throws IOException {
-    File file = testFolder.newFile("hosts.csv");
-    BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("HOST,OS,ACCESS_TYPE\n"
-        + "host1.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host2.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host3.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host4.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host5.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host6.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host7.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host8.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host9.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"
-        + "host10.app.com,Linux-RHL,SSH_SUDO_APP_ACCOUNT\n"); // TODO: Autogenerate
+    out.write("RandomText " + randomInt());
     out.close();
     return file;
   }
