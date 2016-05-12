@@ -120,16 +120,16 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
     ncOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ2").build());
     ncOz3 = tagService.saveTag(aTag().withTagType(tagType).withName("NC_OZ3").build());
 
-    tagService.linkTags(nc.getUuid(), ncOz1.getUuid());
-    tagService.linkTags(nc.getUuid(), ncOz2.getUuid());
-    tagService.linkTags(nc.getUuid(), ncOz3.getUuid());
+    tagService.linkTags(app.getUuid(), nc.getUuid(), ncOz1.getUuid());
+    tagService.linkTags(app.getUuid(), nc.getUuid(), ncOz2.getUuid());
+    tagService.linkTags(app.getUuid(), nc.getUuid(), ncOz3.getUuid());
 
     or = tagService.saveTag(aTag().withTagType(tagType).withName("OR").build());
     orOz1 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ1").build());
     orOz2 = tagService.saveTag(aTag().withTagType(tagType).withName("OR_OZ2").build());
 
-    tagService.linkTags(or.getUuid(), orOz1.getUuid());
-    tagService.linkTags(or.getUuid(), orOz2.getUuid());
+    tagService.linkTags(app.getUuid(), or.getUuid(), orOz1.getUuid());
+    tagService.linkTags(app.getUuid(), or.getUuid(), orOz2.getUuid());
 
     // Tag hosts
     hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(0).getUuid(), ncOz1.getUuid());
