@@ -7,11 +7,11 @@ import ro.fortsoft.pf4j.ExtensionPoint;
  * @author Rishi
  */
 public interface StateTypeDescriptor extends ExtensionPoint {
-  String getType();
+  public String getType();
 
-  Object getJsonSchema();
+  public Object getJsonSchema();
 
-  Object getUiSchema();
+  public Object getUiSchema();
 
-  State newInstance(String id);
+  public State newInstance(String id);
 }

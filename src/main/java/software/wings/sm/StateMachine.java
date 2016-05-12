@@ -1,12 +1,17 @@
 package software.wings.sm;
 
+import org.modelmapper.ModelMapper;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorConstants;
+import software.wings.beans.Graph;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.ForkState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,15 +28,63 @@ import java.util.Set;
 public class StateMachine extends Base {
   @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
 
-  private String initialStateName;
+  private String originId;
+
+  private String name;
+
+  private Graph graph;
+
+  private int version;
 
   @Serialized private List<State> states;
 
   @Serialized private List<Transition> transitions;
 
+  private String initialStateName;
+
   @Transient private transient Map<String, State> cachedStatesMap = null;
 
   @Transient private transient Map<String, Map<TransitionType, List<State>>> cachedTransitionFlowMap = null;
+
+  public StateMachine() {}
+
+  public StateMachine(Graph graph, Map<String, StateTypeDescriptor> map) {
+    this.graph = graph;
+    this.name = graph.getGraphName();
+    transform(map);
+  }
+
+  private void transform(Map<String, StateTypeDescriptor> stencilMap) {
+    states = new ArrayList<>();
+    for (Node node : graph.getNodes()) {
+      if (node.getType() == null || stencilMap.get(node.getType()) == null) {
+        throw new WingsException("Unknown stencil type");
+      }
+      StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
+      State state = stateTypeDesc.newInstance(node.getId());
+
+      Map<String, Object> properties = node.getProperties();
+      // populate properties
+      ModelMapper modelMapper = new ModelMapper();
+      modelMapper.map(properties, state);
+      addState(state);
+    }
+
+    Map<String, State> statesMap = getStatesMap();
+    if (graph.getLinks() != null) {
+      for (Link link : graph.getLinks()) {
+        State stateFrom = statesMap.get(link.getFrom());
+        State stateTo = statesMap.get(link.getTo());
+        TransitionType transitionType = TransitionType.valueOf(link.getType().toUpperCase());
+        if (transitionType == TransitionType.FORK) {
+          ((ForkState) statesMap.get(stateFrom.getName())).addForkState(stateTo);
+        } else {
+          addTransition(new Transition(stateFrom, transitionType, stateTo));
+        }
+      }
+    }
+    validate();
+  }
 
   public String getInitialStateName() {
     return initialStateName;
@@ -291,6 +344,38 @@ public class StateMachine extends Base {
     }
     getTransitionFlowMap();
     return true;
+  }
+
+  public String getOriginId() {
+    return originId;
+  }
+
+  public void setOriginId(String originId) {
+    this.originId = originId;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public Graph getGraph() {
+    return graph;
+  }
+
+  public void setGraph(Graph graph) {
+    this.graph = graph;
+  }
+
+  public int getVersion() {
+    return version;
+  }
+
+  public void setVersion(int version) {
+    this.version = version;
   }
 
   @Override

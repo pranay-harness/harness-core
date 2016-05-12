@@ -1,14 +1,18 @@
 /**
  *
  */
-package software.wings.sm;
+package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Host;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.SmInstance;
 
 /**
  * @author Rishi
@@ -39,10 +43,9 @@ public class HttpStateTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.isAsynch()).as("Asynch Execution").isEqualTo(false);
     assertThat(response.getStateExecutionData()).isNotNull();
-    assertThat(response.getStateExecutionData()).isInstanceOf(HttpState.HttpStateExecutionData.class);
+    assertThat(response.getStateExecutionData()).isInstanceOf(HttpStateExecutionData.class);
 
-    HttpState.HttpStateExecutionData stateExecutionData =
-        (HttpState.HttpStateExecutionData) response.getStateExecutionData();
+    HttpStateExecutionData stateExecutionData = (HttpStateExecutionData) response.getStateExecutionData();
     assertThat(stateExecutionData.getHttpUrl()).isNotNull();
     assertThat(stateExecutionData.getHttpUrl()).isEqualTo("http://app123.application.com:8080/health/status");
   }

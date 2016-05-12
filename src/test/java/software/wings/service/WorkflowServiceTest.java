@@ -6,12 +6,12 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ForkState;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
+import software.wings.sm.states.ForkState;
 
 import java.util.ArrayList;
 import java.util.List;

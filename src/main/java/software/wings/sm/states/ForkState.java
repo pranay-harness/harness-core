@@ -1,9 +1,17 @@
-package software.wings.sm;
+package software.wings.sm.states;
 
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.SmInstance;
+import software.wings.sm.State;
+import software.wings.sm.StateMachineExecutor;
+import software.wings.sm.StateType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -70,5 +78,9 @@ public class ForkState extends State {
 
   public void setForkStateNames(List<String> forkStateNames) {
     this.forkStateNames = forkStateNames;
+  }
+
+  public void addForkState(State state) {
+    this.forkStateNames.add(state.getName());
   }
 }

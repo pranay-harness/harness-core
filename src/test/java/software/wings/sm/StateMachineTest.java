@@ -30,7 +30,7 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThowDupErrorCode() {
+  public void shouldThrowDupErrorCode() {
     try {
       StateMachine sm = new StateMachine();
       State state = new StateSynch("StateA");

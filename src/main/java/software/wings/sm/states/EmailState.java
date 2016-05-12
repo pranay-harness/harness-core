@@ -1,7 +1,12 @@
 /**
  *
  */
-package software.wings.sm;
+package software.wings.sm.states;
+
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
+import software.wings.sm.StateType;
 
 /**
  * @author Rishi
