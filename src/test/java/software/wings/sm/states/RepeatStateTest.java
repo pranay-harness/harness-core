@@ -2,7 +2,7 @@
  *
  */
 
-package software.wings.sm;
+package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -19,8 +19,14 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
 import software.wings.common.UUIDGenerator;
-import software.wings.sm.RepeatState.RepeatStateExecutionData;
-import software.wings.sm.RepeatState.RepeatStrategy;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.RepeatElementType;
+import software.wings.sm.Repeatable;
+import software.wings.sm.SmInstance;
+import software.wings.sm.StateMachineExecutor;
+import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
+import software.wings.sm.states.RepeatState.RepeatStrategy;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;

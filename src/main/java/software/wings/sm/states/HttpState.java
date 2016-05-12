@@ -1,15 +1,13 @@
-package software.wings.sm;
+package software.wings.sm.states;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-import software.wings.app.WingsBootstrap;
-import software.wings.utils.XmlUtils;
-
-import java.io.IOException;
-
-import javax.xml.parsers.ParserConfigurationException;
+import software.wings.api.HttpStateExecutionData;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateType;
 
 /**
  * Http state which makes a call to http service.
@@ -124,90 +122,9 @@ public class HttpState extends State {
     this.assertion = assertion;
   }
 
-  public static class HttpStateExecutionData extends StateExecutionData {
-    private static final long serialVersionUID = -435324810208952473L;
-    private String httpUrl;
-    private String httpMethod;
-    private int httpResponseCode;
-    private String httpResponseBody;
-    private String assertionStatement;
-    private String assertionStatus;
-
-    private transient Document document;
-    private transient XmlUtils xmlUtils;
-
-    public String getHttpUrl() {
-      return httpUrl;
-    }
-
-    public void setHttpUrl(String httpUrl) {
-      this.httpUrl = httpUrl;
-    }
-
-    public String getHttpMethod() {
-      return httpMethod;
-    }
-
-    public void setHttpMethod(String httpMethod) {
-      this.httpMethod = httpMethod;
-    }
-
-    public int getHttpResponseCode() {
-      return httpResponseCode;
-    }
-
-    public void setHttpResponseCode(int httpResponseCode) {
-      this.httpResponseCode = httpResponseCode;
-    }
-
-    public String getHttpResponseBody() {
-      return httpResponseBody;
-    }
-
-    public void setHttpResponseBody(String httpResponseBody) {
-      this.httpResponseBody = httpResponseBody;
-    }
-
-    public String getAssertionStatement() {
-      return assertionStatement;
-    }
-
-    public void setAssertionStatement(String assertionStatement) {
-      this.assertionStatement = assertionStatement;
-    }
-
-    public String getAssertionStatus() {
-      return assertionStatus;
-    }
-
-    public void setAssertionStatus(String assertionStatus) {
-      this.assertionStatus = assertionStatus;
-    }
-
-    public boolean xmlFormat() {
-      try {
-        getDocument();
-        return true;
-      } catch (Exception e) {
-        return false;
-      }
-    }
-    public String xpath(String path) {
-      try {
-        return getXmlUtils().xpath(getDocument(), path);
-      } catch (Exception e) {
-        return null;
-      }
-    }
-
-    private Document getDocument() throws ParserConfigurationException, SAXException, IOException {
-      if (document == null) {
-        document = getXmlUtils().parse(httpResponseBody);
-      }
-      return document;
-    }
-    private XmlUtils getXmlUtils() {
-      return WingsBootstrap.lookup(XmlUtils.class);
-    }
+  @Override
+  public String toString() {
+    return "HttpState [url=" + url + ", method=" + method + ", header=" + header + ", body=" + body
+        + ", assertion=" + assertion + "]";
   }
 }

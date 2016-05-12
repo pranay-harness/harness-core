@@ -5,7 +5,6 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.sm.StateMachine;
 
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class Pipeline extends Base {
 
   private String stateMachineId;
 
-  @Transient private StateMachine stateMachine;
+  @Transient private Graph Graph;
 
   public String getName() {
     return name;
@@ -30,14 +29,6 @@ public class Pipeline extends Base {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public StateMachine getStateMachine() {
-    return stateMachine;
-  }
-
-  public void setStateMachine(StateMachine stateMachine) {
-    this.stateMachine = stateMachine;
   }
 
   public String getDescription() {
@@ -70,5 +61,13 @@ public class Pipeline extends Base {
 
   public void setStateMachineId(String stateMachineId) {
     this.stateMachineId = stateMachineId;
+  }
+
+  public Graph getGraph() {
+    return Graph;
+  }
+
+  public void setGraph(Graph graph) {
+    Graph = graph;
   }
 }

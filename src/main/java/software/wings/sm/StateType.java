@@ -8,6 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.ForkState;
+import software.wings.sm.states.HttpState;
+import software.wings.sm.states.PauseState;
+import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.WaitState;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -21,15 +26,24 @@ import java.util.HashMap;
 public enum StateType implements StateTypeDescriptor {
   REPEAT,
   FORK,
-  HTTP,
+  STATE_MACHINE,
+
   WAIT,
   PAUSE,
+
+  DEPLOY,
   START,
   STOP,
   RESTART,
-  DEPLOY,
-  STATE_MACHINE,
-  EMAIL;
+
+  HTTP,
+  SPLUNK,
+  APP_DYNAMICS,
+  EMAIL,
+
+  BUILD,
+  ENV_STATE,
+  APPROVAL;
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String jsonSchemaSuffix = "-JSONSchema.json";
@@ -39,8 +53,8 @@ public enum StateType implements StateTypeDescriptor {
   private Object uiSchema;
 
   StateType() {
-    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
-    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+    //    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
+    //    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
   private Object readResource(String file) {
@@ -52,7 +66,9 @@ public enum StateType implements StateTypeDescriptor {
     } catch (Exception exception) {
       WingsException ex = new WingsException("Error in initializing StateType", exception);
       logger.error(ex.getMessage(), ex);
-      throw ex;
+      return null;
+      // throw ex;
+      // TODO - uncomment exception later on
     }
   }
 

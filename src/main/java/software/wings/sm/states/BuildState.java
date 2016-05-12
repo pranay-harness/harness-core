@@ -1,18 +1,24 @@
-package software.wings.sm;
+package software.wings.sm.states;
+
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionResponse;
+import software.wings.sm.State;
+import software.wings.sm.StateType;
+import software.wings.utils.Misc;
 
 /**
  * A Pause state to pause state machine execution.
  * @author Rishi
  */
-public class PauseState extends State {
+public class BuildState extends State {
   private static final long serialVersionUID = 1L;
 
   /**
    * Creates pause state with given name.
    * @param name name of the state.
    */
-  public PauseState(String name) {
-    super(name, StateType.PAUSE.name());
+  public BuildState(String name) {
+    super(name, StateType.BUILD.name());
   }
 
   /* (non-Javadoc)
@@ -20,6 +26,7 @@ public class PauseState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return null;
+    Misc.quietSleep(2000);
+    return new ExecutionResponse();
   }
 }
