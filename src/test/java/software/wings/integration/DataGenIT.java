@@ -8,7 +8,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
-import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.integration.IntegrationTestUtil.createHostsFile;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
@@ -206,7 +205,7 @@ public class DataGenIT extends WingsBaseTest {
       try {
         String version = String.format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
         String name = containerNames.get(randomInt() % containerNames.size());
-        File file = getTestFile("AppContainer" + randomInt());
+        File file = getTestFile(name);
         FileDataBodyPart filePart = new FileDataBodyPart("file", file);
         FormDataMultiPart multiPart = new FormDataMultiPart()
                                           .field("name", name)
@@ -232,7 +231,10 @@ public class DataGenIT extends WingsBaseTest {
   }
 
   private File getTestFile(String name) throws IOException {
-    File file = testFolder.newFile(name + getUuid());
+    File file = new File(testFolder.getRoot().getAbsolutePath() + "/" + name);
+    if (!file.isFile()) {
+      file = testFolder.newFile(name);
+    }
     BufferedWriter out = new BufferedWriter(new FileWriter(file));
     out.write(randomText(100));
     out.close();
