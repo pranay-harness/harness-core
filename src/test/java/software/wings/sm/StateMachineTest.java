@@ -1,4 +1,5 @@
 package software.wings.sm;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
@@ -59,10 +60,8 @@ public class StateMachineTest extends WingsBaseTest {
     /**
      * Creates a new Notifier object.
      *
-     * @param uuid
-     *          uuid of notifier.
-     * @param duration
-     *          duration to sleep for.
+     * @param uuid     uuid of notifier.
+     * @param duration duration to sleep for.
      */
     public Notifier(String uuid, int duration) {
       this.uuid = uuid;

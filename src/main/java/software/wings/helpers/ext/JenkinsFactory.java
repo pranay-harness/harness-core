@@ -7,6 +7,7 @@ import com.google.inject.assistedinject.Assisted;
  */
 public interface JenkinsFactory {
   Jenkins createWithoutCredentials(@Assisted("url") String url);
+
   Jenkins create(
       @Assisted("url") String url, @Assisted("username") String username, @Assisted("password") String password);
 }

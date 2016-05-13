@@ -28,8 +28,6 @@ public class HostFileHelper {
   public static final String[] CSVHeader = {
       "HOST", "OS", "CONNECTION_TYPE", "ACCESS_TYPE", "TAGS", "CREATED_BY", "CREATED_AT"};
 
-  public static enum HostFileType { CSV, PROPERTIES, XML }
-
   public static List<Host> parseHosts(InputStream inputStream, String appId, String infraId, HostFileType fileType) {
     List<Host> hosts = new ArrayList<>();
     if (fileType.equals(CSV)) { // TODO: Generalize for other types as well
@@ -93,4 +91,6 @@ public class HostFileHelper {
     }
     return file;
   }
+
+  public static enum HostFileType { CSV, PROPERTIES, XML }
 }

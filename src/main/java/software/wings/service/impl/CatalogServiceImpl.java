@@ -20,16 +20,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class CatalogServiceImpl implements CatalogService {
+  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private Map<String, List<CatalogItem>> catalogs;
 
   @Inject
@@ -70,6 +69,4 @@ public class CatalogServiceImpl implements CatalogService {
     }
     return maps;
   }
-
-  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 }

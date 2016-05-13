@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 /**
  * Represents type of state.
+ *
  * @author Rishi
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)

@@ -8,6 +8,7 @@ import software.wings.utils.Misc;
 
 /**
  * A Pause state to pause state machine execution.
+ *
  * @author Rishi
  */
 public class ApprovalState extends State {
@@ -18,6 +19,7 @@ public class ApprovalState extends State {
 
   /**
    * Creates pause state with given name.
+   *
    * @param name name of the state.
    */
   public ApprovalState(String name) {

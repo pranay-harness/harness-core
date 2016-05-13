@@ -7,6 +7,7 @@ import software.wings.sm.StateType;
 
 /**
  * Execution type state.
+ *
  * @author Rishi
  */
 public class ExecState extends State {
@@ -16,7 +17,8 @@ public class ExecState extends State {
 
   /**
    * Creates a new Exec State.
-   * @param name state name.
+   *
+   * @param name      state name.
    * @param stateType Type of state.
    */
   public ExecState(String name, StateType stateType) {

@@ -7,6 +7,7 @@ import software.wings.beans.Base;
 
 /**
  * Represents State Machine Instance.
+ *
  * @author Rishi
  */
 @Entity(value = "smInstances", noClassnameStored = true)

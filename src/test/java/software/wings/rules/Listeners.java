@@ -1,6 +1,5 @@
 package software.wings.rules;
 
-import org.mockito.Mock;
 import software.wings.core.queue.AbstractQueueListener;
 
 import java.lang.annotation.ElementType;

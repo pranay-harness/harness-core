@@ -8,7 +8,6 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
 import com.offbytwo.jenkins.JenkinsServer;
-import com.offbytwo.jenkins.client.JenkinsHttpClient;
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;

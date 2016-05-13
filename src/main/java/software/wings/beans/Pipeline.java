@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 @Entity(value = "pipelines", noClassnameStored = true)
 public class Pipeline extends Base {

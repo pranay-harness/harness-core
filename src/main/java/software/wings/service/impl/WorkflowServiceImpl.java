@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -43,12 +42,10 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
-
   @Inject private StateMachineExecutor stateMachineExecutor;
-
   @Inject private PluginManager pluginManager;
-
   private List<StateTypeDescriptor> stencilList;
   private Map<String, StateTypeDescriptor> stencilMap;
 
@@ -157,8 +154,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   public Pipeline readPipeline(String appId, String pipelineId) {
     return wingsPersistence.get(Pipeline.class, appId, pipelineId);
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)

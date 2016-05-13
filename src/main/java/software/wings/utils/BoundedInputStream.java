@@ -28,6 +28,17 @@ public class BoundedInputStream extends InputStream {
     this.size = size;
   }
 
+  public static BoundedInputStream getBoundedStreamForUrl(String urlString, int size) {
+    try {
+      URL url = new URL(urlString);
+      return new BoundedInputStream(url.openStream(), size);
+    } catch (MalformedURLException ex) {
+      throw new WingsException(INVALID_URL);
+    } catch (IOException ex) {
+      throw new WingsException(FILE_DOWNLOAD_FAILED);
+    }
+  }
+
   private int updateTotalBytesRead(int bytesRead) throws IOException {
     if (bytesRead > 0) {
       totalBytesRead += bytesRead;
@@ -51,16 +62,5 @@ public class BoundedInputStream extends InputStream {
   @Override
   public int read(byte bytes[], int off, int len) throws IOException {
     return updateTotalBytesRead(inputStream.read(bytes, off, len));
-  }
-
-  public static BoundedInputStream getBoundedStreamForUrl(String urlString, int size) {
-    try {
-      URL url = new URL(urlString);
-      return new BoundedInputStream(url.openStream(), size);
-    } catch (MalformedURLException ex) {
-      throw new WingsException(INVALID_URL);
-    } catch (IOException ex) {
-      throw new WingsException(FILE_DOWNLOAD_FAILED);
-    }
   }
 }

@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 /**
  * Represents state machine execution data.
+ *
  * @author Rishi
  */
 public class StateExecutionData implements Serializable {

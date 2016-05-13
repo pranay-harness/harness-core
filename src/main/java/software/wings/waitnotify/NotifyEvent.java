@@ -21,6 +21,7 @@ public class NotifyEvent extends Queuable {
 
   /**
    * Copy constructor.
+   *
    * @param other NotifyEvent to create copy for.
    */
   public NotifyEvent(NotifyEvent other) {
@@ -65,6 +66,10 @@ public class NotifyEvent extends Queuable {
     private int retries = 0;
 
     private Builder() {}
+
+    public static Builder aNotifyEvent() {
+      return new Builder();
+    }
 
     /**
      * @return copy of Builder object.
@@ -125,10 +130,6 @@ public class NotifyEvent extends Queuable {
     public Builder withWaitInstanceId(String waitInstanceId) {
       this.waitInstanceId = waitInstanceId;
       return this;
-    }
-
-    public static Builder aNotifyEvent() {
-      return new Builder();
     }
 
     /**

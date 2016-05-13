@@ -11,7 +11,6 @@ import java.util.TimeZone;
 
 /**
  * @author Rishi
- *
  */
 public class WingsTimestamp {
   private long timestamp;

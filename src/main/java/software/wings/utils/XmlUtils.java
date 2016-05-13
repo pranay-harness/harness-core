@@ -10,7 +10,6 @@ import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-
 import javax.inject.Singleton;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -22,7 +21,6 @@ import javax.xml.xpath.XPathFactory;
 
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class XmlUtils {

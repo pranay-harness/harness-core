@@ -12,7 +12,6 @@ import software.wings.service.intfc.WorkflowService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

@@ -147,6 +147,7 @@ public class Artifact extends Base {
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
+
     public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
       @Override
       public void initialize(final ValidArtifact validateForUpdate) {}

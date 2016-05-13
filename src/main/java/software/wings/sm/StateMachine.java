@@ -26,6 +26,7 @@ import java.util.Set;
 
 /**
  * Describes a StateMachine.
+ *
  * @author Rishi
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
@@ -118,6 +119,7 @@ public class StateMachine extends Base {
 
   /**
    * Adds a state to state machine.
+   *
    * @param state state to be added.
    * @return state after saving.
    */
@@ -139,6 +141,7 @@ public class StateMachine extends Base {
 
   /**
    * Adds transition to state machine.
+   *
    * @param transition transition to be added.
    * @return transition after add.
    */
@@ -156,7 +159,7 @@ public class StateMachine extends Base {
   }
 
   /**
-   * @return  map to state to stateNames.
+   * @return map to state to stateNames.
    */
   public Map<String, State> getStatesMap() {
     if (cachedStatesMap != null && cachedStatesMap.size() > 0) {
@@ -188,7 +191,8 @@ public class StateMachine extends Base {
 
   /**
    * Returns next state given start state and transition type.
-   * @param fromStateName start state.
+   *
+   * @param fromStateName  start state.
    * @param transitionType transition type to look state from.
    * @return first next state if any or null.
    */
@@ -202,7 +206,8 @@ public class StateMachine extends Base {
 
   /**
    * Returns list of next states given start state and transition type.
-   * @param fromStateName start state.
+   *
+   * @param fromStateName  start state.
    * @param transitionType transition type to look state from.
    * @return list of next states or null.
    */
@@ -331,6 +336,7 @@ public class StateMachine extends Base {
 
   /**
    * Get state based on name.
+   *
    * @param stateName name of state to lookup for.
    * @return state object if found or null.
    */
@@ -349,6 +355,7 @@ public class StateMachine extends Base {
 
   /**
    * Validates a state machine.
+   *
    * @return true if valid.
    */
   public boolean validate() {

@@ -10,12 +10,10 @@ import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
 
 import java.io.IOException;
-
 import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * @author Rishi
- *
  */
 public class HttpStateExecutionData extends StateExecutionData {
   private static final long serialVersionUID = -435324810208952473L;
@@ -85,6 +83,7 @@ public class HttpStateExecutionData extends StateExecutionData {
       return false;
     }
   }
+
   public String xpath(String path) {
     try {
       return getXmlUtils().xpath(getDocument(), path);
@@ -99,6 +98,7 @@ public class HttpStateExecutionData extends StateExecutionData {
     }
     return document;
   }
+
   private XmlUtils getXmlUtils() {
     return WingsBootstrap.lookup(XmlUtils.class);
   }

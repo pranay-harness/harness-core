@@ -48,8 +48,6 @@ public class SearchFilter {
     this.fieldValues = fieldValues;
   }
 
-  public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -77,4 +75,6 @@ public class SearchFilter {
         .add("op", op)
         .toString();
   }
+
+  public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
 }

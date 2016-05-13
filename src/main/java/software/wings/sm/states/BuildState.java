@@ -8,6 +8,7 @@ import software.wings.utils.Misc;
 
 /**
  * A Pause state to pause state machine execution.
+ *
  * @author Rishi
  */
 public class BuildState extends State {
@@ -15,6 +16,7 @@ public class BuildState extends State {
 
   /**
    * Creates pause state with given name.
+   *
    * @param name name of the state.
    */
   public BuildState(String name) {

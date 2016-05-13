@@ -11,7 +11,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class Graph {
   public static final String ORIGIN_STATE_NAME = "ORIGIN";

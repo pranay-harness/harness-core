@@ -10,7 +10,8 @@ import java.util.Objects;
 public class Validator {
   /**
    * Checks that value is not null.
-   * @param name name of parameter.
+   *
+   * @param name  name of parameter.
    * @param value input value of parameter.
    */
   public static void notNullCheck(String name, Object value) {
@@ -24,8 +25,9 @@ public class Validator {
 
   /**
    * Checks whether 2 values are equal or not.
+   *
    * @param appId value1
-   * @param uuid value2
+   * @param uuid  value2
    */
   public static void equalCheck(Object appId, Object uuid) {
     if (!Objects.equals(appId, uuid)) {

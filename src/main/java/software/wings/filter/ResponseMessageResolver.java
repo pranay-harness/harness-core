@@ -9,7 +9,6 @@ import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 
 import java.util.List;
-
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

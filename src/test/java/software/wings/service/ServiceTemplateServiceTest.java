@@ -42,23 +42,17 @@ import java.util.Map;
 
 public class ServiceTemplateServiceTest {
   ServiceTemplateService templateService;
-
-  private InfraService infraService = mock(InfraService.class);
-
-  private HostService hostService = mock(HostService.class);
-
-  private TagService tagService = mock(TagService.class);
-
-  private ConfigService configService = mock(ConfigService.class);
-
-  private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
-
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")
                                        .withEnvId("ENV_ID")
                                        .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
+  private InfraService infraService = mock(InfraService.class);
+  private HostService hostService = mock(HostService.class);
+  private TagService tagService = mock(TagService.class);
+  private ConfigService configService = mock(ConfigService.class);
+  private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
 
   @Before
   public void setUp() throws Exception {

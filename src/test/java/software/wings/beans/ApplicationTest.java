@@ -16,9 +16,8 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class ApplicationTest extends WingsBaseTest {
-  @Inject private JsonUtils jsonUtils;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private JsonUtils jsonUtils;
 
   @Test
   public void testSerializeDeserialize() {

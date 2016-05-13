@@ -7,7 +7,6 @@ import software.wings.common.AuditHelper;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

@@ -10,6 +10,7 @@ import java.io.Closeable;
 public class Misc {
   /**
    * sleep without throwing InterruptedExeception.
+   *
    * @param delay sleep interval in millis.
    */
   public static void quietSleep(int delay) {
@@ -22,6 +23,7 @@ public class Misc {
 
   /**
    * Closes list of Closeables and swallows exception.
+   *
    * @param closeables Closeable objects to close.
    */
   public static void quietClose(Closeable... closeables) {
@@ -42,7 +44,8 @@ public class Misc {
 
   /**
    * Converts a string to integer and in case of exception returns a default value.
-   * @param value String to convert to int.
+   *
+   * @param value        String to convert to int.
    * @param defaultValue defaultValue to return in case of exceptions.
    * @return converted int value or default.
    */

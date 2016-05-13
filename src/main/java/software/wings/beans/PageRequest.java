@@ -45,6 +45,7 @@ public class PageRequest<T> {
 
   /**
    * Copy Constructor for PageRequest
+   *
    * @param req PageRequest to copy.
    */
   public PageRequest(PageRequest<T> req) {
@@ -182,9 +183,10 @@ public class PageRequest<T> {
 
   /**
    * Creates and adds a new search filter to PageRequest
-   * @param fieldName name of field to apply filter on.
+   *
+   * @param fieldName  name of field to apply filter on.
    * @param fieldValue value for RHS.
-   * @param op Operator for filter.
+   * @param op         Operator for filter.
    */
   public void addFilter(String fieldName, Object fieldValue, Operator op) {
     SearchFilter filter = new SearchFilter();

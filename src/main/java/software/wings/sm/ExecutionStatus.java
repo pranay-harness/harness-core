@@ -2,6 +2,7 @@ package software.wings.sm;
 
 /**
  * Describes possible execution statuses for a state.
+ *
  * @author Rishi
  */
 public enum ExecutionStatus {

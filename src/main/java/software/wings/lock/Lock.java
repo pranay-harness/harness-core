@@ -7,7 +7,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-
 import software.wings.beans.Base;
 
 import java.util.Date;
