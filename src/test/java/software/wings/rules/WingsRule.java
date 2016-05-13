@@ -1,7 +1,5 @@
 package software.wings.rules;
 
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
@@ -9,6 +7,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -27,7 +26,6 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version.Main;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
-import org.apache.commons.lang.ArrayUtils;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -39,13 +37,19 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.WingsBootstrap;
+import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.ReadPref;
+import software.wings.collect.ArtifactCollectEventListener;
+import software.wings.collect.CollectEvent;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.Jenkins;
+import software.wings.helpers.ext.JenkinsFactory;
+import software.wings.helpers.ext.JenkinsImpl;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -55,6 +59,7 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
@@ -63,6 +68,7 @@ import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.ConfigService;
@@ -86,8 +92,8 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.lang.annotation.Annotation;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -98,9 +104,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class WingsRule implements MethodRule {
   private MongodExecutable mongodExecutable;
-
   private Injector injector;
   private MongoServer mongoServer;
+  private Datastore datastore;
+  private DistributedLockSvc distributedLockSvc;
+  private int port = 0;
+  private ExecutorService executorService = new CurrentThreadExecutor();
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
@@ -119,10 +128,10 @@ public class WingsRule implements MethodRule {
       }
     };
   }
-  private Datastore datastore;
-  private DistributedLockSvc distributedLockSvc;
-  private int port = 0;
-  private ExecutorService executorService = new CurrentThreadExecutor();
+
+  public Datastore getDatastore() {
+    return datastore;
+  }
 
   protected void before(List<Annotation> annotations) throws Throwable {
     MongoClient mongoClient;
@@ -161,7 +170,7 @@ public class WingsRule implements MethodRule {
         bind(Datastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(datastore);
         bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
             .annotatedWith(Names.named("datastoreMap"))
-            .toInstance(ImmutableMap.<ReadPref, Datastore>of(ReadPref.CRITICAL, datastore, ReadPref.NORMAL, datastore));
+            .toInstance(ImmutableMap.of(ReadPref.CRITICAL, datastore, ReadPref.NORMAL, datastore));
         bind(WingsPersistence.class).to(WingsMongoPersistence.class);
         bind(ArtifactService.class).to(ArtifactServiceImpl.class);
         bind(WorkflowService.class).to(WorkflowServiceImpl.class);
@@ -191,11 +200,25 @@ public class WingsRule implements MethodRule {
         bind(ReleaseService.class).to(ReleaseServiceImpl.class);
         bind(CatalogService.class).to(CatalogServiceImpl.class);
         bind(HostService.class).to(HostServiceImpl.class);
+        bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
+        bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
+        bind(ArtifactCollectorService.class)
+            .annotatedWith(Names.named(SourceType.JENKINS.name()))
+            .to(JenkinsArtifactCollectorServiceImpl.class);
+        install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
       }
     });
-    injector.getInstance(QueueListenerController.class).register(injector.getInstance(NotifyEventListener.class), 1);
+    registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
     WingsBootstrap.initialize(injector);
+  }
+
+  private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
+    if (listenerOptional.isPresent()) {
+      for (Class<? extends AbstractQueueListener> queueListenerClass : ((Listeners) listenerOptional.get()).value()) {
+        injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
+      }
+    }
   }
 
   protected void after() {
@@ -266,9 +289,5 @@ public class WingsRule implements MethodRule {
 
   private Logger log() {
     return LoggerFactory.getLogger(getClass());
-  }
-
-  public Datastore getDatastore() {
-    return datastore;
   }
 }

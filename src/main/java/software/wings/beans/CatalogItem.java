@@ -7,9 +7,23 @@ import java.util.Comparator;
 
 /**
  * @author Rishi
- *
  */
 public class CatalogItem {
+  public static final Comparator<CatalogItem> displayOrderComparator = new Comparator<CatalogItem>() {
+
+    @Override
+    public int compare(CatalogItem o1, CatalogItem o2) {
+      if (o1.displayOrder == null && o2.displayOrder == null) {
+        return 0;
+      } else if (o1.displayOrder != null && o2.displayOrder != null) {
+        return o1.displayOrder.compareTo(o2.displayOrder);
+      } else if (o1.displayOrder == null && o2.displayOrder != null) {
+        return -1;
+      } else {
+        return 1;
+      }
+    }
+  };
   private String name;
   private String value;
   private String displayText;
@@ -55,20 +69,4 @@ public class CatalogItem {
     return "CatalogItem [name=" + name + ", value=" + value + ", displayText=" + displayText
         + ", displayOrder=" + displayOrder + "]";
   }
-
-  public static final Comparator<CatalogItem> displayOrderComparator = new Comparator<CatalogItem>() {
-
-    @Override
-    public int compare(CatalogItem o1, CatalogItem o2) {
-      if (o1.displayOrder == null && o2.displayOrder == null) {
-        return 0;
-      } else if (o1.displayOrder != null && o2.displayOrder != null) {
-        return o1.displayOrder.compareTo(o2.displayOrder);
-      } else if (o1.displayOrder == null && o2.displayOrder != null) {
-        return -1;
-      } else {
-        return 1;
-      }
-    }
-  };
 }

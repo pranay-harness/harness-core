@@ -37,6 +37,10 @@ public class RestResponse<T> extends RestRequest<T> {
 
     private Builder() {}
 
+    public static Builder aRestResponse() {
+      return new Builder();
+    }
+
     /**
      * @return copy of Builder object.
      */
@@ -59,12 +63,9 @@ public class RestResponse<T> extends RestRequest<T> {
       return this;
     }
 
-    public static Builder aRestResponse() {
-      return new Builder();
-    }
-
     /**
      * Builds a RestResponse object.
+     *
      * @return RestResponse object.
      */
     public RestResponse build() {

@@ -16,11 +16,6 @@ public class FileUrlSource extends ArtifactSource {
     super(SourceType.HTTP);
   }
 
-  @Override
-  public ArtifactFile collect(Object[] params) {
-    return null;
-  }
-
   public String getUrl() {
     return url;
   }

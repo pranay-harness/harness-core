@@ -21,6 +21,7 @@ import javax.inject.Inject;
 
 /**
  * Test for checking notify cleanup handler.
+ *
  * @author Rishi
  */
 public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {

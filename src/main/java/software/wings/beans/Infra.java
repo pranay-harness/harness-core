@@ -9,9 +9,7 @@ import java.util.Objects;
  */
 @Entity(value = "infras", noClassnameStored = true)
 public class Infra extends Base {
-  public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }
   private InfraType infraType;
-
   private String envId;
 
   public InfraType getInfraType() {
@@ -49,6 +47,8 @@ public class Infra extends Base {
     final Infra other = (Infra) obj;
     return Objects.equals(this.infraType, other.infraType) && Objects.equals(this.envId, other.envId);
   }
+
+  public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }
 
   public static final class InfraBuilder {
     private InfraType infraType;

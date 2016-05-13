@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
  * @author Rishi
  */
 public class WingsBootstrap {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   private static Injector guiceInjector;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static MainConfiguration getConfig() {
     return lookup(MainConfiguration.class);

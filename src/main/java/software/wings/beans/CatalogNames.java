@@ -5,7 +5,6 @@ package software.wings.beans;
 
 /**
  * @author Rishi
- *
  */
 public interface CatalogNames {
   public static final String ORCHESTRATION_STENCILS = "ORCHESTRATION_STENCILS";

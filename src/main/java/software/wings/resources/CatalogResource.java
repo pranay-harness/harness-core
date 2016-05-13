@@ -12,12 +12,13 @@ import software.wings.service.intfc.WorkflowService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Rishi
@@ -35,7 +36,8 @@ public class CatalogResource {
   }
 
   @GET
-  public RestResponse<Map<String, Object>> list(@QueryParam("catalogType") List<String> catalogTypes) {
+  public RestResponse<Map<String, Object>> list(
+      @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {

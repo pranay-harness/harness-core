@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -22,14 +23,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Set;
-
 import javax.inject.Singleton;
 
 @Singleton
 public class JsonUtils {
-  private final ObjectMapper mapper;
-  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
-
   static {
     // json-path initialization
     Configuration.setDefaults(new Configuration.Defaults() {
@@ -54,9 +51,13 @@ public class JsonUtils {
     });
   }
 
+  private final ObjectMapper mapper;
+  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+
   public JsonUtils() {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.setSerializationInclusion(Include.NON_NULL);
   }
 
   public DocumentContext parseJson(String json) {
@@ -81,6 +82,7 @@ public class JsonUtils {
 
   /**
    * Converts object to json.
+   *
    * @param obj Object to be converted.
    * @return json string.
    */
@@ -100,9 +102,10 @@ public class JsonUtils {
 
   /**
    * Deserializes json string to object of given type.
-   * @param jsonString json to deserialize.
+   *
+   * @param jsonString     json to deserialize.
    * @param classToConvert target class type.
-   * @param <T> target class type.
+   * @param <T>            target class type.
    * @return Deserialized object.
    */
   @JsonDeserialize
@@ -117,9 +120,10 @@ public class JsonUtils {
 
   /**
    * Deserializes json string to object of given type reference.
-   * @param jsonString json to deserialize.
+   *
+   * @param jsonString   json to deserialize.
    * @param valueTypeRef target class type reference.
-   * @param <T> target class type.
+   * @param <T>          target class type.
    * @return Deserialized object.
    */
   @JsonDeserialize
@@ -134,11 +138,12 @@ public class JsonUtils {
 
   /**
    * Deserializes json string to list of objects of given type.
-   * @param jsonString json to deserialize.
+   *
+   * @param jsonString     json to deserialize.
    * @param collectionType collection type. i.e. List, Set etc.
    * @param classToConvert target class type.
-   * @param <T> collection type.
-   * @param <U> targetClassType.
+   * @param <T>            collection type.
+   * @param <U>            targetClassType.
    * @return Deserialized Collection object.
    */
   @JsonDeserialize
@@ -154,9 +159,10 @@ public class JsonUtils {
 
   /**
    * Deserializes json to List of given type.
-   * @param jsonString json to deserialize.
+   *
+   * @param jsonString   json to deserialize.
    * @param valueTypeRef TypeReference for the list.
-   * @param <T> Type of list
+   * @param <T>          Type of list
    * @return deserialized list.
    */
   @JsonDeserialize
@@ -171,9 +177,10 @@ public class JsonUtils {
 
   /**
    * validates a json string.
-   * @param jsonString json to deserialize.
+   *
+   * @param jsonString   json to deserialize.
    * @param valueTypeRef target class type.
-   * @param <T> collection type.
+   * @param <T>          collection type.
    */
   public <T> void validateJson(String jsonString, TypeReference<T> valueTypeRef)
       throws JsonParseException, JsonMappingException, IOException {

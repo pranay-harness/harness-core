@@ -41,6 +41,7 @@ public class ResponseCodeCache {
 
   /**
    * Converts error code into ResponseMessage object.
+   *
    * @param errorCode errorCode for which message is needed.
    * @return ResponseMessage Object.
    */
@@ -62,8 +63,9 @@ public class ResponseCodeCache {
 
   /**
    * Converts error code and map of key value pairs for substitution into ResponseMessage object .
+   *
    * @param errorCode errorCode for which message is needed.
-   * @param params for substituting in ResponseMessage
+   * @param params    for substituting in ResponseMessage
    * @return ResponseMessage object.
    */
   public ResponseMessage getResponseMessage(String errorCode, Map<String, Object> params) {

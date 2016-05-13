@@ -7,6 +7,7 @@ import software.wings.sm.StateType;
 
 /**
  * dummy implementation for wait state.
+ *
  * @author Rishi
  */
 public class WaitState extends State {
@@ -14,6 +15,7 @@ public class WaitState extends State {
 
   /**
    * Creates a new wait state.
+   *
    * @param name state name
    */
   public WaitState(String name) {

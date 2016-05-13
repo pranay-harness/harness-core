@@ -1,43 +1,94 @@
 package software.wings.helpers.ext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
-import com.offbytwo.jenkins.JenkinsServer;
-import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.BuildWithDetails;
-import com.offbytwo.jenkins.model.JobWithDetails;
-import org.junit.Ignore;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import software.wings.utils.JsonUtils;
+import software.wings.WingsBaseTest;
 
 import java.io.IOException;
-import java.net.URI;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.List;
+import javax.inject.Inject;
 
-public class JenkinsTest {
-  @Ignore
-  @Test
-  public void testJobExists() throws URISyntaxException, IOException {
-    Jenkins jenkins = new Jenkins("http://localhost:8081", "admin", "admin"); //, "user1", "user1");
-    assertThat(jenkins.getJob("scheduler")).isTrue();
+public class JenkinsTest extends WingsBaseTest {
+  @Inject private JenkinsFactory jenkinsFactory;
+
+  private Jenkins jenkins;
+
+  @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
+
+  @Before
+  public void setUp() throws URISyntaxException {
+    jenkins = jenkinsFactory.create("http://localhost:8089", "admin", "admin");
   }
 
-  @Ignore
   @Test
-  public void testGetBuild() throws URISyntaxException, IOException {
-    JenkinsServer jenkins = new JenkinsServer(new URI("http://localhost:8081"), "admin", "admin");
+  public void shouldGetJobFromJenkins() throws URISyntaxException, IOException {
+    assertThat(jenkins.getJob("scheduler")).isNotNull();
+  }
 
-    JobWithDetails jobDetails = jenkins.getJob("scheduler");
-    Build build = jobDetails.getBuildByNumber(8);
+  @Test
+  public void shouldReturnNullWhenJobDoesNotExist() throws URISyntaxException, IOException {
+    assertThat(jenkins.getJob("scheduler1")).isNull();
+  }
 
-    //		QueueItem q = new QueueItem();
-    //		q.setId(5l);
-    //		Build build = jenkins.getBuild(q);
-    BuildWithDetails details = build.details();
-    // FileOutputStream fout = new FileOutputStream("/Users/rishi/abc.war");
-    // long l = IOUtils.copy(details.downloadArtifact(details.getArtifacts().get(0)), fout);
-    // fout.close();
-    System.out.println(details.getId());
-    System.out.println(new JsonUtils().asJson(details.getActions()));
+  @Test
+  public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
+    Pair<String, InputStream> fileInfo =
+        jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
+    assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
+    IOUtils.closeQuietly(fileInfo.getValue());
+  }
+
+  @Test
+  public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
+    Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
+    assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
+    IOUtils.closeQuietly(fileInfo.getValue());
+  }
+
+  @Test
+  public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
+    Pair<String, InputStream> fileInfo =
+        jenkins.downloadArtifact("scheduler1", "57", "build/libs/docker-scheduler-*.jar");
+    assertThat(fileInfo).isNull();
+  }
+
+  @Test
+  public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
+    Pair<String, InputStream> fileInfo =
+        jenkins.downloadArtifact("scheduler", "-1", "build/libs/docker-scheduler-*.jar");
+    assertThat(fileInfo).isNull();
+  }
+
+  @Test
+  public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
+    Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
+    assertThat(fileInfo).isNull();
+  }
+
+  @Test
+  public void shouldGetLastNBuildDetailsForGitJobs() throws URISyntaxException, IOException {
+    List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
+    assertThat(buildDetails)
+        .hasSize(4)
+        .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
+        .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
+  }
+
+  @Test
+  public void shouldGetLastNBuildDetailsForSvnJobs() throws URISyntaxException, IOException {
+    List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
+    assertThat(buildDetails)
+        .hasSize(4)
+        .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
+        .containsExactly(tuple(65, "39"), tuple(64, "39"), tuple(63, "39"), tuple(62, "39"));
   }
 }

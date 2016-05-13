@@ -19,7 +19,8 @@ public class Role extends Base {
 
   /**
    * Creates a role object.
-   * @param name role name.
+   *
+   * @param name        role name.
    * @param description role description.
    * @param permissions permissions associated with role.
    */
@@ -55,6 +56,7 @@ public class Role extends Base {
 
   /**
    * Adds permission to role.
+   *
    * @param permission permission to add.
    */
   public void addPermission(Permission permission) {

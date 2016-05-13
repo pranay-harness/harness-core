@@ -31,12 +31,11 @@ import java.io.UnsupportedEncodingException;
 
 @Singleton
 public class GridFsDbFileExt {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   private String fileCollectionName = LOGS.getName() + ".files";
   private String chunkCollectionName = LOGS.getName() + ".chunks";
   private int chunkSize = (int) LOGS.getChunkSize();
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public void appendToFile(String fileName, String content) {
     GridFSFile file = LOGS.getGridFSBucket().find(eq("filename", fileName)).first();

@@ -91,7 +91,7 @@ public class ServiceTemplateResource {
   }
 
   @GET
-  @Path("{templateId}/host_configs")
+  @Path("{templateId}/host-configs")
   public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
     return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));

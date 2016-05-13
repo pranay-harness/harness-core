@@ -5,8 +5,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Singleton;
 
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.FieldCriteria;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;

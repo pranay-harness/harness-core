@@ -66,6 +66,7 @@ public class ArtifactResourceTest {
   @Rule public TemporaryFolder tempFolder = new TemporaryFolder(new File("/tmp"));
 
   private File tempFile;
+
   @Before
   public void setUp() throws IOException {
     reset(ARTIFACT_SERVICE);

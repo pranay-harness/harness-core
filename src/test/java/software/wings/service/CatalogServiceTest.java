@@ -16,14 +16,13 @@ import software.wings.utils.JsonUtils;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class CatalogServiceTest extends WingsBaseTest {
+  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   @Inject private CatalogService catalogService;
 
   @Test
@@ -41,6 +40,4 @@ public class CatalogServiceTest extends WingsBaseTest {
     assertThat(catalogs).isNotNull();
     assertThat(catalogs.size()).isEqualTo(2);
   }
-
-  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
 }

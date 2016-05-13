@@ -7,6 +7,7 @@ import software.wings.sm.StateType;
 
 /**
  * A Pause state to pause state machine execution.
+ *
  * @author Rishi
  */
 public class PauseState extends State {
@@ -14,6 +15,7 @@ public class PauseState extends State {
 
   /**
    * Creates pause state with given name.
+   *
    * @param name name of the state.
    */
   public PauseState(String name) {

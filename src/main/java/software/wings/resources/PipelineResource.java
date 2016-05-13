@@ -22,7 +22,6 @@ import javax.ws.rs.QueryParam;
 
 /**
  * @author Rishi
- *
  */
 @Path("/pipelines")
 public class PipelineResource {

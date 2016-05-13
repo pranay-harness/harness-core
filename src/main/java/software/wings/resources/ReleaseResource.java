@@ -62,8 +62,8 @@ public class ReleaseResource {
   /**
    * Endpoint to create a new release.
    *
-   * @param appId QueryParam app_id.
-   * @param release       release to be created.
+   * @param appId   QueryParam app_id.
+   * @param release release to be created.
    * @return newly created release.
    */
   @POST

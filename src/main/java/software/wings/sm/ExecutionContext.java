@@ -5,7 +5,6 @@ package software.wings.sm;
 
 /**
  * @author Rishi
- *
  */
 public interface ExecutionContext {
   public Object evaluateExpression(String expression);

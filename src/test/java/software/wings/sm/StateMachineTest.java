@@ -1,4 +1,5 @@
 package software.wings.sm;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
@@ -9,12 +10,15 @@ import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
+import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Listeners(NotifyEventListener.class)
 public class StateMachineTest extends WingsBaseTest {
   @Test
   public void shouldValidate() {
@@ -56,10 +60,8 @@ public class StateMachineTest extends WingsBaseTest {
     /**
      * Creates a new Notifier object.
      *
-     * @param uuid
-     *          uuid of notifier.
-     * @param duration
-     *          duration to sleep for.
+     * @param uuid     uuid of notifier.
+     * @param duration duration to sleep for.
      */
     public Notifier(String uuid, int duration) {
       this.uuid = uuid;

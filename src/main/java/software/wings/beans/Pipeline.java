@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 @Entity(value = "pipelines", noClassnameStored = true)
 public class Pipeline extends Base {
@@ -18,8 +17,6 @@ public class Pipeline extends Base {
   private String description;
   private List<String> services;
   private String cronSchedule;
-
-  private String stateMachineId;
 
   @Transient private Graph Graph;
 
@@ -53,14 +50,6 @@ public class Pipeline extends Base {
 
   public void setCronSchedule(String cronSchedule) {
     this.cronSchedule = cronSchedule;
-  }
-
-  public String getStateMachineId() {
-    return stateMachineId;
-  }
-
-  public void setStateMachineId(String stateMachineId) {
-    this.stateMachineId = stateMachineId;
   }
 
   public Graph getGraph() {

@@ -2,6 +2,7 @@ package software.wings.sm;
 
 /**
  * List of transision types between states.
+ *
  * @author Rishi
  */
 public enum TransitionType {

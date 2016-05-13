@@ -7,8 +7,6 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
-import javax.inject.Inject;
-
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http
  * header entries.
@@ -32,6 +30,7 @@ public class AuditHelper {
 
   /**
    * Creates a new Audit log entry in database.
+   *
    * @param header AuditHeader recieved from request.
    * @return AuditHeader after saving.
    */
@@ -50,9 +49,10 @@ public class AuditHelper {
 
   /**
    * Creates a audit header for request or response with request/response body.
-   * @param header AuditHeader entry.
+   *
+   * @param header      AuditHeader entry.
    * @param requestType Request or Response.
-   * @param httpBody HttpBody for request or response.
+   * @param httpBody    HttpBody for request or response.
    */
   public void create(AuditHeader header, RequestType requestType, byte[] httpBody) {
     try {
@@ -67,7 +67,8 @@ public class AuditHelper {
 
   /**
    * Finalizes autdit log entry by recording response code and time.
-   * @param header AuditHeader entry to update.
+   *
+   * @param header  AuditHeader entry to update.
    * @param payload response payload.
    */
   public void finalizeAudit(AuditHeader header, byte[] payload) {

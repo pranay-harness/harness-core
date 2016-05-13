@@ -13,22 +13,12 @@ import java.util.stream.Collectors;
 
 @Entity(value = "hosts", noClassnameStored = true)
 public class Host extends Base implements Repeatable {
-  public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
-
-  public enum ConnectionType { SSH }
-
   private String infraId;
-
   private String hostName;
-
   private String osType;
-
   private AccessType accessType;
-
   private ConnectionType connectionType;
-
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
-
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   public String getInfraId() {
@@ -124,6 +114,10 @@ public class Host extends Base implements Repeatable {
         && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.tags, other.tags)
         && Objects.equals(this.configFiles, other.configFiles);
   }
+
+  public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
+
+  public enum ConnectionType { SSH }
 
   public static final class HostBuilder {
     private String infraId;

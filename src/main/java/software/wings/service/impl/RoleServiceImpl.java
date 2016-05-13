@@ -11,7 +11,6 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.WingsBootstrap;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.BuildState;
+import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.PauseState;
@@ -20,6 +22,7 @@ import java.util.HashMap;
 
 /**
  * Represents type of state.
+ *
  * @author Rishi
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -108,7 +111,13 @@ public enum StateType implements StateTypeDescriptor {
       case PAUSE: {
         return new PauseState(id);
       }
-      default: { throw new WingsException("newInstance is not supported"); }
+      case BUILD: {
+        return new BuildState(id);
+      }
+      case ENV_STATE: {
+        return new EnvState(id);
+      }
+      default: { throw new WingsException("State implementation is not supported for " + id); }
     }
   }
 }

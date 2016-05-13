@@ -77,8 +77,8 @@ import javax.inject.Inject;
 @Ignore
 @Integration
 public class ConfigFileOverrideIT extends WingsBaseTest {
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   @Inject WingsPersistence wingsPersistence;
-
   @Inject AppService appService;
   @Inject ServiceResourceService srs;
   @Inject InfraService infraService;
@@ -87,9 +87,6 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   @Inject ConfigService configService;
   @Inject EnvironmentService environmentService;
   @Inject HostService hostService;
-
-  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
-
   ServiceTemplate template;
   List<Host> hosts;
 

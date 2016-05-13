@@ -198,15 +198,19 @@ public class RepeatState extends State {
     public List<Repeatable> getRepeatElements() {
       return repeatElements;
     }
+
     public void setRepeatElements(List<Repeatable> repeatElements) {
       this.repeatElements = repeatElements;
     }
+
     public Integer getRepeatElementIndex() {
       return repeatElementIndex;
     }
+
     public void setRepeatElementIndex(Integer repeatElementIndex) {
       this.repeatElementIndex = repeatElementIndex;
     }
+
     boolean indexReachedMax() {
       if (repeatElements != null && repeatElementIndex != null && repeatElementIndex == repeatElements.size()) {
         return true;

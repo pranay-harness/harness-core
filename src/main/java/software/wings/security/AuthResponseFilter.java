@@ -1,9 +1,9 @@
 package software.wings.security;
 
+import java.io.IOException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
-import java.io.IOException;
 
 /**
  * Created by anubhaw on 4/20/16.

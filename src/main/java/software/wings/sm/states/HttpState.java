@@ -27,8 +27,7 @@ public class HttpState extends State {
   /**
    * Create a new Http State with given name.
    *
-   * @param name
-   *          name of the state.
+   * @param name name of the state.
    */
   public HttpState(String name) {
     super(name, StateType.HTTP.name());

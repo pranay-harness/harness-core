@@ -1,72 +1,34 @@
 package software.wings.helpers.ext;
 
-import com.offbytwo.jenkins.JenkinsServer;
 import com.offbytwo.jenkins.model.JobWithDetails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URI;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.List;
 
-public class Jenkins {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-  private String jenkinsUrl;
-  private String username;
-  private String password;
-  private JenkinsServer jenkinsServer;
+/**
+ * Created by peeyushaggarwal on 5/12/16.
+ */
+public interface Jenkins {
+  JobWithDetails getJob(String jobname) throws IOException;
 
-  public Jenkins(String jenkinsUrl) throws URISyntaxException {
-    this.jenkinsUrl = jenkinsUrl;
-    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl));
-  }
+  List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException;
 
-  public Jenkins(String jenkinsUrl, String username, String password) throws URISyntaxException {
-    this.jenkinsUrl = jenkinsUrl;
-    this.username = username;
-    this.password = password;
-    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, password);
-  }
+  String trigger(String jobname);
 
-  public boolean getJob(String jobname) throws IOException {
-    JobWithDetails jobDetails = jenkinsServer.getJob(jobname);
-    if (jobDetails != null) {
-      return true;
-    }
-    return false;
-  }
+  String checkStatus(String jobname);
 
-  public String trigger(String jobname) {
-    return jobname;
-  }
+  String checkStatus(String jobname, String buildNo);
 
-  public String checkStatus(String jobname) {
-    return jobname;
-  }
+  String checkArtifactStatus(String jobname, String artifactpathRegex);
 
-  public String checkStatus(String jobname, String buildNo) {
-    return jobname;
-  }
+  String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex);
 
-  public String checkArtifactStatus(String jobname, String artifactpathRegex) {
-    return jobname;
-  }
+  Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
+      throws IOException, URISyntaxException;
 
-  public String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex) {
-    return jobname;
-  }
-
-  public void downloadArtifact(String jobname, String artifactpathRegex, OutputStream os) throws IOException {
-    /*Pattern pattern = Pattern.compile(artifactpathRegex);
-    JobWithDetails jobDetails = jenkinsServer.getJob(jobname);
-    BuildWithDetails buildWithDetails = jobDetails.getLastCompletedBuild().details();
-    Optional<Artifact> artifactOpt = buildWithDetails
-        .getArtifacts().stream().filter(artifact -> pattern.matcher(artifact.getRelativePath()).matches()).findFirst();
-    if(artifactOpt.isPresent()) {
-
-    }*/
-  }
-
-  public void downloadArtifact(String jobname, String buildNo, String artifactpathRegex, OutputStream os) {}
+  Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
+      throws IOException, URISyntaxException;
 }

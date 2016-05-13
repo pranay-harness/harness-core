@@ -9,5 +9,5 @@ import java.lang.annotation.Target;
  * Created by peeyushaggarwal on 5/10/16.
  */
 @Retention(value = RetentionPolicy.RUNTIME)
-@Target(value = {ElementType.METHOD})
+@Target(value = {ElementType.METHOD, ElementType.TYPE})
 public @interface RealMongo {}

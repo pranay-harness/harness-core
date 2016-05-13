@@ -37,6 +37,7 @@ public class User extends Base implements Principal {
 
   /**
    * Return partial user object without sensitive information.
+   *
    * @param fullUser Full User object.
    * @return Partial User object without sensitive information.
    */
@@ -104,6 +105,7 @@ public class User extends Base implements Principal {
 
   /**
    * Adds role to User object.
+   *
    * @param role role to assign to User.
    */
   public void addRole(Role role) {
@@ -137,6 +139,10 @@ public class User extends Base implements Principal {
     private boolean active = true;
 
     private Builder() {}
+
+    public static Builder anUser() {
+      return new Builder();
+    }
 
     /**
      * @return copy of builder object.
@@ -221,10 +227,6 @@ public class User extends Base implements Principal {
     public Builder withName(String name) {
       this.name = name;
       return this;
-    }
-
-    public static Builder anUser() {
-      return new Builder();
     }
 
     /**

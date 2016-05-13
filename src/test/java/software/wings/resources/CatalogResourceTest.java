@@ -20,12 +20,10 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.Map;
-
 import javax.ws.rs.core.GenericType;
 
 /**
  * @author Rishi
- *
  */
 public class CatalogResourceTest extends WingsBaseTest {
   private static final CatalogService catalogService = mock(CatalogService.class);

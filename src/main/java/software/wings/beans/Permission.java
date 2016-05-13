@@ -16,9 +16,10 @@ public class Permission {
 
   /**
    * Create a permission object with fields.
-   * @param resource resource name.
-   * @param action allowed action.
-   * @param envId environment id.
+   *
+   * @param resource  resource name.
+   * @param action    allowed action.
+   * @param envId     environment id.
    * @param serviceId service id.
    */
   public Permission(String resource, String action, String envId, String serviceId) {

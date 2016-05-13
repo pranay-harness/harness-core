@@ -14,15 +14,14 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.inject.Singleton;
 
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class ExpressionEvaluator {
+  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public Object evaluate(String expression, String name, Object value) {
@@ -117,6 +116,4 @@ public class ExpressionEvaluator {
 
     return sb.toString();
   }
-
-  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
 }

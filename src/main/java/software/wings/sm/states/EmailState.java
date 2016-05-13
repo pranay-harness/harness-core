@@ -10,7 +10,6 @@ import software.wings.sm.StateType;
 
 /**
  * @author Rishi
- *
  */
 public class EmailState extends State {
   private static final long serialVersionUID = 1L;

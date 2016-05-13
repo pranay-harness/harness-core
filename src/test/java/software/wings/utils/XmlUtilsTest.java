@@ -10,14 +10,12 @@ import org.xml.sax.SAXException;
 import software.wings.WingsBaseTest;
 
 import java.io.IOException;
-
 import javax.inject.Inject;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
 /**
  * @author Rishi
- *
  */
 public class XmlUtilsTest extends WingsBaseTest {
   @Inject private XmlUtils XmlUtils;

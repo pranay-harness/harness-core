@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 /**
@@ -24,7 +23,6 @@ import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class YamlUtilsTest extends WingsBaseTest {
   @Inject private YamlUtils yamlUtils;

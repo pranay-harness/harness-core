@@ -2,11 +2,12 @@ package software.wings.service.impl;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,14 @@ import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
+import software.wings.beans.ArtifactSourceMetadata;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
+import software.wings.collect.ArtifactCollectEventListener;
+import software.wings.collect.CollectEvent;
+import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService;
@@ -27,6 +32,7 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -38,11 +44,12 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollector.class);
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectEventListener.class);
 
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
+  @Inject private Queue<CollectEvent> collectQueue;
 
   @Override
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
@@ -56,18 +63,20 @@ public class ArtifactServiceImpl implements ArtifactService {
     Validator.notNullCheck("application", application);
     Release release = wingsPersistence.get(Release.class, artifact.getRelease().getUuid());
     Validator.notNullCheck("release", release);
-    Validator.notNullCheck("artifactSourceName", release.get(artifact.getArtifactSourceName()));
+    for (ArtifactSourceMetadata artifactSourceMetadata : artifact.getArtifactSourceMetadatas()) {
+      Validator.notNullCheck("artifactSourceName", release.get(artifactSourceMetadata.getArtifactSourceName()));
+    }
 
     Validator.equalCheck(application.getUuid(), release.getAppId());
 
     artifact.setRelease(release);
-    artifact.setStatus(Status.RUNNING);
+    artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 
-    executorService.submit(
-        new ArtifactCollector(wingsPersistence, release, artifact.getArtifactSourceName(), artifact));
+    Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
+    collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
 
-    return wingsPersistence.get(Artifact.class, key);
+    return savedArtifact;
   }
 
   @Override
@@ -80,6 +89,23 @@ public class ArtifactServiceImpl implements ArtifactService {
                                 .equal(artifact.getUuid()),
         wingsPersistence.createUpdateOperations(Artifact.class).set("displayName", artifact.getDisplayName()));
     return wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
+  }
+
+  @Override
+  public void updateStatus(String artifactId, String appId, Artifact.Status status) {
+    Query<Artifact> query =
+        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+    UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class).set("status", status);
+    wingsPersistence.update(query, ops);
+  }
+
+  @Override
+  public void addArtifactFile(String artifactId, String appId, List<ArtifactFile> artifactFile) {
+    Query<Artifact> query =
+        wingsPersistence.createQuery(Artifact.class).field(ID_KEY).equal(artifactId).field("appId").equal(appId);
+    UpdateOperations<Artifact> ops =
+        wingsPersistence.createUpdateOperations(Artifact.class).addAll("artifactFiles", artifactFile, false);
+    wingsPersistence.update(query, ops);
   }
 
   @Override
@@ -124,37 +150,5 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public Artifact get(String appId, String artifactId) {
     return wingsPersistence.get(Artifact.class, appId, artifactId);
-  }
-
-  static class ArtifactCollector implements Runnable {
-    private WingsPersistence wingsPersistence;
-    private Release release;
-    private Artifact artifact;
-    private String artifactSourceName;
-
-    public ArtifactCollector(
-        WingsPersistence wingsPersistence, Release release, String artifactSourceName, Artifact artifact) {
-      this.wingsPersistence = wingsPersistence;
-      this.release = release;
-      this.artifactSourceName = artifactSourceName;
-      this.artifact = artifact;
-    }
-
-    @Override
-    public void run() {
-      try {
-        ArtifactFile artifactFile = release.get(artifactSourceName).collect(null);
-        UpdateOperations<Artifact> ops = wingsPersistence.createUpdateOperations(Artifact.class)
-                                             .set("artifactFile", artifactFile)
-                                             .set("status", Status.READY);
-        wingsPersistence.update(artifact, ops);
-        logger.info("Artifact collection completed - artifactId : " + artifact.getUuid());
-      } catch (Exception ex) {
-        logger.error(ex.getMessage(), ex);
-        UpdateOperations<Artifact> ops =
-            wingsPersistence.createUpdateOperations(Artifact.class).set("status", Status.FAILED);
-        wingsPersistence.update(artifact, ops);
-      }
-    }
   }
 }
