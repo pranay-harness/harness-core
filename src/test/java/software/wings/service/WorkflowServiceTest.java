@@ -7,6 +7,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.Orchestration;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
@@ -27,6 +28,7 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 /**
@@ -238,7 +240,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     link.setType("success");
     graph.getLinks().add(link);
 
-    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
+    Pipeline updatedPipeline = workflowService.updateWorkflow(Pipeline.class, pipeline);
     assertThat(updatedPipeline).isNotNull();
     assertThat(updatedPipeline.getUuid()).isNotNull();
     assertThat(updatedPipeline.getUuid()).isEqualTo(pipeline.getUuid());
@@ -346,7 +348,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     pipeline.setGraph(graph);
 
-    pipeline = workflowService.createPipeline(pipeline);
+    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getUuid()).isNotNull();
 
@@ -367,5 +369,143 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm.getGraph()).isEqualTo(graph);
 
     return pipeline;
+  }
+
+  @Test
+  public void shouldCreateOrchestration() {
+    createOrchestration();
+  }
+
+  @Test
+  public void shouldUpdateOrchestration() {
+    Orchestration orchestration = createOrchestration();
+    Graph graph = orchestration.getGraph();
+
+    Node node = new Node();
+    node.setId("n5");
+    node.setName("http");
+    node.setX(350);
+    node.setY(50);
+    node.setType(StateType.HTTP.name());
+    graph.getNodes().add(node);
+
+    Link link = new Link();
+    link.setId("l3");
+    link.setFrom("n3");
+    link.setTo("n5");
+    link.setType("success");
+    graph.getLinks().add(link);
+
+    Orchestration updatedOrchestration = workflowService.updateWorkflow(Orchestration.class, orchestration);
+    assertThat(updatedOrchestration).isNotNull();
+    assertThat(updatedOrchestration.getUuid()).isNotNull();
+    assertThat(updatedOrchestration.getUuid()).isEqualTo(orchestration.getUuid());
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValue(orchestration.getUuid());
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+    PageResponse<StateMachine> res = workflowService.list(req);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
+
+    StateMachine sm = workflowService.readLatest(updatedOrchestration.getUuid(), null);
+    assertThat(sm.getGraph()).isNotNull();
+    assertThat(sm.getGraph()).isEqualTo(graph);
+  }
+
+  private Orchestration createOrchestration() {
+    Orchestration orchestration = new Orchestration();
+    orchestration.setName("workflow1");
+    orchestration.setDescription("Sample Workflow");
+
+    Graph graph = new Graph();
+    List<Node> nodes = new ArrayList<>();
+
+    Node node = new Node();
+    node.setId("n0");
+    node.setName("ORIGIN");
+    node.setX(200);
+    node.setY(50);
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n1");
+    node.setName("stop");
+    node.setX(200);
+    node.setY(50);
+    node.setType(StateType.STOP.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n2");
+    node.setName("wait");
+    node.setX(250);
+    node.setY(50);
+    node.getProperties().put("duration", 5000l);
+    node.setType(StateType.WAIT.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n3");
+    node.setName("start");
+    node.setX(300);
+    node.setY(50);
+    node.setType(StateType.START.name());
+    nodes.add(node);
+
+    graph.setNodes(nodes);
+
+    List<Link> links = new ArrayList<>();
+
+    Link link = new Link();
+    link.setId("l0");
+    link.setFrom("n0");
+    link.setTo("n1");
+    link.setType("success");
+    links.add(link);
+
+    link = new Link();
+    link.setId("l1");
+    link.setFrom("n1");
+    link.setTo("n2");
+    link.setType("success");
+    links.add(link);
+
+    link = new Link();
+    link.setId("l2");
+    link.setFrom("n2");
+    link.setTo("n3");
+    link.setType("success");
+    links.add(link);
+
+    graph.setLinks(links);
+
+    orchestration.setGraph(graph);
+
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValue(orchestration.getUuid());
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+    PageResponse<StateMachine> res = workflowService.list(req);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(1);
+    assertThat(res.get(0)).isNotNull();
+
+    StateMachine sm = res.get(0);
+    assertThat(sm.getGraph()).isNotNull();
+    assertThat(sm.getGraph()).isEqualTo(graph);
+
+    return orchestration;
   }
 }

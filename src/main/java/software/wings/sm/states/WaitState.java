@@ -13,6 +13,8 @@ import software.wings.sm.StateType;
 public class WaitState extends State {
   private static final long serialVersionUID = 1L;
 
+  private long duration;
+
   /**
    * Creates a new wait state.
    *
@@ -27,7 +29,14 @@ public class WaitState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    // TODO Auto-generated method stub
-    return null;
+    return new ExecutionResponse();
+  }
+
+  public long getDuration() {
+    return duration;
+  }
+
+  public void setDuration(long duration) {
+    this.duration = duration;
   }
 }

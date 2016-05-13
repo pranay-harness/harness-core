@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.Graph;
+import software.wings.beans.Orchestration;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
@@ -18,6 +19,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.Workflow;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -32,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -46,36 +49,15 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
-  private List<StateTypeDescriptor> stencilList;
-  private Map<String, StateTypeDescriptor> stencilMap;
+  private List<StateTypeDescriptor> cachedStencils;
+  private Map<String, StateTypeDescriptor> cachedStencilMap;
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)
-   */
   @Override
   public StateMachine create(@Valid StateMachine stateMachine) {
     stateMachine.validate();
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see software.wings.service.intfc.WorkflowService#update(software.wings.sm.StateMachine)
-   */
-  @Override
-  public StateMachine update(StateMachine stateMachine) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see software.wings.service.intfc.WorkflowService#read(software.wings.sm.StateMachine)
-   */
   @Override
   public StateMachine read(String smId) {
     return wingsPersistence.get(StateMachine.class, smId);
@@ -93,8 +75,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public List<StateTypeDescriptor> stencils() {
-    if (stencilList != null) {
-      return stencilList;
+    if (cachedStencils != null) {
+      return cachedStencils;
     }
 
     List<StateTypeDescriptor> stencils = new ArrayList<StateTypeDescriptor>();
@@ -113,41 +95,41 @@ public class WorkflowServiceImpl implements WorkflowService {
       stencilDescMap.put(sd.getType(), sd);
     }
 
-    this.stencilList = stencils;
-    this.stencilMap = stencilDescMap;
+    this.cachedStencils = stencils;
+    this.cachedStencilMap = stencilDescMap;
 
     return stencils;
   }
 
-  public Map<String, StateTypeDescriptor> stencilMap() {
-    if (stencilMap == null) {
+  private Map<String, StateTypeDescriptor> stencilMap() {
+    if (cachedStencilMap == null) {
       stencils();
     }
-    return stencilMap;
+    return cachedStencilMap;
   }
 
   @Override
-  public PageResponse<Pipeline> listPipeline(PageRequest<Pipeline> req) {
-    return null;
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> req) {
+    return wingsPersistence.query(Pipeline.class, req);
   }
 
   @Override
-  public Pipeline createPipeline(Pipeline pipeline) {
-    Graph graph = pipeline.getGraph();
-    pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    StateMachine stateMachine = new StateMachine(pipeline.getUuid(), graph, stencilMap());
+  public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
+    Graph graph = workflow.getGraph();
+    workflow = wingsPersistence.saveAndGet(cls, workflow);
+    StateMachine stateMachine = new StateMachine(workflow.getUuid(), graph, stencilMap());
     stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    pipeline.setGraph(stateMachine.getGraph());
-    return pipeline;
+    workflow.setGraph(stateMachine.getGraph());
+    return workflow;
   }
 
   @Override
-  public Pipeline updatePipeline(Pipeline pipeline) {
-    Graph graph = pipeline.getGraph();
-    StateMachine stateMachine = new StateMachine(pipeline.getUuid(), graph, stencilMap());
+  public <T extends Workflow> T updateWorkflow(Class<T> cls, T workflow) {
+    Graph graph = workflow.getGraph();
+    StateMachine stateMachine = new StateMachine(workflow.getUuid(), graph, stencilMap());
     stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    pipeline.setGraph(stateMachine.getGraph());
-    return pipeline;
+    workflow.setGraph(stateMachine.getGraph());
+    return workflow;
   }
 
   @Override
@@ -155,9 +137,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.get(Pipeline.class, appId, pipelineId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)
-   */
   @Override
   public StateMachine readLatest(String originId, String name) {
     if (StringUtils.isBlank(name)) {
@@ -189,5 +168,15 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
     return res.get(0);
+  }
+
+  @Override
+  public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    return wingsPersistence.query(Orchestration.class, pageRequest);
+  }
+
+  @Override
+  public Orchestration readOrchestration(String appId, String orchestrationId) {
+    return wingsPersistence.get(Orchestration.class, appId, orchestrationId);
   }
 }
