@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
-import static software.wings.beans.TagType.HierarchyTagName;
+import static software.wings.beans.Tag.TagBuilder.aTag;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -13,7 +13,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
-import software.wings.beans.TagType;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 
@@ -33,21 +32,25 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   }
 
   @Override
-  public Environment save(Environment environment) {
-    Environment savedEnv = wingsPersistence.saveAndGet(Environment.class, environment);
-    wingsPersistence.save(new TagType(HierarchyTagName, savedEnv.getUuid()));
+  public Environment save(Environment env) {
+    env = wingsPersistence.saveAndGet(Environment.class, env);
+    wingsPersistence.save(aTag()
+                              .withAppId(env.getAppId())
+                              .withEnvId(env.getUuid())
+                              .withName(env.getName())
+                              .withDescription(env.getName())
+                              .withRootTag(true)
+                              .build());
     wingsPersistence.save(
-        anInfra().withAppId(savedEnv.getAppId()).withEnvId(savedEnv.getUuid()).withInfraType(STATIC).build()); // FIXME:
-                                                                                                               // stopgap
-                                                                                                               // for
-                                                                                                               // Allpha
+        anInfra().withAppId(env.getAppId()).withEnvId(env.getUuid()).withInfraType(STATIC).build()); // FIXME: stopgap
+                                                                                                     // for Allpha
 
     UpdateOperations<Application> updateOperations =
-        wingsPersistence.createUpdateOperations(Application.class).add("environments", savedEnv);
+        wingsPersistence.createUpdateOperations(Application.class).add("environments", env);
     Query<Application> updateQuery =
-        wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(environment.getAppId());
+        wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(env.getAppId());
     wingsPersistence.update(updateQuery, updateOperations);
-    return savedEnv;
+    return env;
   }
 
   @Override

@@ -78,7 +78,7 @@ public class Host extends Base implements Repeatable {
   }
 
   public String getTagsString() {
-    return tags.stream().map(Tag::getTagString).collect(Collectors.joining(","));
+    return tags.stream().map(Tag::getName).collect(Collectors.joining(","));
   }
 
   @Override

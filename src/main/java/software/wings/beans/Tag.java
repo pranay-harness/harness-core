@@ -10,24 +10,22 @@ import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Created by anubhaw on 3/30/16.
  */
 @Entity(value = "tags", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("tagType")
+@Indexes(@Index(fields = { @Field("envId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Tag extends Base {
   private String name;
   private String description;
   private String autoTaggingRule;
-  @Reference(idOnly = true, ignoreMissing = true) private TagType tagType;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> linkedTags;
+  private boolean rootTag = false;
+  private String envId;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
-
-  public Tag() {}
 
   public String getName() {
     return name;
@@ -53,24 +51,28 @@ public class Tag extends Base {
     this.autoTaggingRule = autoTaggingRule;
   }
 
-  public String getTagString() {
-    return tagType.getName() + ":" + name;
+  public boolean isRootTag() {
+    return rootTag;
   }
 
-  public TagType getTagType() {
-    return tagType;
+  public void setRootTag(boolean rootTag) {
+    this.rootTag = rootTag;
   }
 
-  public void setTagType(TagType tagType) {
-    this.tagType = tagType;
+  public String getEnvId() {
+    return envId;
   }
 
-  public List<Tag> getLinkedTags() {
-    return linkedTags;
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 
-  public void setLinkedTags(List<Tag> linkedTags) {
-    this.linkedTags = linkedTags;
+  public List<Tag> getChildren() {
+    return children;
+  }
+
+  public void setChildren(List<Tag> children) {
+    this.children = children;
   }
 
   public List<ConfigFile> getConfigFiles() {
@@ -81,36 +83,16 @@ public class Tag extends Base {
     this.configFiles = configFiles;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, autoTaggingRule, tagType, linkedTags, configFiles);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Tag other = (Tag) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.autoTaggingRule, other.autoTaggingRule) && Objects.equals(this.tagType, other.tagType)
-        && Objects.equals(this.linkedTags, other.linkedTags) && Objects.equals(this.configFiles, other.configFiles);
-  }
-
   public static final class TagBuilder {
     private String name;
     private String description;
     private String autoTaggingRule;
-    private TagType tagType;
-    private List<Tag> linkedTags;
-    private List<ConfigFile> configFiles;
+    private boolean rootTag = false;
+    private String envId;
+    private List<Tag> children;
+    private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -138,13 +120,18 @@ public class Tag extends Base {
       return this;
     }
 
-    public TagBuilder withTagType(TagType tagType) {
-      this.tagType = tagType;
+    public TagBuilder withRootTag(boolean rootTag) {
+      this.rootTag = rootTag;
       return this;
     }
 
-    public TagBuilder withLinkedTags(List<Tag> linkedTags) {
-      this.linkedTags = linkedTags;
+    public TagBuilder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public TagBuilder withChildren(List<Tag> children) {
+      this.children = children;
       return this;
     }
 
@@ -155,6 +142,11 @@ public class Tag extends Base {
 
     public TagBuilder withUuid(String uuid) {
       this.uuid = uuid;
+      return this;
+    }
+
+    public TagBuilder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -188,10 +180,12 @@ public class Tag extends Base {
           .withName(name)
           .withDescription(description)
           .withAutoTaggingRule(autoTaggingRule)
-          .withTagType(tagType)
-          .withLinkedTags(linkedTags)
+          .withRootTag(rootTag)
+          .withEnvId(envId)
+          .withChildren(children)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -204,10 +198,12 @@ public class Tag extends Base {
       tag.setName(name);
       tag.setDescription(description);
       tag.setAutoTaggingRule(autoTaggingRule);
-      tag.setTagType(tagType);
-      tag.setLinkedTags(linkedTags);
+      tag.setRootTag(rootTag);
+      tag.setEnvId(envId);
+      tag.setChildren(children);
       tag.setConfigFiles(configFiles);
       tag.setUuid(uuid);
+      tag.setAppId(appId);
       tag.setCreatedBy(createdBy);
       tag.setCreatedAt(createdAt);
       tag.setLastUpdatedBy(lastUpdatedBy);

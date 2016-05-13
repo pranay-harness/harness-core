@@ -12,15 +12,12 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
-
-import software.wings.WingsBaseTest;
 import software.wings.WingsBaseTest;
 import software.wings.common.UUIDGenerator;
 
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.SearchFilter.Operator.IN;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -67,23 +68,35 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public ServiceTemplate updateHostAndTags(
-      String appId, String envId, String serviceTemplateId, List<String> tagIds, List<String> hostIds) {
-    List<Tag> tags = new ArrayList<>();
-    if (tagIds != null) {
-      for (String tagId : tagIds) {
-        tags.add(wingsPersistence.get(Tag.class, tagId));
-      }
-    }
+  public ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds) {
     List<Host> hosts = new ArrayList<>();
     if (hostIds != null) {
       for (String hostId : hostIds) {
         hosts.add(wingsPersistence.get(Host.class, hostId));
       }
     }
-    wingsPersistence.updateFields(
-        ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts, "tags", tags));
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
+  public ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds) {
+    List<Tag> tags = new ArrayList<>();
+    if (tagIds != null) {
+      for (String tagId : tagIds) {
+        tags.add(wingsPersistence.get(Tag.class, tagId));
+      }
+    }
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
+  public PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest) {
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
+    List<Tag> tags = serviceTemplate.getTags();
+    pageRequest.addFilter("tags", tags, IN);
+    return wingsPersistence.query(Host.class, pageRequest);
   }
 
   @Override
@@ -161,18 +174,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {
     List<Tag> leafTagNodes = new ArrayList<>();
-    List<Tag> rootTags = tagService.getRootConfigTags(serviceTemplate.getEnvId());
-    for (Tag tag : rootTags) {
-      tag.getConfigFiles().addAll(configService.getConfigFilesForEntity(serviceTemplate.getUuid(), tag.getUuid()));
+    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
+    if (rootTag == null) {
+      return leafTagNodes;
     }
+    rootTag.getConfigFiles().addAll(
+        configService.getConfigFilesForEntity(serviceTemplate.getUuid(), rootTag.getUuid()));
 
     Queue<Tag> queue = new ArrayQueue<>();
-    queue.addAll(rootTags);
+    queue.add(rootTag);
 
     while (!queue.isEmpty()) {
       Tag root = queue.poll();
       leafTagNodes.add(root);
-      for (Tag child : root.getLinkedTags()) {
+      for (Tag child : root.getChildren()) {
         child.getConfigFiles().addAll(
             configService.getConfigFilesForEntity(serviceTemplate.getUuid(), child.getUuid()));
         child.setConfigFiles(overrideConfigFiles(root.getConfigFiles(), child.getConfigFiles()));
