@@ -1,0 +1,20 @@
+{
+  "request" : {
+    "url" : "/job/scheduler/api/json",
+    "method" : "GET"
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-json-bvb4O.json",
+    "headers" : {
+      "Date" : "Thu, 12 May 2016 23:27:31 GMT",
+      "X-Content-Type-Options" : "nosniff",
+      "X-Jenkins" : "2.2",
+      "X-Jenkins-Session" : "5b0113ca",
+      "Content-Type" : "application/json;charset=UTF-8",
+      "Content-Encoding" : "gzip",
+      "Content-Length" : "818",
+      "Server" : "Jetty(9.2.z-SNAPSHOT)"
+    }
+  }
+}

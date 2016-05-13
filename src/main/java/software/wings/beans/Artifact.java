@@ -4,9 +4,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
@@ -32,7 +34,7 @@ import javax.validation.constraints.NotNull;
 public class Artifact extends Base {
   @Indexed @Reference(idOnly = true) @NotNull(groups = Create.class) private Release release;
 
-  @Indexed @NotNull(groups = Create.class) private String artifactSourceName;
+  @Indexed @NotEmpty(groups = Create.class) private List<ArtifactSourceMetadata> artifactSourceMetadatas;
 
   @Indexed @NotNull private String displayName;
 
@@ -74,12 +76,12 @@ public class Artifact extends Base {
     this.status = status;
   }
 
-  public String getArtifactSourceName() {
-    return artifactSourceName;
+  public List<ArtifactSourceMetadata> getArtifactSourceMetadatas() {
+    return artifactSourceMetadatas;
   }
 
-  public void setArtifactSourceName(String artifactSourceName) {
-    this.artifactSourceName = artifactSourceName;
+  public void setArtifactSourceMetadatas(List<ArtifactSourceMetadata> artifactSourceMetadatas) {
+    this.artifactSourceMetadatas = artifactSourceMetadatas;
   }
 
   public List<ArtifactFile> getArtifactFiles() {
@@ -107,28 +109,27 @@ public class Artifact extends Base {
       return false;
     }
     Artifact artifact = (Artifact) o;
-    return com.google.common.base.Objects.equal(release, artifact.release)
-        && com.google.common.base.Objects.equal(artifactSourceName, artifact.artifactSourceName)
-        && com.google.common.base.Objects.equal(displayName, artifact.displayName)
-        && com.google.common.base.Objects.equal(revision, artifact.revision)
-        && com.google.common.base.Objects.equal(artifactFiles, artifact.artifactFiles) && status == artifact.status;
+    return Objects.equal(release, artifact.release)
+        && Objects.equal(artifactSourceMetadatas, artifact.artifactSourceMetadatas)
+        && Objects.equal(displayName, artifact.displayName) && Objects.equal(revision, artifact.revision)
+        && Objects.equal(artifactFiles, artifact.artifactFiles) && status == artifact.status;
   }
 
   @Override
   public int hashCode() {
-    return com.google.common.base.Objects.hashCode(
-        super.hashCode(), release, artifactSourceName, displayName, revision, artifactFiles, status);
+    return Objects.hashCode(
+        super.hashCode(), release, artifactSourceMetadatas, displayName, revision, artifactFiles, status);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("release", release)
-        .add("artifactSourceName", artifactSourceName)
-        .add("displayName", displayName)
-        .add("revision", revision)
-        .add("artifactFiles", artifactFiles)
         .add("status", status)
+        .add("artifactFiles", artifactFiles)
+        .add("revision", revision)
+        .add("displayName", displayName)
+        .add("artifactSourceMetadatas", artifactSourceMetadatas)
+        .add("release", release)
         .toString();
   }
 
@@ -159,7 +160,7 @@ public class Artifact extends Base {
 
   public static final class Builder {
     private Release release;
-    private String artifactSourceName;
+    private List<ArtifactSourceMetadata> artifactSourceMetadatas;
     private String displayName;
     private String revision;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
@@ -183,8 +184,8 @@ public class Artifact extends Base {
       return this;
     }
 
-    public Builder withArtifactSourceName(String artifactSourceName) {
-      this.artifactSourceName = artifactSourceName;
+    public Builder withArtifactSourceMetadatas(List<ArtifactSourceMetadata> artifactSourceMetadatas) {
+      this.artifactSourceMetadatas = artifactSourceMetadatas;
       return this;
     }
 
@@ -246,7 +247,7 @@ public class Artifact extends Base {
     public Builder but() {
       return anArtifact()
           .withRelease(release)
-          .withArtifactSourceName(artifactSourceName)
+          .withArtifactSourceMetadatas(artifactSourceMetadatas)
           .withDisplayName(displayName)
           .withRevision(revision)
           .withArtifactFiles(artifactFiles)
@@ -263,7 +264,7 @@ public class Artifact extends Base {
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setRelease(release);
-      artifact.setArtifactSourceName(artifactSourceName);
+      artifact.setArtifactSourceMetadatas(artifactSourceMetadatas);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setArtifactFiles(artifactFiles);

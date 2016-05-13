@@ -22,11 +22,6 @@ public class FileUploadSource extends ArtifactSource {
     this.services = services;
   }
 
-  @Override
-  public ArtifactFile collect(Object[] params) {
-    return null;
-  }
-
   public static final class Builder {
     private Set<Service> services = Sets.newHashSet();
     private String sourceName;

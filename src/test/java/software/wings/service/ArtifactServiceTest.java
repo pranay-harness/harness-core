@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.ArtifactSourceMetadata.Builder.anArtifactSourceMetadata;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.ServiceBuilder.aService;
@@ -32,7 +33,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
-
+import java.util.Collections;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
@@ -50,7 +51,8 @@ public class ArtifactServiceTest extends WingsBaseTest {
   private Builder builder = anArtifact()
                                 .withAppId(APP_ID)
                                 .withRelease(aRelease().withUuid(RELEASE_ID).build())
-                                .withArtifactSourceName("ARTIFACT_SOURCE")
+                                .withArtifactSourceMetadatas(Collections.singletonList(
+                                    anArtifactSourceMetadata().withArtifactSourceName("ARTIFACT_SOURCE").build()))
                                 .withRevision("1.0")
                                 .withDisplayName("DISPLAY_NAME")
                                 .withCreatedAt(System.currentTimeMillis())
@@ -92,7 +94,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> artifactService.create(builder.withArtifactSourceName(null).build()));
+        .isThrownBy(() -> artifactService.create(builder.withArtifactSourceMetadatas(Collections.emptyList()).build()));
   }
 
   @Test

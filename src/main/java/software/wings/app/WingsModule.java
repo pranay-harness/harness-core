@@ -6,6 +6,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -19,12 +20,17 @@ import org.mongodb.morphia.Morphia;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ReadPref;
+import software.wings.collect.ArtifactCollectEventListener;
+import software.wings.collect.CollectEvent;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.Jenkins;
+import software.wings.helpers.ext.JenkinsFactory;
+import software.wings.helpers.ext.JenkinsImpl;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
@@ -178,5 +184,9 @@ public class WingsModule extends AbstractModule {
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
+    bind(new TypeLiteral<Queue<CollectEvent>>() {})
+        .toInstance(new MongoQueueImpl<>(CollectEvent.class, primaryDatastore));
+    bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
+    install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
   }
 }

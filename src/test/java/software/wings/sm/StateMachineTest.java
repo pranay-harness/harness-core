@@ -9,12 +9,15 @@ import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
+import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Listeners(NotifyEventListener.class)
 public class StateMachineTest extends WingsBaseTest {
   @Test
   public void shouldValidate() {

@@ -1,23 +1,15 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toSet;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import com.offbytwo.jenkins.JenkinsServer;
-import com.offbytwo.jenkins.model.Artifact;
-import com.offbytwo.jenkins.model.Build;
-import com.offbytwo.jenkins.model.BuildWithDetails;
-import com.offbytwo.jenkins.model.JobWithDetails;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.service.intfc.FileService;
 
-import java.io.InputStream;
-import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -37,30 +29,6 @@ public class JenkinsArtifactSource extends ArtifactSource {
 
   public JenkinsArtifactSource() {
     super(SourceType.JENKINS);
-  }
-
-  @Override
-  public ArtifactFile collect(Object[] params) {
-    try {
-      JenkinsServer jenkins = new JenkinsServer(new URI(jenkinsUrl), username, password);
-      JobWithDetails jobDetails = jenkins.getJob(jobname);
-      Build build = jobDetails.getLastBuild();
-      BuildWithDetails buildWithDetails = build.details();
-      Artifact buildArtifact = buildWithDetails.getArtifacts().get(0);
-      InputStream in = buildWithDetails.downloadArtifact(buildArtifact);
-
-      FileMetadata fileMetadata = new FileMetadata();
-      fileMetadata.setFileName(buildArtifact.getFileName());
-      String uuid = fileService.saveFile(fileMetadata, in, ARTIFACTS);
-      ArtifactFile artifactFile = new ArtifactFile();
-      artifactFile.setFileUuid(uuid);
-      artifactFile.setName(buildArtifact.getFileName());
-      artifactFile.setServices(Lists.newArrayList(getServices()));
-      in.close();
-      return artifactFile;
-    } catch (Exception ex) {
-      return null;
-    }
   }
 
   @Override
