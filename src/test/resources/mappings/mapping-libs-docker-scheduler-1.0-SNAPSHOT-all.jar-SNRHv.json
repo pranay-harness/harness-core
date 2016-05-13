@@ -1,0 +1,31 @@
+{
+  "request" : {
+    "url" : "/job/scheduler/57/artifact/build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar",
+    "method" : "GET",
+    "headers" : {
+      "Accept-Encoding" : {
+        "equalTo" : "gzip,deflate"
+      },
+      "Authorization" : {
+        "equalTo" : "Basic YWRtaW46YWRtaW4="
+      }
+    }
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-libs-docker-scheduler-1.0-SNAPSHOT-all.jar-SNRHv.json",
+    "headers" : {
+      "Date" : "Fri, 13 May 2016 18:17:26 GMT",
+      "X-Content-Type-Options" : "nosniff",
+      "Content-Security-Policy" : "sandbox; default-src 'none'; img-src 'self'; style-src 'self';",
+      "X-WebKit-CSP" : "sandbox; default-src 'none'; img-src 'self'; style-src 'self';",
+      "X-Content-Security-Policy" : "sandbox; default-src 'none'; img-src 'self'; style-src 'self';",
+      "Last-Modified" : "Thu, 12 May 2016 21:04:41 GMT",
+      "Expires" : "Thu, 12 May 2016 21:04:41 GMT",
+      "Accept-Ranges" : "bytes",
+      "Content-Type" : "application/java-archive",
+      "Content-Length" : "40465673",
+      "Server" : "Jetty(9.2.z-SNAPSHOT)"
+    }
+  }
+}

@@ -1,0 +1,174 @@
+package software.wings.helpers.ext;
+
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.helpers.ext.BuildDetails.Builder.aBuildDetails;
+
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
+
+import com.offbytwo.jenkins.JenkinsServer;
+import com.offbytwo.jenkins.client.JenkinsHttpClient;
+import com.offbytwo.jenkins.model.Artifact;
+import com.offbytwo.jenkins.model.Build;
+import com.offbytwo.jenkins.model.BuildResult;
+import com.offbytwo.jenkins.model.BuildWithDetails;
+import com.offbytwo.jenkins.model.JobWithDetails;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.regex.Pattern;
+
+public class JenkinsImpl implements Jenkins {
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
+
+  private JenkinsServer jenkinsServer;
+
+  @AssistedInject
+  public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
+    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl));
+  }
+
+  @AssistedInject
+  public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
+      @Assisted(value = "password") String password) throws URISyntaxException {
+    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, password);
+  }
+
+  @Override
+  public JobWithDetails getJob(String jobname) throws IOException {
+    return jenkinsServer.getJob(jobname);
+  }
+
+  @Override
+  public List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException {
+    JobWithDetails jobWithDetails = getJob(jobname);
+    if (jobWithDetails == null) {
+      return null;
+    }
+    return jobWithDetails.getBuilds()
+        .parallelStream()
+        .limit(lastN)
+        .map(build -> {
+          try {
+            return build.details();
+          } catch (IOException e) {
+            return build;
+          }
+        })
+        .filter(build -> BuildWithDetails.class.isInstance(build))
+        .map(build -> (BuildWithDetails) build)
+        .filter(build
+            -> (build.getResult() == BuildResult.SUCCESS || build.getResult() == BuildResult.UNSTABLE)
+                && isNotEmpty(build.getArtifacts()))
+        .map(buildWithDetails
+            -> aBuildDetails()
+                   .withNumber(buildWithDetails.getNumber())
+                   .withRevision(extractRevision(buildWithDetails))
+                   .build())
+        .collect(toList());
+  }
+
+  @Override
+  public String trigger(String jobname) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public String checkStatus(String jobname) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public String checkStatus(String jobname, String buildNo) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public String checkArtifactStatus(String jobname, String artifactpathRegex) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
+      throws IOException, URISyntaxException {
+    JobWithDetails jobDetails = getJob(jobname);
+    if (jobDetails == null) {
+      return null;
+    }
+    Build build = jobDetails.getLastCompletedBuild();
+    return downloadArtifactFromABuild(build, artifactpathRegex);
+  }
+
+  @Override
+  public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
+      throws IOException, URISyntaxException {
+    JobWithDetails jobDetails = getJob(jobname);
+    if (jobDetails == null) {
+      return null;
+    }
+    Build build = jobDetails.getBuildByNumber(Integer.parseInt(buildNo));
+    return downloadArtifactFromABuild(build, artifactpathRegex);
+  }
+
+  private Pair<String, InputStream> downloadArtifactFromABuild(Build build, String artifactpathRegex)
+      throws IOException, URISyntaxException {
+    if (build == null) {
+      return null;
+    }
+    Pattern pattern = Pattern.compile(artifactpathRegex.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    BuildWithDetails buildWithDetails = build.details();
+    Optional<Artifact> artifactOpt = buildWithDetails.getArtifacts()
+                                         .stream()
+                                         .filter(artifact -> pattern.matcher(artifact.getRelativePath()).matches())
+                                         .findFirst();
+    if (artifactOpt.isPresent()) {
+      return ImmutablePair.of(artifactOpt.get().getFileName(), buildWithDetails.downloadArtifact(artifactOpt.get()));
+    } else {
+      return null;
+    }
+  }
+
+  private String extractRevision(BuildWithDetails buildWithDetails) {
+    Optional<String> gitRevOpt = buildWithDetails.getActions()
+                                     .stream()
+                                     .filter(o -> ((Map<String, Object>) o).containsKey("lastBuiltRevision"))
+                                     .map(o
+                                         -> ((Map<String, Object>) (((Map<String, Object>) o).get("lastBuiltRevision")))
+                                                .get("SHA1")
+                                                .toString()
+                                                .substring(0, 8))
+                                     .findFirst();
+    if (gitRevOpt.isPresent()) {
+      return gitRevOpt.get();
+    } else if (buildWithDetails.getChangeSet().getKind().equals("svn")) {
+      try {
+        SvnBuildDetails svnBuildDetails =
+            buildWithDetails.getClient().get(buildWithDetails.getUrl(), SvnBuildDetails.class);
+        OptionalInt revision =
+            svnBuildDetails.getChangeSet().getRevisions().stream().mapToInt(SvnRevision::getRevision).max();
+        return Integer.toString(revision.getAsInt());
+      } catch (Exception e) {
+        return Long.toString(buildWithDetails.getTimestamp());
+      }
+    } else {
+      return Long.toString(buildWithDetails.getTimestamp());
+    }
+  }
+}

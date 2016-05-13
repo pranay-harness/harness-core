@@ -13,6 +13,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Listeners;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -21,16 +22,17 @@ import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 /**
  * @author Rishi
  */
+@Listeners(NotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
 

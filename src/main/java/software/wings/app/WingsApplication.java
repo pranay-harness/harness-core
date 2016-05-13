@@ -135,12 +135,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     Set<Class<? extends AbstractQueueListener>> queueListeners = reflections.getSubTypesOf(AbstractQueueListener.class);
     for (Class<? extends AbstractQueueListener> queueListener : queueListeners) {
-      //      try {
       logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
       injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListener), 5);
-      //      } catch (Exception e) {
-      //        logger.warn("Error in guice injection... proceeding");
-      //      }
     }
   }
 

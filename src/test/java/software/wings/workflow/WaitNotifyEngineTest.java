@@ -9,8 +9,10 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Listeners;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyEvent;
+import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.NotifyResponse;
 import software.wings.waitnotify.WaitInstance;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
+@Listeners(NotifyEventListener.class)
 public class WaitNotifyEngineTest extends WingsBaseTest {
   private static AtomicInteger callCount;
   private static Map<String, Serializable> responseMap;

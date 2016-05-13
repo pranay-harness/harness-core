@@ -59,8 +59,6 @@ public abstract class ArtifactSource {
     this.artifactType = artifactType;
   }
 
-  public abstract ArtifactFile collect(Object[] params);
-
   public abstract Set<Service> getServices();
 
   @Override
