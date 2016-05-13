@@ -5,6 +5,7 @@ import static software.wings.beans.ChecksumType.MD5;
 import com.google.common.base.MoreObjects;
 
 import org.apache.commons.lang3.StringUtils;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import java.util.Objects;
 
@@ -13,11 +14,11 @@ import java.util.Objects;
  */
 public class BaseFile extends Base {
   private String fileUuid;
-  private String name;
+  @FormDataParam("name") private String name;
   private String mimeType;
   private long size;
   private ChecksumType checksumType = MD5;
-  private String checksum;
+  @FormDataParam("md5") private String checksum;
 
   public BaseFile() {}
 

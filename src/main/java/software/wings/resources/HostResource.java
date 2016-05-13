@@ -76,7 +76,7 @@ public class HostResource {
 
   @PUT
   @Path("{hostId}")
-  public RestResponse<Host> updtae(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
     infraId = hostService.getInfraId(envId, appId);
     host.setUuid(hostId);

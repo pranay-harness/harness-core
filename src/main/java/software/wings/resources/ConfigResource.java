@@ -62,17 +62,9 @@ public class ConfigResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("entityId") String entityId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
-      @FormDataParam("name") String name, @FormDataParam("relativePath") String relativePath,
-      @FormDataParam("md5") String md5, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
-                                .withEntityId(entityId)
-                                .withTemplateId(templateId)
-                                .withName(name)
-                                .withRelativePath(relativePath)
-                                .withChecksum(md5)
-                                .build();
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+    configFile.setEntityId(entityId);
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }
@@ -86,16 +78,9 @@ public class ConfigResource {
   @PUT
   @Path("{configId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse update(@PathParam("configId") String configId, @FormDataParam("name") String name,
-      @FormDataParam("relativePath") String relativePath, @FormDataParam("md5") String md5,
+  public RestResponse update(@PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    ConfigFile configFile = ConfigFile.ConfigFileBuilder.aConfigFile()
-                                .withUuid(configId)
-                                .withName(name)
-                                .withRelativePath(relativePath)
-                                .withChecksum(md5)
-                                .build();
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configService.update(configFile, uploadedInputStream);
     return new RestResponse();
   }

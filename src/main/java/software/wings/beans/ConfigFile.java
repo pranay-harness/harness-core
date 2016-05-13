@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -7,6 +8,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
+import javax.ws.rs.DefaultValue;
 
 /**
  * Created by anubhaw on 4/12/16.
@@ -18,9 +20,10 @@ import java.util.Objects;
                , @Field("templateId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ConfigFile extends BaseFile {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
-  private String templateId;
-  private String entityId;
-  private String relativePath;
+
+  @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
+  @FormDataParam("entityId") private String entityId;
+  @FormDataParam("relativePath") private String relativePath;
 
   public String getEntityId() {
     return entityId;

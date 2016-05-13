@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.beans.ChecksumType.MD5;
 
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -20,10 +21,10 @@ import java.util.Objects;
                       , @Field("name"), @Field("version") }, options = @IndexOptions(unique = true)))
 @Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
-  private boolean standard;
-  private String version;
-  private String description;
-  private ArtifactSource source;
+  @FormDataParam("standard") private boolean standard;
+  @FormDataParam("version") private String version;
+  @FormDataParam("description") private String description;
+  @FormDataParam("source") private ArtifactSource source;
   private boolean standardUpload = false;
 
   public AppContainer() {}
