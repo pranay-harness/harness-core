@@ -1,0 +1,28 @@
+{
+  "request" : {
+    "url" : "/job/scheduler-svn/api/json",
+    "method" : "GET",
+    "headers" : {
+      "Accept-Encoding" : {
+        "equalTo" : "gzip,deflate"
+      },
+      "Authorization" : {
+        "equalTo" : "Basic YWRtaW46YWRtaW4="
+      }
+    }
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-api-json-frO2i.json",
+    "headers" : {
+      "Date" : "Fri, 13 May 2016 18:17:26 GMT",
+      "X-Content-Type-Options" : "nosniff",
+      "X-Jenkins" : "2.2",
+      "X-Jenkins-Session" : "a6be075a",
+      "Content-Type" : "application/json;charset=UTF-8",
+      "Content-Encoding" : "gzip",
+      "Content-Length" : "851",
+      "Server" : "Jetty(9.2.z-SNAPSHOT)"
+    }
+  }
+}

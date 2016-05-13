@@ -78,18 +78,17 @@ public class JenkinsTest extends WingsBaseTest {
   public void shouldGetLastNBuildDetailsForGitJobs() throws URISyntaxException, IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
     assertThat(buildDetails)
-        .hasSize(5)
+        .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(59, "1bfdd117"), tuple(58, "1bfdd117"), tuple(57, "1bfdd117"), tuple(56, "1bfdd117"),
-            tuple(55, "1bfdd117"));
+        .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
   }
 
   @Test
   public void shouldGetLastNBuildDetailsForSvnJobs() throws URISyntaxException, IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);
     assertThat(buildDetails)
-        .hasSize(3)
+        .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
-        .containsExactly(tuple(58, "39"), tuple(57, "39"), tuple(56, "39"));
+        .containsExactly(tuple(65, "39"), tuple(64, "39"), tuple(63, "39"), tuple(62, "39"));
   }
 }

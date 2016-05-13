@@ -24,10 +24,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,8 +31,7 @@ import java.util.OptionalInt;
 import java.util.regex.Pattern;
 
 public class JenkinsImpl implements Jenkins {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-  private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
 
   private JenkinsServer jenkinsServer;
 
@@ -48,7 +43,7 @@ public class JenkinsImpl implements Jenkins {
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
       @Assisted(value = "password") String password) throws URISyntaxException {
-    jenkinsServer = new JenkinsServer(new JenkinsHttpClient(new URI(jenkinsUrl), username, password));
+    jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, password);
   }
 
   @Override
