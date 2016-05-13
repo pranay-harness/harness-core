@@ -96,15 +96,16 @@ public class ServiceTemplateServiceTest {
 
   @Test
   public void shouldUpdateHostAndTags() {
-    when(tagService.saveTag(any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
+    when(tagService.saveTag(eq("PARENT_TAG"), any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
     when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
     when(wingsPersistence.get(Tag.class, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
     when(wingsPersistence.get(Host.class, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
 
     ServiceTemplate template = builder.build();
-    Tag tag = tagService.saveTag(any(Tag.class));
+    Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());
     Host host = hostService.save(any(Host.class));
-    ServiceTemplate savedTemplate = templateService.updateHostAndTags(
+
+    templateService.updateHostAndTags(
         "APP_ID", "ENV_ID", template.getUuid(), asList(tag.getUuid()), asList(host.getUuid()));
 
     verify(wingsPersistence)

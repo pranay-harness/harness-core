@@ -33,7 +33,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.beans.TagType;
+import software.wings.beans.Tag;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
@@ -60,12 +60,12 @@ import javax.ws.rs.core.Response;
 
 @Integration
 public class DataGenUtil extends WingsBaseTest {
-  private static final int NUM_APPS = 100; /* Max 1000 */
-  private static final int NUM_APP_CONTAINER_PER_APP = 100; /* Max 1000 */
+  private static final int NUM_APPS = 10; /* Max 1000 */
+  private static final int NUM_APP_CONTAINER_PER_APP = 10; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 5; /* Max 10   */
-  private static final int NUM_HOSTS_PER_INFRA = 1000; /* No limit */
+  private static final int NUM_HOSTS_PER_INFRA = 100; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private Client client;
@@ -239,12 +239,12 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void createAndTagHosts(Environment environment) {
-    RestResponse<PageResponse<TagType>> response =
+    RestResponse<PageResponse<Tag>> response =
         client
             .target(format("http://localhost:9090/wings/tag-types?appId=%s&envId=%s", environment.getAppId(),
                 environment.getUuid()))
             .request()
-            .get(new GenericType<RestResponse<PageResponse<TagType>>>() {});
+            .get(new GenericType<RestResponse<PageResponse<Tag>>>() {});
     log().info(response.getResource().getResponse().toString());
   }
 

@@ -82,7 +82,7 @@ public class ServiceTemplateResource {
   }
 
   @PUT
-  @Path("{templateId}/map_hosts")
+  @Path("{templateId}/map-hosts")
   public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, @FormDataParam("tags") List<String> tagIds,
       @FormDataParam("hosts") List<String> hostIds) {

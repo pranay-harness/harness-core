@@ -161,18 +161,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {
     List<Tag> leafTagNodes = new ArrayList<>();
-    List<Tag> rootTags = tagService.getRootConfigTags(serviceTemplate.getEnvId());
-    for (Tag tag : rootTags) {
-      tag.getConfigFiles().addAll(configService.getConfigFilesForEntity(serviceTemplate.getUuid(), tag.getUuid()));
+    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
+    if (rootTag == null) {
+      return leafTagNodes;
     }
+    rootTag.getConfigFiles().addAll(
+        configService.getConfigFilesForEntity(serviceTemplate.getUuid(), rootTag.getUuid()));
 
     Queue<Tag> queue = new ArrayQueue<>();
-    queue.addAll(rootTags);
+    queue.add(rootTag);
 
     while (!queue.isEmpty()) {
       Tag root = queue.poll();
       leafTagNodes.add(root);
-      for (Tag child : root.getLinkedTags()) {
+      for (Tag child : root.getChildren()) {
         child.getConfigFiles().addAll(
             configService.getConfigFilesForEntity(serviceTemplate.getUuid(), child.getUuid()));
         child.setConfigFiles(overrideConfigFiles(root.getConfigFiles(), child.getConfigFiles()));
