@@ -28,4 +28,6 @@ public interface ServiceTemplateService {
   void delete(String appId, String envId, String serviceTemplateId);
 
   ServiceTemplate get(String appId, String envId, String serviceTemplateId);
+
+  ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds);
 }

@@ -87,6 +87,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
+  public ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds) {
+    List<Host> hosts = new ArrayList<>();
+    if (hostIds != null) {
+      for (String hostId : hostIds) {
+        hosts.add(wingsPersistence.get(Host.class, hostId));
+      }
+    }
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
   public Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
     if (serviceTemplate == null) {
