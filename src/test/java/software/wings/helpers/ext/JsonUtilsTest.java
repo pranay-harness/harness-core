@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.JenkinsArtifactSource;
-import software.wings.beans.Release;
 import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
-public class JsonTest extends WingsBaseTest {
+public class JsonUtilsTest extends WingsBaseTest {
   @Inject private JsonUtils jsonUtils;
 
   @Test
