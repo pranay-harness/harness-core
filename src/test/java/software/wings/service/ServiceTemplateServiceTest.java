@@ -98,12 +98,12 @@ public class ServiceTemplateServiceTest {
     ServiceTemplate template = builder.build();
     Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());
     Host host = hostService.save(any(Host.class));
-    templateService.updateHostAndTags(
-        "APP_ID", "ENV_ID", template.getUuid(), asList(tag.getUuid()), asList(host.getUuid()));
-
+    templateService.updateHosts("APP_ID", template.getUuid(), asList(host.getUuid()));
+    templateService.updateTags("APP_ID", template.getUuid(), asList(tag.getUuid()));
     verify(wingsPersistence)
-        .updateFields(
-            ServiceTemplate.class, template.getUuid(), ImmutableMap.of("hosts", asList(host), "tags", asList(tag)));
+        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
+    verify(wingsPersistence)
+        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
   }
 
   @Test

@@ -139,8 +139,8 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
-    templateService.updateHostAndTags(
-        app.getUuid(), environment.getUuid(), template.getUuid(), selectedTags, selectedHosts);
+    templateService.updateHosts(app.getUuid(), template.getUuid(), selectedHosts);
+    templateService.updateTags(app.getUuid(), template.getUuid(), selectedTags);
   }
 
   @Test
