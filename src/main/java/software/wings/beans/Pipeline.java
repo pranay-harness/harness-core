@@ -12,29 +12,11 @@ import java.util.List;
  * @author Rishi
  */
 @Entity(value = "pipelines", noClassnameStored = true)
-public class Pipeline extends Base {
-  private String name;
-  private String description;
+public class Pipeline extends Workflow {
   private List<String> services;
   private String cronSchedule;
 
   @Transient private Graph Graph;
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public void setDescription(String description) {
-    this.description = description;
-  }
 
   public List<String> getServices() {
     return services;
@@ -52,10 +34,12 @@ public class Pipeline extends Base {
     this.cronSchedule = cronSchedule;
   }
 
+  @Override
   public Graph getGraph() {
     return Graph;
   }
 
+  @Override
   public void setGraph(Graph graph) {
     Graph = graph;
   }

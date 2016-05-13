@@ -36,8 +36,8 @@ public class PipelineResource {
   @Produces("application/json")
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
-    pageRequest.addFilter("application", appId, SearchFilter.Operator.EQ);
-    return new RestResponse<PageResponse<Pipeline>>(workflowService.listPipeline(pageRequest));
+    pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
+    return new RestResponse<PageResponse<Pipeline>>(workflowService.listPipelines(pageRequest));
   }
 
   @GET
@@ -59,7 +59,7 @@ public class PipelineResource {
   @Produces("application/json")
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
-    return new RestResponse<Pipeline>(workflowService.createPipeline(pipeline));
+    return new RestResponse<Pipeline>(workflowService.createWorkflow(Pipeline.class, pipeline));
   }
 
   @PUT
@@ -68,6 +68,6 @@ public class PipelineResource {
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
-    return new RestResponse<Pipeline>(workflowService.updatePipeline(pipeline));
+    return new RestResponse<Pipeline>(workflowService.updateWorkflow(Pipeline.class, pipeline));
   }
 }

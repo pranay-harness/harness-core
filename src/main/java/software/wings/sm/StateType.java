@@ -14,6 +14,8 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.StartState;
+import software.wings.sm.states.StopState;
 import software.wings.sm.states.WaitState;
 import software.wings.utils.JsonUtils;
 
@@ -116,6 +118,13 @@ public enum StateType implements StateTypeDescriptor {
       }
       case ENV_STATE: {
         return new EnvState(id);
+      }
+
+      case STOP: {
+        return new StopState(id);
+      }
+      case START: {
+        return new StartState(id);
       }
       default: { throw new WingsException("State implementation is not supported for " + id); }
     }
