@@ -4,11 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Graph;
+import software.wings.beans.Graph.Link;
+import software.wings.beans.Graph.Node;
+import software.wings.beans.PageRequest;
+import software.wings.beans.PageResponse;
+import software.wings.beans.Pipeline;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
+import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
@@ -199,5 +208,162 @@ public class WorkflowServiceTest extends WingsBaseTest {
     workflowService.trigger(smId);
 
     Thread.sleep(10000);
+  }
+
+  @Test
+  public void shouldCreatePipelineWithGraph() {
+    createPipeline();
+  }
+
+  @Test
+  public void shouldUpdatePipelineWithGraph() {
+    Pipeline pipeline = createPipeline();
+    Graph graph = pipeline.getGraph();
+
+    Node node = new Node();
+    node.setId("n5");
+    node.setName("PROD");
+    node.setX(350);
+    node.setY(50);
+    node.getProperties().put("envId", "34567");
+    node.setType(StateType.ENV_STATE.name());
+    graph.getNodes().add(node);
+
+    Link link = new Link();
+    link.setId("l3");
+    link.setFrom("n4");
+    link.setTo("n5");
+    link.setType("success");
+    graph.getLinks().add(link);
+
+    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
+    assertThat(updatedPipeline).isNotNull();
+    assertThat(updatedPipeline.getUuid()).isNotNull();
+    assertThat(updatedPipeline.getUuid()).isEqualTo(pipeline.getUuid());
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValue(pipeline.getUuid());
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+    PageResponse<StateMachine> res = workflowService.list(req);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
+
+    StateMachine sm = workflowService.readLatest(updatedPipeline.getUuid(), null);
+    assertThat(sm.getGraph()).isNotNull();
+    assertThat(sm.getGraph()).isEqualTo(graph);
+  }
+
+  private Pipeline createPipeline() {
+    Pipeline pipeline = new Pipeline();
+    pipeline.setName("pipeline1");
+    pipeline.setDescription("Sample Pipeline");
+
+    Graph graph = new Graph();
+    List<Node> nodes = new ArrayList<>();
+
+    Node node = new Node();
+    node.setId("n0");
+    node.setName("ORIGIN");
+    node.setX(200);
+    node.setY(50);
+    node.setType(StateType.BUILD.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n1");
+    node.setName("BUILD");
+    node.setX(200);
+    node.setY(50);
+    node.setType(StateType.BUILD.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n2");
+    node.setName("IT");
+    node.setX(250);
+    node.setY(50);
+    node.getProperties().put("envId", "12345");
+    node.setType(StateType.ENV_STATE.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n3");
+    node.setName("QA");
+    node.setX(300);
+    node.setY(50);
+    node.getProperties().put("envId", "23456");
+    node.setType(StateType.ENV_STATE.name());
+    nodes.add(node);
+
+    node = new Node();
+    node.setId("n4");
+    node.setName("UAT");
+    node.setX(350);
+    node.setY(50);
+    node.getProperties().put("envId", "34567");
+    node.setType(StateType.ENV_STATE.name());
+    nodes.add(node);
+
+    graph.setNodes(nodes);
+
+    List<Link> links = new ArrayList<>();
+
+    Link link = new Link();
+    link.setId("l0");
+    link.setFrom("n0");
+    link.setTo("n1");
+    link.setType("success");
+    links.add(link);
+
+    link = new Link();
+    link.setId("l1");
+    link.setFrom("n1");
+    link.setTo("n2");
+    link.setType("success");
+    links.add(link);
+
+    link = new Link();
+    link.setId("l2");
+    link.setFrom("n2");
+    link.setTo("n3");
+    link.setType("success");
+    links.add(link);
+
+    link = new Link();
+    link.setId("l3");
+    link.setFrom("n3");
+    link.setTo("n4");
+    link.setType("success");
+    links.add(link);
+
+    graph.setLinks(links);
+
+    pipeline.setGraph(graph);
+
+    pipeline = workflowService.createPipeline(pipeline);
+    assertThat(pipeline).isNotNull();
+    assertThat(pipeline.getUuid()).isNotNull();
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValue(pipeline.getUuid());
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+    PageResponse<StateMachine> res = workflowService.list(req);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(1);
+    assertThat(res.get(0)).isNotNull();
+
+    StateMachine sm = res.get(0);
+    assertThat(sm.getGraph()).isNotNull();
+    assertThat(sm.getGraph()).isEqualTo(graph);
+
+    return pipeline;
   }
 }

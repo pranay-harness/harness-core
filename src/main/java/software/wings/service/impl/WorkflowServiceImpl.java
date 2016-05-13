@@ -6,6 +6,7 @@ package software.wings.service.impl;
 
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
@@ -13,6 +14,11 @@ import software.wings.beans.Graph;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder;
+import software.wings.beans.SortOrder.OrderType;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowService;
@@ -79,6 +85,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
+  public PageResponse<StateMachine> list(PageRequest<StateMachine> req) {
+    return wingsPersistence.query(StateMachine.class, req);
+  }
+
+  @Override
   public void trigger(String smId) {
     stateMachineExecutor.execute(smId);
   }
@@ -127,15 +138,19 @@ public class WorkflowServiceImpl implements WorkflowService {
   public Pipeline createPipeline(Pipeline pipeline) {
     Graph graph = pipeline.getGraph();
     pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    StateMachine stateMachine = new StateMachine(graph, stencilMap());
-    pipeline.setGraph(graph);
+    StateMachine stateMachine = new StateMachine(pipeline.getUuid(), graph, stencilMap());
+    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    pipeline.setGraph(stateMachine.getGraph());
     return pipeline;
   }
 
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
-    // create a new version of state machine
-    return null;
+    Graph graph = pipeline.getGraph();
+    StateMachine stateMachine = new StateMachine(pipeline.getUuid(), graph, stencilMap());
+    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+    pipeline.setGraph(stateMachine.getGraph());
+    return pipeline;
   }
 
   @Override
@@ -144,4 +159,40 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)
+   */
+  @Override
+  public StateMachine readLatest(String originId, String name) {
+    if (StringUtils.isBlank(name)) {
+      name = Constants.DEFAULT_WORKFLOW_NAME;
+    }
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValue(originId);
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("name");
+    filter.setFieldValue(name);
+    filter.setOp(Operator.EQ);
+    req.getFilters().add(filter);
+
+    SortOrder order = new SortOrder();
+    order.setFieldName("lastUpdatedAt");
+    order.setOrderType(OrderType.DESC);
+    req.getOrders().add(order);
+
+    req.setLimit("1");
+
+    PageResponse<StateMachine> res = list(req);
+    if (res == null || res.size() == 0) {
+      return null;
+    }
+    return res.get(0);
+  }
 }

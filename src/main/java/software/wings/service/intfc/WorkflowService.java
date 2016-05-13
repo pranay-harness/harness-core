@@ -28,6 +28,10 @@ public interface WorkflowService {
 
   public StateMachine read(String smId);
 
+  public StateMachine readLatest(String originId, String name);
+
+  public PageResponse<StateMachine> list(PageRequest<StateMachine> req);
+
   public void trigger(String smId);
 
   //  public void trigger(String smId, Map<String, Serializable> arguments);

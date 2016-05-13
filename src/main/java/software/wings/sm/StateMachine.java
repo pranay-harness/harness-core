@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import org.modelmapper.ModelMapper;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
@@ -12,7 +13,10 @@ import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
+import software.wings.utils.CollectionUtils;
 
+import java.beans.IntrospectionException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,13 +32,11 @@ import java.util.Set;
 public class StateMachine extends Base {
   @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
 
-  private String originId;
+  @Indexed private String originId;
 
-  private String name;
+  @Indexed private String name;
 
   private Graph graph;
-
-  private int version;
 
   @Serialized private List<State> states;
 
@@ -48,20 +50,23 @@ public class StateMachine extends Base {
 
   public StateMachine() {}
 
-  public StateMachine(Graph graph, Map<String, StateTypeDescriptor> map) {
+  public StateMachine(String originId, Graph graph, Map<String, StateTypeDescriptor> map) {
+    this.originId = originId;
     this.graph = graph;
     this.name = graph.getGraphName();
     transform(map);
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
-    states = new ArrayList<>();
     for (Node node : graph.getNodes()) {
+      if (Graph.ORIGIN_STATE_NAME.equals(node.getName())) {
+        continue;
+      }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new WingsException("Unknown stencil type");
       }
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
-      State state = stateTypeDesc.newInstance(node.getId());
+      State state = stateTypeDesc.newInstance(node.getName());
 
       Map<String, Object> properties = node.getProperties();
       // populate properties
@@ -70,20 +75,29 @@ public class StateMachine extends Base {
       addState(state);
     }
 
-    Map<String, State> statesMap = getStatesMap();
-    if (graph.getLinks() != null) {
-      for (Link link : graph.getLinks()) {
-        State stateFrom = statesMap.get(link.getFrom());
-        State stateTo = statesMap.get(link.getTo());
-        TransitionType transitionType = TransitionType.valueOf(link.getType().toUpperCase());
-        if (transitionType == TransitionType.FORK) {
-          ((ForkState) statesMap.get(stateFrom.getName())).addForkState(stateTo);
-        } else {
-          addTransition(new Transition(stateFrom, transitionType, stateTo));
+    try {
+      Map<String, Node> linkIdMap = CollectionUtils.hierarchyOnUniqueFieldValue(graph.getNodes(), "id");
+      Map<String, State> statesMap = getStatesMap();
+      if (graph.getLinks() != null) {
+        for (Link link : graph.getLinks()) {
+          if (Graph.ORIGIN_STATE_NAME.equals(linkIdMap.get(link.getFrom()).getName())) {
+            setInitialStateName(linkIdMap.get(link.getTo()).getName());
+            continue;
+          }
+          State stateFrom = statesMap.get(linkIdMap.get(link.getFrom()).getName());
+          State stateTo = statesMap.get(linkIdMap.get(link.getTo()).getName());
+          TransitionType transitionType = TransitionType.valueOf(link.getType().toUpperCase());
+          if (transitionType == TransitionType.FORK) {
+            ((ForkState) statesMap.get(stateFrom.getName())).addForkState(stateTo);
+          } else {
+            addTransition(new Transition(stateFrom, transitionType, stateTo));
+          }
         }
       }
+      validate();
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | IntrospectionException e) {
+      throw new WingsException(e);
     }
-    validate();
   }
 
   public String getInitialStateName() {
@@ -368,14 +382,6 @@ public class StateMachine extends Base {
 
   public void setGraph(Graph graph) {
     this.graph = graph;
-  }
-
-  public int getVersion() {
-    return version;
-  }
-
-  public void setVersion(int version) {
-    this.version = version;
   }
 
   @Override

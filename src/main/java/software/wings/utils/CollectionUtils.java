@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import software.wings.exception.WingsException;
+
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -24,6 +26,23 @@ public class CollectionUtils {
       }
     }
     return null;
+  }
+
+  /**
+   * This method is used to create hierarchy by specific field value from the list of objects.
+   */
+  public static <T, F> Map<F, T> hierarchyOnUniqueFieldValue(List<T> list, String fieldName)
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    Map<F, List<T>> map = hierarchy(list, fieldName);
+    Map<F, T> mapByUniqueValue = new HashMap<>();
+    for (F key : map.keySet()) {
+      List<T> listT = map.get(key);
+      if (listT == null || listT.size() != 1) {
+        throw new WingsException("Non-unique fieldValue: field=" + key + ", values=" + listT);
+      }
+      mapByUniqueValue.put(key, listT.get(0));
+    }
+    return mapByUniqueValue;
   }
 
   /**

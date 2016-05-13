@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -57,6 +58,7 @@ public class JsonUtils {
   public JsonUtils() {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.setSerializationInclusion(Include.NON_NULL);
   }
 
   public DocumentContext parseJson(String json) {
