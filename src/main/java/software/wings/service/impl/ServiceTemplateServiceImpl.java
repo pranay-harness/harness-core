@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.SearchFilter.Operator.IN;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -67,26 +68,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public ServiceTemplate updateHostAndTags(
-      String appId, String envId, String serviceTemplateId, List<String> tagIds, List<String> hostIds) {
-    List<Tag> tags = new ArrayList<>();
-    if (tagIds != null) {
-      for (String tagId : tagIds) {
-        tags.add(wingsPersistence.get(Tag.class, tagId));
-      }
-    }
-    List<Host> hosts = new ArrayList<>();
-    if (hostIds != null) {
-      for (String hostId : hostIds) {
-        hosts.add(wingsPersistence.get(Host.class, hostId));
-      }
-    }
-    wingsPersistence.updateFields(
-        ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts, "tags", tags));
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
-  }
-
-  @Override
   public ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds) {
     List<Host> hosts = new ArrayList<>();
     if (hostIds != null) {
@@ -96,6 +77,26 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
+  public ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds) {
+    List<Tag> tags = new ArrayList<>();
+    if (tagIds != null) {
+      for (String tagId : tagIds) {
+        tags.add(wingsPersistence.get(Tag.class, tagId));
+      }
+    }
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  @Override
+  public PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest) {
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
+    List<Tag> tags = serviceTemplate.getTags();
+    pageRequest.addFilter("tags", tags, IN);
+    return wingsPersistence.query(Host.class, pageRequest);
   }
 
   @Override

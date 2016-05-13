@@ -7,11 +7,13 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Host;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
@@ -38,6 +40,7 @@ import javax.ws.rs.QueryParam;
 @Consumes("application/json")
 public class ServiceTemplateResource {
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject private HostService hostService;
 
   @GET
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
@@ -87,10 +90,27 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.updateHosts(appId, serviceTemplateId, hostIds));
   }
 
+  @PUT
+  @Path("{templateId}/map-tags")
+  public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
+      @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
+    return new RestResponse<>(serviceTemplateService.updateTags(appId, serviceTemplateId, tagIds));
+  }
+
   @GET
   @Path("{templateId}/host-configs")
   public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
     return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
+  }
+
+  @GET
+  @Path("{templateId}/tagged-hosts")
+  public RestResponse<PageResponse<Host>> hostConfigs(@QueryParam("envId") String envId,
+      @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
+      @BeanParam PageRequest<Host> pageRequest) {
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("infraId", hostService.getInfraId(envId, appId), EQ);
+    return new RestResponse<>(serviceTemplateService.getTaggedHosts(templateId, pageRequest));
   }
 }

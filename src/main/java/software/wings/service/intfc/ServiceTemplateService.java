@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Host;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.ServiceTemplate;
@@ -18,9 +19,6 @@ public interface ServiceTemplateService {
 
   ServiceTemplate update(ServiceTemplate serviceTemplate);
 
-  ServiceTemplate updateHostAndTags(
-      String appId, String envId, String serviceTemplateId, List<String> tagIds, List<String> hostIds);
-
   List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles);
 
   Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId);
@@ -30,4 +28,8 @@ public interface ServiceTemplateService {
   ServiceTemplate get(String appId, String envId, String serviceTemplateId);
 
   ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds);
+
+  ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds);
+
+  PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest);
 }
