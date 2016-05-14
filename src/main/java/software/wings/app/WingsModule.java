@@ -43,6 +43,7 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NodeSetExecutorServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
@@ -64,6 +65,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NodeSetExecutorService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
@@ -188,5 +190,6 @@ public class WingsModule extends AbstractModule {
         .toInstance(new MongoQueueImpl<>(CollectEvent.class, primaryDatastore));
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
+    bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
   }
 }

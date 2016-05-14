@@ -18,11 +18,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 /**
- *
- */
-
-/**
- * @author Rishi
+ * @author Rishi.
  */
 public class YamlUtilsTest extends WingsBaseTest {
   @Inject private YamlUtils yamlUtils;
@@ -37,7 +33,7 @@ public class YamlUtilsTest extends WingsBaseTest {
 
     assertThat(catalogs).isNotNull();
 
-    List<CatalogItem> cardViewSortBy = catalogs.get(CatalogNames.CARD_VIEW_SORT_BY);
+    List<CatalogItem> cardViewSortBy = catalogs.get("CARD_VIEW_SORT_BY");
     assertThat(cardViewSortBy).isNotNull();
     assertThat(cardViewSortBy.size()).isEqualTo(3);
   }

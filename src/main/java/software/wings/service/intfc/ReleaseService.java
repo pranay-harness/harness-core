@@ -16,6 +16,8 @@ import javax.validation.Valid;
 public interface ReleaseService {
   PageResponse<Release> list(PageRequest<Release> req);
 
+  Release get(String id, String appId);
+
   Release create(@Valid Release release);
 
   Release update(Release release);

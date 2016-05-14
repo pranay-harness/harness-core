@@ -34,6 +34,11 @@ public class ReleaseServiceImpl implements ReleaseService {
   }
 
   @Override
+  public Release get(String id, String appId) {
+    return wingsPersistence.get(Release.class, appId, id);
+  }
+
+  @Override
   @ValidationGroups(Create.class)
   public Release create(@Valid Release release) {
     return wingsPersistence.saveAndGet(Release.class, release);
@@ -42,7 +47,11 @@ public class ReleaseServiceImpl implements ReleaseService {
   @Override
   @ValidationGroups(Update.class)
   public Release update(Release release) {
-    Query<Release> query = wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(release.getUuid());
+    Query<Release> query = wingsPersistence.createQuery(Release.class)
+                               .field(ID_KEY)
+                               .equal(release.getUuid())
+                               .field("appId")
+                               .equal(release.getAppId());
 
     UpdateOperations<Release> updateOperations = wingsPersistence.createUpdateOperations(Release.class)
                                                      .set("releaseName", release.getReleaseName())
@@ -50,7 +59,7 @@ public class ReleaseServiceImpl implements ReleaseService {
                                                      .set("targetDate", release.getTargetDate());
 
     wingsPersistence.update(query, updateOperations);
-    return wingsPersistence.get(Release.class, release.getUuid());
+    return wingsPersistence.get(Release.class, release.getAppId(), release.getUuid());
   }
 
   @Override

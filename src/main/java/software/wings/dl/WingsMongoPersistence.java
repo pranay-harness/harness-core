@@ -111,7 +111,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    return primaryDatastore.get(cls, id);
+    return createQuery(cls).field("appId").equal(object.getAppId()).field("uuid").equal(id).get();
   }
 
   @Override
