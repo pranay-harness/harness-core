@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -32,6 +32,7 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.Service;
 import software.wings.helpers.ext.Jenkins;
 import software.wings.helpers.ext.JenkinsFactory;
+import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -80,6 +81,9 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
 
   @InjectMocks @Inject private JenkinsArtifactCollectorServiceImpl jenkinsArtifactCollectorService;
 
+  /**
+   * setup all mocks for test.
+   */
   @Before
   public void setupMocks() throws IOException, URISyntaxException {
     when(jenkinsFactory.create(anyString(), anyString(), anyString())).thenReturn(jenkins);

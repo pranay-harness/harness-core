@@ -7,8 +7,10 @@ package software.wings.resources;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,23 +23,39 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * @author Rishi
+ * @author Rishi.
  */
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {
   private WorkflowService workflowService;
   private CatalogService catalogService;
+  private JenkinsBuildService jenkinsBuildService;
 
+  /**
+   * Creates a new calalog resource.
+   * @param catalogService catalogService object.
+   * @param workflowService workflowService object.
+   * @param jenkinsBuildService JenkinsBuildService object.
+   */
   @Inject
-  public CatalogResource(CatalogService catalogService, WorkflowService workflowService) {
+  public CatalogResource(
+      CatalogService catalogService, WorkflowService workflowService, JenkinsBuildService jenkinsBuildService) {
     this.catalogService = catalogService;
     this.workflowService = workflowService;
+    this.jenkinsBuildService = jenkinsBuildService;
   }
 
+  /**
+   * returns catalog items.
+   * @param catalogTypes types of catalog items.
+   * @param uriInfo uriInfo from jersey.
+   * @return RestReponse containing map of catalog objects.
+   * @throws IOException exception.
+   */
   @GET
   public RestResponse<Map<String, Object>> list(
-      @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) {
+      @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
@@ -48,6 +66,10 @@ public class CatalogResource {
         switch (catalogType) {
           case CatalogNames.ORCHESTRATION_STENCILS: {
             catalogs.put(catalogType, workflowService.stencils());
+            break;
+          }
+          case CatalogNames.JENKINS_BUILD: {
+            catalogs.put(catalogType, jenkinsBuildService.getBuilds(uriInfo.getQueryParameters()));
             break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
