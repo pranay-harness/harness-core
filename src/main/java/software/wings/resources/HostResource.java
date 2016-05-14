@@ -94,14 +94,6 @@ public class HostResource {
     return new RestResponse();
   }
 
-  @PUT
-  @Path("{hostId}/tags/{tagId}")
-  public RestResponse<Host> tag(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
-      @QueryParam("infraId") String infraId, @PathParam("hostId") String hostId, @PathParam("tagId") String tagId) {
-    infraId = hostService.getInfraId(envId, appId);
-    return new RestResponse<>(hostService.tag(appId, infraId, hostId, tagId));
-  }
-
   @POST
   @Path("import/{fileType}")
   @Consumes(MULTIPART_FORM_DATA)

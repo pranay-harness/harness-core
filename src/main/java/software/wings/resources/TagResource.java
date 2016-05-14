@@ -13,6 +13,7 @@ import software.wings.beans.Tag;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TagService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -47,7 +48,7 @@ public class TagResource {
   }
 
   @POST
-  public RestResponse<Tag> saveTag(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+  public RestResponse<Tag> save(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @QueryParam("parentTagId") String parentTagId, Tag tag) {
     tag.setEnvId(envId);
     tag.setAppId(appId);
@@ -58,22 +59,22 @@ public class TagResource {
   }
 
   @GET
-  @Path("tags/{tagId}")
-  public RestResponse<Tag> getTag(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
+  @Path("{tagId}")
+  public RestResponse<Tag> get(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
     return new RestResponse<>(tagService.getTag(appId, tagId));
   }
 
   @PUT
-  @Path("tags/{tagId}")
-  public RestResponse<Tag> updateTag(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, Tag tag) {
+  @Path("{tagId}")
+  public RestResponse<Tag> update(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, Tag tag) {
     tag.setAppId(appId);
     tag.setUuid(tagId);
     return new RestResponse<>(tagService.updateTag(tag));
   }
 
   @DELETE
-  @Path("tags/{tagId}")
-  public RestResponse deleteTag(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
+  @Path("{tagId}")
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
     tagService.deleteTag(appId, tagId);
     return new RestResponse();
   }
@@ -83,5 +84,21 @@ public class TagResource {
   public RestResponse<Tag> linkTags(
       @QueryParam("appId") String appId, @PathParam("tagId") String tagId, @PathParam("childTag") String childTagId) {
     return new RestResponse<>(tagService.linkTags(appId, tagId, childTagId));
+  }
+
+  @POST
+  @Path("{tagId}/tag-hosts")
+  public RestResponse tagHosts(
+      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, List<String> hostIds) {
+    tagService.tagHosts(appId, tagId, hostIds);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{tagId}/untag-hosts")
+  public RestResponse untagHosts(
+      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, List<String> hostIds) {
+    tagService.untagHosts(appId, tagId, hostIds);
+    return new RestResponse();
   }
 }

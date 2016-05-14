@@ -4,6 +4,8 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Tag;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 4/25/16.
  */
@@ -23,4 +25,8 @@ public interface TagService {
   Tag getRootConfigTag(String appId, String envId);
 
   Tag createAndLinkTag(String parentTagId, Tag tag);
+
+  void tagHosts(String appId, String tagId, List<String> hostIds);
+
+  void untagHosts(String appId, String tagId, List<String> hostIds);
 }

@@ -60,12 +60,12 @@ import javax.ws.rs.core.Response;
 
 @Integration
 public class DataGenUtil extends WingsBaseTest {
-  private static final int NUM_APPS = 10; /* Max 1000 */
+  private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 10; /* Max 1000 */
-  private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 5; /* Max 10   */
-  private static final int NUM_HOSTS_PER_INFRA = 100; /* No limit */
+  private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();

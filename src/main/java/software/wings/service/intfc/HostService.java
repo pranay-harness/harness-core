@@ -20,8 +20,6 @@ public interface HostService {
 
   public Host update(Host host);
 
-  Host tag(String appId, String infraId, String hostId, String tagId);
-
   Integer importHosts(String appId, String infraId, InputStream uploadedInputStream, HostFileType sourceType);
 
   File exportHosts(String appId, String infraId, HostFileType fileType);

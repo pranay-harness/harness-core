@@ -125,12 +125,10 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
     orOz2 = tagService.createAndLinkTag(or.getUuid(), aTag().withName("OR_OZ2").build());
 
     // Tag hosts
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(0).getUuid(), ncOz1.getUuid());
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(1).getUuid(), ncOz1.getUuid());
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(2).getUuid(), ncOz1.getUuid());
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(3).getUuid(), ncOz3.getUuid());
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(4).getUuid(), ncOz3.getUuid());
-    hostService.tag(app.getUuid(), infra.getUuid(), hosts.get(5).getUuid(), ncOz3.getUuid());
+    tagService.tagHosts(app.getUuid(), ncOz1.getUuid(),
+        Arrays.asList(hosts.get(0).getUuid(), hosts.get(1).getUuid(), hosts.get(2).getUuid()));
+    tagService.tagHosts(app.getUuid(), ncOz3.getUuid(),
+        Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
 
     template = templateService.save(
         aServiceTemplate().withService(service).withEnvId(environment.getUuid()).withName("Catalog:8080").build());
