@@ -10,10 +10,10 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Tag;
+import software.wings.beans.UuidList;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TagService;
 
-import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -88,17 +88,16 @@ public class TagResource {
 
   @POST
   @Path("{tagId}/tag-hosts")
-  public RestResponse tagHosts(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, List<String> hostIds) {
-    tagService.tagHosts(appId, tagId, hostIds);
+  public RestResponse tagHosts(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
+    tagService.tagHosts(appId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
 
   @POST
   @Path("{tagId}/untag-hosts")
   public RestResponse untagHosts(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, List<String> hostIds) {
-    tagService.untagHosts(appId, tagId, hostIds);
+      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
+    tagService.untagHosts(appId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
 }
