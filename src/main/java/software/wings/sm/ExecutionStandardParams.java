@@ -3,8 +3,16 @@
  */
 package software.wings.sm;
 
+import software.wings.app.WingsBootstrap;
+import software.wings.beans.Application;
+import software.wings.beans.Artifact;
+import software.wings.beans.Environment;
+import software.wings.dl.WingsPersistence;
+
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,63 +20,119 @@ import java.util.Map;
  */
 public class ExecutionStandardParams implements Serializable {
   private static final long serialVersionUID = 247894502473046682L;
-  private String appName;
-  private String appDescription;
-  private String releaseName;
-  private String artifactDisplayName;
-  private String artifactRevision;
 
-  private String envName;
+  private String appId;
+  private String envId;
+  private List<String> artifactIds;
 
-  public String getAppName() {
-    return appName;
+  private String workflowExecutionId;
+  private StateMachineExecutionCallback callback;
+
+  private transient Application app;
+  private transient Environment env;
+  private transient List<Artifact> artifacts;
+
+  private Long startTs;
+  private Long endTs;
+
+  public String getAppId() {
+    return appId;
   }
 
-  public void setAppName(String appName) {
-    this.appName = appName;
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
-  public String getAppDescription() {
-    return appDescription;
+  public String getEnvId() {
+    return envId;
   }
 
-  public void setAppDescription(String appDescription) {
-    this.appDescription = appDescription;
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 
-  public String getReleaseName() {
-    return releaseName;
+  public List<String> getArtifactIds() {
+    return artifactIds;
   }
 
-  public void setReleaseName(String releaseName) {
-    this.releaseName = releaseName;
+  public void setArtifactIds(List<String> artifactIds) {
+    this.artifactIds = artifactIds;
   }
 
-  public String getArtifactDisplayName() {
-    return artifactDisplayName;
+  public Application getApp() {
+    if (app == null && appId != null) {
+      app = WingsBootstrap.lookup(WingsPersistence.class).get(Application.class, appId);
+    }
+    return app;
   }
 
-  public void setArtifactDisplayName(String artifactDisplayName) {
-    this.artifactDisplayName = artifactDisplayName;
+  public void setApp(Application app) {
+    this.app = app;
   }
 
-  public String getArtifactRevision() {
-    return artifactRevision;
+  public Environment getEnv() {
+    if (env == null && envId != null) {
+      env = WingsBootstrap.lookup(WingsPersistence.class).get(Environment.class, appId, envId);
+    }
+    return env;
   }
 
-  public void setArtifactRevision(String artifactRevision) {
-    this.artifactRevision = artifactRevision;
+  public void setEnv(Environment env) {
+    this.env = env;
   }
 
-  public String getEnvName() {
-    return envName;
+  public List<Artifact> getArtifacts() {
+    if (artifacts == null && artifactIds != null && artifactIds.size() > 0) {
+      List<Artifact> list = new ArrayList<>();
+      for (String artifactId : artifactIds) {
+        list.add(WingsBootstrap.lookup(WingsPersistence.class).get(Artifact.class, appId, artifactId));
+      }
+      artifacts = list;
+    }
+    return artifacts;
   }
 
-  public void setEnvName(String envName) {
-    this.envName = envName;
+  public void setArtifacts(List<Artifact> artifacts) {
+    this.artifacts = artifacts;
+  }
+
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
+  }
+
+  public void setWorkflowExecutionId(String workflowExecutionId) {
+    this.workflowExecutionId = workflowExecutionId;
+  }
+
+  public Long getStartTs() {
+    return startTs;
+  }
+
+  public void setStartTs(Long startTs) {
+    this.startTs = startTs;
+  }
+
+  public Long getEndTs() {
+    return endTs;
+  }
+
+  public void setEndTs(Long endTs) {
+    this.endTs = endTs;
+  }
+
+  public StateMachineExecutionCallback getCallback() {
+    return callback;
+  }
+
+  public void setCallback(StateMachineExecutionCallback callback) {
+    this.callback = callback;
   }
 
   public Map<String, Object> paramMap() {
-    return new HashMap<>();
+    Map<String, Object> map = new HashMap<>();
+    map.put("app", getApp());
+    map.put("env", getEnv());
+
+    return map;
   }
 }

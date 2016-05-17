@@ -13,7 +13,7 @@ import java.util.List;
 public class SearchFilter {
   private String fieldName;
   private Object fieldValue;
-  private List<String> fieldValues;
+  private List<Object> fieldValues;
   private Operator op;
 
   public String getFieldName() {
@@ -40,11 +40,11 @@ public class SearchFilter {
     this.op = op;
   }
 
-  public List<String> getFieldValues() {
+  public List<Object> getFieldValues() {
     return fieldValues;
   }
 
-  public void setFieldValues(List<String> fieldValues) {
+  public void setFieldValues(List<Object> fieldValues) {
     this.fieldValues = fieldValues;
   }
 

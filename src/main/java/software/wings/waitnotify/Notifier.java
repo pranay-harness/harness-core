@@ -14,7 +14,9 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 
+import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -52,7 +54,10 @@ public class Notifier implements Runnable {
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
       filter.setFieldName("correlationId");
-      filter.setFieldValues(correlationIds);
+
+      ArrayList<Object> fieldValues = new ArrayList();
+      fieldValues.addAll(correlationIds);
+      filter.setFieldValues(fieldValues);
       filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
       req.getFilters().add(filter);

@@ -14,7 +14,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.RepeatElementType;
 import software.wings.sm.Repeatable;
-import software.wings.sm.SmInstance;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateMachineExecutor;
@@ -79,16 +79,16 @@ public class RepeatState extends State {
       return executionResponse;
     }
 
-    SmInstance smInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
 
     if (repeatStrategy == RepeatStrategy.PARALLEL) {
       for (Repeatable repeatElement : repeatElements) {
         ExecutionContextImpl contextClone = SerializationUtils.clone(context);
         contextClone.pushContextElement(repeatElement);
-        String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getName();
-        stateMachineExecutor.execute(
-            smInstance.getStateMachineId(), repeatTransitionStateName, contextClone, smInstance.getUuid(), notifyId);
+        String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
+        stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName,
+            contextClone, stateExecutionInstance.getUuid(), notifyId);
         correlationIds.add(notifyId);
       }
     } else {
@@ -97,9 +97,9 @@ public class RepeatState extends State {
       Repeatable repeatElement = repeatElements.get(repeatElementIndex);
       ExecutionContextImpl contextClone = SerializationUtils.clone(context);
       contextClone.pushContextElement(repeatElement);
-      String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getName();
-      stateMachineExecutor.execute(
-          smInstance.getStateMachineId(), repeatTransitionStateName, contextClone, smInstance.getUuid(), notifyId);
+      String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
+      stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
+          stateExecutionInstance.getUuid(), notifyId);
       correlationIds.add(notifyId);
     }
 
@@ -142,10 +142,10 @@ public class RepeatState extends State {
       ExecutionContextImpl contextClone = SerializationUtils.clone(context);
       contextClone.pushContextElement(repeatElement);
 
-      SmInstance smInstance = context.getSmInstance();
-      String notifyId = smInstance.getUuid() + "-repeat-" + repeatElement.getName();
-      stateMachineExecutor.execute(
-          smInstance.getStateMachineId(), repeatTransitionStateName, contextClone, smInstance.getUuid(), notifyId);
+      StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+      String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
+      stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
+          stateExecutionInstance.getUuid(), notifyId);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(notifyId);
 

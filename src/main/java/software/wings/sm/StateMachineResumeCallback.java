@@ -11,18 +11,15 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class SmAsynchResumeCallback implements NotifyCallback {
+public class StateMachineResumeCallback implements NotifyCallback {
   private static final long serialVersionUID = 1L;
 
   private String smInstanceId;
 
-  public SmAsynchResumeCallback(String smInstanceId) {
+  public StateMachineResumeCallback(String smInstanceId) {
     this.smInstanceId = smInstanceId;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
-   */
   @Override
   public void notify(Map<String, ? extends Serializable> response) {
     WingsBootstrap.lookup(StateMachineExecutor.class).resume(smInstanceId, response);

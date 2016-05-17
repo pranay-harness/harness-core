@@ -13,9 +13,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**
@@ -49,7 +51,9 @@ public class NotifyResponseCleanupHandler implements Runnable {
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
       filter.setFieldName("correlationId");
-      filter.setFieldValues(correlationIds);
+      ArrayList<Object> fieldValues = new ArrayList();
+      fieldValues.addAll(correlationIds);
+      filter.setFieldValues(fieldValues);
       filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
       req.getFilters().add(filter);

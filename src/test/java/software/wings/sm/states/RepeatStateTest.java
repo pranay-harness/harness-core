@@ -23,7 +23,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.RepeatElementType;
 import software.wings.sm.Repeatable;
-import software.wings.sm.SmInstance;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStrategy;
@@ -133,10 +133,10 @@ public class RepeatStateTest extends WingsBaseTest {
 
   private ExecutionContextImpl prepareExecutionContext(String stateName, ExpressionEvaluator evaluator) {
     ExecutionContextImpl context = new ExecutionContextImpl();
-    SmInstance smInstance = new SmInstance();
-    smInstance.setUuid(UUIDGenerator.getUuid());
-    smInstance.setStateName(stateName);
-    context.setSmInstance(smInstance);
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
+    stateExecutionInstance.setStateName(stateName);
+    context.setSmInstance(stateExecutionInstance);
 
     context.setEvaluator(evaluator);
     return context;

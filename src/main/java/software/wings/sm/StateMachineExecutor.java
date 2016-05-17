@@ -12,10 +12,10 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 /**
@@ -30,33 +30,42 @@ public class StateMachineExecutor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  public void execute(StateMachine sm) {
-    execute(sm, new ArrayList<>());
+  public StateExecutionInstance execute(String smId, ExecutionStandardParams stdParams) {
+    return execute(wingsPersistence.get(StateMachine.class, smId), stdParams);
   }
 
-  /**
-   * Starts execution of a state machine with given arguments.
-   *
-   * @param sm        StateMachine to execute.
-   * @param arguments contextParams arguments.
-   */
-  public void execute(StateMachine sm, List<Repeatable> contextParams) {
+  public StateExecutionInstance execute(StateMachine sm, ExecutionStandardParams stdParams) {
+    return execute(sm, stdParams, null);
+  }
+
+  public StateExecutionInstance execute(
+      StateMachine sm, ExecutionStandardParams stdParams, List<Repeatable> contextParams) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
     }
 
+    if (stdParams == null) {
+      logger.error("stdParams passed for execution is null");
+      throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
+    }
+
     ExecutionContextImpl context = new ExecutionContextImpl();
+    if (stdParams.getStartTs() == null) {
+      stdParams.setStartTs(System.currentTimeMillis());
+    }
+    context.setStandardParams(stdParams);
+
     if (contextParams != null) {
       context.getContextElements().addAll(contextParams);
     }
     context.setStateMachineId(sm.getUuid());
 
-    execute(sm, sm.getInitialState().getName(), context);
+    return execute(sm, sm.getInitialState().getName(), context);
   }
 
-  public void execute(StateMachine sm, String stateName, ExecutionContextImpl context) {
-    execute(sm, stateName, context, null, null);
+  public StateExecutionInstance execute(StateMachine sm, String stateName, ExecutionContextImpl context) {
+    return execute(sm, stateName, context, null, null);
   }
 
   /**
@@ -68,57 +77,63 @@ public class StateMachineExecutor {
    * @param parentInstanceId parent instance for this execution.
    * @param notifyId         id to notify on.
    */
-  public void execute(
+  public StateExecutionInstance execute(
       StateMachine sm, String stateName, ExecutionContextImpl context, String parentInstanceId, String notifyId) {
-    SmInstance smInstance = new SmInstance();
-    smInstance.setContext(context);
-    smInstance.setStateName(stateName);
-    smInstance.setParentInstanceId(parentInstanceId);
-    smInstance.setStateMachineId(context.getStateMachineId());
-    smInstance.setNotifyId(notifyId);
-    smInstance = wingsPersistence.saveAndGet(SmInstance.class, smInstance);
-
-    executorService.submit(new SmExecutionDispatcher(sm, this, smInstance));
+    return execute(sm, stateName, context, parentInstanceId, notifyId, null);
   }
 
-  public void execute(String smId) {
-    execute(wingsPersistence.get(StateMachine.class, smId));
+  public StateExecutionInstance execute(StateMachine sm, String stateName, ExecutionContextImpl context,
+      String parentInstanceId, String notifyId, String prevInstanceId) {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(context.getStandardParams().getAppId());
+    stateExecutionInstance.setContext(context);
+    stateExecutionInstance.setStateName(stateName);
+    stateExecutionInstance.setParentInstanceId(parentInstanceId);
+    stateExecutionInstance.setStateMachineId(context.getStateMachineId());
+    stateExecutionInstance.setNotifyId(notifyId);
+    stateExecutionInstance.setPrevInstanceId(prevInstanceId);
+    stateExecutionInstance.setWorkflowExecutionId(context.getStandardParams().getWorkflowExecutionId());
+    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+
+    executorService.submit(new SmExecutionDispatcher(sm, this, stateExecutionInstance));
+    return stateExecutionInstance;
   }
 
-  public void execute(
+  public StateExecutionInstance execute(
       String smId, String stateName, ExecutionContextImpl context, String parentInstanceId, String notifyId) {
-    execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
+    return execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
   }
 
-  public void execute(SmInstance smInstance) {
-    StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
-    execute(sm, smInstance);
+  public StateExecutionInstance execute(StateExecutionInstance stateExecutionInstance) {
+    StateMachine sm = wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId());
+    return execute(sm, stateExecutionInstance);
   }
 
-  public void execute(StateMachine sm, SmInstance smInstance) {
-    NotifyCallback callback = new SmAsynchResumeCallback(smInstance.getUuid());
-    execute(sm, smInstance, waitNotifyEngine, callback);
+  public StateExecutionInstance execute(StateMachine sm, StateExecutionInstance stateExecutionInstance) {
+    NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getUuid());
+    return execute(sm, stateExecutionInstance, waitNotifyEngine, callback);
   }
 
   /**
    * Executes a state machine instance for a state machine.
    *
    * @param sm               StateMachine to execute.
-   * @param smInstance       stateMachine instance to execute.
+   * @param stateExecutionInstance       stateMachine instance to execute.
    * @param waitNotifyEngine waitNotify instance module.
    * @param callback         callback to execute on notify.
    */
-  public void execute(
-      StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine, NotifyCallback callback) {
-    updateStatus(smInstance, ExecutionStatus.RUNNING, "startTs");
+  public StateExecutionInstance execute(StateMachine sm, StateExecutionInstance stateExecutionInstance,
+      WaitNotifyEngine waitNotifyEngine, NotifyCallback callback) {
+    updateStatus(stateExecutionInstance, ExecutionStatus.RUNNING, "startTs");
 
     State currentState = null;
     try {
-      currentState = sm.getState(smInstance.getStateName());
-      ExecutionResponse executionResponse = currentState.execute(smInstance.getContext());
-      handleExecuteResponse(sm, smInstance, waitNotifyEngine, callback, currentState, executionResponse);
+      currentState = sm.getState(stateExecutionInstance.getStateName());
+      ExecutionResponse executionResponse = currentState.execute(stateExecutionInstance.getContext());
+      return handleExecuteResponse(
+          sm, stateExecutionInstance, waitNotifyEngine, callback, currentState, executionResponse);
     } catch (Exception exeception) {
-      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, exeception);
+      return handleExecuteResponseException(sm, stateExecutionInstance, waitNotifyEngine, currentState, exeception);
     }
   }
 
@@ -129,109 +144,136 @@ public class StateMachineExecutor {
    * @param response     map of responses from state machine instances this state was waiting on.
    */
   public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
-    SmInstance smInstance = wingsPersistence.get(SmInstance.class, smInstanceId);
-    StateMachine sm = wingsPersistence.get(StateMachine.class, smInstance.getStateMachineId());
-    State currentState = sm.getState(smInstance.getStateName());
+    StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, smInstanceId);
+    StateMachine sm = wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId());
+    State currentState = sm.getState(stateExecutionInstance.getStateName());
     try {
-      ExecutionResponse executionResponse = currentState.handleAsynchResponse(smInstance.getContext(), response);
-      NotifyCallback callback = new SmAsynchResumeCallback(smInstance.getUuid());
-      handleExecuteResponse(sm, smInstance, waitNotifyEngine, callback, currentState, executionResponse);
+      ExecutionResponse executionResponse =
+          currentState.handleAsynchResponse(stateExecutionInstance.getContext(), response);
+      NotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getUuid());
+      handleExecuteResponse(sm, stateExecutionInstance, waitNotifyEngine, callback, currentState, executionResponse);
     } catch (Exception execution) {
-      handleExecuteResponseException(sm, smInstance, waitNotifyEngine, currentState, execution);
+      handleExecuteResponseException(sm, stateExecutionInstance, waitNotifyEngine, currentState, execution);
     }
   }
 
-  private void handleExecuteResponseException(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
-      State currentState, Exception exception) {
+  private StateExecutionInstance handleExecuteResponseException(StateMachine sm,
+      StateExecutionInstance stateExecutionInstance, WaitNotifyEngine waitNotifyEngine, State currentState,
+      Exception exception) {
     logger.info("Error seen in the state execution  - currentState : {}, smInstanceId: {}", currentState,
-        smInstance.getUuid(), exception);
+        stateExecutionInstance.getUuid(), exception);
     try {
-      updateContext(smInstance, null);
-      failedTransition(waitNotifyEngine, sm, smInstance);
+      updateContext(stateExecutionInstance, null);
+      return failedTransition(waitNotifyEngine, sm, stateExecutionInstance, exception);
     } catch (Exception e2) {
       logger.error("Error in transitioning to failure state", e2);
     }
+    return null;
   }
 
-  private void handleExecuteResponse(StateMachine sm, SmInstance smInstance, WaitNotifyEngine waitNotifyEngine,
-      NotifyCallback callback, State currentState, ExecutionResponse executionResponse) {
-    updateContext(smInstance, executionResponse);
+  private StateExecutionInstance handleExecuteResponse(StateMachine sm, StateExecutionInstance stateExecutionInstance,
+      WaitNotifyEngine waitNotifyEngine, NotifyCallback callback, State currentState,
+      ExecutionResponse executionResponse) {
+    updateContext(stateExecutionInstance, executionResponse);
     if (executionResponse.isAsynch()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
-            + ", smInstanceId: " + smInstance.getUuid());
-        updateStatus(smInstance, ExecutionStatus.ERROR, "endTs");
+            + ", smInstanceId: " + stateExecutionInstance.getUuid());
+        updateStatus(stateExecutionInstance, ExecutionStatus.ERROR, "endTs");
       } else {
         waitNotifyEngine.waitForAll(callback,
             executionResponse.getCorrelationIds().toArray(new String[executionResponse.getCorrelationIds().size()]));
       }
     } else {
       if (executionResponse.getExecutionStatus() == ExecutionStatus.SUCCESS) {
-        successTransition(waitNotifyEngine, sm, smInstance);
+        return successTransition(waitNotifyEngine, sm, stateExecutionInstance);
       } else {
-        failedTransition(waitNotifyEngine, sm, smInstance);
+        return failedTransition(waitNotifyEngine, sm, stateExecutionInstance, null);
       }
     }
+    return null;
   }
 
-  private void successTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SmInstance smInstance) {
-    updateStatus(smInstance, ExecutionStatus.SUCCESS, "endTs");
+  private StateExecutionInstance successTransition(
+      WaitNotifyEngine waitNotifyEngine, StateMachine sm, StateExecutionInstance stateExecutionInstance) {
+    updateStatus(stateExecutionInstance, ExecutionStatus.SUCCESS, "endTs");
 
-    State nextState = sm.getSuccessTransition(smInstance.getStateName());
+    State nextState = sm.getSuccessTransition(stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info("nextSuccessState is null.. ending execution  - currentState : " + smInstance.getStateName()
-          + ", smInstanceId: " + smInstance.getUuid());
-      if (smInstance.getNotifyId() != null) {
-        waitNotifyEngine.notify(smInstance.getNotifyId(), ExecutionStatus.SUCCESS);
+      logger.info("nextSuccessState is null.. ending execution  - currentState : "
+          + stateExecutionInstance.getStateName() + ", smInstanceId: " + stateExecutionInstance.getUuid());
+      if (stateExecutionInstance.getNotifyId() == null) {
+        logger.info("State Machine execution ended for the {}", sm.getName());
+        ExecutionStandardParams stdParams = stateExecutionInstance.getContext().getStandardParams();
+        if (stdParams != null && stdParams.getCallback() != null) {
+          stdParams.getCallback().callback(stateExecutionInstance.getContext(), ExecutionStatus.SUCCESS, null);
+        }
+      } else {
+        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.SUCCESS);
       }
     } else {
-      execute(
-          sm, nextState.getName(), smInstance.getContext(), smInstance.getParentInstanceId(), smInstance.getNotifyId());
+      return execute(sm, nextState.getName(), stateExecutionInstance.getContext(),
+          stateExecutionInstance.getParentInstanceId(), stateExecutionInstance.getNotifyId(),
+          stateExecutionInstance.getUuid());
     }
+
+    return null;
   }
 
-  private void failedTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm, SmInstance smInstance) {
-    updateStatus(smInstance, ExecutionStatus.FAILED, "endTs");
+  private StateExecutionInstance failedTransition(WaitNotifyEngine waitNotifyEngine, StateMachine sm,
+      StateExecutionInstance stateExecutionInstance, Exception exception) {
+    updateStatus(stateExecutionInstance, ExecutionStatus.FAILED, "endTs");
 
-    State nextState = sm.getFailureTransition(smInstance.getStateName());
+    State nextState = sm.getFailureTransition(stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info("nextFailureState is null.. ending execution  - currentState : " + smInstance.getStateName()
-          + ", smInstanceId: " + smInstance.getUuid());
-      if (smInstance.getNotifyId() != null) {
-        waitNotifyEngine.notify(smInstance.getNotifyId(), ExecutionStatus.FAILED);
+      logger.info("nextFailureState is null.. ending execution  - currentState : "
+          + stateExecutionInstance.getStateName() + ", smInstanceId: " + stateExecutionInstance.getUuid());
+      if (stateExecutionInstance.getNotifyId() == null) {
+        logger.info("State Machine execution failed for the {}", sm.getName());
+        ExecutionStandardParams stdParams = stateExecutionInstance.getContext().getStandardParams();
+        if (stdParams != null && stdParams.getCallback() != null) {
+          stdParams.getCallback().callback(stateExecutionInstance.getContext(), ExecutionStatus.FAILED, exception);
+        }
+      } else {
+        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.FAILED);
       }
     } else {
-      execute(
-          sm, nextState.getName(), smInstance.getContext(), smInstance.getParentInstanceId(), smInstance.getNotifyId());
+      return execute(sm, nextState.getName(), stateExecutionInstance.getContext(),
+          stateExecutionInstance.getParentInstanceId(), stateExecutionInstance.getNotifyId(),
+          stateExecutionInstance.getUuid());
     }
+    return null;
   }
 
-  private void updateStatus(SmInstance smInstance, ExecutionStatus status, String tsField) {
-    UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);
+  private void updateStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status, String tsField) {
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("status", status);
     ops.set(tsField, System.currentTimeMillis());
 
-    wingsPersistence.update(smInstance, ops);
+    wingsPersistence.update(stateExecutionInstance, ops);
   }
 
-  private void updateContext(SmInstance smInstance, ExecutionResponse executionResponse) {
-    ExecutionContextImpl context = smInstance.getContext();
+  private void updateContext(StateExecutionInstance stateExecutionInstance, ExecutionResponse executionResponse) {
+    ExecutionContextImpl context = stateExecutionInstance.getContext();
     if (!context.isDirty() && executionResponse.getStateExecutionData() == null) {
       return;
     }
 
     if (executionResponse != null && executionResponse.getStateExecutionData() != null) {
-      context.getStateExecutionMap().put(smInstance.getStateName(), executionResponse.getStateExecutionData());
+      context.getStateExecutionMap().put(
+          stateExecutionInstance.getStateName(), executionResponse.getStateExecutionData());
     }
-    UpdateOperations<SmInstance> ops = wingsPersistence.createUpdateOperations(SmInstance.class);
-    ops.set("context", smInstance.getContext());
-    wingsPersistence.update(smInstance, ops);
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+    ops.set("context", stateExecutionInstance.getContext());
+    wingsPersistence.update(stateExecutionInstance, ops);
     context.setDirty(false);
   }
 
   static class SmExecutionDispatcher implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private SmInstance smInstance;
+    private StateExecutionInstance stateExecutionInstance;
     private StateMachine sm;
     private StateMachineExecutor stateMachineExecutor;
 
@@ -239,12 +281,13 @@ public class StateMachineExecutor {
      * Creates a new SmExecutionDispatcher.
      *
      * @param sm         stateMachine for dispatcher.
-     * @param smInstance stateMachineInstance to dispatch.
+     * @param stateExecutionInstance stateMachineInstance to dispatch.
      */
-    public SmExecutionDispatcher(StateMachine sm, StateMachineExecutor stateMachineExecutor, SmInstance smInstance) {
+    public SmExecutionDispatcher(
+        StateMachine sm, StateMachineExecutor stateMachineExecutor, StateExecutionInstance stateExecutionInstance) {
       this.sm = sm;
       this.stateMachineExecutor = stateMachineExecutor;
-      this.smInstance = smInstance;
+      this.stateExecutionInstance = stateExecutionInstance;
     }
 
     /* (non-Javadoc)
@@ -252,7 +295,7 @@ public class StateMachineExecutor {
      */
     @Override
     public void run() {
-      stateMachineExecutor.execute(sm, smInstance);
+      stateMachineExecutor.execute(sm, stateExecutionInstance);
     }
   }
 }

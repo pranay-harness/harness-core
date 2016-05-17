@@ -12,7 +12,7 @@ import software.wings.beans.Host;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.SmInstance;
+import software.wings.sm.StateExecutionInstance;
 
 /**
  * @author Rishi
@@ -22,11 +22,11 @@ public class HttpStateTest extends WingsBaseTest {
   @Test
   public void shouldAssertResponse() {
     ExecutionContextImpl context = new ExecutionContextImpl();
-    SmInstance smInstance = new SmInstance();
-    smInstance.setUuid(UUIDGenerator.getUuid());
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     String stateName = "healthCheck1";
-    smInstance.setStateName(stateName);
-    context.setSmInstance(smInstance);
+    stateExecutionInstance.setStateName(stateName);
+    context.setSmInstance(stateExecutionInstance);
 
     Host host = new Host();
     host.setHostName("app123.application.com");
