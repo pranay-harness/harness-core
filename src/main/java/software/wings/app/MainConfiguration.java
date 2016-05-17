@@ -16,6 +16,8 @@ public class MainConfiguration extends Configuration {
 
   @JsonProperty private boolean enableAuth;
 
+  @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
+
   public MongoConfig getMongoConnectionFactory() {
     return mongoConnectionFactory;
   }
@@ -38,5 +40,13 @@ public class MainConfiguration extends Configuration {
 
   public void setEnableAuth(boolean enableAuth) {
     this.enableAuth = enableAuth;
+  }
+
+  public int getJenkinsBuildQuerySize() {
+    return jenkinsBuildQuerySize;
+  }
+
+  public void setJenkinsBuildQuerySize(int jenkinsBuildQuerySize) {
+    this.jenkinsBuildQuerySize = jenkinsBuildQuerySize;
   }
 }

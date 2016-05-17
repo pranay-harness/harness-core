@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +16,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 /**
- * @author Rishi
+ * @author Rishi.
  */
 public class CatalogServiceTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
@@ -27,7 +24,7 @@ public class CatalogServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetCardviewSortBy() {
-    List<CatalogItem> catalogItems = catalogService.getCatalogItems(CatalogNames.CARD_VIEW_SORT_BY);
+    List<CatalogItem> catalogItems = catalogService.getCatalogItems("CARD_VIEW_SORT_BY");
     logger.debug("catalogItems: {}", catalogItems);
     assertThat(catalogItems).isNotNull();
     assertThat(catalogItems.size()).isEqualTo(3);
@@ -35,8 +32,7 @@ public class CatalogServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetCatalogs() {
-    Map<String, List<CatalogItem>> catalogs =
-        catalogService.getCatalogs(CatalogNames.CARD_VIEW_SORT_BY, CatalogNames.ARTIFACT_TYPE);
+    Map<String, List<CatalogItem>> catalogs = catalogService.getCatalogs("CARD_VIEW_SORT_BY", "ARTIFACT_TYPE");
     assertThat(catalogs).isNotNull();
     assertThat(catalogs.size()).isEqualTo(2);
   }

@@ -2,12 +2,15 @@ package software.wings.service.impl;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Host;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Tag;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.TagService;
 
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -67,5 +70,29 @@ public class TagServiceImpl implements TagService {
       wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
     }
     return tag;
+  }
+
+  @Override
+  public void tagHosts(String appId, String tagId, List<String> hostIds) {
+    Tag tag = wingsPersistence.get(Tag.class, tagId);
+    if (hostIds != null) {
+      hostIds.forEach(hostId -> {
+        Host host = wingsPersistence.get(Host.class, hostId);
+        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
+        wingsPersistence.update(host, updateOp);
+      });
+    }
+  }
+
+  @Override
+  public void untagHosts(String appId, String tagId, List<String> hostIds) {
+    Tag tag = wingsPersistence.get(Tag.class, tagId);
+    if (hostIds != null) {
+      hostIds.forEach(hostId -> {
+        Host host = wingsPersistence.get(Host.class, hostId);
+        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
+        wingsPersistence.update(host, updateOp);
+      });
+    }
   }
 }

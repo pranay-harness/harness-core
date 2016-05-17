@@ -1,9 +1,8 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.ArtifactSource.SourceType.HTTP;
-import static software.wings.beans.ChecksumType.MD5;
+import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.FileUploadSource;
-import software.wings.beans.FileUrlSource;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
@@ -68,14 +66,11 @@ public class AppContainerResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> uploadPlatform(@QueryParam("appId") String appId,
-      @FormDataParam("standard") boolean standard, @FormDataParam("name") String name,
-      @FormDataParam("version") String version, @FormDataParam("description") String description,
-      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("md5") String md5,
-      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    AppContainer appContainer =
-        createPlatformSoftwareFromRequest(appId, name, version, md5, description, urlString, standard, sourceType,
-            uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
+      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
+      @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
+    appContainer.setAppId(appId);
+    setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
     String fileId = appContainerService.save(appContainer, uploadedInputStream, PLATFORMS);
@@ -86,19 +81,23 @@ public class AppContainerResource {
   @Path("{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> updatePlatform(@QueryParam("appId") String appId,
-      @PathParam("appContainerId") String appContainerId, @FormDataParam("standard") boolean standard,
-      @FormDataParam("name") String name, @FormDataParam("version") String version,
-      @FormDataParam("description") String description, @FormDataParam("sourceType") SourceType sourceType,
-      @FormDataParam("md5") String md5, @FormDataParam("url") String urlString,
-      @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    AppContainer appContainer =
-        createPlatformSoftwareFromRequest(appId, name, version, md5, description, urlString, standard, sourceType,
-            uploadedInputStream); // TODO: Encapsulate FormDataParam into one object
+      @PathParam("appContainerId") String appContainerId, @FormDataParam("sourceType") SourceType sourceType,
+      @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
+    appContainer.setAppId(appId);
+    setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
     String fileId = appContainerService.update(appContainerId, appContainer, uploadedInputStream, PLATFORMS);
     return new RestResponse<>(fileId);
+  }
+
+  private void setSourceForAppContainer(SourceType sourceType, String urlString, AppContainer appContainer) {
+    if (sourceType.equals(HTTP)) {
+      appContainer.setSource(aFileUrlSource().withUrl(urlString).build());
+    } else {
+      appContainer.setSource(new FileUploadSource());
+    }
   }
 
   @DELETE
@@ -113,27 +112,5 @@ public class AppContainerResource {
           BoundedInputStream.getBoundedStreamForUrl(urlString, 4 * 1000 * 1000 * 1000); // TODO: read from config
     }
     return inputStream;
-  }
-
-  private AppContainer createPlatformSoftwareFromRequest(String appId, String name, String version, String md5,
-      String description, String urlString, boolean standard, SourceType sourceType, InputStream inputStream) {
-    AppContainer appContainer = anAppContainer()
-                                    .withAppId(appId)
-                                    .withName(name)
-                                    .withDescription(description)
-                                    .withVersion(version)
-                                    .withChecksum(md5)
-                                    .withChecksumType(MD5)
-                                    .withStandard(standard)
-                                    .build();
-
-    if (sourceType.equals(HTTP)) {
-      FileUrlSource fileUrlSource = new FileUrlSource();
-      fileUrlSource.setUrl(urlString);
-      appContainer.setSource(fileUrlSource);
-    } else {
-      appContainer.setSource(new FileUploadSource());
-    }
-    return appContainer;
   }
 }

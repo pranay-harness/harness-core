@@ -88,8 +88,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       Role role, PermissionAttr permissionAttr, Application application, Environment environment) {
     String reqResource = permissionAttr.getResource().toString();
     String reqAction = permissionAttr.getAction().toString();
-    boolean reqApp = permissionAttr.isOnEnv();
-    boolean reqEnv = permissionAttr.isOnApp();
+    boolean reqApp = permissionAttr.isOnApp();
+    boolean reqEnv = permissionAttr.isOnEnv();
     for (Permission permission : role.getPermissions()) {
       if (hasResourceAccess(reqResource, permission) && canPerformAction(reqAction, permission)
           && allowedInEnv(environment, reqEnv, permission) && forApplication(application, reqApp, permission)) {
@@ -100,11 +100,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean forApplication(Application application, boolean reqApp, Permission permission) {
-    return reqApp && ("ALL".equals(permission.getServiceId()) || (application.equals(permission.getServiceId())));
+    return reqApp && ("ALL".equals(permission.getServiceId())); // TODO: revisit
   }
 
   private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
-    return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getName().equals(permission.getEnvId()));
+    return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getUuid().equals(permission.getEnvId()));
   }
 
   private boolean canPerformAction(String reqAction, Permission permission) {

@@ -23,4 +23,6 @@ mongo:
 portal:
   url: http://192.168.1.15:9090/wings
 
+jenkinsBuildQuerySize: 50
+
 enableAuth: false
