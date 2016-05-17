@@ -12,7 +12,7 @@ test:
   override:
     - mvn verify site
   post:
-    - cp -r target/site $CIRCLE_ARTIFACTS \;
+    - cp -r target/site $CIRCLE_ARTIFACTS
     - mkdir -p $CIRCLE_TEST_REPORTS/junit/ 
     - mkdir -p $CIRCLE_TEST_REPORTS/integration/ 
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
