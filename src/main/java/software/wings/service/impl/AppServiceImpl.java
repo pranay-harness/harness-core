@@ -34,11 +34,6 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
-  public List<Application> list() {
-    return wingsPersistence.list(Application.class);
-  }
-
-  @Override
   public PageResponse<Application> list(PageRequest<Application> req) {
     return wingsPersistence.query(Application.class, req);
   }

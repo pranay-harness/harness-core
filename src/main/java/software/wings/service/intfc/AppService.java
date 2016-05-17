@@ -4,8 +4,6 @@ import software.wings.beans.Application;
 import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 
-import java.util.List;
-
 /**
  * Application Service.
  *
@@ -13,8 +11,6 @@ import java.util.List;
  */
 public interface AppService {
   Application save(Application app);
-
-  List<Application> list();
 
   PageResponse<Application> list(PageRequest<Application> req);
 
