@@ -104,6 +104,12 @@ public class StateMachineExecutor {
     return execute(wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId);
   }
 
+  public StateExecutionInstance execute(String smId, String stateName, ExecutionContextImpl context,
+      String parentInstanceId, String notifyId, String prevInstanceId) {
+    return execute(
+        wingsPersistence.get(StateMachine.class, smId), stateName, context, parentInstanceId, notifyId, prevInstanceId);
+  }
+
   public StateExecutionInstance execute(StateExecutionInstance stateExecutionInstance) {
     StateMachine sm = wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId());
     return execute(sm, stateExecutionInstance);
@@ -140,11 +146,12 @@ public class StateMachineExecutor {
   /**
    * Resumes execution of a StateMachineInstance.
    *
-   * @param smInstanceId stateMachineInstance to resume.
+   * @param stateExecutionInstanceId stateMachineInstance to resume.
    * @param response     map of responses from state machine instances this state was waiting on.
    */
-  public void resume(String smInstanceId, Map<String, ? extends Serializable> response) {
-    StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, smInstanceId);
+  public void resume(String stateExecutionInstanceId, Map<String, ? extends Serializable> response) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     try {
@@ -160,7 +167,7 @@ public class StateMachineExecutor {
   private StateExecutionInstance handleExecuteResponseException(StateMachine sm,
       StateExecutionInstance stateExecutionInstance, WaitNotifyEngine waitNotifyEngine, State currentState,
       Exception exception) {
-    logger.info("Error seen in the state execution  - currentState : {}, smInstanceId: {}", currentState,
+    logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
     try {
       updateContext(stateExecutionInstance, null);
@@ -178,7 +185,7 @@ public class StateMachineExecutor {
     if (executionResponse.isAsynch()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
-            + ", smInstanceId: " + stateExecutionInstance.getUuid());
+            + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
         updateStatus(stateExecutionInstance, ExecutionStatus.ERROR, "endTs");
       } else {
         waitNotifyEngine.waitForAll(callback,
@@ -201,7 +208,7 @@ public class StateMachineExecutor {
     State nextState = sm.getSuccessTransition(stateExecutionInstance.getStateName());
     if (nextState == null) {
       logger.info("nextSuccessState is null.. ending execution  - currentState : "
-          + stateExecutionInstance.getStateName() + ", smInstanceId: " + stateExecutionInstance.getUuid());
+          + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
       if (stateExecutionInstance.getNotifyId() == null) {
         logger.info("State Machine execution ended for the {}", sm.getName());
         ExecutionStandardParams stdParams = stateExecutionInstance.getContext().getStandardParams();
@@ -227,7 +234,7 @@ public class StateMachineExecutor {
     State nextState = sm.getFailureTransition(stateExecutionInstance.getStateName());
     if (nextState == null) {
       logger.info("nextFailureState is null.. ending execution  - currentState : "
-          + stateExecutionInstance.getStateName() + ", smInstanceId: " + stateExecutionInstance.getUuid());
+          + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
       if (stateExecutionInstance.getNotifyId() == null) {
         logger.info("State Machine execution failed for the {}", sm.getName());
         ExecutionStandardParams stdParams = stateExecutionInstance.getContext().getStandardParams();

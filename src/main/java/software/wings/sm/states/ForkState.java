@@ -68,7 +68,7 @@ public class ForkState extends State {
         executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       }
     }
-    logger.info("Fork state execution completed - smInstanceId:{}, stateName:{}, executionStatus:{}",
+    logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
         context.getSmInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
     return executionResponse;
   }

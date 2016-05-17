@@ -219,7 +219,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void populateGraph(WorkflowExecution workflowExecution) {
-    PageRequest pageRequest = new PageRequest<>();
+    PageRequest<StateExecutionInstance> pageRequest = new PageRequest<>();
 
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
