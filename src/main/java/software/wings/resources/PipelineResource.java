@@ -8,6 +8,9 @@ import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
@@ -41,14 +44,6 @@ public class PipelineResource {
   }
 
   @GET
-  @Path("playbacks")
-  @Produces("application/json")
-  public RestResponse<PageResponse<Pipeline>> listPlaybacks(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
-    return null;
-  }
-
-  @GET
   @Path("{pipelineId}")
   @Produces("application/json")
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
@@ -69,5 +64,33 @@ public class PipelineResource {
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<Pipeline>(workflowService.updateWorkflow(Pipeline.class, pipeline));
+  }
+
+  @GET
+  @Path("executions")
+  @Produces("application/json")
+  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
+      @QueryParam("pipelineId") String pipelineId, @BeanParam PageRequest<WorkflowExecution> pageRequest) {
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValue(appId);
+    filter.setOp(Operator.EQ);
+    pageRequest.getFilters().add(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("workflowExecutionType");
+    filter.setFieldValue(WorkflowExecutionType.PIPELINE);
+    filter.setOp(Operator.EQ);
+    pageRequest.getFilters().add(filter);
+
+    return new RestResponse<PageResponse<WorkflowExecution>>(workflowService.listExecutions(pageRequest, true));
+  }
+
+  @POST
+  @Path("executions")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> triggerExecution(
+      @QueryParam("appId") String appId, @QueryParam("pipelineId") String pipelineId) {
+    return new RestResponse<WorkflowExecution>(workflowService.triggerPipelineExecution(appId, pipelineId));
   }
 }

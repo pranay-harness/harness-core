@@ -5,6 +5,7 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeDescriptor;
 
@@ -34,14 +35,19 @@ public interface WorkflowService {
 
   public void trigger(String smId);
 
-  //  public void trigger(String smId, Map<String, Serializable> arguments);
-
-  //  public void trigger(String smId, Map<String, Serializable> arguments,
-  //      StateMachineExecutionCallback callback);
-
   public List<StateTypeDescriptor> stencils();
 
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest);
 
-  public Orchestration readOrchestration(String appId, String orchestrationId);
+  public Orchestration readOrchestration(String appId, String envId, String orchestrationId);
+
+  public PageResponse<WorkflowExecution> listExecutions(
+      PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
+
+  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId);
+
+  public WorkflowExecution triggerOrchestrationExecution(
+      String appId, String orchestrationId, List<String> artifactIds);
+
+  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId);
 }

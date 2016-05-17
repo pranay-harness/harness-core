@@ -8,7 +8,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.SmInstance;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.State;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
@@ -41,13 +41,14 @@ public class ForkState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
-    SmInstance smInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
     List<String> correlationIds = new ArrayList<>();
     for (String state : forkStateNames) {
-      String notifyId = smInstance.getUuid() + "-forkTo-" + state;
+      String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
       ExecutionContextImpl contextClone = SerializationUtils.clone(context);
       WingsBootstrap.lookup(StateMachineExecutor.class)
-          .execute(smInstance.getStateMachineId(), state, contextClone, smInstance.getUuid(), notifyId);
+          .execute(stateExecutionInstance.getStateMachineId(), state, contextClone, stateExecutionInstance.getUuid(),
+              notifyId);
       correlationIds.add(notifyId);
     }
 

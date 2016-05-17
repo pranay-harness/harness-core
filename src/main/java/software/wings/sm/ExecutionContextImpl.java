@@ -22,7 +22,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   private Deque<Repeatable> contextElements = new ArrayDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
 
-  private transient SmInstance smInstance;
+  private transient StateExecutionInstance stateExecutionInstance;
 
   private boolean dirty = false;
 
@@ -70,15 +70,23 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
 
   @Override
   public StateExecutionData getStateExecutionData() {
-    return stateExecutionMap.get(smInstance.getStateName());
+    return stateExecutionMap.get(stateExecutionInstance.getStateName());
   }
 
-  public SmInstance getSmInstance() {
-    return smInstance;
+  public StateExecutionInstance getSmInstance() {
+    return stateExecutionInstance;
   }
 
-  public void setSmInstance(SmInstance smInstance) {
-    this.smInstance = smInstance;
+  public void setSmInstance(StateExecutionInstance stateExecutionInstance) {
+    this.stateExecutionInstance = stateExecutionInstance;
+  }
+
+  public ExecutionStandardParams getStandardParams() {
+    return standardParams;
+  }
+
+  public void setStandardParams(ExecutionStandardParams standardParams) {
+    this.standardParams = standardParams;
   }
 
   @Override
@@ -94,7 +102,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return getEvaluator().merge(expression, context, smInstance.getStateName());
+    return getEvaluator().merge(expression, context, stateExecutionInstance.getStateName());
   }
 
   @Override
@@ -110,7 +118,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    return getEvaluator().evaluate(expression, context, smInstance.getStateName());
+    return getEvaluator().evaluate(expression, context, stateExecutionInstance.getStateName());
   }
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {

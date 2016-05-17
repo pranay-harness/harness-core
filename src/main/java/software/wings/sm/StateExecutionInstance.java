@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
@@ -10,14 +11,23 @@ import software.wings.beans.Base;
  *
  * @author Rishi
  */
-@Entity(value = "smInstances", noClassnameStored = true)
-public class SmInstance extends Base {
+@Entity(value = "stateExecutionInstances", noClassnameStored = true)
+public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String stateName;
 
   @Serialized private ExecutionContextImpl context;
-  private String parentInstanceId;
-  private String cloneInstanceId;
+
+  @Indexed private String workflowExecutionId;
+
+  @Indexed private String parentInstanceId;
+
+  @Indexed private String prevInstanceId;
+
+  private String nextInstanceId;
+
+  @Indexed private String cloneInstanceId;
+
   private String notifyId;
   private ExecutionStatus status = ExecutionStatus.NEW;
 
@@ -94,6 +104,30 @@ public class SmInstance extends Base {
 
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
+  }
+
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
+  }
+
+  public void setWorkflowExecutionId(String workflowExecutionId) {
+    this.workflowExecutionId = workflowExecutionId;
+  }
+
+  public String getPrevInstanceId() {
+    return prevInstanceId;
+  }
+
+  public void setPrevInstanceId(String prevInstanceId) {
+    this.prevInstanceId = prevInstanceId;
+  }
+
+  public String getNextInstanceId() {
+    return nextInstanceId;
+  }
+
+  public void setNextInstanceId(String nextInstanceId) {
+    this.nextInstanceId = nextInstanceId;
   }
 
   @PostLoad

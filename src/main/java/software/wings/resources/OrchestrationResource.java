@@ -8,7 +8,12 @@ import software.wings.beans.PageRequest;
 import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.service.intfc.WorkflowService;
+
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
@@ -55,7 +60,7 @@ public class OrchestrationResource {
   @Produces("application/json")
   public RestResponse<Orchestration> read(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId) {
-    return new RestResponse<Orchestration>(workflowService.readOrchestration(appId, orchestrationId));
+    return new RestResponse<Orchestration>(workflowService.readOrchestration(appId, envId, orchestrationId));
   }
 
   @POST
@@ -73,5 +78,52 @@ public class OrchestrationResource {
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
     return new RestResponse<Orchestration>(workflowService.updateWorkflow(Orchestration.class, orchestration));
+  }
+
+  @GET
+  @Path("executions")
+  @Produces("application/json")
+  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
+      @BeanParam PageRequest<WorkflowExecution> pageRequest) {
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValue(appId);
+    filter.setOp(Operator.EQ);
+    pageRequest.getFilters().add(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("workflowExecutionType");
+    filter.setFieldValue(WorkflowExecutionType.ORCHESTRATION);
+    filter.setOp(Operator.EQ);
+    pageRequest.getFilters().add(filter);
+
+    return new RestResponse<PageResponse<WorkflowExecution>>(workflowService.listExecutions(pageRequest, false));
+  }
+
+  @GET
+  @Path("executions/{workflowExecutionId}")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<WorkflowExecution>(workflowService.getExecutionDetails(appId, workflowExecutionId));
+  }
+
+  @POST
+  @Path("executions")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
+      @QueryParam("orchestrationId") String orchestrationId, @QueryParam("artifactId") List<String> artifactIds) {
+    return new RestResponse<WorkflowExecution>(
+        workflowService.triggerOrchestrationExecution(appId, orchestrationId, artifactIds));
+  }
+
+  @PUT
+  @Path("executions/{workflowExecutionId}")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> updateExecutionDetails(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    // TODO - implement abort and pause functionality
+    return null;
   }
 }
