@@ -36,4 +36,4 @@ body="""Report Link(Maynot get generated in case of code coverage failure): http
 Test Coverage: https://circleci.com/api/v1/project/wings-software/wings/%s/artifacts/0/$CIRCLE_ARTIFACTS/site/jacoco/index.html
 """ % (build_num,build_num)
 
-send_email(send_email, password, recipient, subject, body)
+send_email(sender, password, recipient, subject, body)
