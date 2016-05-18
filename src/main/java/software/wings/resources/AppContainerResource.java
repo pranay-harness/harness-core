@@ -92,7 +92,8 @@ public class AppContainerResource {
     return new RestResponse<>(fileId);
   }
 
-  private void setSourceForAppContainer(SourceType sourceType, String urlString, AppContainer appContainer) {
+  private void setSourceForAppContainer(
+      SourceType sourceType, String urlString, AppContainer appContainer) { // Fixme: use jsonSubType
     if (sourceType.equals(HTTP)) {
       appContainer.setSource(aFileUrlSource().withUrl(urlString).build());
     } else {

@@ -1,31 +1,21 @@
 package software.wings.resources;
 
-import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.beans.ArtifactSource.SourceType.HTTP;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.beans.Host;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HostService;
-import software.wings.utils.BoundedInputStream;
-import software.wings.utils.HostFileHelper.HostFileType;
 
-import java.io.File;
-import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,8 +23,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * Created by anubhaw on 5/9/16.
@@ -66,12 +54,13 @@ public class HostResource {
   }
 
   @POST
-  public RestResponse<Host> save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, Host host) {
+  public RestResponse save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+      @QueryParam("envId") String envId, Host baseHost) {
     infraId = hostService.getInfraId(envId, appId);
-    host.setAppId(appId);
-    host.setInfraId(infraId);
-    return new RestResponse<Host>(hostService.save(host));
+    baseHost.setAppId(appId);
+    baseHost.setInfraId(infraId);
+    hostService.bulkSave(baseHost, baseHost.getHostNames());
+    return new RestResponse();
   }
 
   @PUT
@@ -94,32 +83,31 @@ public class HostResource {
     return new RestResponse();
   }
 
-  @POST
-  @Path("import/{fileType}")
-  @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("fileType") HostFileType fileType,
-      @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
-      @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    infraId = hostService.getInfraId(envId, appId);
-    if (sourceType.equals(HTTP)) {
-      uploadedInputStream =
-          BoundedInputStream.getBoundedStreamForUrl(urlString, 40 * 1000 * 1000); // TODO: read from config
-    }
-    hostService.importHosts(appId, infraId, uploadedInputStream, fileType);
-    return new RestResponse();
-  }
-
-  @GET
-  @Path("export/{fileType}")
-  @Encoded
-  public Response exportHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("fileType") HostFileType fileType) {
-    infraId = hostService.getInfraId(envId, appId);
-    File hostsFile = hostService.exportHosts(appId, infraId, fileType);
-    Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
-    response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
-    return response.build();
-  }
+  //  @POST
+  //  @Path("import-hosts")
+  //  @Consumes(MULTIPART_FORM_DATA)
+  //  public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  //  @QueryParam("envId") String envId,
+  //      @FormDataParam("file") InputStream uploadedInputStream,
+  //      @FormDataParam("file") FormDataContentDisposition fileDetail,
+  //      @FormDataParam("hostAttributes") EnvironmentAttribute attribute) {
+  //    infraId = hostService.getInfraId(envId, appId);
+  ////    baseHost.setAppId(appId);
+  ////    baseHost.setInfraId(infraId);
+  ////    hostService.importHosts(baseHost, new BoundedInputStream(uploadedInputStream, 40 * 1000 * 1000)); //TODO: read
+  ///from config
+  //    return new RestResponse();
+  //  }
+  //
+  //  @GET
+  //  @Path("export-hosts")
+  //  @Encoded
+  //  public Response exportHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  //  @QueryParam("envId") String envId) {
+  //    infraId = hostService.getInfraId(envId, appId);
+  //    File hostsFile = hostService.exportHosts(appId, infraId);
+  //    Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
+  //    response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
+  //    return response.build();
+  //  }
 }

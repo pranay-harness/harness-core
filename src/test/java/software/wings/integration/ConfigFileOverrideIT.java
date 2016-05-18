@@ -5,14 +5,14 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.EnvironmentAttribute.EnvironmentAttributeBuilder.anEnvironmentAttribute;
+import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.Tag.TagBuilder.aTag;
-import static software.wings.integration.IntegrationTestUtil.createHostsFile;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
-import static software.wings.utils.HostFileHelper.HostFileType.CSV;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.EnvironmentAttribute;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.Service;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -262,9 +264,23 @@ public class ConfigFileOverrideIT extends WingsBaseTest {
   }
 
   private List<Host> importAndGetHosts(Infra infra) throws IOException {
-    int numOfHostsImported = hostService.importHosts(infra.getAppId(), infra.getUuid(),
-        new FileInputStream(createHostsFile(testFolder.newFile("host.csv"), 10)), CSV);
-    log().info("{} host imported", numOfHostsImported);
+    EnvironmentAttribute environmentAttribute = wingsPersistence.saveAndGet(EnvironmentAttribute.class,
+        anEnvironmentAttribute().withAppId(infra.getAppId()).withEnvId(infra.getEnvId()).build());
+    Host baseHost = aHost()
+                        .withAppId(infra.getAppId())
+                        .withInfraId(infra.getUuid())
+                        .withHostAttributes(environmentAttribute)
+                        .withBastionHostAttributes(environmentAttribute)
+                        .build();
+    //    int numOfHostsImported =
+    //        hostService.importHosts(baseHost, new BoundedInputStream(new
+    //        FileInputStream(createHostsFile(testFolder.newFile("host.csv"), 10))));
+    List<String> hostNames = new ArrayList<>();
+    for (int i = 1; i <= 10; i++) {
+      hostNames.add(String.format("host%s.app.com", i));
+    }
+    hostService.bulkSave(baseHost, hostNames);
+    //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infra.getUuid(), EQ);
     pageRequest.addFilter("appId", infra.getAppId(), EQ);

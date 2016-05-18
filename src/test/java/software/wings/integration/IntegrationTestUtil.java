@@ -17,9 +17,9 @@ public class IntegrationTestUtil {
 
   public static File createHostsFile(File file, int numHosts) throws IOException {
     BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("HOST,OS,CONNECTION_TYPE,ACCESS_TYPE\n"); // Header
+    out.write("HOST\n"); // Header
     for (int idx = 1; idx <= numHosts; idx++) {
-      out.write(String.format("host%s.app.com,Linux-RHL,SSH,SSH_SUDO_APP_ACCOUNT\n", idx));
+      out.write(String.format("host%s.app.com\n", idx));
     }
     out.close();
     return file;
