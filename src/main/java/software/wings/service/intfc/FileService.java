@@ -31,7 +31,7 @@ public interface FileService {
 
   List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket);
 
-  public static enum FileBucket {
+  enum FileBucket {
     LOB("lob"),
     ARTIFACTS("artifacts"),
     AUDITS("audits"),

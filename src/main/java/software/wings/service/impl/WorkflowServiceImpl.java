@@ -258,6 +258,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (instance.getPrevInstanceId() != null) {
         fromInstanceId = instance.getPrevInstanceId();
       } else if (instance.getParentInstanceId() != null) {
+        // TODO: needs work for repeat element instance.
         // This is scenario like fork, repeat or sub workflow
         fromInstanceId = instance.getParentInstanceId();
       }
@@ -343,6 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
     stateMachineExecutor.execute(stateMachine, stdParams);
 
+    // TODO: findAndModify
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field("appId")
                                          .equal(workflowExecution.getAppId())
@@ -352,6 +354,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                          .equal(ExecutionStatus.NEW);
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", ExecutionStatus.RUNNING);
+
     wingsPersistence.update(query, updateOps);
 
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
