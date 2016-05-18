@@ -581,7 +581,8 @@
                 <version>0.7.6.201602180812</version>
                 <configuration>
                     <excludes>
-                        <exclude>wings/software/beans/*</exclude>
+                        <exclude>software/wings/service/intfc/*.class</exclude>
+                        <exclude>software/wings/beans/*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -589,7 +590,8 @@
                         <id>default-prepare-agent</id>
                         <configuration>
                             <excludes>
-                                <exclude>wings/software/beans/*</exclude>
+                                <exclude>software/wings/service/intfc/*.class</exclude>
+                                <exclude>software/wings/beans/*.class</exclude>
                             </excludes>
                         </configuration>
                         <goals>
@@ -601,7 +603,8 @@
                         <phase>prepare-package</phase>
                         <configuration>
                             <excludes>
-                                <exclude>wings/software/beans/*</exclude>
+                                <exclude>software/wings/service/intfc/*.class</exclude>
+                                <exclude>software/wings/beans/*.class</exclude>
                             </excludes>
                         </configuration>
                         <goals>
@@ -615,7 +618,8 @@
                         </goals>
                         <configuration>
                             <excludes>
-                                <exclude>wings/software/beans/*</exclude>
+                                <exclude>software/wings/service/intfc/*.class</exclude>
+                                <exclude>software/wings/beans/*.class</exclude>
                             </excludes>
                             <rules>
                                 <rule implementation="org.jacoco.maven.RuleConfiguration">
@@ -624,7 +628,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.35</minimum>
+                                            <minimum>0.33</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -678,7 +682,8 @@
                 <version>0.7.6.201602180812</version>
                 <configuration>
                     <excludes>
-                        <exclude>wings/software/beans/*</exclude>
+                        <exclude>software/wings/service/intfc/*.class</exclude>
+                        <exclude>software/wings/beans/*.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>
