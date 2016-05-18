@@ -10,6 +10,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -23,6 +24,7 @@ import javax.ws.rs.core.UriInfo;
  */
 public class PageRequest<T> {
   public static final String UNLIMITED = "UNLIMITED";
+  public static final int DEFAULT_UNLIMITED = 1000;
   public static final int DEFAULT_PAGE_SIZE = 50;
 
   @DefaultValue("0") @QueryParam("offset") private String offset;

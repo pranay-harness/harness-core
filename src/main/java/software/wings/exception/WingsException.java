@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.WebApplicationException;
 
 /**
@@ -27,6 +28,11 @@ public class WingsException extends WebApplicationException {
 
   public WingsException(String errorCode) {
     this(errorCode, null);
+  }
+
+  public WingsException(String errorCode, String key, Object value) {
+    this(errorCode, null);
+    addParam(key, value);
   }
 
   public WingsException(String errorCode, Throwable cause) {
@@ -57,6 +63,10 @@ public class WingsException extends WebApplicationException {
 
   public void setParams(Map<String, Object> params) {
     this.params = params;
+  }
+
+  public void addParam(String key, Object value) {
+    this.params.put(key, value);
   }
 
   public List<ResponseMessage> getResponseMessageList() {

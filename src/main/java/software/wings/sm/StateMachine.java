@@ -64,7 +64,7 @@ public class StateMachine extends Base {
         continue;
       }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException("Unknown stencil type");
+        throw new WingsException(ErrorConstants.UNKNOWN_STENCIL_TYPE);
       }
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
       State state = stateTypeDesc.newInstance(node.getName());
@@ -176,9 +176,7 @@ public class StateMachine extends Base {
       }
     }
     if (dupNames.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("dupStateNames", dupNames.toString());
-      throw new WingsException(params, ErrorConstants.DUPLICATE_STATE_NAMES);
+      throw new WingsException(ErrorConstants.DUPLICATE_STATE_NAMES, "dupStateNames", dupNames.toString());
     }
 
     cachedStatesMap = statesMap;
@@ -302,24 +300,18 @@ public class StateMachine extends Base {
       }
     }
     if (invalidStateNames.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("invalidStateNames", invalidStateNames.toString());
-      throw new WingsException(params, ErrorConstants.TRANSITION_TO_INCORRECT_STATE);
+      throw new WingsException(
+          ErrorConstants.TRANSITION_TO_INCORRECT_STATE, "invalidStateNames", invalidStateNames.toString());
     }
     if (nonForkStates.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("nonForkStates", nonForkStates.toString());
-      throw new WingsException(params, ErrorConstants.NON_FORK_STATES);
+      throw new WingsException(ErrorConstants.NON_FORK_STATES, "nonForkStates", nonForkStates.toString());
     }
     if (nonRepeatStates.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("nonRepeatStates", nonRepeatStates.toString());
-      throw new WingsException(params, ErrorConstants.NON_REPEAT_STATES);
+      throw new WingsException(ErrorConstants.NON_REPEAT_STATES, "nonRepeatStates", nonRepeatStates.toString());
     }
     if (statesWithDupTransitions.size() > 0) {
-      Map<String, Object> params = new HashMap<>();
-      params.put("statesWithDupTransitions", statesWithDupTransitions.toString());
-      throw new WingsException(params, ErrorConstants.STATES_WITH_DUP_TRANSITIONS);
+      throw new WingsException(
+          ErrorConstants.STATES_WITH_DUP_TRANSITIONS, "statesWithDupTransitions", statesWithDupTransitions.toString());
     }
     for (String forkStateName : forkStateNamesMap.keySet()) {
       ForkState forkFromState = (ForkState) statesMap.get(forkStateName);

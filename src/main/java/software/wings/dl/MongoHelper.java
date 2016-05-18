@@ -37,7 +37,9 @@ public class MongoHelper {
 
     long total = q.countAll();
     q.offset(req.getStart());
-    if (!PageRequest.UNLIMITED.equals(req.getLimit())) {
+    if (PageRequest.UNLIMITED.equals(req.getLimit())) {
+      q.limit(PageRequest.DEFAULT_UNLIMITED);
+    } else {
       q.limit(req.getPageSize());
     }
     List<T> list = q.asList();
