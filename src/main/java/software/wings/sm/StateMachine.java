@@ -11,6 +11,7 @@ import software.wings.beans.ErrorConstants;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
+import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.utils.CollectionUtils;
@@ -51,11 +52,11 @@ public class StateMachine extends Base {
 
   public StateMachine() {}
 
-  public StateMachine(String originId, Graph graph, Map<String, StateTypeDescriptor> map) {
+  public StateMachine(String originId, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     this.originId = originId;
     this.graph = graph;
     this.name = graph.getGraphName();
-    transform(map);
+    transform(stencilMap);
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
@@ -91,7 +92,11 @@ public class StateMachine extends Base {
           if (transitionType == TransitionType.FORK) {
             ((ForkState) statesMap.get(stateFrom.getName())).addForkState(stateTo);
           } else {
-            addTransition(new Transition(stateFrom, transitionType, stateTo));
+            addTransition(Transition.Builder.aTransition()
+                              .withFromState(stateFrom)
+                              .withTransitionType(transitionType)
+                              .withToState(stateTo)
+                              .build());
           }
         }
       }
@@ -387,5 +392,110 @@ public class StateMachine extends Base {
   public String toString() {
     return "StateMachine [initialStateName=" + initialStateName + ", states=" + states + ", transitions=" + transitions
         + "]";
+  }
+
+  public static final class Builder {
+    private String originId;
+    private String name;
+    private Graph graph;
+    private List<State> states;
+    private List<Transition> transitions;
+    private String initialStateName;
+    private String uuid;
+    private String appId;
+    private User createdBy;
+    private long createdAt;
+    private User lastUpdatedBy;
+    private long lastUpdatedAt;
+    private boolean active = true;
+
+    private Builder() {}
+
+    public static Builder aStateMachine() {
+      return new Builder();
+    }
+
+    public Builder withOriginId(String originId) {
+      this.originId = originId;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withGraph(Graph graph) {
+      this.graph = graph;
+      return this;
+    }
+
+    public Builder withStates(List<State> states) {
+      this.states = states;
+      return this;
+    }
+
+    public Builder withTransitions(List<Transition> transitions) {
+      this.transitions = transitions;
+      return this;
+    }
+
+    public Builder withInitialStateName(String initialStateName) {
+      this.initialStateName = initialStateName;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public StateMachine build() {
+      StateMachine stateMachine = new StateMachine();
+      stateMachine.setOriginId(originId);
+      stateMachine.setName(name);
+      stateMachine.setGraph(graph);
+      stateMachine.setStates(states);
+      stateMachine.setTransitions(transitions);
+      stateMachine.setInitialStateName(initialStateName);
+      stateMachine.setUuid(uuid);
+      stateMachine.setAppId(appId);
+      stateMachine.setCreatedBy(createdBy);
+      stateMachine.setCreatedAt(createdAt);
+      stateMachine.setLastUpdatedBy(lastUpdatedBy);
+      stateMachine.setLastUpdatedAt(lastUpdatedAt);
+      stateMachine.setActive(active);
+      return stateMachine;
+    }
   }
 }

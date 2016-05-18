@@ -53,6 +53,24 @@ public class StateMachineTest extends WingsBaseTest {
     }
   }
 
+  @Test
+  public void shouldThrowNullTransition() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      sm.setInitialStateName("StateA");
+
+      sm.addTransition(Transition.Builder.aTransition().withToState(stateA).withFromState(stateB).build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorConstants.TRANSITION_TYPE_NULL);
+    }
+  }
+
   static class Notifier implements Runnable {
     private String uuid;
     private int duration;

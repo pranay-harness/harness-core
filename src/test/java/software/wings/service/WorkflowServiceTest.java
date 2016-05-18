@@ -20,13 +20,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
-import software.wings.sm.State;
-import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineTest;
-import software.wings.sm.StateType;
-import software.wings.sm.Transition;
-import software.wings.sm.TransitionType;
+import software.wings.sm.*;
 import software.wings.sm.states.ForkState;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyEventListener;
@@ -60,8 +54,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 
-    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateB));
-    sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateC));
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
 
     sm = workflowService.create(sm);
     assertThat(sm).isNotNull();
@@ -86,8 +88,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 
-    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateB));
-    sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateC));
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
 
     sm = workflowService.create(sm);
     assertThat(sm).isNotNull();
@@ -138,10 +148,26 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     sm.setInitialStateName(stateA.getName());
 
-    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateAB));
-    sm.addTransition(new Transition(stateAB, TransitionType.SUCCESS, stateB));
-    sm.addTransition(new Transition(stateB, TransitionType.SUCCESS, stateBC));
-    sm.addTransition(new Transition(stateBC, TransitionType.SUCCESS, stateC));
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateBC)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateBC)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
 
     sm = svc.create(sm);
     assertThat(sm).isNotNull();
@@ -169,7 +195,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     sm.setInitialStateName(stateA.getName());
 
-    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, fork1));
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(fork1)
+                         .build());
 
     sm = workflowService.create(sm);
     assertThat(sm).isNotNull();
@@ -207,9 +237,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     sm.setInitialStateName(stateA.getName());
 
-    sm.addTransition(new Transition(stateA, TransitionType.SUCCESS, stateAB));
-    sm.addTransition(new Transition(stateAB, TransitionType.SUCCESS, fork1));
-    sm.addTransition(new Transition(fork1, TransitionType.SUCCESS, stateC));
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(fork1)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(fork1)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
 
     sm = workflowService.create(sm);
     assertThat(sm).isNotNull();
