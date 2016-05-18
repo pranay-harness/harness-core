@@ -56,4 +56,39 @@ public class Transition implements Serializable {
   public String toString() {
     return "Transition [fromState=" + fromState + ", toState=" + toState + ", transitionType=" + transitionType + "]";
   }
+
+  public static final class Builder {
+    private State fromState;
+    private State toState;
+    private TransitionType transitionType;
+
+    private Builder() {}
+
+    public static Builder aTransition() {
+      return new Builder();
+    }
+
+    public Builder withFromState(State fromState) {
+      this.fromState = fromState;
+      return this;
+    }
+
+    public Builder withToState(State toState) {
+      this.toState = toState;
+      return this;
+    }
+
+    public Builder withTransitionType(TransitionType transitionType) {
+      this.transitionType = transitionType;
+      return this;
+    }
+
+    public Transition build() {
+      Transition transition = new Transition();
+      transition.setFromState(fromState);
+      transition.setToState(toState);
+      transition.setTransitionType(transitionType);
+      return transition;
+    }
+  }
 }

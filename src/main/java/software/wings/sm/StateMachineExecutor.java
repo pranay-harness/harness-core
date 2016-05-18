@@ -15,7 +15,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 /**
@@ -278,7 +277,7 @@ public class StateMachineExecutor {
     context.setDirty(false);
   }
 
-  static class SmExecutionDispatcher implements Runnable {
+  private static class SmExecutionDispatcher implements Runnable {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private StateExecutionInstance stateExecutionInstance;
     private StateMachine sm;
