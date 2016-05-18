@@ -19,7 +19,7 @@ public class Validator {
       Map<String, Object> map = new HashMap<>();
       map.put("name", name);
       map.put("value", value);
-      throw new WingsException(map, ErrorConstants.INVALID_ARGUMENT);
+      throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
     }
   }
 

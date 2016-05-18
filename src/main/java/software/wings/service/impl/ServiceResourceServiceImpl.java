@@ -5,9 +5,9 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.Application;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.Service;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;

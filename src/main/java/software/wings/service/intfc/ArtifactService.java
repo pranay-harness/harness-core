@@ -2,8 +2,8 @@ package software.wings.service.intfc;
 
 import software.wings.beans.Artifact;
 import software.wings.beans.ArtifactFile;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 
 import java.io.File;
 import java.util.List;

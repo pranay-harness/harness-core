@@ -21,10 +21,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import software.wings.beans.Artifact;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactService;
 

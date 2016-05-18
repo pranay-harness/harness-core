@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.dl;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

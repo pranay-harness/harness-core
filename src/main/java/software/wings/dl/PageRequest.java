@@ -1,9 +1,11 @@
-package software.wings.beans;
+package software.wings.dl;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SortOrder;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;

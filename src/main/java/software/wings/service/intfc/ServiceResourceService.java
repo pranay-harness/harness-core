@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.Service;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 
 /**
  * Created by anubhaw on 3/28/16.

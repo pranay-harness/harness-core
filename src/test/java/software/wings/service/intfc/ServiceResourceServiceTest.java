@@ -20,10 +20,10 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.PageRequest;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceBuilder;
+import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 
