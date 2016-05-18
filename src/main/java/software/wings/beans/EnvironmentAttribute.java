@@ -72,9 +72,9 @@ public class EnvironmentAttribute extends Base {
     return MoreObjects.toStringHelper(this).add("envId", envId).add("name", name).add("value", value).toString();
   }
 
-  public static final class EnvironmentVariableBuilder {
+  public static final class EnvironmentAttributeBuilder {
     private String envId;
-    private String key;
+    private String name;
     private EnvironmentValue value;
     private String uuid;
     private String appId;
@@ -84,66 +84,66 @@ public class EnvironmentAttribute extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private EnvironmentVariableBuilder() {}
+    private EnvironmentAttributeBuilder() {}
 
-    public static EnvironmentVariableBuilder anEnvironmentVariable() {
-      return new EnvironmentVariableBuilder();
+    public static EnvironmentAttributeBuilder anEnvironmentAttribute() {
+      return new EnvironmentAttributeBuilder();
     }
 
-    public EnvironmentVariableBuilder withEnvId(String envId) {
+    public EnvironmentAttributeBuilder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    public EnvironmentVariableBuilder withKey(String key) {
-      this.key = key;
+    public EnvironmentAttributeBuilder withName(String name) {
+      this.name = name;
       return this;
     }
 
-    public EnvironmentVariableBuilder withValue(EnvironmentValue value) {
+    public EnvironmentAttributeBuilder withValue(EnvironmentValue value) {
       this.value = value;
       return this;
     }
 
-    public EnvironmentVariableBuilder withUuid(String uuid) {
+    public EnvironmentAttributeBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public EnvironmentVariableBuilder withAppId(String appId) {
+    public EnvironmentAttributeBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public EnvironmentVariableBuilder withCreatedBy(User createdBy) {
+    public EnvironmentAttributeBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public EnvironmentVariableBuilder withCreatedAt(long createdAt) {
+    public EnvironmentAttributeBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public EnvironmentVariableBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public EnvironmentAttributeBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public EnvironmentVariableBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public EnvironmentAttributeBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public EnvironmentVariableBuilder withActive(boolean active) {
+    public EnvironmentAttributeBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    public EnvironmentVariableBuilder but() {
-      return anEnvironmentVariable()
+    public EnvironmentAttributeBuilder but() {
+      return anEnvironmentAttribute()
           .withEnvId(envId)
-          .withKey(key)
+          .withName(name)
           .withValue(value)
           .withUuid(uuid)
           .withAppId(appId)
@@ -157,7 +157,7 @@ public class EnvironmentAttribute extends Base {
     public EnvironmentAttribute build() {
       EnvironmentAttribute environmentAttribute = new EnvironmentAttribute();
       environmentAttribute.setEnvId(envId);
-      environmentAttribute.setName(key);
+      environmentAttribute.setName(name);
       environmentAttribute.setValue(value);
       environmentAttribute.setUuid(uuid);
       environmentAttribute.setAppId(appId);

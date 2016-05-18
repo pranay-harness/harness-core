@@ -1,6 +1,16 @@
 package software.wings.beans;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
+
+import com.google.common.base.MoreObjects;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.sm.RepeatElementType;
@@ -9,16 +19,26 @@ import software.wings.sm.Repeatable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Entity(value = "hosts", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("infraId")
+                           , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base implements Repeatable {
   private String infraId;
   private String hostName;
-  private String osType;
-  private AccessType accessType;
-  private ConnectionType connectionType;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
+
+  @FormDataParam("hostAttributes")
+  @Reference(idOnly = true, ignoreMissing = true)
+  private EnvironmentAttribute hostAttributes;
+
+  @FormDataParam("bastionHostAttributes")
+  @Reference(idOnly = true, ignoreMissing = true)
+  private EnvironmentAttribute bastionHostAttributes;
+
+  @FormDataParam("tags") @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
+
+  @Transient @JsonProperty(access = WRITE_ONLY) private List<String> hostNames; // to support bulk add host API
+
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   public String getInfraId() {
@@ -37,28 +57,20 @@ public class Host extends Base implements Repeatable {
     this.hostName = hostName;
   }
 
-  public String getOsType() {
-    return osType;
+  public EnvironmentAttribute getHostAttributes() {
+    return hostAttributes;
   }
 
-  public void setOsType(String osType) {
-    this.osType = osType;
+  public void setHostAttributes(EnvironmentAttribute hostAttributes) {
+    this.hostAttributes = hostAttributes;
   }
 
-  public AccessType getAccessType() {
-    return accessType;
+  public EnvironmentAttribute getBastionHostAttributes() {
+    return bastionHostAttributes;
   }
 
-  public void setAccessType(AccessType accessType) {
-    this.accessType = accessType;
-  }
-
-  public ConnectionType getConnectionType() {
-    return connectionType;
-  }
-
-  public void setConnectionType(ConnectionType connectionType) {
-    this.connectionType = connectionType;
+  public void setBastionHostAttributes(EnvironmentAttribute bastionHostAttributes) {
+    this.bastionHostAttributes = bastionHostAttributes;
   }
 
   public List<Tag> getTags() {
@@ -77,8 +89,12 @@ public class Host extends Base implements Repeatable {
     this.configFiles = configFiles;
   }
 
-  public String getTagsString() {
-    return tags.stream().map(Tag::getName).collect(Collectors.joining(","));
+  public List<String> getHostNames() {
+    return hostNames;
+  }
+
+  public void setHostNames(List<String> hostNames) {
+    this.hostNames = hostNames;
   }
 
   @Override
@@ -94,7 +110,7 @@ public class Host extends Base implements Repeatable {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, accessType, connectionType, tags, configFiles);
+        + Objects.hash(infraId, hostName, hostAttributes, bastionHostAttributes, tags, configFiles);
   }
 
   @Override
@@ -110,21 +126,28 @@ public class Host extends Base implements Repeatable {
     }
     final Host other = (Host) obj;
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.osType, other.osType) && Objects.equals(this.accessType, other.accessType)
-        && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.configFiles, other.configFiles);
+        && Objects.equals(this.hostAttributes, other.hostAttributes)
+        && Objects.equals(this.bastionHostAttributes, other.bastionHostAttributes)
+        && Objects.equals(this.tags, other.tags) && Objects.equals(this.configFiles, other.configFiles);
   }
 
-  public enum AccessType { SSH, SSH_KEY, SSH_USER_PASSWD, SSH_SU_APP_ACCOUNT, SSH_SUDO_APP_ACCOUNT }
-
-  public enum ConnectionType { SSH }
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("infraId", infraId)
+        .add("hostName", hostName)
+        .add("hostAttributes", hostAttributes)
+        .add("bastionHostAttributes", bastionHostAttributes)
+        .add("tags", tags)
+        .add("configFiles", configFiles)
+        .toString();
+  }
 
   public static final class HostBuilder {
     private String infraId;
     private String hostName;
-    private String osType;
-    private AccessType accessType;
-    private ConnectionType connectionType;
+    private EnvironmentAttribute hostAttributes;
+    private EnvironmentAttribute bastionHostAttributes;
     private List<Tag> tags = new ArrayList<>();
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
@@ -151,18 +174,13 @@ public class Host extends Base implements Repeatable {
       return this;
     }
 
-    public HostBuilder withOsType(String osType) {
-      this.osType = osType;
+    public HostBuilder withHostAttributes(EnvironmentAttribute hostAttributes) {
+      this.hostAttributes = hostAttributes;
       return this;
     }
 
-    public HostBuilder withAccessType(AccessType accessType) {
-      this.accessType = accessType;
-      return this;
-    }
-
-    public HostBuilder withConnectionType(ConnectionType connectionType) {
-      this.connectionType = connectionType;
+    public HostBuilder withBastionHostAttributes(EnvironmentAttribute bastionHostAttributes) {
+      this.bastionHostAttributes = bastionHostAttributes;
       return this;
     }
 
@@ -215,9 +233,8 @@ public class Host extends Base implements Repeatable {
       return aHost()
           .withInfraId(infraId)
           .withHostName(hostName)
-          .withOsType(osType)
-          .withAccessType(accessType)
-          .withConnectionType(connectionType)
+          .withHostAttributes(hostAttributes)
+          .withBastionHostAttributes(bastionHostAttributes)
           .withTags(tags)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
@@ -233,9 +250,8 @@ public class Host extends Base implements Repeatable {
       Host host = new Host();
       host.setInfraId(infraId);
       host.setHostName(hostName);
-      host.setOsType(osType);
-      host.setAccessType(accessType);
-      host.setConnectionType(connectionType);
+      host.setHostAttributes(hostAttributes);
+      host.setBastionHostAttributes(bastionHostAttributes);
       host.setTags(tags);
       host.setConfigFiles(configFiles);
       host.setUuid(uuid);

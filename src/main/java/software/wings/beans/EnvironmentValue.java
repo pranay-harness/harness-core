@@ -9,9 +9,12 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  */
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ @Type(value = HostAttributes.class, name = "HOST_ATTRIBUTES") })
+@JsonSubTypes({
+  @Type(value = HostAttributes.class, name = "HOST_ATTRIBUTES")
+  , @Type(value = BastionHostAttributes.class, name = "BASTION_HOST_ATTRIBUTES")
+})
 public abstract class EnvironmentValue {
-  public enum EnvironmentVariableTypes { HOST_ATTRIBUTES }
+  public enum EnvironmentVariableTypes { HOST_ATTRIBUTES, BASTION_HOST_ATTRIBUTES }
 
   private EnvironmentVariableTypes type;
 

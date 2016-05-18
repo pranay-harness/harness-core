@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static software.wings.beans.EnvironmentValue.EnvironmentVariableTypes.HOST_ATTRIBUTES;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.Objects;
 
 /**
@@ -19,12 +21,21 @@ public class HostAttributes extends EnvironmentValue {
 
   public enum ConnectionType { SSH }
 
+  private String osType;
   private AccessType accessType;
   private ConnectionType connectionType;
   private String key;
 
   public HostAttributes() {
     super(HOST_ATTRIBUTES);
+  }
+
+  public String getOsType() {
+    return osType;
+  }
+
+  public void setOsType(String osType) {
+    this.osType = osType;
   }
 
   public AccessType getAccessType() {
@@ -53,7 +64,7 @@ public class HostAttributes extends EnvironmentValue {
 
   @Override
   public int hashCode() {
-    return Objects.hash(accessType, connectionType, key);
+    return Objects.hash(osType, accessType, connectionType, key);
   }
 
   @Override
@@ -65,11 +76,22 @@ public class HostAttributes extends EnvironmentValue {
       return false;
     }
     final HostAttributes other = (HostAttributes) obj;
-    return Objects.equals(this.accessType, other.accessType)
+    return Objects.equals(this.osType, other.osType) && Objects.equals(this.accessType, other.accessType)
         && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.key, other.key);
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("osType", osType)
+        .add("accessType", accessType)
+        .add("connectionType", connectionType)
+        .add("key", key)
+        .toString();
+  }
+
   public static final class HostAttributesBuilder {
+    private String osType;
     private AccessType accessType;
     private ConnectionType connectionType;
     private String key;
@@ -78,6 +100,11 @@ public class HostAttributes extends EnvironmentValue {
 
     public static HostAttributesBuilder aHostAttributes() {
       return new HostAttributesBuilder();
+    }
+
+    public HostAttributesBuilder withOsType(String osType) {
+      this.osType = osType;
+      return this;
     }
 
     public HostAttributesBuilder withAccessType(AccessType accessType) {
@@ -96,11 +123,16 @@ public class HostAttributes extends EnvironmentValue {
     }
 
     public HostAttributesBuilder but() {
-      return aHostAttributes().withAccessType(accessType).withConnectionType(connectionType).withKey(key);
+      return aHostAttributes()
+          .withOsType(osType)
+          .withAccessType(accessType)
+          .withConnectionType(connectionType)
+          .withKey(key);
     }
 
     public HostAttributes build() {
       HostAttributes hostAttributes = new HostAttributes();
+      hostAttributes.setOsType(osType);
       hostAttributes.setAccessType(accessType);
       hostAttributes.setConnectionType(connectionType);
       hostAttributes.setKey(key);
