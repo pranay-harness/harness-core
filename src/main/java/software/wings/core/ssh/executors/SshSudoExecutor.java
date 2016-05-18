@@ -1,7 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.JSchException;
@@ -40,7 +39,7 @@ public class SshSudoExecutor extends AbstractSshExecutor {
       }
     } catch (IOException ex) {
       logger.error("Reading writing to output/input stream failed", ex);
-      throw new WingsException(UNKNOWN_ERROR_MEG, UNKNOWN_ERROR_CODE, ex.getCause());
+      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
     }
   }
 }

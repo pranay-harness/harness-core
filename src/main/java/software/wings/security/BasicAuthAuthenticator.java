@@ -1,6 +1,6 @@
 package software.wings.security;
 
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 
 import com.google.common.base.Optional;
 
@@ -29,6 +29,6 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
       user.setToken(authToken.getUuid());
       return Optional.of(user);
     }
-    throw new WingsException(INVALID_CREDENTIAL_ERROR_MSG);
+    throw new WingsException(INVALID_CREDENTIAL);
   }
 }

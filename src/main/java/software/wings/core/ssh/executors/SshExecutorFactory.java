@@ -1,7 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 
 import software.wings.exception.WingsException;
 
@@ -19,8 +18,7 @@ public class SshExecutorFactory {
         executor = new SshJumpboxExecutor();
         break;
       default:
-        throw new WingsException(
-            UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("Unknown executor type: " + config.getExecutorType()));
+        throw new WingsException(UNKNOWN_ERROR, new Throwable("Unknown executor type: " + config.getExecutorType()));
     }
     executor.init(config);
     return executor;

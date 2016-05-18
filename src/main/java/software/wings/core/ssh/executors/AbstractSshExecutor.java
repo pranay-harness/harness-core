@@ -1,16 +1,11 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL_ERROR_MSG;
-import static software.wings.beans.ErrorConstants.INVALID_KEYPATH_ERROR_MSG;
-import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.INVALID_KEY_ERROR_MSG;
-import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION_ERROR_MSG;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
-import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_CODE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_HOST_ERROR_MSG;
+import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorConstants.INVALID_KEY;
+import static software.wings.beans.ErrorConstants.INVALID_KEYPATH;
+import static software.wings.beans.ErrorConstants.SSH_SOCKET_CONNECTION;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -49,6 +44,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
+  private final int MAX_BYTES_READ_PER_CHANNEL =
+      1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
 
   @Inject protected ExecutionLogs executionLogs;
   @Inject protected FileService fileService;
@@ -58,7 +55,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   @Override
   public void init(SshSessionConfig config) {
     if (null == config.getExecutionId() || config.getExecutionId().length() == 0) {
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable("INVALID_EXECUTION_ID"));
+      throw new WingsException(UNKNOWN_ERROR, new Throwable("INVALID_EXECUTION_ID"));
     }
 
     this.config = config;
@@ -70,9 +67,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       outputStream = channel.getOutputStream();
       inputStream = channel.getInputStream();
     } catch (JSchException ex) {
-      logger.error("Failed to initialize executor");
-      SshException shEx = extractSshException(ex);
-      throw new WingsException(shEx.code, shEx.msg, ex.getCause());
+      logger.error("Failed to initialize executor " + ex);
+      throw new WingsException(normalizeError(ex), ex.getCause());
     } catch (IOException ex) {
       ex.printStackTrace();
     }
@@ -88,12 +84,17 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       ((ChannelExec) channel).setCommand(command);
       channel.connect();
 
+      int totalBytesRead = 0;
       byte[] tmp = new byte[1024]; // FIXME: Improve stream reading/writing logic
       while (true) {
         while (inputStream.available() > 0) {
           int numOfBytesRead = inputStream.read(tmp, 0, 1024);
           if (numOfBytesRead < 0) {
             break;
+          }
+          totalBytesRead += numOfBytesRead;
+          if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
+            throw new WingsException(UNKNOWN_ERROR);
           }
           String line = new String(tmp, 0, numOfBytesRead);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
@@ -108,12 +109,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         quietSleep(1000);
       }
     } catch (JSchException ex) {
-      SshException shEx = extractSshException(ex);
       logger.error("Command execution failed with error " + ex.getMessage());
-      throw new WingsException(shEx.code, shEx.msg, ex.getCause());
+      throw new WingsException(normalizeError(ex), ex.getCause());
     } catch (IOException ex) {
       logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
+      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
     } finally {
       destroy();
     }
@@ -142,67 +142,42 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   public abstract Session getSession(SshSessionConfig config) throws JSchException;
 
-  public void postChannelConnect(){};
+  public void postChannelConnect() {}
 
-  protected class SshException {
-    private String code;
-    private String msg;
-
-    private SshException(String code, String cause) {
-      this.code = code;
-      this.msg = cause;
-    }
-
-    public String getCode() {
-      return code;
-    }
-
-    public String getMsg() {
-      return msg;
-    }
-  }
-
-  protected SshException extractSshException(JSchException jschexception) {
+  protected String normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
 
-    String customMessage = null;
-    String customCode = null;
+    String errorConst = null;
 
     if (null != cause) {
       if (cause instanceof NoRouteToHostException || cause instanceof UnknownHostException) {
-        customMessage = UNKNOWN_HOST_ERROR_MSG;
-        customCode = UNKNOWN_HOST_ERROR_CODE;
+        errorConst = UNKNOWN_HOST;
       } else if (cause instanceof SocketTimeoutException) {
-        customMessage = UNKNOWN_HOST_ERROR_MSG;
-        customCode = UNKNOWN_HOST_ERROR_CODE;
+        errorConst = UNKNOWN_HOST;
       } else if (cause instanceof SocketException) {
-        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
-        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+        errorConst = SSH_SOCKET_CONNECTION;
       } else if (cause instanceof FileNotFoundException) {
-        customMessage = INVALID_KEYPATH_ERROR_MSG;
-        customCode = INVALID_KEY_ERROR_CODE;
+        errorConst = INVALID_KEYPATH;
       } else {
-        customMessage = UNKNOWN_ERROR_CODE;
-        customCode = UNKNOWN_ERROR_MEG;
+        errorConst = UNKNOWN_ERROR;
       }
     } else {
       if (message.startsWith("invalid privatekey")) {
-        customMessage = INVALID_KEY_ERROR_MSG;
-        customCode = INVALID_KEY_ERROR_CODE;
+        errorConst = INVALID_KEY;
       } else if (message.contains("Auth fail") || message.contains("Auth cancel")
           || message.contains("USERAUTH fail")) {
-        customMessage = INVALID_CREDENTIAL_ERROR_MSG;
-        customCode = INVALID_CREDENTIAL_ERROR_CODE;
+        errorConst = INVALID_CREDENTIAL;
       } else if (message.startsWith("timeout: socket is not established")) {
-        customMessage = SSH_SOCKET_CONNECTION_ERROR_MSG;
-        customCode = SSH_SOCKET_CONNECTION_ERROR_CODE;
+        errorConst = SSH_SOCKET_CONNECTION;
       }
     }
-    return new SshException(customCode, customMessage);
+    return errorConst;
   }
 
-  /**** SCP. ****/
+  /****
+   * SCP.
+   ****/
   @Override
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
     FileInputStream fis = null;
@@ -248,14 +223,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       session.disconnect();
     } catch (FileNotFoundException ex) {
       logger.error("file [" + localFilePath + "] could not be found");
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
+      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
     } catch (IOException ex) {
       logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, ex.getCause());
+      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
     } catch (JSchException ex) {
-      SshException shEx = extractSshException(ex);
-      logger.error("Command execution failed with error ", ex);
-      throw new WingsException(shEx.getCode(), shEx.getMsg(), ex.getCause());
+      logger.error("Command execution failed with errorCode ", ex);
+      throw new WingsException(normalizeError(ex), ex.getCause());
     }
     return SUCCESS;
   }
@@ -283,7 +257,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } while (c != '\n');
 
       if (b <= 2) {
-        throw new WingsException(UNKNOWN_ERROR_CODE, UNKNOWN_ERROR_MEG, new Throwable(sb.toString()));
+        throw new WingsException(UNKNOWN_ERROR, new Throwable(sb.toString()));
       }
       logger.error(sb.toString());
       return 0;

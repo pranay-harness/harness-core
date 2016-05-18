@@ -2,7 +2,7 @@ package software.wings.utils;
 
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
 import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR_MEG;
+import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.beans.Host.HostBuilder.aHost;
 
 import org.apache.commons.csv.CSVParser;
@@ -62,12 +62,12 @@ public class HostFileHelper {
         try {
           csvPrinter.printRecord(row);
         } catch (IOException ex) {
-          throw new WingsException(UNKNOWN_ERROR_MEG);
+          throw new WingsException(UNKNOWN_ERROR);
         }
       });
       fileWriter.flush();
     } catch (IOException ex) {
-      throw new WingsException(UNKNOWN_ERROR_MEG);
+      throw new WingsException(UNKNOWN_ERROR);
     } finally {
       try {
         if (fileWriter != null) {
