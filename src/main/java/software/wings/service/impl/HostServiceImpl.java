@@ -42,7 +42,7 @@ public class HostServiceImpl implements HostService {
   public Host update(Host host) {
     wingsPersistence.updateFields(Host.class, host.getUuid(),
         ImmutableMap.<String, Object>builder()
-            .put("hostName", host.getName())
+            .put("hostName", host.getHostName())
             .put("hostAttributes", host.getHostAttributes())
             .put("bastionHostAttributes", host.getBastionHostAttributes())
             .put("tags", host.getTags())

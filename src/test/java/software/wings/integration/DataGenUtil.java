@@ -9,9 +9,10 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
-import static software.wings.integration.IntegrationTestUtil.createHostsFile;
+import static software.wings.beans.EnvironmentAttribute.EnvironmentAttributeBuilder.anEnvironmentAttribute;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -30,6 +31,7 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
+import software.wings.beans.EnvironmentAttribute;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Tag;
@@ -374,13 +376,20 @@ public class DataGenUtil extends WingsBaseTest {
     log().info(response.getResource().getResponse().toString());
   }
 
-  private void addHostsToEnv(Environment environment) throws IOException {
-    WebTarget target = client.target(format("http://localhost:9090/wings/hosts/import/CSV?appId=%s&envId=%s",
-        environment.getAppId(), environment.getUuid()));
-    File file = createHostsFile(testFolder.newFile(environment.getUuid() + ".csv"), NUM_HOSTS_PER_INFRA);
-    FormDataMultiPart multiPart = new FormDataMultiPart().field("sourceType", "FILE_UPLOAD");
-    multiPart.bodyPart(new FileDataBodyPart("file", file));
-    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+  private void addHostsToEnv(Environment env) throws IOException {
+    EnvironmentAttribute envAttr = wingsPersistence.saveAndGet(EnvironmentAttribute.class,
+        anEnvironmentAttribute().withAppId(env.getAppId()).withEnvId(env.getUuid()).build());
+
+    WebTarget target =
+        client.target(format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
+    List<String> hostNames = new ArrayList<>();
+    for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
+      hostNames.add("host" + i + ".ec2.aws.com");
+    }
+
+    Response response = target.request().post(Entity.entity(
+        ImmutableMap.of("hostNames", hostNames, "hostAttributes", envAttr, "bastionHostAttributes", envAttr),
+        APPLICATION_JSON));
     assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
   }
 
