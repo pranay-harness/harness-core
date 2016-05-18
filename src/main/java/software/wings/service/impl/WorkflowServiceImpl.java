@@ -16,8 +16,6 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -27,6 +25,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.common.Constants;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowService;
@@ -219,7 +219,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void populateGraph(WorkflowExecution workflowExecution) {
-    PageRequest pageRequest = new PageRequest<>();
+    PageRequest<StateExecutionInstance> pageRequest = new PageRequest<>();
 
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -258,6 +258,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (instance.getPrevInstanceId() != null) {
         fromInstanceId = instance.getPrevInstanceId();
       } else if (instance.getParentInstanceId() != null) {
+        // TODO: needs work for repeat element instance.
         // This is scenario like fork, repeat or sub workflow
         fromInstanceId = instance.getParentInstanceId();
       }
@@ -343,6 +344,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
     stateMachineExecutor.execute(stateMachine, stdParams);
 
+    // TODO: findAndModify
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field("appId")
                                          .equal(workflowExecution.getAppId())
@@ -352,6 +354,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                          .equal(ExecutionStatus.NEW);
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", ExecutionStatus.RUNNING);
+
     wingsPersistence.update(query, updateOps);
 
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);

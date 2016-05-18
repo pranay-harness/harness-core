@@ -5,9 +5,9 @@ import com.codahale.metrics.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Deployment;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.service.intfc.DeploymentService;
 
 import javax.inject.Inject;

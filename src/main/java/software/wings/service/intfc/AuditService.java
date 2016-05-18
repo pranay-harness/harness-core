@@ -2,9 +2,9 @@ package software.wings.service.intfc;
 
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.User;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 
 /**
  * HttpAuditService.

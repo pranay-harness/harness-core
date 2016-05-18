@@ -14,9 +14,9 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.RepeatElementType;
 import software.wings.sm.Repeatable;
-import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 
@@ -145,7 +145,7 @@ public class RepeatState extends State {
       StateExecutionInstance stateExecutionInstance = context.getSmInstance();
       String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
       stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
-          stateExecutionInstance.getUuid(), notifyId);
+          stateExecutionInstance.getUuid(), notifyId, stateExecutionInstance.getUuid());
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(notifyId);
 

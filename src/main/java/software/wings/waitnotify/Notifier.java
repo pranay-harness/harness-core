@@ -6,11 +6,11 @@ import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.queue.Queue;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 

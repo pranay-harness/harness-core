@@ -5,8 +5,6 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -37,7 +35,9 @@ public class MongoHelper {
 
     long total = q.countAll();
     q.offset(req.getStart());
-    if (!PageRequest.UNLIMITED.equals(req.getLimit())) {
+    if (PageRequest.UNLIMITED.equals(req.getLimit())) {
+      q.limit(PageRequest.DEFAULT_UNLIMITED);
+    } else {
       q.limit(req.getPageSize());
     }
     List<T> list = q.asList();

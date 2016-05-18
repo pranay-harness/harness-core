@@ -19,9 +19,9 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
-import software.wings.beans.PageRequest;
 import software.wings.beans.Release;
 import software.wings.beans.Release.ReleaseBuilder;
+import software.wings.dl.PageRequest;
 import software.wings.service.intfc.ReleaseService;
 
 import java.util.List;

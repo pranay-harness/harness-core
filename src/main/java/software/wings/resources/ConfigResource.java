@@ -11,9 +11,9 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ConfigService;
 
 import java.io.File;

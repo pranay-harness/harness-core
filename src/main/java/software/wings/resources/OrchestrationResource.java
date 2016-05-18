@@ -4,13 +4,13 @@
 package software.wings.resources;
 
 import software.wings.beans.Orchestration;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import javax.ws.rs.QueryParam;
  * @author Rishi
  *
  */
-@Path("/Orchestrations")
+@Path("/orchestrations")
 public class OrchestrationResource {
   private WorkflowService workflowService;
 
@@ -81,10 +81,10 @@ public class OrchestrationResource {
   }
 
   @GET
-  @Path("executions")
+  @Path("{orchestrationId}/executions")
   @Produces("application/json")
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
+      @QueryParam("envId") String envId, @PathParam("orchestrationId") String orchestrationId,
       @BeanParam PageRequest<WorkflowExecution> pageRequest) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -110,10 +110,10 @@ public class OrchestrationResource {
   }
 
   @POST
-  @Path("executions")
+  @Path("{orchestrationId}/executions")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
-      @QueryParam("orchestrationId") String orchestrationId, @QueryParam("artifactId") List<String> artifactIds) {
+      @PathParam("orchestrationId") String orchestrationId, @QueryParam("artifactId") List<String> artifactIds) {
     return new RestResponse<WorkflowExecution>(
         workflowService.triggerOrchestrationExecution(appId, orchestrationId, artifactIds));
   }

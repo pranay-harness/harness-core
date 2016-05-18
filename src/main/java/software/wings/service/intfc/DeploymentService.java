@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Deployment;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 
 public interface DeploymentService {
   public PageResponse<Deployment> list(PageRequest<Deployment> req);

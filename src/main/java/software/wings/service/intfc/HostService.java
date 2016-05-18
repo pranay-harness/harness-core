@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Host;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;

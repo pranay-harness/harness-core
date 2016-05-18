@@ -2,9 +2,9 @@ package software.wings.service.intfc;
 
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.ServiceTemplate;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 
 import java.util.List;
 import java.util.Map;

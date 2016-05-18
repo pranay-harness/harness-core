@@ -30,10 +30,10 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Tag;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 

@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.EnvironmentAttribute;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentAttributeService;
 

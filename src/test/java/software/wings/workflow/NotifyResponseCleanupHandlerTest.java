@@ -8,10 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 import software.wings.waitnotify.NotifyResponse;

@@ -3,19 +3,24 @@ package software.wings.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.WorkflowExecution;
+import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
@@ -23,6 +28,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
+import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
@@ -39,6 +45,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
 
   @Inject private WingsPersistence wingsPersistence;
+
+  private String appId = UUIDGenerator.getUuid();
 
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
@@ -419,6 +427,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private Orchestration createOrchestration() {
     Orchestration orchestration = new Orchestration();
+    orchestration.setAppId(appId);
     orchestration.setName("workflow1");
     orchestration.setDescription("Sample Workflow");
 
@@ -508,4 +517,36 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     return orchestration;
   }
+
+  @Test
+  public void triggerOrchestration() {
+    Orchestration orchestration = createOrchestration();
+    WorkflowExecution execution = workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), null);
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    Misc.quietSleep(2000);
+    execution = workflowService.getExecutionDetails(appId, executionId);
+    assertThat(execution).isNotNull();
+    assertThat(execution.getUuid()).isEqualTo(executionId);
+    assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  public void triggerPipeline() {
+    Pipeline pipeline = createPipeline();
+    WorkflowExecution execution = workflowService.triggerPipelineExecution(appId, pipeline.getUuid());
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Pipeline executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    Misc.quietSleep(2000);
+    execution = workflowService.getExecutionDetails(appId, executionId);
+    assertThat(execution).isNotNull();
+    assertThat(execution.getUuid()).isEqualTo(executionId);
+    assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

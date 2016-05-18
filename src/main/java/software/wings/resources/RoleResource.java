@@ -4,10 +4,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import software.wings.beans.PageRequest;
-import software.wings.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.RoleService;
 
