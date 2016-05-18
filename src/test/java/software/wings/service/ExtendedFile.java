@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import org.junit.Ignore;
 import software.wings.beans.BaseFile;

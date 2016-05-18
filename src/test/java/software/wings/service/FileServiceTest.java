@@ -1,9 +1,9 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.FileMetadata.Builder.aFileMetadata;
-import static software.wings.service.impl.ExtendedFile.Builder.anExtendedFile;
+import static software.wings.service.ExtendedFile.Builder.anExtendedFile;
 
 import com.google.common.io.Files;
 
