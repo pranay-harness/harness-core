@@ -221,7 +221,7 @@ public class StateMachine extends Base {
    * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
-    if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() == 0) {
+    if (cachedTransitionFlowMap != null && cachedTransitionFlowMap.size() > 0) {
       return cachedTransitionFlowMap;
     }
 
