@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -26,6 +26,8 @@ import software.wings.beans.Service.ServiceBuilder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
 
