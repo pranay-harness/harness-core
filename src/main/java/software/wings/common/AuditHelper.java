@@ -15,7 +15,7 @@ import software.wings.service.intfc.AuditService;
  */
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
-  private static AuditHelper instance = new AuditHelper();
+  private static final AuditHelper instance = new AuditHelper();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private AuditHelper() {}

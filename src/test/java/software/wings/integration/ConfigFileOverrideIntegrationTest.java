@@ -76,9 +76,8 @@ import javax.inject.Inject;
  * |
  */
 
-@Ignore
 @Integration
-public class ConfigFileOverrideIT extends WingsBaseTest {
+public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   @Inject WingsPersistence wingsPersistence;
   @Inject AppService appService;

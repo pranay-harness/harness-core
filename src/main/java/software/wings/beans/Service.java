@@ -18,6 +18,8 @@ import java.util.List;
  */
 @Entity(value = "services", noClassnameStored = true)
 public class Service extends Base implements Repeatable {
+  private static final long serialVersionUID = -5785133514617556212L;
+
   private String name;
   private String description;
   private ArtifactType artifactType;

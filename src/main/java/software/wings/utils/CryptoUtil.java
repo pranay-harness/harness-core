@@ -5,7 +5,7 @@ import java.util.Random;
 
 /* http://stackoverflow.com/a/19597101 */
 public class CryptoUtil {
-  private static char[] VALID_CHARACTERS =
+  private static final char[] VALID_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
 
   public static String secureRandAlphaNumString(int length) {

@@ -359,7 +359,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
+        <dependency>
+            <groupId>com.openpojo</groupId>
+            <artifactId>openpojo</artifactId>
+            <version>0.8.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <version>18.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -443,8 +456,8 @@
                         <configuration>
                             <skip>false</skip>
                             <excludes>
-                                <exclude>**/*IT.java</exclude>
-                                <exclude>**/IT*.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
+                                <exclude>**/IntegrationTest*.java</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -469,8 +482,8 @@
                 </executions>
                 <configuration>
                     <includes>
-                        <include>**/IT*.java</include>
-                        <include>**/*IT.java</include>
+                        <include>**/IntegrationTest*.java</include>
+                        <include>**/*IntegrationTest.java</include>
                     </includes>
                 </configuration>
             </plugin>

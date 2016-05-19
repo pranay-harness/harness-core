@@ -95,7 +95,7 @@ public class SshSessionConfig {
   }
 
   public static class SshSessionConfigBuilder {
-    public String executionId;
+    private String executionId;
     private Integer sshConnectionTimeout = 10000; // 10 seconds
     private Integer retryInterval = 1000;
     private ExecutorType executorType;

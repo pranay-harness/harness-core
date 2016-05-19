@@ -15,6 +15,7 @@ import software.wings.service.intfc.ReleaseService;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -31,6 +32,8 @@ import javax.ws.rs.QueryParam;
  * @author Rishi
  */
 @Path("/releases")
+@Produces("application/json")
+@Consumes("application/json")
 public class ReleaseResource {
   private ReleaseService releaseService;
 
@@ -55,7 +58,7 @@ public class ReleaseResource {
   @ExceptionMetered
   public RestResponse<PageResponse<Release>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Release> pageRequest) {
-    pageRequest.addFilter("application", appId, EQ);
+    pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(releaseService.list(pageRequest));
   }
 
@@ -69,7 +72,6 @@ public class ReleaseResource {
   @POST
   @Timed
   @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Release> save(@QueryParam("appId") String appId, Release release) {
     try {
       Application application = appService.findByUuid(appId);
@@ -87,7 +89,6 @@ public class ReleaseResource {
   @PUT
   @Timed
   @ExceptionMetered
-  @Produces("application/json")
   @Path("{id}")
   public RestResponse<Release> update(
       @QueryParam("appId") String appId, @PathParam("id") String releaseId, Release release) {
@@ -98,7 +99,6 @@ public class ReleaseResource {
   @POST
   @Timed
   @ExceptionMetered
-  @Produces("application/json")
   @Path("{id}/artifactsources")
   public RestResponse<Release> addArtifactSource(
       @QueryParam("appId") String appId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
@@ -108,7 +108,6 @@ public class ReleaseResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  @Produces("application/json")
   @Path("{id}/artifactsources")
   public RestResponse<Release> deleteArtifactSource(
       @QueryParam("appId") String appId, @PathParam("id") String releaseId, @BeanParam ArtifactSource artifactSource) {

@@ -1,4 +1,4 @@
-package software.wings.workflow;
+package software.wings.waitnotify;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,13 +10,6 @@ import software.wings.WingsBaseTest;
 import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
-import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyEvent;
-import software.wings.waitnotify.NotifyEventListener;
-import software.wings.waitnotify.NotifyResponse;
-import software.wings.waitnotify.WaitInstance;
-import software.wings.waitnotify.WaitNotifyEngine;
-import software.wings.waitnotify.WaitQueue;
 
 import java.io.Serializable;
 import java.util.HashMap;

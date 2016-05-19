@@ -14,7 +14,7 @@ public interface SshExecutor {
 
   void destroy();
 
-  public enum ExecutorType { PASSWORD, SSHKEY, JUMPBOX }
+  enum ExecutorType { PASSWORD, SSHKEY, JUMPBOX }
 
-  public enum ExecutionResult { SUCCESS, FAILURE }
+  enum ExecutionResult { SUCCESS, FAILURE }
 }

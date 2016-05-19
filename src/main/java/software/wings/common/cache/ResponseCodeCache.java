@@ -14,8 +14,7 @@ import java.util.Properties;
 public class ResponseCodeCache {
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 
-  private static ResponseCodeCache instance = new ResponseCodeCache();
-  ;
+  private static final ResponseCodeCache instance = new ResponseCodeCache();
 
   private final Properties messages;
 

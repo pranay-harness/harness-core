@@ -15,8 +15,10 @@ import software.wings.service.StaticMap;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Listeners(NotifyEventListener.class)
 public class StateMachineTest extends WingsBaseTest {
@@ -72,18 +74,25 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   static class Notifier implements Runnable {
-    private String uuid;
+    private boolean shouldFail;
+    private String name;
     private int duration;
+    private String uuid;
 
     /**
      * Creates a new Notifier object.
      *
-     * @param uuid     uuid of notifier.
+     * @param name     name of notifier.
      * @param duration duration to sleep for.
      */
-    public Notifier(String uuid, int duration) {
+    public Notifier(String name, String uuid, int duration) {
+      this(name, uuid, duration, false);
+    }
+    public Notifier(String name, String uuid, int duration, boolean shouldFail) {
+      this.name = name;
       this.uuid = uuid;
       this.duration = duration;
+      this.shouldFail = shouldFail;
     }
 
     /*
@@ -100,7 +109,12 @@ public class StateMachineTest extends WingsBaseTest {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
-      WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "SUCCESS");
+      StaticMap.putValue(name, System.currentTimeMillis());
+      if (shouldFail) {
+        WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "FAILURE");
+      } else {
+        WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "SUCCESS");
+      }
     }
   }
 
@@ -108,8 +122,15 @@ public class StateMachineTest extends WingsBaseTest {
    * @author Rishi
    */
   public static class StateSynch extends State {
+    private boolean shouldFail;
+
     public StateSynch(String name) {
+      this(name, false);
+    }
+
+    public StateSynch(String name, boolean shouldFail) {
       super(name, StateType.HTTP.name());
+      this.shouldFail = shouldFail;
     }
 
     /*
@@ -125,6 +146,9 @@ public class StateMachineTest extends WingsBaseTest {
       response.setStateExecutionData(stateExecutionData);
       StaticMap.putValue(getName(), System.currentTimeMillis());
       System.out.println("stateExecutionData:" + stateExecutionData);
+      if (shouldFail) {
+        response.setExecutionStatus(ExecutionStatus.FAILED);
+      }
       return response;
     }
   }
@@ -133,11 +157,16 @@ public class StateMachineTest extends WingsBaseTest {
    * @author Rishi
    */
   public static class StateAsynch extends State {
+    private boolean shouldFail;
     private int duration;
 
     public StateAsynch(String name, int duration) {
+      this(name, duration, false);
+    }
+    public StateAsynch(String name, int duration, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
+      this.shouldFail = shouldFail;
     }
 
     /*
@@ -155,8 +184,19 @@ public class StateMachineTest extends WingsBaseTest {
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
       response.setCorrelationIds(correlationIds);
-      ThreadPool.execute(new Notifier(uuid, duration));
+      ThreadPool.execute(new Notifier(getName(), uuid, duration, shouldFail));
       return response;
+    }
+    @Override
+    public ExecutionResponse handleAsynchResponse(
+        ExecutionContextImpl context, Map<String, ? extends Serializable> responseMap) {
+      ExecutionResponse executionResponse = new ExecutionResponse();
+      for (Serializable response : responseMap.values()) {
+        if (!"SUCCESS".equals(response)) {
+          executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+        }
+      }
+      return executionResponse;
     }
   }
 
