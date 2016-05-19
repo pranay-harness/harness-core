@@ -85,7 +85,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.utils.CurrentThreadExecutor;
+import software.wings.CurrentThreadExecutor;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyEvent;

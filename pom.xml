@@ -456,8 +456,8 @@
                         <configuration>
                             <skip>false</skip>
                             <excludes>
-                                <exclude>**/*IT.java</exclude>
-                                <exclude>**/IT*.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
+                                <exclude>**/IntegrationTest*.java</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -482,8 +482,8 @@
                 </executions>
                 <configuration>
                     <includes>
-                        <include>**/IT*.java</include>
-                        <include>**/*IT.java</include>
+                        <include>**/IntegrationTest*.java</include>
+                        <include>**/*IntegrationTest.java</include>
                     </includes>
                 </configuration>
             </plugin>

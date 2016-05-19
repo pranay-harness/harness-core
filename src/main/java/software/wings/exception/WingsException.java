@@ -15,6 +15,8 @@ import javax.ws.rs.WebApplicationException;
  * @author Rishi
  */
 public class WingsException extends WebApplicationException {
+  private static final long serialVersionUID = -3266129015976960503L;
+
   List<ResponseMessage> responseMessageList = new ArrayList<ResponseMessage>();
   private Map<String, Object> params = new HashMap<String, Object>();
 

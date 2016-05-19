@@ -28,7 +28,6 @@ import javax.inject.Inject;
 @Singleton
 public class WaitNotifyEngine {
   private static final long NO_TIMEOUT = 0L;
-  private static WaitNotifyEngine instance;
 
   @Inject private WingsPersistence wingsPersistence;
 

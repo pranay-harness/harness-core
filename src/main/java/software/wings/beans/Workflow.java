@@ -13,7 +13,7 @@ public class Workflow extends Base {
   private String name;
   private String description;
 
-  @Transient private Graph Graph;
+  @Transient private Graph graph;
 
   public String getName() {
     return name;
@@ -32,10 +32,10 @@ public class Workflow extends Base {
   }
 
   public Graph getGraph() {
-    return Graph;
+    return graph;
   }
 
   public void setGraph(Graph graph) {
-    Graph = graph;
+    this.graph = graph;
   }
 }

@@ -25,7 +25,6 @@ public class HttpStateExecutionData extends StateExecutionData {
   private String assertionStatus;
 
   private transient Document document;
-  private transient XmlUtils xmlUtils;
 
   public String getHttpUrl() {
     return httpUrl;
@@ -77,7 +76,7 @@ public class HttpStateExecutionData extends StateExecutionData {
 
   public boolean xmlFormat() {
     try {
-      getDocument();
+      document();
       return true;
     } catch (Exception e) {
       return false;
@@ -86,20 +85,20 @@ public class HttpStateExecutionData extends StateExecutionData {
 
   public String xpath(String path) {
     try {
-      return getXmlUtils().xpath(getDocument(), path);
+      return xmlUtils().xpath(document(), path);
     } catch (Exception e) {
       return null;
     }
   }
 
-  private Document getDocument() throws ParserConfigurationException, SAXException, IOException {
+  private Document document() throws ParserConfigurationException, SAXException, IOException {
     if (document == null) {
-      document = getXmlUtils().parse(httpResponseBody);
+      document = xmlUtils().parse(httpResponseBody);
     }
     return document;
   }
 
-  private XmlUtils getXmlUtils() {
+  private XmlUtils xmlUtils() {
     return WingsBootstrap.lookup(XmlUtils.class);
   }
 }

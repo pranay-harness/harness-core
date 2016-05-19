@@ -39,23 +39,23 @@ public interface FileService {
     LOGS("logs"),
     PLATFORMS("platforms");
 
-    FileBucket(String name, int chunkSize) {
-      this.name = name;
+    FileBucket(String bucketName, int chunkSize) {
+      this.bucketName = bucketName;
       this.chunkSize = chunkSize;
-      this.gridFSBucket = WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(name);
+      this.gridFSBucket = WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(bucketName);
     }
 
-    FileBucket(String name) {
-      this(name, 16 * 1000 * 1000);
+    FileBucket(String bucketName) {
+      this(bucketName, 16 * 1000 * 1000);
     }
 
     private WingsPersistence wingsPersistence;
-    private String name;
+    private String bucketName;
     private int chunkSize;
     private GridFSBucket gridFSBucket;
 
     public String getName() {
-      return name;
+      return bucketName;
     }
 
     public int getChunkSize() {
@@ -63,7 +63,7 @@ public interface FileService {
     }
 
     public GridFSBucket getGridFSBucket() {
-      return WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(name);
+      return WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(bucketName);
     }
   }
 }

@@ -44,13 +44,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
-  private final int MAX_BYTES_READ_PER_CHANNEL =
+  private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
+  public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   @Inject protected ExecutionLogs executionLogs;
   @Inject protected FileService fileService;
-
-  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   @Override
   public void init(SshSessionConfig config) {
