@@ -41,6 +41,7 @@ import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.EnvironmentAttributeServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.ExecutionLogsImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
@@ -64,6 +65,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.EnvironmentAttributeService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
@@ -194,5 +196,6 @@ public class WingsModule extends AbstractModule {
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(EnvironmentAttributeService.class).to(EnvironmentAttributeServiceImpl.class);
+    bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
   }
 }

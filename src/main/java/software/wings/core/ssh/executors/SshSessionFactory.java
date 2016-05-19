@@ -1,31 +1,32 @@
 package software.wings.core.ssh.executors;
 
+import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
+
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
 public class SshSessionFactory {
-  private final static Logger LOGGER = LoggerFactory.getLogger(SshSessionFactory.class);
+  private static final Logger logger = LoggerFactory.getLogger(SshSessionFactory.class);
 
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
       Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
-      LOGGER.info("portforwarding port " + forwardingPort);
+      logger.info("portforwarding port " + forwardingPort);
 
-      SshSessionConfig newConfig = new SshSessionConfigBuilder()
-                                       .user(config.getUser())
-                                       .password(config.getPassword())
-                                       .keyPath(config.getKeyPath())
-                                       .host("127.0.0.1")
-                                       .port(forwardingPort)
+      SshSessionConfig newConfig = aSshSessionConfig()
+                                       .withUser(config.getUser())
+                                       .withPassword(config.getPassword())
+                                       .withKey(config.getKey())
+                                       .withHost("127.0.0.1")
+                                       .withPort(forwardingPort)
                                        .build();
       session = getSSHSession(newConfig);
     } catch (JSchException e) {
@@ -36,12 +37,14 @@ public class SshSessionFactory {
 
   public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
+    JSch.setLogger(new MyLogger());
+
     Session session = null;
     if ("KEY".equals(getSessionType(config))) {
       if (null == config.getKeyPassphrase()) {
-        jsch.addIdentity(config.getKeyPath());
+        jsch.addIdentity(config.getKey());
       } else {
-        jsch.addIdentity(config.getKeyPath(), config.getKeyPassphrase());
+        jsch.addIdentity(config.getKey(), config.getKeyPassphrase());
       }
       session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
     } else {
@@ -54,7 +57,41 @@ public class SshSessionFactory {
     return session;
   }
 
+  public static class MyLogger implements com.jcraft.jsch.Logger {
+    static java.util.Hashtable name = new java.util.Hashtable();
+
+    static {
+      name.put(DEBUG, "DEBUG: ");
+      name.put(INFO, "INFO: ");
+      name.put(WARN, "WARN: ");
+      name.put(ERROR, "ERROR: ");
+      name.put(FATAL, "FATAL: ");
+    }
+
+    public boolean isEnabled(int level) {
+      return true;
+    }
+
+    public void log(int level, String message) {
+      switch (level) {
+        case DEBUG:
+          logger.debug(message);
+          break;
+        case INFO:
+          logger.info(message);
+          break;
+        case WARN:
+          logger.warn(message);
+          break;
+        case FATAL:
+        case ERROR:
+          logger.error(message);
+          break;
+      }
+    }
+  }
+
   private static String getSessionType(SshSessionConfig config) {
-    return config.getKeyPath() != null && config.getKeyPath().length() > 0 ? "KEY" : "PASSWORD";
+    return config.getKey() != null && config.getKey().length() > 0 ? "KEY" : "PASSWORD";
   }
 }

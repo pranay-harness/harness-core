@@ -56,6 +56,7 @@ import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.ExecutionLogsImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
@@ -74,6 +75,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
@@ -209,6 +211,7 @@ public class WingsRule implements MethodRule {
             .to(JenkinsArtifactCollectorServiceImpl.class);
         install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
         bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
+        bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
       }
     });
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());

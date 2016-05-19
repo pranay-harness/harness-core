@@ -6,14 +6,22 @@ import static software.wings.utils.Misc.quietSleep;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ExecutionLogs;
+import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 2/4/16.
  */
 public class SshSudoExecutor extends AbstractSshExecutor {
+  @Inject
+  public SshSudoExecutor(ExecutionLogs executionLogs, FileService fileService) {
+    super(executionLogs, fileService);
+  }
+
   @Override
   public Session getSession(SshSessionConfig config) throws JSchException {
     return SshSessionFactory.getSSHSession(config);

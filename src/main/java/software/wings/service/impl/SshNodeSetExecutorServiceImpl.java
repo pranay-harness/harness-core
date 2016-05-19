@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
-import software.wings.core.ssh.ExecutionLogs;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -19,7 +18,7 @@ public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ExecutionLogs executionLogs;
+  @Inject private ExecutionLogsImpl executionLogs;
 
   @Override
   public void execute(Execution execution) {
