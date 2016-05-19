@@ -583,6 +583,20 @@
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
                         <exclude>software/wings/beans/*.class</exclude>
+                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
+                        <exclude>software/wings/sm/State.class</exclude>
+                        <exclude>software/wings/sm/Transition.class</exclude>
+                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
+                        <exclude>software/wings/sm/StateEvent.class</exclude>
+                        <exclude>software/wings/sm/*$Builder.class</exclude>
+                        <exclude>software/wings/dl/MongoConfig.class</exclude>
+                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
+                        <exclude>software/wings/app/WingsModule.class</exclude>
+                        <exclude>software/wings/app/WingsApplication.class</exclude>
+                        <exclude>software/wings/app/MainConfiguration.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

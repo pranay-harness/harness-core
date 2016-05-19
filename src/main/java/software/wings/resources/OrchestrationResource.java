@@ -48,14 +48,6 @@ public class OrchestrationResource {
   }
 
   @GET
-  @Path("playbacks")
-  @Produces("application/json")
-  public RestResponse<PageResponse<Orchestration>> listPlaybacks(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
-    return null;
-  }
-
-  @GET
   @Path("{orchestrationId}")
   @Produces("application/json")
   public RestResponse<Orchestration> read(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
