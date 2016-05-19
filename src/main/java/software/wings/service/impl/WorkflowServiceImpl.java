@@ -259,7 +259,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         fromInstanceId = instance.getPrevInstanceId();
       } else if (instance.getParentInstanceId() != null) {
         // TODO: needs work for repeat element instance.
-        // This is scenario like fork, repeat or sub workflow
+        // This is scenario like fork, repeat or sub waitnotify
         fromInstanceId = instance.getParentInstanceId();
       }
       if (fromInstanceId != null) {

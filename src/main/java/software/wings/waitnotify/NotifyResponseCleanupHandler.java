@@ -26,7 +26,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-public class NotifyResponseCleanupHandler implements Runnable {
+public final class NotifyResponseCleanupHandler implements Runnable {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 

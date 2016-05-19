@@ -28,24 +28,26 @@ import javax.inject.Singleton;
  * Created by peeyushaggarwal on 4/13/16.
  */
 @Singleton
-public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
+public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
+  private static final Logger logger = LoggerFactory.getLogger(NotifyEventListener.class);
+
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private PersistentLocker persistentLocker;
 
   @Override
   protected void onMessage(NotifyEvent message) throws Exception {
-    log().trace("Processing message {}", message);
+    logger.trace("Processing message {}", message);
     String waitInstanceId = message.getWaitInstanceId();
 
     WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
 
     if (waitInstance == null) {
-      log().warn("waitInstance not found for waitInstanceId: {}", waitInstanceId);
+      logger.warn("waitInstance not found for waitInstanceId: {}", waitInstanceId);
       return;
     }
     if (waitInstance.getStatus() != ExecutionStatus.NEW) {
-      log().warn("WaitInstance already processed - waitInstanceId:[{}], status=[{}] skipping ...", waitInstanceId,
+      logger.warn("WaitInstance already processed - waitInstanceId:[{}], status=[{}] skipping ...", waitInstanceId,
           waitInstance.getStatus());
       return;
     }
@@ -55,7 +57,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, ReadPref.CRITICAL);
 
     if (isEmpty(waitQueuesResponse)) {
-      log().warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
+      logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
       return;
     }
 
@@ -68,7 +70,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
                                                .filter(s -> !finalCorrelationIdsForLambda.contains(s))
                                                .collect(toList());
       if (!isEmpty(missingCorrelationIds)) {
-        log().warn("Some of the correlationIds still needs to be waited, "
+        logger.warn("Some of the correlationIds still needs to be waited, "
                 + "waitInstanceId: [{}], correlationIds: {}",
             waitInstanceId, missingCorrelationIds);
         return;
@@ -95,7 +97,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
                                                .map(WaitQueue::getCorrelationId)
                                                .filter(s -> !finalCorrelationIds.contains(s))
                                                .collect(toList());
-      log().error("notifyResponses for the correlationIds: {} not found."
+      logger.error("notifyResponses for the correlationIds: {} not found."
               + " skipping the callback for the waitInstanceId: [{}]",
           missingCorrelationIds, waitInstanceId);
       return;
@@ -110,7 +112,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
     try {
       lockAcquired = persistentLocker.acquireLock(WaitInstance.class, waitInstanceId);
       if (!lockAcquired) {
-        log().warn("Persistent lock could not be acquired for the waitInstanceId: " + waitInstanceId);
+        logger.warn("Persistent lock could not be acquired for the waitInstanceId: " + waitInstanceId);
         return;
       }
 
@@ -121,7 +123,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
           callback.notify(responseMap);
         } catch (Exception exception) {
           status = ExecutionStatus.ERROR;
-          log().error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
+          logger.error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
           try {
             WaitInstanceError waitInstanceError = new WaitInstanceError();
             waitInstanceError.setWaitInstanceId(waitInstanceId);
@@ -130,7 +132,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
 
             wingsPersistence.save(waitInstanceError);
           } catch (Exception e2) {
-            log().error("Error in persisting waitInstanceError", e2);
+            logger.error("Error in persisting waitInstanceError", e2);
           }
         }
       }
@@ -141,7 +143,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
             wingsPersistence.createUpdateOperations(WaitInstance.class).set("status", status);
         wingsPersistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
-        log().error("Error in waitInstanceUpdate", exception);
+        logger.error("Error in waitInstanceUpdate", exception);
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
@@ -151,7 +153,7 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
         } catch (Exception exception) {
-          log().error("Error in waitQueue cleanup", exception);
+          logger.error("Error in waitQueue cleanup", exception);
         }
       }
     } finally {
@@ -159,10 +161,6 @@ public class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
         persistentLocker.releaseLock(WaitInstance.class, waitInstanceId);
       }
     }
-    log().trace("Done processing message {}", message);
-  }
-
-  private Logger log() {
-    return LoggerFactory.getLogger(getClass());
+    logger.trace("Done processing message {}", message);
   }
 }
