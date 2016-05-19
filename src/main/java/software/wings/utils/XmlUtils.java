@@ -3,6 +3,8 @@
  */
 package software.wings.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -44,7 +46,7 @@ public class XmlUtils {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     DocumentBuilder builder = factory.newDocumentBuilder();
-    Document document = builder.parse(new ByteArrayInputStream(content.getBytes()));
+    Document document = builder.parse(new ByteArrayInputStream(content.getBytes(UTF_8)));
     return document;
   }
 }

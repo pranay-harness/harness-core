@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.utils.Misc.quietSleep;
 
@@ -26,7 +27,7 @@ public class SshSudoExecutor extends AbstractSshExecutor {
     try {
       int sudoPromptTimeout = 5;
       while (sudoPromptTimeout > 0) {
-        inputStream = new String(((ByteArrayOutputStream) outputStream).toByteArray(), "UTF-8");
+        inputStream = new String(((ByteArrayOutputStream) outputStream).toByteArray(), UTF_8);
         if (inputStream.length() > 0) {
           break;
         }
@@ -34,7 +35,7 @@ public class SshSudoExecutor extends AbstractSshExecutor {
         sudoPromptTimeout--;
       }
       if (inputStream.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-        outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
+        outputStream.write((config.getSudoUserPassword() + "\n").getBytes(UTF_8));
         outputStream.flush();
       }
     } catch (IOException ex) {

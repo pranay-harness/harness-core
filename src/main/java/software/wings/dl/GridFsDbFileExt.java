@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import static com.mongodb.client.model.Filters.eq;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.service.intfc.FileService.FileBucket.LOGS;
 
@@ -75,7 +76,7 @@ public class GridFsDbFileExt {
     BasicDBObject doc = new BasicDBObject()
                             .append("files_id", file.getId())
                             .append("n", chunkIdx)
-                            .append("data", new Binary(content.getBytes()));
+                            .append("data", new Binary(content.getBytes(UTF_8)));
     wingsPersistence.getCollection(chunkCollectionName).insert(doc);
     updateFileMetaData(file, content.length());
   }
@@ -90,7 +91,7 @@ public class GridFsDbFileExt {
 
     DBObject doc = wingsPersistence.getCollection(chunkCollectionName).findOne(query);
     byte[] data = ((Binary) doc.get("data")).getData();
-    byte[] newData = substring.getBytes();
+    byte[] newData = substring.getBytes(UTF_8);
     byte[] combined = ArrayUtils.addAll(data, newData);
     Binary binData = new Binary(combined);
 
@@ -102,11 +103,7 @@ public class GridFsDbFileExt {
 
   public void put(String fileName, String content) {
     InputStream streamToUploadFrom;
-    try {
-      streamToUploadFrom = new ByteArrayInputStream(content.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException ex) {
-      throw new WingsException("String to stream conversion failed", ex.getCause());
-    }
+    streamToUploadFrom = new ByteArrayInputStream(content.getBytes(UTF_8));
     LOGS.getGridFSBucket().uploadFromStream(
         fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
     logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
