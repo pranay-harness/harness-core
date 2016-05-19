@@ -14,7 +14,6 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -44,15 +43,7 @@ public class OrchestrationResource {
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
     pageRequest.addFilter("environment.uuid", envId, SearchFilter.Operator.EQ);
-    return new RestResponse<PageResponse<Orchestration>>(workflowService.listOrchestration(pageRequest));
-  }
-
-  @GET
-  @Path("playbacks")
-  @Produces("application/json")
-  public RestResponse<PageResponse<Orchestration>> listPlaybacks(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
-    return null;
+    return new RestResponse<>(workflowService.listOrchestration(pageRequest));
   }
 
   @GET
@@ -60,7 +51,7 @@ public class OrchestrationResource {
   @Produces("application/json")
   public RestResponse<Orchestration> read(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId) {
-    return new RestResponse<Orchestration>(workflowService.readOrchestration(appId, envId, orchestrationId));
+    return new RestResponse<>(workflowService.readOrchestration(appId, envId, orchestrationId));
   }
 
   @POST
@@ -68,7 +59,7 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
-    return new RestResponse<Orchestration>(workflowService.createWorkflow(Orchestration.class, orchestration));
+    return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
   }
 
   @PUT
@@ -77,7 +68,7 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
-    return new RestResponse<Orchestration>(workflowService.updateWorkflow(Orchestration.class, orchestration));
+    return new RestResponse<>(workflowService.updateWorkflow(Orchestration.class, orchestration));
   }
 
   @GET
@@ -98,7 +89,7 @@ public class OrchestrationResource {
     filter.setOp(Operator.EQ);
     pageRequest.getFilters().add(filter);
 
-    return new RestResponse<PageResponse<WorkflowExecution>>(workflowService.listExecutions(pageRequest, false));
+    return new RestResponse<>(workflowService.listExecutions(pageRequest, false));
   }
 
   @GET
@@ -106,7 +97,7 @@ public class OrchestrationResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<WorkflowExecution>(workflowService.getExecutionDetails(appId, workflowExecutionId));
+    return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId));
   }
 
   @POST
@@ -114,8 +105,7 @@ public class OrchestrationResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(@QueryParam("appId") String appId,
       @PathParam("orchestrationId") String orchestrationId, @QueryParam("artifactId") List<String> artifactIds) {
-    return new RestResponse<WorkflowExecution>(
-        workflowService.triggerOrchestrationExecution(appId, orchestrationId, artifactIds));
+    return new RestResponse<>(workflowService.triggerOrchestrationExecution(appId, orchestrationId, artifactIds));
   }
 
   @PUT

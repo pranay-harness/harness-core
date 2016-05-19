@@ -43,7 +43,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -259,7 +258,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         fromInstanceId = instance.getPrevInstanceId();
       } else if (instance.getParentInstanceId() != null) {
         // TODO: needs work for repeat element instance.
-        // This is scenario like fork, repeat or sub workflow
+        // This is scenario like fork, repeat or sub waitnotify
         fromInstanceId = instance.getParentInstanceId();
       }
       if (fromInstanceId != null) {

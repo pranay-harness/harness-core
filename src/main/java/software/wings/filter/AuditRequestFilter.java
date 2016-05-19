@@ -1,5 +1,7 @@
 package software.wings.filter;
 
+import com.google.inject.Inject;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.sql.Timestamp;
 import javax.annotation.Priority;
+import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -29,12 +32,14 @@ import javax.ws.rs.ext.Provider;
  *
  * @author Rishi
  */
+@Singleton
 @Provider
 @Priority(1)
 public class AuditRequestFilter implements ContainerRequestFilter {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Context private ResourceContext resourceContext;
-  private AuditHelper auditHelper = AuditHelper.getInstance();
+
+  @Inject private AuditHelper auditHelper;
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {

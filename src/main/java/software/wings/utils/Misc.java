@@ -8,6 +8,9 @@ import java.io.Closeable;
  * @author Rishi
  */
 public class Misc {
+  public interface ThrowingCallable { void run() throws Exception; }
+
+  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
   /**
    * sleep without throwing InterruptedExeception.
    *
@@ -53,6 +56,23 @@ public class Misc {
     try {
       return Integer.parseInt(value);
     } catch (Exception exception) {
+      return defaultValue;
+    }
+  }
+
+  public static void ignoreException(ThrowingCallable callable) {
+    try {
+      callable.run();
+    } catch (Exception e) {
+      // Ignore
+    }
+  }
+
+  public static <T> T ignoreException(ReturningThrowingCallable<T> callable, T defaultValue) {
+    try {
+      return callable.run();
+    } catch (Exception e) {
+      // Ignore
       return defaultValue;
     }
   }

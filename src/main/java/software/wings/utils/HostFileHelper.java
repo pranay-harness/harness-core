@@ -1,5 +1,6 @@
 package software.wings.utils;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
 import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
@@ -12,10 +13,11 @@ import software.wings.beans.Host;
 import software.wings.exception.WingsException;
 
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +30,7 @@ public class HostFileHelper {
   public static List<Host> parseHosts(InputStream inputStream, Host baseHost) {
     List<Host> hosts = new ArrayList<>();
     try {
-      CSVParser csvParser = new CSVParser(new InputStreamReader(inputStream), DEFAULT.withHeader());
+      CSVParser csvParser = new CSVParser(new InputStreamReader(inputStream, UTF_8), DEFAULT.withHeader());
       List<CSVRecord> records = csvParser.getRecords();
       for (CSVRecord record : records) {
         String hostName = record.get("HOST");
@@ -51,10 +53,10 @@ public class HostFileHelper {
   public static File createHostsFile(List<Host> hosts) {
     File tempDir = FileUtils.createTempDirPath();
     File file = new File(tempDir, "Hosts.csv");
-    FileWriter fileWriter = null;
+    OutputStreamWriter fileWriter = null;
     try {
       final CSVPrinter csvPrinter = new CSVPrinter(fileWriter, DEFAULT);
-      fileWriter = new FileWriter(file);
+      fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8);
       csvPrinter.printRecord(CSVHeader);
       hosts.forEach(host -> {
         List row = new ArrayList();

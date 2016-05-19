@@ -1,4 +1,4 @@
-package software.wings.utils;
+package software.wings;
 
 import java.util.Collections;
 import java.util.List;

@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogItem;
-import software.wings.beans.CatalogNames;
 import software.wings.service.intfc.CatalogService;
 import software.wings.utils.JsonUtils;
 

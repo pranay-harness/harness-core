@@ -6,8 +6,8 @@ import static software.wings.beans.ErrorConstants.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorConstants.INVALID_TOKEN;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Priority;
+import javax.inject.Singleton;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -35,12 +36,17 @@ import javax.ws.rs.core.UriInfo;
 /**
  * Created by anubhaw on 3/11/16.
  */
+@Singleton
 @Priority(AUTHENTICATION)
 @AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
-  private AuditService auditService = WingsBootstrap.lookup(AuditService.class);
-  private GenericDbCache dbCache = WingsBootstrap.lookup(GenericDbCache.class);
+
+  @Inject private AuditService auditService;
+
+  @Inject private GenericDbCache dbCache;
+
+  @Inject private AuditHelper auditHelper;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -138,7 +144,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private void updateUserInAuditRecord(User user) {
-    auditService.updateUser(AuditHelper.getInstance().get(), User.getPublicUser(user));
+    auditService.updateUser(auditHelper.get(), User.getPublicUser(user));
   }
 
   private AuthToken extractToken(ContainerRequestContext requestContext) {

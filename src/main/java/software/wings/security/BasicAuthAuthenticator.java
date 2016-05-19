@@ -3,22 +3,25 @@ package software.wings.security;
 import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 
 import com.google.common.base.Optional;
+import com.google.inject.Inject;
 
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
 import org.mindrot.jbcrypt.BCrypt;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
+import javax.inject.Singleton;
+
 /**
  * Created by anubhaw on 3/10/16.
  */
+@Singleton
 public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, User> {
-  WingsPersistence wingsPersistence = WingsBootstrap.lookup(WingsPersistence.class);
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {

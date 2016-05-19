@@ -90,14 +90,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerScheduledJobs(injector);
 
     environment.servlets()
-        .addFilter("AuditResponseFilter", new AuditResponseFilter())
+        .addFilter("AuditResponseFilter", injector.getInstance(AuditResponseFilter.class))
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-    environment.jersey().register(AuditRequestFilter.class);
+    environment.jersey().register(injector.getInstance(AuditRequestFilter.class));
 
     registerJerseyProviders(environment);
 
     // Authentication/Authorization filters
-    registerAuthFilters(configuration, environment);
+    registerAuthFilters(configuration, environment, injector);
 
     environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
 
@@ -151,14 +151,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(WingsExceptionMapper.class);
   }
 
-  private void registerAuthFilters(MainConfiguration configuration, Environment environment) {
+  private void registerAuthFilters(MainConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isEnableAuth()) {
-      environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                                                               .setAuthenticator(new BasicAuthAuthenticator())
-                                                               .buildAuthFilter()));
+      environment.jersey().register(
+          new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                                     .setAuthenticator(injector.getInstance(BasicAuthAuthenticator.class))
+                                     .buildAuthFilter()));
       environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
-      environment.jersey().register(AuthRuleFilter.class);
-      environment.jersey().register(AuthResponseFilter.class);
+      environment.jersey().register(injector.getInstance(AuthRuleFilter.class));
+      environment.jersey().register(injector.getInstance(AuthResponseFilter.class));
     }
   }
 

@@ -13,6 +13,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 
+import com.google.common.collect.Lists;
+
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -20,16 +22,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Verifier;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Artifact;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.ReleaseBuilder;
+import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.beans.RestResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
 
+import java.io.IOException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
@@ -78,7 +83,8 @@ public class ReleaseResourceTest extends WingsBaseTest {
         .thenReturn(releaseBuilder.but().build());
     when(RELEASE_SERVICE.deleteArtifactSource(anyString(), any(ArtifactSource.class)))
         .thenReturn(releaseBuilder.but().build());
-    PageResponse pageResponse = mock(PageResponse.class);
+    PageResponse<Release> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(Lists.newArrayList());
     when(RELEASE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
   }
 
@@ -133,5 +139,19 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                                  new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
     verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, jenkinsArtifactSource);
+  }
+
+  @Test
+  public void shouldListResource() throws IOException {
+    RestResponse<PageResponse<Artifact>> restResponse =
+        RESOURCES.client()
+            .target("/releases/?appId=" + APP_ID)
+            .request()
+            .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+    PageRequest<Release> expectedPageRequest = new PageRequest<>();
+    expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
+    expectedPageRequest.setOffset("0");
+    expectedPageRequest.setLimit("50");
+    verify(RELEASE_SERVICE).list(expectedPageRequest);
   }
 }

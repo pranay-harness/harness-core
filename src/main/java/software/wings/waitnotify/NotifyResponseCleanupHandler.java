@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 /**
@@ -26,7 +25,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-public class NotifyResponseCleanupHandler implements Runnable {
+public final class NotifyResponseCleanupHandler implements Runnable {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 

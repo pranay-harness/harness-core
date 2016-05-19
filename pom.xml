@@ -363,7 +363,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        
+
+        <dependency>
+            <groupId>com.openpojo</groupId>
+            <artifactId>openpojo</artifactId>
+            <version>0.8.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <version>18.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -447,8 +460,8 @@
                         <configuration>
                             <skip>false</skip>
                             <excludes>
-                                <exclude>**/*IT.java</exclude>
-                                <exclude>**/IT*.java</exclude>
+                                <exclude>**/*IntegrationTest.java</exclude>
+                                <exclude>**/IntegrationTest*.java</exclude>
                             </excludes>
                         </configuration>
                     </execution>
@@ -473,8 +486,8 @@
                 </executions>
                 <configuration>
                     <includes>
-                        <include>**/IT*.java</include>
-                        <include>**/*IT.java</include>
+                        <include>**/IntegrationTest*.java</include>
+                        <include>**/*IntegrationTest.java</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -587,17 +600,25 @@
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
                         <exclude>software/wings/beans/*.class</exclude>
+                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
+                        <exclude>software/wings/sm/State.class</exclude>
+                        <exclude>software/wings/sm/Transition.class</exclude>
+                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
+                        <exclude>software/wings/sm/StateEvent.class</exclude>
+                        <exclude>software/wings/sm/*$Builder.class</exclude>
+                        <exclude>software/wings/dl/MongoConfig.class</exclude>
+                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
+                        <exclude>software/wings/app/WingsModule.class</exclude>
+                        <exclude>software/wings/app/WingsApplication.class</exclude>
+                        <exclude>software/wings/app/MainConfiguration.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
                     <execution>
                         <id>default-prepare-agent</id>
-                        <configuration>
-                            <excludes>
-                                <exclude>software/wings/service/intfc/*.class</exclude>
-                                <exclude>software/wings/beans/*.class</exclude>
-                            </excludes>
-                        </configuration>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
@@ -605,12 +626,6 @@
                     <execution>
                         <id>default-report</id>
                         <phase>prepare-package</phase>
-                        <configuration>
-                            <excludes>
-                                <exclude>software/wings/service/intfc/*.class</exclude>
-                                <exclude>software/wings/beans/*.class</exclude>
-                            </excludes>
-                        </configuration>
                         <goals>
                             <goal>report</goal>
                         </goals>
@@ -621,10 +636,6 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <excludes>
-                                <exclude>software/wings/service/intfc/*.class</exclude>
-                                <exclude>software/wings/beans/*.class</exclude>
-                            </excludes>
                             <rules>
                                 <rule implementation="org.jacoco.maven.RuleConfiguration">
                                     <element>BUNDLE</element>
@@ -638,6 +649,24 @@
                                 </rule>
                             </rules>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>findbugs-maven-plugin</artifactId>
+                <version>3.0.3</version>
+                <configuration>
+                    <threshold>High</threshold>
+                    <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>failing-on-high</id>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -688,6 +717,20 @@
                     <excludes>
                         <exclude>software/wings/service/intfc/*.class</exclude>
                         <exclude>software/wings/beans/*.class</exclude>
+                        <exclude>software/wings/waitnotify/NotifyResponse.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstance.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitQueue.class</exclude>
+                        <exclude>software/wings/waitnotify/WaitInstanceError.class</exclude>
+                        <exclude>software/wings/sm/State.class</exclude>
+                        <exclude>software/wings/sm/Transition.class</exclude>
+                        <exclude>software/wings/sm/StateExecutionData.class</exclude>
+                        <exclude>software/wings/sm/StateEvent.class</exclude>
+                        <exclude>software/wings/sm/*$Builder.class</exclude>
+                        <exclude>software/wings/dl/MongoConfig.class</exclude>
+                        <exclude>software/wings/dl/DatastoreSet.class</exclude>
+                        <exclude>software/wings/app/WingsModule.class</exclude>
+                        <exclude>software/wings/app/WingsApplication.class</exclude>
+                        <exclude>software/wings/app/MainConfiguration.class</exclude>
                     </excludes>
                 </configuration>
             </plugin>

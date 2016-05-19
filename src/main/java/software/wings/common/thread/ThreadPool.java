@@ -16,7 +16,7 @@ public class ThreadPool {
   private static final int CORE_POOL_SIZE = 20;
   private static final int MAX_POOL_SIZE = 1000;
   private static final long IDLE_TIME = 500L;
-  private static ThreadPoolExecutor commonPool =
+  private static final ThreadPoolExecutor commonPool =
       create(CORE_POOL_SIZE, MAX_POOL_SIZE, IDLE_TIME, TimeUnit.MILLISECONDS);
 
   public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {

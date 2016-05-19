@@ -1,5 +1,6 @@
 package software.wings.common.thread;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,10 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
    * number of threads that are actively executing tasks
    */
   private final AtomicInteger activeCount = new AtomicInteger();
+
+  public ScalingThreadPoolExecutor() {
+    super(1, 1, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100));
+  }
 
   public ScalingThreadPoolExecutor(
       int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue workQueue) {

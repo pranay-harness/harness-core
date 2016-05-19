@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorConstants.INVALID_KEY;
 import static software.wings.beans.ErrorConstants.INVALID_KEYPATH;
@@ -51,8 +52,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected ExecutionLogs executionLogs;
   protected FileService fileService;
-
-  public static String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
+  public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   @Inject
   public AbstractSshExecutor(ExecutionLogs executionLogs, FileService fileService) {
@@ -104,9 +104,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
             throw new WingsException(UNKNOWN_ERROR);
           }
-          String line = new String(tmp, 0, numOfBytesRead);
+          String line = new String(tmp, 0, numOfBytesRead, UTF_8);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-            outputStream.write((config.getSudoUserPassword() + "\n").getBytes());
+            outputStream.write((config.getSudoUserPassword() + "\n").getBytes(UTF_8));
             outputStream.flush();
           }
           executionLogs.appendLogs(config.getExecutionId(), line);
@@ -217,7 +217,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       }
       command = "C0644 " + filesize + " " + fileName + "\n";
 
-      out.write(command.getBytes());
+      out.write(command.getBytes(UTF_8));
       out.flush();
       if (checkAck(in) != 0) {
         return FAILURE;
