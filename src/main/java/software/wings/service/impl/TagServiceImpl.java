@@ -46,7 +46,16 @@ public class TagServiceImpl implements TagService {
   public void deleteTag(String appId, String tagId) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
     if (tag != null && !tag.isRootTag()) {
-      wingsPersistence.delete(Tag.class, tagId);
+      cascadingDelete(tag);
+    }
+  }
+
+  private void cascadingDelete(Tag tag) {
+    if (tag != null) {
+      wingsPersistence.delete(Tag.class, tag.getUuid());
+      if (tag.getChildren() != null) {
+        tag.getChildren().forEach(childTag -> cascadingDelete(childTag));
+      }
     }
   }
 
