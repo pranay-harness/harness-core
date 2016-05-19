@@ -20,7 +20,13 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.*;
+import software.wings.sm.ExecutionStatus;
+import software.wings.sm.State;
+import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachineTest;
+import software.wings.sm.StateType;
+import software.wings.sm.Transition;
+import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyEventListener;
@@ -121,14 +127,172 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerAsynch() throws InterruptedException {
-    StateMachine sm = createAsynchSM(workflowService);
+  public void shouldTriggerFailedTransition() throws InterruptedException {
+    StateMachine sm = new StateMachine();
     sm.setAppId("APP_ID");
+    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000), true);
+    sm.addState(stateB);
+    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+    StateMachineTest.StateSynch stateD = new StateMachineTest.StateSynch("stateD" + new Random().nextInt(10000));
+    sm.addState(stateD);
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .withToState(stateD)
+                         .build());
+
+    sm = workflowService.create(sm);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
     workflowService.trigger(smId);
+    Thread.sleep(5000);
 
-    Thread.sleep(10000);
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNull();
+    assertThat(StaticMap.getValue(stateD.getName())).isNotNull();
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateB.getName()))
+        .as("StateA executed before StateB")
+        .isEqualTo(true);
+    assertThat(StaticMap.getValue(stateC.getName())).isNull();
+    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateD.getName()))
+        .as("StateB executed before StateD")
+        .isEqualTo(true);
+  }
+
+  @Test
+  public void shouldTriggerAsynch() throws InterruptedException {
+    StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
+    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    sm.addState(stateB);
+    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+
+    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000);
+    sm.addState(stateAB);
+    State stateBC = new StateMachineTest.StateAsynch("StateBC" + new Random().nextInt(10000), 1000);
+    sm.addState(stateBC);
+
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateBC)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateBC)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateC)
+                         .build());
+
+    sm = workflowService.create(sm);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(sm.getUuid());
+
+    Thread.sleep(5000);
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
+        .as("StateA executed before StateAB")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateB.getName()))
+        .as("StateAB executed before StateB")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateB.getName()) < (long) StaticMap.getValue(stateBC.getName()))
+        .as("StateB executed before StateBC")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateBC.getName()) < (long) StaticMap.getValue(stateC.getName()))
+        .as("StateBC executed before StateC")
+        .isEqualTo(true);
+  }
+
+  @Test
+  public void shouldTriggerFailedAsynch() throws InterruptedException {
+    StateMachine sm = new StateMachine();
+    sm.setAppId("APP_ID");
+    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    sm.addState(stateA);
+    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    sm.addState(stateB);
+    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    sm.addState(stateC);
+
+    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000, true);
+    sm.addState(stateAB);
+
+    sm.setInitialStateName(stateA.getName());
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateA)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateAB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .withToState(stateB)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(stateAB)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .withToState(stateC)
+                         .build());
+
+    sm = workflowService.create(sm);
+    assertThat(sm).isNotNull();
+    assertThat(sm.getUuid()).isNotNull();
+
+    System.out.println("Going to trigger state machine");
+    workflowService.trigger(sm.getUuid());
+
+    Thread.sleep(3000);
+
+    assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
+    assertThat(StaticMap.getValue(stateB.getName())).isNull();
+    assertThat(StaticMap.getValue(stateC.getName())).isNotNull();
+
+    assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
+        .as("StateA executed before StateAB")
+        .isEqualTo(true);
+    assertThat((long) StaticMap.getValue(stateAB.getName()) < (long) StaticMap.getValue(stateC.getName()))
+        .as("StateAB executed before StateC")
+        .isEqualTo(true);
   }
 
   private StateMachine createAsynchSM(WorkflowService svc) {
@@ -561,7 +725,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void triggerOrchestration() {
+  public void shouldTriggerOrchestration() {
     Orchestration orchestration = createOrchestration();
     WorkflowExecution execution = workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), null);
     assertThat(execution).isNotNull();
@@ -573,6 +737,19 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(execution).isNotNull();
     assertThat(execution.getUuid()).isEqualTo(executionId);
     assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  public void shouldListOrchestration() {
+    shouldTriggerOrchestration();
+
+    // 2nd orchestration
+    Orchestration orchestration = createOrchestration();
+    PageRequest<Orchestration> pageRequest = new PageRequest<>();
+    PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
   }
 
   @Test
