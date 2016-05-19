@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import com.openpojo.reflection.PojoClass;
-import com.openpojo.validation.test.Tester;
 
 /**
  * Created by peeyushaggarwal on 5/18/16.

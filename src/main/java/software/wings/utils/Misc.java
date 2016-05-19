@@ -1,7 +1,6 @@
 package software.wings.utils;
 
 import java.io.Closeable;
-import java.util.function.Function;
 
 /**
  * Miscellaneous utility class.

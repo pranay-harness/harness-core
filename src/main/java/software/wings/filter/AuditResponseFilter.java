@@ -7,6 +7,8 @@ import software.wings.common.AuditHelper;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -21,9 +23,11 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author Rishi
  */
+@Singleton
 public class AuditResponseFilter implements Filter {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  AuditHelper auditHelper = AuditHelper.getInstance();
+
+  @Inject private AuditHelper auditHelper;
 
   @Override
   public void init(FilterConfig arg0) throws ServletException {}

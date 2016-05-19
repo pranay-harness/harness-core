@@ -13,7 +13,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 
-import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

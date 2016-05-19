@@ -5,14 +5,13 @@ import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.beans.SearchFilter;
-import software.wings.beans.SortOrder;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;

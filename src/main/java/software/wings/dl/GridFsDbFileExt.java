@@ -19,12 +19,10 @@ import org.bson.BsonObjectId;
 import org.bson.types.Binary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 
 /**
  * Created by anubhaw on 3/3/16.

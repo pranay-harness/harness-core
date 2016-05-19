@@ -16,7 +16,6 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.WingsPersistence;
@@ -30,9 +29,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
 
 @Singleton
 public class FileServiceImpl implements FileService {
+  @Inject private WingsPersistence wingsPersistence;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
@@ -72,8 +74,7 @@ public class FileServiceImpl implements FileService {
       objIDs.add(new ObjectId(id));
     }
     BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
-    List<DBObject> dbObjects =
-        WingsBootstrap.lookup(WingsPersistence.class).getCollection("configs.files").find(query).toArray();
+    List<DBObject> dbObjects = wingsPersistence.getCollection("configs.files").find(query).toArray();
     return dbObjects;
   }
 

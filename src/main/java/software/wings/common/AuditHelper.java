@@ -1,11 +1,14 @@
 package software.wings.common;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
+
+import javax.inject.Singleton;
 
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http
@@ -13,16 +16,12 @@ import software.wings.service.intfc.AuditService;
  *
  * @author Rishi
  */
+@Singleton
 public class AuditHelper {
   private static final ThreadLocal<AuditHeader> auditThreadLocal = new ThreadLocal<AuditHeader>();
-  private static final AuditHelper instance = new AuditHelper();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private AuditHelper() {}
-
-  public static AuditHelper getInstance() {
-    return instance;
-  }
+  @Inject private AuditService auditService;
 
   public AuditHeader get() {
     return auditThreadLocal.get();
@@ -36,7 +35,6 @@ public class AuditHelper {
    */
   public AuditHeader create(AuditHeader header) {
     try {
-      AuditService auditService = WingsBootstrap.lookup(AuditService.class);
       header = auditService.create(header);
       logger.info("Saving auditHeader to thread local");
       auditThreadLocal.set(header);
@@ -56,7 +54,6 @@ public class AuditHelper {
    */
   public void create(AuditHeader header, RequestType requestType, byte[] httpBody) {
     try {
-      AuditService auditService = WingsBootstrap.lookup(AuditService.class);
       auditService.create(header, requestType, httpBody);
     } catch (RuntimeException exception) {
       logger.error(
@@ -72,7 +69,6 @@ public class AuditHelper {
    * @param payload response payload.
    */
   public void finalizeAudit(AuditHeader header, byte[] payload) {
-    AuditService auditService = WingsBootstrap.lookup(AuditService.class);
     auditService.finalize(header, payload);
     auditThreadLocal.remove();
   }
