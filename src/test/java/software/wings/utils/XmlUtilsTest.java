@@ -18,14 +18,14 @@ import javax.xml.xpath.XPathExpressionException;
  * @author Rishi
  */
 public class XmlUtilsTest extends WingsBaseTest {
-  @Inject private XmlUtils XmlUtils;
+  @Inject private XmlUtils xmlUtils;
 
   @Test
   public void shouldGetXpath()
       throws XPathExpressionException, ParserConfigurationException, SAXException, IOException {
     String content = "<widgets><widget><manufacturer>abc</manufacturer><dimensions/></widget></widgets>";
     String expression = "//widget/manufacturer/text()";
-    String text = XmlUtils.xpath(content, expression);
+    String text = xmlUtils.xpath(content, expression);
 
     assertThat(text).isNotNull();
     assertThat(text).isEqualTo("abc");

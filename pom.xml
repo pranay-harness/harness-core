@@ -668,6 +668,10 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>3.0.3</version>
+                <configuration>
+                    <threshold>High</threshold>
+                    <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
+                </configuration>
                 <executions>
                     <execution>
                         <id>failing-on-high</id>
@@ -675,10 +679,6 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
-                        <configuration>
-                            <threshold>High</threshold>
-                            <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
