@@ -225,7 +225,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     System.out.println("Going to trigger state machine");
     workflowService.trigger(sm.getUuid());
 
-    Thread.sleep(5000);
+    Thread.sleep(8000);
 
     assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
         .as("StateA executed before StateAB")
