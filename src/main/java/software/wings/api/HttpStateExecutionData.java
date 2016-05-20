@@ -5,7 +5,6 @@ package software.wings.api;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import software.wings.app.WingsBootstrap;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
 
@@ -85,7 +84,7 @@ public class HttpStateExecutionData extends StateExecutionData {
 
   public String xpath(String path) {
     try {
-      return xmlUtils().xpath(document(), path);
+      return XmlUtils.xpath(document(), path);
     } catch (Exception e) {
       return null;
     }
@@ -93,12 +92,8 @@ public class HttpStateExecutionData extends StateExecutionData {
 
   private Document document() throws ParserConfigurationException, SAXException, IOException {
     if (document == null) {
-      document = xmlUtils().parse(httpResponseBody);
+      document = XmlUtils.parse(httpResponseBody);
     }
     return document;
-  }
-
-  private XmlUtils xmlUtils() {
-    return WingsBootstrap.lookup(XmlUtils.class);
   }
 }

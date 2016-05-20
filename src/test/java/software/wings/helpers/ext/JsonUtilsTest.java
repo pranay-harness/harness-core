@@ -8,20 +8,18 @@ import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
-public class JsonUtilsTest extends WingsBaseTest {
-  @Inject private JsonUtils jsonUtils;
-
+public class JsonUtilsTest {
   @Test
   public void testJson() {
     BaseA baseA = new BaseA();
-    String jsona = jsonUtils.asJson(baseA);
+    String jsona = JsonUtils.asJson(baseA);
     System.out.println(jsona);
     BaseB baseB = new BaseB();
-    String jsonb = jsonUtils.asJson(baseB);
+    String jsonb = JsonUtils.asJson(baseB);
     System.out.println(jsonb);
 
-    Base baseA2 = jsonUtils.asObject(jsona, Base.class);
-    Base baseB2 = jsonUtils.asObject(jsonb, Base.class);
+    Base baseA2 = JsonUtils.asObject(jsona, Base.class);
+    Base baseB2 = JsonUtils.asObject(jsonb, Base.class);
 
     System.out.println(baseB2.getBaseType());
   }
