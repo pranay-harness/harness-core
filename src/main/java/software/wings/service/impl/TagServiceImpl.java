@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
@@ -36,9 +37,15 @@ public class TagServiceImpl implements TagService {
 
   @Override
   public Tag updateTag(Tag tag) {
-    wingsPersistence.updateFields(Tag.class, tag.getUuid(),
-        ImmutableMap.of("name", tag.getName(), "description", tag.getDescription(), "autoTaggingRule",
-            tag.getAutoTaggingRule(), "children", tag.getChildren()));
+    Builder<String, Object> mapBuilder =
+        ImmutableMap.<String, Object>builder().put("name", tag.getName()).put("description", tag.getDescription());
+    if (tag.getAutoTaggingRule() != null) {
+      mapBuilder.put("autoTaggingRule", tag.getAutoTaggingRule());
+    }
+    if (tag.getChildren() != null) {
+      mapBuilder.put("children", tag.getChildren());
+    }
+    wingsPersistence.updateFields(Tag.class, tag.getUuid(), mapBuilder.build());
     return wingsPersistence.get(Tag.class, tag.getUuid());
   }
 
