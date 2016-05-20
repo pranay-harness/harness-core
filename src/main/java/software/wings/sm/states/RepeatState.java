@@ -79,7 +79,7 @@ public class RepeatState extends State {
       return executionResponse;
     }
 
-    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
     if (repeatStrategy == RepeatStrategy.PARALLEL) {
@@ -142,7 +142,7 @@ public class RepeatState extends State {
       ExecutionContextImpl contextClone = SerializationUtils.clone(context);
       contextClone.pushContextElement(repeatElement);
 
-      StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+      StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
       String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
       stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
           stateExecutionInstance.getUuid(), notifyId, stateExecutionInstance.getUuid());

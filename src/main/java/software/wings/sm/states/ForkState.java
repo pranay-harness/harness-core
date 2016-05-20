@@ -41,7 +41,7 @@ public class ForkState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
-    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
@@ -69,7 +69,7 @@ public class ForkState extends State {
       }
     }
     logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
-        context.getSmInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
+        context.getStateExecutionInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
     return executionResponse;
   }
 

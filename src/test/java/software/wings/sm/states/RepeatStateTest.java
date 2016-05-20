@@ -136,7 +136,7 @@ public class RepeatStateTest extends WingsBaseTest {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     stateExecutionInstance.setStateName(stateName);
-    context.setSmInstance(stateExecutionInstance);
+    context.setStateExecutionInstance(stateExecutionInstance);
 
     context.setEvaluator(evaluator);
     return context;

@@ -3,6 +3,7 @@
  */
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Serialized;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -26,7 +27,7 @@ public class ExecutionStandardParams implements Serializable {
   private List<String> artifactIds;
 
   private String workflowExecutionId;
-  private StateMachineExecutionCallback callback;
+  @Serialized private StateMachineExecutionCallback callback;
 
   private transient Application app;
   private transient Environment env;
