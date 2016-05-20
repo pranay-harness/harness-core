@@ -5,14 +5,14 @@ import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorConstants.INVALID_KEY;
 import static software.wings.beans.ErrorConstants.INVALID_KEYPATH;
 import static software.wings.beans.ErrorConstants.INVALID_PORT;
-import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_ERROR;
+import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
+import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.beans.ErrorConstants.UNREACHABLE_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
-import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.Channel;
@@ -25,8 +25,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -180,8 +180,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } else if (message.contains("Auth fail") || message.contains("Auth cancel")
           || message.contains("USERAUTH fail")) {
         errorConst = INVALID_CREDENTIAL;
-      } else if (message.startsWith("timeout: socket is not established")) {
-        errorConst = SOCKET_CONNECTION_ERROR;
+      } else if (message.startsWith("timeout: socket is not established")
+          || message.contains("SocketTimeoutException")) {
+        errorConst = SOCKET_CONNECTION_TIMEOUT;
+      } else if (message.equals("session is down")) {
+        errorConst = SSH_SESSION_TIMEOUT;
       }
     }
     return errorConst;
@@ -191,8 +194,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * SCP.
    ****/
   @Override
-  public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
-    FileInputStream fis = null;
+  public ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket gridFsBucket) {
     try {
       String command = "scp -t " + remoteFilePath;
       Channel channel = session.openChannel("exec");
@@ -207,7 +209,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         logger.error("SCP connection initiation failed");
         return FAILURE;
       }
-      GridFSFile fileMetaData = fileService.getGridFsFile(localFilePath, ARTIFACTS);
+      GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
 
       // send "C0644 filesize filename", where filename should not include '/'
       long filesize = fileMetaData.getLength();
@@ -222,7 +224,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       if (checkAck(in) != 0) {
         return FAILURE;
       }
-      fileService.downloadToStream(localFilePath, out, ARTIFACTS);
+      fileService.downloadToStream(gridFsFileId, out, gridFsBucket);
       out.write(new byte[1], 0, 1);
       out.flush();
 
@@ -234,7 +236,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       channel.disconnect();
       session.disconnect();
     } catch (FileNotFoundException ex) {
-      logger.error("file [" + localFilePath + "] could not be found");
+      logger.error("file [" + gridFsFileId + "] could not be found");
       throw new WingsException(UNKNOWN_ERROR, ex.getCause());
     } catch (IOException ex) {
       logger.error("Exception in reading InputStream");

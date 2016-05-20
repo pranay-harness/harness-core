@@ -1,5 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import software.wings.service.intfc.FileService.FileBucket;
+
 /**
  * Created by anubhaw on 2/4/16.
  */
@@ -8,7 +10,7 @@ public interface SshExecutor {
 
   ExecutionResult execute(String command);
 
-  ExecutionResult transferFile(String localFilePath, String remoteFilePath);
+  ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket fileBucket);
 
   void abort();
 
