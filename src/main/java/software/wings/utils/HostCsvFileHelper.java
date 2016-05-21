@@ -41,7 +41,7 @@ public class HostCsvFileHelper {
   @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-  public final String[] CSVHeader = {
+  private final String[] CSVHeader = {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
 
   public List<Host> parseHosts(Infra infra, BoundedInputStream inputStream) {
