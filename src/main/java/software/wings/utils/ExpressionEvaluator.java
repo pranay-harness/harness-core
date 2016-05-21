@@ -19,10 +19,15 @@ import javax.inject.Singleton;
 /**
  * @author Rishi
  */
-@Singleton
 public class ExpressionEvaluator {
   private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private static ExpressionEvaluator instance = new ExpressionEvaluator();
+
+  public static ExpressionEvaluator getInstance() {
+    return instance;
+  }
 
   public Object evaluate(String expression, String name, Object value) {
     logger.debug("evaluate request - expression: {}, name: {}, value: {}", expression, name, value);

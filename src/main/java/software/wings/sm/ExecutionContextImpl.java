@@ -1,5 +1,9 @@
 package software.wings.sm;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.WingsBootstrap;
 import software.wings.utils.ExpressionEvaluator;
 
@@ -22,11 +26,11 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
   private Deque<Repeatable> contextElements = new ArrayDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
 
-  private transient StateExecutionInstance stateExecutionInstance;
+  @Transient private transient StateExecutionInstance stateExecutionInstance;
 
   private boolean dirty = false;
 
-  private transient ExpressionEvaluator evaluator;
+  @Transient private transient ExpressionEvaluator evaluator;
 
   public Deque<Repeatable> getContextElements() {
     return contextElements;
@@ -73,11 +77,11 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
     return stateExecutionMap.get(stateExecutionInstance.getStateName());
   }
 
-  public StateExecutionInstance getSmInstance() {
+  public StateExecutionInstance getStateExecutionInstance() {
     return stateExecutionInstance;
   }
 
-  public void setSmInstance(StateExecutionInstance stateExecutionInstance) {
+  public void setStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
     this.stateExecutionInstance = stateExecutionInstance;
   }
 
@@ -123,7 +127,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext();
-    context.put(getSmInstance().getStateName(), stateExecutionData);
+    context.put(getStateExecutionInstance().getStateName(), stateExecutionData);
     return context;
   }
 
@@ -180,7 +184,7 @@ public class ExecutionContextImpl implements ExecutionContext, Serializable {
 
   public ExpressionEvaluator getEvaluator() {
     if (evaluator == null) {
-      evaluator = WingsBootstrap.lookup(ExpressionEvaluator.class);
+      evaluator = ExpressionEvaluator.getInstance();
     }
     return evaluator;
   }

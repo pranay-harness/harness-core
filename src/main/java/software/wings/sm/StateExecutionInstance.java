@@ -1,9 +1,9 @@
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
 
 /**
@@ -16,7 +16,7 @@ public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String stateName;
 
-  @Serialized private ExecutionContextImpl context;
+  @Embedded private ExecutionContextImpl context;
 
   @Indexed private String workflowExecutionId;
 
@@ -132,6 +132,6 @@ public class StateExecutionInstance extends Base {
 
   @PostLoad
   public void afterLoad() {
-    context.setSmInstance(this);
+    context.setStateExecutionInstance(this);
   }
 }

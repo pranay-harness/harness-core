@@ -26,7 +26,7 @@ public class HttpStateTest extends WingsBaseTest {
     stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     String stateName = "healthCheck1";
     stateExecutionInstance.setStateName(stateName);
-    context.setSmInstance(stateExecutionInstance);
+    context.setStateExecutionInstance(stateExecutionInstance);
 
     Host host = new Host();
     host.setHostName("app123.application.com");
