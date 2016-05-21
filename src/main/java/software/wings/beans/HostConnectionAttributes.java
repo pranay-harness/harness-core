@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.EnvironmentValue.EnvironmentVariableTypes.HOST_ATTRIBUTES;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.base.MoreObjects;
 
@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 5/16/16.
  */
-public class HostAttributes extends EnvironmentValue {
+public class HostConnectionAttributes extends SettingValue {
   public enum AccessType {
     PASSWORD,
     PASSWORD_SU_APP_ACCOUNT,
@@ -26,10 +26,13 @@ public class HostAttributes extends EnvironmentValue {
   private ConnectionType connectionType;
   private String key;
 
-  public HostAttributes() {
-    super(HOST_ATTRIBUTES);
+  public HostConnectionAttributes() {
+    super(HOST_CONNECTION_ATTRIBUTES);
   }
 
+  public HostConnectionAttributes(SettingVariableTypes type) {
+    super(type);
+  }
   public String getOsType() {
     return osType;
   }
@@ -75,7 +78,7 @@ public class HostAttributes extends EnvironmentValue {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    final HostAttributes other = (HostAttributes) obj;
+    final HostConnectionAttributes other = (HostConnectionAttributes) obj;
     return Objects.equals(this.osType, other.osType) && Objects.equals(this.accessType, other.accessType)
         && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.key, other.key);
   }
@@ -90,53 +93,53 @@ public class HostAttributes extends EnvironmentValue {
         .toString();
   }
 
-  public static final class HostAttributesBuilder {
+  public static final class HostConnectionAttributesBuilder {
     private String osType;
     private AccessType accessType;
     private ConnectionType connectionType;
     private String key;
 
-    private HostAttributesBuilder() {}
+    private HostConnectionAttributesBuilder() {}
 
-    public static HostAttributesBuilder aHostAttributes() {
-      return new HostAttributesBuilder();
+    public static HostConnectionAttributesBuilder aHostConnectionAttributes() {
+      return new HostConnectionAttributesBuilder();
     }
 
-    public HostAttributesBuilder withOsType(String osType) {
+    public HostConnectionAttributesBuilder withOsType(String osType) {
       this.osType = osType;
       return this;
     }
 
-    public HostAttributesBuilder withAccessType(AccessType accessType) {
+    public HostConnectionAttributesBuilder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
-    public HostAttributesBuilder withConnectionType(ConnectionType connectionType) {
+    public HostConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
 
-    public HostAttributesBuilder withKey(String key) {
+    public HostConnectionAttributesBuilder withKey(String key) {
       this.key = key;
       return this;
     }
 
-    public HostAttributesBuilder but() {
-      return aHostAttributes()
+    public HostConnectionAttributesBuilder but() {
+      return aHostConnectionAttributes()
           .withOsType(osType)
           .withAccessType(accessType)
           .withConnectionType(connectionType)
           .withKey(key);
     }
 
-    public HostAttributes build() {
-      HostAttributes hostAttributes = new HostAttributes();
-      hostAttributes.setOsType(osType);
-      hostAttributes.setAccessType(accessType);
-      hostAttributes.setConnectionType(connectionType);
-      hostAttributes.setKey(key);
-      return hostAttributes;
+    public HostConnectionAttributes build() {
+      HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
+      hostConnectionAttributes.setOsType(osType);
+      hostConnectionAttributes.setAccessType(accessType);
+      hostConnectionAttributes.setConnectionType(connectionType);
+      hostConnectionAttributes.setKey(key);
+      return hostConnectionAttributes;
     }
   }
 }

@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,7 +10,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
-import static software.wings.beans.EnvironmentAttribute.EnvironmentAttributeBuilder.anEnvironmentAttribute;
+import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import com.google.common.collect.ImmutableMap;
@@ -30,10 +32,11 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentAttribute;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -45,7 +48,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,10 +65,10 @@ import javax.ws.rs.core.Response;
 @Integration
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
-  private static final int NUM_APP_CONTAINER_PER_APP = 10; /* Max 1000 */
-  private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
+  private static final int NUM_APP_CONTAINER_PER_APP = 1; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 5; /* Max 10   */
+  private static final int NUM_ENV_PER_APP = 1; /* Max 10   */
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
@@ -81,84 +83,84 @@ public class DataGenUtil extends WingsBaseTest {
       + "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software "
       + "like Aldus PageMaker including versions of Lorem Ipsum";
   private List<String> envNames =
-      Arrays.asList("DEV", "QA", "UAT", "PROD", "STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
-  private List<String> containerNames = Arrays.asList("AOLserver", "Apache HTTP Server", "Apache Tomcat",
-      "Barracuda Web Server", "Boa", "Caddy", "Caudium", "Cherokee HTTP Server", "GlassFish", "Hiawatha", "HFS",
-      "IBM HTTP Server", "Internet Information Services", "Jetty", "Jexus", "lighttpd", "LiteSpeed Web Server",
-      "Mongoose", "Monkey HTTP Server", "NaviServer", "NCSA HTTPd", "Nginx", "OpenLink Virtuoso", "OpenLiteSpeed",
-      "Oracle HTTP Server", "Oracle iPlanet Web Server", "Oracle WebLogic Server", "Resin Open Source",
-      "Resin Professional", "thttpd", "TUX web server", "Wakanda Server", "WEBrick", "Xitami", "Yaws",
-      "Zeus Web Server", "Zope");
-  private List<String> seedNames = Arrays.asList("Abaris", "Abundantia", "Acca Larentia", "Achelois", "Achelous",
-      "Acheron", "Achilles", "Acidalia", "Acis", "Acmon", "Acoetes", "Actaeon", "Adamanthea", "Adephagia", "Adonis",
-      "Adrastea", "Adrasteia", "Aeacos", "Aeacus", "Aegaeon", "Aegeus", "Aegina", "Aegle", "Aello", "Aellopos",
-      "Aeneas", "Aeolos", "Aeolus", "Aequitas", "Aer", "Aerecura", "Aesacus", "Aesculapius", "Aesir", "Aeson",
-      "Aeternitas", "Aethalides", "Aether", "Aethon", "Aetna", "Aeëtes", "Agamemnon", "Agave", "Agdistes", "Agdos",
-      "Aglaea", "Aglaia", "Aglaulus", "Aglauros", "Aglaurus", "Agraulos", "Agrotara", "Agrotora", "Aiakos", "Aigle",
-      "Aiolos", "Aion", "Air", "Aither", "Aius Locutius", "Ajax the Great", "Ajax the Lesser", "Alcemana", "Alcides",
-      "Alcmena", "Alcmene", "Alcyone", "Alecto", "Alectrona", "Alernus or Elernus", "Alexandra", "Alkyone", "Aloadae",
-      "Alpheos", "Alpheus", "Althaea", "Amalthea", "Amaltheia", "Amarynthia", "Ampelius", "Amphion", "Amphitrite",
-      "Amphitryon", "Amymone", "Ananke", "Anaxarete", "Andhrimnir", "Andromeda", "Angerona", "Angitia", "Angrboda",
-      "Anius", "Anna Perenna", "Annona", "Antaeus", "Antaios", "Anteros", "Antevorta", "Anticlea", "Antiklia",
-      "Antiope", "Apate", "Aphrodite", "Apollo", "Apollon", "Aquilo", "Arachne", "Arcas", "Areon", "Ares", "Arethusa",
-      "Argeos", "Argus", "Ariadne", "Arimanius", "Arion", "Aristaeus", "Aristaios", "Aristeas", "Arkas", "Arkeus Ultor",
-      "Artemis", "Asclepius", "Asklepios", "Asopus", "Asteria", "Asterie", "Astraea", "Astraeus", "Astraios", "Astrild",
-      "Atalanta", "Ate", "Athamas", "Athamus", "Athena", "Athene", "Athis", "Atla", "Atlantides", "Atlas", "Atropos",
-      "Attis", "Attropus", "Audhumla", "Augean Stables", "Augian Stables", "Aura", "Aurai", "Aurora", "Autolycus",
-      "Autolykos", "Auxesia", "Averruncus", "Bacchae", "Bacchantes", "Bacchus", "Balder", "Balios", "Balius", "Battus",
-      "Baucis", "Bellerophon", "Bellona or Duellona", "Beyla", "Bia", "Bias", "Bona Dea", "Bonus Eventus", "Boreads",
-      "Boreas", "Borghild", "Bragi", "Briareos", "Briareus", "Bromios", "Brono", "Bubona", "Byblis", "Bylgia", "Caca",
-      "Cacus", "Cadmus", "Caelus", "Caeneus", "Caenis", "Calais", "Calchas", "Calliope", "Callisto", "Calypso",
-      "Camenae", "Canens", "Cardea", "Carmenta", "Carmentes", "Carna", "Cassandra", "Castor", "Caunus", "Cecrops",
-      "Celaeno", "Celoneo", "Ceneus", "Cephalus", "Cerberus", "Cercopes", "Ceres", "Cerigo", "Cerynean Hind",
-      "Ceryneian Hind", "Cerynitis", "Ceto", "Ceyx", "Chaos", "Chariclo", "Charites", "Charon", "Charybdis", "Cheiron",
-      "Chelone", "Chimaera", "Chimera", "Chione", "Chiron", "Chloe", "Chloris", "Chronos", "Chronus", "Chthonia",
-      "Cinyras", "Cipus", "Circe", "Clementia", "Clio", "Cloacina", "Clotho", "Clymene", "Coeus", "Coltus", "Comus",
-      "Concordia", "Consus", "Cornix", "Cottus", "Cotys", "Cotytto", "Cratus", "Cretan Bull", "Crius", "Cronos",
-      "Cronus", "Cupid", "Cura", "Cyane", "Cybele", "Cyclopes", "Cyclops", "Cygnus", "Cyllarus", "Cynthia",
-      "Cyparissus", "Cyrene", "Cytherea", "Cyáneë", "Daedalion", "Daedalus", "Dagur", "Danae", "Daphnaie", "Daphne",
-      "Dea Dia", "Dea Tacita", "Decima", "Deimos", "Deimus", "Deino", "Delos", "Delphyne", "Demeter", "Demphredo",
-      "Deo", "Despoena", "Deucalion", "Deukalion", "Devera or Deverra", "Deïanira", "Di inferi", "Diana",
-      "Diana Nemorensis", "Dice", "Dike", "Diomedes", "Dione", "Dionysos", "Dionysus", "Dioscuri", "Dis", "Disciplina",
-      "Discordia", "Disen", "Dithyrambos", "Dius Fidius", "Doris", "Dryades", "Dryads", "Dryope", "Echidna", "Echo",
-      "Edesia", "Egeria", "Eileithyia", "Eir", "Eirene", "Ekhidna", "Ekho", "Electra", "Elektra", "Eleuthia", "Elli",
-      "Elpis", "Empanda or Panda", "Empousa", "Empousai", "Empusa", "Enosichthon", "Enyalius", "Enyo", "Eos", "Epaphos",
-      "Epaphus", "Ephialtes", "Epimeliades", "Epimeliads", "Epimelides", "Epimetheus", "Epiona", "Epione", "Epiphanes",
-      "Epona", "Erato", "Erebos", "Erebus", "Erechtheus", "Erichtheus", "Erichthoneus", "Erichthonios", "Erichthonius",
-      "Erinyes", "Erinys", "Eris", "Eros", "Erotes", "Erymanthean Boar", "Erymanthian Boar", "Erysichthon", "Erytheia",
-      "Erytheis", "Erythia", "Ether", "Eumenides", "Eunomia", "Euphrosyne", "Europa", "Euros", "Eurus", "Euryale",
-      "Eurybia", "Eurydice", "Eurynome", "Eurystheus", "Eurytus", "Euterpe", "Falacer", "Fama", "Fascinus", "Fates",
-      "Fauna", "Faunus", "Faustitas", "Febris", "Februus", "Fecunditas", "Felicitas", "Fenrir", "Ferentina", "Feronia",
-      "Fides", "Flora", "Fontus or Fons", "Fornax", "Forseti", "Fortuna", "Freya", "Freyr", "Frigg", "Fufluns",
-      "Fulgora", "Furies", "Furrina", "Ga", "Gaea", "Gaia", "Gaiea", "Galanthis", "Galatea", "Galeotes", "Ganymede",
-      "Ganymedes", "Ge", "Gefion", "Genius", "Gerd", "Geryon", "Geryones", "Geyron", "Glaucus", "Gorgons", "Graces",
-      "Graeae", "Graiae", "Graii", "Gratiae", "Gyes", "Gyges", "Hades", "Haides", "Halcyone", "Hamadryades",
-      "Hamadryads", "Harmonia", "Harmony", "Harpies", "Harpocrates", "Harpyia", "Harpyiai", "Hebe", "Hecate",
-      "Hecatoncheires", "Hecatonchires", "Hecuba", "Heimdall", "Hekate", "Hekatonkheires", "Hel", "Helen", "Heliades",
-      "Helice", "Helios", "Helius", "Hemera", "Hemere", "Hephaestus", "Hephaistos", "Hera", "Heracles", "Herakles",
-      "Hercules", "Hermaphroditos", "Hermaphroditus", "Hermes", "Hermod", "Herse", "Hersilia", "Hespera",
-      "Hesperethousa", "Hesperia", "Hesperides", "Hesperids", "Hesperie", "Hesperis", "Hesperos", "Hesperus", "Hestia",
-      "Himeros", "Hippodame", "Hippolyta", "Hippolytos", "Hippolytta", "Hippolytus", "Hippomenes", "Hod", "Holler",
-      "Honos", "Hope", "Hora", "Horae", "Horai", "Hyacinth", "Hyacinthus", "Hyades", "Hyakinthos", "Hydra", "Hydriades",
-      "Hydriads", "Hygeia", "Hygieia", "Hylonome", "Hymen", "Hymenaeus", "Hymenaios", "Hyperion", "Hypnos", "Hypnus",
-      "Hyppolyta", "Hyppolyte", "Iacchus", "Iambe", "Ianthe", "Iapetos", "Iapetus", "Icarus", "Icelos", "Idmon", "Idun",
-      "Ikelos", "Ilia", "Ilithyia", "Ilythia", "Inachus", "Indiges", "Ino", "Intercidona", "Inuus", "Invidia", "Io",
-      "Ion", "Iphicles", "Iphigenia", "Iphis", "Irene", "Iris", "Isis", "Itys", "Ixion", "Janus", "Jason", "Jord",
-      "Jormungand", "Juno", "Jupiter", "Justitia", "Juturna", "Juventas", "Kadmos", "Kalais", "Kalliope", "Kallisto",
-      "Kalypso", "Kari", "Kekrops", "Kelaino", "Kerberos", "Keres", "Kerkopes", "Keto", "Khaos", "Kharon", "Kharybdis",
-      "Kheiron", "Khelone", "Khimaira", "Khione", "Khloris", "Khronos", "Kirke", "Kleio", "Klotho", "Klymene", "Koios",
-      "Komos", "Kore", "Kottos", "Kratos", "Krios", "Kronos", "Kronus", "Kvasir", "Kybele", "Kyklopes", "Kyrene",
-      "Lachesis", "Laertes", "Laga", "Lakhesis", "Lamia", "Lampetia", "Lampetie", "Laomedon", "Lares", "Latona",
-      "Latreus", "Laverna", "Leda", "Leimoniades", "Leimoniads", "Lelantos", "Lelantus", "Lemures", "Lethaea", "Lethe",
-      "Leto", "Letum", "Leucothea", "Levana", "Liber", "Libera", "Liberalitas", "Libertas", "Libitina", "Lichas",
-      "Limoniades", "Limoniads", "Linus", "Lofn", "Loki", "Lua", "Lucifer", "Lucina", "Luna", "Lupercus", "Lycaon",
-      "Lympha", "Macareus", "Maenads", "Magni", "Maia", "Maiandros", "Maliades", "Mana Genita", "Manes", "Mani",
-      "Mania", "Mantus", "Mares of Diomedes", "Mars", "Mater Matuta", "Meandrus", "Medea", "Meditrina", "Medousa",
-      "Medusa", "Mefitis or Mephitis", "Meleager", "Meliades", "Meliads", "Meliai", "Melidae", "Mellona or Mellonia",
-      "Melpomene", "Memnon", "Mena or Mene", "Menoetius", "Menoitos", "Mercury", "Merope", "Metis", "Midas", "Miming",
-      "Mimir", "Minerva", "Minos", "Minotaur", "Minotaurus", "Mithras", "Mnemosyne", "Modesty", "Modi", "Moirae",
-      "Moirai", "Molae", "Momos", "Momus", "Moneta", "Mopsus", "Mormo", "Mormolykeia", "Moros", "Morpheus", "Mors",
-      "Morta", "Morus", "Mount Olympus", "Mousai", "Murcia or Murtia", "Muses", "Mutunus Tutunus", "Myiagros", "Myrrha",
+      asList("DEV", "QA", "UAT", "PROD", "STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
+  private List<String> containerNames =
+      asList("AOLserver", "Apache HTTP Server", "Apache Tomcat", "Barracuda Web Server", "Boa", "Caddy", "Caudium",
+          "Cherokee HTTP Server", "GlassFish", "Hiawatha", "HFS", "IBM HTTP Server", "Internet Information Services",
+          "Jetty", "Jexus", "lighttpd", "LiteSpeed Web Server", "Mongoose", "Monkey HTTP Server", "NaviServer",
+          "NCSA HTTPd", "Nginx", "OpenLink Virtuoso", "OpenLiteSpeed", "Oracle HTTP Server",
+          "Oracle iPlanet Web Server", "Oracle WebLogic Server", "Resin Open Source", "Resin Professional", "thttpd",
+          "TUX web server", "Wakanda Server", "WEBrick", "Xitami", "Yaws", "Zeus Web Server", "Zope");
+  private List<String> seedNames = asList("Abaris", "Abundantia", "Acca Larentia", "Achelois", "Achelous", "Acheron",
+      "Achilles", "Acidalia", "Acis", "Acmon", "Acoetes", "Actaeon", "Adamanthea", "Adephagia", "Adonis", "Adrastea",
+      "Adrasteia", "Aeacos", "Aeacus", "Aegaeon", "Aegeus", "Aegina", "Aegle", "Aello", "Aellopos", "Aeneas", "Aeolos",
+      "Aeolus", "Aequitas", "Aer", "Aerecura", "Aesacus", "Aesculapius", "Aesir", "Aeson", "Aeternitas", "Aethalides",
+      "Aether", "Aethon", "Aetna", "Aeëtes", "Agamemnon", "Agave", "Agdistes", "Agdos", "Aglaea", "Aglaia", "Aglaulus",
+      "Aglauros", "Aglaurus", "Agraulos", "Agrotara", "Agrotora", "Aiakos", "Aigle", "Aiolos", "Aion", "Air", "Aither",
+      "Aius Locutius", "Ajax the Great", "Ajax the Lesser", "Alcemana", "Alcides", "Alcmena", "Alcmene", "Alcyone",
+      "Alecto", "Alectrona", "Alernus or Elernus", "Alexandra", "Alkyone", "Aloadae", "Alpheos", "Alpheus", "Althaea",
+      "Amalthea", "Amaltheia", "Amarynthia", "Ampelius", "Amphion", "Amphitrite", "Amphitryon", "Amymone", "Ananke",
+      "Anaxarete", "Andhrimnir", "Andromeda", "Angerona", "Angitia", "Angrboda", "Anius", "Anna Perenna", "Annona",
+      "Antaeus", "Antaios", "Anteros", "Antevorta", "Anticlea", "Antiklia", "Antiope", "Apate", "Aphrodite", "Apollo",
+      "Apollon", "Aquilo", "Arachne", "Arcas", "Areon", "Ares", "Arethusa", "Argeos", "Argus", "Ariadne", "Arimanius",
+      "Arion", "Aristaeus", "Aristaios", "Aristeas", "Arkas", "Arkeus Ultor", "Artemis", "Asclepius", "Asklepios",
+      "Asopus", "Asteria", "Asterie", "Astraea", "Astraeus", "Astraios", "Astrild", "Atalanta", "Ate", "Athamas",
+      "Athamus", "Athena", "Athene", "Athis", "Atla", "Atlantides", "Atlas", "Atropos", "Attis", "Attropus", "Audhumla",
+      "Augean Stables", "Augian Stables", "Aura", "Aurai", "Aurora", "Autolycus", "Autolykos", "Auxesia", "Averruncus",
+      "Bacchae", "Bacchantes", "Bacchus", "Balder", "Balios", "Balius", "Battus", "Baucis", "Bellerophon",
+      "Bellona or Duellona", "Beyla", "Bia", "Bias", "Bona Dea", "Bonus Eventus", "Boreads", "Boreas", "Borghild",
+      "Bragi", "Briareos", "Briareus", "Bromios", "Brono", "Bubona", "Byblis", "Bylgia", "Caca", "Cacus", "Cadmus",
+      "Caelus", "Caeneus", "Caenis", "Calais", "Calchas", "Calliope", "Callisto", "Calypso", "Camenae", "Canens",
+      "Cardea", "Carmenta", "Carmentes", "Carna", "Cassandra", "Castor", "Caunus", "Cecrops", "Celaeno", "Celoneo",
+      "Ceneus", "Cephalus", "Cerberus", "Cercopes", "Ceres", "Cerigo", "Cerynean Hind", "Ceryneian Hind", "Cerynitis",
+      "Ceto", "Ceyx", "Chaos", "Chariclo", "Charites", "Charon", "Charybdis", "Cheiron", "Chelone", "Chimaera",
+      "Chimera", "Chione", "Chiron", "Chloe", "Chloris", "Chronos", "Chronus", "Chthonia", "Cinyras", "Cipus", "Circe",
+      "Clementia", "Clio", "Cloacina", "Clotho", "Clymene", "Coeus", "Coltus", "Comus", "Concordia", "Consus", "Cornix",
+      "Cottus", "Cotys", "Cotytto", "Cratus", "Cretan Bull", "Crius", "Cronos", "Cronus", "Cupid", "Cura", "Cyane",
+      "Cybele", "Cyclopes", "Cyclops", "Cygnus", "Cyllarus", "Cynthia", "Cyparissus", "Cyrene", "Cytherea", "Cyáneë",
+      "Daedalion", "Daedalus", "Dagur", "Danae", "Daphnaie", "Daphne", "Dea Dia", "Dea Tacita", "Decima", "Deimos",
+      "Deimus", "Deino", "Delos", "Delphyne", "Demeter", "Demphredo", "Deo", "Despoena", "Deucalion", "Deukalion",
+      "Devera or Deverra", "Deïanira", "Di inferi", "Diana", "Diana Nemorensis", "Dice", "Dike", "Diomedes", "Dione",
+      "Dionysos", "Dionysus", "Dioscuri", "Dis", "Disciplina", "Discordia", "Disen", "Dithyrambos", "Dius Fidius",
+      "Doris", "Dryades", "Dryads", "Dryope", "Echidna", "Echo", "Edesia", "Egeria", "Eileithyia", "Eir", "Eirene",
+      "Ekhidna", "Ekho", "Electra", "Elektra", "Eleuthia", "Elli", "Elpis", "Empanda or Panda", "Empousa", "Empousai",
+      "Empusa", "Enosichthon", "Enyalius", "Enyo", "Eos", "Epaphos", "Epaphus", "Ephialtes", "Epimeliades",
+      "Epimeliads", "Epimelides", "Epimetheus", "Epiona", "Epione", "Epiphanes", "Epona", "Erato", "Erebos", "Erebus",
+      "Erechtheus", "Erichtheus", "Erichthoneus", "Erichthonios", "Erichthonius", "Erinyes", "Erinys", "Eris", "Eros",
+      "Erotes", "Erymanthean Boar", "Erymanthian Boar", "Erysichthon", "Erytheia", "Erytheis", "Erythia", "Ether",
+      "Eumenides", "Eunomia", "Euphrosyne", "Europa", "Euros", "Eurus", "Euryale", "Eurybia", "Eurydice", "Eurynome",
+      "Eurystheus", "Eurytus", "Euterpe", "Falacer", "Fama", "Fascinus", "Fates", "Fauna", "Faunus", "Faustitas",
+      "Febris", "Februus", "Fecunditas", "Felicitas", "Fenrir", "Ferentina", "Feronia", "Fides", "Flora",
+      "Fontus or Fons", "Fornax", "Forseti", "Fortuna", "Freya", "Freyr", "Frigg", "Fufluns", "Fulgora", "Furies",
+      "Furrina", "Ga", "Gaea", "Gaia", "Gaiea", "Galanthis", "Galatea", "Galeotes", "Ganymede", "Ganymedes", "Ge",
+      "Gefion", "Genius", "Gerd", "Geryon", "Geryones", "Geyron", "Glaucus", "Gorgons", "Graces", "Graeae", "Graiae",
+      "Graii", "Gratiae", "Gyes", "Gyges", "Hades", "Haides", "Halcyone", "Hamadryades", "Hamadryads", "Harmonia",
+      "Harmony", "Harpies", "Harpocrates", "Harpyia", "Harpyiai", "Hebe", "Hecate", "Hecatoncheires", "Hecatonchires",
+      "Hecuba", "Heimdall", "Hekate", "Hekatonkheires", "Hel", "Helen", "Heliades", "Helice", "Helios", "Helius",
+      "Hemera", "Hemere", "Hephaestus", "Hephaistos", "Hera", "Heracles", "Herakles", "Hercules", "Hermaphroditos",
+      "Hermaphroditus", "Hermes", "Hermod", "Herse", "Hersilia", "Hespera", "Hesperethousa", "Hesperia", "Hesperides",
+      "Hesperids", "Hesperie", "Hesperis", "Hesperos", "Hesperus", "Hestia", "Himeros", "Hippodame", "Hippolyta",
+      "Hippolytos", "Hippolytta", "Hippolytus", "Hippomenes", "Hod", "Holler", "Honos", "Hope", "Hora", "Horae",
+      "Horai", "Hyacinth", "Hyacinthus", "Hyades", "Hyakinthos", "Hydra", "Hydriades", "Hydriads", "Hygeia", "Hygieia",
+      "Hylonome", "Hymen", "Hymenaeus", "Hymenaios", "Hyperion", "Hypnos", "Hypnus", "Hyppolyta", "Hyppolyte",
+      "Iacchus", "Iambe", "Ianthe", "Iapetos", "Iapetus", "Icarus", "Icelos", "Idmon", "Idun", "Ikelos", "Ilia",
+      "Ilithyia", "Ilythia", "Inachus", "Indiges", "Ino", "Intercidona", "Inuus", "Invidia", "Io", "Ion", "Iphicles",
+      "Iphigenia", "Iphis", "Irene", "Iris", "Isis", "Itys", "Ixion", "Janus", "Jason", "Jord", "Jormungand", "Juno",
+      "Jupiter", "Justitia", "Juturna", "Juventas", "Kadmos", "Kalais", "Kalliope", "Kallisto", "Kalypso", "Kari",
+      "Kekrops", "Kelaino", "Kerberos", "Keres", "Kerkopes", "Keto", "Khaos", "Kharon", "Kharybdis", "Kheiron",
+      "Khelone", "Khimaira", "Khione", "Khloris", "Khronos", "Kirke", "Kleio", "Klotho", "Klymene", "Koios", "Komos",
+      "Kore", "Kottos", "Kratos", "Krios", "Kronos", "Kronus", "Kvasir", "Kybele", "Kyklopes", "Kyrene", "Lachesis",
+      "Laertes", "Laga", "Lakhesis", "Lamia", "Lampetia", "Lampetie", "Laomedon", "Lares", "Latona", "Latreus",
+      "Laverna", "Leda", "Leimoniades", "Leimoniads", "Lelantos", "Lelantus", "Lemures", "Lethaea", "Lethe", "Leto",
+      "Letum", "Leucothea", "Levana", "Liber", "Libera", "Liberalitas", "Libertas", "Libitina", "Lichas", "Limoniades",
+      "Limoniads", "Linus", "Lofn", "Loki", "Lua", "Lucifer", "Lucina", "Luna", "Lupercus", "Lycaon", "Lympha",
+      "Macareus", "Maenads", "Magni", "Maia", "Maiandros", "Maliades", "Mana Genita", "Manes", "Mani", "Mania",
+      "Mantus", "Mares of Diomedes", "Mars", "Mater Matuta", "Meandrus", "Medea", "Meditrina", "Medousa", "Medusa",
+      "Mefitis or Mephitis", "Meleager", "Meliades", "Meliads", "Meliai", "Melidae", "Mellona or Mellonia", "Melpomene",
+      "Memnon", "Mena or Mene", "Menoetius", "Menoitos", "Mercury", "Merope", "Metis", "Midas", "Miming", "Mimir",
+      "Minerva", "Minos", "Minotaur", "Minotaurus", "Mithras", "Mnemosyne", "Modesty", "Modi", "Moirae", "Moirai",
+      "Molae", "Momos", "Momus", "Moneta", "Mopsus", "Mormo", "Mormolykeia", "Moros", "Morpheus", "Mors", "Morta",
+      "Morus", "Mount Olympus", "Mousai", "Murcia or Murtia", "Muses", "Mutunus Tutunus", "Myiagros", "Myrrha",
       "Myscelus", "Naenia", "Naiades", "Naiads", "Naias", "Narcissus", "Nascio", "Neaera", "Neaira", "Necessitas",
       "Nemean Lion", "Nemeian Lion", "Nemesis", "Nephelai", "Nephele", "Neptune", "Neptunus", "Nereides", "Nereids",
       "Nereus", "Nerio", "Nessus", "Nestor", "Neverita", "Nike", "Nikothoe", "Niobe", "Nix", "Nixi", "Njord", "Nomios",
@@ -377,20 +379,27 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void addHostsToEnv(Environment env) throws IOException {
-    EnvironmentAttribute envAttr = wingsPersistence.saveAndGet(EnvironmentAttribute.class,
-        anEnvironmentAttribute().withAppId(env.getAppId()).withEnvId(env.getUuid()).build());
+    SettingAttribute envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+        aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
 
     WebTarget target =
         client.target(format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
     List<String> hostNames = new ArrayList<>();
-    for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
-      hostNames.add("host" + i + ".ec2.aws.com");
-    }
 
-    Response response = target.request().post(Entity.entity(
-        ImmutableMap.of("hostNames", hostNames, "hostAttributes", envAttr, "bastionHostAttributes", envAttr),
-        APPLICATION_JSON));
-    assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+    List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
+                                                      .field("appId")
+                                                      .equal(env.getAppId())
+                                                      .field("value.type")
+                                                      .equal(HOST_CONNECTION_ATTRIBUTES)
+                                                      .asList();
+
+    for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
+      Response response = target.request().post(
+          Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttrs",
+                            connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttrs", envAttr),
+              APPLICATION_JSON));
+      assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
+    }
   }
 
   private File getTestFile(String name) throws IOException {

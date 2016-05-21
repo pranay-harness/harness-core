@@ -34,6 +34,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Override
   public Environment save(Environment env) {
     env = wingsPersistence.saveAndGet(Environment.class, env);
+
     wingsPersistence.save(aTag()
                               .withAppId(env.getAppId())
                               .withEnvId(env.getUuid())
@@ -43,7 +44,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
                               .build());
     wingsPersistence.save(
         anInfra().withAppId(env.getAppId()).withEnvId(env.getUuid()).withInfraType(STATIC).build()); // FIXME: stopgap
-                                                                                                     // for Allpha
+                                                                                                     // for Alpha
 
     UpdateOperations<Application> updateOperations =
         wingsPersistence.createUpdateOperations(Application.class).add("environments", env);

@@ -11,6 +11,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.TagService;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -110,5 +111,19 @@ public class TagServiceImpl implements TagService {
         wingsPersistence.update(host, updateOp);
       });
     }
+  }
+
+  @Override
+  public List<Tag> getTagsByName(String appId, String envId, List<String> tagNames) {
+    List<Tag> tags = new ArrayList<>();
+    if (tagNames != null && tagNames.size() > 0) {
+      tagNames.forEach(name -> {
+        Tag tag = wingsPersistence.createQuery(Tag.class).field("envId").equal(envId).field("name").equal(name).get();
+        if (tag != null) {
+          tags.add(tag);
+        }
+      });
+    }
+    return tags;
   }
 }

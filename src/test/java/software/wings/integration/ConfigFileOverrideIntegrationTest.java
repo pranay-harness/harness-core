@@ -5,12 +5,12 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
-import static software.wings.beans.EnvironmentAttribute.EnvironmentAttributeBuilder.anEnvironmentAttribute;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.beans.Tag.TagBuilder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
@@ -22,7 +22,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.EnvironmentAttribute;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.Service;
@@ -101,7 +101,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException {
     // DB cleanup
-    Arrays.asList(Host.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class)
+    Arrays.asList(Host.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
@@ -262,13 +262,13 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   }
 
   private List<Host> importAndGetHosts(Infra infra) throws IOException {
-    EnvironmentAttribute environmentAttribute = wingsPersistence.saveAndGet(EnvironmentAttribute.class,
-        anEnvironmentAttribute().withAppId(infra.getAppId()).withEnvId(infra.getEnvId()).build());
+    SettingAttribute settingAttribute =
+        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(infra.getAppId()).build());
     Host baseHost = aHost()
                         .withAppId(infra.getAppId())
                         .withInfraId(infra.getUuid())
-                        .withHostAttributes(environmentAttribute)
-                        .withBastionHostAttributes(environmentAttribute)
+                        .withHostConnAttrs(settingAttribute)
+                        .withBastionConnAttrs(settingAttribute)
                         .build();
     //    int numOfHostsImported =
     //        hostService.importHosts(baseHost, new BoundedInputStream(new
