@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -384,7 +385,6 @@ public class DataGenUtil extends WingsBaseTest {
 
     WebTarget target =
         client.target(format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
-    List<String> hostNames = new ArrayList<>();
 
     List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
                                                       .field("appId")

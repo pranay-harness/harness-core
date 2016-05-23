@@ -28,7 +28,6 @@ import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Rishi
@@ -78,8 +77,6 @@ public class RepeatStateTest extends WingsBaseTest {
     repeatState.setRepeatElementExpression("services()");
     repeatState.setRepeatElementType(ContextElementType.SERVICE);
     repeatState.setRepeatStrategy(RepeatStrategy.PARALLEL);
-
-    AtomicInteger counter = new AtomicInteger(0);
 
     ExecutionResponse response = repeatState.execute(context, null);
 

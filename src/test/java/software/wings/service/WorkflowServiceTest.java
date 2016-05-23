@@ -284,7 +284,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
     workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
-    Thread.sleep(3000);
+    Thread.sleep(4000);
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
     assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
