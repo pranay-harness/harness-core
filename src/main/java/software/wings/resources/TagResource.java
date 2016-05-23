@@ -52,10 +52,7 @@ public class TagResource {
       @QueryParam("parentTagId") String parentTagId, Tag tag) {
     tag.setEnvId(envId);
     tag.setAppId(appId);
-    if (parentTagId == null || parentTagId.length() == 0) {
-      tag.setRootTag(true);
-    }
-    return new RestResponse<>(tagService.createAndLinkTag(parentTagId, tag));
+    return new RestResponse<>(tagService.saveTag(parentTagId, tag));
   }
 
   @GET
@@ -77,13 +74,6 @@ public class TagResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
     tagService.deleteTag(appId, tagId);
     return new RestResponse();
-  }
-
-  @POST
-  @Path("{tagId}/link/{childTag}")
-  public RestResponse<Tag> linkTags(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, @PathParam("childTag") String childTagId) {
-    return new RestResponse<>(tagService.linkTags(appId, tagId, childTagId));
   }
 
   @POST

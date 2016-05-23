@@ -115,14 +115,14 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // create Tag hierarchy
     Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
 
-    nc = tagService.createAndLinkTag(rootTag.getUuid(), aTag().withName("NC").build());
-    ncOz1 = tagService.createAndLinkTag(nc.getUuid(), aTag().withName("NC_OZ1").build());
-    ncOz2 = tagService.createAndLinkTag(nc.getUuid(), aTag().withName("NC_OZ2").build());
-    ncOz3 = tagService.createAndLinkTag(nc.getUuid(), aTag().withName("NC_OZ3").build());
+    nc = tagService.saveTag(rootTag.getUuid(), aTag().withName("NC").build());
+    ncOz1 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ1").build());
+    ncOz2 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ2").build());
+    ncOz3 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ3").build());
 
-    or = tagService.createAndLinkTag(rootTag.getUuid(), aTag().withName("OR").build());
-    orOz1 = tagService.createAndLinkTag(or.getUuid(), aTag().withName("OR_OZ1").build());
-    orOz2 = tagService.createAndLinkTag(or.getUuid(), aTag().withName("OR_OZ2").build());
+    or = tagService.saveTag(rootTag.getUuid(), aTag().withName("OR").build());
+    orOz1 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ1").build());
+    orOz2 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ2").build());
 
     // Tag hosts
     tagService.tagHosts(app.getUuid(), ncOz1.getUuid(),
