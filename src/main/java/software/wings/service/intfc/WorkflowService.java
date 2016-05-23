@@ -33,7 +33,7 @@ public interface WorkflowService {
 
   PageResponse<StateMachine> list(PageRequest<StateMachine> req);
 
-  void trigger(String smId);
+  void trigger(String appId, String stateMachineId, String executionUuid);
 
   List<StateTypeDescriptor> stencils();
 

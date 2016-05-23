@@ -13,17 +13,19 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.sm.RepeatElementType;
-import software.wings.sm.Repeatable;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "hosts", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
-public class Host extends Base implements Repeatable {
+public class Host extends Base implements ContextElement {
   private static final long serialVersionUID = 1189183137783838598L;
 
   private String infraId;
@@ -100,8 +102,14 @@ public class Host extends Base implements Repeatable {
   }
 
   @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.HOST;
+  public ContextElementType getElementType() {
+    return ContextElementType.HOST;
+  }
+  @Override
+  public Map<String, Object> paramMap() {
+    Map<String, Object> map = new HashMap<>();
+    map.put(ContextElementType.HOST.getDisplayName(), this);
+    return map;
   }
 
   @Override

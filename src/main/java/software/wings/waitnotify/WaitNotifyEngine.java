@@ -18,6 +18,7 @@ import software.wings.dl.WingsPersistence;
 
 import java.io.Serializable;
 import java.util.Arrays;
+
 import javax.inject.Inject;
 
 /**
@@ -76,7 +77,7 @@ public class WaitNotifyEngine {
 
     log().debug("notify request received for the correlationId : {}", correlationId);
 
-    String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response));
+    String notificationId = wingsPersistence.save(new NotifyResponse<T>(correlationId, response));
 
     PageRequest<WaitQueue> req = new PageRequest<>();
     req.addFilter("correlationId", correlationId, SearchFilter.Operator.EQ);

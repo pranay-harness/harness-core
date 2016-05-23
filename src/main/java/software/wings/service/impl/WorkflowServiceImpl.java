@@ -30,19 +30,22 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStandardParams;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.WorkflowStandardParams;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -78,8 +81,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public void trigger(String smId) {
-    stateMachineExecutor.execute(smId, new ExecutionStandardParams());
+  public void trigger(String appId, String stateMachineId, String executionUuid) {
+    stateMachineExecutor.execute(appId, stateMachineId, executionUuid);
   }
 
   @Override
@@ -126,7 +129,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
     workflow = wingsPersistence.saveAndGet(cls, workflow);
-    StateMachine stateMachine = new StateMachine(workflow.getUuid(), graph, stencilMap());
+    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
     stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
     workflow.setGraph(stateMachine.getGraph());
     return workflow;
@@ -135,7 +138,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public <T extends Workflow> T updateWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
-    StateMachine stateMachine = new StateMachine(workflow.getUuid(), graph, stencilMap());
+    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
     stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
     workflow.setGraph(stateMachine.getGraph());
     return workflow;
@@ -227,7 +230,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     pageRequest.getFilters().add(filter);
 
     filter = new SearchFilter();
-    filter.setFieldName("workflowExecutionId");
+    filter.setFieldName("executionUuid");
     filter.setFieldValue(workflowExecution.getUuid());
     filter.setOp(Operator.EQ);
     pageRequest.getFilters().add(filter);
@@ -300,7 +303,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
-    ExecutionStandardParams stdParams = new ExecutionStandardParams();
+    WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
 
     return triggerExecution(workflowExecution, stateMachine, stdParams);
@@ -329,7 +332,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
-    ExecutionStandardParams stdParams = new ExecutionStandardParams();
+    WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setArtifactIds(artifactIds);
 
@@ -337,11 +340,17 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private WorkflowExecution triggerExecution(
-      WorkflowExecution workflowExecution, StateMachine stateMachine, ExecutionStandardParams stdParams) {
+      WorkflowExecution workflowExecution, StateMachine stateMachine, WorkflowStandardParams stdParams) {
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
-    stdParams.setWorkflowExecutionId(workflowExecutionId);
-    stdParams.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
-    stateMachineExecutor.execute(stateMachine, stdParams);
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setAppId(workflowExecution.getAppId());
+    stateExecutionInstance.setExecutionUuid(workflowExecutionId);
+    stateExecutionInstance.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
+
+    ArrayDeque<ContextElement> contextElements = new ArrayDeque<>();
+    contextElements.push(stdParams);
+    stateExecutionInstance.setContextElements(contextElements);
+    stateMachineExecutor.execute(stateMachine, stateExecutionInstance);
 
     // TODO: findAndModify
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)

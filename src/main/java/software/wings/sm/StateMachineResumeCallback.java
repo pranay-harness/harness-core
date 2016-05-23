@@ -14,14 +14,16 @@ import java.util.Map;
 public class StateMachineResumeCallback implements NotifyCallback {
   private static final long serialVersionUID = 1L;
 
+  private String appId;
   private String stateExecutionInstanceId;
 
-  public StateMachineResumeCallback(String stateExecutionInstanceId) {
+  public StateMachineResumeCallback(String appId, String stateExecutionInstanceId) {
+    this.appId = appId;
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
   @Override
   public void notify(Map<String, ? extends Serializable> response) {
-    WingsBootstrap.lookup(StateMachineExecutor.class).resume(stateExecutionInstanceId, response);
+    WingsBootstrap.lookup(StateMachineExecutor.class).resume(appId, stateExecutionInstanceId, response);
   }
 }

@@ -6,10 +6,11 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ArtifactSource.ArtifactType;
-import software.wings.sm.RepeatElementType;
-import software.wings.sm.Repeatable;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Component bean class.
@@ -17,7 +18,7 @@ import java.util.List;
  * @author Rishi
  */
 @Entity(value = "services", noClassnameStored = true)
-public class Service extends Base implements Repeatable {
+public class Service extends Base implements ContextElement {
   private static final long serialVersionUID = -5785133514617556212L;
 
   private String name;
@@ -97,13 +98,13 @@ public class Service extends Base implements Repeatable {
         .add("description", description)
         .add("artifactType", artifactType)
         .add("configFiles", configFiles)
-        .add("repeatElementType", getRepeatElementType())
+        .add("repeatElementType", getElementType())
         .toString();
   }
 
   @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.SERVICE;
+  public ContextElementType getElementType() {
+    return ContextElementType.SERVICE;
   }
 
   public static final class ServiceBuilder {
@@ -218,5 +219,10 @@ public class Service extends Base implements Repeatable {
       service.setActive(active);
       return service;
     }
+  }
+
+  @Override
+  public Map<String, Object> paramMap() {
+    return null;
   }
 }
