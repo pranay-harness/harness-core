@@ -4,7 +4,6 @@
 
 package software.wings.sm.states;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.sm.ContextElement;
@@ -18,6 +17,7 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -101,7 +101,8 @@ public class RepeatState extends State {
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
       SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
-    StateExecutionInstance childStateExecutionInstance = SerializationUtils.clone(stateExecutionInstance);
+    StateExecutionInstance childStateExecutionInstance =
+        JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
