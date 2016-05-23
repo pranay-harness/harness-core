@@ -18,6 +18,7 @@ import software.wings.beans.CatalogNames;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.io.IOException;
@@ -33,11 +34,12 @@ public class CatalogResourceTest extends WingsBaseTest {
   private static final CatalogService catalogService = mock(CatalogService.class);
   private static final WorkflowService workflowService = mock(WorkflowService.class);
   private static final JenkinsBuildService jenkinsBuildService = mock(JenkinsBuildService.class);
+  private static final SettingsService settingsService = mock(SettingsService.class);
 
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
-          .addResource(new CatalogResource(catalogService, workflowService, jenkinsBuildService))
+          .addResource(new CatalogResource(catalogService, workflowService, jenkinsBuildService, settingsService))
           .build();
 
   @After
@@ -78,5 +80,29 @@ public class CatalogResourceTest extends WingsBaseTest {
         .hasSize(1)
         .extracting(o -> ((Map<String, Object>) o).get(CatalogNames.JENKINS_BUILD))
         .isNotNull();
+  }
+
+  @Test
+  public void shouldListCatalogForConnectionAttributes() {
+    when(settingsService.getConnectionAttributes(any(MultivaluedMap.class))).thenReturn(Lists.newArrayList());
+    RestResponse<Map<String, Object>> actual = resources.client()
+                                                   .target("/catalogs?catalogType=CONNECTION_ATTRIBUTES")
+                                                   .request()
+                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+    assertThat(actual).isNotNull();
+    assertThat(actual.getResource().size()).isEqualTo(1);
+    assertThat(actual.getResource().get("CONNECTION_ATTRIBUTES")).isNotNull();
+  }
+
+  @Test
+  public void shouldListCatalogForBastionHostAttributes() {
+    when(settingsService.getBastionHostAttributes(any(MultivaluedMap.class))).thenReturn(Lists.newArrayList());
+    RestResponse<Map<String, Object>> actual = resources.client()
+                                                   .target("/catalogs?catalogType=BASTION_HOST_ATTRIBUTES")
+                                                   .request()
+                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+    assertThat(actual).isNotNull();
+    assertThat(actual.getResource().size()).isEqualTo(1);
+    assertThat(actual.getResource().get("BASTION_HOST_ATTRIBUTES")).isNotNull();
   }
 }

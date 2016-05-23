@@ -4,10 +4,14 @@
 
 package software.wings.resources;
 
+import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
+import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
+
 import software.wings.beans.CatalogNames;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.io.IOException;
@@ -31,19 +35,22 @@ public class CatalogResource {
   private WorkflowService workflowService;
   private CatalogService catalogService;
   private JenkinsBuildService jenkinsBuildService;
+  private SettingsService settingsService;
 
   /**
    * Creates a new calalog resource.
    * @param catalogService catalogService object.
    * @param workflowService workflowService object.
    * @param jenkinsBuildService JenkinsBuildService object.
+   * @param settingsService SettingService object
    */
   @Inject
-  public CatalogResource(
-      CatalogService catalogService, WorkflowService workflowService, JenkinsBuildService jenkinsBuildService) {
+  public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
+      JenkinsBuildService jenkinsBuildService, SettingsService settingsService) {
     this.catalogService = catalogService;
     this.workflowService = workflowService;
     this.jenkinsBuildService = jenkinsBuildService;
+    this.settingsService = settingsService;
   }
 
   /**
@@ -70,6 +77,15 @@ public class CatalogResource {
           }
           case CatalogNames.JENKINS_BUILD: {
             catalogs.put(catalogType, jenkinsBuildService.getBuilds(uriInfo.getQueryParameters()));
+            break;
+          }
+          case CONNECTION_ATTRIBUTES: {
+            catalogs.put(CONNECTION_ATTRIBUTES, settingsService.getConnectionAttributes(uriInfo.getQueryParameters()));
+            break;
+          }
+          case BASTION_HOST_ATTRIBUTES: {
+            catalogs.put(
+                BASTION_HOST_ATTRIBUTES, settingsService.getBastionHostAttributes(uriInfo.getQueryParameters()));
             break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }

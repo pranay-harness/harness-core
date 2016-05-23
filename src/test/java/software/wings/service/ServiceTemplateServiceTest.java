@@ -16,10 +16,9 @@ import static software.wings.beans.Tag.TagBuilder.aTag;
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
@@ -40,8 +39,7 @@ import java.util.Map;
  * Created by anubhaw on 4/29/16.
  */
 
-@RunWith(MockitoJUnitRunner.class)
-public class ServiceTemplateServiceTest {
+public class ServiceTemplateServiceTest extends WingsBaseTest {
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")
                                        .withEnvId("ENV_ID")
