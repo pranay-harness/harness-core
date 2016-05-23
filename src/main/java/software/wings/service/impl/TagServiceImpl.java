@@ -84,14 +84,27 @@ public class TagServiceImpl implements TagService {
   @Override
   public void tagHosts(String appId, String tagId, List<String> hostIds) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
-    if (hostIds != null) {
-      hostIds.forEach(hostId -> {
-        Host host = wingsPersistence.get(Host.class, hostId);
-        List<Tag> tags = getUpdateHostTagsList(tag, host);
-        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
-        wingsPersistence.update(host, updateOp);
-      });
+
+    if (hostIds == null || tag == null) {
+      return;
     }
+
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("tags").equal(tag.getUuid()).asList();
+
+    // Tag hosts
+    hostIds.forEach(hostId -> {
+      Host host = wingsPersistence.get(Host.class, hostId);
+      List<Tag> tags = getUpdateHostTagsList(tag, host);
+      UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
+      wingsPersistence.update(host, updateOp);
+      hosts.remove(host); // remove updated tags from all tagged hosts
+    });
+
+    // Un-tag hosts
+    hosts.forEach(host -> {
+      UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
+      wingsPersistence.update(host, updateOp);
+    });
   }
 
   private List<Tag> getUpdateHostTagsList(Tag tag, Host host) {
@@ -106,18 +119,6 @@ public class TagServiceImpl implements TagService {
     }
     tags.add(tag);
     return tags;
-  }
-
-  @Override
-  public void untagHosts(String appId, String tagId, List<String> hostIds) {
-    Tag tag = wingsPersistence.get(Tag.class, tagId);
-    if (hostIds != null) {
-      hostIds.forEach(hostId -> {
-        Host host = wingsPersistence.get(Host.class, hostId);
-        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
-        wingsPersistence.update(host, updateOp);
-      });
-    }
   }
 
   @Override

@@ -82,12 +82,4 @@ public class TagResource {
     tagService.tagHosts(appId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
-
-  @POST
-  @Path("{tagId}/untag-hosts")
-  public RestResponse untagHosts(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
-    tagService.untagHosts(appId, tagId, uuidList.getUuids());
-    return new RestResponse();
-  }
 }
