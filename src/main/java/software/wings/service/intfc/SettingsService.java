@@ -4,6 +4,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.List;
+import javax.ws.rs.core.MultivaluedMap;
+
 /**
  * Created by anubhaw on 5/17/16.
  */
@@ -21,4 +24,7 @@ public interface SettingsService {
   SettingAttribute getByName(String appId, String attributeName);
 
   void createDefaultSettings(String appId);
+
+  List<SettingAttribute> getConnectionAttributes(MultivaluedMap<String, String> queryParameters);
+  List<SettingAttribute> getBastionHostAttributes(MultivaluedMap<String, String> queryParameters);
 }

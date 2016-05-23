@@ -18,6 +18,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
+import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
@@ -40,7 +41,7 @@ import java.util.Map;
  * Created by anubhaw on 4/29/16.
  */
 
-public class ServiceTemplateServiceTest {
+public class ServiceTemplateServiceTest extends WingsBaseTest {
   ServiceTemplateService templateService;
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")

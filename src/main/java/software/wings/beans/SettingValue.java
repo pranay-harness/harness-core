@@ -17,8 +17,15 @@ public abstract class SettingValue {
   public enum SettingVariableTypes { HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES }
 
   private SettingVariableTypes type;
-
   public SettingValue(SettingVariableTypes type) {
+    this.type = type;
+  }
+
+  public SettingVariableTypes getType() {
+    return type;
+  }
+
+  public void setType(SettingVariableTypes type) {
     this.type = type;
   }
 }
