@@ -5,6 +5,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
 import software.wings.beans.User;
+import software.wings.dl.WingsDeque;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -17,14 +18,13 @@ import java.util.Map;
  */
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
 public class StateExecutionInstance extends Base {
-  private static final long serialVersionUID = 1872770318731510631L;
   private String stateMachineId;
   private String stateName;
 
-  @Serialized private ArrayDeque<ContextElement> contextElements = new ArrayDeque<>();
+  private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
 
-  @Serialized private StateMachineExecutionCallback callback;
+  private StateMachineExecutionCallback callback;
 
   @Indexed private String executionUuid;
 
@@ -134,7 +134,7 @@ public class StateExecutionInstance extends Base {
     return contextElements;
   }
 
-  public void setContextElements(ArrayDeque<ContextElement> contextElements) {
+  public void setContextElements(WingsDeque<ContextElement> contextElements) {
     this.contextElements = contextElements;
   }
 
@@ -157,7 +157,7 @@ public class StateExecutionInstance extends Base {
   public static final class Builder {
     private String stateMachineId;
     private String stateName;
-    private ArrayDeque<ContextElement> contextElements = new ArrayDeque<>();
+    private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private StateMachineExecutionCallback callback;
     private String executionUuid;
@@ -193,7 +193,7 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
-    public Builder withContextElements(ArrayDeque<ContextElement> contextElements) {
+    public Builder withContextElements(WingsDeque<ContextElement> contextElements) {
       this.contextElements = contextElements;
       return this;
     }

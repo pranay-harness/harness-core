@@ -2,23 +2,22 @@ package software.wings.sm;
 
 import com.google.inject.Singleton;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorConstants;
+import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.utils.ExpressionEvaluator;
+import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.Serializable;
-import java.util.ArrayDeque;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 /**
@@ -59,7 +58,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setStateMachineId(sm.getUuid());
     stateExecutionInstance.setExecutionUuid(executionUuid);
 
-    ArrayDeque<ContextElement> contextElements = new ArrayDeque<>();
+    WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     if (contextParams != null) {
       contextElements.addAll(contextParams);
     }
@@ -209,7 +208,7 @@ public class StateMachineExecutor {
         waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.SUCCESS);
       }
     } else {
-      StateExecutionInstance cloned = SerializationUtils.clone(stateExecutionInstance);
+      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
       return execute(sm, cloned);
@@ -241,7 +240,7 @@ public class StateMachineExecutor {
         waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.FAILED);
       }
     } else {
-      StateExecutionInstance cloned = SerializationUtils.clone(stateExecutionInstance);
+      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
       return execute(sm, cloned);

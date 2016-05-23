@@ -1,6 +1,5 @@
 package software.wings.sm.states;
 
-import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.sm.ExecutionContext;
@@ -11,6 +10,7 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,7 +46,8 @@ public class ForkState extends State {
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
-      StateExecutionInstance childStateExecutionInstance = SerializationUtils.clone(stateExecutionInstance);
+      StateExecutionInstance childStateExecutionInstance =
+          JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(notifyId);

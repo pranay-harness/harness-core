@@ -3,6 +3,7 @@
  */
 package software.wings.service.impl;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.WingsBootstrap;
@@ -23,8 +24,26 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private String appId;
   private String workflowExecutionId;
 
+  public WorkflowExecutionUpdate() {}
+
   public WorkflowExecutionUpdate(String appId, String workflowExecutionId) {
     this.appId = appId;
+    this.workflowExecutionId = workflowExecutionId;
+  }
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
+  }
+
+  public void setWorkflowExecutionId(String workflowExecutionId) {
     this.workflowExecutionId = workflowExecutionId;
   }
 
@@ -47,6 +66,4 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", status);
     wingsPersistence.update(query, updateOps);
   }
-
-  private static final long serialVersionUID = 1L;
 }
