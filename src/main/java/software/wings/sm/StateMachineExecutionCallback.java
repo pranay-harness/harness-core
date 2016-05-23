@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import java.io.Serializable;
 
 /**
@@ -7,6 +9,7 @@ import java.io.Serializable;
  *
  * @author Rishi
  */
-public interface StateMachineExecutionCallback extends Serializable {
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+public interface StateMachineExecutionCallback {
   void callback(ExecutionContext context, ExecutionStatus status, Exception ex);
 }

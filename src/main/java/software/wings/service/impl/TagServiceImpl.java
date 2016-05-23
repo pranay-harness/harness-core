@@ -28,7 +28,16 @@ public class TagServiceImpl implements TagService {
 
   @Override
   public Tag saveTag(String parentTagId, Tag tag) {
-    return wingsPersistence.saveAndGet(Tag.class, tag);
+    if (parentTagId == null || parentTagId.length() == 0) {
+      tag.setRootTag(true);
+      return wingsPersistence.saveAndGet(Tag.class, tag);
+    } else {
+      Tag parentTag = wingsPersistence.get(Tag.class, parentTagId);
+      tag.setRootTagId(parentTag.isRootTag() ? parentTagId : parentTag.getRootTagId());
+      tag = wingsPersistence.saveAndGet(Tag.class, tag);
+      wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
+      return tag;
+    }
   }
 
   @Override
@@ -68,25 +77,8 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public Tag linkTags(String appId, String tagId, String childTagId) {
-    Tag childTag = wingsPersistence.get(Tag.class, childTagId);
-    wingsPersistence.addToList(Tag.class, tagId, "children", childTag);
-    return wingsPersistence.get(Tag.class, tagId);
-  }
-
-  @Override
   public Tag getRootConfigTag(String appId, String envId) {
     return wingsPersistence.createQuery(Tag.class).field("envId").equal(envId).field("rootTag").equal(true).get();
-  }
-
-  @Override
-  public Tag createAndLinkTag(String parentTagId, Tag tag) {
-    Tag parentTag = wingsPersistence.get(Tag.class, parentTagId);
-    tag = wingsPersistence.saveAndGet(Tag.class, tag);
-    if (parentTag != null) {
-      wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
-    }
-    return tag;
   }
 
   @Override
@@ -95,10 +87,25 @@ public class TagServiceImpl implements TagService {
     if (hostIds != null) {
       hostIds.forEach(hostId -> {
         Host host = wingsPersistence.get(Host.class, hostId);
-        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).add("tags", tag);
+        List<Tag> tags = getUpdateHostTagsList(tag, host);
+        UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
         wingsPersistence.update(host, updateOp);
       });
     }
+  }
+
+  private List<Tag> getUpdateHostTagsList(Tag tag, Host host) {
+    List<Tag> tags = host.getTags();
+    if (tags != null && tags.size() != 0) {
+      for (int i = 0; i < tags.size(); i++) {
+        if (tag.getRootTagId().equals(tags.get(i).getRootTagId())) {
+          tags.remove(i);
+          break;
+        }
+      }
+    }
+    tags.add(tag);
+    return tags;
   }
 
   @Override

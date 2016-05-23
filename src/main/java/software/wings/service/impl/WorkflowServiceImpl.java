@@ -27,6 +27,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowService;
@@ -347,7 +348,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
 
-    ArrayDeque<ContextElement> contextElements = new ArrayDeque<>();
+    WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     contextElements.push(stdParams);
     stateExecutionInstance.setContextElements(contextElements);
     stateMachineExecutor.execute(stateMachine, stateExecutionInstance);

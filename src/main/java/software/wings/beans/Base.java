@@ -24,9 +24,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public class Base implements Serializable {
-  private static final long serialVersionUID = -152566601082809950L;
-
+public class Base {
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Indexed @NotNull private String appId;
