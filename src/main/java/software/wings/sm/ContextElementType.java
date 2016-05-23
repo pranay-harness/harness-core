@@ -5,17 +5,15 @@ package software.wings.sm;
  *
  * @author Rishi
  */
-public enum RepeatElementType {
+public enum ContextElementType {
   SERVICE("service"),
-  PHASE("phase"),
-  DATA_CENTER("dataCenter"),
-  OZ("operationalZone"),
+  TAG("tag"),
   HOST("host"),
   OTHER("");
 
   private String displayName;
 
-  RepeatElementType(String displayName) {
+  ContextElementType(String displayName) {
     this.displayName = displayName;
   }
 

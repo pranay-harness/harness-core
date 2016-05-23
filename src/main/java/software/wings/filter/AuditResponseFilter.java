@@ -51,7 +51,7 @@ public class AuditResponseFilter implements Filter {
 
       AuditHeader header = auditHelper.get();
       if (header != null) {
-        header.setResponseTime(new Timestamp(System.currentTimeMillis()));
+        header.setResponseTime(System.currentTimeMillis());
         header.setResponseStatusCode(((HttpServletResponse) response).getStatus());
         auditHelper.finalizeAudit(header, copy);
       }

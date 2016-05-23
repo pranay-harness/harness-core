@@ -12,6 +12,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.User;
+import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
 import software.wings.utils.CollectionUtils;
@@ -52,8 +53,9 @@ public class StateMachine extends Base {
 
   public StateMachine() {}
 
-  public StateMachine(String originId, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    this.originId = originId;
+  public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
+    setAppId(workflow.getAppId());
+    this.originId = workflow.getUuid();
     this.graph = graph;
     this.name = graph.getGraphName();
     transform(stencilMap);

@@ -9,7 +9,6 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
 import software.wings.dl.WingsPersistence;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,15 +17,12 @@ import java.util.Map;
 /**
  * @author Rishi
  */
-public class ExecutionStandardParams implements Serializable {
+public class WorkflowStandardParams implements ContextElement {
   private static final long serialVersionUID = 247894502473046682L;
 
   private String appId;
   private String envId;
   private List<String> artifactIds;
-
-  private String workflowExecutionId;
-  private StateMachineExecutionCallback callback;
 
   private transient Application app;
   private transient Environment env;
@@ -96,14 +92,6 @@ public class ExecutionStandardParams implements Serializable {
     this.artifacts = artifacts;
   }
 
-  public String getWorkflowExecutionId() {
-    return workflowExecutionId;
-  }
-
-  public void setWorkflowExecutionId(String workflowExecutionId) {
-    this.workflowExecutionId = workflowExecutionId;
-  }
-
   public Long getStartTs() {
     return startTs;
   }
@@ -120,19 +108,22 @@ public class ExecutionStandardParams implements Serializable {
     this.endTs = endTs;
   }
 
-  public StateMachineExecutionCallback getCallback() {
-    return callback;
-  }
-
-  public void setCallback(StateMachineExecutionCallback callback) {
-    this.callback = callback;
-  }
-
+  @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
     map.put("app", getApp());
     map.put("env", getEnv());
 
     return map;
+  }
+
+  @Override
+  public ContextElementType getElementType() {
+    return null;
+  }
+
+  @Override
+  public String getName() {
+    return null;
   }
 }

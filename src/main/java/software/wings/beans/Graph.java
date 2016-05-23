@@ -5,6 +5,7 @@ package software.wings.beans;
 
 import software.wings.common.Constants;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,9 @@ import java.util.Map;
 /**
  * @author Rishi
  */
-public class Graph {
+public class Graph implements Serializable {
+  private static final long serialVersionUID = 7894954599933362678L;
+
   public static final String ORIGIN_STATE_NAME = "ORIGIN";
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
@@ -81,7 +84,9 @@ public class Graph {
     return true;
   }
 
-  public static class Node {
+  public static class Node implements Serializable {
+    private static final long serialVersionUID = 7894954599933362678L;
+
     private String id;
     private String name;
     private String type;
@@ -187,7 +192,9 @@ public class Graph {
     }
   }
 
-  public static class Link {
+  public static class Link implements Serializable {
+    private static final long serialVersionUID = 7894954599933362678L;
+
     private String id;
     private String from;
     private String to;

@@ -29,4 +29,6 @@ public interface TagService {
   void tagHosts(String appId, String tagId, List<String> hostIds);
 
   void untagHosts(String appId, String tagId, List<String> hostIds);
+
+  List<Tag> getTagsByName(String appId, String envId, List<String> tagNames);
 }

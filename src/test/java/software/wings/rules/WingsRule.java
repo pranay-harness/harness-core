@@ -54,6 +54,7 @@ import software.wings.helpers.ext.JenkinsImpl;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
+import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
@@ -67,12 +68,14 @@ import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -85,6 +88,7 @@ import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -204,6 +208,7 @@ public class WingsRule implements MethodRule {
         bind(ReleaseService.class).to(ReleaseServiceImpl.class);
         bind(CatalogService.class).to(CatalogServiceImpl.class);
         bind(HostService.class).to(HostServiceImpl.class);
+        bind(AuditService.class).to(AuditServiceImpl.class);
         bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
         bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
         bind(ArtifactCollectorService.class)
@@ -212,6 +217,7 @@ public class WingsRule implements MethodRule {
         install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
         bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
         bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
+        bind(SettingsService.class).to(SettingsServiceImpl.class);
       }
     });
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());

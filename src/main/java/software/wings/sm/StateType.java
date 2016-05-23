@@ -6,7 +6,6 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.BuildState;
 import software.wings.sm.states.EnvState;
@@ -66,8 +65,7 @@ public enum StateType implements StateTypeDescriptor {
     try {
       URL url = this.getClass().getResource(file);
       String json = Resources.toString(url, Charsets.UTF_8);
-      JsonUtils jsonUtils = WingsBootstrap.lookup(JsonUtils.class);
-      return jsonUtils.asObject(json, HashMap.class);
+      return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
       WingsException ex = new WingsException("Error in initializing StateType", exception);
       logger.error(ex.getMessage(), ex);

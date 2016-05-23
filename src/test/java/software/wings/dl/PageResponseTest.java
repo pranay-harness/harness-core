@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.dl;
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 

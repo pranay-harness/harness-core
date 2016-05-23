@@ -12,7 +12,6 @@ import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import javax.inject.Singleton;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,25 +23,24 @@ import javax.xml.xpath.XPathFactory;
 /**
  * @author Rishi
  */
-@Singleton
 public class XmlUtils {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(XmlUtils.class);
 
-  public String xpath(String content, String expression)
+  public static String xpath(String content, String expression)
       throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
     logger.debug("xpath request - expression: {}, content: {}", expression, content);
     Document document = parse(content);
     return xpath(document, expression);
   }
 
-  public String xpath(Document document, String expression) throws XPathExpressionException {
+  public static String xpath(Document document, String expression) throws XPathExpressionException {
     XPath xpath = XPathFactory.newInstance().newXPath();
     String retValue = xpath.evaluate(expression, document);
     logger.debug("xpath request - return value: {}", retValue);
     return retValue;
   }
 
-  public Document parse(String content) throws ParserConfigurationException, SAXException, IOException {
+  public static Document parse(String content) throws ParserConfigurationException, SAXException, IOException {
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
     DocumentBuilder builder = factory.newDocumentBuilder();

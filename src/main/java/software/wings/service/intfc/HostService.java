@@ -20,8 +20,6 @@ public interface HostService {
 
   public Host update(Host host);
 
-  int importHosts(Host baseHost, BoundedInputStream boundedInputStream);
-
   File exportHosts(String appId, String infraId);
 
   String getInfraId(String envId, String appId);
@@ -29,4 +27,6 @@ public interface HostService {
   void delete(String appId, String infraId, String hostId);
 
   void bulkSave(Host baseHost, List<String> hostNames);
+
+  int importHosts(String appId, String infraId, BoundedInputStream boundedInputStream);
 }

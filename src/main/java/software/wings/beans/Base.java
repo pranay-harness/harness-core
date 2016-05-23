@@ -12,7 +12,9 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.io.Serializable;
 import java.util.Objects;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -22,7 +24,9 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public class Base {
+public class Base implements Serializable {
+  private static final long serialVersionUID = -152566601082809950L;
+
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Indexed @NotNull private String appId;

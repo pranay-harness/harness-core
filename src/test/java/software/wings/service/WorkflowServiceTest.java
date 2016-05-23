@@ -34,6 +34,7 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 /**
@@ -45,12 +46,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
-  private String appId = UUIDGenerator.getUuid();
+  private static String appId = UUIDGenerator.getUuid();
 
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -84,7 +85,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTrigger() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -110,7 +111,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, smId, executionUuid);
     Thread.sleep(5000);
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -128,7 +130,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerFailedTransition() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000), true);
@@ -161,7 +163,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, smId, executionUuid);
     Thread.sleep(5000);
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -181,7 +184,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerAsynch() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -222,7 +225,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm.getUuid()).isNotNull();
 
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(sm.getUuid());
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
     Thread.sleep(8000);
 
@@ -243,7 +247,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerFailedAsynch() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -277,9 +281,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm.getUuid()).isNotNull();
 
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(sm.getUuid());
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
-    Thread.sleep(3000);
+    Thread.sleep(4000);
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
     assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
@@ -296,7 +301,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private StateMachine createAsynchSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -341,7 +346,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerSimpleFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -368,17 +373,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm).isNotNull();
     assertThat(sm.getUuid()).isNotNull();
 
-    String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
-    Thread.sleep(5000);
+    Thread.sleep(2000);
   }
 
   @Test
   public void shouldTriggerMixedFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
-    sm.setAppId("APP_ID");
+    sm.setAppId(appId);
     State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
     StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
@@ -422,7 +427,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
-    workflowService.trigger(smId);
+    String executionUuid = UUIDGenerator.getUuid();
+    workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
     Thread.sleep(10000);
   }

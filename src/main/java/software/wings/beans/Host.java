@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
@@ -13,29 +11,31 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.sm.RepeatElementType;
-import software.wings.sm.Repeatable;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "hosts", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
-public class Host extends Base implements Repeatable {
+public class Host extends Base implements ContextElement {
   private static final long serialVersionUID = 1189183137783838598L;
 
   private String infraId;
   private String hostName;
 
-  @FormDataParam("hostAttributes")
+  @FormDataParam("hostConnAttrs")
   @Reference(idOnly = true, ignoreMissing = true)
-  private EnvironmentAttribute hostAttributes;
+  private SettingAttribute hostConnAttrs;
 
-  @FormDataParam("bastionHostAttributes")
+  @FormDataParam("bastionConnAttrs")
   @Reference(idOnly = true, ignoreMissing = true)
-  private EnvironmentAttribute bastionHostAttributes;
+  private SettingAttribute bastionConnAttrs;
 
   @FormDataParam("tags") @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
@@ -59,20 +59,20 @@ public class Host extends Base implements Repeatable {
     this.hostName = hostName;
   }
 
-  public EnvironmentAttribute getHostAttributes() {
-    return hostAttributes;
+  public SettingAttribute getHostConnAttrs() {
+    return hostConnAttrs;
   }
 
-  public void setHostAttributes(EnvironmentAttribute hostAttributes) {
-    this.hostAttributes = hostAttributes;
+  public void setHostConnAttrs(SettingAttribute hostConnAttrs) {
+    this.hostConnAttrs = hostConnAttrs;
   }
 
-  public EnvironmentAttribute getBastionHostAttributes() {
-    return bastionHostAttributes;
+  public SettingAttribute getBastionConnAttrs() {
+    return bastionConnAttrs;
   }
 
-  public void setBastionHostAttributes(EnvironmentAttribute bastionHostAttributes) {
-    this.bastionHostAttributes = bastionHostAttributes;
+  public void setBastionConnAttrs(SettingAttribute bastionConnAttrs) {
+    this.bastionConnAttrs = bastionConnAttrs;
   }
 
   public List<Tag> getTags() {
@@ -100,8 +100,14 @@ public class Host extends Base implements Repeatable {
   }
 
   @Override
-  public RepeatElementType getRepeatElementType() {
-    return RepeatElementType.HOST;
+  public ContextElementType getElementType() {
+    return ContextElementType.HOST;
+  }
+  @Override
+  public Map<String, Object> paramMap() {
+    Map<String, Object> map = new HashMap<>();
+    map.put(ContextElementType.HOST.getDisplayName(), this);
+    return map;
   }
 
   @Override
@@ -112,7 +118,7 @@ public class Host extends Base implements Repeatable {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, hostAttributes, bastionHostAttributes, tags, configFiles);
+        + Objects.hash(infraId, hostName, hostConnAttrs, bastionConnAttrs, tags, hostNames, configFiles);
   }
 
   @Override
@@ -128,29 +134,18 @@ public class Host extends Base implements Repeatable {
     }
     final Host other = (Host) obj;
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.hostAttributes, other.hostAttributes)
-        && Objects.equals(this.bastionHostAttributes, other.bastionHostAttributes)
-        && Objects.equals(this.tags, other.tags) && Objects.equals(this.configFiles, other.configFiles);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("infraId", infraId)
-        .add("hostName", hostName)
-        .add("hostAttributes", hostAttributes)
-        .add("bastionHostAttributes", bastionHostAttributes)
-        .add("tags", tags)
-        .add("configFiles", configFiles)
-        .toString();
+        && Objects.equals(this.hostConnAttrs, other.hostConnAttrs)
+        && Objects.equals(this.bastionConnAttrs, other.bastionConnAttrs) && Objects.equals(this.tags, other.tags)
+        && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles);
   }
 
   public static final class HostBuilder {
     private String infraId;
     private String hostName;
-    private EnvironmentAttribute hostAttributes;
-    private EnvironmentAttribute bastionHostAttributes;
+    private SettingAttribute hostConnAttrs;
+    private SettingAttribute bastionConnAttrs;
     private List<Tag> tags = new ArrayList<>();
+    private List<String> hostNames; // to support bulk add host API
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
     private String appId;
@@ -176,18 +171,23 @@ public class Host extends Base implements Repeatable {
       return this;
     }
 
-    public HostBuilder withHostAttributes(EnvironmentAttribute hostAttributes) {
-      this.hostAttributes = hostAttributes;
+    public HostBuilder withHostConnAttrs(SettingAttribute hostConnAttrs) {
+      this.hostConnAttrs = hostConnAttrs;
       return this;
     }
 
-    public HostBuilder withBastionHostAttributes(EnvironmentAttribute bastionHostAttributes) {
-      this.bastionHostAttributes = bastionHostAttributes;
+    public HostBuilder withBastionConnAttrs(SettingAttribute bastionConnAttrs) {
+      this.bastionConnAttrs = bastionConnAttrs;
       return this;
     }
 
     public HostBuilder withTags(List<Tag> tags) {
       this.tags = tags;
+      return this;
+    }
+
+    public HostBuilder withHostNames(List<String> hostNames) {
+      this.hostNames = hostNames;
       return this;
     }
 
@@ -235,9 +235,10 @@ public class Host extends Base implements Repeatable {
       return aHost()
           .withInfraId(infraId)
           .withHostName(hostName)
-          .withHostAttributes(hostAttributes)
-          .withBastionHostAttributes(bastionHostAttributes)
+          .withHostConnAttrs(hostConnAttrs)
+          .withBastionConnAttrs(bastionConnAttrs)
           .withTags(tags)
+          .withHostNames(hostNames)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
@@ -252,9 +253,10 @@ public class Host extends Base implements Repeatable {
       Host host = new Host();
       host.setInfraId(infraId);
       host.setHostName(hostName);
-      host.setHostAttributes(hostAttributes);
-      host.setBastionHostAttributes(bastionHostAttributes);
+      host.setHostConnAttrs(hostConnAttrs);
+      host.setBastionConnAttrs(bastionConnAttrs);
       host.setTags(tags);
+      host.setHostNames(hostNames);
       host.setConfigFiles(configFiles);
       host.setUuid(uuid);
       host.setAppId(appId);

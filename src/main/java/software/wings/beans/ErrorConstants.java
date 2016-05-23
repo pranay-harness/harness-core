@@ -36,4 +36,5 @@ public interface ErrorConstants {
   public static final String PLATFORM_SOFTWARE_DELETE_ERROR = "PLATFORM_SOFTWARE_DELETE_ERROR";
   public static final String INVALID_CSV_FILE = "INVALID_CSV_FILE";
   public static final String UNKNOWN_STENCIL_TYPE = "UNKNOWN_STENCIL_TYPE";
+  public static final String ARGS_NAME = "ARGS_NAME";
 }

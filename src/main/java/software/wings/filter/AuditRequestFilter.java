@@ -56,7 +56,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     HttpMethod method = HttpMethod.valueOf(requestContext.getMethod());
     header.setRequestMethod(method);
     header.setResourcePath(requestContext.getUriInfo().getPath());
-    header.setRequestTime(new Timestamp(System.currentTimeMillis()));
+    header.setRequestTime(System.currentTimeMillis());
 
     HttpServletRequest request = resourceContext.getResource(HttpServletRequest.class);
 

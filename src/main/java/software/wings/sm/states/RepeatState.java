@@ -7,17 +7,16 @@ package software.wings.sm.states;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
+import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.RepeatElementType;
-import software.wings.sm.Repeatable;
+import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 
 import java.io.Serializable;
@@ -32,7 +31,7 @@ public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private RepeatElementType repeatElementType;
+  private ContextElementType repeatElementType;
   private String repeatElementExpression;
   private RepeatStrategy repeatStrategy;
 
@@ -50,16 +49,14 @@ public class RepeatState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
-    return execute(
-        (ExecutionContextImpl) context, repeatStateExecutionData, WingsBootstrap.lookup(StateMachineExecutor.class));
+    return execute((ExecutionContextImpl) context, repeatStateExecutionData);
   }
 
-  ExecutionResponse execute(ExecutionContextImpl context, RepeatStateExecutionData repeatStateExecutionData,
-      StateMachineExecutor stateMachineExecutor) {
+  ExecutionResponse execute(ExecutionContextImpl context, RepeatStateExecutionData repeatStateExecutionData) {
     if (repeatStateExecutionData == null) {
       repeatStateExecutionData = new RepeatStateExecutionData();
     }
-    List<Repeatable> repeatElements = repeatStateExecutionData.getRepeatElements();
+    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
     try {
       if (repeatElements == null || repeatElements.size() == 0) {
         if (repeatElementExpression != null) {
@@ -79,45 +76,44 @@ public class RepeatState extends State {
       return executionResponse;
     }
 
-    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
+    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
     if (repeatStrategy == RepeatStrategy.PARALLEL) {
-      for (Repeatable repeatElement : repeatElements) {
-        ExecutionContextImpl contextClone = SerializationUtils.clone(context);
-        contextClone.pushContextElement(repeatElement);
-        String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
-        stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName,
-            contextClone, stateExecutionInstance.getUuid(), notifyId);
-        correlationIds.add(notifyId);
+      for (ContextElement repeatElement : repeatElements) {
+        processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
       }
     } else {
       Integer repeatElementIndex = 0;
       repeatStateExecutionData.setRepeatElementIndex(0);
-      Repeatable repeatElement = repeatElements.get(repeatElementIndex);
-      ExecutionContextImpl contextClone = SerializationUtils.clone(context);
-      contextClone.pushContextElement(repeatElement);
-      String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
-      stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
-          stateExecutionInstance.getUuid(), notifyId);
-      correlationIds.add(notifyId);
+      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
+      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
     }
 
-    ExecutionResponse executionResponse = new ExecutionResponse();
     executionResponse.setAsynch(true);
     executionResponse.setCorrelationIds(correlationIds);
     executionResponse.setStateExecutionData(repeatStateExecutionData);
     return executionResponse;
   }
 
+  private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
+      SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
+    String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
+    StateExecutionInstance childStateExecutionInstance = SerializationUtils.clone(stateExecutionInstance);
+
+    childStateExecutionInstance.setStateName(repeatTransitionStateName);
+    childStateExecutionInstance.setNotifyId(notifyId);
+
+    childStateExecutionInstance.getContextElements().push(repeatElement);
+    executionResponse.add(childStateExecutionInstance);
+    correlationIds.add(notifyId);
+  }
+
   @Override
   public ExecutionResponse handleAsynchResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
-    return handleAsynchResponse(context, response, WingsBootstrap.lookup(StateMachineExecutor.class));
-  }
-
-  ExecutionResponse handleAsynchResponse(ExecutionContextImpl context, Map<String, ? extends Serializable> response,
-      StateMachineExecutor stateMachineExecutor) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Serializable status : response.values()) {
       executionStatus = (ExecutionStatus) status;
@@ -127,7 +123,7 @@ public class RepeatState extends State {
     }
 
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
-    List<Repeatable> repeatElements = repeatStateExecutionData.getRepeatElements();
+    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
 
     if (repeatStrategy == RepeatStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
         || repeatStateExecutionData.indexReachedMax()) {
@@ -135,32 +131,29 @@ public class RepeatState extends State {
       executionResponse.setExecutionStatus(executionStatus);
       return executionResponse;
     } else {
+      SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
       Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
       repeatElementIndex++;
       repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
-      Repeatable repeatElement = repeatElements.get(repeatElementIndex);
-      ExecutionContextImpl contextClone = SerializationUtils.clone(context);
-      contextClone.pushContextElement(repeatElement);
+      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
 
-      StateExecutionInstance stateExecutionInstance = context.getSmInstance();
-      String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
-      stateMachineExecutor.execute(stateExecutionInstance.getStateMachineId(), repeatTransitionStateName, contextClone,
-          stateExecutionInstance.getUuid(), notifyId, stateExecutionInstance.getUuid());
+      StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
       List<String> correlationIds = new ArrayList<>();
-      correlationIds.add(notifyId);
+      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
 
-      ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setAsynch(true);
       executionResponse.setCorrelationIds(correlationIds);
+      executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     }
   }
 
-  public RepeatElementType getRepeatElementType() {
+  public ContextElementType getRepeatElementType() {
     return repeatElementType;
   }
 
-  public void setRepeatElementType(RepeatElementType repeatElementType) {
+  public void setRepeatElementType(ContextElementType repeatElementType) {
     this.repeatElementType = repeatElementType;
   }
 
@@ -192,14 +185,14 @@ public class RepeatState extends State {
 
   public static class RepeatStateExecutionData extends StateExecutionData {
     private static final long serialVersionUID = 5043797016447183954L;
-    private List<Repeatable> repeatElements = new ArrayList<>();
+    private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
 
-    public List<Repeatable> getRepeatElements() {
+    public List<ContextElement> getRepeatElements() {
       return repeatElements;
     }
 
-    public void setRepeatElements(List<Repeatable> repeatElements) {
+    public void setRepeatElements(List<ContextElement> repeatElements) {
       this.repeatElements = repeatElements;
     }
 

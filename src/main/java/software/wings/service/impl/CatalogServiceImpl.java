@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogItem;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.YamlUtils;
 
 import java.net.URL;
@@ -28,7 +27,7 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class CatalogServiceImpl implements CatalogService {
-  private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
+  private final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
 
   @Inject

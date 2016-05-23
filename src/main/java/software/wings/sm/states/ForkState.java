@@ -3,14 +3,13 @@ package software.wings.sm.states;
 import org.apache.commons.lang3.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.WingsBootstrap;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 
 import java.io.Serializable;
@@ -27,7 +26,7 @@ public class ForkState extends State {
   private static final long serialVersionUID = 1L;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private List<String> forkStateNames = new ArrayList<String>();
+  private List<String> forkStateNames = new ArrayList<>();
 
   public ForkState(String name) {
     super(name, StateType.FORK.name());
@@ -41,18 +40,20 @@ public class ForkState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext contextIntf) {
     ExecutionContextImpl context = (ExecutionContextImpl) contextIntf;
-    StateExecutionInstance stateExecutionInstance = context.getSmInstance();
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
+
+    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
-      ExecutionContextImpl contextClone = SerializationUtils.clone(context);
-      WingsBootstrap.lookup(StateMachineExecutor.class)
-          .execute(stateExecutionInstance.getStateMachineId(), state, contextClone, stateExecutionInstance.getUuid(),
-              notifyId);
+      StateExecutionInstance childStateExecutionInstance = SerializationUtils.clone(stateExecutionInstance);
+
+      childStateExecutionInstance.setStateName(state);
+      childStateExecutionInstance.setNotifyId(notifyId);
+      executionResponse.add(childStateExecutionInstance);
       correlationIds.add(notifyId);
     }
 
-    ExecutionResponse executionResponse = new ExecutionResponse();
     executionResponse.setAsynch(true);
     executionResponse.setCorrelationIds(correlationIds);
     return executionResponse;
@@ -69,7 +70,7 @@ public class ForkState extends State {
       }
     }
     logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
-        context.getSmInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
+        context.getStateExecutionInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
     return executionResponse;
   }
 

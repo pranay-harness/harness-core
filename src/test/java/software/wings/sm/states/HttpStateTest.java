@@ -13,20 +13,25 @@ import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.utils.ExpressionEvaluator;
+
+import javax.inject.Inject;
 
 /**
  * @author Rishi
  *
  */
 public class HttpStateTest extends WingsBaseTest {
+  @Inject private ExpressionEvaluator evaluator;
+
   @Test
   public void shouldAssertResponse() {
-    ExecutionContextImpl context = new ExecutionContextImpl();
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     String stateName = "healthCheck1";
+    stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     stateExecutionInstance.setStateName(stateName);
-    context.setSmInstance(stateExecutionInstance);
+
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, null, evaluator);
 
     Host host = new Host();
     host.setHostName("app123.application.com");
