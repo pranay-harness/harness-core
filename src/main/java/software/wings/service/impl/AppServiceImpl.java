@@ -12,6 +12,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -25,11 +26,14 @@ import javax.inject.Singleton;
 public class AppServiceImpl implements AppService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private SettingsService settingsService;
 
   @Override
   @Metered
   public Application save(Application app) {
-    return wingsPersistence.saveAndGet(Application.class, app);
+    Application application = wingsPersistence.saveAndGet(Application.class, app);
+    settingsService.createDefaultSettings(application.getUuid()); // FIXME: Should be at common place
+    return application;
   }
 
   @Override

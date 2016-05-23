@@ -11,7 +11,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.HostFileHelper;
+import software.wings.utils.HostCsvFileHelper;
 
 import java.io.File;
 import java.util.List;
@@ -22,6 +22,7 @@ import javax.inject.Inject;
  */
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private HostCsvFileHelper csvFileHelper;
 
   @Override
   public PageResponse<Host> list(PageRequest<Host> req) {
@@ -43,25 +44,25 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.updateFields(Host.class, host.getUuid(),
         ImmutableMap.<String, Object>builder()
             .put("hostName", host.getHostName())
-            .put("hostAttributes", host.getHostAttributes())
-            .put("bastionHostAttributes", host.getBastionHostAttributes())
+            .put("hostAttributes", host.getHostConnAttrs())
+            .put("bastionHostAttributes", host.getBastionConnAttrs())
             .put("tags", host.getTags())
             .build());
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
   @Override
-  public int importHosts(Host baseHost, BoundedInputStream inputStream) {
-    Infra infra = wingsPersistence.get(Infra.class, baseHost.getInfraId()); // TODO: validate infra
-    List<Host> hosts = HostFileHelper.parseHosts(inputStream, baseHost);
+  public int importHosts(String appId, String infraId, BoundedInputStream inputStream) {
+    Infra infra = wingsPersistence.get(Infra.class, infraId); // TODO: validate infra
+    List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
     List<String> IDs = wingsPersistence.save(hosts);
     return IDs.size();
   }
 
   @Override
   public File exportHosts(String appId, String infraId) {
-    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraID").equal(infraId).asList();
-    return HostFileHelper.createHostsFile(hosts);
+    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList();
+    return csvFileHelper.createHostsFile(hosts);
   }
 
   @Override
@@ -81,8 +82,8 @@ public class HostServiceImpl implements HostService {
                .withHostName(hostName)
                .withAppId(baseHost.getAppId())
                .withInfraId(baseHost.getInfraId())
-               .withHostAttributes(baseHost.getHostAttributes())
-               .withBastionHostAttributes(baseHost.getBastionHostAttributes())
+               .withHostConnAttrs(baseHost.getHostConnAttrs())
+               .withBastionConnAttrs(baseHost.getBastionConnAttrs())
                .withTags(baseHost.getTags())
                .build());
     });

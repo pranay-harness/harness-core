@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+
 import com.google.common.base.MoreObjects;
 
 import java.util.Objects;
@@ -7,8 +9,12 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 5/17/16.
  */
-public class BastionHostAttributes extends HostAttributes {
+public class BastionConnectionAttributes extends HostConnectionAttributes {
   private String hostName;
+
+  public BastionConnectionAttributes() {
+    super(BASTION_HOST_CONNECTION_ATTRIBUTES);
+  }
 
   public String getHostName() {
     return hostName;
@@ -34,7 +40,7 @@ public class BastionHostAttributes extends HostAttributes {
     if (!super.equals(obj)) {
       return false;
     }
-    final BastionHostAttributes other = (BastionHostAttributes) obj;
+    final BastionConnectionAttributes other = (BastionConnectionAttributes) obj;
     return Objects.equals(this.hostName, other.hostName);
   }
 

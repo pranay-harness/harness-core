@@ -67,6 +67,7 @@ import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
+import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -212,6 +214,7 @@ public class WingsRule implements MethodRule {
             .to(JenkinsArtifactCollectorServiceImpl.class);
         install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
         bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
+        bind(SettingsService.class).to(SettingsServiceImpl.class);
       }
     });
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
