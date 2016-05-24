@@ -14,13 +14,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.inject.Singleton;
 
 /**
  * @author Rishi
  */
 public class ExpressionEvaluator {
-  private static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
+  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
@@ -56,12 +55,12 @@ public class ExpressionEvaluator {
     return retValue;
   }
 
-  public Object evaluate(String expression, Map<String, Object> context, String prefixForUnknown) {
-    expression = normalizePrefix(expression, context, prefixForUnknown);
+  public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    expression = normalizeExpression(expression, context, defaultObjectPrefix);
     return evaluate(expression, context);
   }
 
-  private String normalizePrefix(String expression, Map<String, Object> context, String prefixForUnknown) {
+  private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
@@ -79,7 +78,7 @@ public class ExpressionEvaluator {
       }
 
       if (!context.containsKey(topObjectName)) {
-        variable = prefixForUnknown + "." + variable;
+        variable = defaultObjectPrefix + "." + variable;
       }
       matcher.appendReplacement(sb, variable);
     }
@@ -92,7 +91,7 @@ public class ExpressionEvaluator {
     return merge(expression, context, null);
   }
 
-  public String merge(String expression, Map<String, Object> context, String prefixForUnknown) {
+  public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
@@ -104,13 +103,13 @@ public class ExpressionEvaluator {
       // remove $ and braces(${varName})
       variable = variable.substring(2, variable.length() - 1);
 
-      if (prefixForUnknown != null) {
+      if (defaultObjectPrefix != null) {
         String topObjectName = variable;
         if (topObjectName.indexOf('.') > 0) {
           topObjectName = topObjectName.substring(0, topObjectName.indexOf('.'));
         }
         if (!context.containsKey(topObjectName)) {
-          variable = prefixForUnknown + "." + variable;
+          variable = defaultObjectPrefix + "." + variable;
         }
       }
 

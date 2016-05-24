@@ -60,7 +60,7 @@ public class RepeatState extends State {
     try {
       if (repeatElements == null || repeatElements.size() == 0) {
         if (repeatElementExpression != null) {
-          repeatElements = context.evaluateRepeatExpression(repeatElementType, repeatElementExpression);
+          repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
           repeatStateExecutionData.setRepeatElements(repeatElements);
         }
       }

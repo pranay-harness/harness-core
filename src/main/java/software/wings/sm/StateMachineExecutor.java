@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 /**
@@ -32,6 +33,7 @@ public class StateMachineExecutor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private ExpressionProcessorFactory expressionProcessorFactory;
 
   public StateExecutionInstance execute(String appId, String smId, String executionUuid) {
     return execute(appId, smId, executionUuid, null);
@@ -85,7 +87,8 @@ public class StateMachineExecutor {
       stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
     }
 
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, expressionEvaluator);
+    ExecutionContextImpl context =
+        new ExecutionContextImpl(stateExecutionInstance, stateMachine, expressionEvaluator, expressionProcessorFactory);
     executorService.execute(new SmExecutionDispatcher(context, this));
     return stateExecutionInstance;
   }
@@ -116,7 +119,8 @@ public class StateMachineExecutor {
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, expressionEvaluator);
+    ExecutionContextImpl context =
+        new ExecutionContextImpl(stateExecutionInstance, sm, expressionEvaluator, expressionProcessorFactory);
     try {
       ExecutionResponse executionResponse = currentState.handleAsynchResponse(context, response);
       handleExecuteResponse(context, executionResponse);

@@ -77,4 +77,46 @@ public class SearchFilter {
   }
 
   public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
+
+  public static final class Builder {
+    private String fieldName;
+    private Object fieldValue;
+    private List<Object> fieldValues;
+    private Operator op;
+
+    private Builder() {}
+
+    public static Builder aSearchFilter() {
+      return new Builder();
+    }
+
+    public Builder withFieldName(String fieldName) {
+      this.fieldName = fieldName;
+      return this;
+    }
+
+    public Builder withFieldValue(Object fieldValue) {
+      this.fieldValue = fieldValue;
+      return this;
+    }
+
+    public Builder withFieldValues(List<Object> fieldValues) {
+      this.fieldValues = fieldValues;
+      return this;
+    }
+
+    public Builder withOp(Operator op) {
+      this.op = op;
+      return this;
+    }
+
+    public SearchFilter build() {
+      SearchFilter searchFilter = new SearchFilter();
+      searchFilter.setFieldName(fieldName);
+      searchFilter.setFieldValue(fieldValue);
+      searchFilter.setFieldValues(fieldValues);
+      searchFilter.setOp(op);
+      return searchFilter;
+    }
+  }
 }

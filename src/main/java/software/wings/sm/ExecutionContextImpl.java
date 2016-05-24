@@ -1,10 +1,14 @@
 package software.wings.sm;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.utils.ExpressionEvaluator;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 
 /**
  * Describes execution context for a state machine execution.
@@ -15,29 +19,23 @@ public class ExecutionContextImpl implements ExecutionContext {
   private ExpressionEvaluator evaluator;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
+  private ExpressionProcessorFactory expressionProcessorFactory;
 
-  public ExecutionContextImpl(
-      StateExecutionInstance stateExecutionInstance, StateMachine stateMachine, ExpressionEvaluator evaluator) {
+  public ExecutionContextImpl(StateExecutionInstance stateExecutionInstance, StateMachine stateMachine,
+      ExpressionEvaluator evaluator, ExpressionProcessorFactory expressionProcessorFactory) {
     super();
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
     this.evaluator = evaluator;
+    this.expressionProcessorFactory = expressionProcessorFactory;
   }
 
   public StateMachine getStateMachine() {
     return stateMachine;
   }
 
-  public void setStateMachine(StateMachine stateMachine) {
-    this.stateMachine = stateMachine;
-  }
-
   public StateExecutionInstance getStateExecutionInstance() {
     return stateExecutionInstance;
-  }
-
-  public void setStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
-    this.stateExecutionInstance = stateExecutionInstance;
   }
 
   @Override
@@ -69,12 +67,8 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    return evaluator.evaluate(expression, context, stateExecutionInstance.getStateName());
-  }
-
-  public List<ContextElement> evaluateRepeatExpression(
-      ContextElementType repeatElementType, String repeatElementExpression) {
-    return (List<ContextElement>) evaluateExpression(repeatElementExpression, prepareContext());
+    normalizeExpression(expression, context, stateExecutionInstance.getStateName());
+    return evaluator.evaluate(expression, context);
   }
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
@@ -111,4 +105,60 @@ public class ExecutionContextImpl implements ExecutionContext {
   public void pushContextElement(ContextElement contextElement) {
     stateExecutionInstance.getContextElements().push(contextElement);
   }
+
+  private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    List<ExpressionProcessor> expressionProcessors = new ArrayList<>();
+    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+
+    StringBuffer sb = new StringBuffer();
+
+    while (matcher.find()) {
+      String variable = matcher.group(0);
+      logger.debug("wingsVariable found: {}", variable);
+
+      // remove $ and braces(${varName})
+      variable = variable.substring(2, variable.length() - 1);
+
+      String topObjectName = variable;
+      if (topObjectName.indexOf('.') > 0) {
+        topObjectName = topObjectName.substring(0, topObjectName.indexOf('.'));
+      }
+
+      boolean unknownObject = false;
+      if (!context.containsKey(topObjectName)) {
+        unknownObject = true;
+      }
+      if (unknownObject) {
+        for (ExpressionProcessor expressionProcessor : expressionProcessors) {
+          String newVariable = expressionProcessor.normalizeExpression(variable);
+          if (newVariable != null) {
+            variable = newVariable;
+            unknownObject = false;
+            break;
+          }
+        }
+      }
+      if (unknownObject) {
+        ExpressionProcessor expressionProcessor = expressionProcessorFactory.getExpressionProcessor(variable, this);
+        if (expressionProcessor != null) {
+          variable = expressionProcessor.normalizeExpression(variable);
+          unknownObject = false;
+        }
+      }
+      if (unknownObject) {
+        variable = defaultObjectPrefix + "." + variable;
+      }
+
+      matcher.appendReplacement(sb, variable);
+    }
+    matcher.appendTail(sb);
+
+    for (ExpressionProcessor expressionProcessor : expressionProcessors) {
+      context.put(expressionProcessor.getPrefixObjectName(), expressionProcessor);
+    }
+
+    return sb.toString();
+  }
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

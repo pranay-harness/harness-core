@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.dl.WingsDeque;
