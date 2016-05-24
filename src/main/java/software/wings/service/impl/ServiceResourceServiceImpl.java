@@ -48,7 +48,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public Service get(String serviceId) {
+  public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, serviceId);
     if (service != null) {
       service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
@@ -57,7 +57,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public void delete(String serviceId) {
+  public void delete(String appId, String serviceId) {
     wingsPersistence.delete(Service.class, serviceId);
   }
 }
