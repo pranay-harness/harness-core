@@ -52,10 +52,7 @@ public class TagResource {
       @QueryParam("parentTagId") String parentTagId, Tag tag) {
     tag.setEnvId(envId);
     tag.setAppId(appId);
-    if (parentTagId == null || parentTagId.length() == 0) {
-      tag.setRootTag(true);
-    }
-    return new RestResponse<>(tagService.createAndLinkTag(parentTagId, tag));
+    return new RestResponse<>(tagService.saveTag(parentTagId, tag));
   }
 
   @GET
@@ -80,24 +77,9 @@ public class TagResource {
   }
 
   @POST
-  @Path("{tagId}/link/{childTag}")
-  public RestResponse<Tag> linkTags(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, @PathParam("childTag") String childTagId) {
-    return new RestResponse<>(tagService.linkTags(appId, tagId, childTagId));
-  }
-
-  @POST
   @Path("{tagId}/tag-hosts")
   public RestResponse tagHosts(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
     tagService.tagHosts(appId, tagId, uuidList.getUuids());
-    return new RestResponse();
-  }
-
-  @POST
-  @Path("{tagId}/untag-hosts")
-  public RestResponse untagHosts(
-      @QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
-    tagService.untagHosts(appId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
 }

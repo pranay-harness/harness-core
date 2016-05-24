@@ -6,6 +6,8 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD_
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -15,7 +17,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.List;
 import javax.inject.Inject;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Created by anubhaw on 5/17/16.
@@ -82,5 +86,25 @@ public class SettingsServiceImpl implements SettingsService {
             .withValue(
                 aHostConnectionAttributes().withConnectionType(SSH).withAccessType(PASSWORD_SUDO_APP_ACCOUNT).build())
             .build());
+  }
+
+  @Override
+  public List<SettingAttribute> getConnectionAttributes(MultivaluedMap<String, String> queryParameters) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("appId")
+        .equal(queryParameters.getFirst("appId"))
+        .field("value.type")
+        .equal(HOST_CONNECTION_ATTRIBUTES)
+        .asList();
+  }
+
+  @Override
+  public List<SettingAttribute> getBastionHostAttributes(MultivaluedMap<String, String> queryParameters) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("appId")
+        .equal(queryParameters.getFirst("appId"))
+        .field("value.type")
+        .equal(BASTION_HOST_CONNECTION_ATTRIBUTES)
+        .asList();
   }
 }

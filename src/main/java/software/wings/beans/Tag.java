@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 3/30/16.
@@ -22,6 +23,7 @@ public class Tag extends Base {
   private String description;
   private String autoTaggingRule;
   private boolean rootTag = false;
+  private String rootTagId;
   private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children;
 
@@ -83,11 +85,44 @@ public class Tag extends Base {
     this.configFiles = configFiles;
   }
 
+  public String getRootTagId() {
+    return rootTagId;
+  }
+
+  public void setRootTagId(String rootTagId) {
+    this.rootTagId = rootTagId;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(name, description, autoTaggingRule, rootTag, rootTagId, envId, children, configFiles);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Tag other = (Tag) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.autoTaggingRule, other.autoTaggingRule) && Objects.equals(this.rootTag, other.rootTag)
+        && Objects.equals(this.rootTagId, other.rootTagId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.children, other.children) && Objects.equals(this.configFiles, other.configFiles);
+  }
+
   public static final class TagBuilder {
     private String name;
     private String description;
     private String autoTaggingRule;
     private boolean rootTag = false;
+    private String rootTagId;
     private String envId;
     private List<Tag> children;
     private List<ConfigFile> configFiles = new ArrayList<>();
@@ -122,6 +157,11 @@ public class Tag extends Base {
 
     public TagBuilder withRootTag(boolean rootTag) {
       this.rootTag = rootTag;
+      return this;
+    }
+
+    public TagBuilder withRootTagId(String rootTagId) {
+      this.rootTagId = rootTagId;
       return this;
     }
 
@@ -181,6 +221,7 @@ public class Tag extends Base {
           .withDescription(description)
           .withAutoTaggingRule(autoTaggingRule)
           .withRootTag(rootTag)
+          .withRootTagId(rootTagId)
           .withEnvId(envId)
           .withChildren(children)
           .withConfigFiles(configFiles)
@@ -199,6 +240,7 @@ public class Tag extends Base {
       tag.setDescription(description);
       tag.setAutoTaggingRule(autoTaggingRule);
       tag.setRootTag(rootTag);
+      tag.setRootTagId(rootTagId);
       tag.setEnvId(envId);
       tag.setChildren(children);
       tag.setConfigFiles(configFiles);

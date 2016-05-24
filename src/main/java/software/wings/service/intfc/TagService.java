@@ -20,15 +20,9 @@ public interface TagService {
 
   void deleteTag(String appId, String tagId);
 
-  Tag linkTags(String appId, String tagId, String childTagId);
-
   Tag getRootConfigTag(String appId, String envId);
 
-  Tag createAndLinkTag(String parentTagId, Tag tag);
-
   void tagHosts(String appId, String tagId, List<String> hostIds);
-
-  void untagHosts(String appId, String tagId, List<String> hostIds);
 
   List<Tag> getTagsByName(String appId, String envId, List<String> tagNames);
 }

@@ -86,8 +86,8 @@ public class HostCsvFileHelper {
       hosts.forEach(host -> {
         List row = new ArrayList();
         row.add(host.getHostName());
-        row.add(host.getHostConnAttrs() != null ? host.getHostConnAttrs().getName() : null);
-        row.add(host.getBastionConnAttrs() != null ? host.getBastionConnAttrs().getName() : null);
+        row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
+        row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);
         row.add(host.getTags() != null
                 ? host.getTags().stream().map(tag -> tag.getName()).collect(Collectors.joining(","))
                 : null);
