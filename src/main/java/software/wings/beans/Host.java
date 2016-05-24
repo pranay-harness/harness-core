@@ -31,13 +31,11 @@ public class Host extends Base implements ContextElement {
   private String infraId;
   private String hostName;
 
-  @FormDataParam("hostConnAttrs")
-  @Reference(idOnly = true, ignoreMissing = true)
-  private SettingAttribute hostConnAttrs;
+  @FormDataParam("hostConnAttr") @Reference(idOnly = true, ignoreMissing = true) private SettingAttribute hostConnAttr;
 
-  @FormDataParam("bastionConnAttrs")
+  @FormDataParam("bastionConnAttr")
   @Reference(idOnly = true, ignoreMissing = true)
-  private SettingAttribute bastionConnAttrs;
+  private SettingAttribute bastionConnAttr;
 
   @FormDataParam("tags") @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
@@ -61,20 +59,20 @@ public class Host extends Base implements ContextElement {
     this.hostName = hostName;
   }
 
-  public SettingAttribute getHostConnAttrs() {
-    return hostConnAttrs;
+  public SettingAttribute getHostConnAttr() {
+    return hostConnAttr;
   }
 
-  public void setHostConnAttrs(SettingAttribute hostConnAttrs) {
-    this.hostConnAttrs = hostConnAttrs;
+  public void setHostConnAttr(SettingAttribute hostConnAttr) {
+    this.hostConnAttr = hostConnAttr;
   }
 
-  public SettingAttribute getBastionConnAttrs() {
-    return bastionConnAttrs;
+  public SettingAttribute getBastionConnAttr() {
+    return bastionConnAttr;
   }
 
-  public void setBastionConnAttrs(SettingAttribute bastionConnAttrs) {
-    this.bastionConnAttrs = bastionConnAttrs;
+  public void setBastionConnAttr(SettingAttribute bastionConnAttr) {
+    this.bastionConnAttr = bastionConnAttr;
   }
 
   public List<Tag> getTags() {
@@ -120,7 +118,7 @@ public class Host extends Base implements ContextElement {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, hostConnAttrs, bastionConnAttrs, tags, hostNames, configFiles);
+        + Objects.hash(infraId, hostName, hostConnAttr, bastionConnAttr, tags, hostNames, configFiles);
   }
 
   @Override
@@ -136,8 +134,8 @@ public class Host extends Base implements ContextElement {
     }
     final Host other = (Host) obj;
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.hostConnAttrs, other.hostConnAttrs)
-        && Objects.equals(this.bastionConnAttrs, other.bastionConnAttrs) && Objects.equals(this.tags, other.tags)
+        && Objects.equals(this.hostConnAttr, other.hostConnAttr)
+        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr) && Objects.equals(this.tags, other.tags)
         && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles);
   }
 
@@ -255,8 +253,8 @@ public class Host extends Base implements ContextElement {
       Host host = new Host();
       host.setInfraId(infraId);
       host.setHostName(hostName);
-      host.setHostConnAttrs(hostConnAttrs);
-      host.setBastionConnAttrs(bastionConnAttrs);
+      host.setHostConnAttr(hostConnAttrs);
+      host.setBastionConnAttr(bastionConnAttrs);
       host.setTags(tags);
       host.setHostNames(hostNames);
       host.setConfigFiles(configFiles);
