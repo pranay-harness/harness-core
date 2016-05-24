@@ -13,7 +13,6 @@ import static software.wings.beans.Service.ServiceBuilder.aService;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.AppContainer;
 import software.wings.beans.RestResponse;
@@ -71,20 +70,19 @@ public class ServiceResourceTest {
   }
 
   @Test
-  @Ignore
   public void shouldGetService() {
     when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID)).thenReturn(aSERVICE);
     RestResponse<Service> restResponse = RESOURCES.client()
                                              .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
                                              .request()
                                              .get(new GenericType<RestResponse<Service>>() {});
-    assertThat(restResponse.getResource()).isNotNull();
+    assertThat(restResponse.getResource()).isInstanceOf(Service.class);
     verify(RESOURCE_SERVICE).get(APP_ID, SERVICE_ID);
   }
 
   @Test
-  @Ignore
   public void shouldSaveService() {
+    when(RESOURCE_SERVICE.save(any(Service.class))).thenReturn(aSERVICE);
     RestResponse<Service> restResponse =
         RESOURCES.client()
             .target(format("/services/?appId=%s", APP_ID))
@@ -95,15 +93,16 @@ public class ServiceResourceTest {
   }
 
   @Test
-  @Ignore
   public void shouldUpdateService() {
+    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).build();
+    when(RESOURCE_SERVICE.update(any(Service.class))).thenReturn(service);
     RestResponse<Service> restResponse =
         RESOURCES.client()
             .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
             .request()
-            .put(Entity.entity(aSERVICE, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+            .put(Entity.entity(service, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).update(aSERVICE);
+    verify(RESOURCE_SERVICE).update(service);
   }
 
   @Test
