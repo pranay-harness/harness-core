@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "hosts", noClassnameStored = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base implements ContextElement {

@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
@@ -18,6 +19,7 @@ import java.util.Map;
  * @author Rishi
  */
 @Entity(value = "services", noClassnameStored = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Service extends Base implements ContextElement {
   private static final long serialVersionUID = -5785133514617556212L;
 
