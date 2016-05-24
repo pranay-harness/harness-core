@@ -22,7 +22,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Verifier;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Artifact;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.ReleaseBuilder;
@@ -143,15 +142,25 @@ public class ReleaseResourceTest extends WingsBaseTest {
 
   @Test
   public void shouldListResource() throws IOException {
-    RestResponse<PageResponse<Artifact>> restResponse =
+    RestResponse<PageResponse<Release>> restResponse =
         RESOURCES.client()
             .target("/releases/?appId=" + APP_ID)
             .request()
-            .get(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+            .get(new GenericType<RestResponse<PageResponse<Release>>>() {});
     PageRequest<Release> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
     verify(RELEASE_SERVICE).list(expectedPageRequest);
+  }
+
+  @Test
+  public void shouldGetRelease() throws IOException {
+    RestResponse<Release> restResponse = RESOURCES.client()
+                                             .target("/releases/" + RELEASE_ID + "?appId=" + APP_ID)
+                                             .request()
+                                             .get(new GenericType<RestResponse<Release>>() {});
+
+    verify(RELEASE_SERVICE).get(RELEASE_ID, APP_ID);
   }
 }

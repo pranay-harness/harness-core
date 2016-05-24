@@ -62,6 +62,14 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.list(pageRequest));
   }
 
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("{id}")
+  public RestResponse<Release> get(@QueryParam("appId") String appId, @PathParam("id") String releaseId) {
+    return new RestResponse<>(releaseService.get(releaseId, appId));
+  }
+
   /**
    * Endpoint to create a new release.
    *
