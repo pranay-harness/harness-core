@@ -39,9 +39,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private ConfigService configService = mock(ConfigService.class);
   private ServiceResourceService srs = new ServiceResourceServiceImpl(wingsPersistence, configService);
 
+  private final String SERVICE_ID = "SERVICE_ID";
+  private final String APP_ID = "APP_ID";
   private ServiceBuilder builder = aService()
-                                       .withUuid("SERVICE_ID")
-                                       .withAppId("APP_ID")
+                                       .withUuid(SERVICE_ID)
+                                       .withAppId(APP_ID)
                                        .withName("SERVICE_NAME")
                                        .withDescription("SERVICE_DESC")
                                        .withArtifactType(JAR)
@@ -55,29 +57,29 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
-    request.addFilter("appId", "APP_ID", EQ);
+    request.addFilter("appId", APP_ID, EQ);
     srs.list(request);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(wingsPersistence).query(eq(Service.class), argument.capture());
     SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);
     assertThat(filter.getFieldName()).isEqualTo("appId");
-    assertThat(filter.getFieldValue()).isEqualTo("APP_ID");
+    assertThat(filter.getFieldValue()).isEqualTo(APP_ID);
     assertThat(filter.getOp()).isEqualTo(EQ);
   }
 
   @Test
   public void shouldSaveService() {
     Service service = srs.save(builder.build());
-    assertThat(service.getUuid()).isEqualTo("SERVICE_ID");
+    assertThat(service.getUuid()).isEqualTo(SERVICE_ID);
   }
 
   @Test
   public void shouldFetchService() {
-    when(wingsPersistence.get(Service.class, "SERVICE_ID")).thenReturn(builder.build());
-    when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, "SERVICE_ID"))
+    when(wingsPersistence.get(Service.class, SERVICE_ID)).thenReturn(builder.build());
+    when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(new ArrayList<ConfigFile>());
-    srs.get("SERVICE_ID");
-    verify(wingsPersistence).get(Service.class, "SERVICE_ID");
+    srs.get(APP_ID, SERVICE_ID);
+    verify(wingsPersistence).get(Service.class, SERVICE_ID);
   }
 
   @Test
@@ -89,14 +91,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                           .build();
     srs.update(service);
     verify(wingsPersistence)
-        .updateFields(Service.class, "SERVICE_ID",
+        .updateFields(Service.class, SERVICE_ID,
             ImmutableMap.of("name", "UPDATED_SERVICE_NAME", "description", "UPDATED_SERVICE_DESC", "artifactType", WAR,
                 "appContainer", anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build()));
   }
 
   @Test
   public void shouldDeleteService() {
-    srs.delete("SERVICE_ID");
-    verify(wingsPersistence).delete(Service.class, "SERVICE_ID");
+    srs.delete(APP_ID, SERVICE_ID);
+    verify(wingsPersistence).delete(Service.class, SERVICE_ID);
   }
 }

@@ -3,8 +3,6 @@ package software.wings.resources;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
-import com.google.inject.Inject;
-
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import software.wings.beans.RestResponse;
@@ -13,6 +11,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
 
+import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -33,38 +32,45 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class ServiceResource {
-  @Inject private ServiceResourceService srs;
+  private ServiceResourceService serviceResourceService;
+
+  @Inject
+  public ServiceResource(ServiceResourceService serviceResourceService) {
+    this.serviceResourceService = serviceResourceService;
+  }
 
   @GET
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    return new RestResponse<>(srs.list(pageRequest));
+    return new RestResponse<>(serviceResourceService.list(pageRequest));
   }
 
   @GET
   @Path("{serviceId}")
-  public RestResponse<Service> get(@PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(srs.get(serviceId));
+  public RestResponse<Service> get(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.get(appId, serviceId));
   }
 
   @POST
   public RestResponse<Service> save(@QueryParam("appId") String appId, Service service) {
     service.setAppId(appId);
-    return new RestResponse<>(srs.save(service));
+    return new RestResponse<>(serviceResourceService.save(service));
   }
 
   @PUT
   @Path("{serviceId}")
-  public RestResponse<Service> update(@PathParam("serviceId") String serviceId, Service service) {
+  public RestResponse<Service> update(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, Service service) {
     service.setUuid(serviceId);
-    return new RestResponse<>(srs.update(service));
+    service.setAppId(appId);
+    return new RestResponse<>(serviceResourceService.update(service));
   }
 
   @DELETE
   @Path("{serviceId}")
-  public RestResponse delete(@PathParam("serviceId") String serviceId) {
-    srs.delete(serviceId);
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    serviceResourceService.delete(appId, serviceId);
     return new RestResponse();
   }
 }
