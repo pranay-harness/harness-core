@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -41,13 +42,14 @@ public class HostCsvFileHelper {
   @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-  private final String[] CSVHeader = {
+  private final Object[] CSVHeader = {
       "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
 
   public List<Host> parseHosts(Infra infra, BoundedInputStream inputStream) {
     List<Host> hosts = new ArrayList<>();
+    CSVParser csvParser = null;
     try {
-      CSVParser csvParser = new CSVParser(new InputStreamReader(inputStream, UTF_8), DEFAULT.withHeader());
+      csvParser = new CSVParser(new InputStreamReader(inputStream, UTF_8), DEFAULT.withHeader());
       List<CSVRecord> records = csvParser.getRecords();
       for (CSVRecord record : records) {
         String hostName = record.get("HOST_NAME");
@@ -70,6 +72,8 @@ public class HostCsvFileHelper {
       }
     } catch (IOException ex) {
       throw new WingsException(INVALID_CSV_FILE);
+    } finally {
+      Misc.quietClose(csvParser);
     }
     return hosts;
   }
@@ -93,20 +97,17 @@ public class HostCsvFileHelper {
                 : null);
         try {
           csvPrinter.printRecord(row);
-        } catch (IOException ex) {
+        } catch (IOException e) {
           throw new WingsException(UNKNOWN_ERROR);
+        } finally {
+          Misc.quietClose(csvPrinter);
         }
       });
       fileWriter.flush();
-    } catch (IOException ex) {
+      csvPrinter.close();
+      fileWriter.close();
+    } catch (Exception ex) {
       throw new WingsException(UNKNOWN_ERROR);
-    } finally {
-      try {
-        if (fileWriter != null) {
-          fileWriter.close();
-        }
-      } catch (IOException ignore) {
-      }
     }
     return file;
   }

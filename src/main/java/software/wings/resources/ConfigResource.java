@@ -8,8 +8,6 @@ import com.google.inject.Inject;
 
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -22,6 +20,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -47,7 +46,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Path("/configs")
 @Produces("application/json")
 public class ConfigResource {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ConfigService configService;
 
   @GET

@@ -40,7 +40,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -130,18 +129,22 @@ public class WorkflowServiceImpl implements WorkflowService {
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
     workflow = wingsPersistence.saveAndGet(cls, workflow);
-    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
-    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    workflow.setGraph(stateMachine.getGraph());
+    if (graph != null) {
+      StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      workflow.setGraph(stateMachine.getGraph());
+    }
     return workflow;
   }
 
   @Override
   public <T extends Workflow> T updateWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
-    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
-    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    workflow.setGraph(stateMachine.getGraph());
+    if (graph != null) {
+      StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      workflow.setGraph(stateMachine.getGraph());
+    }
     return workflow;
   }
 
@@ -316,9 +319,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowExecutionType.ORCHESTRATION, appId, orchestrationId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
-        throw new WingsException("Orchestration has already been triggered");
-      }
+      throw new WingsException("Orchestration has already been triggered");
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 

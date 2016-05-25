@@ -689,6 +689,11 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.6</version>
+            </plugin>
+            <plugin>
                 <groupId>com.syncleus.maven.plugins</groupId>
                 <artifactId>maven-mongodb-plugin</artifactId>
                 <version>1.1.1</version>
@@ -779,6 +784,25 @@
                 <configuration>
                     <threshold>Low</threshold>
                     <excludeFilterFile>${basedir}/findbugs-exclude.xml</excludeFilterFile>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.6</version>
+
+                <configuration>
+                    <linkXref>true</linkXref>
+                    <sourceEncoding>utf-8</sourceEncoding>
+                    <minimumTokens>100</minimumTokens>
+                    <targetJdk>1.8</targetJdk>
+                    <excludes>
+                        <exclude>**/beans/*.java</exclude>
+                        <exclude>**/generated/*.java</exclude>
+                    </excludes>
+                    <excludeRoots>
+                        <excludeRoot>target/generated-sources/stubs</excludeRoot>
+                    </excludeRoots>
                 </configuration>
             </plugin>
             <plugin>

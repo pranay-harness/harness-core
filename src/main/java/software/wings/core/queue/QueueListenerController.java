@@ -5,6 +5,8 @@ import io.dropwizard.lifecycle.Managed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 import javax.inject.Singleton;
 
@@ -27,8 +29,17 @@ public class QueueListenerController implements Managed {
   @Override
   public void stop() throws Exception {
     for (Runnable runnable : executorService.shutdownNow()) {
-      while (!((FutureTask<?>) runnable).isDone() || !((FutureTask<?>) runnable).isCancelled()) {
-        ((FutureTask<?>) runnable).cancel(true);
+      FutureTask<?> futureTask = (FutureTask<?>) runnable;
+      boolean keepTrying = true;
+      while (keepTrying) {
+        try {
+          futureTask.cancel(true);
+          futureTask.get(1, TimeUnit.NANOSECONDS);
+        } catch (TimeoutException e) {
+          // need to retry
+        } catch (Exception e) {
+          keepTrying = false;
+        }
       }
     }
   }

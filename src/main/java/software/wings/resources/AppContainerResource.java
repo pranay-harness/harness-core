@@ -12,8 +12,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.FileUploadSource;
@@ -25,6 +23,7 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.InputStream;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -46,8 +45,6 @@ import javax.ws.rs.QueryParam;
 @Timed
 @ExceptionMetered
 public class AppContainerResource {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   @Inject private AppContainerService appContainerService;
 
   @GET

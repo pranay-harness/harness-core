@@ -234,4 +234,67 @@ public class PageRequest<T> {
         .add("offset", offset)
         .toString();
   }
+
+  public static final class Builder {
+    private String offset;
+    private String limit;
+    private List<SearchFilter> filters = new ArrayList<SearchFilter>();
+    private List<SortOrder> orders = new ArrayList<>();
+    private List<String> fieldsIncluded = new ArrayList<>();
+    private List<String> fieldsExcluded = new ArrayList<>();
+    private UriInfo uriInfo;
+
+    private Builder() {}
+
+    public static Builder aPageRequest() {
+      return new Builder();
+    }
+
+    public Builder withOffset(String offset) {
+      this.offset = offset;
+      return this;
+    }
+
+    public Builder withLimit(String limit) {
+      this.limit = limit;
+      return this;
+    }
+
+    public Builder withFilters(List<SearchFilter> filters) {
+      this.filters = filters;
+      return this;
+    }
+
+    public Builder withOrders(List<SortOrder> orders) {
+      this.orders = orders;
+      return this;
+    }
+
+    public Builder withFieldsIncluded(List<String> fieldsIncluded) {
+      this.fieldsIncluded = fieldsIncluded;
+      return this;
+    }
+
+    public Builder withFieldsExcluded(List<String> fieldsExcluded) {
+      this.fieldsExcluded = fieldsExcluded;
+      return this;
+    }
+
+    public Builder withUriInfo(UriInfo uriInfo) {
+      this.uriInfo = uriInfo;
+      return this;
+    }
+
+    public PageRequest build() {
+      PageRequest pageRequest = new PageRequest();
+      pageRequest.setOffset(offset);
+      pageRequest.setLimit(limit);
+      pageRequest.setFilters(filters);
+      pageRequest.setOrders(orders);
+      pageRequest.setFieldsIncluded(fieldsIncluded);
+      pageRequest.setFieldsExcluded(fieldsExcluded);
+      pageRequest.setUriInfo(uriInfo);
+      return pageRequest;
+    }
+  }
 }

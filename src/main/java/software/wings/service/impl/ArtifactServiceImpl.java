@@ -9,8 +9,6 @@ import com.google.common.io.Files;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -19,7 +17,6 @@ import software.wings.beans.ArtifactFile;
 import software.wings.beans.ArtifactSourceMetadata;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
-import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageRequest;
@@ -34,7 +31,7 @@ import software.wings.utils.validation.Update;
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
@@ -44,9 +41,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
   private static final String DEFAULT_ARTIFACT_FILE_NAME = "ArtifactFile";
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectEventListener.class);
 
-  @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
   @Inject private Queue<CollectEvent> collectQueue;

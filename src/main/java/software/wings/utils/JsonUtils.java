@@ -27,6 +27,7 @@ import java.util.Set;
 public class JsonUtils {
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
+  private static final ObjectMapper mapperForCloning;
   static {
     // json-path initialization
     Configuration.setDefaults(new Configuration.Defaults() {
@@ -53,6 +54,11 @@ public class JsonUtils {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(Include.NON_NULL);
+
+    mapperForCloning = new ObjectMapper();
+    mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    mapperForCloning.setSerializationInclusion(Include.NON_NULL);
+    mapperForCloning.enableDefaultTyping();
   }
 
   public static DocumentContext parseJson(String json) {
@@ -82,13 +88,17 @@ public class JsonUtils {
    * @return json string.
    */
   public static String asJson(Object obj) {
+    return asJson(obj, mapper);
+  }
+
+  public static String asJson(Object obj, ObjectMapper objectMapper) {
     try {
       SimpleFilterProvider filterProvider = new SimpleFilterProvider();
       // Do not fail if no filter is set
       filterProvider.setFailOnUnknownId(false);
 
       // No filters used in this.
-      return mapper.writer(filterProvider).writeValueAsString(obj);
+      return objectMapper.writer(filterProvider).writeValueAsString(obj);
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
@@ -105,8 +115,13 @@ public class JsonUtils {
    */
   @JsonDeserialize
   public static <T> T asObject(String jsonString, Class<T> classToConvert) {
+    return asObject(jsonString, classToConvert, mapper);
+  }
+
+  @JsonDeserialize
+  public static <T> T asObject(String jsonString, Class<T> classToConvert, ObjectMapper objectMapper) {
     try {
-      return mapper.readValue(jsonString, classToConvert);
+      return objectMapper.readValue(jsonString, classToConvert);
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
@@ -183,8 +198,8 @@ public class JsonUtils {
   }
 
   public static <T> T clone(T t, Class<T> cls) {
-    String json = asJson(t);
+    String json = asJson(t, mapperForCloning);
     logger.debug("Cloning Object - json: {}", json);
-    return asObject(json, cls);
+    return asObject(json, cls, mapperForCloning);
   }
 }

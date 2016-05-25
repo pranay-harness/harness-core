@@ -10,7 +10,6 @@ import io.dropwizard.lifecycle.Managed;
  */
 public class ManagedDistributedLockSvc implements DistributedLockSvc, Managed {
   private DistributedLockSvc distributedLockSvc;
-  private boolean start;
 
   public ManagedDistributedLockSvc(DistributedLockSvc distributedLockSvc) {
     this.distributedLockSvc = distributedLockSvc;

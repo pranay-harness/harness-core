@@ -42,6 +42,7 @@ import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.ReadPref;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
+import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
@@ -92,6 +93,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.utils.ManagedScheduledExecutorService;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyEvent;
@@ -218,6 +220,7 @@ public class WingsRule implements MethodRule {
         bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
         bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
         bind(SettingsService.class).to(SettingsServiceImpl.class);
+        bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
       }
     });
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());

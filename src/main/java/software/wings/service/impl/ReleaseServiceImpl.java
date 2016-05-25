@@ -46,7 +46,7 @@ public class ReleaseServiceImpl implements ReleaseService {
 
   @Override
   @ValidationGroups(Update.class)
-  public Release update(Release release) {
+  public Release update(@Valid Release release) {
     Query<Release> query = wingsPersistence.createQuery(Release.class)
                                .field(ID_KEY)
                                .equal(release.getUuid())

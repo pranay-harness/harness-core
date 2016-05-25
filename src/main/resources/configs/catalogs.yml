@@ -17,7 +17,11 @@ ARTIFACT_TYPE:
       value: ZIP
     - name: OTHER
       value: OTHER
-      
+
+ARTIFACT_SOURCE_TYPE:
+    - name: JENKINS
+    - value: JENKINS
+
 DEPLOYMENT_STRATEGY:
     - name: SERIAL
       value: SERIAL

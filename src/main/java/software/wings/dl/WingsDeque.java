@@ -2,13 +2,8 @@ package software.wings.dl;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
-import java.util.stream.Stream;
 
 /**
  * Created by peeyushaggarwal on 5/23/16.

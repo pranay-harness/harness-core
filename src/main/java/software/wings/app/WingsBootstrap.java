@@ -2,9 +2,6 @@ package software.wings.app;
 
 import com.google.inject.Injector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Used initialize all the resources such as Mongo DB ConnectionPool, Serviceregistry etc.
  *
@@ -12,7 +9,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WingsBootstrap {
   private static Injector guiceInjector;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static MainConfiguration getConfig() {
     return lookup(MainConfiguration.class);

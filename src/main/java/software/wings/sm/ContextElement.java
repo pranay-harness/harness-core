@@ -11,8 +11,7 @@ import java.util.Map;
  * @author Rishi
  */
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public interface ContextElement extends Serializable {
+public interface ContextElement {
   public ContextElementType getElementType();
 
   public String getName();
