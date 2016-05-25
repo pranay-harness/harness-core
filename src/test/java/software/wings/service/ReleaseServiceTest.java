@@ -32,8 +32,9 @@ import javax.ws.rs.BadRequestException;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ReleaseServiceTest extends WingsBaseTest {
+  public static final String APP_ID = "APP_ID";
   private static final ReleaseBuilder releaseBuilder =
-      aRelease().withAppId("APP_ID").withReleaseName("REL1").withDescription("RELEASE 1");
+      aRelease().withAppId(APP_ID).withReleaseName("REL1").withDescription("RELEASE 1");
 
   private static final JenkinsArtifactSource artifactSource =
       aJenkinsArtifactSource()
@@ -45,7 +46,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
           .withArtifactPathServices(Lists.newArrayList(
               anArtifactPathServiceEntry()
                   .withArtifactPathRegex("dist/svr-*.war")
-                  .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId("APP_ID").build()))
+                  .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build()))
                   .build()))
           .withJenkinsUrl("http://jenkins")
           .build();
@@ -59,13 +60,13 @@ public class ReleaseServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(anApplication().withUuid("APP_ID").build());
-    wingsRule.getDatastore().save(anAppContainer().withUuid("UUID").withAppId("APP_ID").build());
+    wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).build());
+    wingsRule.getDatastore().save(anAppContainer().withUuid("UUID").withAppId(APP_ID).build());
     wingsRule.getDatastore().save(
         aService()
             .withUuid("SERVICE_ID")
-            .withAppId("APP_ID")
-            .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").withAppId("APP_ID").build())
+            .withAppId(APP_ID)
+            .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").withAppId(APP_ID).build())
             .build());
   }
 
@@ -126,7 +127,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
     Release release =
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
-    releaseService.addArtifactSource(release.getUuid(), artifactSource);
+    releaseService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
 
     release = releaseService.list(new PageRequest<>()).get(0);
     assertThat(release.getArtifactSources()).hasSize(1).containsExactly(artifactSource);
@@ -137,7 +138,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
     Release release =
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
-    releaseService.addArtifactSource(release.getUuid(), artifactSource);
+    releaseService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
 
     release = releaseService.list(new PageRequest<>()).get(0);
     assertThat(release.getArtifactSources()).hasSize(1).containsExactly(artifactSource);
@@ -145,7 +146,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
     Release finalRelease = release;
     assertThatExceptionOfType(BadRequestException.class)
         .isThrownBy(()
-                        -> releaseService.addArtifactSource(finalRelease.getUuid(),
+                        -> releaseService.addArtifactSource(finalRelease.getUuid(), APP_ID,
                             aFileUrlSource().withArtifactType(ArtifactType.WAR).withSourceName("filesource").build()));
   }
 
@@ -154,9 +155,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     Release release =
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
 
-    releaseService.addArtifactSource(release.getUuid(), artifactSource);
+    releaseService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
 
-    releaseService.deleteArtifactSource(release.getUuid(), artifactSource);
+    releaseService.deleteArtifactSource(release.getUuid(), APP_ID, artifactSource.getSourceName());
 
     release = releaseService.list(new PageRequest<>()).get(0);
     assertThat(release.getArtifactSources()).hasSize(0);
