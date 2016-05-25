@@ -3,8 +3,6 @@ package software.wings.service.impl;
 import static software.wings.beans.ErrorConstants.PLATFORM_SOFTWARE_DELETE_ERROR;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -17,13 +15,13 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.InputStream;
+
 import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 5/4/16.
  */
 public class AppContainerServiceImpl implements AppContainerService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 

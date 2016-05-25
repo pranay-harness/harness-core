@@ -1,7 +1,5 @@
 package software.wings.audit;
 
-import com.google.common.base.Objects;
-
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;

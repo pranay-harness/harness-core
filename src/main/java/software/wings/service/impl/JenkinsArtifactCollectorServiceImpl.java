@@ -13,7 +13,6 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.helpers.ext.Jenkins;
 import software.wings.helpers.ext.JenkinsFactory;
-import software.wings.helpers.ext.JenkinsImpl;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.FileService;
 
@@ -21,6 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**

@@ -3,7 +3,6 @@
  */
 package software.wings.service.impl;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.WingsBootstrap;

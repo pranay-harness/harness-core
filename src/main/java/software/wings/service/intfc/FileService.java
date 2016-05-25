@@ -49,7 +49,6 @@ public interface FileService {
       this(bucketName, 16 * 1000 * 1000);
     }
 
-    private WingsPersistence wingsPersistence;
     private String bucketName;
     private int chunkSize;
     private GridFSBucket gridFSBucket;

@@ -2,8 +2,6 @@ package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-import java.io.Serializable;
-
 /**
  * Interface defining StateMachine execution callback.
  *

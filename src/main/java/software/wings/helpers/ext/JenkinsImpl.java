@@ -16,8 +16,6 @@ import com.offbytwo.jenkins.model.JobWithDetails;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,8 +28,6 @@ import java.util.OptionalInt;
 import java.util.regex.Pattern;
 
 public class JenkinsImpl implements Jenkins {
-  private static final Logger logger = LoggerFactory.getLogger(JenkinsImpl.class);
-
   private JenkinsServer jenkinsServer;
 
   @AssistedInject

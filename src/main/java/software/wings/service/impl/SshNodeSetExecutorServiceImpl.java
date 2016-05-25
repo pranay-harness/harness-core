@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Deployment;
 import software.wings.beans.Execution;
 import software.wings.core.ssh.ExecutionLogs;
@@ -9,16 +7,12 @@ import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SshNodeSetExecutorService;
 
 import javax.inject.Inject;
 
 @javax.inject.Singleton
 public class SshNodeSetExecutorServiceImpl implements SshNodeSetExecutorService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionLogs executionLogs;
 
   @Override

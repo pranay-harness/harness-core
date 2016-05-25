@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
@@ -11,6 +9,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -19,7 +18,6 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class RoleServiceImpl implements RoleService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
 

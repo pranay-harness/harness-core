@@ -5,8 +5,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -24,7 +22,6 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class AppServiceImpl implements AppService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
 

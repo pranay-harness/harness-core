@@ -25,7 +25,6 @@ import software.wings.core.ssh.ExecutionLogs;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -180,7 +179,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    ****/
   @Override
   public ExecutionResult transferFile(String localFilePath, String remoteFilePath) {
-    FileInputStream fis = null;
     try {
       String command = "scp -t " + remoteFilePath;
       Channel channel = session.openChannel("exec");

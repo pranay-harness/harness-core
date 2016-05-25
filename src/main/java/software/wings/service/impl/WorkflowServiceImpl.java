@@ -40,7 +40,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.WorkflowStandardParams;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -316,9 +315,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowExecutionType.ORCHESTRATION, appId, orchestrationId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
-      for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
-        throw new WingsException("Orchestration has already been triggered");
-      }
+      throw new WingsException("Orchestration has already been triggered");
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
