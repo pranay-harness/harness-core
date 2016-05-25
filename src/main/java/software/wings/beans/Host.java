@@ -26,8 +26,6 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base implements ContextElement {
-  private static final long serialVersionUID = 1189183137783838598L;
-
   private String infraId;
   private String hostName;
 
