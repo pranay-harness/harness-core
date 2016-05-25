@@ -46,7 +46,6 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
-import software.wings.service.impl.NodeSetExecutorServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -70,7 +69,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.JenkinsBuildService;
-import software.wings.service.intfc.NodeSetExecutorService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
@@ -159,7 +157,6 @@ public class WingsModule extends AbstractModule {
     bind(AuditService.class).to(AuditServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(FileService.class).to(FileServiceImpl.class);
-    bind(NodeSetExecutorService.class).to(NodeSetExecutorServiceImpl.class);
     bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(PlatformService.class).to(PlatformServiceImpl.class);
     bind(ReleaseService.class).to(ReleaseServiceImpl.class);
@@ -200,5 +197,6 @@ public class WingsModule extends AbstractModule {
     bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
+    bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
   }
 }

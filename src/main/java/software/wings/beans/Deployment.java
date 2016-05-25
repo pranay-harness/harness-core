@@ -48,28 +48,6 @@ public class Deployment extends Execution {
     this.backup = backup;
   }
 
-  @Override
-  public String getCommand() {
-    return null;
-    /*
-        //TODO - get from config
-        String portalUrl = WingsBootstrap.getConfig().getPortal().getUrl();
-        String fwUrl = portalUrl + "/bins/framework";
-        String params = String
-            .format("%s/configs/download/%s %s %s", portalUrl, getRelease().getApplication().getUuid(),
-                getRelease().getUuid(), getArtifact().getUuid());
-
-        return "mkdir -p $HOME/wings_temp && cd $HOME/wings_temp" + " && curl -sk -o wings_main.pl "
-            + fwUrl + " && chmod a+x wings_main.pl && ./wings_main.pl " + params
-            + " && echo \"SUCCESS\"";
-            */
-  }
-
-  @Override
-  public List<CommandUnit> getCommandUnits() {
-    return null;
-  }
-
   public Release getRelease() {
     return release;
   }
@@ -87,16 +65,7 @@ public class Deployment extends Execution {
   }
 
   @Override
-  public String getSetupCommand() {
+  public List<CommandUnit> getCommandUnits() {
     return null;
-    /*return "rm -rf wings && " + "mkdir -p $HOME/wings && " + "cd $HOME/wings && " + "mkdir -p downloads"; //TODO: Read
-     * deployment dir location from config*/
-  }
-
-  @Override
-  public String getDeployCommand() {
-    return null;
-    /*return String.format("cd wings && mkdir -p runtime && cd runtime && tar -xvzf ../downloads/%s",
-     * getArtifact().getArtifactFile().getFileName());*/
   }
 }

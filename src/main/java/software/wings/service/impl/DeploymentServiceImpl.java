@@ -8,7 +8,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DeploymentService;
-import software.wings.service.intfc.NodeSetExecutorService;
+import software.wings.service.intfc.SshCommandUnitExecutorService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -40,8 +40,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     @Override
     public void run() {
-      NodeSetExecutorService nodeSetExecutorService = WingsBootstrap.lookup(NodeSetExecutorService.class);
-      nodeSetExecutorService.execute(deployment);
+      SshCommandUnitExecutorService commandUnitExecutorService =
+          WingsBootstrap.lookup(SshCommandUnitExecutorService.class);
+      commandUnitExecutorService.execute(deployment);
     }
   }
 }

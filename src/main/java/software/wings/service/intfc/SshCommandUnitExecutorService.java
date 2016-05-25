@@ -1,3 +1,5 @@
 package software.wings.service.intfc;
 
-public interface SshCommandUnitExecutorService extends NodeSetExecutorService {}
+import software.wings.beans.Execution;
+
+public interface SshCommandUnitExecutorService { void execute(Execution execution); }
