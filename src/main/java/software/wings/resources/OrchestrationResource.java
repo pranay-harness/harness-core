@@ -14,6 +14,7 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -68,7 +69,7 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
-    return new RestResponse<>(workflowService.updateWorkflow(Orchestration.class, orchestration));
+    return new RestResponse<>(workflowService.updateOrchestration(orchestration));
   }
 
   @GET

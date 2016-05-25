@@ -63,7 +63,7 @@ public class PipelineResource {
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
-    return new RestResponse<>(workflowService.updateWorkflow(Pipeline.class, pipeline));
+    return new RestResponse<>(workflowService.updatePipeline(pipeline));
   }
 
   @GET

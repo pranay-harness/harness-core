@@ -7,12 +7,15 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author Rishi
  */
 @Entity(value = "pipelines", noClassnameStored = true)
 public class Pipeline extends Workflow {
-  private List<String> services;
+  @NotNull private List<String> services;
+
   private String cronSchedule;
 
   public List<String> getServices() {
