@@ -82,8 +82,11 @@ public class ReleaseServiceTest extends WingsBaseTest {
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
     assertThat(release.getDescription()).isEqualTo("RELEASE 1");
 
-    Release updatedRelease =
-        releaseService.update(releaseBuilder.but().withUuid(release.getUuid()).withDescription("RELEASE 1.1").build());
+    Release updatedRelease = releaseService.update(releaseBuilder.but()
+                                                       .withUuid(release.getUuid())
+                                                       .withDescription("RELEASE 1.1")
+                                                       .withTargetDate(System.currentTimeMillis() + futureOffset)
+                                                       .build());
     assertThat(updatedRelease.getDescription()).isEqualTo("RELEASE 1.1");
   }
 

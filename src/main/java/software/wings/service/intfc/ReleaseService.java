@@ -19,7 +19,7 @@ public interface ReleaseService {
 
   Release create(@Valid Release release);
 
-  Release update(Release release);
+  Release update(@Valid Release release);
 
   <T extends ArtifactSource> Release addArtifactSource(String uuid, @Valid T artifactSource);
 
