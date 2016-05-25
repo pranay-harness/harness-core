@@ -1,4 +1,4 @@
-package software.wings.helpers.ext;
+package software.wings.helpers.ext.jenkins;
 
 import com.offbytwo.jenkins.model.BaseModel;
 

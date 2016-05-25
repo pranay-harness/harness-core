@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -25,6 +26,7 @@ public interface SettingsService {
 
   void createDefaultSettings(String appId);
 
-  List<SettingAttribute> getConnectionAttributes(MultivaluedMap<String, String> queryParameters);
-  List<SettingAttribute> getBastionHostAttributes(MultivaluedMap<String, String> queryParameters);
+  List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type);
+
+  List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type);
 }

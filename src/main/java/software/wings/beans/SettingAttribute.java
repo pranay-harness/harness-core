@@ -16,6 +16,8 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class SettingAttribute extends Base {
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+
   private String name;
   private SettingValue value;
 

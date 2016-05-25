@@ -4,7 +4,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
@@ -16,8 +15,9 @@ import static software.wings.beans.Tag.TagBuilder.aTag;
 
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
@@ -30,8 +30,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.util.List;
@@ -42,23 +40,18 @@ import java.util.Map;
  */
 
 public class ServiceTemplateServiceTest extends WingsBaseTest {
-  ServiceTemplateService templateService;
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")
                                        .withEnvId("ENV_ID")
                                        .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
-  private InfraService infraService = mock(InfraService.class);
-  private HostService hostService = mock(HostService.class);
-  private TagService tagService = mock(TagService.class);
-  private ConfigService configService = mock(ConfigService.class);
-  private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
 
-  @Before
-  public void setUp() throws Exception {
-    templateService = new ServiceTemplateServiceImpl(wingsPersistence, tagService, configService);
-  }
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private ConfigService configService;
+  @Mock private TagService tagService;
+  @Mock private HostService hostService; // FIXME: remove and break the test
+  @InjectMocks ServiceTemplateServiceImpl templateService;
 
   @Test
   public void shouldListSavedServiceTemplates() {

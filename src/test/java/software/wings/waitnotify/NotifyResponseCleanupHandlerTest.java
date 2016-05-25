@@ -30,7 +30,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
   @Test
   public void shouldCleanup() throws InterruptedException {
     String corrId = UUIDGenerator.getUuid();
-    NotifyResponse notifyResponse = new NotifyResponse(corrId, "TEST");
+    NotifyResponse<String> notifyResponse = new NotifyResponse<>(corrId, "TEST");
     notifyResponse.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(notifyResponse);
 

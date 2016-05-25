@@ -8,6 +8,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -49,16 +50,19 @@ import software.wings.core.queue.Queue;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.Jenkins;
-import software.wings.helpers.ext.JenkinsFactory;
-import software.wings.helpers.ext.JenkinsImpl;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.JenkinsImpl;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
+import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.ExecutionLogsImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
@@ -79,10 +83,12 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -211,13 +217,18 @@ public class WingsRule implements MethodRule {
         bind(AuditService.class).to(AuditServiceImpl.class);
         bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
         bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
-        bind(ArtifactCollectorService.class)
-            .annotatedWith(Names.named(SourceType.JENKINS.name()))
-            .to(JenkinsArtifactCollectorServiceImpl.class);
         install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
         bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
+        bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
         bind(SettingsService.class).to(SettingsServiceImpl.class);
         bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
+
+        MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
+            MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
+        artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
+            .to(JenkinsArtifactCollectorServiceImpl.class);
+        bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, datastore));
+        bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
       }
     });
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());

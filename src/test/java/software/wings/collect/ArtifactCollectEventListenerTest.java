@@ -1,6 +1,7 @@
 package software.wings.collect;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -29,6 +30,7 @@ import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 
 import java.util.Collections;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -47,7 +49,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
 
   @Mock private ArtifactService artifactService;
 
-  @Mock private Injector injector;
+  @Mock private Map<String, ArtifactCollectorService> collectorServiceMap;
 
   @Mock private ArtifactCollectorService artifactCollectorService;
 
@@ -55,13 +57,13 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   public Verifier verifier = new Verifier() {
     @Override
     protected void verify() throws Throwable {
-      verifyNoMoreInteractions(artifactService, injector, artifactCollectorService);
+      verifyNoMoreInteractions(artifactService, collectorServiceMap, artifactCollectorService);
     }
   };
 
   @Before
   public void setupMocks() {
-    when(injector.getInstance(any(Key.class))).thenReturn(artifactCollectorService);
+    when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
   }
 
   @Test
@@ -80,7 +82,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                               .build())
             .build());
 
-    verify(injector).getInstance(any(Key.class));
+    verify(collectorServiceMap).get(anyString());
     verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);
@@ -105,7 +107,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                               .build())
             .build());
 
-    verify(injector).getInstance(any(Key.class));
+    verify(collectorServiceMap).get(anyString());
     verify(artifactCollectorService).collect(ARTIFACT_SOURCE, Collections.emptyMap());
 
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);

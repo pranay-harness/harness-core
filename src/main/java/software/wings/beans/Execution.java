@@ -1,31 +1,23 @@
 package software.wings.beans;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 
+import java.util.List;
+@Entity(value = "executions")
 public abstract class Execution extends Base {
-  private List<String> hostInstanceMappings = new ArrayList<>();
-  private OperationType operationType;
-  private Strategy strategy = Strategy.SERIAL;
+  @Reference(idOnly = true, ignoreMissing = true) private Host host;
   private String sshUser;
   private String sshPassword;
   private String appAccount;
   private String appAccountPassword;
 
-  public OperationType getOperationType() {
-    return operationType;
+  public Host getHost() {
+    return host;
   }
 
-  public void setOperationType(OperationType operationType) {
-    this.operationType = operationType;
-  }
-
-  public List<String> getHostInstanceMappings() {
-    return hostInstanceMappings;
-  }
-
-  public void setHostInstanceMappings(List<String> hostInstanceMappings) {
-    this.hostInstanceMappings = hostInstanceMappings;
+  public void setHost(Host host) {
+    this.host = host;
   }
 
   public String getSshUser() {
@@ -59,22 +51,5 @@ public abstract class Execution extends Base {
   public void setAppAccountPassword(String appAccountPassword) {
     this.appAccountPassword = appAccountPassword;
   }
-
-  public Strategy getStrategy() {
-    return strategy;
-  }
-
-  public void setStrategy(Strategy strategy) {
-    this.strategy = strategy;
-  }
-
-  public abstract String getCommand();
-
-  public abstract String getSetupCommand();
-
-  public abstract String getDeployCommand();
-
-  public enum OperationType { DEPLOY, START, STOP, RESTART, ENABLE, DISABLE, ROLLBACK, CUSTOM }
-
-  public enum Strategy { SERIAL, PARALLEL }
+  public abstract List<CommandUnit> getCommandUnits();
 }

@@ -78,9 +78,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     when(APP_SERVICE.findByUuid(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     when(RELEASE_SERVICE.create(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
     when(RELEASE_SERVICE.update(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
-    when(RELEASE_SERVICE.addArtifactSource(anyString(), any(ArtifactSource.class)))
+    when(RELEASE_SERVICE.addArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
         .thenReturn(releaseBuilder.but().build());
-    when(RELEASE_SERVICE.deleteArtifactSource(anyString(), any(ArtifactSource.class)))
+    when(RELEASE_SERVICE.deleteArtifactSource(anyString(), anyString(), anyString()))
         .thenReturn(releaseBuilder.but().build());
     PageResponse<Release> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList());
@@ -137,7 +137,18 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                              .post(Entity.entity(jenkinsArtifactSource, MediaType.APPLICATION_JSON),
                                                  new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
-    verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, jenkinsArtifactSource);
+    verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, APP_ID, jenkinsArtifactSource);
+  }
+
+  @Test
+  public void shouldDeleteArtifactSource() {
+    RestResponse<Release> restResponse =
+        RESOURCES.client()
+            .target("/releases/" + RELEASE_ID + "/artifactsources/artifactSource?appId=" + APP_ID)
+            .request()
+            .delete(new GenericType<RestResponse<Release>>() {});
+    assertThat(restResponse.getResource()).isInstanceOf(Release.class);
+    verify(RELEASE_SERVICE).deleteArtifactSource(RELEASE_ID, APP_ID, "artifactSource");
   }
 
   @Test

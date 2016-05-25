@@ -3,6 +3,7 @@
  */
 package software.wings.sm;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -18,15 +19,13 @@ import java.util.Map;
  * @author Rishi
  */
 public class WorkflowStandardParams implements ContextElement {
-  private static final long serialVersionUID = 247894502473046682L;
-
   private String appId;
   private String envId;
   private List<String> artifactIds;
 
-  private transient Application app;
-  private transient Environment env;
-  private transient List<Artifact> artifacts;
+  @Transient private transient Application app;
+  @Transient private transient Environment env;
+  @Transient private transient List<Artifact> artifacts;
 
   private Long startTs;
   private Long endTs;

@@ -12,6 +12,8 @@ import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNEC
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingValue;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -89,22 +91,17 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public List<SettingAttribute> getConnectionAttributes(MultivaluedMap<String, String> queryParameters) {
+  public List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
-        .equal(queryParameters.getFirst("appId"))
+        .equal(appId)
         .field("value.type")
-        .equal(HOST_CONNECTION_ATTRIBUTES)
+        .equal(type)
         .asList();
   }
 
   @Override
-  public List<SettingAttribute> getBastionHostAttributes(MultivaluedMap<String, String> queryParameters) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .field("appId")
-        .equal(queryParameters.getFirst("appId"))
-        .field("value.type")
-        .equal(BASTION_HOST_CONNECTION_ATTRIBUTES)
-        .asList();
+  public List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type) {
+    return getSettingAttributesByType(SettingAttribute.GLOBAL_APP_ID, type);
   }
 }

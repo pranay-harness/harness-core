@@ -8,9 +8,9 @@ import software.wings.beans.ArtifactSource;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
-import software.wings.helpers.ext.BuildDetails;
-import software.wings.helpers.ext.Jenkins;
-import software.wings.helpers.ext.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.BuildDetails;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.ReleaseService;
 

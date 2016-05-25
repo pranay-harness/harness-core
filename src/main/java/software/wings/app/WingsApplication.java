@@ -47,7 +47,7 @@ import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
 /**
- * The main application - entry point for the entire Wings Application.n
+ * The main application - entry point for the entire Wings Application.
  *
  * @author Rishi
  */

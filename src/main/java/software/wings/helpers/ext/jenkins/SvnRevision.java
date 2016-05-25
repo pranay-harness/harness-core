@@ -1,4 +1,4 @@
-package software.wings.helpers.ext;
+package software.wings.helpers.ext.jenkins;
 
 /**
  * Created by peeyushaggarwal on 5/12/16.

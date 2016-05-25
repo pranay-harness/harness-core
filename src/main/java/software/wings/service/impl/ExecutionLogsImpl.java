@@ -1,18 +1,16 @@
-package software.wings.core.ssh;
-
-import com.google.inject.Singleton;
+package software.wings.service.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.GridFsDbFileExt;
+import software.wings.service.intfc.ExecutionLogs;
 
 import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 2/17/16.
  */
-@Singleton
-public class ExecutionLogs {
+public class ExecutionLogsImpl implements ExecutionLogs {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private GridFsDbFileExt gridFSDBFileExt;

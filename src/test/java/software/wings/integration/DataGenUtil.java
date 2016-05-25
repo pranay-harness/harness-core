@@ -275,7 +275,6 @@ public class DataGenUtil extends WingsBaseTest {
       String name = getName(serviceNames);
       Map<String, Object> serviceMap = new HashMap<>();
       serviceMap.put("name", name);
-      serviceMap.put("@class", "software.wings.beans.Service");
       serviceMap.put("description", randomText(40));
       serviceMap.put("appId", appId);
       serviceMap.put("artifactType", WAR.name());
@@ -397,8 +396,7 @@ public class DataGenUtil extends WingsBaseTest {
     for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
       Response response = target.request().post(
           Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttrs",
-                            connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttrs", envAttr,
-                            "@class", "software.wings.beans.Host"),
+                            connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttrs", envAttr),
               APPLICATION_JSON));
       assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
     }

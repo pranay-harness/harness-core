@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.HostBuilder.aHost;
 
 import com.google.common.collect.ImmutableMap;
@@ -44,8 +45,8 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.updateFields(Host.class, host.getUuid(),
         ImmutableMap.<String, Object>builder()
             .put("hostName", host.getHostName())
-            .put("hostAttributes", host.getHostConnAttr())
-            .put("bastionHostAttributes", host.getBastionConnAttr())
+            .put("hostConnAttr", host.getHostConnAttr())
+            .put("bastionConnAttr", host.getBastionConnAttr())
             .put("tags", host.getTags())
             .build());
     return wingsPersistence.saveAndGet(Host.class, host);
@@ -55,8 +56,18 @@ public class HostServiceImpl implements HostService {
   public int importHosts(String appId, String infraId, BoundedInputStream inputStream) {
     Infra infra = wingsPersistence.get(Infra.class, infraId); // TODO: validate infra
     List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
-    List<String> IDs = wingsPersistence.save(hosts);
-    return IDs.size();
+    List<String> Ids = wingsPersistence.save(hosts);
+    return Ids.size();
+  }
+
+  @Override
+  public List<Host> getHostsById(String appId, List<String> hostUuids) {
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field(ID_KEY)
+        .hasAnyOf(hostUuids)
+        .asList();
   }
 
   @Override
