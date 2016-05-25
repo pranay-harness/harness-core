@@ -101,7 +101,7 @@ public class ReleaseResource {
   public RestResponse<Release> update(
       @QueryParam("appId") String appId, @PathParam("id") String releaseId, Release release) {
     release.setUuid(releaseId);
-    release.setAppId(release.getAppId());
+    release.setAppId(appId);
     return new RestResponse<>(releaseService.update(release));
   }
 
