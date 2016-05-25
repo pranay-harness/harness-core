@@ -124,36 +124,6 @@ public class WingsModule extends AbstractModule {
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
-    MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
-    List<String> hosts = Splitter.on(",").splitToList(mongoConfig.getHost());
-    List<ServerAddress> serverAddresses = new ArrayList<>();
-
-    for (String host : hosts) {
-      serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
-    }
-    Morphia morphia = new Morphia();
-    MongoClient mongoClient = new MongoClient(serverAddresses);
-    this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
-    distributedLockSvc = new ManagedDistributedLockSvc(
-        new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, mongoConfig.getDb(), "locks"))
-            .getLockSvc());
-
-    if (hosts.size() > 1) {
-      mongoClient = new MongoClient(serverAddresses);
-      mongoClient.setReadPreference(ReadPreference.secondaryPreferred());
-      this.secondaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
-    } else {
-      this.secondaryDatastore = primaryDatastore;
-    }
-
-    morphia.mapPackage("software.wings.beans");
-    this.primaryDatastore.ensureIndexes();
-    if (hosts.size() > 1) {
-      this.secondaryDatastore.ensureIndexes();
-    }
-
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
   @Override
@@ -171,48 +141,28 @@ public class WingsModule extends AbstractModule {
     bind(UserService.class).to(UserServiceImpl.class);
     bind(RoleService.class).to(RoleServiceImpl.class);
     bind(ServiceResourceService.class).to(ServiceResourceServiceImpl.class);
-    bind(Datastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
-    bind(Datastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
-    bind(new TypeLiteral<Map<ReadPref, Datastore>>() {})
-        .annotatedWith(Names.named("datastoreMap"))
-        .toInstance(datastoreMap);
-    bind(ExecutorService.class).toInstance(new ManagedExecutorService(create(20, 1000, 500L, TimeUnit.MILLISECONDS)));
     bind(EnvironmentService.class).to(EnvironmentServiceImpl.class);
     bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
     bind(InfraService.class).to(InfraServiceImpl.class);
     bind(WorkflowService.class).to(WorkflowServiceImpl.class);
     bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
-    bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("timer"))
-        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(NotifyEvent.class, primaryDatastore));
-    bind(ScheduledExecutorService.class)
-        .annotatedWith(Names.named("notifier"))
-        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
-    bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
     bind(TagService.class).to(TagServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);
     bind(AppContainerService.class).to(AppContainerServiceImpl.class);
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
-    bind(new TypeLiteral<Queue<CollectEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(CollectEvent.class, primaryDatastore));
-    bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
-    install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
     bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
+    bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
     artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
         .to(JenkinsArtifactCollectorServiceImpl.class);
-    bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
-    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, primaryDatastore));
-    bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+
+    install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
   }
 }
