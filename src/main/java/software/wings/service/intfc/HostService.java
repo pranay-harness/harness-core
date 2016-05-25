@@ -29,4 +29,6 @@ public interface HostService {
   void bulkSave(Host baseHost, List<String> hostNames);
 
   int importHosts(String appId, String infraId, BoundedInputStream boundedInputStream);
+
+  List<Host> getHostsById(String appId, List<String> hostUuids);
 }

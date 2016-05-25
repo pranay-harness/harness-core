@@ -19,6 +19,8 @@ public interface ErrorConstants {
   public static final String SOCKET_CONNECTION_ERROR = "SSH_SOCKET_CONNECTION_ERROR";
   public static final String SOCKET_CONNECTION_TIMEOUT = "SOCKET_CONNECTION_TIMEOUT_ERROR";
   public static final String UNKNOWN_ERROR = "UNKNOWN_ERROR";
+  public static final String UNKNOWN_COMMAND_UNIT_ERROR = "UNKNOWN_COMMAND_UNIT_ERROR";
+  public static final String UNKNOWN_EXECUTOR_TYPE_ERROR = "UNKNOWN_EXECUTOR_TYPE_ERROR";
   public static final String NOT_INITIALIZED = "NOT_INITIALIZED";
   public static final String ALREADY_INITIALIZED = "ALREADY_INITIALIZED";
 

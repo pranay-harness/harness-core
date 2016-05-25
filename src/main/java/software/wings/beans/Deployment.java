@@ -3,6 +3,8 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.List;
+
 @Entity(value = "deployments", noClassnameStored = true)
 public class Deployment extends Execution {
   @Reference(idOnly = true) private Release release;
@@ -61,6 +63,11 @@ public class Deployment extends Execution {
             + fwUrl + " && chmod a+x wings_main.pl && ./wings_main.pl " + params
             + " && echo \"SUCCESS\"";
             */
+  }
+
+  @Override
+  public List<CommandUnit> getCommandUnits() {
+    return null;
   }
 
   public Release getRelease() {

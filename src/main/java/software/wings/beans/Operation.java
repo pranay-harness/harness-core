@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import java.util.List;
+
 public class Operation extends Execution {
   private String customArg;
 
@@ -14,6 +16,11 @@ public class Operation extends Execution {
   @Override
   public String getCommand() {
     // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<CommandUnit> getCommandUnits() {
     return null;
   }
 

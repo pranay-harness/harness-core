@@ -1,31 +1,33 @@
 package software.wings.beans;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 
+import java.util.List;
+@Entity(value = "executions", noClassnameStored = true)
 public abstract class Execution extends Base {
-  private List<String> hostInstanceMappings = new ArrayList<>();
-  private OperationType operationType;
+  @Reference(idOnly = true, ignoreMissing = true) private Host host;
+  private CommandType commandType;
   private Strategy strategy = Strategy.SERIAL;
   private String sshUser;
   private String sshPassword;
   private String appAccount;
   private String appAccountPassword;
 
-  public OperationType getOperationType() {
-    return operationType;
+  public CommandType getCommandType() {
+    return commandType;
   }
 
-  public void setOperationType(OperationType operationType) {
-    this.operationType = operationType;
+  public void setCommandType(CommandType commandType) {
+    this.commandType = commandType;
   }
 
-  public List<String> getHostInstanceMappings() {
-    return hostInstanceMappings;
+  public Host getHost() {
+    return host;
   }
 
-  public void setHostInstanceMappings(List<String> hostInstanceMappings) {
-    this.hostInstanceMappings = hostInstanceMappings;
+  public void setHost(Host host) {
+    this.host = host;
   }
 
   public String getSshUser() {
@@ -70,11 +72,13 @@ public abstract class Execution extends Base {
 
   public abstract String getCommand();
 
+  public abstract List<CommandUnit> getCommandUnits();
+
   public abstract String getSetupCommand();
 
   public abstract String getDeployCommand();
 
-  public enum OperationType { DEPLOY, START, STOP, RESTART, ENABLE, DISABLE, ROLLBACK, CUSTOM }
+  public enum CommandType { DEPLOY, START, STOP, RESTART, ENABLE, DISABLE, ROLLBACK, CUSTOM }
 
   public enum Strategy { SERIAL, PARALLEL }
 }
