@@ -111,15 +111,15 @@ public class ReleaseResource {
   @Path("{id}/artifactsources")
   public RestResponse<Release> addArtifactSource(
       @QueryParam("appId") String appId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
-    return new RestResponse<>(releaseService.addArtifactSource(releaseId, artifactSource));
+    return new RestResponse<>(releaseService.addArtifactSource(releaseId, appId, artifactSource));
   }
 
   @DELETE
   @Timed
   @ExceptionMetered
-  @Path("{id}/artifactsources")
-  public RestResponse<Release> deleteArtifactSource(
-      @QueryParam("appId") String appId, @PathParam("id") String releaseId, @BeanParam ArtifactSource artifactSource) {
-    return new RestResponse<>(releaseService.deleteArtifactSource(releaseId, artifactSource));
+  @Path("{id}/artifactsources/{artifactSourceName}")
+  public RestResponse<Release> deleteArtifactSource(@QueryParam("appId") String appId,
+      @PathParam("id") String releaseId, @PathParam("artifactSourceName") String artifactSourceName) {
+    return new RestResponse<>(releaseService.deleteArtifactSource(releaseId, appId, artifactSourceName));
   }
 }
