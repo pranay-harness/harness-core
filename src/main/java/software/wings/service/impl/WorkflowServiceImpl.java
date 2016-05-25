@@ -129,18 +129,22 @@ public class WorkflowServiceImpl implements WorkflowService {
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
     workflow = wingsPersistence.saveAndGet(cls, workflow);
-    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
-    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    workflow.setGraph(stateMachine.getGraph());
+    if (graph != null) {
+      StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      workflow.setGraph(stateMachine.getGraph());
+    }
     return workflow;
   }
 
   @Override
   public <T extends Workflow> T updateWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
-    StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
-    stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-    workflow.setGraph(stateMachine.getGraph());
+    if (graph != null) {
+      StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
+      stateMachine = wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
+      workflow.setGraph(stateMachine.getGraph());
+    }
     return workflow;
   }
 
