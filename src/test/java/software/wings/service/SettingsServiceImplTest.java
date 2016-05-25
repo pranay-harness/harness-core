@@ -12,6 +12,7 @@ import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.Arrays;
@@ -34,12 +35,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withName("PASSWORD")
             .withValue(aHostConnectionAttributes().withAccessType(PASSWORD).withConnectionType(SSH).build())
             .build());
-    MultivaluedMap<String, String> queryMap = new MultivaluedHashMap<>();
-    queryMap.put("appId", Arrays.asList("APP_ID"));
 
-    List<SettingAttribute> connectionAttributes = settingsService.getConnectionAttributes(queryMap);
+    List<SettingAttribute> connectionAttributes =
+        settingsService.getSettingAttributesByType("APP_ID", SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
     assertThat(connectionAttributes).isNotNull();
-    assertThat(((SettingValue) connectionAttributes.get(0).getValue())).isInstanceOf(HostConnectionAttributes.class);
+    assertThat((connectionAttributes.get(0).getValue())).isInstanceOf(HostConnectionAttributes.class);
   }
 
   @Test
@@ -49,11 +49,10 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                                  .withName("PASSWORD")
                                                                  .withValue(new BastionConnectionAttributes())
                                                                  .build());
-    MultivaluedMap<String, String> queryMap = new MultivaluedHashMap<>();
-    queryMap.put("appId", Arrays.asList("APP_ID"));
 
-    List<SettingAttribute> connectionAttributes = settingsService.getBastionHostAttributes(queryMap);
+    List<SettingAttribute> connectionAttributes =
+        settingsService.getSettingAttributesByType("APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES);
     assertThat(connectionAttributes).isNotNull();
-    assertThat(((SettingValue) connectionAttributes.get(0).getValue())).isInstanceOf(BastionConnectionAttributes.class);
+    assertThat((connectionAttributes.get(0).getValue())).isInstanceOf(BastionConnectionAttributes.class);
   }
 }

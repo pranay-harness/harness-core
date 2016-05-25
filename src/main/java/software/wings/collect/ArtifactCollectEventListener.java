@@ -20,6 +20,7 @@ import software.wings.service.intfc.ArtifactService;
 
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -32,7 +33,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
   @Inject private ArtifactService artifactService;
 
-  @Inject private Injector injector;
+  @Inject private Map<String, ArtifactCollectorService> artifactCollectorServiceMap;
 
   @Override
   protected void onMessage(CollectEvent message) throws Exception {
@@ -55,9 +56,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       throws FileNotFoundException {
     String artifactSourceName = artifactSourceMetadata.getArtifactSourceName();
     ArtifactSource artifactSource = release.get(artifactSourceName);
-    Key<ArtifactCollectorService> key =
-        Key.get(ArtifactCollectorService.class, named(artifactSource.getSourceType().name()));
-    ArtifactCollectorService artifactCollectorService = injector.getInstance(key);
+    ArtifactCollectorService artifactCollectorService =
+        artifactCollectorServiceMap.get(artifactSource.getSourceType().name());
     List<ArtifactFile> artifactFiles =
         artifactCollectorService.collect(artifactSource, artifactSourceMetadata.getMetadata());
 

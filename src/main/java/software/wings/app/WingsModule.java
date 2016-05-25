@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -19,6 +20,7 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.ReadPref;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
@@ -29,10 +31,12 @@ import software.wings.core.queue.Queue;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.helpers.ext.Jenkins;
-import software.wings.helpers.ext.JenkinsFactory;
-import software.wings.helpers.ext.JenkinsImpl;
+import software.wings.helpers.ext.jenkins.Jenkins;
+import software.wings.helpers.ext.jenkins.JenkinsFactory;
+import software.wings.helpers.ext.jenkins.JenkinsImpl;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -40,11 +44,13 @@ import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
+import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.ExecutionLogsImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
+import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
@@ -58,6 +64,7 @@ import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.CatalogService;
@@ -69,6 +76,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
@@ -198,5 +206,13 @@ public class WingsModule extends AbstractModule {
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
+
+    MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
+    artifactCollectorServiceMapBinder.addBinding(SourceType.JENKINS.name())
+        .to(JenkinsArtifactCollectorServiceImpl.class);
+    bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
+    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, primaryDatastore));
+    bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
   }
 }

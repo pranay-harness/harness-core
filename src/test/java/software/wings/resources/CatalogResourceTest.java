@@ -16,6 +16,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
@@ -84,7 +85,8 @@ public class CatalogResourceTest extends WingsBaseTest {
 
   @Test
   public void shouldListCatalogForConnectionAttributes() {
-    when(settingsService.getConnectionAttributes(any(MultivaluedMap.class))).thenReturn(Lists.newArrayList());
+    when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
+        .thenReturn(Lists.newArrayList());
     RestResponse<Map<String, Object>> actual = resources.client()
                                                    .target("/catalogs?catalogType=CONNECTION_ATTRIBUTES")
                                                    .request()
@@ -96,7 +98,8 @@ public class CatalogResourceTest extends WingsBaseTest {
 
   @Test
   public void shouldListCatalogForBastionHostAttributes() {
-    when(settingsService.getBastionHostAttributes(any(MultivaluedMap.class))).thenReturn(Lists.newArrayList());
+    when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
+        .thenReturn(Lists.newArrayList());
     RestResponse<Map<String, Object>> actual = resources.client()
                                                    .target("/catalogs?catalogType=BASTION_HOST_ATTRIBUTES")
                                                    .request()
