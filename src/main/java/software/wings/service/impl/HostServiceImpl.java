@@ -45,8 +45,8 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.updateFields(Host.class, host.getUuid(),
         ImmutableMap.<String, Object>builder()
             .put("hostName", host.getHostName())
-            .put("hostAttributes", host.getHostConnAttr())
-            .put("bastionHostAttributes", host.getBastionConnAttr())
+            .put("hostConnAttr", host.getHostConnAttr())
+            .put("bastionConnAttr", host.getBastionConnAttr())
             .put("tags", host.getTags())
             .build());
     return wingsPersistence.saveAndGet(Host.class, host);
