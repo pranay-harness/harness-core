@@ -2,6 +2,7 @@ package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -17,10 +18,10 @@ import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -81,11 +82,12 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     Map<String, Serializable> responseMap = new HashMap<>();
 
     SearchFilter searchFilter = new SearchFilter();
-    searchFilter.setFieldName("uuid");
-    searchFilter.setFieldValues(waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()));
+    searchFilter.setFieldName(ID_KEY);
+    searchFilter.setFieldValues(
+        waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray());
     searchFilter.setOp(SearchFilter.Operator.IN);
     PageRequest<NotifyResponse> notifyResponseReq = new PageRequest<>();
-    notifyResponseReq.setFilters(Collections.singletonList(searchFilter));
+    notifyResponseReq.addFilter(searchFilter);
     PageResponse<NotifyResponse> notifyResponses =
         wingsPersistence.query(NotifyResponse.class, notifyResponseReq, ReadPref.CRITICAL);
 

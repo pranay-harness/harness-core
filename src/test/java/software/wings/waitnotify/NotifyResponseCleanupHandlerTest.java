@@ -5,6 +5,7 @@
 package software.wings.waitnotify;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -37,7 +38,7 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
     PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
     reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
     reqNotifyRes.setLimit(PageRequest.UNLIMITED);
-    reqNotifyRes.getFieldsIncluded().add("uuid");
+    reqNotifyRes.addFieldsIncluded(ID_KEY);
     PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
     assertThat(notifyPageResponses)
         .as("NotifyResponsesWithSuccessStatus")

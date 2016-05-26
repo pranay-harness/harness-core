@@ -2,6 +2,7 @@ package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import software.wings.lock.PersistentLocker;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -40,7 +42,7 @@ public class Notifier implements Runnable {
         return;
       }
       PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-      reqNotifyRes.getFieldsIncluded().add("uuid");
+      reqNotifyRes.addFieldsIncluded(ID_KEY);
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
 
       if (isEmpty(notifyPageResponses)) {
@@ -59,7 +61,7 @@ public class Notifier implements Runnable {
       filter.setFieldValues(fieldValues);
       filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
-      req.getFilters().add(filter);
+      req.addFilter(filter);
 
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
 

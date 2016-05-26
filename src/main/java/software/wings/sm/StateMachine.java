@@ -62,12 +62,14 @@ public class StateMachine extends Base {
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
+    String originStateId = null;
     for (Node node : graph.getNodes()) {
-      if (Graph.ORIGIN_STATE_NAME.equals(node.getName())) {
+      if (Graph.ORIGIN_STATE.equals(node.getName()) || Graph.ORIGIN_STATE.equals(node.getType())) {
+        originStateId = node.getId();
         continue;
       }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException(ErrorConstants.UNKNOWN_STENCIL_TYPE);
+        throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown stencil type");
       }
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
       State state = stateTypeDesc.newInstance(node.getName());
@@ -79,12 +81,15 @@ public class StateMachine extends Base {
       addState(state);
     }
 
+    if (originStateId == null) {
+      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Origin state missing");
+    }
     try {
       Map<String, Node> linkIdMap = CollectionUtils.hierarchyOnUniqueFieldValue(graph.getNodes(), "id");
       Map<String, State> statesMap = getStatesMap();
       if (graph.getLinks() != null) {
         for (Link link : graph.getLinks()) {
-          if (Graph.ORIGIN_STATE_NAME.equals(linkIdMap.get(link.getFrom()).getName())) {
+          if (Graph.ORIGIN_STATE.equals(linkIdMap.get(link.getFrom()).getName())) {
             setInitialStateName(linkIdMap.get(link.getTo()).getName());
             continue;
           }

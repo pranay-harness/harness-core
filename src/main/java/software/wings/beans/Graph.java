@@ -13,9 +13,9 @@ import java.util.Map;
 /**
  * @author Rishi
  */
-public class Graph implements Serializable {
-  public static final String ORIGIN_STATE_NAME = "ORIGIN";
-  private static final long serialVersionUID = 7894954599933362678L;
+public class Graph {
+  public static final String ORIGIN_STATE = "ORIGIN";
+
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes;
 

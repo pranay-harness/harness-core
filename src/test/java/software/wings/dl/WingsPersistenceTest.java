@@ -13,10 +13,10 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -47,13 +47,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     PageRequest<TestEntity> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
-    List<Object> fieldValues = new ArrayList<>();
-    fieldValues.add("fieldA11");
-    fieldValues.add("fieldA21");
-    filter.setFieldValues(fieldValues);
+
+    filter.setFieldValues("fieldA11", "fieldA21");
     filter.setFieldName("fieldA");
     filter.setOp(Operator.IN);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
@@ -67,15 +65,15 @@ public class WingsPersistenceTest extends WingsBaseTest {
     req.setLimit("2");
     req.setOffset("1");
     SearchFilter filter = new SearchFilter();
-    filter.setFieldValue("fieldA1");
+    filter.setFieldValues("fieldA1");
     filter.setFieldName("fieldA");
     filter.setOp(Operator.CONTAINS);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
 
     SortOrder order = new SortOrder();
     order.setFieldName("fieldA");
     order.setOrderType(OrderType.DESC);
-    req.getOrders().add(order);
+    req.addOrder(order);
 
     PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
 

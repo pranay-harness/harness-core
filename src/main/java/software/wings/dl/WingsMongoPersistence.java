@@ -20,6 +20,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -70,7 +73,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return createQuery(cls).field("appId").equal(appId).field("uuid").equal(id).field("active").equal(true).get();
+    return createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(id).field("active").equal(true).get();
   }
 
   @Override
@@ -85,6 +88,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
+    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
     PageResponse<T> res = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
     if (isEmpty(res)) {
       return null;
@@ -109,7 +113,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T saveAndGet(Class<T> cls, T object) {
     Object id = save(object);
-    return createQuery(cls).field("appId").equal(object.getAppId()).field("uuid").equal(id).get();
+    return createQuery(cls).field("appId").equal(object.getAppId()).field(ID_KEY).equal(id).get();
   }
 
   @Override
@@ -179,6 +183,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
+    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
   }
 

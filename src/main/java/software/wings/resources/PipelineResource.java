@@ -84,15 +84,15 @@ public class PipelineResource {
       @PathParam("pipelineId") String pipelineId, @BeanParam PageRequest<WorkflowExecution> pageRequest) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    filter.setFieldValue(appId);
+    filter.setFieldValues(appId);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("workflowExecutionType");
-    filter.setFieldValue(WorkflowExecutionType.PIPELINE);
+    filter.setFieldValues(WorkflowExecutionType.PIPELINE);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
   }

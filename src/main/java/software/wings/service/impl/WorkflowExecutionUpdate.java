@@ -3,6 +3,8 @@
  */
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.WingsBootstrap;
@@ -55,7 +57,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field("appId")
                                          .equal(appId)
-                                         .field("uuid")
+                                         .field(ID_KEY)
                                          .equal(workflowExecutionId)
                                          .field("status")
                                          .in(runningStatuses);

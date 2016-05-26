@@ -37,6 +37,7 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 /**
@@ -293,7 +294,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     String executionUuid = UUIDGenerator.getUuid();
     workflowService.trigger(appId, sm.getUuid(), executionUuid);
 
-    Thread.sleep(4000);
+    Thread.sleep(5000);
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
     assertThat(StaticMap.getValue(stateAB.getName())).isNotNull();
@@ -483,9 +484,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
-    filter.setFieldValue(pipeline.getUuid());
+    filter.setFieldValues(pipeline.getUuid());
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
@@ -592,9 +593,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
-    filter.setFieldValue(pipeline.getUuid());
+    filter.setFieldValues(pipeline.getUuid());
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
@@ -651,9 +652,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
-    filter.setFieldValue(orchestration.getUuid());
+    filter.setFieldValues(orchestration.getUuid());
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
@@ -751,9 +752,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
-    filter.setFieldValue(orchestration.getUuid());
+    filter.setFieldValues(orchestration.getUuid());
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();

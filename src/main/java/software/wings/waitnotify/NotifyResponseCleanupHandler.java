@@ -2,6 +2,7 @@ package software.wings.waitnotify;
 
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**
@@ -38,7 +40,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
       reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
       reqNotifyRes.setLimit(PageRequest.UNLIMITED);
-      reqNotifyRes.getFieldsIncluded().add("uuid");
+      reqNotifyRes.addFieldsIncluded(ID_KEY);
       PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
@@ -55,7 +57,7 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       filter.setFieldValues(fieldValues);
       filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
-      req.getFilters().add(filter);
+      req.addFilter(filter);
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);

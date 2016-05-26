@@ -62,7 +62,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).query(eq(Service.class), argument.capture());
     SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);
     assertThat(filter.getFieldName()).isEqualTo("appId");
-    assertThat(filter.getFieldValue()).isEqualTo(APP_ID);
+    assertThat(filter.getFieldValues()).containsExactly(APP_ID);
     assertThat(filter.getOp()).isEqualTo(EQ);
   }
 

@@ -3,8 +3,6 @@
  */
 package software.wings.common;
 
-import com.google.common.collect.Lists;
-
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -59,14 +57,11 @@ public class HostsExpressionProcessor implements ExpressionProcessor {
 
   public List<Host> list() {
     List<Host> hosts = null;
-    PageRequest<Host> pageRequest = PageRequest.Builder.aPageRequest()
-                                        .withLimit(PageRequest.UNLIMITED)
-                                        .withFilters(Lists.newArrayList(SearchFilter.Builder.aSearchFilter()
-                                                                            .withFieldName("appId")
-                                                                            .withFieldValue(appId)
-                                                                            .withOp(Operator.EQ)
-                                                                            .build()))
-                                        .build();
+    PageRequest<Host> pageRequest =
+        PageRequest.Builder.aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .build();
     if (hostNames == null || hostNames.length == 0) {
       hosts = hostService.list(pageRequest);
     } else {
