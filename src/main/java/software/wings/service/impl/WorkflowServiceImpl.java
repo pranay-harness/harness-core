@@ -118,8 +118,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> req) {
-    return wingsPersistence.query(Pipeline.class, req);
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
+    SearchFilter filter =
+        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
+    pageRequest.getFilters().add(filter);
+    return wingsPersistence.query(Pipeline.class, pageRequest);
   }
 
   @Override
@@ -204,6 +207,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    SearchFilter filter =
+        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
+    pageRequest.getFilters().add(filter);
     return wingsPersistence.query(Orchestration.class, pageRequest);
   }
 

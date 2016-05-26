@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -70,7 +71,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return createQuery(cls).field("appId").equal(appId).field("uuid").equal(id).get();
+    return createQuery(cls).field("appId").equal(appId).field("uuid").equal(id).field("active").equal(true).get();
   }
 
   @Override
