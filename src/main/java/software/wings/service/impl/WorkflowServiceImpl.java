@@ -160,7 +160,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                 .equal(pipeline.getUuid()),
         ops);
 
-    updateWorkflow(pipeline);
+    pipeline = updateWorkflow(pipeline);
     return wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
   }
 
@@ -219,7 +219,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                 .equal(orchestration.getUuid()),
         ops);
 
-    updateWorkflow(orchestration);
+    orchestration = updateWorkflow(orchestration);
     return wingsPersistence.get(Orchestration.class, orchestration.getAppId(), orchestration.getUuid());
   }
 
