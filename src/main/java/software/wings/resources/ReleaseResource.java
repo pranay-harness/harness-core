@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -15,7 +14,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
 
 import javax.inject.Inject;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

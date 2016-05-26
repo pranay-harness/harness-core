@@ -6,7 +6,6 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.dl.PageResponse;
 import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;

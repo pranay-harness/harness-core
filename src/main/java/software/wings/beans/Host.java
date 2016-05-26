@@ -101,6 +101,7 @@ public class Host extends Base implements ContextElement {
   public ContextElementType getElementType() {
     return ContextElementType.HOST;
   }
+
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();

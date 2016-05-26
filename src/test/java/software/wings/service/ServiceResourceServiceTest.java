@@ -35,12 +35,11 @@ import java.util.ArrayList;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
+  private final String SERVICE_ID = "SERVICE_ID";
+  private final String APP_ID = "APP_ID";
   private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private ConfigService configService = mock(ConfigService.class);
   private ServiceResourceService srs = new ServiceResourceServiceImpl(wingsPersistence, configService);
-
-  private final String SERVICE_ID = "SERVICE_ID";
-  private final String APP_ID = "APP_ID";
   private ServiceBuilder builder = aService()
                                        .withUuid(SERVICE_ID)
                                        .withAppId(APP_ID)

@@ -10,9 +10,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.jenkins.Jenkins;
-import software.wings.helpers.ext.jenkins.JenkinsFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,11 +18,9 @@ import java.util.List;
 import javax.inject.Inject;
 
 public class JenkinsTest extends WingsBaseTest {
-  @Inject private JenkinsFactory jenkinsFactory;
-
-  private Jenkins jenkins;
-
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
+  @Inject private JenkinsFactory jenkinsFactory;
+  private Jenkins jenkins;
 
   @Before
   public void setUp() throws URISyntaxException {

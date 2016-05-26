@@ -9,7 +9,6 @@ import software.wings.beans.ErrorConstants;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.utils.ExpressionEvaluator;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -18,7 +17,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 /**
@@ -42,6 +40,7 @@ public class StateMachineExecutor {
       String appId, String smId, String executionUuid, List<ContextElement> contextParams) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, null);
   }
+
   public StateExecutionInstance execute(String appId, String smId, String executionUuid,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, callback);
@@ -110,7 +109,7 @@ public class StateMachineExecutor {
    * Resumes execution of a StateMachineInstance.
    *
    * @param stateExecutionInstanceId stateMachineInstance to resume.
-   * @param response     map of responses from state machine instances this state was waiting on.
+   * @param response                 map of responses from state machine instances this state was waiting on.
    */
   public void resume(String appId, String stateExecutionInstanceId, Map<String, ? extends Serializable> response) {
     StateExecutionInstance stateExecutionInstance =

@@ -42,17 +42,17 @@ import javax.inject.Inject;
  * Created by anubhaw on 2/10/16.
  */
 public abstract class AbstractSshExecutor implements SshExecutor {
+  public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
   protected final Logger logger = LoggerFactory.getLogger(getClass());
+  private final int MAX_BYTES_READ_PER_CHANNEL =
+      1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected Session session;
   protected Channel channel;
   protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
-  private final int MAX_BYTES_READ_PER_CHANNEL =
-      1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected ExecutionLogs executionLogs;
   protected FileService fileService;
-  public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
 
   @Inject
   public AbstractSshExecutor(ExecutionLogs executionLogs, FileService fileService) {

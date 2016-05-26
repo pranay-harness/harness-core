@@ -28,9 +28,8 @@ import javax.mail.MessagingException;
 public class MailerTest extends WingsBaseTest {
   private static final String EMAIL = "test@email.com";
   private static final String PASSWORD = "password";
-
-  @Inject private Mailer mailer;
   @Rule public GreenMailRule greenMail = new GreenMailRule(ServerSetupTest.SMTP);
+  @Inject private Mailer mailer;
 
   @Before
   public void setup() {

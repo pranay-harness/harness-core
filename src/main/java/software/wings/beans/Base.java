@@ -13,7 +13,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
 import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
 
 /**

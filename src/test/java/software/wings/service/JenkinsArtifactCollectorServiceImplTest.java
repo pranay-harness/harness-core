@@ -61,16 +61,11 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
                                                            .build()))
           .build();
   public static final String FILE_ID = "FILE_ID";
-  @Mock private JenkinsFactory jenkinsFactory;
-
-  @Mock private Jenkins jenkins;
-
-  @Mock private FileService fileService;
-
   @Captor ArgumentCaptor<FileMetadata> fileMetadataArgumentCaptor;
-
   @Captor ArgumentCaptor<FileBucket> fileBucketArgumentCaptor;
-
+  @Mock private JenkinsFactory jenkinsFactory;
+  @Mock private Jenkins jenkins;
+  @Mock private FileService fileService;
   @Rule
   public Verifier verifier = new Verifier() {
     @Override

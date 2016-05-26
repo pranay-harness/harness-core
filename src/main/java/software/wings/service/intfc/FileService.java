@@ -39,6 +39,10 @@ public interface FileService {
     LOGS("logs"),
     PLATFORMS("platforms");
 
+    private String bucketName;
+    private int chunkSize;
+    private GridFSBucket gridFSBucket;
+
     FileBucket(String bucketName, int chunkSize) {
       this.bucketName = bucketName;
       this.chunkSize = chunkSize;
@@ -48,10 +52,6 @@ public interface FileService {
     FileBucket(String bucketName) {
       this(bucketName, 16 * 1000 * 1000);
     }
-
-    private String bucketName;
-    private int chunkSize;
-    private GridFSBucket gridFSBucket;
 
     public String getName() {
       return bucketName;

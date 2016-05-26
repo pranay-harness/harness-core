@@ -28,6 +28,7 @@ public class JsonUtils {
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
   private static final ObjectMapper mapperForCloning;
+
   static {
     // json-path initialization
     Configuration.setDefaults(new Configuration.Defaults() {
@@ -147,27 +148,6 @@ public class JsonUtils {
   }
 
   /**
-   * Deserializes json string to list of objects of given type.
-   *
-   * @param jsonString     json to deserialize.
-   * @param collectionType collection type. i.e. List, Set etc.
-   * @param classToConvert target class type.
-   * @param <T>            collection type.
-   * @param <U>            targetClassType.
-   * @return Deserialized Collection object.
-   */
-  @JsonDeserialize
-  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
-    try {
-      return mapper.readValue(
-          jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
-    } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
-      throw new RuntimeException(exception);
-    }
-  }
-
-  /**
    * Deserializes json to List of given type.
    *
    * @param jsonString   json to deserialize.
@@ -201,5 +181,26 @@ public class JsonUtils {
     String json = asJson(t, mapperForCloning);
     logger.debug("Cloning Object - json: {}", json);
     return asObject(json, cls, mapperForCloning);
+  }
+
+  /**
+   * Deserializes json string to list of objects of given type.
+   *
+   * @param jsonString     json to deserialize.
+   * @param collectionType collection type. i.e. List, Set etc.
+   * @param classToConvert target class type.
+   * @param <T>            collection type.
+   * @param <U>            targetClassType.
+   * @return Deserialized Collection object.
+   */
+  @JsonDeserialize
+  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
+    try {
+      return mapper.readValue(
+          jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
+    } catch (Exception exception) {
+      logger.error(exception.getMessage(), exception);
+      throw new RuntimeException(exception);
+    }
   }
 }

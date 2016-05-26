@@ -9,7 +9,6 @@ import javax.validation.constraints.NotNull;
 
 /**
  * @author Rishi
- *
  */
 public class Workflow extends Base {
   @NotNull private String name;

@@ -40,10 +40,11 @@ public class CatalogResource {
 
   /**
    * Creates a new calalog resource.
-   * @param catalogService catalogService object.
-   * @param workflowService workflowService object.
+   *
+   * @param catalogService      catalogService object.
+   * @param workflowService     workflowService object.
    * @param jenkinsBuildService JenkinsBuildService object.
-   * @param settingsService SettingService object
+   * @param settingsService     SettingService object
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
@@ -56,8 +57,9 @@ public class CatalogResource {
 
   /**
    * returns catalog items.
+   *
    * @param catalogTypes types of catalog items.
-   * @param uriInfo uriInfo from jersey.
+   * @param uriInfo      uriInfo from jersey.
    * @return RestReponse containing map of catalog objects.
    * @throws IOException exception.
    */

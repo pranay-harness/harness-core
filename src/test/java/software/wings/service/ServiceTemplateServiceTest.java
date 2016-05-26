@@ -46,12 +46,11 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                        .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
-
+  @InjectMocks ServiceTemplateServiceImpl templateService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
   @Mock private HostService hostService; // FIXME: remove and break the test
-  @InjectMocks ServiceTemplateServiceImpl templateService;
 
   @Test
   public void shouldListSavedServiceTemplates() {

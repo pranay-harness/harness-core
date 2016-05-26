@@ -18,12 +18,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class ServicesExpressionProcessor implements ExpressionProcessor {
-  private static final String SERVICES_EXPR_PROCESSOR = "servicesExpressionProcessor";
   static final String EXPRESSION_START_PATTERN = "services()";
-
+  private static final String SERVICES_EXPR_PROCESSOR = "servicesExpressionProcessor";
   private ServiceResourceService serviceResourceService;
   private String appId;
 
@@ -57,6 +55,7 @@ public class ServicesExpressionProcessor implements ExpressionProcessor {
     this.serviceNames = serviceNames;
     return this;
   }
+
   public ServicesExpressionProcessor withNames(String... serviceNames) {
     this.serviceNames = serviceNames;
     return this;

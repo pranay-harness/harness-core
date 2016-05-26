@@ -27,9 +27,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class RepeatStateTest {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Test
   public void shouldExecuteSerial() {
     String stateName = "test";
@@ -120,6 +121,4 @@ public class RepeatStateTest {
     repeatElements.add(svr);
     return repeatElements;
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

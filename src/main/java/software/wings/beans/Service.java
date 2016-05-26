@@ -107,6 +107,11 @@ public class Service extends Base implements ContextElement {
     return ContextElementType.SERVICE;
   }
 
+  @Override
+  public Map<String, Object> paramMap() {
+    return null;
+  }
+
   public static final class ServiceBuilder {
     private String name;
     private String description;
@@ -219,10 +224,5 @@ public class Service extends Base implements ContextElement {
       service.setActive(active);
       return service;
     }
-  }
-
-  @Override
-  public Map<String, Object> paramMap() {
-    return null;
   }
 }

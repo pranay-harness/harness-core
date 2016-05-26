@@ -27,7 +27,6 @@ import javax.ws.rs.core.UriInfo;
 
 /**
  * @author Rishi
- *
  */
 public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;

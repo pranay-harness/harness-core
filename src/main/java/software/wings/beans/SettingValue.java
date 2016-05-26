@@ -16,9 +16,8 @@ import software.wings.helpers.ext.mail.SmtpConfig;
       @Type(value = SmtpConfig.class, name = "SMTP")
 })
 public abstract class SettingValue {
-  public enum SettingVariableTypes { HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, SMTP }
-
   private SettingVariableTypes type;
+
   public SettingValue(SettingVariableTypes type) {
     this.type = type;
   }
@@ -30,4 +29,6 @@ public abstract class SettingValue {
   public void setType(SettingVariableTypes type) {
     this.type = type;
   }
+
+  public enum SettingVariableTypes { HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, SMTP }
 }

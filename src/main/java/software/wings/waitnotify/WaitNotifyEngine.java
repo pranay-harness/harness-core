@@ -18,7 +18,6 @@ import software.wings.dl.WingsPersistence;
 
 import java.io.Serializable;
 import java.util.Arrays;
-
 import javax.inject.Inject;
 
 /**

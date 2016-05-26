@@ -36,10 +36,10 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private WingsPersistence wingsPersistence;
   private TagService tagService;
   private ConfigService configService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject
   public ServiceTemplateServiceImpl(

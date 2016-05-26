@@ -11,15 +11,11 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.SettingsService;
 
-import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Created by anubhaw on 5/23/16.

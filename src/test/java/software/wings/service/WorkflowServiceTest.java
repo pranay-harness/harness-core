@@ -37,7 +37,6 @@ import software.wings.waitnotify.NotifyEventListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 /**
@@ -45,13 +44,11 @@ import javax.inject.Inject;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceTest extends WingsBaseTest {
-  @Inject private WorkflowService workflowService;
-
-  @Inject private WingsPersistence wingsPersistence;
-
-  private Environment env;
-
   private static String appId = UUIDGenerator.getUuid();
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private WorkflowService workflowService;
+  @Inject private WingsPersistence wingsPersistence;
+  private Environment env;
 
   public Environment getEnvironment() {
     if (env == null) {
@@ -813,6 +810,4 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(execution.getUuid()).isEqualTo(executionId);
     assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

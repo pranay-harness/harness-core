@@ -21,10 +21,9 @@ import javax.annotation.Nullable;
  * @author Rishi
  */
 public class ExecutionContextImpl implements ExecutionContext {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
-
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
-
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -165,6 +164,4 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     return sb.toString();
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

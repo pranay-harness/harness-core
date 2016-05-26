@@ -7,7 +7,6 @@ import java.util.Map;
 
 /**
  * @author Rishi.
- *
  */
 public interface CatalogService {
   List<CatalogItem> getCatalogItems(String catalogType);

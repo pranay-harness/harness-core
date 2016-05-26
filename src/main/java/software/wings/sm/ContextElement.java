@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
 import java.util.Map;
 
 /**

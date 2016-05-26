@@ -6,7 +6,6 @@ import software.wings.audit.AuditHeader;
 import software.wings.common.AuditHelper;
 
 import java.io.IOException;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.Filter;

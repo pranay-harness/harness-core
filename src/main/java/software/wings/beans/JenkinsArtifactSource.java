@@ -5,10 +5,8 @@ import static java.util.stream.Collectors.toSet;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
-import com.google.inject.Inject;
 
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.service.intfc.FileService;
 
 import java.util.List;
 import java.util.Set;

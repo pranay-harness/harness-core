@@ -17,12 +17,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class HostsExpressionProcessor implements ExpressionProcessor {
-  private static final String HOSTS_EXPR_PROCESSOR = "hostsExpressionProcessor";
   static final String EXPRESSION_START_PATTERN = "hosts()";
-
+  private static final String HOSTS_EXPR_PROCESSOR = "hostsExpressionProcessor";
   private HostService hostService;
   private String[] hostNames;
   private Object appId;
@@ -53,6 +51,7 @@ public class HostsExpressionProcessor implements ExpressionProcessor {
     this.hostNames = hostNames;
     return this;
   }
+
   public HostsExpressionProcessor withNames(String... hostNames) {
     this.hostNames = hostNames;
     return this;

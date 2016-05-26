@@ -24,11 +24,10 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
+  private static final String HOST_NAME = "192.168.1.13";
   @Inject private SshCommandUnitExecutorService commandUnitExecutorService;
   @Inject private AppContainerService appContainerService;
   @Inject private FileService fileService;
-
-  private static final String HOST_NAME = "192.168.1.13";
 
   @Test
   public void shouldSucessfullyExecuteExecCommandUnits() {

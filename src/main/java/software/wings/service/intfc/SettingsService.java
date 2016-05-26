@@ -6,7 +6,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
 import java.util.List;
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Created by anubhaw on 5/17/16.

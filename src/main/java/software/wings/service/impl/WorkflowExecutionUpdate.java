@@ -17,7 +17,6 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private String appId;
