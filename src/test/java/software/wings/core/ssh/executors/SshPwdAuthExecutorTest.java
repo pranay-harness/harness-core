@@ -63,7 +63,7 @@ import javax.inject.Inject;
 @RealMongo
 @Ignore
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "192.168.137.92";
+  private final String HOST = "192.168.1.13";
   private final Integer PORT = 22;
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";

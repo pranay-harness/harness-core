@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
+
 @Entity(value = "executions")
 public abstract class Execution extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Host host;

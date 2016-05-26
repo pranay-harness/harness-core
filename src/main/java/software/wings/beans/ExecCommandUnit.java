@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.CommandUnit.CommandUnitType.EXEC;
+
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 
 /**
@@ -7,6 +9,10 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
  */
 public class ExecCommandUnit extends CommandUnit {
   private String commandString;
+
+  public ExecCommandUnit() {
+    super(EXEC);
+  }
 
   public String getCommandString() {
     return commandString;
@@ -18,7 +24,6 @@ public class ExecCommandUnit extends CommandUnit {
 
   public static final class ExecCommandUnitBuilder {
     private String commandString;
-    private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
     private ExecCommandUnitBuilder() {}
@@ -32,27 +37,18 @@ public class ExecCommandUnit extends CommandUnit {
       return this;
     }
 
-    public ExecCommandUnitBuilder withCommandUnitType(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-      return this;
-    }
-
     public ExecCommandUnitBuilder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
     public ExecCommandUnitBuilder but() {
-      return anExecCommandUnit()
-          .withCommandString(commandString)
-          .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult);
+      return anExecCommandUnit().withCommandString(commandString).withExecutionResult(executionResult);
     }
 
     public ExecCommandUnit build() {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandString(commandString);
-      execCommandUnit.setCommandUnitType(commandUnitType);
       execCommandUnit.setExecutionResult(executionResult);
       return execCommandUnit;
     }

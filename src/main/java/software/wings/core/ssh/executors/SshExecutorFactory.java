@@ -9,10 +9,10 @@ import software.wings.service.intfc.FileService;
 import javax.inject.Inject;
 
 public class SshExecutorFactory {
-  @Inject private static FileService fileService;
-  @Inject private static ExecutionLogs executionLogs;
+  @Inject private FileService fileService;
+  @Inject private ExecutionLogs executionLogs;
 
-  public static SshExecutor getExecutor(SshSessionConfig config) {
+  public SshExecutor getExecutor(SshSessionConfig config) {
     SshExecutor executor;
     switch (config.getExecutorType()) {
       case PASSWORD:

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static software.wings.beans.ErrorConstants.UNKNOWN_COMMAND_UNIT_ERROR;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
 
 import org.slf4j.Logger;
@@ -18,17 +19,19 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.SshCommandUnitExecutorService;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements SshCommandUnitExecutorService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private SshExecutorFactory sshExecutorFactory;
 
   @Override
-  public void execute(Execution execution) {
+  public ExecutionResult execute(Execution execution) {
     SshSessionConfig sshSessionConfig = getSshSessionConfig(execution, execution.getHost());
     for (CommandUnit commandUnit : execution.getCommandUnits()) {
-      SshExecutor executor = SshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
+      SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
       ExecutionResult result;
       switch (commandUnit.getCommandUnitType()) {
         case EXEC:
@@ -46,9 +49,10 @@ public class SshCommandUnitExecutorServiceImpl implements SshCommandUnitExecutor
       }
       commandUnit.setExecutionResult(result);
       if (result == FAILURE) {
-        break;
+        return FAILURE;
       }
     }
+    return SUCCESS;
   }
 
   private SshSessionConfig getSshSessionConfig(Execution execution, Host host) {

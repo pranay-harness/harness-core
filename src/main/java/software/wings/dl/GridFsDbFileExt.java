@@ -47,17 +47,19 @@ public class GridFsDbFileExt {
       int existingChunksCount = (int) Math.ceil(fileLength / (double) chunkSize);
 
       int bytesFreeInLastChunk = fileLength % chunkSize == 0 ? 0 : (int) (chunkSize - fileLength % chunkSize);
+      int subStrEndIdx;
 
       if (bytesFreeInLastChunk > 0) {
-        appendToExistingChunk(file, existingChunksCount, content.substring(0, bytesFreeInLastChunk));
-        content = content.substring(bytesFreeInLastChunk);
+        subStrEndIdx = bytesFreeInLastChunk > content.length() ? content.length() : bytesFreeInLastChunk;
+        appendToExistingChunk(file, existingChunksCount, content.substring(0, subStrEndIdx));
+        content = content.substring(subStrEndIdx);
       }
 
       int newChunksRequired = (int) Math.ceil(content.length() / (double) chunkSize);
 
       int offset = 0;
       for (int i = 0; i < newChunksRequired; i++) {
-        int subStrEndIdx = (offset + chunkSize > content.length() ? content.length() : offset + chunkSize);
+        subStrEndIdx = (offset + chunkSize > content.length() ? content.length() : offset + chunkSize);
         saveNewChunk(file, existingChunksCount + i, content.substring(offset, subStrEndIdx));
         offset += chunkSize;
       }

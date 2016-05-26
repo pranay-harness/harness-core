@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.CommandUnit.CommandUnitType.SCP;
+
 import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -10,6 +12,10 @@ public class ScpCommandUnit extends CommandUnit {
   private String fileId;
   private FileBucket fileBucket;
   private String destinationFilePath;
+
+  public ScpCommandUnit() {
+    super(SCP);
+  }
 
   public String getFileId() {
     return fileId;
@@ -39,7 +45,6 @@ public class ScpCommandUnit extends CommandUnit {
     private String fileId;
     private FileBucket fileBucket;
     private String destinationFilePath;
-    private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
     private ScpCommandUnitBuilder() {}
@@ -63,11 +68,6 @@ public class ScpCommandUnit extends CommandUnit {
       return this;
     }
 
-    public ScpCommandUnitBuilder withCommandUnitType(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-      return this;
-    }
-
     public ScpCommandUnitBuilder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
@@ -78,7 +78,6 @@ public class ScpCommandUnit extends CommandUnit {
           .withFileId(fileId)
           .withFileBucket(fileBucket)
           .withDestinationFilePath(destinationFilePath)
-          .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult);
     }
 
@@ -87,7 +86,6 @@ public class ScpCommandUnit extends CommandUnit {
       scpCommandUnit.setFileId(fileId);
       scpCommandUnit.setFileBucket(fileBucket);
       scpCommandUnit.setDestinationFilePath(destinationFilePath);
-      scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setExecutionResult(executionResult);
       return scpCommandUnit;
     }

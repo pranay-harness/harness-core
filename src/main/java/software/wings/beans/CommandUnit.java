@@ -10,6 +10,10 @@ public class CommandUnit {
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
 
+  public CommandUnit(CommandUnitType commandUnitType) {
+    this.commandUnitType = commandUnitType;
+  }
+
   public CommandUnitType getCommandUnitType() {
     return commandUnitType;
   }

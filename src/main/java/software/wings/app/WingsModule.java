@@ -26,6 +26,7 @@ import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
 import software.wings.core.queue.Queue;
+import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -198,5 +199,6 @@ public class WingsModule extends AbstractModule {
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
+    bind(SshExecutorFactory.class);
   }
 }
