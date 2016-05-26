@@ -6,12 +6,12 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -20,7 +20,6 @@ import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import javax.inject.Inject;
-import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
@@ -32,6 +31,7 @@ public class ReleaseServiceImpl implements ReleaseService {
 
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
+    req.addFilter("active", true, Operator.EQ);
     return wingsPersistence.query(Release.class, req);
   }
 
@@ -42,13 +42,13 @@ public class ReleaseServiceImpl implements ReleaseService {
 
   @Override
   @ValidationGroups(Create.class)
-  public Release create(@Valid Release release) {
+  public Release create(Release release) {
     return wingsPersistence.saveAndGet(Release.class, release);
   }
 
   @Override
   @ValidationGroups(Update.class)
-  public Release update(@Valid Release release) {
+  public Release update(Release release) {
     Query<Release> query = wingsPersistence.createQuery(Release.class)
                                .field(ID_KEY)
                                .equal(release.getUuid())
@@ -65,16 +65,15 @@ public class ReleaseServiceImpl implements ReleaseService {
   }
 
   @Override
-  public Release addArtifactSource(
-      @NotEmpty String uuid, @NotEmpty String appId, @Valid ArtifactSource artifactSource) {
-    Release release = wingsPersistence.get(Release.class, appId, uuid);
+  public Release addArtifactSource(String id, String appId, ArtifactSource artifactSource) {
+    Release release = wingsPersistence.get(Release.class, appId, id);
     if (release == null) {
-      throw new NotFoundException("Release with id " + uuid + " not found");
+      throw new NotFoundException("Release with id " + id + " not found");
     }
     if (isEmpty(release.getArtifactSources())) {
       wingsPersistence.getDatastore().findAndModify(wingsPersistence.createQuery(Release.class)
                                                         .field(ID_KEY)
-                                                        .equal(uuid)
+                                                        .equal(id)
                                                         .field("appId")
                                                         .equal(appId)
                                                         .field("artifactSources")
@@ -82,36 +81,55 @@ public class ReleaseServiceImpl implements ReleaseService {
           wingsPersistence.createUpdateOperations(Release.class).add("artifactSources", artifactSource));
     } else {
       if (release.getArtifactSources().get(0).getClass() != artifactSource.getClass()) {
-        throw new BadRequestException("Release with id " + uuid + " doesn't allow buildSource of this type ");
+        throw new BadRequestException("Release with id " + id + " doesn't allow buildSource of this type ");
       }
       release.getArtifactSources().add(artifactSource);
 
       wingsPersistence.update(
-          wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(uuid).field("appId").equal(appId),
+          wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId),
           wingsPersistence.createUpdateOperations(Release.class).add("artifactSources", artifactSource));
     }
-    return wingsPersistence.get(Release.class, uuid);
+    return wingsPersistence.get(Release.class, id);
   }
 
   @Override
-  public <T extends ArtifactSource> Release deleteArtifactSource(
-      @NotEmpty String uuid, @NotEmpty String appId, @NotEmpty String artifactSourceName) {
-    Release release = wingsPersistence.get(Release.class, appId, uuid);
+  public <T extends ArtifactSource> Release deleteArtifactSource(String id, String appId, String artifactSourceName) {
+    Release release = wingsPersistence.get(Release.class, appId, id);
     if (release == null) {
-      throw new NotFoundException("Release with id " + uuid + " not found");
+      throw new NotFoundException("Release with id " + id + " not found");
     }
 
     wingsPersistence.update(
-        wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(uuid).field("appId").equal(appId),
+        wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId),
         wingsPersistence.createUpdateOperations(Release.class)
             .removeAll("artifactSources", new BasicDBObject("sourceName", artifactSourceName)));
 
-    return wingsPersistence.get(Release.class, uuid);
+    return wingsPersistence.get(Release.class, id);
   }
 
   @Override
-  public void delete(String releaseId) {
-    wingsPersistence.getDatastore().delete(
-        wingsPersistence.createQuery(Release.class).field("active").equal(false).field(ID_KEY).equal(releaseId));
+  public boolean delete(String id, String appId) {
+    return wingsPersistence.getDatastore()
+               .delete(wingsPersistence.createQuery(Release.class)
+                           .field("active")
+                           .equal(false)
+                           .field(ID_KEY)
+                           .equal(id)
+                           .field("appId")
+                           .equal(appId))
+               .getN()
+        > 0;
+  }
+
+  @Override
+  public Release softDelete(String id, String appId) {
+    Query<Release> query =
+        wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId);
+
+    UpdateOperations<Release> updateOperations =
+        wingsPersistence.createUpdateOperations(Release.class).set("active", false);
+
+    wingsPersistence.update(query, updateOperations);
+    return wingsPersistence.get(Release.class, appId, id);
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -14,6 +15,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
 
 import javax.inject.Inject;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -66,8 +68,8 @@ public class ReleaseResource {
   @Timed
   @ExceptionMetered
   @Path("{id}")
-  public RestResponse<Release> get(@QueryParam("appId") String appId, @PathParam("id") String releaseId) {
-    return new RestResponse<>(releaseService.get(releaseId, appId));
+  public RestResponse<Release> get(@QueryParam("appId") String appId, @PathParam("id") String id) {
+    return new RestResponse<>(releaseService.get(id, appId));
   }
 
   /**
@@ -94,15 +96,29 @@ public class ReleaseResource {
     }
   }
 
+  /**
+   * Endpoint to update a release.
+   *
+   * @param appId   QueryParam app_id.
+   * @param release release to be created.
+   * @return release to be updated.
+   */
   @PUT
   @Timed
   @ExceptionMetered
   @Path("{id}")
-  public RestResponse<Release> update(
-      @QueryParam("appId") String appId, @PathParam("id") String releaseId, Release release) {
-    release.setUuid(releaseId);
+  public RestResponse<Release> update(@QueryParam("appId") String appId, @PathParam("id") String id, Release release) {
+    release.setUuid(id);
     release.setAppId(appId);
     return new RestResponse<>(releaseService.update(release));
+  }
+
+  @DELETE
+  @Timed
+  @ExceptionMetered
+  @Path("{id}")
+  public RestResponse<Release> delete(@QueryParam("appId") String appId, @PathParam("id") String id) {
+    return new RestResponse<>(releaseService.softDelete(id, appId));
   }
 
   @POST
@@ -110,16 +126,16 @@ public class ReleaseResource {
   @ExceptionMetered
   @Path("{id}/artifactsources")
   public RestResponse<Release> addArtifactSource(
-      @QueryParam("appId") String appId, @PathParam("id") String releaseId, ArtifactSource artifactSource) {
-    return new RestResponse<>(releaseService.addArtifactSource(releaseId, appId, artifactSource));
+      @QueryParam("appId") String appId, @PathParam("id") String id, ArtifactSource artifactSource) {
+    return new RestResponse<>(releaseService.addArtifactSource(id, appId, artifactSource));
   }
 
   @DELETE
   @Timed
   @ExceptionMetered
   @Path("{id}/artifactsources/{artifactSourceName}")
-  public RestResponse<Release> deleteArtifactSource(@QueryParam("appId") String appId,
-      @PathParam("id") String releaseId, @PathParam("artifactSourceName") String artifactSourceName) {
-    return new RestResponse<>(releaseService.deleteArtifactSource(releaseId, appId, artifactSourceName));
+  public RestResponse<Release> deleteArtifactSource(@QueryParam("appId") String appId, @PathParam("id") String id,
+      @PathParam("artifactSourceName") String artifactSourceName) {
+    return new RestResponse<>(releaseService.deleteArtifactSource(id, appId, artifactSourceName));
   }
 }

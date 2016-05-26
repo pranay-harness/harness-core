@@ -23,10 +23,12 @@ public interface ReleaseService {
   Release update(@Valid Release release);
 
   <T extends ArtifactSource> Release addArtifactSource(
-      @NotEmpty String uuid, @NotEmpty String appId, @Valid T artifactSource);
+      @NotEmpty String id, @NotEmpty String appId, @Valid T artifactSource);
 
   <T extends ArtifactSource> Release deleteArtifactSource(
-      @NotEmpty String uuid, @NotEmpty String appId, @NotEmpty String artifactSourceName);
+      @NotEmpty String id, @NotEmpty String appId, @NotEmpty String artifactSourceName);
 
-  void delete(String appId);
+  boolean delete(@NotEmpty String id, @NotEmpty String appId);
+
+  Release softDelete(String id, String appId);
 }

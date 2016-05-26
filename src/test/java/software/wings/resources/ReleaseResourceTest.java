@@ -78,6 +78,7 @@ public class ReleaseResourceTest extends WingsBaseTest {
     when(APP_SERVICE.findByUuid(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     when(RELEASE_SERVICE.create(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
     when(RELEASE_SERVICE.update(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
+    when(RELEASE_SERVICE.softDelete(anyString(), anyString())).then(invocation -> releaseBuilder.but().build());
     when(RELEASE_SERVICE.addArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
         .thenReturn(releaseBuilder.but().build());
     when(RELEASE_SERVICE.deleteArtifactSource(anyString(), anyString(), anyString()))
@@ -173,5 +174,15 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                              .get(new GenericType<RestResponse<Release>>() {});
 
     verify(RELEASE_SERVICE).get(RELEASE_ID, APP_ID);
+  }
+
+  @Test
+  public void shouldDeleteRelease() throws IOException {
+    RestResponse<Release> restResponse = RESOURCES.client()
+                                             .target("/releases/" + RELEASE_ID + "?appId=" + APP_ID)
+                                             .request()
+                                             .delete(new GenericType<RestResponse<Release>>() {});
+
+    verify(RELEASE_SERVICE).softDelete(RELEASE_ID, APP_ID);
   }
 }
