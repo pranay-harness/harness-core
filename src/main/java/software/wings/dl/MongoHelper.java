@@ -111,7 +111,7 @@ public class MongoHelper {
   }
 
   public static <T> UpdateOperations<T> setUnset(UpdateOperations<T> ops, String field, Object value) {
-    if (value == null || (value instanceof String && isBlank(((String) value)))) {
+    if (value == null || (value instanceof String && isBlank((String) value))) {
       return ops.unset(field);
     } else {
       return ops.set(field, value);
