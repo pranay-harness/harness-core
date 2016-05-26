@@ -10,21 +10,18 @@ import software.wings.WingsBaseTest;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.beans.Host;
 import software.wings.common.UUIDGenerator;
+import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExpressionProcessorFactory;
 import software.wings.sm.StateExecutionInstance;
-import software.wings.utils.ExpressionEvaluator;
 
 import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class HttpStateTest extends WingsBaseTest {
-  @Inject private ExpressionEvaluator evaluator;
-  @Inject private ExpressionProcessorFactory expressionProcessorFactory;
+  @Inject private ExecutionContextFactory executionContextFactory;
 
   @Test
   public void shouldAssertResponse() {
@@ -33,8 +30,7 @@ public class HttpStateTest extends WingsBaseTest {
     stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     stateExecutionInstance.setStateName(stateName);
 
-    ExecutionContextImpl context =
-        new ExecutionContextImpl(stateExecutionInstance, null, evaluator, expressionProcessorFactory);
+    ExecutionContextImpl context = executionContextFactory.create(stateExecutionInstance, null);
 
     Host host = new Host();
     host.setHostName("app123.application.com");

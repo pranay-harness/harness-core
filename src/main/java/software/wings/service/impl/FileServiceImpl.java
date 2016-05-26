@@ -33,9 +33,8 @@ import javax.inject.Inject;
 
 @Singleton
 public class FileServiceImpl implements FileService {
-  @Inject private WingsPersistence wingsPersistence;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {

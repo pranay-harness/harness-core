@@ -10,21 +10,14 @@ import software.wings.sm.ExecutionStatus;
 
 /**
  * @author Rishi
- *
  */
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 public class WorkflowExecution extends Base {
-  public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SUB_WORKFLOW }
-  ;
-
   @Indexed private String workflowId;
 
   private String stateMachineId;
-
   @Indexed private WorkflowExecutionType workflowExecutionType;
-
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
-
   @Transient private Graph graph;
 
   public String getWorkflowId() {
@@ -66,4 +59,6 @@ public class WorkflowExecution extends Base {
   public void setStatus(ExecutionStatus status) {
     this.status = status;
   }
+
+  public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SUB_WORKFLOW }
 }

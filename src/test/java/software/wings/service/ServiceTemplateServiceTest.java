@@ -47,7 +47,6 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                        .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
-
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private TagService tagService;

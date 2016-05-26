@@ -6,13 +6,10 @@ import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD_
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
-import static software.wings.beans.SettingValue.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
-import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SettingValue;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -21,7 +18,6 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
 import javax.inject.Inject;
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Created by anubhaw on 5/17/16.

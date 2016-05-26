@@ -7,11 +7,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ArtifactSource.ArtifactType;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Component bean class.
@@ -20,7 +17,7 @@ import java.util.Map;
  */
 @Entity(value = "services", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Service extends Base implements ContextElement {
+public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
@@ -29,7 +26,6 @@ public class Service extends Base implements ContextElement {
 
   @Transient private List<ConfigFile> configFiles;
 
-  @Override
   public String getName() {
     return name;
   }
@@ -98,13 +94,7 @@ public class Service extends Base implements ContextElement {
         .add("description", description)
         .add("artifactType", artifactType)
         .add("configFiles", configFiles)
-        .add("repeatElementType", getElementType())
         .toString();
-  }
-
-  @Override
-  public ContextElementType getElementType() {
-    return ContextElementType.SERVICE;
   }
 
   public static final class ServiceBuilder {
@@ -219,10 +209,5 @@ public class Service extends Base implements ContextElement {
       service.setActive(active);
       return service;
     }
-  }
-
-  @Override
-  public Map<String, Object> paramMap() {
-    return null;
   }
 }

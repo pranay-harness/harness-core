@@ -15,6 +15,7 @@ public class EnvState extends State {
   private static final long serialVersionUID = 1L;
 
   private String envId;
+  private String workflowId;
 
   /**
    * Creates pause state with given name.
@@ -40,5 +41,13 @@ public class EnvState extends State {
 
   public void setEnvId(String envId) {
     this.envId = envId;
+  }
+
+  public String getWorkflowId() {
+    return workflowId;
+  }
+
+  public void setWorkflowId(String workflowId) {
+    this.workflowId = workflowId;
   }
 }

@@ -10,17 +10,6 @@ import java.util.Objects;
  * Created by anubhaw on 5/16/16.
  */
 public class HostConnectionAttributes extends SettingValue {
-  public enum AccessType {
-    PASSWORD,
-    PASSWORD_SU_APP_ACCOUNT,
-    PASSWORD_SUDO_APP_ACCOUNT,
-    KEY,
-    KEY_SU_APP_ACCOUNT,
-    KEY_SUDO_APP_ACCOUNT
-  }
-
-  public enum ConnectionType { SSH }
-
   private String osType;
   private AccessType accessType;
   private ConnectionType connectionType;
@@ -33,6 +22,7 @@ public class HostConnectionAttributes extends SettingValue {
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type);
   }
+
   public String getOsType() {
     return osType;
   }
@@ -92,6 +82,17 @@ public class HostConnectionAttributes extends SettingValue {
         .add("key", key)
         .toString();
   }
+
+  public enum AccessType {
+    PASSWORD,
+    PASSWORD_SU_APP_ACCOUNT,
+    PASSWORD_SUDO_APP_ACCOUNT,
+    KEY,
+    KEY_SU_APP_ACCOUNT,
+    KEY_SUDO_APP_ACCOUNT
+  }
+
+  public enum ConnectionType { SSH }
 
   public static final class HostConnectionAttributesBuilder {
     private String osType;

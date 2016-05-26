@@ -20,9 +20,8 @@ import java.util.regex.Pattern;
  */
 public class ExpressionEvaluator {
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   public static ExpressionEvaluator getInstance() {
     return instance;

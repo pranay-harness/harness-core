@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 
 /**
  * @author Rishi
- *
  */
 @Entity(value = "orchestrations", noClassnameStored = true)
 public class Orchestration extends Workflow {

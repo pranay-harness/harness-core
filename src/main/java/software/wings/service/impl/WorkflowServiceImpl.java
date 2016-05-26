@@ -119,9 +119,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
-    SearchFilter filter =
-        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
-    pageRequest.getFilters().add(filter);
     return wingsPersistence.query(Pipeline.class, pageRequest);
   }
 
@@ -181,20 +178,20 @@ public class WorkflowServiceImpl implements WorkflowService {
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
-    filter.setFieldValue(originId);
+    filter.setFieldValues(originId);
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("name");
-    filter.setFieldValue(name);
+    filter.setFieldValues(name);
     filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
+    req.addFilter(filter);
 
     SortOrder order = new SortOrder();
     order.setFieldName("lastUpdatedAt");
     order.setOrderType(OrderType.DESC);
-    req.getOrders().add(order);
+    req.addOrder(order);
 
     req.setLimit("1");
 
@@ -207,9 +204,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
-    SearchFilter filter =
-        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
-    pageRequest.getFilters().add(filter);
     return wingsPersistence.query(Orchestration.class, pageRequest);
   }
 
@@ -231,14 +225,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public Orchestration readOrchestration(String appId, String envId, String orchestrationId) {
-    Orchestration orchestration = wingsPersistence.createQuery(Orchestration.class)
-                                      .field("appId")
-                                      .equal(appId)
-                                      .field("uuid")
-                                      .equal(orchestrationId)
-                                      .field("active")
-                                      .equal(true)
-                                      .get();
+    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
 
     if (orchestration == null) {
       return orchestration;
@@ -277,20 +264,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    filter.setFieldValue(workflowExecution.getAppId());
+    filter.setFieldValues(workflowExecution.getAppId());
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("executionUuid");
-    filter.setFieldValue(workflowExecution.getUuid());
+    filter.setFieldValues(workflowExecution.getUuid());
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     SortOrder order = new SortOrder();
     order.setFieldName("createdAt");
     order.setOrderType(OrderType.ASC);
-    pageRequest.getOrders().add(order);
+    pageRequest.addOrder(order);
 
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, pageRequest);
     if (res != null && res.size() > 0) {
@@ -406,7 +393,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .field("appId")
                                          .equal(workflowExecution.getAppId())
-                                         .field("uuid")
+                                         .field(ID_KEY)
                                          .equal(workflowExecutionId)
                                          .field("status")
                                          .equal(ExecutionStatus.NEW);
@@ -424,21 +411,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    filter.setFieldValue(appId);
+    filter.setFieldValues(appId);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("workflowId");
-    filter.setFieldValue(workflowId);
+    filter.setFieldValues(workflowId);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("workflowExecutionType");
-    filter.setFieldValue(workflowExecutionType);
+    filter.setFieldValues(workflowExecutionType);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("status");
@@ -447,7 +434,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     statuses.add(ExecutionStatus.RUNNING);
     filter.setFieldValues(statuses);
     filter.setOp(Operator.IN);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     PageResponse<WorkflowExecution> pageResponse = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (pageResponse == null) {

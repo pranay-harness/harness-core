@@ -15,7 +15,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.InputStream;
-
 import javax.inject.Inject;
 
 /**

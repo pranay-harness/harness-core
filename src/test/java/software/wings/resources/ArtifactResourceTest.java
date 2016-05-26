@@ -96,18 +96,6 @@ public class ArtifactResourceTest {
   }
 
   @Test
-  public void shouldThrowExceptionWhenAppIdDoesNotMatch() {
-    Artifact artifact = anArtifact().withAppId("BAD_APP_ID").build();
-
-    Response response = RESOURCES.client()
-                            .target("/artifacts/?appId=" + APP_ID)
-                            .request()
-                            .post(Entity.entity(artifact, MediaType.APPLICATION_JSON));
-    assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-    assertThat(response.readEntity(new GenericType<RestResponse<Void>>() {}).getResponseMessages()).hasSize(1);
-  }
-
-  @Test
   public void shouldUpdateArtifact() {
     Artifact artifact = anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
 

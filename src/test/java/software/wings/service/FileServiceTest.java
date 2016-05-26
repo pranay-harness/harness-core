@@ -27,10 +27,8 @@ import javax.inject.Inject;
  */
 @RealMongo
 public class FileServiceTest extends WingsBaseTest {
-  @Inject private FileService fileService;
-
   @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
+  @Inject private FileService fileService;
   private File tempFile;
 
   @Before

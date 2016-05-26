@@ -1,6 +1,5 @@
 package software.wings.collect;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -13,8 +12,6 @@ import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Injector;
-import com.google.inject.Key;
 
 import org.junit.Before;
 import org.junit.Rule;

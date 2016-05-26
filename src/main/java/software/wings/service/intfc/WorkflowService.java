@@ -10,7 +10,6 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeDescriptor;
 
 import java.util.List;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 

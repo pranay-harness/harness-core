@@ -12,7 +12,6 @@ import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.ExpressionProcessorFactory;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

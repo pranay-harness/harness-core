@@ -57,6 +57,10 @@ public class SshSessionFactory {
     return session;
   }
 
+  private static String getSessionType(SshSessionConfig config) {
+    return config.getKey() != null && config.getKey().length() > 0 ? "KEY" : "PASSWORD";
+  }
+
   public static class MyLogger implements com.jcraft.jsch.Logger {
     static java.util.Hashtable name = new java.util.Hashtable();
 
@@ -89,9 +93,5 @@ public class SshSessionFactory {
           break;
       }
     }
-  }
-
-  private static String getSessionType(SshSessionConfig config) {
-    return config.getKey() != null && config.getKey().length() > 0 ? "KEY" : "PASSWORD";
   }
 }

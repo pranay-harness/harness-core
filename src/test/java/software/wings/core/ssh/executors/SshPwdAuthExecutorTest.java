@@ -68,10 +68,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";
   private final String EXECUTION_ID = "EXECUTION_ID";
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private SshSessionConfig config;
   private SshExecutor executor;
-  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
-
   @Inject private FileService fileService;
   @Mock private ExecutionLogs executionLogs;
 

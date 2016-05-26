@@ -107,10 +107,18 @@ public class ReleaseServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldSoftDeleteRelease() {
+    Release release =
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
+    releaseService.softDelete(release.getUuid(), release.getAppId());
+    assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
+  }
+
+  @Test
   public void shouldDeleteInactiveRelease() {
     Release release = releaseService.create(
         releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).withActive(false).build());
-    releaseService.delete(release.getUuid());
+    assertThat(releaseService.delete(release.getUuid(), release.getAppId())).isTrue();
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
 
@@ -118,7 +126,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
   public void shouldNotDeleteActiveRelease() {
     Release release =
         releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
-    releaseService.delete(release.getUuid());
+    assertThat(releaseService.delete(release.getUuid(), release.getAppId())).isFalse();
     assertThat(releaseService.list(new PageRequest<>())).hasSize(1);
   }
 

@@ -3,8 +3,6 @@
  */
 package software.wings.common;
 
-import com.google.common.collect.Lists;
-
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -18,12 +16,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class ServicesExpressionProcessor implements ExpressionProcessor {
-  private static final String SERVICES_EXPR_PROCESSOR = "servicesExpressionProcessor";
   static final String EXPRESSION_START_PATTERN = "services()";
-
+  private static final String SERVICES_EXPR_PROCESSOR = "servicesExpressionProcessor";
   private ServiceResourceService serviceResourceService;
   private String appId;
 
@@ -57,6 +53,7 @@ public class ServicesExpressionProcessor implements ExpressionProcessor {
     this.serviceNames = serviceNames;
     return this;
   }
+
   public ServicesExpressionProcessor withNames(String... serviceNames) {
     this.serviceNames = serviceNames;
     return this;
@@ -64,14 +61,11 @@ public class ServicesExpressionProcessor implements ExpressionProcessor {
 
   public List<Service> list() {
     List<Service> services = null;
-    PageRequest<Service> pageRequest = PageRequest.Builder.aPageRequest()
-                                           .withLimit(PageRequest.UNLIMITED)
-                                           .withFilters(Lists.newArrayList(SearchFilter.Builder.aSearchFilter()
-                                                                               .withFieldName("appId")
-                                                                               .withFieldValue(appId)
-                                                                               .withOp(Operator.EQ)
-                                                                               .build()))
-                                           .build();
+    PageRequest<Service> pageRequest =
+        PageRequest.Builder.aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .build();
     if (serviceNames == null || serviceNames.length == 0) {
       services = serviceResourceService.list(pageRequest);
     } else {

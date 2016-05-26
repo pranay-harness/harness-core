@@ -15,7 +15,6 @@ public class ApprovalState extends State {
   private static final long serialVersionUID = 1L;
 
   private String groupName;
-  ;
 
   /**
    * Creates pause state with given name.

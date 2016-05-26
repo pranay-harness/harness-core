@@ -12,6 +12,7 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -35,7 +36,7 @@ public class PageRequest<T> {
   @DefaultValue("50") @QueryParam("limit") private String limit;
 
   private int pageSize = DEFAULT_PAGE_SIZE;
-  private List<SearchFilter> filters = new ArrayList<SearchFilter>();
+  private List<SearchFilter> filters = new ArrayList<>();
   private List<SortOrder> orders = new ArrayList<>();
   private List<String> fieldsIncluded = new ArrayList<>();
   private List<String> fieldsExcluded = new ArrayList<>();
@@ -104,7 +105,11 @@ public class PageRequest<T> {
   }
 
   public List<String> getFieldsIncluded() {
-    return fieldsIncluded;
+    return new ArrayList<>(fieldsIncluded);
+  }
+
+  public void addFieldsIncluded(String fieldsIncluded) {
+    this.fieldsIncluded.add(fieldsIncluded);
   }
 
   public void setFieldsIncluded(List<String> fieldsIncluded) {
@@ -112,7 +117,11 @@ public class PageRequest<T> {
   }
 
   public List<String> getFieldsExcluded() {
-    return fieldsExcluded;
+    return new ArrayList<>(fieldsExcluded);
+  }
+
+  public void addFieldsExcluded(String fieldsExcluded) {
+    this.fieldsExcluded.add(fieldsExcluded);
   }
 
   public void setFieldsExcluded(List<String> fieldsExcluded) {
@@ -155,21 +164,25 @@ public class PageRequest<T> {
       //  filter.setDataType(map.getFirst(key + "[dataType]"));
       //}
       if (map.containsKey(key + "[value]")) {
-        filter.setFieldValue(map.getFirst(key + "[value]"));
+        filter.setFieldValues(map.getFirst(key + "[value]"));
       }
-      getFilters().add(filter);
+      filters.add(filter);
     }
     for (int index = 0; index < orderCount; index++) {
       String key = "sort[" + index + "]";
       SortOrder order = new SortOrder();
       order.setFieldName(map.getFirst(key + "[field]"));
       order.setOrderType(OrderType.valueOf(map.getFirst(key + "[direction]").toUpperCase()));
-      getOrders().add(order);
+      orders.add(order);
     }
   }
 
   public List<SearchFilter> getFilters() {
-    return filters;
+    return new ArrayList<>(filters);
+  }
+
+  public void addFilter(SearchFilter filter) {
+    this.filters.add(filter);
   }
 
   public void setFilters(List<SearchFilter> filters) {
@@ -177,7 +190,11 @@ public class PageRequest<T> {
   }
 
   public List<SortOrder> getOrders() {
-    return orders;
+    return new ArrayList<>(orders);
+  }
+
+  public void addOrder(SortOrder order) {
+    this.orders.add(order);
   }
 
   public void setOrders(List<SortOrder> orders) {
@@ -194,9 +211,9 @@ public class PageRequest<T> {
   public void addFilter(String fieldName, Object fieldValue, Operator op) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName(fieldName);
-    filter.setFieldValue(fieldValue);
+    filter.setFieldValues(fieldValue);
     filter.setOp(op);
-    getFilters().add(filter);
+    filters.add(filter);
   }
 
   @Override
@@ -260,13 +277,13 @@ public class PageRequest<T> {
       return this;
     }
 
-    public Builder withFilters(List<SearchFilter> filters) {
-      this.filters = filters;
+    public Builder addFilter(SearchFilter filter) {
+      this.filters.add(filter);
       return this;
     }
 
-    public Builder withOrders(List<SortOrder> orders) {
-      this.orders = orders;
+    public Builder addOrder(SortOrder order) {
+      this.orders.add(order);
       return this;
     }
 

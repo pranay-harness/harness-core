@@ -5,7 +5,6 @@ import static software.wings.common.thread.ThreadPool.create;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
-import org.mongodb.morphia.Datastore;
 import software.wings.utils.ManagedExecutorService;
 import software.wings.utils.ManagedScheduledExecutorService;
 
@@ -27,6 +26,7 @@ public class ExecutorModule extends AbstractModule {
   public ExecutorModule(ExecutorService executorService) {
     this.executorService = executorService;
   }
+
   @Override
   protected void configure() {
     bind(ExecutorService.class).toInstance(new ManagedExecutorService(executorService));

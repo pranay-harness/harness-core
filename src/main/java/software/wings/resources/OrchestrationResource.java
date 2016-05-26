@@ -15,7 +15,6 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -29,7 +28,6 @@ import javax.ws.rs.QueryParam;
 
 /**
  * @author Rishi
- *
  */
 @Path("/orchestrations")
 public class OrchestrationResource {
@@ -92,15 +90,15 @@ public class OrchestrationResource {
       @BeanParam PageRequest<WorkflowExecution> pageRequest) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    filter.setFieldValue(appId);
+    filter.setFieldValues(appId);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
     filter.setFieldName("workflowExecutionType");
-    filter.setFieldValue(WorkflowExecutionType.ORCHESTRATION);
+    filter.setFieldValues(WorkflowExecutionType.ORCHESTRATION);
     filter.setOp(Operator.EQ);
-    pageRequest.getFilters().add(filter);
+    pageRequest.addFilter(filter);
 
     return new RestResponse<>(workflowService.listExecutions(pageRequest, false));
   }

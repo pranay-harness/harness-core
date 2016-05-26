@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Service;
+import software.wings.api.ServiceElement;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -27,9 +27,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class RepeatStateTest {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Test
   public void shouldExecuteSerial() {
     String stateName = "test";
@@ -111,15 +112,13 @@ public class RepeatStateTest {
 
   private List<ContextElement> getTestRepeatElements() {
     List<ContextElement> repeatElements = new ArrayList<>();
-    Service ui = new Service();
+    ServiceElement ui = new ServiceElement();
     ui.setName("ui");
     repeatElements.add(ui);
 
-    Service svr = new Service();
+    ServiceElement svr = new ServiceElement();
     svr.setName("server");
     repeatElements.add(svr);
     return repeatElements;
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

@@ -1,5 +1,4 @@
 package software.wings.resources;
-
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -31,14 +30,14 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/23/16.
  */
 public class ServiceResourceTest {
+  public static final String APP_ID = "APP_ID";
   private static final ServiceResourceService RESOURCE_SERVICE = mock(ServiceResourceService.class);
+
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ServiceResource(RESOURCE_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
-
-  public static final String APP_ID = "APP_ID";
   private static final String SERVICE_ID = "SERVICE_ID";
   private static final Service aSERVICE =
       aService()

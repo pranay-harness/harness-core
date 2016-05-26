@@ -6,7 +6,6 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
-
 import javax.validation.constraints.NotNull;
 
 /**

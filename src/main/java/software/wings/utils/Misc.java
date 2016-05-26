@@ -8,9 +8,6 @@ import java.io.Closeable;
  * @author Rishi
  */
 public class Misc {
-  public interface ThrowingCallable { void run() throws Exception; }
-
-  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
   /**
    * sleep without throwing InterruptedExeception.
    *
@@ -76,4 +73,8 @@ public class Misc {
       return defaultValue;
     }
   }
+
+  public interface ThrowingCallable { void run() throws Exception; }
+
+  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
 }

@@ -3,8 +3,6 @@
  */
 package software.wings.common;
 
-import com.google.common.collect.Lists;
-
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -17,12 +15,10 @@ import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class HostsExpressionProcessor implements ExpressionProcessor {
-  private static final String HOSTS_EXPR_PROCESSOR = "hostsExpressionProcessor";
   static final String EXPRESSION_START_PATTERN = "hosts()";
-
+  private static final String HOSTS_EXPR_PROCESSOR = "hostsExpressionProcessor";
   private HostService hostService;
   private String[] hostNames;
   private Object appId;
@@ -53,6 +49,7 @@ public class HostsExpressionProcessor implements ExpressionProcessor {
     this.hostNames = hostNames;
     return this;
   }
+
   public HostsExpressionProcessor withNames(String... hostNames) {
     this.hostNames = hostNames;
     return this;
@@ -60,14 +57,11 @@ public class HostsExpressionProcessor implements ExpressionProcessor {
 
   public List<Host> list() {
     List<Host> hosts = null;
-    PageRequest<Host> pageRequest = PageRequest.Builder.aPageRequest()
-                                        .withLimit(PageRequest.UNLIMITED)
-                                        .withFilters(Lists.newArrayList(SearchFilter.Builder.aSearchFilter()
-                                                                            .withFieldName("appId")
-                                                                            .withFieldValue(appId)
-                                                                            .withOp(Operator.EQ)
-                                                                            .build()))
-                                        .build();
+    PageRequest<Host> pageRequest =
+        PageRequest.Builder.aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
+            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .build();
     if (hostNames == null || hostNames.length == 0) {
       hosts = hostService.list(pageRequest);
     } else {

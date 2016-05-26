@@ -1,9 +1,8 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * SearchFilter bean class.
@@ -12,8 +11,7 @@ import java.util.List;
  */
 public class SearchFilter {
   private String fieldName;
-  private Object fieldValue;
-  private List<Object> fieldValues;
+  private Object[] fieldValues;
   private Operator op;
 
   public String getFieldName() {
@@ -24,14 +22,6 @@ public class SearchFilter {
     this.fieldName = fieldName;
   }
 
-  public Object getFieldValue() {
-    return fieldValue;
-  }
-
-  public void setFieldValue(Object fieldValue) {
-    this.fieldValue = fieldValue;
-  }
-
   public Operator getOp() {
     return op;
   }
@@ -40,37 +30,49 @@ public class SearchFilter {
     this.op = op;
   }
 
-  public List<Object> getFieldValues() {
+  public Object[] getFieldValues() {
     return fieldValues;
   }
 
-  public void setFieldValues(List<Object> fieldValues) {
+  public void setFieldValues(Object... fieldValues) {
     this.fieldValues = fieldValues;
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    SearchFilter that = (SearchFilter) o;
-    return Objects.equal(fieldName, that.fieldName) && Objects.equal(fieldValue, that.fieldValue)
-        && Objects.equal(fieldValues, that.fieldValues) && op == that.op;
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((fieldName == null) ? 0 : fieldName.hashCode());
+    result = prime * result + Arrays.hashCode(fieldValues);
+    result = prime * result + ((op == null) ? 0 : op.hashCode());
+    return result;
   }
 
   @Override
-  public int hashCode() {
-    return Objects.hashCode(fieldName, fieldValue, fieldValues, op);
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    SearchFilter other = (SearchFilter) obj;
+    if (fieldName == null) {
+      if (other.fieldName != null)
+        return false;
+    } else if (!fieldName.equals(other.fieldName))
+      return false;
+    if (!Arrays.equals(fieldValues, other.fieldValues))
+      return false;
+    if (op != other.op)
+      return false;
+    return true;
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("fieldName", fieldName)
-        .add("fieldValue", fieldValue)
         .add("fieldValues", fieldValues)
         .add("op", op)
         .toString();
@@ -81,7 +83,7 @@ public class SearchFilter {
   public static final class Builder {
     private String fieldName;
     private Object fieldValue;
-    private List<Object> fieldValues;
+    private Object[] fieldValues;
     private Operator op;
 
     private Builder() {}
@@ -90,22 +92,9 @@ public class SearchFilter {
       return new Builder();
     }
 
-    public Builder withFieldName(String fieldName) {
+    public Builder withField(String fieldName, Operator op, Object... fieldValues) {
       this.fieldName = fieldName;
-      return this;
-    }
-
-    public Builder withFieldValue(Object fieldValue) {
-      this.fieldValue = fieldValue;
-      return this;
-    }
-
-    public Builder withFieldValues(List<Object> fieldValues) {
       this.fieldValues = fieldValues;
-      return this;
-    }
-
-    public Builder withOp(Operator op) {
       this.op = op;
       return this;
     }
@@ -113,7 +102,6 @@ public class SearchFilter {
     public SearchFilter build() {
       SearchFilter searchFilter = new SearchFilter();
       searchFilter.setFieldName(fieldName);
-      searchFilter.setFieldValue(fieldValue);
       searchFilter.setFieldValues(fieldValues);
       searchFilter.setOp(op);
       return searchFilter;

@@ -408,12 +408,14 @@ public class MongoQueueTest extends WingsBaseTest {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o)
+    public boolean equals(Object obj) {
+      if (this == obj) {
         return true;
-      if (o == null || getClass() != o.getClass())
+      }
+      if (obj == null || getClass() != obj.getClass()) {
         return false;
-      TestEntity that = (TestEntity) o;
+      }
+      TestEntity that = (TestEntity) obj;
       return data == that.data && Objects.equals(id, that.id);
     }
 
@@ -447,12 +449,14 @@ public class MongoQueueTest extends WingsBaseTest {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (this == o)
+    public boolean equals(Object obj) {
+      if (this == obj) {
         return true;
-      if (o == null || getClass() != o.getClass())
+      }
+      if (obj == null || getClass() != obj.getClass()) {
         return false;
-      TestQueuableWithEntity that = (TestQueuableWithEntity) o;
+      }
+      TestQueuableWithEntity that = (TestQueuableWithEntity) obj;
       return Objects.equals(entity, that.entity);
     }
 

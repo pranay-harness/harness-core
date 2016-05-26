@@ -88,6 +88,7 @@ public class StateMachineTest extends WingsBaseTest {
     public Notifier(String name, String uuid, int duration) {
       this(name, uuid, duration, false);
     }
+
     public Notifier(String name, String uuid, int duration, boolean shouldFail) {
       this.name = name;
       this.uuid = uuid;
@@ -163,6 +164,7 @@ public class StateMachineTest extends WingsBaseTest {
     public StateAsynch(String name, int duration) {
       this(name, duration, false);
     }
+
     public StateAsynch(String name, int duration, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
@@ -187,6 +189,7 @@ public class StateMachineTest extends WingsBaseTest {
       ThreadPool.execute(new Notifier(getName(), uuid, duration, shouldFail));
       return response;
     }
+
     @Override
     public ExecutionResponse handleAsynchResponse(
         ExecutionContextImpl context, Map<String, ? extends Serializable> responseMap) {

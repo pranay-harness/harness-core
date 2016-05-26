@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -38,12 +37,11 @@ import javax.inject.Singleton;
 
 @Singleton
 public class HostCsvFileHelper {
+  private final Object[] CSVHeader = {
+      "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
   @Inject private SettingsService attributeService;
   @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-
-  private final Object[] CSVHeader = {
-      "HOST_NAME", "HOST_CONNECTION_ATTRIBUTES", "BASTION_HOST_CONNECTION_ATTRIBUTES", "TAGS"};
 
   public List<Host> parseHosts(Infra infra, BoundedInputStream inputStream) {
     List<Host> hosts = new ArrayList<>();

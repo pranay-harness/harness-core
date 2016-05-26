@@ -2,35 +2,25 @@ package software.wings.dl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ErrorConstants;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.exception.WingsException;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class MongoHelper {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-
-  public static <T> PageResponse<T> queryPageRequest(
-      Datastore datastore, Class<T> cls, PageRequest<T> req, String fieldName, String fieldValue) {
-    if (req == null) {
-      req = new PageRequest<>();
-    }
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName(fieldName);
-    filter.setFieldValue(fieldValue);
-    filter.setOp(Operator.EQ);
-    req.getFilters().add(filter);
-
-    return queryPageRequest(datastore, cls, req);
-  }
 
   public static <T> PageResponse<T> queryPageRequest(Datastore datastore, Class<T> cls, PageRequest<T> req) {
     Query q = datastore.createQuery(cls);
@@ -81,37 +71,40 @@ public class MongoHelper {
   }
 
   private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
+    if (ArrayUtils.isEmpty(filter.getFieldValues())) {
+      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
+    }
     Operator op = filter.getOp();
     if (op == null) {
       op = Operator.EQ;
     }
     switch (op) {
       case LT:
-        return fieldEnd.lessThan(filter.getFieldValue());
+        return fieldEnd.lessThan(filter.getFieldValues()[0]);
 
       case GT:
-        return fieldEnd.greaterThan(filter.getFieldValue());
+        return fieldEnd.greaterThan(filter.getFieldValues()[0]);
 
       case EQ:
-        return fieldEnd.equal(filter.getFieldValue());
+        return fieldEnd.equal(filter.getFieldValues()[0]);
 
       case CONTAINS:
-        return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValue()));
+        return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
       case STARTS_WITH:
-        return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValue()));
+        return fieldEnd.startsWithIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 
       case IN:
-        return fieldEnd.hasAnyOf(filter.getFieldValues());
+        return fieldEnd.hasAnyOf(Arrays.asList(filter.getFieldValues()));
 
       case NOT_IN:
-        return fieldEnd.hasNoneOf(filter.getFieldValues());
+        return fieldEnd.hasNoneOf(Arrays.asList(filter.getFieldValues()));
     }
     return null;
   }
 
   public static <T> UpdateOperations<T> setUnset(UpdateOperations<T> ops, String field, Object value) {
-    if (value == null || (value instanceof String && isBlank(((String) value)))) {
+    if (value == null || (value instanceof String && isBlank((String) value))) {
       return ops.unset(field);
     } else {
       return ops.set(field, value);

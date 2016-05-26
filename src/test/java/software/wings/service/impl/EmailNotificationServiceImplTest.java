@@ -45,9 +45,6 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   @Mock private Queue<EmailData> queue;
-
-  @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
-
   @Rule
   public Verifier verify = new Verifier() {
     @Override
@@ -55,6 +52,7 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
       verifyNoMoreInteractions(queue, mailer, settingsService);
     }
   };
+  @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
 
   @Before
   public void setupMocks() {

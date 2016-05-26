@@ -1,10 +1,6 @@
 package software.wings.collect;
 
-import static com.google.inject.name.Names.named;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-
-import com.google.inject.Injector;
-import com.google.inject.Key;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
