@@ -1,5 +1,9 @@
 package software.wings.sm;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.ExpressionEvaluator;
@@ -9,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import javax.annotation.Nullable;
 
 /**
  * Describes execution context for a state machine execution.
@@ -16,18 +21,19 @@ import java.util.regex.Matcher;
  * @author Rishi
  */
 public class ExecutionContextImpl implements ExecutionContext {
-  private ExpressionEvaluator evaluator;
+  @Inject private ExpressionEvaluator evaluator;
+
+  @Inject private ExpressionProcessorFactory expressionProcessorFactory;
+
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
-  private ExpressionProcessorFactory expressionProcessorFactory;
 
-  public ExecutionContextImpl(StateExecutionInstance stateExecutionInstance, StateMachine stateMachine,
-      ExpressionEvaluator evaluator, ExpressionProcessorFactory expressionProcessorFactory) {
+  @AssistedInject
+  public ExecutionContextImpl(
+      @Assisted StateExecutionInstance stateExecutionInstance, @Assisted @Nullable StateMachine stateMachine) {
     super();
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
-    this.evaluator = evaluator;
-    this.expressionProcessorFactory = expressionProcessorFactory;
   }
 
   public StateMachine getStateMachine() {

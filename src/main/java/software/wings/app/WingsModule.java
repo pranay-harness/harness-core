@@ -70,6 +70,9 @@ import software.wings.service.intfc.SshCommandUnitExecutorService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextFactory;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessorFactory;
 
 import java.util.Map;
@@ -138,5 +141,8 @@ public class WingsModule extends AbstractModule {
         .to(JenkinsArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
+    install(new FactoryModuleBuilder()
+                .implement(ExecutionContext.class, ExecutionContextImpl.class)
+                .build(ExecutionContextFactory.class));
   }
 }
