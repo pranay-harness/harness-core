@@ -27,13 +27,14 @@ import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/29/16.
@@ -51,7 +52,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
   @Mock private HostService hostService; // FIXME: remove and break the test
-  @InjectMocks ServiceTemplateServiceImpl templateService;
+  @InjectMocks @Inject private ServiceTemplateService templateService;
 
   @Test
   public void shouldListSavedServiceTemplates() {

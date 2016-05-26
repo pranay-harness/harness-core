@@ -38,6 +38,7 @@ import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
@@ -63,6 +64,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -131,6 +133,7 @@ public class WingsModule extends AbstractModule {
     bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
     bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+    bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
