@@ -619,6 +619,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateOrchestration() {
     Orchestration orchestration = createOrchestration();
+    String uuid = orchestration.getUuid();
+    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+    assertThat(orchestration.getUuid()).isEqualTo(uuid);
+
     orchestration.setName("orchestration2");
     orchestration.setDescription(null);
     Graph graph = orchestration.getGraph();
@@ -658,6 +665,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
     StateMachine sm = workflowService.readLatest(updatedOrchestration.getUuid(), null);
     assertThat(sm.getGraph()).isNotNull();
     assertThat(sm.getGraph()).isEqualTo(graph);
+  }
+
+  @Test
+  public void shouldDeleteOrchestration() {
+    Orchestration orchestration = createOrchestration();
+    String uuid = orchestration.getUuid();
+    workflowService.deleteWorkflow(Orchestration.class, appId, uuid);
+    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+    assertThat(orchestration).isNull();
   }
 
   private Orchestration createOrchestration() {

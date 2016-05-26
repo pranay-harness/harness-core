@@ -4,6 +4,7 @@
 package software.wings.resources;
 
 import software.wings.beans.Orchestration;
+import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -17,6 +18,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -70,6 +72,15 @@ public class OrchestrationResource {
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));
+  }
+
+  @DELETE
+  @Path("{pipelineId}")
+  @Produces("application/json")
+  public RestResponse delete(
+      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    workflowService.deleteWorkflow(Pipeline.class, appId, pipelineId);
+    return new RestResponse();
   }
 
   @GET

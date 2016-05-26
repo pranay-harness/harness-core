@@ -22,6 +22,8 @@ public interface WorkflowService {
 
   <T extends Workflow> T updateWorkflow(@Valid T workflow);
 
+  <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId);
+
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> req);
 
   Pipeline readPipeline(@NotNull String appId, @NotNull String pipelineId);

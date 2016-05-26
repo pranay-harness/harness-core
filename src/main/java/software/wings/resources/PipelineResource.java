@@ -15,6 +15,7 @@ import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -64,6 +65,15 @@ public class PipelineResource {
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<>(workflowService.updatePipeline(pipeline));
+  }
+
+  @DELETE
+  @Path("{pipelineId}")
+  @Produces("application/json")
+  public RestResponse delete(
+      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
+    workflowService.deleteWorkflow(Pipeline.class, appId, pipelineId);
+    return new RestResponse();
   }
 
   @GET

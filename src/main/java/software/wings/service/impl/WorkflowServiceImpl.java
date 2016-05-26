@@ -225,12 +225,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public Orchestration readOrchestration(String appId, String envId, String orchestrationId) {
-    return wingsPersistence.createQuery(Orchestration.class)
-        .field("appId")
-        .equal(appId)
-        .field("uuid")
-        .equal(orchestrationId)
-        .get();
+    Orchestration orchestration = wingsPersistence.createQuery(Orchestration.class)
+                                      .field("appId")
+                                      .equal(appId)
+                                      .field("uuid")
+                                      .equal(orchestrationId)
+                                      .field("active")
+                                      .equal(true)
+                                      .get();
+
+    if (orchestration == null) {
+      return orchestration;
+    }
+    StateMachine stateMachine = readLatest(orchestrationId, null);
+
+    orchestration.setGraph(stateMachine.getGraph());
+    return orchestration;
   }
 
   @Override
@@ -438,5 +448,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
+    UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
+    ops.set("active", false);
+    wingsPersistence.update(
+        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
   }
 }
