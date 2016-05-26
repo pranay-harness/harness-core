@@ -47,7 +47,7 @@ import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
 /**
- * The main application - entry point for the entire Wings Application.n
+ * The main application - entry point for the entire Wings Application.
  *
  * @author Rishi
  */
@@ -77,7 +77,10 @@ public class WingsApplication extends Application<MainConfiguration> {
   @Override
   public void run(MainConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");
-    Injector injector = Guice.createInjector(new ValidationModule(), new WingsModule(configuration));
+    DatabaseModule databaseModule = new DatabaseModule(configuration);
+
+    Injector injector = Guice.createInjector(new ValidationModule(), databaseModule, new WingsModule(configuration),
+        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
 
     WingsBootstrap.initialize(injector);
 

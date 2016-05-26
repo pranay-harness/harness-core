@@ -200,14 +200,14 @@ public class PageRequest<T> {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    PageRequest<?> that = (PageRequest<?>) o;
+    PageRequest<?> that = (PageRequest<?>) obj;
     return start == that.start && pageSize == that.pageSize && isOr == that.isOr && Objects.equal(offset, that.offset)
         && Objects.equal(limit, that.limit) && Objects.equal(filters, that.filters)
         && Objects.equal(orders, that.orders) && Objects.equal(fieldsIncluded, that.fieldsIncluded)

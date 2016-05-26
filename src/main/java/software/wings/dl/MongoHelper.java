@@ -1,8 +1,11 @@
 package software.wings.dl;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter;
@@ -105,5 +108,13 @@ public class MongoHelper {
         return fieldEnd.hasNoneOf(filter.getFieldValues());
     }
     return null;
+  }
+
+  public static <T> UpdateOperations<T> setUnset(UpdateOperations<T> ops, String field, Object value) {
+    if (value == null || (value instanceof String && isBlank(((String) value)))) {
+      return ops.unset(field);
+    } else {
+      return ops.set(field, value);
+    }
   }
 }

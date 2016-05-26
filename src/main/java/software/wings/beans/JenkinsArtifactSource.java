@@ -15,8 +15,6 @@ import java.util.Set;
 import javax.validation.Valid;
 
 public class JenkinsArtifactSource extends ArtifactSource {
-  @Inject private FileService fileService;
-
   @NotEmpty private String jenkinsUrl;
 
   @NotEmpty private String username;

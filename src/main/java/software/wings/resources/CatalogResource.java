@@ -9,6 +9,7 @@ import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
 import software.wings.beans.CatalogNames;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
@@ -80,12 +81,15 @@ public class CatalogResource {
             break;
           }
           case CONNECTION_ATTRIBUTES: {
-            catalogs.put(CONNECTION_ATTRIBUTES, settingsService.getConnectionAttributes(uriInfo.getQueryParameters()));
+            catalogs.put(CONNECTION_ATTRIBUTES,
+                settingsService.getSettingAttributesByType(
+                    uriInfo.getQueryParameters().getFirst("appId"), SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES));
             break;
           }
           case BASTION_HOST_ATTRIBUTES: {
-            catalogs.put(
-                BASTION_HOST_ATTRIBUTES, settingsService.getBastionHostAttributes(uriInfo.getQueryParameters()));
+            catalogs.put(BASTION_HOST_ATTRIBUTES,
+                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst("appId"),
+                    SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES));
             break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }

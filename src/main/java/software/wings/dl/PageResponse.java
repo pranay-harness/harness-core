@@ -220,14 +220,14 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    PageResponse<?> that = (PageResponse<?>) o;
+    PageResponse<?> that = (PageResponse<?>) obj;
     return total == that.total && Objects.equal(response, that.response);
   }
 

@@ -4,6 +4,9 @@
 
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.MongoHelper.setUnset;
+
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +50,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -65,14 +67,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
   @Override
-  public StateMachine create(@Valid StateMachine stateMachine) {
+  public StateMachine create(StateMachine stateMachine) {
     stateMachine.validate();
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
-  }
-
-  @Override
-  public StateMachine read(String smId) {
-    return wingsPersistence.get(StateMachine.class, smId);
   }
 
   @Override
@@ -121,8 +118,11 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> req) {
-    return wingsPersistence.query(Pipeline.class, req);
+  public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
+    SearchFilter filter =
+        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
+    pageRequest.getFilters().add(filter);
+    return wingsPersistence.query(Pipeline.class, pageRequest);
   }
 
   @Override
@@ -138,7 +138,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public <T extends Workflow> T updateWorkflow(Class<T> cls, T workflow) {
+  public <T extends Workflow> T updateWorkflow(T workflow) {
     Graph graph = workflow.getGraph();
     if (graph != null) {
       StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
@@ -146,6 +146,25 @@ public class WorkflowServiceImpl implements WorkflowService {
       workflow.setGraph(stateMachine.getGraph());
     }
     return workflow;
+  }
+
+  @Override
+  public Pipeline updatePipeline(Pipeline pipeline) {
+    UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
+    setUnset(ops, "description", pipeline.getDescription());
+    setUnset(ops, "cronSchedule", pipeline.getCronSchedule());
+    setUnset(ops, "name", pipeline.getName());
+    setUnset(ops, "services", pipeline.getServices());
+
+    wingsPersistence.update(wingsPersistence.createQuery(Pipeline.class)
+                                .field("appId")
+                                .equal(pipeline.getAppId())
+                                .field(ID_KEY)
+                                .equal(pipeline.getUuid()),
+        ops);
+
+    pipeline = updateWorkflow(pipeline);
+    return wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
   }
 
   @Override
@@ -188,17 +207,46 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    SearchFilter filter =
+        SearchFilter.Builder.aSearchFilter().withFieldName("active").withFieldValue(true).withOp(Operator.EQ).build();
+    pageRequest.getFilters().add(filter);
     return wingsPersistence.query(Orchestration.class, pageRequest);
   }
 
   @Override
+  public Orchestration updateOrchestration(Orchestration orchestration) {
+    UpdateOperations<Orchestration> ops = wingsPersistence.createUpdateOperations(Orchestration.class);
+    setUnset(ops, "description", orchestration.getDescription());
+    setUnset(ops, "name", orchestration.getName());
+    wingsPersistence.update(wingsPersistence.createQuery(Orchestration.class)
+                                .field("appId")
+                                .equal(orchestration.getAppId())
+                                .field(ID_KEY)
+                                .equal(orchestration.getUuid()),
+        ops);
+
+    orchestration = updateWorkflow(orchestration);
+    return wingsPersistence.get(Orchestration.class, orchestration.getAppId(), orchestration.getUuid());
+  }
+
+  @Override
   public Orchestration readOrchestration(String appId, String envId, String orchestrationId) {
-    return wingsPersistence.createQuery(Orchestration.class)
-        .field("appId")
-        .equal(appId)
-        .field("uuid")
-        .equal(orchestrationId)
-        .get();
+    Orchestration orchestration = wingsPersistence.createQuery(Orchestration.class)
+                                      .field("appId")
+                                      .equal(appId)
+                                      .field("uuid")
+                                      .equal(orchestrationId)
+                                      .field("active")
+                                      .equal(true)
+                                      .get();
+
+    if (orchestration == null) {
+      return orchestration;
+    }
+    StateMachine stateMachine = readLatest(orchestrationId, null);
+
+    orchestration.setGraph(stateMachine.getGraph());
+    return orchestration;
   }
 
   @Override
@@ -406,5 +454,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
     return pageResponse.getResponse();
+  }
+
+  @Override
+  public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
+    UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
+    ops.set("active", false);
+    wingsPersistence.update(
+        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
   }
 }

@@ -1,8 +1,8 @@
-package software.wings.helpers.ext;
+package software.wings.helpers.ext.jenkins;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static software.wings.helpers.ext.BuildDetails.Builder.aBuildDetails;
+import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;

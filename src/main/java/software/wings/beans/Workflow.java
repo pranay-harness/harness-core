@@ -5,12 +5,14 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Transient;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * @author Rishi
  *
  */
 public class Workflow extends Base {
-  private String name;
+  @NotNull private String name;
   private String description;
 
   @Transient private Graph graph;

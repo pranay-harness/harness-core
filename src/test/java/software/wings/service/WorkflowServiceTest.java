@@ -2,10 +2,13 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentBuilder;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -46,7 +49,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  private Environment env;
+
   private static String appId = UUIDGenerator.getUuid();
+
+  public Environment getEnvironment() {
+    if (env == null) {
+      env = wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+    }
+    return env;
+  }
 
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
@@ -441,6 +453,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdatePipelineWithGraph() {
     Pipeline pipeline = createPipeline();
+    pipeline.setDescription("newDescription");
+    pipeline.setName("pipeline2");
+    List<String> newServices = Lists.newArrayList("123", "345");
+    pipeline.setServices(newServices);
     Graph graph = pipeline.getGraph();
 
     Node node = new Node();
@@ -459,10 +475,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     link.setType("success");
     graph.getLinks().add(link);
 
-    Pipeline updatedPipeline = workflowService.updateWorkflow(Pipeline.class, pipeline);
+    Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
     assertThat(updatedPipeline).isNotNull();
     assertThat(updatedPipeline.getUuid()).isNotNull();
     assertThat(updatedPipeline.getUuid()).isEqualTo(pipeline.getUuid());
+    assertThat(updatedPipeline.getName()).isEqualTo("pipeline2");
+    assertThat(updatedPipeline.getDescription()).isEqualTo("newDescription");
+    assertThat(updatedPipeline.getServices()).isEqualTo(newServices);
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
@@ -482,9 +501,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private Pipeline createPipeline() {
     Pipeline pipeline = new Pipeline();
+    pipeline.setAppId(appId);
     pipeline.setName("pipeline1");
     pipeline.setDescription("Sample Pipeline");
 
+    pipeline.setServices(Lists.newArrayList("service1", "service2"));
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
 
@@ -598,6 +619,15 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateOrchestration() {
     Orchestration orchestration = createOrchestration();
+    String uuid = orchestration.getUuid();
+    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+    assertThat(orchestration.getUuid()).isEqualTo(uuid);
+
+    orchestration.setName("orchestration2");
+    orchestration.setDescription(null);
     Graph graph = orchestration.getGraph();
 
     Node node = new Node();
@@ -615,11 +645,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
     link.setType("success");
     graph.getLinks().add(link);
 
-    Orchestration updatedOrchestration = workflowService.updateWorkflow(Orchestration.class, orchestration);
+    Orchestration updatedOrchestration = workflowService.updateOrchestration(orchestration);
     assertThat(updatedOrchestration).isNotNull();
     assertThat(updatedOrchestration.getUuid()).isNotNull();
     assertThat(updatedOrchestration.getUuid()).isEqualTo(orchestration.getUuid());
-
+    assertThat(updatedOrchestration.getName()).isEqualTo("orchestration2");
+    assertThat(updatedOrchestration.getDescription()).isNull();
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("originId");
@@ -636,11 +667,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
 
+  @Test
+  public void shouldDeleteOrchestration() {
+    Orchestration orchestration = createOrchestration();
+    String uuid = orchestration.getUuid();
+    workflowService.deleteWorkflow(Orchestration.class, appId, uuid);
+    orchestration = workflowService.readOrchestration(appId, orchestration.getEnvironment().getUuid(), uuid);
+    assertThat(orchestration).isNull();
+  }
+
   private Orchestration createOrchestration() {
     Orchestration orchestration = new Orchestration();
     orchestration.setAppId(appId);
     orchestration.setName("workflow1");
     orchestration.setDescription("Sample Workflow");
+    orchestration.setEnvironment(getEnvironment());
 
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
@@ -732,7 +773,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerOrchestration() {
     Orchestration orchestration = createOrchestration();
-    WorkflowExecution execution = workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), null);
+    WorkflowExecution execution =
+        workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), Lists.newArrayList("123"));
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
     logger.debug("Orchestration executionId: {}", executionId);
