@@ -71,6 +71,7 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
+    orchestration.setUuid(orchestrationId);
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));
   }
 
