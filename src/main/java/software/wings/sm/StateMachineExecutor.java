@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.mongodb.morphia.query.UpdateOperations;
@@ -31,6 +32,7 @@ public class StateMachineExecutor {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private ExecutionContextFactory executionContextFactory;
+  @Inject private Injector injector;
 
   public StateExecutionInstance execute(String appId, String smId, String executionUuid) {
     return execute(appId, smId, executionUuid, null);
@@ -98,6 +100,7 @@ public class StateMachineExecutor {
     State currentState = null;
     try {
       currentState = stateMachine.getState(stateExecutionInstance.getStateName());
+      // injector.injectMembers(currentState);
       ExecutionResponse executionResponse = currentState.execute(context);
       handleExecuteResponse(context, executionResponse);
     } catch (Exception exeception) {

@@ -3,12 +3,18 @@
  */
 package software.wings.sm;
 
+import com.google.inject.Inject;
+
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.app.WingsBootstrap;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +25,14 @@ import java.util.Map;
  * @author Rishi
  */
 public class WorkflowStandardParams implements ContextElement {
+  @Inject private AppService appService;
+
+  @Inject private ArtifactService artifactService;
+
+  @Inject private EnvironmentService environmentService;
+
+  @Inject private WingsPersistence wingsPersistence;
+
   private String appId;
   private String envId;
   private List<String> artifactIds;
@@ -54,43 +68,6 @@ public class WorkflowStandardParams implements ContextElement {
     this.artifactIds = artifactIds;
   }
 
-  public Application getApp() {
-    if (app == null && appId != null) {
-      app = WingsBootstrap.lookup(WingsPersistence.class).get(Application.class, appId);
-    }
-    return app;
-  }
-
-  public void setApp(Application app) {
-    this.app = app;
-  }
-
-  public Environment getEnv() {
-    if (env == null && envId != null) {
-      env = WingsBootstrap.lookup(WingsPersistence.class).get(Environment.class, appId, envId);
-    }
-    return env;
-  }
-
-  public void setEnv(Environment env) {
-    this.env = env;
-  }
-
-  public List<Artifact> getArtifacts() {
-    if (artifacts == null && artifactIds != null && artifactIds.size() > 0) {
-      List<Artifact> list = new ArrayList<>();
-      for (String artifactId : artifactIds) {
-        list.add(WingsBootstrap.lookup(WingsPersistence.class).get(Artifact.class, appId, artifactId));
-      }
-      artifacts = list;
-    }
-    return artifacts;
-  }
-
-  public void setArtifacts(List<Artifact> artifacts) {
-    this.artifacts = artifacts;
-  }
-
   public Long getStartTs() {
     return startTs;
   }
@@ -124,5 +101,30 @@ public class WorkflowStandardParams implements ContextElement {
   @Override
   public String getName() {
     return null;
+  }
+
+  private Application getApp() {
+    if (app == null && appId != null) {
+      app = appService.findByUuid(appId);
+    }
+    return app;
+  }
+
+  private Environment getEnv() {
+    if (env == null && envId != null) {
+      env = environmentService.get(appId, envId);
+    }
+    return env;
+  }
+
+  private List<Artifact> getArtifacts() {
+    if (artifacts == null && artifactIds != null && artifactIds.size() > 0) {
+      List<Artifact> list = new ArrayList<>();
+      for (String artifactId : artifactIds) {
+        list.add(artifactService.get(appId, artifactId));
+      }
+      artifacts = list;
+    }
+    return artifacts;
   }
 }

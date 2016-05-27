@@ -4,6 +4,8 @@ import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import com.google.inject.Injector;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -31,6 +33,8 @@ import javax.inject.Singleton;
 @Singleton
 public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
   private static final Logger logger = LoggerFactory.getLogger(NotifyEventListener.class);
+
+  @Inject private Injector injector;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -120,6 +124,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
       ExecutionStatus status = ExecutionStatus.SUCCESS;
       NotifyCallback callback = waitInstance.getCallback();
+      injector.injectMembers(callback);
       if (callback != null) {
         try {
           callback.notify(responseMap);
