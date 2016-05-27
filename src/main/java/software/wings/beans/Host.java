@@ -12,20 +12,16 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
-public class Host extends Base implements ContextElement {
+public class Host extends Base {
   private String infraId;
   private String hostName;
 
@@ -95,23 +91,6 @@ public class Host extends Base implements ContextElement {
 
   public void setHostNames(List<String> hostNames) {
     this.hostNames = hostNames;
-  }
-
-  @Override
-  public ContextElementType getElementType() {
-    return ContextElementType.HOST;
-  }
-
-  @Override
-  public Map<String, Object> paramMap() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(ContextElementType.HOST.getDisplayName(), this);
-    return map;
-  }
-
-  @Override
-  public String getName() {
-    return hostName;
   }
 
   @Override

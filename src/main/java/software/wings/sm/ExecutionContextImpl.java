@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import static org.apache.commons.collections.CollectionUtils.isEmpty;
-
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.assistedinject.Assisted;
@@ -16,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+
 import javax.annotation.Nullable;
 
 /**
@@ -75,7 +74,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    normalizeExpression(expression, context, stateExecutionInstance.getStateName());
+    expression = normalizeExpression(expression, context, stateExecutionInstance.getStateName());
     return evaluator.evaluate(expression, context);
   }
 
