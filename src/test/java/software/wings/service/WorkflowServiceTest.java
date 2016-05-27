@@ -454,14 +454,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Graph graph = createInitialGraph();
     pipeline.setGraph(graph);
 
-    updatePipeline(pipeline);
+    updatePipeline(pipeline, 1);
   }
   @Test
   public void shouldUpdatePipelineWithGraph() {
     Pipeline pipeline = createPipeline();
-    updatePipeline(pipeline);
+    updatePipeline(pipeline, 2);
   }
-  public void updatePipeline(Pipeline pipeline) {
+  public void updatePipeline(Pipeline pipeline, int graphCount) {
     pipeline.setDescription("newDescription");
     pipeline.setName("pipeline2");
     List<String> newServices = Lists.newArrayList("123", "345");
@@ -501,7 +501,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(1);
+    assertThat(res.size()).isEqualTo(graphCount);
 
     StateMachine sm = workflowService.readLatest(updatedPipeline.getUuid(), null);
     assertThat(sm.getGraph()).isNotNull();
