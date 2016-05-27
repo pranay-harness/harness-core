@@ -7,8 +7,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
-import software.wings.beans.Host;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.ExecutionContextImpl;
@@ -32,7 +32,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionContextImpl context = executionContextFactory.create(stateExecutionInstance, null);
 
-    Host host = new Host();
+    HostElement host = new HostElement();
     host.setHostName("app123.application.com");
     context.pushContextElement(host);
 
