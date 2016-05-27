@@ -100,7 +100,7 @@ public class StateMachineExecutor {
     State currentState = null;
     try {
       currentState = stateMachine.getState(stateExecutionInstance.getStateName());
-      // injector.injectMembers(currentState);
+      injector.injectMembers(currentState);
       ExecutionResponse executionResponse = currentState.execute(context);
       handleExecuteResponse(context, executionResponse);
     } catch (Exception exeception) {

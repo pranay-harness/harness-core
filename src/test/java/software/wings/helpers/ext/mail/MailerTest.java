@@ -39,17 +39,13 @@ public class MailerTest extends WingsBaseTest {
   @Test
   public void shouldSendNormalEmail() throws EmailException, TemplateException, IOException, MessagingException {
     mailer.send(aSmtpConfig()
+                    .withFromAddress(EMAIL)
                     .withHost("localhost")
                     .withPort(greenMail.getSmtp().getPort())
                     .withUsername(EMAIL)
                     .withPassword(PASSWORD)
                     .build(),
-        anEmailData()
-            .withFrom(EMAIL)
-            .withBody("test")
-            .withSubject("test")
-            .withTo(Lists.newArrayList("recieve@email.com"))
-            .build());
+        anEmailData().withBody("test").withSubject("test").withTo(Lists.newArrayList("recieve@email.com")).build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
@@ -62,16 +58,17 @@ public class MailerTest extends WingsBaseTest {
   @Test
   public void shouldSendTemplatedEmail() throws EmailException, TemplateException, IOException, MessagingException {
     mailer.send(aSmtpConfig()
+                    .withFromAddress(EMAIL)
                     .withHost("localhost")
                     .withPort(greenMail.getSmtp().getPort())
                     .withUsername(EMAIL)
                     .withPassword(PASSWORD)
                     .build(),
         anEmailData()
-            .withFrom(EMAIL)
             .withTemplateName("testmail")
             .withTemplateModel(ImmutableMap.of("name", "test"))
             .withTo(Lists.newArrayList("recieve@email.com"))
+            .withCc(Lists.newArrayList("recieve2@email.com"))
             .build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("hello test");
@@ -79,6 +76,6 @@ public class MailerTest extends WingsBaseTest {
     assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
-        .containsExactly("recieve@email.com");
+        .containsExactly("recieve@email.com", "recieve2@email.com");
   }
 }

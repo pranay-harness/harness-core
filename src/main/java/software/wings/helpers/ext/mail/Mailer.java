@@ -35,9 +35,14 @@ public class Mailer {
       email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
     }
 
-    email.setFrom(emailData.getFrom());
+    email.setFrom(smtpConfig.getFromAddress());
+
     for (String to : emailData.getTo()) {
       email.addTo(to);
+    }
+
+    for (String cc : emailData.getCc()) {
+      email.addCc(cc);
     }
 
     String subject = emailData.getSubject();
