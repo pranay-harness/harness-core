@@ -3,9 +3,11 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.ErrorConstants;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
@@ -74,6 +76,7 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   static class Notifier implements Runnable {
+    @Inject private WaitNotifyEngine waitNotifyEngine;
     private boolean shouldFail;
     private String name;
     private int duration;
@@ -112,9 +115,9 @@ public class StateMachineTest extends WingsBaseTest {
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {
-        WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "FAILURE");
+        waitNotifyEngine.notify(uuid, "FAILURE");
       } else {
-        WingsBootstrap.lookup(WaitNotifyEngine.class).notify(uuid, "SUCCESS");
+        waitNotifyEngine.notify(uuid, "SUCCESS");
       }
     }
   }
@@ -161,6 +164,8 @@ public class StateMachineTest extends WingsBaseTest {
     private boolean shouldFail;
     private int duration;
 
+    @Inject private Injector injector;
+
     public StateAsynch(String name, int duration) {
       this(name, duration, false);
     }
@@ -186,7 +191,9 @@ public class StateMachineTest extends WingsBaseTest {
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
       response.setCorrelationIds(correlationIds);
-      ThreadPool.execute(new Notifier(getName(), uuid, duration, shouldFail));
+      Notifier notifier = new Notifier(getName(), uuid, duration, shouldFail);
+      injector.injectMembers(notifier);
+      ThreadPool.execute(notifier);
       return response;
     }
 

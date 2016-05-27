@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import com.google.inject.Inject;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.waitnotify.NotifyCallback;
 
 import java.io.Serializable;

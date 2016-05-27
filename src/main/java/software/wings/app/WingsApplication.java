@@ -82,8 +82,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     Injector injector = Guice.createInjector(new ValidationModule(), databaseModule, new WingsModule(configuration),
         new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
 
-    WingsBootstrap.initialize(injector);
-
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);

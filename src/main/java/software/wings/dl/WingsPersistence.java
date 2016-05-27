@@ -61,7 +61,7 @@ public interface WingsPersistence {
 
   public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 
-  public GridFSBucket createGridFSBucket(String bucketName);
+  public GridFSBucket getOrCreateGridFSBucket(String bucketName);
 
   public Datastore getDatastore();
 

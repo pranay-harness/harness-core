@@ -32,12 +32,13 @@ import java.io.InputStream;
 public class GridFsDbFileExt {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private FileBucketHelper fileBucketHelper;
   private String fileCollectionName = LOGS.getName() + ".files";
   private String chunkCollectionName = LOGS.getName() + ".chunks";
   private int chunkSize = (int) LOGS.getChunkSize();
 
   public void appendToFile(String fileName, String content) {
-    GridFSFile file = LOGS.getGridFSBucket().find(eq("filename", fileName)).first();
+    GridFSFile file = fileBucketHelper.getOrCreateFileBucket(LOGS).find(eq("filename", fileName)).first();
     if (null == file) { // Write first chunk
       logger.info("No file found with name {}. Create new file and write initial chunks", fileName);
       put(fileName, content);
@@ -104,18 +105,18 @@ public class GridFsDbFileExt {
   public void put(String fileName, String content) {
     InputStream streamToUploadFrom;
     streamToUploadFrom = new ByteArrayInputStream(content.getBytes(UTF_8));
-    LOGS.getGridFSBucket().uploadFromStream(
+    fileBucketHelper.getOrCreateFileBucket(LOGS).uploadFromStream(
         fileName, streamToUploadFrom, new GridFSUploadOptions().chunkSizeBytes(chunkSize));
     logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
   public GridFSFile get(String fileName) {
-    return LOGS.getGridFSBucket().find(eq("filename", fileName)).first();
+    return fileBucketHelper.getOrCreateFileBucket(LOGS).find(eq("filename", fileName)).first();
   }
 
   public void downloadToStream(String fileName, FileOutputStream fileOutputStream) {
     try {
-      LOGS.getGridFSBucket().downloadToStreamByName(fileName, fileOutputStream);
+      fileBucketHelper.getOrCreateFileBucket(LOGS).downloadToStreamByName(fileName, fileOutputStream);
     } catch (MongoGridFSException ex) {
       if (!ex.getMessage().startsWith("Chunk size data length is not the expected size")) { // TODO: Fixit
         logger.error(ex.getMessage());

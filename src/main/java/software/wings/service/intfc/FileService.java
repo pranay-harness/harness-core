@@ -1,13 +1,10 @@
 package software.wings.service.intfc;
 
 import com.mongodb.DBObject;
-import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
-import software.wings.dl.WingsPersistence;
 
 import java.io.File;
 import java.io.InputStream;
@@ -57,10 +54,6 @@ public interface FileService {
 
     public int getChunkSize() {
       return chunkSize;
-    }
-
-    public GridFSBucket getGridFSBucket() {
-      return WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(bucketName);
     }
   }
 }
