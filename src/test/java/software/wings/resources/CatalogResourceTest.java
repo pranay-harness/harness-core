@@ -6,6 +6,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 
 import com.google.common.collect.Lists;
 
@@ -15,6 +16,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogNames;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
@@ -50,7 +52,7 @@ public class CatalogResourceTest extends WingsBaseTest {
 
   @After
   public void tearDown() {
-    reset(catalogService, workflowService);
+    reset(catalogService, workflowService, jenkinsBuildService, settingsService);
   }
 
   @Test
@@ -76,7 +78,9 @@ public class CatalogResourceTest extends WingsBaseTest {
 
   @Test
   public void shouldListCatalogsForJenkinsBuild() throws IOException {
-    when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class))).thenReturn(Lists.newArrayList());
+    when(settingsService.get(anyString())).thenReturn(aSettingAttribute().withValue(new JenkinsConfig()).build());
+    when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class), any(JenkinsConfig.class)))
+        .thenReturn(Lists.newArrayList());
 
     RestResponse<Map<String, Object>> actual = resources.client()
                                                    .target("/catalogs?catalogType=JENKINS_BUILD")
@@ -89,6 +93,19 @@ public class CatalogResourceTest extends WingsBaseTest {
         .hasSize(1)
         .extracting(o -> ((Map<String, Object>) o).get(CatalogNames.JENKINS_BUILD))
         .isNotNull();
+  }
+
+  @Test
+  public void shouldListCatalogsForJenkinsConfig() throws IOException {
+    when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
+        .thenReturn(Lists.newArrayList());
+    RestResponse<Map<String, Object>> actual = resources.client()
+                                                   .target("/catalogs?catalogType=JENKINS_CONFIG")
+                                                   .request()
+                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+    assertThat(actual).isNotNull();
+    assertThat(actual.getResource().size()).isEqualTo(1);
+    assertThat(actual.getResource().get("JENKINS_CONFIG")).isNotNull();
   }
 
   @Test

@@ -10,8 +10,10 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import com.google.common.collect.ImmutableMap;
@@ -41,6 +43,7 @@ import software.wings.beans.Tag;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
+import software.wings.utils.JsonUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -237,6 +240,8 @@ public class DataGenUtil extends WingsBaseTest {
 
   @Test
   public void populateData() throws IOException {
+    createGlobalSettings();
+
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
     Map<String, List<Service>> services = new HashMap<>();
@@ -247,6 +252,40 @@ public class DataGenUtil extends WingsBaseTest {
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
     }
+  }
+
+  private void createGlobalSettings() {
+    WebTarget target = client.target("http://localhost:9090/wings/settings/?appId=" + SettingAttribute.GLOBAL_APP_ID);
+    System.out.println(JsonUtils.asJson(aSettingAttribute()
+                                            .withName("Wings Jenkins")
+                                            .withValue(aJenkinsConfig()
+                                                           .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
+                                                           .withUsername("admin")
+                                                           .withPassword("W!ngs")
+                                                           .build())
+                                            .build()));
+    target.request().post(Entity.entity(aSettingAttribute()
+                                            .withName("Wings Jenkins")
+                                            .withValue(aJenkinsConfig()
+                                                           .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
+                                                           .withUsername("admin")
+                                                           .withPassword("W!ngs")
+                                                           .build())
+                                            .build(),
+                              APPLICATION_JSON),
+        new GenericType<RestResponse<SettingAttribute>>() {});
+    target.request().post(Entity.entity(aSettingAttribute()
+                                            .withName("SMTP")
+                                            .withValue(aSmtpConfig()
+                                                           .withFromAddress("wings_test@wings.software")
+                                                           .withUsername("wings_test")
+                                                           .withPassword("@wes0me@pp")
+                                                           .withPort(465)
+                                                           .withUseSSL(true)
+                                                           .build())
+                                            .build(),
+                              APPLICATION_JSON),
+        new GenericType<RestResponse<SettingAttribute>>() {});
   }
 
   private List<Application> createApplications() {

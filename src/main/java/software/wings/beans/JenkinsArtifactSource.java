@@ -13,11 +13,7 @@ import java.util.Set;
 import javax.validation.Valid;
 
 public class JenkinsArtifactSource extends ArtifactSource {
-  @NotEmpty private String jenkinsUrl;
-
-  @NotEmpty private String username;
-
-  @NotEmpty private String password;
+  @NotEmpty private String jenkinsSettingId;
 
   @NotEmpty private String jobname;
 
@@ -34,28 +30,12 @@ public class JenkinsArtifactSource extends ArtifactSource {
         .collect(toSet());
   }
 
-  public String getJenkinsUrl() {
-    return jenkinsUrl;
+  public String getJenkinsSettingId() {
+    return jenkinsSettingId;
   }
 
-  public void setJenkinsUrl(String jenkinsUrl) {
-    this.jenkinsUrl = jenkinsUrl;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
+  public void setJenkinsSettingId(String jenkinsSettingId) {
+    this.jenkinsSettingId = jenkinsSettingId;
   }
 
   public String getJobname() {
@@ -75,55 +55,38 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!super.equals(obj)) {
+    if (!super.equals(o))
       return false;
-    }
-    JenkinsArtifactSource that = (JenkinsArtifactSource) obj;
-    return Objects.equal(jenkinsUrl, that.jenkinsUrl) && Objects.equal(username, that.username)
-        && Objects.equal(password, that.password) && Objects.equal(jobname, that.jobname)
+    JenkinsArtifactSource that = (JenkinsArtifactSource) o;
+    return Objects.equal(jenkinsSettingId, that.jenkinsSettingId) && Objects.equal(jobname, that.jobname)
         && Objects.equal(artifactPathServices, that.artifactPathServices);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), jenkinsUrl, username, password, jobname, artifactPathServices);
-  }
-
-  @Override
-  public String getSourceName() {
-    if (super.getSourceName() == null) {
-      setSourceName(jobname);
-    }
-    return super.getSourceName();
+    return Objects.hashCode(super.hashCode(), jenkinsSettingId, jobname, artifactPathServices);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("jenkinsUrl", jenkinsUrl)
-        .add("username", username)
-        .add("password", password)
-        .add("jobname", jobname)
         .add("artifactPathServices", artifactPathServices)
-        .add("sourceName", getSourceName())
+        .add("jenkinsSettingId", jenkinsSettingId)
+        .add("jobname", jobname)
         .toString();
   }
 
   public static final class Builder {
-    private String sourceName;
     private ArtifactType artifactType;
-    private String jobname;
+    private String sourceName;
     private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-    private String username;
-    private String password;
-    private String jenkinsUrl;
+    private String jobname;
+    private String jenkinsSettingId;
 
     private Builder() {}
 
@@ -131,18 +94,13 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return new Builder();
     }
 
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
-    public Builder withJobname(String jobname) {
-      this.jobname = jobname;
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
       return this;
     }
 
@@ -151,33 +109,32 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return this;
     }
 
-    public Builder withUsername(String username) {
-      this.username = username;
+    public Builder withJobname(String jobname) {
+      this.jobname = jobname;
       return this;
     }
 
-    public Builder withPassword(String password) {
-      this.password = password;
+    public Builder withJenkinsSettingId(String jenkinsSettingId) {
+      this.jenkinsSettingId = jenkinsSettingId;
       return this;
     }
 
-    public Builder withJenkinsUrl(String jenkinsUrl) {
-      this.jenkinsUrl = jenkinsUrl;
-      return this;
+    public Builder but() {
+      return aJenkinsArtifactSource()
+          .withArtifactType(artifactType)
+          .withSourceName(sourceName)
+          .withArtifactPathServices(artifactPathServices)
+          .withJobname(jobname)
+          .withJenkinsSettingId(jenkinsSettingId);
     }
 
-    /**
-     * @return a new JenkinsArtifactSource object with given fields.
-     */
     public JenkinsArtifactSource build() {
       JenkinsArtifactSource jenkinsArtifactSource = new JenkinsArtifactSource();
-      jenkinsArtifactSource.setSourceName(sourceName);
       jenkinsArtifactSource.setArtifactType(artifactType);
-      jenkinsArtifactSource.setJobname(jobname);
+      jenkinsArtifactSource.setSourceName(sourceName);
       jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
-      jenkinsArtifactSource.setUsername(username);
-      jenkinsArtifactSource.setPassword(password);
-      jenkinsArtifactSource.setJenkinsUrl(jenkinsUrl);
+      jenkinsArtifactSource.setJobname(jobname);
+      jenkinsArtifactSource.setJenkinsSettingId(jenkinsSettingId);
       return jenkinsArtifactSource;
     }
   }

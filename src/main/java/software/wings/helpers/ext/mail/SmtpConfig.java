@@ -104,7 +104,6 @@ public class SmtpConfig extends SettingValue {
     private boolean useSSL;
     private String username;
     private String password;
-    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -142,11 +141,6 @@ public class SmtpConfig extends SettingValue {
       return this;
     }
 
-    public Builder withType(SettingVariableTypes type) {
-      this.type = type;
-      return this;
-    }
-
     public Builder but() {
       return aSmtpConfig()
           .withHost(host)
@@ -154,8 +148,7 @@ public class SmtpConfig extends SettingValue {
           .withFromAddress(fromAddress)
           .withUseSSL(useSSL)
           .withUsername(username)
-          .withPassword(password)
-          .withType(type);
+          .withPassword(password);
     }
 
     public SmtpConfig build() {
@@ -166,7 +159,6 @@ public class SmtpConfig extends SettingValue {
       smtpConfig.setUseSSL(useSSL);
       smtpConfig.setUsername(username);
       smtpConfig.setPassword(password);
-      smtpConfig.setType(type);
       return smtpConfig;
     }
   }

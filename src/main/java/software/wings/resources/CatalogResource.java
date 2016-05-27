@@ -8,6 +8,7 @@ import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
 import software.wings.beans.CatalogNames;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,6 +36,7 @@ import javax.ws.rs.core.UriInfo;
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {
+  public static final String JENKINS_CONFIG_ID = "JENKINS_CONFIG_ID";
   private WorkflowService workflowService;
   private CatalogService catalogService;
   private JenkinsBuildService jenkinsBuildService;
@@ -44,10 +45,10 @@ public class CatalogResource {
   /**
    * Creates a new calalog resource.
    *
-   * @param catalogService catalogService object.
-   * @param workflowService workflowService object.
+   * @param catalogService      catalogService object.
+   * @param workflowService     workflowService object.
    * @param jenkinsBuildService JenkinsBuildService object.
-   * @param settingsService SettingService object
+   * @param settingsService     SettingService object
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
@@ -62,7 +63,7 @@ public class CatalogResource {
    * returns catalog items.
    *
    * @param catalogTypes types of catalog items.
-   * @param uriInfo uriInfo from jersey.
+   * @param uriInfo      uriInfo from jersey.
    * @return RestReponse containing map of catalog objects.
    * @throws IOException exception.
    */
@@ -95,8 +96,17 @@ public class CatalogResource {
             catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
             break;
           }
+          case CatalogNames.JENKINS_CONFIG: {
+            catalogs.put(catalogType,
+                settingsService.getSettingAttributesByType(
+                    uriInfo.getQueryParameters().getFirst("appId"), SettingVariableTypes.JENKINS));
+            break;
+          }
           case CatalogNames.JENKINS_BUILD: {
-            catalogs.put(catalogType, jenkinsBuildService.getBuilds(uriInfo.getQueryParameters()));
+            catalogs.put(catalogType,
+                jenkinsBuildService.getBuilds(uriInfo.getQueryParameters(),
+                    (JenkinsConfig) settingsService.get(uriInfo.getQueryParameters().getFirst(JENKINS_CONFIG_ID))
+                        .getValue()));
             break;
           }
           case CONNECTION_ATTRIBUTES: {

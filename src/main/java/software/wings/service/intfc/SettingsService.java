@@ -17,6 +17,8 @@ public interface SettingsService {
 
   SettingAttribute get(String appId, String varId);
 
+  SettingAttribute get(String varId);
+
   SettingAttribute update(SettingAttribute envVar);
 
   void delete(String appId, String varId);
