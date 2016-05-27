@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionContext;

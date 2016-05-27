@@ -203,7 +203,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
-  public GridFSBucket createGridFSBucket(String bucketName) {
+  public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);
   }

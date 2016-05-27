@@ -1,8 +1,9 @@
 package software.wings.service.impl;
 
 import com.google.inject.Singleton;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 
-import software.wings.app.WingsBootstrap;
 import software.wings.beans.Deployment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -19,6 +20,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  @Inject private DeploymentExecutor.Factory deploymentExecutorFactory;
+
   @Override
   public PageResponse<Deployment> list(PageRequest<Deployment> req) {
     return wingsPersistence.query(Deployment.class, req);
@@ -27,22 +30,25 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   public Deployment create(Deployment deployment) {
     deployment = wingsPersistence.saveAndGet(Deployment.class, deployment);
-    executorService.submit(new DeploymentExecutor(deployment));
+    executorService.submit(deploymentExecutorFactory.create(deployment));
     return deployment;
   }
 
-  static class DeploymentExecutor implements Runnable {
+  public static class DeploymentExecutor implements Runnable {
     private Deployment deployment;
 
-    public DeploymentExecutor(Deployment deployment) {
+    @Inject private SshCommandUnitExecutorService sshCommandUnitExecutorService;
+
+    @AssistedInject
+    public DeploymentExecutor(@Assisted Deployment deployment) {
       this.deployment = deployment;
     }
 
     @Override
     public void run() {
-      SshCommandUnitExecutorService commandUnitExecutorService =
-          WingsBootstrap.lookup(SshCommandUnitExecutorService.class);
-      commandUnitExecutorService.execute(deployment);
+      sshCommandUnitExecutorService.execute(deployment);
     }
+
+    public interface Factory { DeploymentExecutor create(@Assisted Deployment deployment); }
   }
 }

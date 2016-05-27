@@ -148,5 +148,6 @@ public class WingsModule extends AbstractModule {
     install(new FactoryModuleBuilder()
                 .implement(ExecutionContext.class, ExecutionContextImpl.class)
                 .build(ExecutionContextFactory.class));
+    install(new FactoryModuleBuilder().build(DeploymentServiceImpl.DeploymentExecutor.Factory.class));
   }
 }

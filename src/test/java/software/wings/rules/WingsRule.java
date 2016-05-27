@@ -34,7 +34,6 @@ import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
-import software.wings.app.WingsBootstrap;
 import software.wings.app.WingsModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
@@ -122,7 +121,6 @@ public class WingsRule implements MethodRule {
 
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
-    WingsBootstrap.initialize(injector);
   }
 
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
