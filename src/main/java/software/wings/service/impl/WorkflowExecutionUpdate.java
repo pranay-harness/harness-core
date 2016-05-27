@@ -5,6 +5,8 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import com.google.inject.Inject;
+
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.WingsBootstrap;
@@ -23,6 +25,8 @@ import java.util.List;
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private String appId;
   private String workflowExecutionId;
+
+  @Inject private WingsPersistence wingsPersistence;
 
   public WorkflowExecutionUpdate() {}
 
@@ -49,7 +53,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    WingsPersistence wingsPersistence = WingsBootstrap.lookup(WingsPersistence.class);
     List<ExecutionStatus> runningStatuses = new ArrayList<>();
     runningStatuses.add(ExecutionStatus.NEW);
     runningStatuses.add(ExecutionStatus.RUNNING);

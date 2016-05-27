@@ -30,13 +30,17 @@ import software.wings.service.intfc.SettingsService;
  */
 public class EmailNotificationServiceImplTest extends WingsBaseTest {
   private static final EmailData emailTemplateData = anEmailData()
-                                                         .withFrom("from")
                                                          .withTo(newArrayList("to"))
+                                                         .withTo(newArrayList("cc"))
                                                          .withTemplateName("templateName")
                                                          .withTemplateModel("templateModel")
                                                          .build();
-  private static final EmailData emailBodyData =
-      anEmailData().withFrom("from").withTo(newArrayList("to")).withBody("body").withSubject("subject").build();
+  private static final EmailData emailBodyData = anEmailData()
+                                                     .withTo(newArrayList("to"))
+                                                     .withTo(newArrayList("cc"))
+                                                     .withBody("body")
+                                                     .withSubject("subject")
+                                                     .build();
 
   private static final SmtpConfig smtpConfig = aSmtpConfig().build();
 
@@ -62,7 +66,7 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldSendEmailWithTemplate() throws Exception {
-    emailDataNotificationService.send(emailTemplateData.getFrom(), emailTemplateData.getTo(),
+    emailDataNotificationService.send(emailTemplateData.getTo(), emailTemplateData.getCc(),
         emailTemplateData.getTemplateName(), emailTemplateData.getTemplateModel());
     verify(mailer).send(smtpConfig, emailTemplateData);
     verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
@@ -71,7 +75,7 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldSendEmailWithBody() throws Exception {
     emailDataNotificationService.send(
-        emailBodyData.getFrom(), emailBodyData.getTo(), emailBodyData.getSubject(), emailBodyData.getBody());
+        emailBodyData.getTo(), emailBodyData.getCc(), emailBodyData.getSubject(), emailBodyData.getBody());
     verify(mailer).send(smtpConfig, emailBodyData);
     verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
   }
@@ -85,7 +89,7 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldSendAsyncEmailWithTemplate() throws Exception {
-    emailDataNotificationService.sendAsync(emailTemplateData.getFrom(), emailTemplateData.getTo(),
+    emailDataNotificationService.sendAsync(emailTemplateData.getTo(), emailTemplateData.getCc(),
         emailTemplateData.getTemplateName(), emailTemplateData.getTemplateModel());
     verify(queue).send(emailTemplateData);
   }
@@ -93,7 +97,7 @@ public class EmailNotificationServiceImplTest extends WingsBaseTest {
   @Test
   public void sendAsyncWithBody() throws Exception {
     emailDataNotificationService.sendAsync(
-        emailBodyData.getFrom(), emailBodyData.getTo(), emailBodyData.getSubject(), emailBodyData.getBody());
+        emailBodyData.getTo(), emailBodyData.getCc(), emailBodyData.getSubject(), emailBodyData.getBody());
     verify(queue).send(emailBodyData);
   }
 }

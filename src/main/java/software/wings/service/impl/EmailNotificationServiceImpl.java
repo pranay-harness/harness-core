@@ -29,20 +29,15 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   @Inject private Queue<EmailData> emailEventQueue;
 
   @Override
-  public void send(String from, List<String> to, String templateName, Object templateModel)
+  public void send(List<String> to, List<String> cc, String templateName, Object templateModel)
       throws EmailException, TemplateException, IOException {
-    send(anEmailData()
-             .withFrom(from)
-             .withTo(to)
-             .withTemplateName(templateName)
-             .withTemplateModel(templateModel)
-             .build());
+    send(anEmailData().withTo(to).withCc(cc).withTemplateName(templateName).withTemplateModel(templateModel).build());
   }
 
   @Override
-  public void send(String from, List<String> to, String subject, String body)
+  public void send(List<String> to, List<String> cc, String subject, String body)
       throws EmailException, TemplateException, IOException {
-    send(anEmailData().withFrom(from).withTo(to).withSubject(subject).withBody(body).build());
+    send(anEmailData().withTo(to).withCc(cc).withSubject(subject).withBody(body).build());
   }
 
   @Override
@@ -53,16 +48,16 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   }
 
   @Override
-  public void sendAsync(String from, List<String> to, String subject, String body) {
+  public void sendAsync(List<String> to, List<String> cc, String subject, String body) {
     emailEventQueue.send(
-        anEmailData().withFrom(from).withTo(to).withSubject(subject).withBody(body).withRetries(3).build());
+        anEmailData().withTo(to).withCc(cc).withSubject(subject).withBody(body).withRetries(3).build());
   }
 
   @Override
-  public void sendAsync(String from, List<String> to, String templateName, Object templateModel) {
+  public void sendAsync(List<String> to, List<String> cc, String templateName, Object templateModel) {
     emailEventQueue.send(anEmailData()
-                             .withFrom(from)
                              .withTo(to)
+                             .withCc(cc)
                              .withTemplateName(templateName)
                              .withTemplateModel(templateModel)
                              .withRetries(3)
