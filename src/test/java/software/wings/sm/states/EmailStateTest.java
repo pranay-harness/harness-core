@@ -15,7 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EmailStateExecutionData;
-import software.wings.beans.Host;
+import software.wings.api.HostElement;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.NotificationService;
 import software.wings.sm.ExecutionContextFactory;
@@ -25,6 +25,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 
 import java.io.IOException;
+
 import javax.inject.Inject;
 
 /**
@@ -52,7 +53,7 @@ public class EmailStateTest extends WingsBaseTest {
 
     context = executionContextFactory.create(stateExecutionInstance, null);
 
-    Host host = new Host();
+    HostElement host = new HostElement();
     host.setHostName("app123.application.com");
     context.pushContextElement(host);
 
