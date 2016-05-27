@@ -41,12 +41,10 @@ public interface FileService {
 
     private String bucketName;
     private int chunkSize;
-    private GridFSBucket gridFSBucket;
 
     FileBucket(String bucketName, int chunkSize) {
       this.bucketName = bucketName;
       this.chunkSize = chunkSize;
-      this.gridFSBucket = WingsBootstrap.lookup(WingsPersistence.class).createGridFSBucket(bucketName);
     }
 
     FileBucket(String bucketName) {

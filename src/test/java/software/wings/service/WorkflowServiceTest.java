@@ -28,14 +28,21 @@ import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
 import software.wings.sm.StateType;
+import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
+import software.wings.utils.CollectionUtils;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyEventListener;
 
+import java.beans.IntrospectionException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.inject.Inject;
@@ -854,5 +861,55 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(execution).isNotNull();
     assertThat(execution.getUuid()).isEqualTo(executionId);
     assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  public void stencils()
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
+    assertThat(stencils).isNotNull();
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils.containsKey(StateTypeScope.ORCHESTRATION_STENCILS)).isTrue();
+    assertThat(stencils.containsKey(StateTypeScope.PIPELINE_STENCILS)).isTrue();
+    contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "DEPLOY", "START", "STOP");
+  }
+
+  @Test
+  public void stencilsForPipeline()
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
+        workflowService.stencils(StateTypeScope.PIPELINE_STENCILS);
+    assertThat(stencils).isNotNull();
+    assertThat(stencils.size()).isEqualTo(1);
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils.containsKey(StateTypeScope.PIPELINE_STENCILS)).isTrue();
+    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "BUILD", "ENV_STATE")).isTrue();
+    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "STOP")).isFalse();
+    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "START")).isFalse();
+  }
+
+  @Test
+  public void stencilsForOrchestration()
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
+        workflowService.stencils(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencils).isNotNull();
+    assertThat(stencils.size()).isEqualTo(1);
+    logger.debug(JsonUtils.asJson(stencils));
+    assertThat(stencils.containsKey(StateTypeScope.ORCHESTRATION_STENCILS)).isTrue();
+    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "START", "STOP", "DEPLOY")).isTrue();
+    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "BUILD")).isFalse();
+    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "ENV_STATE")).isFalse();
+  }
+
+  private boolean contains(List<StateTypeDescriptor> list, String... types)
+      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
+    Map<String, List<StateTypeDescriptor>> map = CollectionUtils.hierarchy(list, "type");
+    for (String type : types) {
+      if (!map.containsKey(type)) {
+        return false;
+      }
+    }
+    return true;
   }
 }

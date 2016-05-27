@@ -2,6 +2,7 @@ package software.wings.helpers.ext.mail;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.core.queue.Queuable;
@@ -14,20 +15,12 @@ import java.util.List;
  */
 @Entity(value = "emailQueue", noClassnameStored = true)
 public class EmailData extends Queuable {
-  private String from;
-  private List<String> to;
+  private List<String> to = Lists.newArrayList();
+  private List<String> cc = Lists.newArrayList();
   private String subject;
   private String body;
   private String templateName;
   private Object templateModel;
-
-  public String getFrom() {
-    return from;
-  }
-
-  public void setFrom(String from) {
-    this.from = from;
-  }
 
   public List<String> getTo() {
     return to;
@@ -35,6 +28,14 @@ public class EmailData extends Queuable {
 
   public void setTo(List<String> to) {
     this.to = to;
+  }
+
+  public List<String> getCc() {
+    return cc;
+  }
+
+  public void setCc(List<String> cc) {
+    this.cc = cc;
   }
 
   public String getSubject() {
@@ -71,28 +72,26 @@ public class EmailData extends Queuable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
+    if (this == o)
       return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
     EmailData emailData = (EmailData) o;
-    return Objects.equal(from, emailData.from) && Objects.equal(to, emailData.to)
+    return Objects.equal(to, emailData.to) && Objects.equal(cc, emailData.cc)
         && Objects.equal(subject, emailData.subject) && Objects.equal(body, emailData.body)
         && Objects.equal(templateName, emailData.templateName) && Objects.equal(templateModel, emailData.templateModel);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(from, to, subject, body, templateName, templateModel);
+    return Objects.hashCode(to, cc, subject, body, templateName, templateModel);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("from", from)
         .add("to", to)
+        .add("cc", cc)
         .add("subject", subject)
         .add("body", body)
         .add("templateName", templateName)
@@ -101,8 +100,8 @@ public class EmailData extends Queuable {
   }
 
   public static final class Builder {
-    private String from;
-    private List<String> to;
+    private List<String> to = Lists.newArrayList();
+    private List<String> cc = Lists.newArrayList();
     private String subject;
     private String body;
     private String templateName;
@@ -121,13 +120,13 @@ public class EmailData extends Queuable {
       return new Builder();
     }
 
-    public Builder withFrom(String from) {
-      this.from = from;
+    public Builder withTo(List<String> to) {
+      this.to = to;
       return this;
     }
 
-    public Builder withTo(List<String> to) {
-      this.to = to;
+    public Builder withCc(List<String> cc) {
+      this.cc = cc;
       return this;
     }
 
@@ -188,8 +187,8 @@ public class EmailData extends Queuable {
 
     public Builder but() {
       return anEmailData()
-          .withFrom(from)
           .withTo(to)
+          .withCc(cc)
           .withSubject(subject)
           .withBody(body)
           .withTemplateName(templateName)
@@ -205,8 +204,8 @@ public class EmailData extends Queuable {
 
     public EmailData build() {
       EmailData emailData = new EmailData();
-      emailData.setFrom(from);
       emailData.setTo(to);
+      emailData.setCc(cc);
       emailData.setSubject(subject);
       emailData.setBody(body);
       emailData.setTemplateName(templateName);

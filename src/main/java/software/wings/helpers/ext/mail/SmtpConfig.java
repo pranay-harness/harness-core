@@ -11,6 +11,7 @@ import software.wings.beans.SettingValue;
 public class SmtpConfig extends SettingValue {
   private String host;
   private int port;
+  private String fromAddress;
   private boolean useSSL;
   private String username;
   private String password;
@@ -59,22 +60,29 @@ public class SmtpConfig extends SettingValue {
     this.password = password;
   }
 
+  public String getFromAddress() {
+    return fromAddress;
+  }
+
+  public void setFromAddress(String fromAddress) {
+    this.fromAddress = fromAddress;
+  }
+
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o)
       return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    SmtpConfig that = (SmtpConfig) obj;
-    return port == that.port && useSSL == that.useSSL && Objects.equal(host, that.host)
-        && Objects.equal(username, that.username) && Objects.equal(password, that.password);
+    SmtpConfig config = (SmtpConfig) o;
+    return port == config.port && useSSL == config.useSSL && Objects.equal(host, config.host)
+        && Objects.equal(fromAddress, config.fromAddress) && Objects.equal(username, config.username)
+        && Objects.equal(password, config.password);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(host, port, useSSL, username, password);
+    return Objects.hashCode(host, port, fromAddress, useSSL, username, password);
   }
 
   @Override
@@ -82,6 +90,7 @@ public class SmtpConfig extends SettingValue {
     return MoreObjects.toStringHelper(this)
         .add("host", host)
         .add("port", port)
+        .add("fromAddress", fromAddress)
         .add("useSSL", useSSL)
         .add("username", username)
         .add("password", password)
@@ -91,9 +100,11 @@ public class SmtpConfig extends SettingValue {
   public static final class Builder {
     private String host;
     private int port;
+    private String fromAddress;
     private boolean useSSL;
     private String username;
     private String password;
+    private SettingVariableTypes type;
 
     private Builder() {}
 
@@ -108,6 +119,11 @@ public class SmtpConfig extends SettingValue {
 
     public Builder withPort(int port) {
       this.port = port;
+      return this;
+    }
+
+    public Builder withFromAddress(String fromAddress) {
+      this.fromAddress = fromAddress;
       return this;
     }
 
@@ -126,18 +142,31 @@ public class SmtpConfig extends SettingValue {
       return this;
     }
 
+    public Builder withType(SettingVariableTypes type) {
+      this.type = type;
+      return this;
+    }
+
     public Builder but() {
-      return aSmtpConfig().withHost(host).withPort(port).withUseSSL(useSSL).withUsername(username).withPassword(
-          password);
+      return aSmtpConfig()
+          .withHost(host)
+          .withPort(port)
+          .withFromAddress(fromAddress)
+          .withUseSSL(useSSL)
+          .withUsername(username)
+          .withPassword(password)
+          .withType(type);
     }
 
     public SmtpConfig build() {
       SmtpConfig smtpConfig = new SmtpConfig();
       smtpConfig.setHost(host);
       smtpConfig.setPort(port);
+      smtpConfig.setFromAddress(fromAddress);
       smtpConfig.setUseSSL(useSSL);
       smtpConfig.setUsername(username);
       smtpConfig.setPassword(password);
+      smtpConfig.setType(type);
       return smtpConfig;
     }
   }

@@ -8,8 +8,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.StateTypeScope;
 
 import java.util.List;
+import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -37,7 +40,7 @@ public interface WorkflowService {
 
   void trigger(@NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid);
 
-  List<StateTypeDescriptor> stencils();
+  Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes);
 
   PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest);
 

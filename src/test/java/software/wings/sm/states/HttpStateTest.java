@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;

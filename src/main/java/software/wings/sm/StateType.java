@@ -1,5 +1,8 @@
 package software.wings.sm;
 
+import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
+import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
@@ -19,7 +22,10 @@ import software.wings.sm.states.WaitState;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Represents type of state.
@@ -28,26 +34,26 @@ import java.util.HashMap;
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
-  REPEAT,
-  FORK,
-  STATE_MACHINE,
+  REPEAT(ORCHESTRATION_STENCILS),
+  FORK(ORCHESTRATION_STENCILS),
+  STATE_MACHINE(ORCHESTRATION_STENCILS),
 
-  WAIT,
-  PAUSE,
+  WAIT(ORCHESTRATION_STENCILS),
+  PAUSE(ORCHESTRATION_STENCILS),
 
-  DEPLOY,
-  START,
-  STOP,
-  RESTART,
+  DEPLOY(ORCHESTRATION_STENCILS),
+  START(ORCHESTRATION_STENCILS),
+  STOP(ORCHESTRATION_STENCILS),
+  RESTART(ORCHESTRATION_STENCILS),
 
-  HTTP,
-  SPLUNK,
-  APP_DYNAMICS,
-  EMAIL,
+  HTTP(ORCHESTRATION_STENCILS),
+  SPLUNK(ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  EMAIL(ORCHESTRATION_STENCILS),
 
-  BUILD,
-  ENV_STATE,
-  APPROVAL;
+  BUILD(PIPELINE_STENCILS),
+  ENV_STATE(PIPELINE_STENCILS),
+  APPROVAL(ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String jsonSchemaSuffix = "-JSONSchema.json";
@@ -55,10 +61,12 @@ public enum StateType implements StateTypeDescriptor {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private Object jsonSchema;
   private Object uiSchema;
+  private List<StateTypeScope> scopes = new ArrayList<>();
 
-  StateType() {
-    //        this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
-    //        this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+  StateType(StateTypeScope... scopes) {
+    this.scopes = Arrays.asList(scopes);
+    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
+    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
   private Object readResource(String file) {
@@ -67,7 +75,7 @@ public enum StateType implements StateTypeDescriptor {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      WingsException ex = new WingsException("Error in initializing StateType", exception);
+      WingsException ex = new WingsException("Error in initializing StateType-" + file, exception);
       logger.error(ex.getMessage(), ex);
       return null;
       // throw ex;
@@ -90,7 +98,14 @@ public enum StateType implements StateTypeDescriptor {
     return uiSchema;
   }
 
-  /* (non-Javadoc)
+  @Override
+  public List<StateTypeScope> getScopes() {
+    return scopes;
+  }
+
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.sm.StateTypeDescriptor#newInstance(java.lang.String)
    */
   @Override
