@@ -164,12 +164,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     Graph graph = pipeline.getGraph();
     pipeline = updateWorkflow(pipeline);
     pipeline.setGraph(graph);
-    return wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    return pipeline;
   }
 
   @Override
   public Pipeline readPipeline(String appId, String pipelineId) {
-    return wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    StateMachine stateMachine = readLatest(pipelineId, null);
+    if (stateMachine != null) {
+      pipeline.setGraph(stateMachine.getGraph());
+    }
+    return pipeline;
   }
 
   @Override
@@ -224,7 +229,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     Graph graph = orchestration.getGraph();
     orchestration = updateWorkflow(orchestration);
-    return wingsPersistence.get(Orchestration.class, orchestration.getAppId(), orchestration.getUuid());
+    return orchestration;
   }
 
   @Override
