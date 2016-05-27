@@ -202,6 +202,7 @@ public class StateMachineExecutor {
         logger.info("State Machine execution ended for the stateMachine: {}, executionUuid: {}", sm.getName(),
             stateExecutionInstance.getExecutionUuid());
         if (stateExecutionInstance.getCallback() != null) {
+          injector.injectMembers(stateExecutionInstance.getCallback());
           stateExecutionInstance.getCallback().callback(context, ExecutionStatus.SUCCESS, null);
         } else {
           logger.info("No callback for the stateMachine: {}, executionUuid: {}", sm.getName(),
@@ -234,6 +235,7 @@ public class StateMachineExecutor {
         logger.info("State Machine execution failed for the stateMachine: {}, executionUuid: {}", sm.getName(),
             stateExecutionInstance.getExecutionUuid());
         if (stateExecutionInstance.getCallback() != null) {
+          injector.injectMembers(stateExecutionInstance.getCallback());
           stateExecutionInstance.getCallback().callback(context, ExecutionStatus.SUCCESS, exception);
         } else {
           logger.info("No callback for the stateMachine: {}, executionUuid: {}", sm.getName(),
