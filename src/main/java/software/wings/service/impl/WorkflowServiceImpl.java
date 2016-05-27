@@ -9,6 +9,7 @@ import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Singleton;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -42,6 +43,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.ArrayList;
@@ -64,7 +66,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
-  private List<StateTypeDescriptor> cachedStencils;
+  private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
   @Override
@@ -84,7 +86,24 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public List<StateTypeDescriptor> stencils() {
+  public Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes) {
+    Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = loadStateTypes();
+
+    if (ArrayUtils.isEmpty(stateTypeScopes)) {
+      return new HashMap<>(mapByScope);
+    } else {
+      Map<StateTypeScope, List<StateTypeDescriptor>> maps = new HashMap<>();
+      for (StateTypeScope scope : stateTypeScopes) {
+        maps.put(scope, mapByScope.get(scope));
+      }
+      return maps;
+    }
+  }
+
+  /**
+   * @return
+   */
+  private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
     if (cachedStencils != null) {
       return cachedStencils;
     }
@@ -95,25 +114,33 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<StateTypeDescriptor> plugins = pluginManager.getExtensions(StateTypeDescriptor.class);
     stencils.addAll(plugins);
 
-    Map<String, StateTypeDescriptor> stencilDescMap = new HashMap<>();
+    Map<String, StateTypeDescriptor> mapByType = new HashMap<>();
+    Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = new HashMap<>();
     for (StateTypeDescriptor sd : stencils) {
-      if (stencilDescMap.get(sd.getType()) != null) {
+      if (mapByType.get(sd.getType()) != null) {
         // already present for the type
         logger.error("Duplicate implementation for the stencil: {}", sd.getType());
         throw new WingsException("Duplicate implementation for the stencil: " + sd.getType());
       }
-      stencilDescMap.put(sd.getType(), sd);
+      mapByType.put(sd.getType(), sd);
+      for (StateTypeScope scope : sd.getScopes()) {
+        List<StateTypeDescriptor> listByScope = mapByScope.get(scope);
+        if (listByScope == null) {
+          listByScope = new ArrayList<>();
+          mapByScope.put(scope, listByScope);
+        }
+        listByScope.add(sd);
+      }
     }
 
-    this.cachedStencils = stencils;
-    this.cachedStencilMap = stencilDescMap;
-
-    return stencils;
+    this.cachedStencils = mapByScope;
+    this.cachedStencilMap = mapByType;
+    return mapByScope;
   }
 
   private Map<String, StateTypeDescriptor> stencilMap() {
     if (cachedStencilMap == null) {
-      stencils();
+      stencils(null);
     }
     return cachedStencilMap;
   }

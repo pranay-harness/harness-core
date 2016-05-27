@@ -21,10 +21,15 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.StateTypeScope;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -51,7 +56,10 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Test
   public void shouldListCatalogs() {
     when(catalogService.getCatalogItems(anyString())).thenReturn(new ArrayList<>());
-    when(workflowService.stencils()).thenReturn(new ArrayList<>());
+    HashMap<StateTypeScope, List<StateTypeDescriptor>> stencils =
+        new HashMap<StateTypeScope, List<StateTypeDescriptor>>();
+    stencils.put(StateTypeScope.ORCHESTRATION_STENCILS, new ArrayList<>());
+    when(workflowService.stencils(StateTypeScope.ORCHESTRATION_STENCILS)).thenReturn(stencils);
 
     RestResponse<Map<String, Object>> actual =
         resources.client()

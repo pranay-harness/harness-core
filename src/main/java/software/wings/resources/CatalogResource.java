@@ -14,11 +14,14 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateTypeDescriptor;
+import software.wings.sm.StateTypeScope;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,10 +44,10 @@ public class CatalogResource {
   /**
    * Creates a new calalog resource.
    *
-   * @param catalogService      catalogService object.
-   * @param workflowService     workflowService object.
+   * @param catalogService catalogService object.
+   * @param workflowService workflowService object.
    * @param jenkinsBuildService JenkinsBuildService object.
-   * @param settingsService     SettingService object
+   * @param settingsService SettingService object
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
@@ -59,7 +62,7 @@ public class CatalogResource {
    * returns catalog items.
    *
    * @param catalogTypes types of catalog items.
-   * @param uriInfo      uriInfo from jersey.
+   * @param uriInfo uriInfo from jersey.
    * @return RestReponse containing map of catalog objects.
    * @throws IOException exception.
    */
@@ -69,13 +72,27 @@ public class CatalogResource {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
-      catalogs.put(CatalogNames.ORCHESTRATION_STENCILS, workflowService.stencils());
+      Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
+      for (StateTypeScope stencil : stencils.keySet()) {
+        catalogs.put(stencil.name(), stencils.get(stencil));
+      }
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
         switch (catalogType) {
+          case CatalogNames.PIPELINE_STENCILS: {
+            StateTypeScope scope = StateTypeScope.valueOf(catalogType);
+            catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
+            break;
+          }
           case CatalogNames.ORCHESTRATION_STENCILS: {
-            catalogs.put(catalogType, workflowService.stencils());
+            StateTypeScope scope = StateTypeScope.valueOf(catalogType);
+            catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
+            break;
+          }
+          case CatalogNames.COMMAND_STENCILS: {
+            StateTypeScope scope = StateTypeScope.valueOf(catalogType);
+            catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
             break;
           }
           case CatalogNames.JENKINS_BUILD: {
