@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.ArtifactSourceMetadata.Builder.anArtifactSourceMetadata;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.ServiceBuilder.aService;
@@ -33,7 +32,6 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
-import java.util.Collections;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
@@ -51,8 +49,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   private Builder builder = anArtifact()
                                 .withAppId(APP_ID)
                                 .withRelease(aRelease().withUuid(RELEASE_ID).build())
-                                .withArtifactSourceMetadatas(Collections.singletonList(
-                                    anArtifactSourceMetadata().withArtifactSourceName("ARTIFACT_SOURCE").build()))
+                                .withArtifactSourceName("ARTIFACT_SOURCE")
                                 .withRevision("1.0")
                                 .withDisplayName("DISPLAY_NAME")
                                 .withCreatedAt(System.currentTimeMillis())
@@ -75,31 +72,32 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreateArtifactWhenValid() {
-    assertThat(artifactService.create(builder.build())).isNotNull();
+    assertThat(artifactService.create(builder.but().build())).isNotNull();
   }
 
   @Test
   public void shouldThrowExceptionWhenAppIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> artifactService.create(builder.withAppId("BAD_APP_ID").build()));
+        .isThrownBy(() -> artifactService.create(builder.but().withAppId("BAD_APP_ID").build()));
   }
 
   @Test
   public void shouldThrowExceptionWhenReleaseIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(
-            () -> artifactService.create(builder.withRelease(aRelease().withUuid("RELEASE_ID1").build()).build()));
+        .isThrownBy(()
+                        -> artifactService.create(
+                            builder.but().withRelease(aRelease().withUuid("RELEASE_ID1").build()).build()));
   }
 
   @Test
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
-        .isThrownBy(() -> artifactService.create(builder.withArtifactSourceMetadatas(Collections.emptyList()).build()));
+        .isThrownBy(() -> artifactService.create(builder.but().withRevision(null).build()));
   }
 
   @Test
   public void shouldUpdateArtifactWhenValid() {
-    Artifact savedArtifact = artifactService.create(builder.build());
+    Artifact savedArtifact = artifactService.create(builder.but().build());
 
     savedArtifact.setDisplayName("ARTIFACT_DISPLAY_NAME");
     assertThat(artifactService.update(savedArtifact)).isEqualTo(savedArtifact);
@@ -107,7 +105,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionWhenArtifactToBeUpdatedIsInvalid() {
-    Artifact savedArtifact = artifactService.create(builder.build());
+    Artifact savedArtifact = artifactService.create(builder.but().build());
 
     savedArtifact.setDisplayName(null);
     assertThatExceptionOfType(ConstraintViolationException.class)
@@ -116,7 +114,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
-    Artifact savedArtifact = artifactService.create(builder.build());
+    Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.download(APP_ID, savedArtifact.getUuid(), SERVICE_ID)).isNull();
   }
 
@@ -124,7 +122,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
     try {
-      Artifact savedArtifact = artifactService.create(builder.build());
+      Artifact savedArtifact = artifactService.create(builder.but().build());
       ArtifactFile artifactFile =
           anArtifactFile()
               .withAppId(APP_ID)
@@ -153,13 +151,13 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListArtifact() {
-    Artifact savedArtifact = artifactService.create(builder.build());
+    Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.list(new PageRequest<>())).hasSize(1).containsExactly(savedArtifact);
   }
 
   @Test
   public void shouldGetArtifact() {
-    Artifact savedArtifact = artifactService.create(builder.build());
+    Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 }

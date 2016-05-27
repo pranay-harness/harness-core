@@ -14,7 +14,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
-import software.wings.beans.ArtifactSourceMetadata;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.collect.CollectEvent;
@@ -57,9 +56,6 @@ public class ArtifactServiceImpl implements ArtifactService {
     Validator.notNullCheck("application", application);
     Release release = wingsPersistence.get(Release.class, artifact.getRelease().getUuid());
     Validator.notNullCheck("release", release);
-    for (ArtifactSourceMetadata artifactSourceMetadata : artifact.getArtifactSourceMetadatas()) {
-      Validator.notNullCheck("artifactSourceName", release.get(artifactSourceMetadata.getArtifactSourceName()));
-    }
 
     Validator.equalCheck(application.getUuid(), release.getAppId());
 
