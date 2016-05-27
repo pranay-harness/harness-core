@@ -31,7 +31,6 @@ public class StateMachineExecutor {
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private Injector injector;
 
   public StateExecutionInstance execute(String appId, String smId, String executionUuid) {
@@ -87,7 +86,8 @@ public class StateMachineExecutor {
       stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
     }
 
-    ExecutionContextImpl context = executionContextFactory.create(stateExecutionInstance, stateMachine);
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
+    injector.injectMembers(context);
     executorService.execute(new SmExecutionDispatcher(context, this));
     return stateExecutionInstance;
   }
@@ -119,7 +119,7 @@ public class StateMachineExecutor {
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
-    ExecutionContextImpl context = executionContextFactory.create(stateExecutionInstance, sm);
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     try {
       ExecutionResponse executionResponse = currentState.handleAsynchResponse(context, response);
       handleExecuteResponse(context, executionResponse);

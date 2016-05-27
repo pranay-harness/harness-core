@@ -2,12 +2,13 @@ package software.wings.sm.states;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Injector;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.common.UUIDGenerator;
-import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -18,7 +19,7 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class HttpStateTest extends WingsBaseTest {
-  @Inject private ExecutionContextFactory executionContextFactory;
+  @Inject private Injector injector;
 
   @Test
   public void shouldAssertResponse() {
@@ -27,7 +28,7 @@ public class HttpStateTest extends WingsBaseTest {
     stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     stateExecutionInstance.setStateName(stateName);
 
-    ExecutionContextImpl context = executionContextFactory.create(stateExecutionInstance, null);
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
 
     HostElement host = new HostElement();
     host.setHostName("app123.application.com");
