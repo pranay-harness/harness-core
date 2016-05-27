@@ -7,9 +7,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
+import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -17,7 +21,7 @@ import static software.wings.integration.IntegrationTestUtil.randomInt;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
@@ -31,11 +35,16 @@ import org.mongodb.morphia.utils.ReflectionUtils;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.Environment;
+import software.wings.beans.Host;
+import software.wings.beans.Infra;
+import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.dl.PageResponse;
@@ -66,7 +75,7 @@ import javax.ws.rs.core.Response;
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 1; /* Max 1000 */
-  private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 1; /* Max 10   */
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
@@ -218,7 +227,7 @@ public class DataGenUtil extends WingsBaseTest {
 
     dropDBAndEnsureIndexes();
 
-    ClientConfig config = new ClientConfig(new JacksonJaxbJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
+    ClientConfig config = new ClientConfig(new JacksonJsonProvider().configure(FAIL_ON_UNKNOWN_PROPERTIES, false));
     config.register(MultiPartWriter.class);
     client = ClientBuilder.newClient(config);
   }
@@ -246,7 +255,39 @@ public class DataGenUtil extends WingsBaseTest {
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
+      addServiceInstances(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
     }
+  }
+
+  private void addServiceInstances(Application application, List<Service> services, List<Environment> appEnvs) {
+    // TODO: improve make http calls and use better generation scheme
+    services.forEach(service -> {
+      appEnvs.forEach(environment -> {
+        String infraId =
+            wingsPersistence.createQuery(Infra.class).field("envId").equal(environment.getUuid()).get().getUuid();
+        List<Host> hosts = wingsPersistence.createQuery(Host.class)
+                               .field("appId")
+                               .equal(environment.getAppId())
+                               .field("infraId")
+                               .equal(infraId)
+                               .asList();
+        ServiceTemplate template =
+            wingsPersistence.saveAndGet(ServiceTemplate.class, aServiceTemplate().withName("catalog:8080").build());
+        Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
+        Artifact artifact =
+            wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
+
+        hosts.forEach(host
+            -> wingsPersistence.save(aServiceInstance()
+                                         .withAppId(host.getAppId())
+                                         .withHost(host)
+                                         .withService(service)
+                                         .withServiceTemplate(template)
+                                         .withRelease(release)
+                                         .withArtifact(artifact)
+                                         .build()));
+      });
+    });
   }
 
   private List<Application> createApplications() {
@@ -325,8 +366,6 @@ public class DataGenUtil extends WingsBaseTest {
             .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
     return response.getResource().getResponse();
   }
-
-  /* Seed data */
 
   private boolean addOneAppContainer(String appId) {
     WebTarget target = client.target("http://localhost:9090/wings/app-containers/?appId=" + appId);
