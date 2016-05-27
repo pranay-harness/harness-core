@@ -73,6 +73,8 @@ public class ArtifactResourceTest {
     when(ARTIFACT_SERVICE.create(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.update(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.get(APP_ID, ARTIFACT_ID)).thenReturn(ACTUAL);
+    when(ARTIFACT_SERVICE.softDelete(APP_ID, ARTIFACT_ID)).thenReturn(ACTUAL);
+
     tempFile = tempFolder.newFile();
     Files.write("Dummy".getBytes(), tempFile);
     when(ARTIFACT_SERVICE.download(APP_ID, ARTIFACT_ID, SERVICE_ID)).thenReturn(tempFile);
@@ -93,18 +95,6 @@ public class ArtifactResourceTest {
             .post(Entity.entity(artifact, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Artifact>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Artifact.class);
     verify(ARTIFACT_SERVICE).create(artifact);
-  }
-
-  @Test
-  public void shouldThrowExceptionWhenAppIdDoesNotMatch() {
-    Artifact artifact = anArtifact().withAppId("BAD_APP_ID").build();
-
-    Response response = RESOURCES.client()
-                            .target("/artifacts/?appId=" + APP_ID)
-                            .request()
-                            .post(Entity.entity(artifact, MediaType.APPLICATION_JSON));
-    assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-    assertThat(response.readEntity(new GenericType<RestResponse<Void>>() {}).getResponseMessages()).hasSize(1);
   }
 
   @Test
@@ -157,5 +147,16 @@ public class ArtifactResourceTest {
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
     verify(ARTIFACT_SERVICE).list(expectedPageRequest);
+  }
+
+  @Test
+  public void shouldDeleteArtifact() throws IOException {
+    RestResponse<PageResponse<Artifact>> restResponse =
+        RESOURCES.client()
+            .target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID)
+            .request()
+            .delete(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+
+    verify(ARTIFACT_SERVICE).softDelete(APP_ID, ARTIFACT_ID);
   }
 }

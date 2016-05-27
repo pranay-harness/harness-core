@@ -8,7 +8,6 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
 import software.wings.beans.ArtifactSource;
-import software.wings.beans.ArtifactSourceMetadata;
 import software.wings.beans.Release;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.ArtifactCollectorService;
@@ -37,30 +36,23 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
     try {
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING);
       Release release = message.getArtifact().getRelease();
-      for (ArtifactSourceMetadata artifactSourceMetadata : message.getArtifact().getArtifactSourceMetadatas()) {
-        collectArtifactSource(artifact, release, artifactSourceMetadata);
+
+      ArtifactSource artifactSource = release.get(artifact.getArtifactSourceName());
+      ArtifactCollectorService artifactCollectorService =
+          artifactCollectorServiceMap.get(artifactSource.getSourceType().name());
+      List<ArtifactFile> artifactFiles = artifactCollectorService.collect(artifactSource, artifact.getMetadata());
+
+      if (isNotEmpty(artifactFiles)) {
+        artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), artifactFiles);
+      } else {
+        throw new FileNotFoundException("unable to collect artifact ");
       }
+
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
-    }
-  }
-
-  private void collectArtifactSource(Artifact artifact, Release release, ArtifactSourceMetadata artifactSourceMetadata)
-      throws FileNotFoundException {
-    String artifactSourceName = artifactSourceMetadata.getArtifactSourceName();
-    ArtifactSource artifactSource = release.get(artifactSourceName);
-    ArtifactCollectorService artifactCollectorService =
-        artifactCollectorServiceMap.get(artifactSource.getSourceType().name());
-    List<ArtifactFile> artifactFiles =
-        artifactCollectorService.collect(artifactSource, artifactSourceMetadata.getMetadata());
-
-    if (isNotEmpty(artifactFiles)) {
-      artifactService.addArtifactFile(artifact.getUuid(), artifact.getAppId(), artifactFiles);
-    } else {
-      throw new FileNotFoundException("unable to collect artifact ");
     }
   }
 }

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -65,7 +66,7 @@ public class ArtifactResource {
   @ExceptionMetered
   @Produces("application/json")
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
-    Validator.equalCheck(appId, artifact.getAppId());
+    artifact.setAppId(appId);
     return new RestResponse<>(artifactService.create(artifact));
   }
 
@@ -77,7 +78,17 @@ public class ArtifactResource {
   public RestResponse<Artifact> update(
       @QueryParam("appId") String appId, @PathParam("artifactId") String artifactId, Artifact artifact) {
     artifact.setUuid(artifactId);
+    artifact.setAppId(appId);
     return new RestResponse<>(artifactService.update(artifact));
+  }
+
+  @DELETE
+  @Path("{artifactId}")
+  @Timed
+  @ExceptionMetered
+  @Produces("application/json")
+  public RestResponse<Artifact> update(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
+    return new RestResponse<>(artifactService.softDelete(appId, artifactId));
   }
 
   @GET

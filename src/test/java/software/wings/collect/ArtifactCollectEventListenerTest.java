@@ -6,7 +6,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.ArtifactSourceMetadata.Builder.anArtifactSourceMetadata;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -74,8 +73,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                .withUuid(RELEASE_ID)
                                                .withArtifactSources(Lists.newArrayList(ARTIFACT_SOURCE))
                                                .build())
-                              .withArtifactSourceMetadatas(Collections.singletonList(
-                                  anArtifactSourceMetadata().withArtifactSourceName(ARTIFACT_SOURCE_NAME).build()))
+                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                               .build())
             .build());
 
@@ -99,8 +97,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                                                .withUuid(RELEASE_ID)
                                                .withArtifactSources(Lists.newArrayList(ARTIFACT_SOURCE))
                                                .build())
-                              .withArtifactSourceMetadatas(Collections.singletonList(
-                                  anArtifactSourceMetadata().withArtifactSourceName(ARTIFACT_SOURCE_NAME).build()))
+                              .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                               .build())
             .build());
 
@@ -124,8 +121,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
                     .withUuid(ARTIFACT_ID)
                     .withAppId(APP_ID)
                     .withRelease(aRelease().withUuid(RELEASE_ID).withArtifactSources(Lists.newArrayList()).build())
-                    .withArtifactSourceMetadatas(Collections.singletonList(
-                        anArtifactSourceMetadata().withArtifactSourceName(ARTIFACT_SOURCE_NAME).build()))
+                    .withArtifactSourceName(ARTIFACT_SOURCE_NAME)
                     .build())
             .build());
 
