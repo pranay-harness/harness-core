@@ -449,14 +449,25 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldUpdatePipelineWithNoGraph() {
+    Pipeline pipeline = createPipelineNoGraph();
+    Graph graph = createInitialGraph();
+    pipeline.setGraph(graph);
+
+    updatePipeline(pipeline, 1);
+  }
+  @Test
   public void shouldUpdatePipelineWithGraph() {
     Pipeline pipeline = createPipeline();
+    updatePipeline(pipeline, 2);
+  }
+  public void updatePipeline(Pipeline pipeline, int graphCount) {
     pipeline.setDescription("newDescription");
     pipeline.setName("pipeline2");
     List<String> newServices = Lists.newArrayList("123", "345");
     pipeline.setServices(newServices);
-    Graph graph = pipeline.getGraph();
 
+    Graph graph = pipeline.getGraph();
     Node node = new Node();
     node.setId("n5");
     node.setName("PROD");
@@ -490,7 +501,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(2);
+    assertThat(res.size()).isEqualTo(graphCount);
 
     StateMachine sm = workflowService.readLatest(updatedPipeline.getUuid(), null);
     assertThat(sm.getGraph()).isNotNull();
@@ -504,6 +515,37 @@ public class WorkflowServiceTest extends WingsBaseTest {
     pipeline.setDescription("Sample Pipeline");
 
     pipeline.setServices(Lists.newArrayList("service1", "service2"));
+    Graph graph = createInitialGraph();
+
+    pipeline.setGraph(graph);
+
+    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
+    assertThat(pipeline).isNotNull();
+    assertThat(pipeline.getUuid()).isNotNull();
+
+    PageRequest<StateMachine> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("originId");
+    filter.setFieldValues(pipeline.getUuid());
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+    PageResponse<StateMachine> res = workflowService.list(req);
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(1);
+    assertThat(res.get(0)).isNotNull();
+
+    StateMachine sm = res.get(0);
+    assertThat(sm.getGraph()).isNotNull();
+    assertThat(sm.getGraph()).isEqualTo(graph);
+
+    return pipeline;
+  }
+
+  /**
+   * @return
+   */
+  private Graph createInitialGraph() {
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
 
@@ -583,8 +625,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
     links.add(link);
 
     graph.setLinks(links);
+    return graph;
+  }
 
-    pipeline.setGraph(graph);
+  private Pipeline createPipelineNoGraph() {
+    Pipeline pipeline = new Pipeline();
+    pipeline.setAppId(appId);
+    pipeline.setName("pipeline1");
+    pipeline.setDescription("Sample Pipeline");
+
+    pipeline.setServices(Lists.newArrayList("service1", "service2"));
 
     pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
     assertThat(pipeline).isNotNull();
@@ -599,16 +649,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageResponse<StateMachine> res = workflowService.list(req);
 
     assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(1);
-    assertThat(res.get(0)).isNotNull();
-
-    StateMachine sm = res.get(0);
-    assertThat(sm.getGraph()).isNotNull();
-    assertThat(sm.getGraph()).isEqualTo(graph);
+    assertThat(res.size()).isEqualTo(0);
 
     return pipeline;
   }
-
   @Test
   public void shouldCreateOrchestration() {
     createOrchestration();

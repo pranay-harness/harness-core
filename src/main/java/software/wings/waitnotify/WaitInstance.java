@@ -18,7 +18,7 @@ import java.util.Objects;
 public class WaitInstance extends Base {
   private List<String> correlationIds;
 
-  @Serialized private NotifyCallback callback;
+  private NotifyCallback callback;
 
   private long timeoutMsec;
 

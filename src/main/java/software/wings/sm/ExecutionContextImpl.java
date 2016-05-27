@@ -1,6 +1,9 @@
 package software.wings.sm;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 
@@ -24,13 +27,13 @@ public class ExecutionContextImpl implements ExecutionContext {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
+  @Inject private Injector injector;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
   @AssistedInject
   public ExecutionContextImpl(
       @Assisted StateExecutionInstance stateExecutionInstance, @Assisted @Nullable StateMachine stateMachine) {
-    super();
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
   }
@@ -93,6 +96,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     // add context params
     for (ContextElement contextElement : stateExecutionInstance.getContextElements()) {
+      injector.injectMembers(contextElement);
       context.putAll(contextElement.paramMap());
     }
 

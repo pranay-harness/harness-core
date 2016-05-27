@@ -6,17 +6,22 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.utils.validation.Create;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
@@ -31,14 +36,17 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "artifacts", noClassnameStored = true)
 @Artifact.ValidArtifact
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
-  @Indexed @Reference(idOnly = true) @NotNull(groups = Create.class) private Release release;
+  @Indexed @Reference(idOnly = true) private Release release;
 
-  @Indexed @NotEmpty(groups = Create.class) private List<ArtifactSourceMetadata> artifactSourceMetadatas;
+  @Indexed @NotEmpty(groups = Create.class) private String artifactSourceName;
 
-  @Indexed @NotNull private String displayName;
+  private Map<String, String> metadata = Maps.newHashMap();
 
-  @Indexed private String revision;
+  @Indexed @NotEmpty private String displayName;
+
+  @Indexed @NotEmpty private String revision;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 
@@ -50,6 +58,22 @@ public class Artifact extends Base {
 
   public void setRelease(Release release) {
     this.release = release;
+  }
+
+  public String getArtifactSourceName() {
+    return artifactSourceName;
+  }
+
+  public void setArtifactSourceName(String artifactSourceName) {
+    this.artifactSourceName = artifactSourceName;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, String> metadata) {
+    this.metadata = metadata;
   }
 
   public String getDisplayName() {
@@ -76,14 +100,6 @@ public class Artifact extends Base {
     this.status = status;
   }
 
-  public List<ArtifactSourceMetadata> getArtifactSourceMetadatas() {
-    return artifactSourceMetadatas;
-  }
-
-  public void setArtifactSourceMetadatas(List<ArtifactSourceMetadata> artifactSourceMetadatas) {
-    this.artifactSourceMetadatas = artifactSourceMetadatas;
-  }
-
   public List<ArtifactFile> getArtifactFiles() {
     return artifactFiles;
   }
@@ -97,39 +113,53 @@ public class Artifact extends Base {
     return artifactFiles.stream().flatMap(artifactFile -> artifactFile.getServices().stream()).collect(toSet());
   }
 
+  @JsonProperty("sourceType")
+  public SourceType getSourceType() {
+    if (release != null) {
+      Optional<ArtifactSource> artifactSource = release.getArtifactSources()
+                                                    .stream()
+                                                    .filter(source -> source.getSourceName().equals(artifactSourceName))
+                                                    .findFirst();
+      if (artifactSource.isPresent()) {
+        return artifactSource.get().getSourceType();
+      }
+    }
+    return null;
+  }
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
+    if (this == o)
       return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!super.equals(o)) {
+    if (!super.equals(o))
       return false;
-    }
     Artifact artifact = (Artifact) o;
-    return Objects.equal(release, artifact.release)
-        && Objects.equal(artifactSourceMetadatas, artifact.artifactSourceMetadatas)
-        && Objects.equal(displayName, artifact.displayName) && Objects.equal(revision, artifact.revision)
-        && Objects.equal(artifactFiles, artifact.artifactFiles) && status == artifact.status;
+    return Objects.equal(release, artifact.release) && Objects.equal(artifactSourceName, artifact.artifactSourceName)
+        && Objects.equal(metadata, artifact.metadata) && Objects.equal(displayName, artifact.displayName)
+        && Objects.equal(revision, artifact.revision) && Objects.equal(artifactFiles, artifact.artifactFiles)
+        && status == artifact.status;
   }
 
   @Override
   public int hashCode() {
     return Objects.hashCode(
-        super.hashCode(), release, artifactSourceMetadatas, displayName, revision, artifactFiles, status);
+        super.hashCode(), release, artifactSourceName, metadata, displayName, revision, artifactFiles, status);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("status", status)
-        .add("artifactFiles", artifactFiles)
-        .add("revision", revision)
-        .add("displayName", displayName)
-        .add("artifactSourceMetadatas", artifactSourceMetadatas)
         .add("release", release)
+        .add("artifactSourceName", artifactSourceName)
+        .add("metadata", metadata)
+        .add("displayName", displayName)
+        .add("revision", revision)
+        .add("artifactFiles", artifactFiles)
+        .add("status", status)
+        .add("sevices", getSevices())
+        .add("sourceType", getSourceType())
         .toString();
   }
 
@@ -161,7 +191,8 @@ public class Artifact extends Base {
 
   public static final class Builder {
     private Release release;
-    private List<ArtifactSourceMetadata> artifactSourceMetadatas;
+    private String artifactSourceName;
+    private Map<String, String> metadata = Maps.newHashMap();
     private String displayName;
     private String revision;
     private List<ArtifactFile> artifactFiles = Lists.newArrayList();
@@ -185,8 +216,13 @@ public class Artifact extends Base {
       return this;
     }
 
-    public Builder withArtifactSourceMetadatas(List<ArtifactSourceMetadata> artifactSourceMetadatas) {
-      this.artifactSourceMetadatas = artifactSourceMetadatas;
+    public Builder withArtifactSourceName(String artifactSourceName) {
+      this.artifactSourceName = artifactSourceName;
+      return this;
+    }
+
+    public Builder withMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
       return this;
     }
 
@@ -248,7 +284,8 @@ public class Artifact extends Base {
     public Builder but() {
       return anArtifact()
           .withRelease(release)
-          .withArtifactSourceMetadatas(artifactSourceMetadatas)
+          .withArtifactSourceName(artifactSourceName)
+          .withMetadata(metadata)
           .withDisplayName(displayName)
           .withRevision(revision)
           .withArtifactFiles(artifactFiles)
@@ -265,7 +302,8 @@ public class Artifact extends Base {
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setRelease(release);
-      artifact.setArtifactSourceMetadatas(artifactSourceMetadatas);
+      artifact.setArtifactSourceName(artifactSourceName);
+      artifact.setMetadata(metadata);
       artifact.setDisplayName(displayName);
       artifact.setRevision(revision);
       artifact.setArtifactFiles(artifactFiles);
