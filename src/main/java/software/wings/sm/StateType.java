@@ -57,8 +57,8 @@ public enum StateType implements StateTypeDescriptor {
   private Object uiSchema;
 
   StateType() {
-    //    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
-    //    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+    //        this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
+    //        this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
   private Object readResource(String file) {

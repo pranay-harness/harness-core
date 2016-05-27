@@ -40,4 +40,6 @@ public interface ErrorConstants {
   public static final String UNKNOWN_STENCIL_TYPE = "UNKNOWN_STENCIL_TYPE";
   public static final String ARGS_NAME = "ARGS_NAME";
   public static final String INVALID_REQUEST = "INVALID_REQUEST";
+  public static final String PIPELINE_ALREADY_TRIGGERED = "PIPELINE_ALREADY_TRIGGERED";
+  public static final String NON_EXISTING_PIPELINE = "NON_EXISTING_PIPELINE";
 }

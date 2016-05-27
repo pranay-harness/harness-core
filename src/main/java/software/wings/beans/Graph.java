@@ -6,6 +6,7 @@ package software.wings.beans;
 import software.wings.common.Constants;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,9 +18,9 @@ public class Graph {
   public static final String ORIGIN_STATE = "ORIGIN";
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
-  private List<Node> nodes;
+  private List<Node> nodes = new ArrayList<>();
 
-  private List<Link> links;
+  private List<Link> links = new ArrayList<>();
 
   public String getGraphName() {
     return graphName;

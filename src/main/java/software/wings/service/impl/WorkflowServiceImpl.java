@@ -15,6 +15,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.beans.ErrorConstants;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -160,7 +161,9 @@ public class WorkflowServiceImpl implements WorkflowService {
                                 .equal(pipeline.getUuid()),
         ops);
 
+    Graph graph = pipeline.getGraph();
     pipeline = updateWorkflow(pipeline);
+    pipeline.setGraph(graph);
     return wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
   }
 
@@ -219,6 +222,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                 .equal(orchestration.getUuid()),
         ops);
 
+    Graph graph = orchestration.getGraph();
     orchestration = updateWorkflow(orchestration);
     return wingsPersistence.get(Orchestration.class, orchestration.getAppId(), orchestration.getUuid());
   }
@@ -318,12 +322,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    if (pipeline == null) {
+      throw new WingsException(ErrorConstants.NON_EXISTING_PIPELINE);
+    }
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowExecutionType.PIPELINE, appId, pipelineId);
     if (runningWorkflowExecutions != null) {
       for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
         if (workflowExecution.getStatus() == ExecutionStatus.NEW) {
-          throw new WingsException("Pipeline already been triggered");
+          throw new WingsException(ErrorConstants.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
         }
         if (workflowExecution.getStatus() == ExecutionStatus.RUNNING) {
           // Analyze if pipeline is in initial stage
