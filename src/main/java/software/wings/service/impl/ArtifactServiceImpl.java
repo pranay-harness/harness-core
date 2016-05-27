@@ -141,4 +141,12 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact get(String appId, String artifactId) {
     return wingsPersistence.get(Artifact.class, appId, artifactId);
   }
+
+  @Override
+  public Artifact softDelete(String appId, String artifactId) {
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Artifact.class).field("appId").equal(appId).field(ID_KEY).equal(artifactId),
+        wingsPersistence.createUpdateOperations(Artifact.class).set("active", false));
+    return wingsPersistence.get(Artifact.class, appId, artifactId);
+  }
 }

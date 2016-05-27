@@ -73,6 +73,8 @@ public class ArtifactResourceTest {
     when(ARTIFACT_SERVICE.create(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.update(any(Artifact.class))).thenReturn(ACTUAL);
     when(ARTIFACT_SERVICE.get(APP_ID, ARTIFACT_ID)).thenReturn(ACTUAL);
+    when(ARTIFACT_SERVICE.softDelete(APP_ID, ARTIFACT_ID)).thenReturn(ACTUAL);
+
     tempFile = tempFolder.newFile();
     Files.write("Dummy".getBytes(), tempFile);
     when(ARTIFACT_SERVICE.download(APP_ID, ARTIFACT_ID, SERVICE_ID)).thenReturn(tempFile);
@@ -145,5 +147,16 @@ public class ArtifactResourceTest {
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
     verify(ARTIFACT_SERVICE).list(expectedPageRequest);
+  }
+
+  @Test
+  public void shouldDeleteArtifact() throws IOException {
+    RestResponse<PageResponse<Artifact>> restResponse =
+        RESOURCES.client()
+            .target("/artifacts/" + ARTIFACT_ID + "?appId=" + APP_ID)
+            .request()
+            .delete(new GenericType<RestResponse<PageResponse<Artifact>>>() {});
+
+    verify(ARTIFACT_SERVICE).softDelete(APP_ID, ARTIFACT_ID);
   }
 }

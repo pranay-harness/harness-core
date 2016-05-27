@@ -23,4 +23,6 @@ public interface ArtifactService {
   File download(String appId, String artifactId, String serviceId);
 
   Artifact get(String appId, String artifactId);
+
+  Artifact softDelete(String appId, String artifactId);
 }

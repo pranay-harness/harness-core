@@ -160,4 +160,11 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
+
+  @Test
+  public void shouldSoftDeleteArtifact() {
+    Artifact savedArtifact = artifactService.create(builder.but().build());
+    artifactService.softDelete(savedArtifact.getAppId(), savedArtifact.getUuid());
+    assertThat(artifactService.list(new PageRequest<>())).hasSize(0);
+  }
 }
