@@ -1,4 +1,4 @@
-package software.wings.service.impl;
+package software.wings.service;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.mockito.Mockito.verify;
@@ -28,7 +28,7 @@ import software.wings.service.intfc.SettingsService;
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
-public class EmailNotificationServiceImplTest extends WingsBaseTest {
+public class EmailNotificationServiceTest extends WingsBaseTest {
   private static final EmailData emailTemplateData = anEmailData()
                                                          .withTo(newArrayList("to"))
                                                          .withTo(newArrayList("cc"))
