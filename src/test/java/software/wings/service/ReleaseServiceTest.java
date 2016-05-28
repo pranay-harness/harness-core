@@ -116,7 +116,6 @@ public class ReleaseServiceTest extends WingsBaseTest {
   public void shouldDeleteInactiveRelease() {
     Release release = releaseService.create(
         releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).withActive(false).build());
-    assertThat(releaseService.delete(release.getUuid(), release.getAppId())).isTrue();
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
 

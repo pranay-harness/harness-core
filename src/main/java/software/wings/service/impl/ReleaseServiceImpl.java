@@ -10,15 +10,19 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ArtifactSource;
+import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ReleaseService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.BadRequestException;
@@ -29,21 +33,30 @@ import javax.ws.rs.NotFoundException;
 public class ReleaseServiceImpl implements ReleaseService {
   @Inject private WingsPersistence wingsPersistence;
 
+  @Inject private SettingsService settingsService;
+
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
     req.addFilter("active", true, Operator.EQ);
-    return wingsPersistence.query(Release.class, req);
+    PageResponse<Release> releases = wingsPersistence.query(Release.class, req);
+    releases.forEach(release -> populateJenkinsSettingName(release.getArtifactSources()));
+    return releases;
   }
 
   @Override
   public Release get(String id, String appId) {
-    return wingsPersistence.get(Release.class, appId, id);
+    Release release = wingsPersistence.get(Release.class, appId, id);
+    if (release != null) {
+      populateJenkinsSettingName(release.getArtifactSources());
+    }
+    return release;
   }
 
   @Override
   @ValidationGroups(Create.class)
   public Release create(Release release) {
-    return wingsPersistence.saveAndGet(Release.class, release);
+    String id = wingsPersistence.save(release);
+    return get(id, release.getAppId());
   }
 
   @Override
@@ -61,7 +74,7 @@ public class ReleaseServiceImpl implements ReleaseService {
                                                      .set("targetDate", release.getTargetDate());
 
     wingsPersistence.update(query, updateOperations);
-    return wingsPersistence.get(Release.class, release.getAppId(), release.getUuid());
+    return get(release.getUuid(), release.getAppId());
   }
 
   @Override
@@ -89,7 +102,7 @@ public class ReleaseServiceImpl implements ReleaseService {
           wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId),
           wingsPersistence.createUpdateOperations(Release.class).add("artifactSources", artifactSource));
     }
-    return wingsPersistence.get(Release.class, id);
+    return get(id, appId);
   }
 
   @Override
@@ -104,7 +117,7 @@ public class ReleaseServiceImpl implements ReleaseService {
         wingsPersistence.createUpdateOperations(Release.class)
             .removeAll("artifactSources", new BasicDBObject("sourceName", artifactSourceName)));
 
-    return wingsPersistence.get(Release.class, id);
+    return get(id, appId);
   }
 
   @Override
@@ -130,6 +143,24 @@ public class ReleaseServiceImpl implements ReleaseService {
         wingsPersistence.createUpdateOperations(Release.class).set("active", false);
 
     wingsPersistence.update(query, updateOperations);
-    return wingsPersistence.get(Release.class, appId, id);
+    return get(id, appId);
+  }
+
+  private void populateJenkinsSettingName(List<ArtifactSource> artifactSources) {
+    if (!isEmpty(artifactSources)) {
+      for (ArtifactSource artifactSource : artifactSources) {
+        if (artifactSource instanceof JenkinsArtifactSource) {
+          try {
+            SettingAttribute attribute =
+                settingsService.get(((JenkinsArtifactSource) artifactSource).getJenkinsSettingId());
+            if (attribute != null) {
+              artifactSource.setSourceName(attribute.getName());
+            }
+          } catch (Exception e) {
+            // Ignore
+          }
+        }
+      }
+    }
   }
 }

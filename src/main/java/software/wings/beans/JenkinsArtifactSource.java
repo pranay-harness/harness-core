@@ -15,6 +15,8 @@ import javax.validation.Valid;
 public class JenkinsArtifactSource extends ArtifactSource {
   @NotEmpty private String jenkinsSettingId;
 
+  private String name;
+
   @NotEmpty private String jobname;
 
   @NotEmpty @Valid private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
@@ -54,6 +56,14 @@ public class JenkinsArtifactSource extends ArtifactSource {
     this.artifactPathServices = artifactPathServices;
   }
 
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -82,11 +92,12 @@ public class JenkinsArtifactSource extends ArtifactSource {
   }
 
   public static final class Builder {
-    private ArtifactType artifactType;
-    private String sourceName;
-    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
-    private String jobname;
     private String jenkinsSettingId;
+    private String name;
+    private String jobname;
+    private List<ArtifactPathServiceEntry> artifactPathServices = Lists.newArrayList();
+    private String sourceName;
+    private ArtifactType artifactType;
 
     private Builder() {}
 
@@ -94,18 +105,13 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return new Builder();
     }
 
-    public Builder withArtifactType(ArtifactType artifactType) {
-      this.artifactType = artifactType;
+    public Builder withJenkinsSettingId(String jenkinsSettingId) {
+      this.jenkinsSettingId = jenkinsSettingId;
       return this;
     }
 
-    public Builder withSourceName(String sourceName) {
-      this.sourceName = sourceName;
-      return this;
-    }
-
-    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
-      this.artifactPathServices = artifactPathServices;
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -114,27 +120,39 @@ public class JenkinsArtifactSource extends ArtifactSource {
       return this;
     }
 
-    public Builder withJenkinsSettingId(String jenkinsSettingId) {
-      this.jenkinsSettingId = jenkinsSettingId;
+    public Builder withArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
+      this.artifactPathServices = artifactPathServices;
+      return this;
+    }
+
+    public Builder withSourceName(String sourceName) {
+      this.sourceName = sourceName;
+      return this;
+    }
+
+    public Builder withArtifactType(ArtifactType artifactType) {
+      this.artifactType = artifactType;
       return this;
     }
 
     public Builder but() {
       return aJenkinsArtifactSource()
-          .withArtifactType(artifactType)
-          .withSourceName(sourceName)
-          .withArtifactPathServices(artifactPathServices)
+          .withJenkinsSettingId(jenkinsSettingId)
+          .withName(name)
           .withJobname(jobname)
-          .withJenkinsSettingId(jenkinsSettingId);
+          .withArtifactPathServices(artifactPathServices)
+          .withSourceName(sourceName)
+          .withArtifactType(artifactType);
     }
 
     public JenkinsArtifactSource build() {
       JenkinsArtifactSource jenkinsArtifactSource = new JenkinsArtifactSource();
-      jenkinsArtifactSource.setArtifactType(artifactType);
-      jenkinsArtifactSource.setSourceName(sourceName);
-      jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
-      jenkinsArtifactSource.setJobname(jobname);
       jenkinsArtifactSource.setJenkinsSettingId(jenkinsSettingId);
+      jenkinsArtifactSource.setName(name);
+      jenkinsArtifactSource.setJobname(jobname);
+      jenkinsArtifactSource.setArtifactPathServices(artifactPathServices);
+      jenkinsArtifactSource.setSourceName(sourceName);
+      jenkinsArtifactSource.setArtifactType(artifactType);
       return jenkinsArtifactSource;
     }
   }
