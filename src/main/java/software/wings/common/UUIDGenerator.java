@@ -1,5 +1,8 @@
 package software.wings.common;
 
+import org.apache.commons.codec.binary.Base64;
+
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 /**
@@ -9,6 +12,11 @@ import java.util.UUID;
  */
 public class UUIDGenerator {
   public static String getUuid() {
-    return UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+    UUID uuid = UUID.randomUUID();
+    byte[] bytes = new byte[16];
+    ByteBuffer uuidBytes = ByteBuffer.wrap(bytes);
+    uuidBytes.putLong(uuid.getMostSignificantBits());
+    uuidBytes.putLong(uuid.getLeastSignificantBits());
+    return Base64.encodeBase64URLSafeString(bytes);
   }
 }
