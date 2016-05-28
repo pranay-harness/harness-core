@@ -7,6 +7,7 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.JenkinsBuildServiceImpl.APP_ID;
@@ -21,7 +22,8 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ArtifactSource.ArtifactType;
+import software.wings.beans.JenkinsConfig;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -36,9 +38,11 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/13/16.
  */
 public class JenkinsBuildServiceTest extends WingsBaseTest {
-  private static final String releaseId = "RELEASE_ID";
-  private static final String appId = "APP_ID";
+  private static final String releaseId = UUIDGenerator.getUuid();
+  private static final String appId = UUIDGenerator.getUuid();
   private static final String artifactSourceName = "job1";
+  private static final JenkinsConfig jenkinsConfig =
+      aJenkinsConfig().withJenkinsUrl("http://jenkins").withUsername("username").withPassword("password").build();
 
   @Mock private JenkinsFactory jenkinsFactory;
 
@@ -72,10 +76,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
             .withUuid(releaseId)
             .withReleaseName("Release 1.1")
             .withArtifactSources(Lists.newArrayList(aJenkinsArtifactSource()
-                                                        .withJenkinsUrl("http://jenkins")
-                                                        .withArtifactType(ArtifactType.WAR)
-                                                        .withUsername("username")
-                                                        .withPassword("password")
+                                                        .withJenkinsSettingId("")
+                                                        .withSourceName(artifactSourceName)
                                                         .withJobname(artifactSourceName)
                                                         .withArtifactPathServices(Lists.newArrayList())
                                                         .build()))
@@ -85,7 +87,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
   @Test
   public void shouldFailValidationWhenReleaseIdIsNull() throws IOException {
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> jenkinsBuildService.getBuilds(new MultivaluedStringMap()));
+        .isThrownBy(() -> jenkinsBuildService.getBuilds(new MultivaluedStringMap(), new JenkinsConfig()));
   }
 
   @Test
@@ -96,7 +98,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
             putSingle(RELEASE_ID, releaseId);
             putSingle(APP_ID, appId);
           }
-        }));
+        }, jenkinsConfig));
   }
 
   @Test
@@ -108,7 +110,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
             putSingle(APP_ID, appId);
             putSingle(ARTIFACT_SOURCE_NAME, artifactSourceName);
           }
-        }));
+        }, jenkinsConfig));
   }
 
   @Test
@@ -120,18 +122,20 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
             putSingle(APP_ID, appId);
             putSingle(ARTIFACT_SOURCE_NAME, "job2");
           }
-        }));
+        }, jenkinsConfig));
   }
 
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
-    assertThat(jenkinsBuildService.getBuilds(new MultivaluedStringMap() {
-      {
-        putSingle(RELEASE_ID, releaseId);
-        putSingle(APP_ID, appId);
-        putSingle(ARTIFACT_SOURCE_NAME, artifactSourceName);
-      }
-    }))
+    assertThat(jenkinsBuildService.getBuilds(
+                   new MultivaluedStringMap() {
+                     {
+                       putSingle(RELEASE_ID, releaseId);
+                       putSingle(APP_ID, appId);
+                       putSingle(ARTIFACT_SOURCE_NAME, artifactSourceName);
+                     }
+                   },
+                   jenkinsConfig))
         .hasSize(4)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));

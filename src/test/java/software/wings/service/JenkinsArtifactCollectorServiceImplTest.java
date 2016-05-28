@@ -10,7 +10,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.collect.ImmutableMap;
@@ -35,6 +37,7 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.SettingsService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -50,11 +53,8 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
   public static final software.wings.beans.JenkinsArtifactSource JENKINS_ARTIFACT_SOURCE =
       aJenkinsArtifactSource()
           .withSourceName("job1")
-          .withUsername("username")
-          .withPassword("password")
-          .withSourceName("job1")
+          .withJobname("job1")
           .withArtifactType(ArtifactType.WAR)
-          .withJenkinsUrl("http://jenkins")
           .withArtifactPathServices(Lists.newArrayList(anArtifactPathServiceEntry()
                                                            .withArtifactPathRegex("build/svr-*.war")
                                                            .withServices(Lists.newArrayList(SERVICE))
@@ -73,7 +73,7 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
       verifyNoMoreInteractions(jenkins, fileService, jenkinsFactory);
     }
   };
-
+  @Mock private SettingsService settingsService;
   @InjectMocks @Inject private JenkinsArtifactCollectorServiceImpl jenkinsArtifactCollectorService;
 
   /**
@@ -86,6 +86,14 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
         .thenReturn(ImmutablePair.of("svr-1234.war", new ByteArrayInputStream("Dummy".getBytes())));
     when(fileService.saveFile(any(FileMetadata.class), any(InputStream.class), any(FileBucket.class)))
         .thenReturn(FILE_ID);
+    when(settingsService.get(anyString()))
+        .thenReturn(aSettingAttribute()
+                        .withValue(aJenkinsConfig()
+                                       .withJenkinsUrl("http://jenkins")
+                                       .withUsername("username")
+                                       .withPassword("password")
+                                       .build())
+                        .build());
   }
 
   @Test

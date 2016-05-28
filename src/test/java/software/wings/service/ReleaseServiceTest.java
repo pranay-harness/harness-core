@@ -41,14 +41,12 @@ public class ReleaseServiceTest extends WingsBaseTest {
           .withArtifactType(ArtifactType.WAR)
           .withSourceName("job1")
           .withJobname("job1")
-          .withUsername("username")
-          .withPassword("password")
+          .withJenkinsSettingId("JENKINS_SETTING_ID")
           .withArtifactPathServices(Lists.newArrayList(
               anArtifactPathServiceEntry()
                   .withArtifactPathRegex("dist/svr-*.war")
                   .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build()))
                   .build()))
-          .withJenkinsUrl("http://jenkins")
           .build();
 
   private static final long futureOffset = MILLISECONDS.convert(10, MINUTES);
@@ -118,7 +116,6 @@ public class ReleaseServiceTest extends WingsBaseTest {
   public void shouldDeleteInactiveRelease() {
     Release release = releaseService.create(
         releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).withActive(false).build());
-    assertThat(releaseService.delete(release.getUuid(), release.getAppId())).isTrue();
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
 

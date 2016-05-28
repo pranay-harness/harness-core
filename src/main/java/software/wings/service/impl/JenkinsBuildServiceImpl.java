@@ -7,6 +7,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.JenkinsArtifactSource;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Release;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -33,7 +34,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Inject private MainConfiguration configuration;
 
   @Override
-  public List<BuildDetails> getBuilds(MultivaluedMap<String, String> queryParameters) throws IOException {
+  public List<BuildDetails> getBuilds(MultivaluedMap<String, String> queryParameters, JenkinsConfig jenkinsConfig)
+      throws IOException {
     String releaseId = queryParameters.getFirst(RELEASE_ID);
     String appId = queryParameters.getFirst(APP_ID);
     String artifactSourceName = queryParameters.getFirst(ARTIFACT_SOURCE_NAME);
@@ -52,8 +54,8 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
     JenkinsArtifactSource jenkinsArtifactSource = ((JenkinsArtifactSource) artifactSource);
 
-    Jenkins jenkins = jenkinsFactory.create(jenkinsArtifactSource.getJenkinsUrl(), jenkinsArtifactSource.getUsername(),
-        jenkinsArtifactSource.getPassword());
+    Jenkins jenkins =
+        jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
     return jenkins.getBuildsForJob(jenkinsArtifactSource.getJobname(), configuration.getJenkinsBuildQuerySize());
   }
 }
