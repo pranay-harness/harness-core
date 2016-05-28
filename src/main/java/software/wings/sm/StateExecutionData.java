@@ -11,8 +11,8 @@ public class StateExecutionData implements Serializable {
   private static final long serialVersionUID = 1L;
 
   private String stateName;
-  private long startTs;
-  private long endTs;
+  private Long startTs;
+  private Long endTs;
   private ExecutionStatus status;
 
   public String getStateName() {
@@ -23,19 +23,19 @@ public class StateExecutionData implements Serializable {
     this.stateName = stateName;
   }
 
-  public long getStartTs() {
+  public Long getStartTs() {
     return startTs;
   }
 
-  public void setStartTs(long startTs) {
+  public void setStartTs(Long startTs) {
     this.startTs = startTs;
   }
 
-  public long getEndTs() {
+  public Long getEndTs() {
     return endTs;
   }
 
-  public void setEndTs(long endTs) {
+  public void setEndTs(Long endTs) {
     this.endTs = endTs;
   }
 

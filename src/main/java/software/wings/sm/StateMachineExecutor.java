@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 /**
@@ -134,12 +135,14 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State currentState = sm.getState(stateExecutionInstance.getStateName());
 
-    updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData());
+    ExecutionStatus status = executionResponse.getExecutionStatus();
+
     if (executionResponse.isAsynch()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
-        updateStatus(stateExecutionInstance, ExecutionStatus.ERROR, "endTs");
+        status = ExecutionStatus.ERROR;
+        updateStatus(stateExecutionInstance, status, "endTs");
       } else {
         NotifyCallback callback =
             new StateMachineResumeCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid());
@@ -147,10 +150,13 @@ public class StateMachineExecutor {
             executionResponse.getCorrelationIds().toArray(new String[executionResponse.getCorrelationIds().size()]));
       }
 
+      updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(), status);
       handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
 
     } else {
-      if (executionResponse.getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(), status);
+
+      if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else {
         return failedTransition(context, null);
@@ -165,6 +171,9 @@ public class StateMachineExecutor {
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     logger.info("Error seen in the state execution  - currentState : {}, stateExecutionInstanceId: {}", currentState,
         stateExecutionInstance.getUuid(), exception);
+
+    updateStateExecutionData(stateExecutionInstance, null, ExecutionStatus.FAILED);
+
     try {
       return failedTransition(context, exception);
     } catch (Exception e2) {
@@ -263,12 +272,18 @@ public class StateMachineExecutor {
   }
 
   private void updateStateExecutionData(
-      StateExecutionInstance stateExecutionInstance, StateExecutionData stateExecutionData) {
-    if (stateExecutionData == null) {
-      return;
-    }
+      StateExecutionInstance stateExecutionInstance, StateExecutionData stateExecutionData, ExecutionStatus status) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
-    stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
+    if (stateExecutionData == null) {
+      stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
+      if (stateExecutionData == null) {
+        stateExecutionData = new StateExecutionData();
+        stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
+      }
+    }
+    stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
+    stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());
+    stateExecutionInstance.setStatus(stateExecutionInstance.getStatus());
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("stateExecutionMap", stateExecutionMap);

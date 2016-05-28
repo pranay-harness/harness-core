@@ -18,6 +18,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
+
 import javax.inject.Inject;
 
 /**
@@ -38,6 +39,11 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req) {
     return wingsPersistence.query(AuditHeader.class, req);
+  }
+
+  @Override
+  public AuditHeader read(String appId, String auditHeaderId) {
+    return wingsPersistence.get(AuditHeader.class, appId, auditHeaderId);
   }
 
   @Override
