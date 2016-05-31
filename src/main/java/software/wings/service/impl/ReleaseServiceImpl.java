@@ -154,7 +154,7 @@ public class ReleaseServiceImpl implements ReleaseService {
             SettingAttribute attribute =
                 settingsService.get(((JenkinsArtifactSource) artifactSource).getJenkinsSettingId());
             if (attribute != null) {
-              artifactSource.setSourceName(attribute.getName());
+              ((JenkinsArtifactSource) artifactSource).setName(attribute.getName());
             }
           } catch (Exception e) {
             // Ignore
