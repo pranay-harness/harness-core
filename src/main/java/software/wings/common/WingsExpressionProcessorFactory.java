@@ -23,17 +23,17 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
 
   @Override
   public ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context) {
-    if (expression.startsWith(ServicesExpressionProcessor.EXPRESSION_START_PATTERN)) {
-      return new ServicesExpressionProcessor(context, serviceResourceService);
-    } else if (expression.startsWith(HostsExpressionProcessor.EXPRESSION_START_PATTERN)) {
-      return new HostsExpressionProcessor(context, hostService);
+    if (expression.startsWith(ServiceExpressionProcessor.EXPRESSION_START_PATTERN)) {
+      return new ServiceExpressionProcessor(context, serviceResourceService);
+    } else if (expression.startsWith(HostExpressionProcessor.EXPRESSION_START_PATTERN)) {
+      return new HostExpressionProcessor(context, hostService);
     }
     return null;
   }
 
   @Override
   public List<ExpressionProcessor> getExpressionProcessors(ExecutionContext context) {
-    return Lists.newArrayList(new ServicesExpressionProcessor(context, serviceResourceService),
-        new HostsExpressionProcessor(context, hostService));
+    return Lists.newArrayList(new ServiceExpressionProcessor(context, serviceResourceService),
+        new HostExpressionProcessor(context, hostService));
   }
 }

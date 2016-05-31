@@ -8,4 +8,5 @@ package software.wings.common;
 public interface Constants {
   String CATALOG_STENCILS = "STENCILS";
   String DEFAULT_WORKFLOW_NAME = "MAIN";
+  char WILD_CHAR = '*';
 }

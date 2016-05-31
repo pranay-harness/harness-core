@@ -16,21 +16,21 @@ import java.util.List;
 /**
  * @author Rishi
  */
-public class HostsExpressionProcessor implements ExpressionProcessor {
+public class HostExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "hosts()";
-  private static final String HOSTS_EXPR_PROCESSOR = "hostsExpressionProcessor";
+  private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";
   private HostService hostService;
   private String[] hostNames;
-  private Object appId;
+  private String appId;
 
-  public HostsExpressionProcessor(ExecutionContext context, HostService hostService) {
+  public HostExpressionProcessor(ExecutionContext context, HostService hostService) {
     this.hostService = hostService;
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 
   @Override
   public String getPrefixObjectName() {
-    return HOSTS_EXPR_PROCESSOR;
+    return HOST_EXPR_PROCESSOR;
   }
 
   @Override
@@ -38,19 +38,19 @@ public class HostsExpressionProcessor implements ExpressionProcessor {
     if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
       return null;
     }
-    expression = HOSTS_EXPR_PROCESSOR + "." + expression;
+    expression = HOST_EXPR_PROCESSOR + "." + expression;
     if (!expression.endsWith(".list()")) {
       expression = expression + ".list()";
     }
     return expression;
   }
 
-  public HostsExpressionProcessor hosts(String... hostNames) {
+  public HostExpressionProcessor hosts(String... hostNames) {
     this.hostNames = hostNames;
     return this;
   }
 
-  public HostsExpressionProcessor withNames(String... hostNames) {
+  public HostExpressionProcessor withNames(String... hostNames) {
     this.hostNames = hostNames;
     return this;
   }
