@@ -7,7 +7,9 @@ package software.wings.sm;
  * @author Rishi
  */
 public interface ExpressionProcessor {
-  public String getPrefixObjectName();
+  public static final String EXPRESSION_NAME_DELIMITER = ",";
 
-  public String normalizeExpression(String expression);
+  String getPrefixObjectName();
+
+  String normalizeExpression(String expression);
 }

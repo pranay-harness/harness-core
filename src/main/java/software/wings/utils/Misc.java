@@ -1,5 +1,8 @@
 package software.wings.utils;
 
+import org.apache.commons.lang3.ArrayUtils;
+import software.wings.common.Constants;
+
 import java.io.Closeable;
 
 /**
@@ -77,4 +80,16 @@ public class Misc {
   public interface ThrowingCallable { void run() throws Exception; }
 
   public interface ReturningThrowingCallable<T> { T run() throws Exception; }
+
+  public static boolean isWildCharPresent(String... names) {
+    if (ArrayUtils.isEmpty(names)) {
+      return false;
+    }
+    for (String name : names) {
+      if (name.indexOf(Constants.WILD_CHAR) >= 0) {
+        return true;
+      }
+    }
+    return false;
+  }
 }
