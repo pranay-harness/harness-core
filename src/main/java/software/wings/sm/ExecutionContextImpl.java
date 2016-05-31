@@ -1,9 +1,9 @@
 package software.wings.sm;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.assistedinject.Assisted;
-import com.google.inject.assistedinject.AssistedInject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
-import javax.annotation.Nullable;
-
 /**
  * Describes execution context for a state machine execution.
  *
@@ -26,15 +24,17 @@ public class ExecutionContextImpl implements ExecutionContext {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
-  @Inject private Injector injector;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
-  @AssistedInject
   public ExecutionContextImpl(
-      @Assisted StateExecutionInstance stateExecutionInstance, @Assisted @Nullable StateMachine stateMachine) {
+      StateExecutionInstance stateExecutionInstance, StateMachine stateMachine, Injector injector) {
+    injector.injectMembers(this);
     this.stateExecutionInstance = stateExecutionInstance;
     this.stateMachine = stateMachine;
+    if (!isEmpty(stateExecutionInstance.getContextElements())) {
+      stateExecutionInstance.getContextElements().forEach(contextElement -> injector.injectMembers(contextElement));
+    }
   }
 
   public StateMachine getStateMachine() {
@@ -95,7 +95,6 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     // add context params
     for (ContextElement contextElement : stateExecutionInstance.getContextElements()) {
-      injector.injectMembers(contextElement);
       context.putAll(contextElement.paramMap());
     }
 

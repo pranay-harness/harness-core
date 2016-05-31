@@ -41,6 +41,11 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
+  public AuditHeader read(String appId, String auditHeaderId) {
+    return wingsPersistence.get(AuditHeader.class, appId, auditHeaderId);
+  }
+
+  @Override
   public AuditHeader create(AuditHeader header) {
     return wingsPersistence.saveAndGet(AuditHeader.class, header);
   }

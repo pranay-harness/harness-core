@@ -16,6 +16,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -37,6 +38,11 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public SettingAttribute get(String appId, String varId) {
+    return wingsPersistence.get(SettingAttribute.class, appId, varId);
+  }
+
+  @Override
+  public SettingAttribute get(String varId) {
     return wingsPersistence.get(SettingAttribute.class, varId);
   }
 
@@ -90,7 +96,7 @@ public class SettingsServiceImpl implements SettingsService {
   public List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
-        .equal(appId)
+        .in(Arrays.asList(appId, SettingAttribute.GLOBAL_APP_ID))
         .field("value.type")
         .equal(type)
         .asList();

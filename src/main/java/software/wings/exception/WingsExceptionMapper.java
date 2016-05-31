@@ -13,6 +13,7 @@ import javax.ws.rs.ext.ExceptionMapper;
  */
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
+
   @Override
   public Response toResponse(WingsException ex) {
     logger.error("Exception occured", ex);

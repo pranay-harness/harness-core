@@ -20,6 +20,7 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.service.impl.ActivityServiceImpl;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
@@ -35,6 +36,7 @@ import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
+import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -46,6 +48,7 @@ import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactCollectorService;
@@ -60,6 +63,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
@@ -72,9 +76,6 @@ import software.wings.service.intfc.SshCommandUnitExecutorService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextFactory;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessorFactory;
 
 import java.util.Map;
@@ -138,6 +139,8 @@ public class WingsModule extends AbstractModule {
     bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
     bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+    bind(ActivityService.class).to(ActivityServiceImpl.class);
+    bind(LogService.class).to(LogServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);
@@ -145,9 +148,6 @@ public class WingsModule extends AbstractModule {
         .to(JenkinsArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
-    install(new FactoryModuleBuilder()
-                .implement(ExecutionContext.class, ExecutionContextImpl.class)
-                .build(ExecutionContextFactory.class));
     install(new FactoryModuleBuilder().build(DeploymentServiceImpl.DeploymentExecutor.Factory.class));
   }
 }

@@ -11,10 +11,13 @@ import software.wings.beans.ArtifactPathServiceEntry;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.JenkinsArtifactSource;
+import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.SettingsService;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -27,9 +30,8 @@ import javax.inject.Inject;
  */
 public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorService {
   public static final String BUILD_NO = "buildNo";
-
+  @Inject SettingsService settingsService;
   @Inject private FileService fileService;
-
   @Inject private JenkinsFactory jenkinsFactory;
 
   @Override
@@ -38,8 +40,10 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
     List<ArtifactFile> artifactFiles = Lists.newArrayList();
     InputStream in = null;
     try {
-      Jenkins jenkins = jenkinsFactory.create(jenkinsArtifactSource.getJenkinsUrl(),
-          jenkinsArtifactSource.getUsername(), jenkinsArtifactSource.getPassword());
+      SettingAttribute settingAttribute = settingsService.get(jenkinsArtifactSource.getJenkinsSettingId());
+      JenkinsConfig jenkinsConfig = (JenkinsConfig) settingAttribute.getValue();
+      Jenkins jenkins = jenkinsFactory.create(
+          jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getUsername(), jenkinsConfig.getPassword());
       for (ArtifactPathServiceEntry artifactPathServiceEntry : jenkinsArtifactSource.getArtifactPathServices()) {
         Pair<String, InputStream> fileInfo = jenkins.downloadArtifact(jenkinsArtifactSource.getJobname(),
             arguments.get(BUILD_NO), artifactPathServiceEntry.getArtifactPathRegex());

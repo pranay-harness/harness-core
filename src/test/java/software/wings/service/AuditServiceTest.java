@@ -1,7 +1,17 @@
 package software.wings.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.audit.AuditHeader;
+import software.wings.beans.HttpMethod;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.User;
+import software.wings.common.UUIDGenerator;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AuditService;
 import software.wings.utils.JsonUtils;
 
@@ -15,18 +25,86 @@ public class AuditServiceTest extends WingsBaseTest {
 
   @Inject private JsonUtils jsonUtils;
 
-  @Test
-  public void shouldCreate() throws Exception {}
+  private String appId = UUIDGenerator.getUuid();
 
   @Test
-  public void shouldCreate1() throws Exception {}
+  public void shouldCreate() throws Exception {
+    createAuditHeader();
+  }
+
+  private AuditHeader createAuditHeader() {
+    AuditHeader header =
+        AuditHeader.Builder.anAuditHeader()
+            .withAppId(appId)
+            .withUrl("http://localhost:9090/wings/catalogs")
+            .withResourcePath("catalogs")
+            .withRequestMethod(HttpMethod.GET)
+            .withHeaderString(
+                "Cache-Control=;no-cache,Accept=;*/*,Connection=;keep-alive,User-Agent=;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36,Host=;localhost:9090,Postman-Token=;bdd7280e-bfac-b0f1-9603-c7b0e55a74af,Accept-Encoding=;gzip, deflate, sdch,Accept-Language=;en-US,en;q=0.8,Content-Type=;application/json")
+            .withRemoteHostName("0:0:0:0:0:0:0:1")
+            .withRemoteHostPort(555555)
+            .withRemoteIpAddress("0:0:0:0:0:0:0:1")
+            .withLocalHostName("Rishis-MacBook-Pro.local")
+            .withLocalIpAddress("192.168.0.110")
+            .build();
+    auditService.create(header);
+    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+    assertThat(header2).isNotNull();
+    assertThat(header2.getUuid()).isNotNull();
+    assertThat(header2).isEqualToComparingFieldByField(header);
+    return header;
+  }
+
+  //  @Test
+  //  public void shouldCreateRequestPayload() throws Exception {
+  //
+  //    AuditHeader header = createAuditHeader();
+  //    assertThat(header.getRequestTime()).isNull();
+  //    assertThat(header.getRequestPayloadUuid()).isNull();
+  //    byte[] httpBody = "TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST".getBytes();
+  //    String fileId = auditService.create(header, RequestType.REQUEST, httpBody );
+  //
+  //    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+  //    assertThat(header2).isNotNull();
+  //    assertThat(header2.getRequestPayloadUuid()).isEqualTo(fileId);
+  //    assertThat(header2.getRequestPayloadUuid()).isNotNull();
+  //
+  //  }
 
   @Test
-  public void shouldFinalize() throws Exception {}
+  public void shouldList() throws Exception {
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+    createAuditHeader();
+
+    PageResponse<AuditHeader> res = auditService.list(
+        PageRequest.Builder.aPageRequest()
+            .withOffset("1")
+            .withLimit("2")
+            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
+            .build());
+
+    assertThat(res).isNotNull();
+    assertThat(res.size()).isEqualTo(2);
+    assertThat(res.getTotal()).isEqualTo(4);
+    assertThat(res.getPageSize()).isEqualTo(2);
+    assertThat(res.getStart()).isEqualTo(1);
+    assertThat(res.getResponse()).isNotNull();
+    assertThat(res.getResponse().size()).isEqualTo(2);
+  }
 
   @Test
-  public void shouldList() throws Exception {}
-
-  @Test
-  public void shouldUpdateUser() throws Exception {}
+  public void shouldUpdateUser() throws Exception {
+    AuditHeader header = createAuditHeader();
+    assertThat(header).isNotNull();
+    assertThat(header.getRemoteUser()).isNull();
+    User user = new User();
+    user.setUuid(UUIDGenerator.getUuid());
+    user.setName("abc");
+    auditService.updateUser(header, user);
+    AuditHeader header2 = auditService.read(header.getAppId(), header.getUuid());
+    assertThat(header2).isNotNull();
+    assertThat(header2.getRemoteUser()).isEqualTo(user);
+  }
 }

@@ -16,6 +16,8 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
@@ -70,6 +72,12 @@ public class WingsApplication extends Application<MainConfiguration> {
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
     bootstrap.addBundle(new AssetsBundle("/static", "/static", "index.html"));
+    bootstrap.addBundle(new SwaggerBundle<MainConfiguration>() {
+      @Override
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MainConfiguration mainConfiguration) {
+        return mainConfiguration.getSwaggerBundleConfiguration();
+      }
+    });
 
     logger.info("bootstrapping done.");
   }

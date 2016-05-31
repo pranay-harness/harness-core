@@ -31,12 +31,12 @@ public class StateMachineResumeCallback implements NotifyCallback {
     return appId;
   }
 
-  public String getStateExecutionInstanceId() {
-    return stateExecutionInstanceId;
-  }
-
   public void setAppId(String appId) {
     this.appId = appId;
+  }
+
+  public String getStateExecutionInstanceId() {
+    return stateExecutionInstanceId;
   }
 
   public void setStateExecutionInstanceId(String stateExecutionInstanceId) {

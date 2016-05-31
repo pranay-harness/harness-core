@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Injector;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
@@ -18,18 +19,16 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.NotificationService;
-import software.wings.sm.ExecutionContextFactory;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 
 import java.io.IOException;
-
 import javax.inject.Inject;
 
 /**
- * @author Rishi
+ * @author paggarwal.
  */
 public class EmailStateTest extends WingsBaseTest {
   private static final String stateName = "emailState1";
@@ -37,7 +36,7 @@ public class EmailStateTest extends WingsBaseTest {
       anEmailStateExecutionData().withToAddress("to1,to2").withCcAddress("cc1,cc2").withSubject("subject").withBody(
           "body");
 
-  @Inject private ExecutionContextFactory executionContextFactory;
+  @Inject private Injector injector;
 
   @Mock private NotificationService<EmailState> emailNotificationService;
 
@@ -51,7 +50,7 @@ public class EmailStateTest extends WingsBaseTest {
     stateExecutionInstance.setUuid(UUIDGenerator.getUuid());
     stateExecutionInstance.setStateName(stateName);
 
-    context = executionContextFactory.create(stateExecutionInstance, null);
+    context = new ExecutionContextImpl(stateExecutionInstance, null, injector);
 
     HostElement host = new HostElement();
     host.setHostName("app123.application.com");
