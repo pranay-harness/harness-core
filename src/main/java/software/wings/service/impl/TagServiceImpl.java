@@ -1,14 +1,19 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.TagService;
 
@@ -22,6 +27,7 @@ import javax.inject.Inject;
 public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private HostService hostService;
 
   @Override
   public PageResponse<Tag> listRootTags(PageRequest<Tag> request) {
@@ -73,8 +79,20 @@ public class TagServiceImpl implements TagService {
     if (tag != null) {
       wingsPersistence.delete(Tag.class, tag.getUuid());
       if (tag.getChildren() != null) {
-        tag.getChildren().forEach(childTag -> cascadingDelete(childTag));
+        tag.getChildren().forEach(this ::cascadingDelete);
+      } else { // leaf tag should update hostInstance mapping
+        updateAllServiceTemplatesWithDeletedHosts(tag);
       }
+    }
+  }
+
+  private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
+    List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), asList(tag));
+    Query<ServiceTemplate> serviceTemplates =
+        wingsPersistence.createQuery(ServiceTemplate.class).field("tags").hasThisElement(tag);
+    if (serviceTemplates != null) {
+      serviceTemplates.forEach(
+          serviceTemplate -> { serviceInstanceService.updateHostMappings(serviceTemplate, new ArrayList<>(), hosts); });
     }
   }
 
