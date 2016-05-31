@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
@@ -9,11 +10,14 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "activities", noClassnameStored = true)
 public class Activity extends Base {
-  private String commandName;
-  private String commandType;
-  private String serviceId;
-  private String serviceTemplateId;
-  private String hostName;
+  @NotEmpty private String commandName;
+  @NotEmpty private String commandType;
+  @NotEmpty private String serviceId;
+  @NotEmpty private String serviceName;
+  @NotEmpty private String serviceTemplateId;
+  @NotEmpty private String serviceTemplateName;
+  @NotEmpty private String hostName;
+  private String releaseId;
   private String releaseName;
   private String artifactName;
   private Status status = Status.RUNNING;
@@ -42,6 +46,14 @@ public class Activity extends Base {
     this.serviceId = serviceId;
   }
 
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
   public String getServiceTemplateId() {
     return serviceTemplateId;
   }
@@ -50,12 +62,28 @@ public class Activity extends Base {
     this.serviceTemplateId = serviceTemplateId;
   }
 
+  public String getServiceTemplateName() {
+    return serviceTemplateName;
+  }
+
+  public void setServiceTemplateName(String serviceTemplateName) {
+    this.serviceTemplateName = serviceTemplateName;
+  }
+
   public String getHostName() {
     return hostName;
   }
 
   public void setHostName(String hostName) {
     this.hostName = hostName;
+  }
+
+  public String getReleaseId() {
+    return releaseId;
+  }
+
+  public void setReleaseId(String releaseId) {
+    this.releaseId = releaseId;
   }
 
   public String getReleaseName() {
@@ -88,8 +116,11 @@ public class Activity extends Base {
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("serviceId", serviceId)
+        .add("serviceName", serviceName)
         .add("serviceTemplateId", serviceTemplateId)
+        .add("serviceTemplateName", serviceTemplateName)
         .add("hostName", hostName)
+        .add("releaseId", releaseId)
         .add("releaseName", releaseName)
         .add("artifactName", artifactName)
         .add("status", status)
@@ -102,8 +133,11 @@ public class Activity extends Base {
     private String commandName;
     private String commandType;
     private String serviceId;
+    private String serviceName;
     private String serviceTemplateId;
+    private String serviceTemplateName;
     private String hostName;
+    private String releaseId;
     private String releaseName;
     private String artifactName;
     private Status status = Status.RUNNING;
@@ -136,13 +170,28 @@ public class Activity extends Base {
       return this;
     }
 
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
+    public Builder withServiceTemplateName(String serviceTemplateName) {
+      this.serviceTemplateName = serviceTemplateName;
+      return this;
+    }
+
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withReleaseId(String releaseId) {
+      this.releaseId = releaseId;
       return this;
     }
 
@@ -201,8 +250,11 @@ public class Activity extends Base {
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withServiceId(serviceId)
+          .withServiceName(serviceName)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceTemplateName(serviceTemplateName)
           .withHostName(hostName)
+          .withReleaseId(releaseId)
           .withReleaseName(releaseName)
           .withArtifactName(artifactName)
           .withStatus(status)
@@ -220,8 +272,11 @@ public class Activity extends Base {
       activity.setCommandName(commandName);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);
+      activity.setServiceName(serviceName);
       activity.setServiceTemplateId(serviceTemplateId);
+      activity.setServiceTemplateName(serviceTemplateName);
       activity.setHostName(hostName);
+      activity.setReleaseId(releaseId);
       activity.setReleaseName(releaseName);
       activity.setArtifactName(artifactName);
       activity.setStatus(status);

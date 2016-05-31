@@ -13,9 +13,14 @@ import java.util.List;
  */
 public interface ServiceInstanceService {
   PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest);
+
   ServiceInstance save(ServiceInstance serviceInstance);
+
   ServiceInstance update(ServiceInstance serviceInstance);
+
   void delete(String appId, String envId, String instanceId);
+
   ServiceInstance get(String appId, String envId, String instanceId);
+
   void updateHostMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
 }

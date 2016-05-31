@@ -24,7 +24,9 @@ public class ActivityServiceTest extends WingsBaseTest {
                                                .withCommandType("EXEC")
                                                .withHostName("host1")
                                                .withReleaseName("REL1")
+                                               .withServiceName("SERVICE")
                                                .withServiceId("SERVICE_ID")
+                                               .withServiceTemplateName("SERVICE_TEMPLATE")
                                                .withServiceTemplateId("SERVICE_TEMPLATE_ID")
                                                .withStatus(Status.RUNNING)
                                                .build();

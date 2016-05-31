@@ -32,5 +32,6 @@ public interface HostService {
   int importHosts(String appId, String infraId, BoundedInputStream boundedInputStream);
 
   List<Host> getHostsById(String appId, List<String> hostUuids);
+
   List<Host> getHostsByTags(String appId, List<Tag> tags);
 }
