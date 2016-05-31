@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 

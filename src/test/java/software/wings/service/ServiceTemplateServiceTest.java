@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Host.HostBuilder.aHost;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.Tag.TagBuilder.aTag;
 

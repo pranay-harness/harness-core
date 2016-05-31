@@ -11,7 +11,7 @@ import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -22,7 +22,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
-import software.wings.beans.Service.ServiceBuilder;
+import software.wings.beans.Service.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceResourceServiceImpl;
@@ -40,13 +40,13 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   private WingsPersistence wingsPersistence = mock(WingsPersistence.class);
   private ConfigService configService = mock(ConfigService.class);
   private ServiceResourceService srs = new ServiceResourceServiceImpl(wingsPersistence, configService);
-  private ServiceBuilder builder = aService()
-                                       .withUuid(SERVICE_ID)
-                                       .withAppId(APP_ID)
-                                       .withName("SERVICE_NAME")
-                                       .withDescription("SERVICE_DESC")
-                                       .withArtifactType(JAR)
-                                       .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
+  private Builder builder = aService()
+                                .withUuid(SERVICE_ID)
+                                .withAppId(APP_ID)
+                                .withName("SERVICE_NAME")
+                                .withDescription("SERVICE_DESC")
+                                .withArtifactType(JAR)
+                                .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
   @Before
   public void setUp() throws Exception {

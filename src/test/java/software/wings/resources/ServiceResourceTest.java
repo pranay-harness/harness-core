@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;

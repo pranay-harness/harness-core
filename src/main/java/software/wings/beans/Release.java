@@ -1,7 +1,7 @@
 package software.wings.beans;
 
 import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

@@ -10,7 +10,7 @@ import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPa
 import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 
 import com.google.common.collect.Lists;
 

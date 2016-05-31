@@ -30,9 +30,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnMatchingServices() {
-    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
-        Service.ServiceBuilder.aService().withName("B1234").build(),
-        Service.ServiceBuilder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
+        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -65,9 +64,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnListAll() {
-    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
-        Service.ServiceBuilder.aService().withName("B1234").build(),
-        Service.ServiceBuilder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
+        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -91,9 +89,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnListSomeByName() {
-    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
-        Service.ServiceBuilder.aService().withName("B1234").build(),
-        Service.ServiceBuilder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
+        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();

@@ -6,7 +6,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.Service.ServiceBuilder.aService;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;

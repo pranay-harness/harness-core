@@ -1,20 +1,17 @@
 package software.wings.beans;
 
-import static software.wings.beans.CommandUnit.CommandUnitType.SCP;
-
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class ScpCommandUnit extends CommandUnit {
+public abstract class ScpCommandUnit extends CommandUnit {
   private String fileId;
   private FileBucket fileBucket;
   private String destinationFilePath;
 
-  public ScpCommandUnit() {
-    super(SCP);
+  public ScpCommandUnit(CommandUnitType commandUnitType) {
+    super(commandUnitType);
   }
 
   public String getFileId() {
@@ -39,55 +36,5 @@ public class ScpCommandUnit extends CommandUnit {
 
   public void setDestinationFilePath(String destinationFilePath) {
     this.destinationFilePath = destinationFilePath;
-  }
-
-  public static final class ScpCommandUnitBuilder {
-    private String fileId;
-    private FileBucket fileBucket;
-    private String destinationFilePath;
-    private ExecutionResult executionResult;
-
-    private ScpCommandUnitBuilder() {}
-
-    public static ScpCommandUnitBuilder aScpCommandUnit() {
-      return new ScpCommandUnitBuilder();
-    }
-
-    public ScpCommandUnitBuilder withFileId(String fileId) {
-      this.fileId = fileId;
-      return this;
-    }
-
-    public ScpCommandUnitBuilder withFileBucket(FileBucket fileBucket) {
-      this.fileBucket = fileBucket;
-      return this;
-    }
-
-    public ScpCommandUnitBuilder withDestinationFilePath(String destinationFilePath) {
-      this.destinationFilePath = destinationFilePath;
-      return this;
-    }
-
-    public ScpCommandUnitBuilder withExecutionResult(ExecutionResult executionResult) {
-      this.executionResult = executionResult;
-      return this;
-    }
-
-    public ScpCommandUnitBuilder but() {
-      return aScpCommandUnit()
-          .withFileId(fileId)
-          .withFileBucket(fileBucket)
-          .withDestinationFilePath(destinationFilePath)
-          .withExecutionResult(executionResult);
-    }
-
-    public ScpCommandUnit build() {
-      ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
-      scpCommandUnit.setFileId(fileId);
-      scpCommandUnit.setFileBucket(fileBucket);
-      scpCommandUnit.setDestinationFilePath(destinationFilePath);
-      scpCommandUnit.setExecutionResult(executionResult);
-      return scpCommandUnit;
-    }
   }
 }

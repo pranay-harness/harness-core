@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Entity;
@@ -21,6 +22,7 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
+  private List<Command> commands;
 
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
@@ -50,6 +52,14 @@ public class Service extends Base {
     this.artifactType = artifactType;
   }
 
+  public List<Command> getCommands() {
+    return commands;
+  }
+
+  public void setCommands(List<Command> commands) {
+    this.commands = commands;
+  }
+
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
@@ -64,27 +74,21 @@ public class Service extends Base {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
+    if (this == o)
       return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
+    if (o == null || getClass() != o.getClass())
       return false;
-    }
-    if (!super.equals(o)) {
+    if (!super.equals(o))
       return false;
-    }
     Service service = (Service) o;
-    return com.google.common.base.Objects.equal(name, service.name)
-        && com.google.common.base.Objects.equal(description, service.description)
-        && artifactType == service.artifactType
-        && com.google.common.base.Objects.equal(appContainer, service.appContainer)
-        && com.google.common.base.Objects.equal(configFiles, service.configFiles);
+    return Objects.equal(name, service.name) && Objects.equal(description, service.description)
+        && artifactType == service.artifactType && Objects.equal(commands, service.commands)
+        && Objects.equal(appContainer, service.appContainer) && Objects.equal(configFiles, service.configFiles);
   }
 
   @Override
   public int hashCode() {
-    return com.google.common.base.Objects.hashCode(
-        super.hashCode(), name, description, artifactType, appContainer, configFiles);
+    return Objects.hashCode(super.hashCode(), name, description, artifactType, commands, appContainer, configFiles);
   }
 
   @Override
@@ -93,14 +97,17 @@ public class Service extends Base {
         .add("name", name)
         .add("description", description)
         .add("artifactType", artifactType)
+        .add("commands", commands)
+        .add("appContainer", appContainer)
         .add("configFiles", configFiles)
         .toString();
   }
 
-  public static final class ServiceBuilder {
+  public static final class Builder {
     private String name;
     private String description;
     private ArtifactType artifactType;
+    private List<Command> commands;
     private AppContainer appContainer;
     private List<ConfigFile> configFiles;
     private String uuid;
@@ -111,77 +118,83 @@ public class Service extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ServiceBuilder() {}
+    private Builder() {}
 
-    public static ServiceBuilder aService() {
-      return new ServiceBuilder();
+    public static Builder aService() {
+      return new Builder();
     }
 
-    public ServiceBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    public ServiceBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    public ServiceBuilder withArtifactType(ArtifactType artifactType) {
+    public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
-    public ServiceBuilder withAppContainer(AppContainer appContainer) {
+    public Builder withCommands(List<Command> commands) {
+      this.commands = commands;
+      return this;
+    }
+
+    public Builder withAppContainer(AppContainer appContainer) {
       this.appContainer = appContainer;
       return this;
     }
 
-    public ServiceBuilder withConfigFiles(List<ConfigFile> configFiles) {
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
-    public ServiceBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    public ServiceBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    public ServiceBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    public ServiceBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    public ServiceBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    public ServiceBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    public ServiceBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    public ServiceBuilder but() {
+    public Builder but() {
       return aService()
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
+          .withCommands(commands)
           .withAppContainer(appContainer)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
@@ -198,6 +211,7 @@ public class Service extends Base {
       service.setName(name);
       service.setDescription(description);
       service.setArtifactType(artifactType);
+      service.setCommands(commands);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
       service.setUuid(uuid);

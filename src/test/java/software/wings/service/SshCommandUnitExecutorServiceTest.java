@@ -1,12 +1,8 @@
 package software.wings.service;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Execution;
-import software.wings.beans.Host.HostBuilder;
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
@@ -33,13 +29,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     //            new ByteArrayInputStream("echo 'hello world'".getBytes(StandardCharsets.UTF_8)),
     //            FileBucket.PLATFORMS);
     //        System.out.println(saveFile);
-    Execution execution = CustomCommand.CustomCommandBuilder.aCustomCommand()
-                              .withUuid("UUID")
-                              .withHost(HostBuilder.aHost().withHostName(HOST_NAME).build())
-                              .withSshUser("ssh_user")
-                              .withSshPassword("Wings@123")
-                              .build();
-    execution = commandUnitExecutorService.execute(execution);
-    Assertions.assertThat(execution.getExecutionResult()).isEqualTo(ExecutionResult.SUCCESS);
+    //   Execution execution =
+    //   CustomCommand.CustomCommandBuilder.aCustomCommand().withUuid("UUID").withHost(HostBuilder.aHost().withHostName(HOST_NAME).build())
+    //        .withSshUser("ssh_user").withSshPassword("Wings@123").build();
+    //    execution = commandUnitExecutorService.execute(execution);
+    //   Assertions.assertThat(execution.getExecutionResult()).isEqualTo(ExecutionResult.SUCCESS);
   }
 }
