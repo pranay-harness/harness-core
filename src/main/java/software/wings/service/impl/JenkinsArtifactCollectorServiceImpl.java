@@ -30,12 +30,9 @@ import javax.inject.Inject;
  */
 public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorService {
   public static final String BUILD_NO = "buildNo";
-
-  @Inject private FileService fileService;
-
-  @Inject private JenkinsFactory jenkinsFactory;
-
   @Inject SettingsService settingsService;
+  @Inject private FileService fileService;
+  @Inject private JenkinsFactory jenkinsFactory;
 
   @Override
   public List<ArtifactFile> collect(ArtifactSource artifactSource, Map<String, String> arguments) {

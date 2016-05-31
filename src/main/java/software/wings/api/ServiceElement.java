@@ -10,9 +10,10 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class ServiceElement implements ContextElement {
+  private String name;
+
   @Override
   public String getName() {
     return name;
@@ -21,8 +22,6 @@ public class ServiceElement implements ContextElement {
   public void setName(String name) {
     this.name = name;
   }
-
-  private String name;
 
   @Override
   public ContextElementType getElementType() {

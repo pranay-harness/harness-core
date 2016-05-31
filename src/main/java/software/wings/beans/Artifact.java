@@ -27,7 +27,6 @@ import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
-import javax.validation.constraints.NotNull;
 
 /**
  * Artifact bean class.

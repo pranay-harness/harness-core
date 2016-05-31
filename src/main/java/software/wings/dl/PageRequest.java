@@ -12,7 +12,6 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -108,24 +107,24 @@ public class PageRequest<T> {
     return new ArrayList<>(fieldsIncluded);
   }
 
-  public void addFieldsIncluded(String fieldsIncluded) {
-    this.fieldsIncluded.add(fieldsIncluded);
-  }
-
   public void setFieldsIncluded(List<String> fieldsIncluded) {
     this.fieldsIncluded = fieldsIncluded;
+  }
+
+  public void addFieldsIncluded(String fieldsIncluded) {
+    this.fieldsIncluded.add(fieldsIncluded);
   }
 
   public List<String> getFieldsExcluded() {
     return new ArrayList<>(fieldsExcluded);
   }
 
-  public void addFieldsExcluded(String fieldsExcluded) {
-    this.fieldsExcluded.add(fieldsExcluded);
-  }
-
   public void setFieldsExcluded(List<String> fieldsExcluded) {
     this.fieldsExcluded = fieldsExcluded;
+  }
+
+  public void addFieldsExcluded(String fieldsExcluded) {
+    this.fieldsExcluded.add(fieldsExcluded);
   }
 
   /**
@@ -181,24 +180,24 @@ public class PageRequest<T> {
     return new ArrayList<>(filters);
   }
 
-  public void addFilter(SearchFilter filter) {
-    this.filters.add(filter);
-  }
-
   public void setFilters(List<SearchFilter> filters) {
     this.filters = filters;
+  }
+
+  public void addFilter(SearchFilter filter) {
+    this.filters.add(filter);
   }
 
   public List<SortOrder> getOrders() {
     return new ArrayList<>(orders);
   }
 
-  public void addOrder(SortOrder order) {
-    this.orders.add(order);
-  }
-
   public void setOrders(List<SortOrder> orders) {
     this.orders = orders;
+  }
+
+  public void addOrder(SortOrder order) {
+    this.orders.add(order);
   }
 
   /**

@@ -11,7 +11,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class HostElement implements ContextElement {
   private String hostName;
