@@ -2,6 +2,7 @@ package software.wings.app;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import software.wings.dl.MongoConfig;
 
 /**
@@ -10,6 +11,8 @@ import software.wings.dl.MongoConfig;
  * @author Rishi
  */
 public class MainConfiguration extends Configuration {
+  @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
+
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
 
   @JsonProperty private PortalConfig portal;
@@ -17,6 +20,14 @@ public class MainConfiguration extends Configuration {
   @JsonProperty private boolean enableAuth;
 
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
+
+  public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
+    return swaggerBundleConfiguration;
+  }
+
+  public void setSwaggerBundleConfiguration(SwaggerBundleConfiguration swaggerBundleConfiguration) {
+    this.swaggerBundleConfiguration = swaggerBundleConfiguration;
+  }
 
   public MongoConfig getMongoConnectionFactory() {
     return mongoConnectionFactory;
