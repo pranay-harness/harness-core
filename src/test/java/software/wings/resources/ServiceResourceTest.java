@@ -1,4 +1,5 @@
 package software.wings.resources;
+
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;

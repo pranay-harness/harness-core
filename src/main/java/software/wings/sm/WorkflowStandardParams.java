@@ -1,6 +1,3 @@
-/**
- *
- */
 package software.wings.sm;
 
 import com.google.inject.Inject;
@@ -9,7 +6,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -20,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Rishi
+ * @author Rishi.
  */
 public class WorkflowStandardParams implements ContextElement {
   @Inject private AppService appService;
@@ -28,8 +24,6 @@ public class WorkflowStandardParams implements ContextElement {
   @Inject private ArtifactService artifactService;
 
   @Inject private EnvironmentService environmentService;
-
-  @Inject private WingsPersistence wingsPersistence;
 
   private String appId;
   private String envId;

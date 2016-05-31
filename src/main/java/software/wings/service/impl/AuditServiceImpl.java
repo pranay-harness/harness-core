@@ -18,7 +18,6 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
-
 import javax.inject.Inject;
 
 /**

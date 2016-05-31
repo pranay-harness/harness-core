@@ -4,8 +4,6 @@ import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.assistedinject.Assisted;
-import com.google.inject.assistedinject.AssistedInject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
-
-import javax.annotation.Nullable;
 
 /**
  * Describes execution context for a state machine execution.

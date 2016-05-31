@@ -8,7 +8,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.IOException;

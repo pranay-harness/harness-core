@@ -12,7 +12,6 @@ import software.wings.sm.StateTypeScope;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 

@@ -27,13 +27,14 @@ import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * Created by anubhaw on 4/29/16.
@@ -46,11 +47,11 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                        .withService(aService().withUuid("SERVICE_ID").build())
                                        .withName("TEMPLATE_NAME")
                                        .withDescription("TEMPLATE_DESCRIPTION");
-  @InjectMocks ServiceTemplateServiceImpl templateService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
-  @Mock private HostService hostService; // FIXME: remove and break the test
+  @Mock private HostService hostService;
+  @InjectMocks @Inject private ServiceTemplateService templateService;
 
   @Test
   public void shouldListSavedServiceTemplates() {
@@ -87,6 +88,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
     when(wingsPersistence.get(Tag.class, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
     when(wingsPersistence.get(Host.class, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
+    when(wingsPersistence.get(ServiceTemplate.class, "TEMPLATE_ID"))
+        .thenReturn(aServiceTemplate().withUuid("SERVICE_TEMPLATE").build());
 
     ServiceTemplate template = builder.build();
     Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());

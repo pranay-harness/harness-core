@@ -44,7 +44,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 /**
@@ -463,11 +462,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     updatePipeline(pipeline, 1);
   }
+
   @Test
   public void shouldUpdatePipelineWithGraph() {
     Pipeline pipeline = createPipeline();
     updatePipeline(pipeline, 2);
   }
+
   public void updatePipeline(Pipeline pipeline, int graphCount) {
     pipeline.setDescription("newDescription");
     pipeline.setName("pipeline2");
@@ -660,6 +661,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     return pipeline;
   }
+
   @Test
   public void shouldCreateOrchestration() {
     createOrchestration();

@@ -9,6 +9,7 @@ import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.TagService;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import javax.inject.Inject;
  */
 public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ServiceInstanceService serviceInstanceService;
 
   @Override
   public PageResponse<Tag> listRootTags(PageRequest<Tag> request) {

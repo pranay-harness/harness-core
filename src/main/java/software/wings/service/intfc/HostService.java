@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Host;
+import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
@@ -31,4 +32,6 @@ public interface HostService {
   int importHosts(String appId, String infraId, BoundedInputStream boundedInputStream);
 
   List<Host> getHostsById(String appId, List<String> hostUuids);
+
+  List<Host> getHostsByTags(String appId, List<Tag> tags);
 }

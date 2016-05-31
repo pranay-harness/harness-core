@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -161,19 +160,19 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> boolean delete(Class<T> cls, String uuid) {
     WriteResult result = primaryDatastore.delete(cls, uuid);
-    if (result == null || result.getN() == 0) {
-      return false;
-    }
-    return true;
+    return !(result == null || result.getN() == 0);
+  }
+
+  @Override
+  public <T extends Base> boolean delete(Query<T> query) {
+    WriteResult result = primaryDatastore.delete(query);
+    return !(result == null || result.getN() == 0);
   }
 
   @Override
   public <T extends Base> boolean delete(T object) {
     WriteResult result = primaryDatastore.delete(object);
-    if (result == null || result.getN() == 0) {
-      return false;
-    }
-    return true;
+    return !(result == null || result.getN() == 0);
   }
 
   @Override
