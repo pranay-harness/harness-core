@@ -50,7 +50,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
-  @Mock private HostService hostService; // FIXME: remove and break the test
+  @Mock private HostService hostService;
   @InjectMocks @Inject private ServiceTemplateService templateService;
 
   @Test
@@ -88,6 +88,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
     when(wingsPersistence.get(Tag.class, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
     when(wingsPersistence.get(Host.class, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
+    when(wingsPersistence.get(ServiceTemplate.class, "TEMPLATE_ID"))
+        .thenReturn(aServiceTemplate().withUuid("SERVICE_TEMPLATE").build());
 
     ServiceTemplate template = builder.build();
     Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());

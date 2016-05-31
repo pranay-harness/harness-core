@@ -16,6 +16,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
@@ -40,13 +42,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   private WingsPersistence wingsPersistence;
   private TagService tagService;
   private ConfigService configService;
+  private ServiceInstanceService serviceInstanceService;
+  private HostService hostService;
 
   @Inject
-  public ServiceTemplateServiceImpl(
-      WingsPersistence wingsPersistence, TagService tagService, ConfigService configService) {
+  public ServiceTemplateServiceImpl(WingsPersistence wingsPersistence, TagService tagService,
+      ConfigService configService, ServiceInstanceService serviceInstanceService, HostService hostService) {
     this.wingsPersistence = wingsPersistence;
     this.tagService = tagService;
     this.configService = configService;
+    this.serviceInstanceService = serviceInstanceService;
+    this.hostService = hostService;
   }
 
   @Override
@@ -76,7 +82,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+    serviceInstanceService.updateHostMappings(serviceTemplate, hosts, new ArrayList<>());
+    return serviceTemplate;
   }
 
   @Override
@@ -88,6 +96,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+    List<Tag> leafTags = getLeafTags(serviceTemplate);
+    List<Host> hosts = hostService.getHostsByTags(serviceTemplate.getAppId(), leafTags);
+    serviceInstanceService.updateHostMappings(serviceTemplate, hosts, new ArrayList<>());
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
@@ -170,6 +182,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     logger.info("Config files after overrides [{}]", existingFiles.toString());
     return existingFiles;
+  }
+
+  private List<Tag> getLeafTags(ServiceTemplate serviceTemplate) {
+    List<Tag> leafTagNodes = new ArrayList<>();
+    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
+    if (rootTag == null) {
+      return leafTagNodes;
+    }
+    List<Tag> tags = wingsPersistence.createQuery(Tag.class)
+                         .field("rootTagId")
+                         .equal(rootTag.getUuid())
+                         .field("children")
+                         .sizeEq(0)
+                         .asList();
+    return tags;
   }
 
   private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {

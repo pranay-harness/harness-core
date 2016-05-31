@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
+import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -68,6 +69,11 @@ public class HostServiceImpl implements HostService {
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
+  }
+
+  @Override
+  public List<Host> getHostsByTags(String appId, List<Tag> tags) {
+    return wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("tags").hasAnyOf(tags).asList();
   }
 
   @Override

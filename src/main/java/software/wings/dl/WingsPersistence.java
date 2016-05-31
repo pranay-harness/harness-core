@@ -49,6 +49,8 @@ public interface WingsPersistence {
 
   public <T extends Base> boolean delete(Class<T> cls, String uuid);
 
+  public <T extends Base> boolean delete(Query<T> query);
+
   public <T extends Base> boolean delete(T entity);
 
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
