@@ -144,6 +144,22 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   }
 
   @Override
+  public <T> void addToListIfNotExists(
+      Class<T> cls, String appId, String entityId, String listFieldName, Object object) {
+    primaryDatastore.findAndModify(
+        createQuery(cls).field(ID_KEY).equal(entityId).field("appId").equal(appId).field(listFieldName).doesNotExist(),
+        createUpdateOperations(cls).add(listFieldName, object));
+  }
+
+  @Override
+  public <T> void compareAndAddToList(
+      Class<T> cls, String appId, String entityId, String listFieldName, Object object, List oldList) {
+    primaryDatastore.findAndModify(
+        createQuery(cls).field(ID_KEY).equal(entityId).field("appId").equal(appId).field(listFieldName).equal(oldList),
+        createUpdateOperations(cls).add(listFieldName, object));
+  }
+
+  @Override
   public <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object) {
     Query<T> query = primaryDatastore.createQuery(cls).field(ID_KEY).equal(entityId);
     UpdateOperations<T> operation = primaryDatastore.createUpdateOperations(cls).add(listFieldName, object);

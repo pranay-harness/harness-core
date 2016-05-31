@@ -42,4 +42,6 @@ public interface ErrorConstants {
   public static final String INVALID_REQUEST = "INVALID_REQUEST";
   public static final String PIPELINE_ALREADY_TRIGGERED = "PIPELINE_ALREADY_TRIGGERED";
   public static final String NON_EXISTING_PIPELINE = "NON_EXISTING_PIPELINE";
+
+  public static final String DUPLICATE_COMMAND_NAMES = "DUPLICATE_COMMAND_NAMES";
 }

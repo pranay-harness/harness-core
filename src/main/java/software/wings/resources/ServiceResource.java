@@ -5,6 +5,8 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
+import software.wings.beans.Command;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -26,6 +28,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 3/25/16.
  */
+@Api("services")
 @Path("services")
 @Timed
 @ExceptionMetered
@@ -72,5 +75,20 @@ public class ServiceResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     serviceResourceService.delete(appId, serviceId);
     return new RestResponse();
+  }
+
+  @POST
+  @Path("{serviceId}/commands")
+  public RestResponse<Service> saveCommand(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, Command command) {
+    command.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
+  }
+
+  @DELETE
+  @Path("{serviceId}/command/{commandName}")
+  public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName) {
+    return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, commandName));
   }
 }

@@ -1,17 +1,18 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Entity;
+import com.google.common.collect.Lists;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.List;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
-@Entity(value = "serviceCommands")
 public class Command extends CommandUnit {
-  private String name;
+  @NotEmpty private String name;
 
-  private List<CommandUnit> commandUnits;
+  @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   public Command() {
     super(CommandUnitType.COMMAND);
@@ -31,5 +32,60 @@ public class Command extends CommandUnit {
 
   public void setCommandUnits(List<CommandUnit> commandUnits) {
     this.commandUnits = commandUnits;
+  }
+
+  public static final class Builder {
+    private String name;
+    private List<CommandUnit> commandUnits = Lists.newArrayList();
+    private String serviceId;
+    private ExecutionResult executionResult;
+
+    private Builder() {}
+
+    public static Builder aCommand() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withCommandUnits(List<CommandUnit> commandUnits) {
+      this.commandUnits = commandUnits;
+      return this;
+    }
+
+    public Builder addCommandUnit(CommandUnit commandUnit) {
+      this.commandUnits.add(commandUnit);
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withExecutionResult(ExecutionResult executionResult) {
+      this.executionResult = executionResult;
+      return this;
+    }
+
+    public Builder but() {
+      return aCommand()
+          .withName(name)
+          .withCommandUnits(commandUnits)
+          .withServiceId(serviceId)
+          .withExecutionResult(executionResult);
+    }
+
+    public Command build() {
+      Command command = new Command();
+      command.setName(name);
+      command.setCommandUnits(commandUnits);
+      command.setServiceId(serviceId);
+      command.setExecutionResult(executionResult);
+      return command;
+    }
   }
 }

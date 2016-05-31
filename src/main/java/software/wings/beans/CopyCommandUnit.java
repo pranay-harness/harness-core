@@ -5,12 +5,12 @@ import software.wings.service.intfc.FileService.FileBucket;
 /**
  * Created by anubhaw on 5/25/16.
  */
-public abstract class ScpCommandUnit extends CommandUnit {
+public abstract class CopyCommandUnit extends CommandUnit {
   private String fileId;
   private FileBucket fileBucket;
   private String destinationFilePath;
 
-  public ScpCommandUnit(CommandUnitType commandUnitType) {
+  public CopyCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
   }
 

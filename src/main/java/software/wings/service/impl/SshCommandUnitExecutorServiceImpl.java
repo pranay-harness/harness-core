@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
-import software.wings.beans.ScpCommandUnit;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -26,7 +26,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   @Override
   public ExecutionResult execute(Host host, CommandUnit commandUnit) {
-    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, commandUnit.getUuid());
+    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, commandUnit.getExecutionId());
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
     ExecutionResult executionResult;
     switch (commandUnit.getCommandUnitType()) {
@@ -34,8 +34,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
         executionResult = executor.execute(execCommandUnit.getCommandString());
         break;
-      case SCP:
-        ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
+      case COPY:
+        CopyCommandUnit scpCommandUnit = (CopyCommandUnit) commandUnit;
         executionResult = executor.transferFile(
             scpCommandUnit.getFileId(), scpCommandUnit.getDestinationFilePath(), scpCommandUnit.getFileBucket());
         break;

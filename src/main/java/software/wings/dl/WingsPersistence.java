@@ -15,59 +15,64 @@ import java.util.List;
 import java.util.Map;
 
 public interface WingsPersistence {
-  public <T extends Base> List<T> list(Class<T> cls);
+  <T extends Base> List<T> list(Class<T> cls);
 
-  public <T extends Base> List<T> list(Class<T> cls, ReadPref readPref);
+  <T extends Base> List<T> list(Class<T> cls, ReadPref readPref);
 
-  public <T extends Base> T get(Class<T> cls, PageRequest<T> req);
+  <T extends Base> T get(Class<T> cls, PageRequest<T> req);
 
-  public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref);
+  <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref);
 
-  public <T extends Base> T get(Class<T> cls, String id);
+  <T extends Base> T get(Class<T> cls, String id);
 
-  public <T extends Base> T get(Class<T> cls, String appId, String id);
+  <T extends Base> T get(Class<T> cls, String appId, String id);
 
-  public <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
+  <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
 
-  public <T extends Base> List<String> save(List<T> tList);
+  <T extends Base> List<String> save(List<T> tList);
 
-  public <T extends Base> String save(T t);
+  <T extends Base> String save(T t);
 
-  public <T extends Base> T saveAndGet(Class<T> cls, T t);
+  <T extends Base> T saveAndGet(Class<T> cls, T t);
 
-  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
+  <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
 
-  public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops);
+  <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops);
 
-  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
+  <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 
-  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
+  <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
 
-  public <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object);
+  <T> void addToListIfNotExists(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
 
-  public <T> void deleteFromList(Class<T> cls, String entityId, String listFieldName, Object object);
+  <T> void compareAndAddToList(
+      Class<T> cls, String appId, String entityId, String listFieldName, Object object, List oldList);
 
-  public <T extends Base> boolean delete(Class<T> cls, String uuid);
+  <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object);
 
-  public <T extends Base> boolean delete(Query<T> query);
+  <T> void deleteFromList(Class<T> cls, String entityId, String listFieldName, Object object);
 
-  public <T extends Base> boolean delete(T entity);
+  <T extends Base> boolean delete(Class<T> cls, String uuid);
 
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
+  <T extends Base> boolean delete(Query<T> query);
 
-  public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref);
+  <T extends Base> boolean delete(T entity);
 
-  public String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in);
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req);
 
-  public <T> Query<T> createQuery(Class<T> cls);
+  <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref);
 
-  public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
+  String uploadFromStream(String bucketName, GridFSUploadOptions options, String filename, InputStream in);
 
-  public GridFSBucket getOrCreateGridFSBucket(String bucketName);
+  <T> Query<T> createQuery(Class<T> cls);
 
-  public Datastore getDatastore();
+  <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 
-  public DBCollection getCollection(String collectionName);
+  GridFSBucket getOrCreateGridFSBucket(String bucketName);
 
-  public void close();
+  Datastore getDatastore();
+
+  DBCollection getCollection(String collectionName);
+
+  void close();
 }

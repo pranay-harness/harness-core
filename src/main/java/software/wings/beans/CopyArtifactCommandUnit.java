@@ -7,7 +7,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
-public class CopyArtifactCommandUnit extends ScpCommandUnit {
+public class CopyArtifactCommandUnit extends CopyCommandUnit {
   private String artifactId;
 
   public CopyArtifactCommandUnit() {

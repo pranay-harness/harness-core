@@ -1,12 +1,23 @@
 package software.wings.beans;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class CommandUnit extends Base {
-  private String serviceId;
+public class CommandUnit {
+  private String executionId;
+  @NotNull private String serviceId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
+
+  public String getExecutionId() {
+    return executionId;
+  }
+
+  public void setExecutionId(String executionId) {
+    this.executionId = executionId;
+  }
 
   public String getServiceId() {
     return serviceId;
@@ -38,12 +49,13 @@ public class CommandUnit extends Base {
 
   public enum CommandUnitType {
     EXEC,
-    SCP,
+    COPY,
     COMMAND,
     COPY_ARTIFACT,
     COPY_PLATFORM,
     APPLY_CONFIG,
     BACKUP,
   }
+
   public enum ExecutionResult { SUCCESS, FAILURE }
 }
