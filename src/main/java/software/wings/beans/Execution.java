@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ public abstract class Execution extends Base {
   private String sshPassword;
   private String appAccount;
   private String appAccountPassword;
+  private ExecutionResult executionResult;
 
   public Host getHost() {
     return host;
@@ -54,4 +56,12 @@ public abstract class Execution extends Base {
   }
 
   public abstract List<CommandUnit> getCommandUnits();
+
+  public ExecutionResult getExecutionResult() {
+    return executionResult;
+  }
+
+  public void setExecutionResult(ExecutionResult executionResult) {
+    this.executionResult = executionResult;
+  }
 }
