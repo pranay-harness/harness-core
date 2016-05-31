@@ -9,7 +9,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DeploymentService;
-import software.wings.service.intfc.SshCommandUnitExecutorService;
+import software.wings.service.intfc.CommandUnitExecutorService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -37,7 +37,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   public static class DeploymentExecutor implements Runnable {
     private Deployment deployment;
 
-    @Inject private SshCommandUnitExecutorService sshCommandUnitExecutorService;
+    @Inject private CommandUnitExecutorService commandUnitExecutorService;
 
     @AssistedInject
     public DeploymentExecutor(@Assisted Deployment deployment) {
@@ -46,7 +46,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     @Override
     public void run() {
-      sshCommandUnitExecutorService.execute(deployment);
+      //      commandUnitExecutorService.execute(deployment);
     }
 
     public interface Factory { DeploymentExecutor create(@Assisted Deployment deployment); }

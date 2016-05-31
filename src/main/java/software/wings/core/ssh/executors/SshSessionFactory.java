@@ -22,7 +22,7 @@ public class SshSessionFactory {
       logger.info("portforwarding port " + forwardingPort);
 
       SshSessionConfig newConfig = aSshSessionConfig()
-                                       .withUser(config.getUser())
+                                       .withUserName(config.getUserName())
                                        .withPassword(config.getPassword())
                                        .withKey(config.getKey())
                                        .withHost("127.0.0.1")
@@ -46,9 +46,9 @@ public class SshSessionFactory {
       } else {
         jsch.addIdentity(config.getKey(), config.getKeyPassphrase());
       }
-      session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
-      session = jsch.getSession(config.getUser(), config.getHost(), config.getPort());
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       session.setPassword(config.getPassword());
     }
     session.setConfig("StrictHostKeyChecking", "no");

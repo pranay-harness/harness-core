@@ -6,7 +6,7 @@ import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.SshCommandUnitExecutorService;
+import software.wings.service.intfc.CommandUnitExecutorService;
 
 import javax.inject.Inject;
 
@@ -18,7 +18,7 @@ import javax.inject.Inject;
 @Ignore
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   private static final String HOST_NAME = "192.168.1.52";
-  @Inject private SshCommandUnitExecutorService commandUnitExecutorService;
+  @Inject private CommandUnitExecutorService commandUnitExecutorService;
   @Inject private AppContainerService appContainerService;
   @Inject private FileService fileService;
 

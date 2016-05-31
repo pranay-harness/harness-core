@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static software.wings.beans.CommandUnit.CommandUnitType.EXEC;
 
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
-
 /**
  * Created by anubhaw on 5/25/16.
  */

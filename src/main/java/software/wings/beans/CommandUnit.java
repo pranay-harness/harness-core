@@ -1,11 +1,9 @@
 package software.wings.beans;
 
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
-
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class CommandUnit {
+public class CommandUnit extends Base {
   private String serviceId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
@@ -47,4 +45,5 @@ public class CommandUnit {
     APPLY_CONFIG,
     BACKUP,
   }
+  public enum ExecutionResult { SUCCESS, FAILURE }
 }

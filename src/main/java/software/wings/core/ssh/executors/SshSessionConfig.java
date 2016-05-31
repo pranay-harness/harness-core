@@ -17,7 +17,7 @@ public class SshSessionConfig {
   private Integer retryInterval;
   private String host;
   private Integer port;
-  private String user;
+  private String userName;
   private String password;
   private String key;
   private String keyPassphrase;
@@ -81,12 +81,12 @@ public class SshSessionConfig {
     this.port = port;
   }
 
-  public String getUser() {
-    return user;
+  public String getUserName() {
+    return userName;
   }
 
-  public void setUser(String user) {
-    this.user = user;
+  public void setUserName(String userName) {
+    this.userName = userName;
   }
 
   public String getPassword() {
@@ -140,7 +140,7 @@ public class SshSessionConfig {
   @Override
   public int hashCode() {
     return Objects.hash(executorType, executionId, sshConnectionTimeout, sshSessionTimeout, retryInterval, host, port,
-        user, password, key, keyPassphrase, sudoUserName, sudoUserPassword, jumpboxConfig);
+        userName, password, key, keyPassphrase, sudoUserName, sudoUserPassword, jumpboxConfig);
   }
 
   @Override
@@ -156,7 +156,7 @@ public class SshSessionConfig {
         && Objects.equals(this.sshConnectionTimeout, other.sshConnectionTimeout)
         && Objects.equals(this.sshSessionTimeout, other.sshSessionTimeout)
         && Objects.equals(this.retryInterval, other.retryInterval) && Objects.equals(this.host, other.host)
-        && Objects.equals(this.port, other.port) && Objects.equals(this.user, other.user)
+        && Objects.equals(this.port, other.port) && Objects.equals(this.userName, other.userName)
         && Objects.equals(this.password, other.password) && Objects.equals(this.key, other.key)
         && Objects.equals(this.keyPassphrase, other.keyPassphrase)
         && Objects.equals(this.sudoUserName, other.sudoUserName)
@@ -174,7 +174,7 @@ public class SshSessionConfig {
         .add("retryInterval", retryInterval)
         .add("host", host)
         .add("port", port)
-        .add("user", user)
+        .add("userName", userName)
         .add("password", password)
         .add("key", key)
         .add("keyPassphrase", keyPassphrase)
@@ -192,7 +192,7 @@ public class SshSessionConfig {
     private Integer retryInterval;
     private String host;
     private Integer port;
-    private String user;
+    private String userName;
     private String password;
     private String key;
     private String keyPassphrase;
@@ -241,8 +241,8 @@ public class SshSessionConfig {
       return this;
     }
 
-    public SshSessionConfigBuilder withUser(String user) {
-      this.user = user;
+    public SshSessionConfigBuilder withUserName(String userName) {
+      this.userName = userName;
       return this;
     }
 
@@ -285,7 +285,7 @@ public class SshSessionConfig {
           .withRetryInterval(retryInterval)
           .withHost(host)
           .withPort(port)
-          .withUser(user)
+          .withUserName(userName)
           .withPassword(password)
           .withKey(key)
           .withKeyPassphrase(keyPassphrase)
@@ -303,7 +303,7 @@ public class SshSessionConfig {
       sshSessionConfig.setRetryInterval(retryInterval);
       sshSessionConfig.setHost(host);
       sshSessionConfig.setPort(port);
-      sshSessionConfig.setUser(user);
+      sshSessionConfig.setUserName(userName);
       sshSessionConfig.setPassword(password);
       sshSessionConfig.setKey(key);
       sshSessionConfig.setKeyPassphrase(keyPassphrase);

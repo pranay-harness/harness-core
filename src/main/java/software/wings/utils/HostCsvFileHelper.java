@@ -63,8 +63,8 @@ public class HostCsvFileHelper {
                       .withAppId(infra.getAppId())
                       .withInfraId(infra.getUuid())
                       .withHostName(hostName)
-                      .withHostConnAttrs(hostConnectionAttrs)
-                      .withBastionConnAttrs(bastionHostAttrs)
+                      .withHostConnAttr(hostConnectionAttrs)
+                      .withBastionConnAttr(bastionHostAttrs)
                       .withTags(tags)
                       .build());
       }

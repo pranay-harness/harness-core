@@ -99,8 +99,8 @@ public class HostServiceImpl implements HostService {
                .withHostName(hostName)
                .withAppId(baseHost.getAppId())
                .withInfraId(baseHost.getInfraId())
-               .withHostConnAttrs(baseHost.getHostConnAttr())
-               .withBastionConnAttrs(baseHost.getBastionConnAttr())
+               .withHostConnAttr(baseHost.getHostConnAttr())
+               .withBastionConnAttr(baseHost.getBastionConnAttr())
                .withTags(baseHost.getTags())
                .build());
     });

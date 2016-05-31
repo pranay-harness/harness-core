@@ -1,6 +1,8 @@
 package software.wings.core.ssh.executors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorConstants.INVALID_KEY;
 import static software.wings.beans.ErrorConstants.INVALID_KEYPATH;
@@ -11,8 +13,6 @@ import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.beans.ErrorConstants.UNREACHABLE_HOST;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.Channel;
@@ -22,6 +22,7 @@ import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;

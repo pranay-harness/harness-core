@@ -37,6 +37,8 @@ public class Host extends Base {
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
+  @Transient private HostConnectionCredential hostConnectionCredential;
+
   public String getInfraId() {
     return infraId;
   }
@@ -117,14 +119,23 @@ public class Host extends Base {
         && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles);
   }
 
+  public HostConnectionCredential getHostConnectionCredential() {
+    return hostConnectionCredential;
+  }
+
+  public void setHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
+    this.hostConnectionCredential = hostConnectionCredential;
+  }
+
   public static final class HostBuilder {
     private String infraId;
     private String hostName;
-    private SettingAttribute hostConnAttrs;
-    private SettingAttribute bastionConnAttrs;
+    private SettingAttribute hostConnAttr;
+    private SettingAttribute bastionConnAttr;
     private List<Tag> tags = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
     private List<ConfigFile> configFiles = new ArrayList<>();
+    private HostConnectionCredential hostConnectionCredential;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -149,13 +160,13 @@ public class Host extends Base {
       return this;
     }
 
-    public HostBuilder withHostConnAttrs(SettingAttribute hostConnAttrs) {
-      this.hostConnAttrs = hostConnAttrs;
+    public HostBuilder withHostConnAttr(SettingAttribute hostConnAttr) {
+      this.hostConnAttr = hostConnAttr;
       return this;
     }
 
-    public HostBuilder withBastionConnAttrs(SettingAttribute bastionConnAttrs) {
-      this.bastionConnAttrs = bastionConnAttrs;
+    public HostBuilder withBastionConnAttr(SettingAttribute bastionConnAttr) {
+      this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
@@ -171,6 +182,11 @@ public class Host extends Base {
 
     public HostBuilder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
+      return this;
+    }
+
+    public HostBuilder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
+      this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
@@ -213,11 +229,12 @@ public class Host extends Base {
       return aHost()
           .withInfraId(infraId)
           .withHostName(hostName)
-          .withHostConnAttrs(hostConnAttrs)
-          .withBastionConnAttrs(bastionConnAttrs)
+          .withHostConnAttr(hostConnAttr)
+          .withBastionConnAttr(bastionConnAttr)
           .withTags(tags)
           .withHostNames(hostNames)
           .withConfigFiles(configFiles)
+          .withHostConnectionCredential(hostConnectionCredential)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -231,11 +248,12 @@ public class Host extends Base {
       Host host = new Host();
       host.setInfraId(infraId);
       host.setHostName(hostName);
-      host.setHostConnAttr(hostConnAttrs);
-      host.setBastionConnAttr(bastionConnAttrs);
+      host.setHostConnAttr(hostConnAttr);
+      host.setBastionConnAttr(bastionConnAttr);
       host.setTags(tags);
       host.setHostNames(hostNames);
       host.setConfigFiles(configFiles);
+      host.setHostConnectionCredential(hostConnectionCredential);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);

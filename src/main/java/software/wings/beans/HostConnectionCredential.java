@@ -1,27 +1,13 @@
 package software.wings.beans;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Reference;
-import software.wings.beans.CommandUnit.ExecutionResult;
-
-import java.util.List;
-
-@Entity(value = "executions")
-public abstract class Execution extends Base {
-  @Reference(idOnly = true, ignoreMissing = true) private Host host;
+/**
+ * Created by anubhaw on 5/31/16.
+ */
+public class HostConnectionCredential {
   private String sshUser;
   private String sshPassword;
   private String appAccount;
   private String appAccountPassword;
-  private ExecutionResult executionResult;
-
-  public Host getHost() {
-    return host;
-  }
-
-  public void setHost(Host host) {
-    this.host = host;
-  }
 
   public String getSshUser() {
     return sshUser;
@@ -53,15 +39,5 @@ public abstract class Execution extends Base {
 
   public void setAppAccountPassword(String appAccountPassword) {
     this.appAccountPassword = appAccountPassword;
-  }
-
-  public abstract List<CommandUnit> getCommandUnits();
-
-  public ExecutionResult getExecutionResult() {
-    return executionResult;
-  }
-
-  public void setExecutionResult(ExecutionResult executionResult) {
-    this.executionResult = executionResult;
   }
 }

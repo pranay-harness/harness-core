@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
 /**

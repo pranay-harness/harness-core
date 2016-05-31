@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
 /**
@@ -17,6 +18,4 @@ public interface SshExecutor {
   void destroy();
 
   enum ExecutorType { PASSWORD, SSHKEY, JUMPBOX }
-
-  enum ExecutionResult { SUCCESS, FAILURE }
 }

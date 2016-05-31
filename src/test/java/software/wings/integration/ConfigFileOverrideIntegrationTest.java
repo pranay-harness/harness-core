@@ -267,8 +267,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Host baseHost = aHost()
                         .withAppId(infra.getAppId())
                         .withInfraId(infra.getUuid())
-                        .withHostConnAttrs(settingAttribute)
-                        .withBastionConnAttrs(settingAttribute)
+                        .withHostConnAttr(settingAttribute)
+                        .withBastionConnAttr(settingAttribute)
                         .build();
     //    int numOfHostsImported =
     //        hostService.importHosts(baseHost, new BoundedInputStream(new

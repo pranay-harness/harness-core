@@ -72,7 +72,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.SshCommandUnitExecutorService;
+import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -114,7 +114,7 @@ public class WingsModule extends AbstractModule {
     bind(AuditService.class).to(AuditServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(FileService.class).to(FileServiceImpl.class);
-    bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
+    bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(PlatformService.class).to(PlatformServiceImpl.class);
     bind(ReleaseService.class).to(ReleaseServiceImpl.class);
     bind(UserService.class).to(UserServiceImpl.class);
@@ -134,7 +134,7 @@ public class WingsModule extends AbstractModule {
     bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
-    bind(SshCommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
+    bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
     bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);

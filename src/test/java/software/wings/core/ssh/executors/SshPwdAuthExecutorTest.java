@@ -2,6 +2,8 @@ package software.wings.core.ssh.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorConstants.INVALID_PORT;
@@ -9,8 +11,6 @@ import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.FAILURE;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
@@ -22,8 +22,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
-import software.wings.core.ssh.executors.SshExecutor.ExecutionResult;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
@@ -82,7 +82,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                  .withExecutorType(ExecutorType.PASSWORD)
                  .withHost(HOST)
                  .withPort(PORT)
-                 .withUser(USER)
+                 .withUserName(USER)
                  .withPassword(PASSWORD)
                  .withSshConnectionTimeout(5000)
                  .build();
