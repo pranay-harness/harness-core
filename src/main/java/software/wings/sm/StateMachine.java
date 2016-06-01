@@ -41,9 +41,9 @@ public class StateMachine extends Base {
 
   private Graph graph;
 
-  @Serialized private List<State> states;
+  @Serialized private List<State> states = new ArrayList<>();
 
-  @Serialized private List<Transition> transitions;
+  @Serialized private List<Transition> transitions = new ArrayList<>();
 
   private String initialStateName;
 
@@ -180,11 +180,13 @@ public class StateMachine extends Base {
     Map<String, State> statesMap = new HashMap<>();
     HashSet<String> dupNames = new HashSet<>();
 
-    for (State state : states) {
-      if (statesMap.get(state.getName()) != null) {
-        dupNames.add(state.getName());
-      } else {
-        statesMap.put(state.getName(), state);
+    if (states != null) {
+      for (State state : states) {
+        if (statesMap.get(state.getName()) != null) {
+          dupNames.add(state.getName());
+        } else {
+          statesMap.put(state.getName(), state);
+        }
       }
     }
     if (dupNames.size() > 0) {
