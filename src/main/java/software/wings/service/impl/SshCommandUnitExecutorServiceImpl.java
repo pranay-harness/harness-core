@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorConstants.UNKNOWN_COMMAND_UNIT_ERROR;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
 
 import org.slf4j.Logger;
@@ -13,7 +12,6 @@ import software.wings.beans.Host;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
 import javax.inject.Inject;
@@ -24,26 +22,37 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private SshExecutorFactory sshExecutorFactory;
 
+  private enum SupportedOp { EXEC, SCP }
+
   @Override
-  public ExecutionResult execute(Host host, CommandUnit commandUnit) {
+  public ExecutionResult execute(Host host, ExecCommandUnit commandUnit) {
+    return execute(host, commandUnit, SupportedOp.EXEC);
+  }
+
+  @Override
+  public ExecutionResult execute(Host host, CopyCommandUnit commandUnit) {
+    return execute(host, commandUnit, SupportedOp.SCP);
+  }
+
+  private ExecutionResult execute(Host host, CommandUnit commandUnit, SupportedOp op) {
     SshSessionConfig sshSessionConfig = getSshSessionConfig(host, commandUnit.getExecutionId());
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
     ExecutionResult executionResult;
-    switch (commandUnit.getCommandUnitType()) {
-      case EXEC:
-        ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
-        executionResult = executor.execute(execCommandUnit.getCommandString());
-        break;
-      case COPY:
-        CopyCommandUnit scpCommandUnit = (CopyCommandUnit) commandUnit;
-        executionResult = executor.transferFile(
-            scpCommandUnit.getFileId(), scpCommandUnit.getDestinationFilePath(), scpCommandUnit.getFileBucket());
-        break;
-      default:
-        throw new WingsException(UNKNOWN_COMMAND_UNIT_ERROR,
-            new Throwable("Unknown command unit over ssh channel: " + commandUnit.getCommandUnitType()));
-    }
+    executionResult = executeByCommandType(executor, commandUnit, op);
     commandUnit.setExecutionResult(executionResult);
+    return executionResult;
+  }
+
+  private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {
+    ExecutionResult executionResult;
+    if (op.equals(SupportedOp.EXEC)) {
+      ExecCommandUnit execCommandUnit = (ExecCommandUnit) commandUnit;
+      executionResult = executor.execute(execCommandUnit.getCommandString());
+    } else {
+      CopyCommandUnit copyCommandUnit = (CopyCommandUnit) commandUnit;
+      executionResult = executor.transferFile(
+          copyCommandUnit.getFileId(), copyCommandUnit.getDestinationFilePath(), copyCommandUnit.getFileBucket());
+    }
     return executionResult;
   }
 
