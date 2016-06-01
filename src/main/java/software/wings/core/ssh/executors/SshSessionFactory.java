@@ -17,7 +17,7 @@ public class SshSessionFactory {
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
-      Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
+      Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
       logger.info("portforwarding port " + forwardingPort);
 

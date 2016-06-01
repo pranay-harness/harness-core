@@ -21,7 +21,7 @@ public class SshExecutorFactory {
       case SSHKEY:
         executor = new SshPubKeyAuthExecutor(executionLogs, fileService);
         break;
-      case JUMPBOX:
+      case BASTION_HOST:
         executor = new SshJumpboxExecutor(executionLogs, fileService);
         break;
       default:

@@ -45,7 +45,7 @@ import javax.inject.Inject;
 public abstract class AbstractSshExecutor implements SshExecutor {
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
   protected final Logger logger = LoggerFactory.getLogger(getClass());
-  private final int MAX_BYTES_READ_PER_CHANNEL =
+  private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected Session session;
   protected Channel channel;
@@ -107,7 +107,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           }
           String line = new String(tmp, 0, numOfBytesRead, UTF_8);
           if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-            outputStream.write((config.getSudoUserPassword() + "\n").getBytes(UTF_8));
+            outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
             outputStream.flush();
           }
           executionLogs.appendLogs(config.getExecutionId(), line);

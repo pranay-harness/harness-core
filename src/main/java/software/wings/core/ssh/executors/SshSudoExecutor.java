@@ -33,7 +33,7 @@ public class SshSudoExecutor extends AbstractSshExecutor {
     super.postChannelConnect();
     String inputStream = null;
     try {
-      int sudoPromptTimeout = 5;
+      int sudoPromptTimeout = 5; // TODO: read from config
       while (sudoPromptTimeout > 0) {
         inputStream = new String(((ByteArrayOutputStream) outputStream).toByteArray(), UTF_8);
         if (inputStream.length() > 0) {
@@ -43,7 +43,7 @@ public class SshSudoExecutor extends AbstractSshExecutor {
         sudoPromptTimeout--;
       }
       if (inputStream.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-        outputStream.write((config.getSudoUserPassword() + "\n").getBytes(UTF_8));
+        outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
         outputStream.flush();
       }
     } catch (IOException ex) {
