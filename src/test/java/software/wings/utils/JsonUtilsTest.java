@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.github.reinert.jjschema.Attributes;
 import com.jayway.jsonpath.DocumentContext;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.sm.states.EmailState;
 import software.wings.utils.JsonUtilsTest.Base.BaseType;
 
 import java.util.List;
@@ -71,6 +73,17 @@ public class JsonUtilsTest {
         .containsExactly(BaseType.B);
   }
 
+  @Test
+  public void shouldGenerateJsonSchema() {
+    System.out.println(JsonUtils.jsonSchema(EmailState.class));
+    // assertThatJson(JsonUtils.jsonSchema(BaseA.class)).isEqualTo("{\n" + "  \"type\" : \"object\",\n" + "
+    // \"properties\" : {\n" + "    \"baseType\" : {\n"
+    //    + "      \"enum\" : [ \"A\", \"B\", \"C\" ]\n" + "    },\n" + "    \"name\" : {\n" + "      \"type\" :
+    //    \"string\"\n" + "    }\n" + "  },\n"
+    //    + "  \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n" + "  \"title\" : \"BaseA\",\n" + "
+    //    \"required\" : [ \"name\" ]\n" + "}");
+  }
+
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = BaseA.class, name = "A")
@@ -90,8 +103,9 @@ public class JsonUtilsTest {
     public enum BaseType { A, B, C }
   }
 
+  @Attributes(title = "BaseA")
   public static class BaseA extends Base {
-    private String name = BaseA.class.getName();
+    @Attributes(required = true) private String name = BaseA.class.getName();
 
     public BaseA() {
       super();
