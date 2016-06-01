@@ -28,7 +28,7 @@ public class SshCommandUnitExecutorServiceImpl implements SshCommandUnitExecutor
   @Inject private SshExecutorFactory sshExecutorFactory;
 
   @Override
-  public ExecutionResult execute(Execution execution) {
+  public Execution execute(Execution execution) {
     SshSessionConfig sshSessionConfig = getSshSessionConfig(execution, execution.getHost());
     for (CommandUnit commandUnit : execution.getCommandUnits()) {
       SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
@@ -49,10 +49,12 @@ public class SshCommandUnitExecutorServiceImpl implements SshCommandUnitExecutor
       }
       commandUnit.setExecutionResult(result);
       if (result == FAILURE) {
-        return FAILURE;
+        execution.setExecutionResult(FAILURE);
+        return execution;
       }
     }
-    return SUCCESS;
+    execution.setExecutionResult(SUCCESS);
+    return execution;
   }
 
   private SshSessionConfig getSshSessionConfig(Execution execution, Host host) {

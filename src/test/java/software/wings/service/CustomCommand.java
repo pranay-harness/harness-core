@@ -25,7 +25,7 @@ public class CustomCommand extends Execution {
     ScpCommandUnit scpCommandUnit = ScpCommandUnitBuilder.aScpCommandUnit()
                                         .withDestinationFilePath("$HOME")
                                         .withFileBucket(PLATFORMS)
-                                        .withFileId("574640b18a31bb84fe5f09d4")
+                                        .withFileId("574ddc4d8a31bba72592ae0a")
                                         .build();
     ExecCommandUnit run = anExecCommandUnit().withCommandString("sh $HOME/startup.sh").build();
     return Arrays.asList(setup, scpCommandUnit, run);

@@ -36,7 +36,7 @@ import javax.ws.rs.core.UriInfo;
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {
-  public static final String JENKINS_CONFIG_ID = "JENKINS_CONFIG_ID";
+  public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
   private WorkflowService workflowService;
   private CatalogService catalogService;
   private JenkinsBuildService jenkinsBuildService;
@@ -105,7 +105,7 @@ public class CatalogResource {
           case CatalogNames.JENKINS_BUILD: {
             catalogs.put(catalogType,
                 jenkinsBuildService.getBuilds(uriInfo.getQueryParameters(),
-                    (JenkinsConfig) settingsService.get(uriInfo.getQueryParameters().getFirst(JENKINS_CONFIG_ID))
+                    (JenkinsConfig) settingsService.get(uriInfo.getQueryParameters().getFirst(JENKINS_SETTING_ID))
                         .getValue()));
             break;
           }

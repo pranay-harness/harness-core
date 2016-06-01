@@ -212,7 +212,7 @@
             <artifactId>hashed-wheel-timer-core</artifactId>
             <version>1.0.0-RC1</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-jexl3</artifactId>
@@ -225,9 +225,9 @@
             <version>2.2.0</version>
         </dependency>
         <dependency>
-              <groupId>org.modelmapper</groupId>
-              <artifactId>modelmapper</artifactId>
-              <version>0.7.5</version>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
+            <version>0.7.5</version>
         </dependency>
 
         <dependency>
@@ -248,26 +248,18 @@
             <version>1.1.1</version>
         </dependency>
 
-<dependency>
-    <groupId>com.smoketurner</groupId>
-    <artifactId>dropwizard-swagger</artifactId>
-    <version>0.9.1-1</version>
-</dependency>
-        <!--dependency>
-      <groupId>io.swagger</groupId>
-      <artifactId>swagger-jersey2-jaxrs</artifactId>
-      <version>1.5.9</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sun.jersey</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.fasterxml.jackson.module</groupId>
-          <artifactId>jackson-module-jaxb-annotations</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency-->
+        <dependency>
+            <groupId>com.smoketurner</groupId>
+            <artifactId>dropwizard-swagger</artifactId>
+            <version>0.9.1-1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.reinert</groupId>
+            <artifactId>jjschema</artifactId>
+            <version>0.6</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -434,6 +426,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
     </dependencies>
 
     <build>
@@ -531,7 +524,7 @@
                     <execution>
                         <id>integration-test</id>
                         <goals>
-                                <goal>integration-test</goal>
+                            <goal>integration-test</goal>
                         </goals>
                     </execution>
                     <execution>
@@ -736,13 +729,13 @@
                 <groupId>com.syncleus.maven.plugins</groupId>
                 <artifactId>maven-mongodb-plugin</artifactId>
                 <version>1.1.1</version>
-               <configuration>
-                     <version>3.2.0</version>
-                     <logging>file</logging>
-                     <logFile>${project.build.directory}/mongo.log</logFile>
-                     <bindIp>127.0.0.1</bindIp>
-                     <syncDelay>0</syncDelay>
-               </configuration>
+                <configuration>
+                    <version>3.2.0</version>
+                    <logging>file</logging>
+                    <logFile>${project.build.directory}/mongo.log</logFile>
+                    <bindIp>127.0.0.1</bindIp>
+                    <syncDelay>0</syncDelay>
+                </configuration>
                 <executions>
                     <execution>
                         <id>start</id>
