@@ -5,8 +5,8 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AppContainerService;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.service.intfc.FileService;
 
 import javax.inject.Inject;
 
@@ -34,5 +34,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     //        .withSshUser("ssh_user").withSshPassword("Wings@123").build();
     //    execution = commandUnitExecutorService.execute(execution);
     //   Assertions.assertThat(execution.getExecutionResult()).isEqualTo(ExecutionResult.SUCCESS);
+    //        String saveFile =
+    //        fileService.saveFile(AppContainer.AppContainerBuilder.anAppContainer().withName("stratup.sh").build(),
+    //            new ByteArrayInputStream("echo 'hello world'".getBytes(StandardCharsets.UTF_8)),
+    //            FileBucket.PLATFORMS);
+    //        System.out.println(saveFile);
   }
 }

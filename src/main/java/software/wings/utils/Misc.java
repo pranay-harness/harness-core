@@ -77,10 +77,6 @@ public class Misc {
     }
   }
 
-  public interface ThrowingCallable { void run() throws Exception; }
-
-  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
-
   public static boolean isWildCharPresent(String... names) {
     if (ArrayUtils.isEmpty(names)) {
       return false;
@@ -92,4 +88,8 @@ public class Misc {
     }
     return false;
   }
+
+  public interface ThrowingCallable { void run() throws Exception; }
+
+  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
 }

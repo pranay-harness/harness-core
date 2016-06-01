@@ -1,13 +1,18 @@
 package software.wings.utils;
 
+import com.google.common.base.Throwables;
+
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.github.reinert.jjschema.JsonSchemaGenerator;
+import com.github.reinert.jjschema.SchemaGeneratorBuilder;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -181,6 +186,21 @@ public class JsonUtils {
     String json = asJson(t, mapperForCloning);
     logger.debug("Cloning Object - json: {}", json);
     return asObject(json, cls, mapperForCloning);
+  }
+
+  public static JsonNode jsonSchema(Class<?> clazz) {
+    return jsonSchema(mapper, clazz);
+  }
+
+  public static JsonNode jsonSchema(ObjectMapper objectMapper, Class<?> clazz) {
+    try {
+      JsonSchemaGenerator v4generator = SchemaGeneratorBuilder.draftV4Schema().build();
+      JsonNode schemaNode = v4generator.generateSchema(clazz);
+      return schemaNode;
+    } catch (Exception e) {
+      logger.error("", e);
+      throw Throwables.propagate(e);
+    }
   }
 
   /**

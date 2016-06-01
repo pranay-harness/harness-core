@@ -8,6 +8,7 @@ import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExe
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
@@ -22,15 +23,16 @@ import software.wings.sm.StateType;
 /**
  * @author Rishi
  */
+@Attributes(title = "Email")
 public class EmailState extends State {
   private static final Logger logger = LoggerFactory.getLogger(EmailState.class);
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final long serialVersionUID = 1L;
-  private String toAddress;
-  private String ccAddress;
-  private String subject;
-  private String body;
+  @Attributes(required = true) private String toAddress;
+  @Attributes(required = true) private String ccAddress;
+  @Attributes(required = true) private String subject;
+  @Attributes(required = true) private String body;
   private boolean ignoreDeliveryFailure = true;
 
   @Inject private transient NotificationService<EmailData> emailNotificationService;

@@ -7,10 +7,13 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BuildState;
+import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
@@ -36,19 +39,19 @@ import java.util.List;
 public enum StateType implements StateTypeDescriptor {
   REPEAT(ORCHESTRATION_STENCILS),
   FORK(ORCHESTRATION_STENCILS),
-  STATE_MACHINE(ORCHESTRATION_STENCILS),
+
+  // STATE_MACHINE(ORCHESTRATION_STENCILS),
 
   WAIT(ORCHESTRATION_STENCILS),
   PAUSE(ORCHESTRATION_STENCILS),
 
-  DEPLOY(ORCHESTRATION_STENCILS),
+  // DEPLOY(ORCHESTRATION_STENCILS),
   START(ORCHESTRATION_STENCILS),
   STOP(ORCHESTRATION_STENCILS),
-  RESTART(ORCHESTRATION_STENCILS),
+  // RESTART(ORCHESTRATION_STENCILS),
 
   HTTP(ORCHESTRATION_STENCILS),
-  SPLUNK(ORCHESTRATION_STENCILS),
-  APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  // SPLUNK(ORCHESTRATION_STENCILS), APP_DYNAMICS(ORCHESTRATION_STENCILS),
   EMAIL(ORCHESTRATION_STENCILS),
 
   BUILD(PIPELINE_STENCILS),
@@ -65,7 +68,7 @@ public enum StateType implements StateTypeDescriptor {
 
   StateType(StateTypeScope... scopes) {
     this.scopes = Arrays.asList(scopes);
-    this.jsonSchema = readResource(stencilsPath + name() + jsonSchemaSuffix);
+    // this.jsonSchema = loadJsonSchema();
     this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
@@ -90,7 +93,7 @@ public enum StateType implements StateTypeDescriptor {
 
   @Override
   public Object getJsonSchema() {
-    return jsonSchema;
+    return loadJsonSchema();
   }
 
   @Override
@@ -139,7 +142,52 @@ public enum StateType implements StateTypeDescriptor {
       case START: {
         return new StartState(id);
       }
+      case APPROVAL: {
+        return new ApprovalState(id);
+      }
+      case EMAIL: {
+        return new EmailState(id);
+      }
       default: { throw new WingsException("State implementation is not supported for " + id); }
+    }
+  }
+
+  private JsonNode loadJsonSchema() {
+    switch (this) {
+      case REPEAT: {
+        return JsonUtils.jsonSchema(RepeatState.class);
+      }
+      case FORK: {
+        return JsonUtils.jsonSchema(ForkState.class);
+      }
+      case HTTP: {
+        return JsonUtils.jsonSchema(HttpState.class);
+      }
+      case WAIT: {
+        return JsonUtils.jsonSchema(WaitState.class);
+      }
+      case PAUSE: {
+        return JsonUtils.jsonSchema(PauseState.class);
+      }
+      case BUILD: {
+        return JsonUtils.jsonSchema(BuildState.class);
+      }
+      case ENV_STATE: {
+        return JsonUtils.jsonSchema(EnvState.class);
+      }
+      case STOP: {
+        return JsonUtils.jsonSchema(StopState.class);
+      }
+      case START: {
+        return JsonUtils.jsonSchema(StartState.class);
+      }
+      case APPROVAL: {
+        return JsonUtils.jsonSchema(ApprovalState.class);
+      }
+      case EMAIL: {
+        return JsonUtils.jsonSchema(EmailState.class);
+      }
+      default: { throw new WingsException("State implementation is not supported for type " + this); }
     }
   }
 }
