@@ -33,7 +33,6 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
-import software.wings.utils.CollectionUtils;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyEventListener;
@@ -869,11 +868,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void stencils()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
-    assertThat(stencils).isNotNull();
     logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils.containsKey(StateTypeScope.ORCHESTRATION_STENCILS)).isTrue();
-    assertThat(stencils.containsKey(StateTypeScope.PIPELINE_STENCILS)).isTrue();
-    contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "DEPLOY", "START", "STOP");
+    assertThat(stencils).isNotNull().hasSize(2).containsKeys(
+        StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(StateTypeDescriptor::getType)
+        .contains(/*"DEPLOY",*/ "START", "STOP");
   }
 
   @Test
@@ -881,13 +881,12 @@ public class WorkflowServiceTest extends WingsBaseTest {
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
         workflowService.stencils(StateTypeScope.PIPELINE_STENCILS);
-    assertThat(stencils).isNotNull();
-    assertThat(stencils.size()).isEqualTo(1);
     logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils.containsKey(StateTypeScope.PIPELINE_STENCILS)).isTrue();
-    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "BUILD", "ENV_STATE")).isTrue();
-    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "STOP")).isFalse();
-    assertThat(contains(stencils.get(StateTypeScope.PIPELINE_STENCILS), "START")).isFalse();
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.PIPELINE_STENCILS);
+    assertThat(stencils.get(StateTypeScope.PIPELINE_STENCILS))
+        .extracting(StateTypeDescriptor::getType)
+        .contains("BUILD", "ENV_STATE")
+        .doesNotContain("START", "STOP");
   }
 
   @Test
@@ -895,23 +894,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
     Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
         workflowService.stencils(StateTypeScope.ORCHESTRATION_STENCILS);
-    assertThat(stencils).isNotNull();
-    assertThat(stencils.size()).isEqualTo(1);
     logger.debug(JsonUtils.asJson(stencils));
-    assertThat(stencils.containsKey(StateTypeScope.ORCHESTRATION_STENCILS)).isTrue();
-    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "START", "STOP", "DEPLOY")).isTrue();
-    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "BUILD")).isFalse();
-    assertThat(contains(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS), "ENV_STATE")).isFalse();
-  }
-
-  private boolean contains(List<StateTypeDescriptor> list, String... types)
-      throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<String, List<StateTypeDescriptor>> map = CollectionUtils.hierarchy(list, "type");
-    for (String type : types) {
-      if (!map.containsKey(type)) {
-        return false;
-      }
-    }
-    return true;
+    assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
+    assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
+        .extracting(StateTypeDescriptor::getType)
+        .doesNotContain("BUILD", "ENV_STATE")
+        .contains("START", "STOP" /*,"DEPLOY"*/);
   }
 }
