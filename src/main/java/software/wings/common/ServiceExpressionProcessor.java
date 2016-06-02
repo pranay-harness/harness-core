@@ -98,6 +98,10 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   List<Service> matchingServices(List<Service> services, String... names) {
+    if (services == null) {
+      return null;
+    }
+
     List<Pattern> patterns = new ArrayList<>();
     for (String name : names) {
       patterns.add(Pattern.compile(name.replaceAll("\\" + Constants.WILD_CHAR, "." + Constants.WILD_CHAR)));
@@ -117,6 +121,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   private List<ServiceElement> convertToServiceElements(List<Service> services) {
+    if (services == null) {
+      return null;
+    }
     ModelMapper mm = new ModelMapper();
 
     List<ServiceElement> elements = new ArrayList<>();
