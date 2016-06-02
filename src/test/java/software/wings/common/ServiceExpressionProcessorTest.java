@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 
@@ -90,6 +92,33 @@ public class ServiceExpressionProcessorTest {
   }
 
   @Test
+  public void shouldReturnListAllFromContext() {
+    Service serviceC = Service.ServiceBuilder.aService().withName("C1234").build();
+
+    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
+        Service.ServiceBuilder.aService().withName("B1234").build(), serviceC);
+
+    ServiceElement serviceCElement = new ServiceElement();
+    serviceCElement.setName(serviceC.getName());
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
+
+    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
+
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+
+    List<ServiceElement> matchingServices = processor.list();
+    assertThat(matchingServices).isNotNull();
+    assertThat(matchingServices.size()).isEqualTo(1);
+    assertThat(matchingServices.get(0).getName()).isEqualTo("C1234");
+  }
+
+  @Test
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
         Service.ServiceBuilder.aService().withName("B1234").build(),
@@ -112,5 +141,56 @@ public class ServiceExpressionProcessorTest {
     assertThat(matchingServices.size()).isEqualTo(2);
     assertThat(matchingServices.get(0).getName()).isEqualTo("B1234");
     assertThat(matchingServices.get(1).getName()).isEqualTo("C1234");
+  }
+
+  @Test
+  public void shouldReturnListSomeByNameFromContext() {
+    Service serviceC = Service.ServiceBuilder.aService().withName("C1234").build();
+
+    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
+        Service.ServiceBuilder.aService().withName("B1234").build(), serviceC);
+
+    ServiceElement serviceCElement = new ServiceElement();
+    serviceCElement.setName(serviceC.getName());
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
+
+    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
+
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
+    assertThat(matchingServices).isNotNull();
+    assertThat(matchingServices.size()).isEqualTo(1);
+    assertThat(matchingServices.get(0).getName()).isEqualTo("C1234");
+  }
+
+  @Test
+  public void shouldNotReturnListFromContext() {
+    Service serviceC = Service.ServiceBuilder.aService().withName("C1234").build();
+
+    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
+        Service.ServiceBuilder.aService().withName("B1234").build(), serviceC);
+
+    ServiceElement serviceCElement = new ServiceElement();
+    serviceCElement.setName(serviceC.getName());
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
+
+    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+    when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
+
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    List<ServiceElement> matchingServices = processor.withNames("A*").list();
+    assertThat(matchingServices).isNotNull();
+    assertThat(matchingServices.size()).isEqualTo(0);
   }
 }

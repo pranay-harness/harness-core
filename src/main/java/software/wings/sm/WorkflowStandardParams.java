@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -19,6 +20,8 @@ import java.util.Map;
  * @author Rishi.
  */
 public class WorkflowStandardParams implements ContextElement {
+  private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
+
   @Inject private AppService appService;
 
   @Inject private ArtifactService artifactService;
@@ -29,9 +32,9 @@ public class WorkflowStandardParams implements ContextElement {
   private String envId;
   private List<String> artifactIds;
 
-  @Transient private transient Application app;
-  @Transient private transient Environment env;
-  @Transient private transient List<Artifact> artifacts;
+  @JsonIgnore @Transient private transient Application app;
+  @JsonIgnore @Transient private transient Environment env;
+  @JsonIgnore @Transient private transient List<Artifact> artifacts;
 
   private Long startTs;
   private Long endTs;
@@ -79,20 +82,20 @@ public class WorkflowStandardParams implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put("app", getApp());
-    map.put("env", getEnv());
+    map.put(APP_OBJECT_NAME, getApp());
+    map.put(ENV_OBJECT_NAME, getEnv());
 
     return map;
   }
 
   @Override
   public ContextElementType getElementType() {
-    return null;
+    return ContextElementType.STANDARD;
   }
 
   @Override
   public String getName() {
-    return null;
+    return STANDARD_PARAMS;
   }
 
   private Application getApp() {

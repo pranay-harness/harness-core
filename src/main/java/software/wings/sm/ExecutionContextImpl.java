@@ -9,8 +9,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.utils.ExpressionEvaluator;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -26,6 +28,10 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
+
+  ExecutionContextImpl(StateExecutionInstance stateExecutionInstance) {
+    this.stateExecutionInstance = stateExecutionInstance;
+  }
 
   public ExecutionContextImpl(
       StateExecutionInstance stateExecutionInstance, StateMachine stateMachine, Injector injector) {
@@ -94,7 +100,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     context.putAll(stateExecutionInstance.getStateExecutionMap());
 
     // add context params
-    for (ContextElement contextElement : stateExecutionInstance.getContextElements()) {
+    Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
+    while (it.hasNext()) {
+      ContextElement contextElement = it.next();
       context.putAll(contextElement.paramMap());
     }
 
@@ -111,6 +119,16 @@ public class ExecutionContextImpl implements ExecutionContext {
    */
   public void pushContextElement(ContextElement contextElement) {
     stateExecutionInstance.getContextElements().push(contextElement);
+  }
+
+  public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
+    ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+    for (ContextElement contextElement : contextElements) {
+      if (contextElement.getElementType() == contextElementType) {
+        return (T) contextElement;
+      }
+    }
+    return null;
   }
 
   private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
