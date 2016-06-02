@@ -188,6 +188,21 @@ public class JsonUtils {
     return asObject(json, cls, mapperForCloning);
   }
 
+  public static JsonNode jsonSchema(Class<?> clazz) {
+    return jsonSchema(mapper, clazz);
+  }
+
+  public static JsonNode jsonSchema(ObjectMapper objectMapper, Class<?> clazz) {
+    try {
+      JsonSchemaGenerator v4generator = SchemaGeneratorBuilder.draftV4Schema().build();
+      JsonNode schemaNode = v4generator.generateSchema(clazz);
+      return schemaNode;
+    } catch (Exception e) {
+      logger.error("", e);
+      throw Throwables.propagate(e);
+    }
+  }
+
   /**
    * Deserializes json string to list of objects of given type.
    *
@@ -206,21 +221,6 @@ public class JsonUtils {
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
-    }
-  }
-
-  public static JsonNode jsonSchema(Class<?> clazz) {
-    return jsonSchema(mapper, clazz);
-  }
-
-  public static JsonNode jsonSchema(ObjectMapper objectMapper, Class<?> clazz) {
-    try {
-      JsonSchemaGenerator v4generator = SchemaGeneratorBuilder.draftV4Schema().build();
-      JsonNode schemaNode = v4generator.generateSchema(clazz);
-      return schemaNode;
-    } catch (Exception e) {
-      logger.error("", e);
-      throw Throwables.propagate(e);
     }
   }
 }
