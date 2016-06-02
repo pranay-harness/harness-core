@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
@@ -25,6 +26,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
+@Api("activity")
 @Path("/activities")
 @Produces("application/json")
 @AuthRule
