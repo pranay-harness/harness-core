@@ -25,19 +25,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 /**
  * @author Rishi
  */
 public class ServiceExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "services()";
   private static final String SERVICE_EXPR_PROCESSOR = "serviceExpressionProcessor";
-  private ServiceResourceService serviceResourceService;
+
+  @Inject private ServiceResourceService serviceResourceService;
 
   private String[] serviceNames;
   private ExecutionContextImpl context;
 
-  public ServiceExpressionProcessor(ExecutionContext context, ServiceResourceService serviceResourceService) {
-    this.serviceResourceService = serviceResourceService;
+  public ServiceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
   }
@@ -134,5 +136,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
+  }
+
+  void setServiceResourceService(ServiceResourceService serviceResourceService) {
+    this.serviceResourceService = serviceResourceService;
   }
 }

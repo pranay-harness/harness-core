@@ -41,7 +41,8 @@ public class ServiceExpressionProcessorTest {
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
 
     List<Service> matchingServices = processor.matchingServices(services, "A1234", "B1234");
     assertThat(matchingServices).isNotNull();
@@ -81,7 +82,9 @@ public class ServiceExpressionProcessorTest {
 
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(3);
@@ -109,7 +112,8 @@ public class ServiceExpressionProcessorTest {
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.list();
     assertThat(matchingServices).isNotNull();
@@ -134,7 +138,9 @@ public class ServiceExpressionProcessorTest {
 
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(2);
@@ -163,7 +169,9 @@ public class ServiceExpressionProcessorTest {
     res.setResponse(services);
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.withNames("A*").list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(1);
