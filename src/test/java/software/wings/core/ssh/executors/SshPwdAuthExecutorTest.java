@@ -81,7 +81,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor = new SshPwdAuthExecutor(executionLogs, fileService);
     config = aSshSessionConfig()
                  .withExecutionId(EXECUTION_ID)
-                 .withExecutorType(ExecutorType.PASSWORD)
+                 .withExecutorType(ExecutorType.PASSWORD_AUTH)
                  .withHost(HOST)
                  .withPort(PORT)
                  .withUserName(USER)

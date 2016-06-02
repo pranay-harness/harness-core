@@ -1,11 +1,10 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD;
-import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.SSH;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
+import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
 
 import org.slf4j.Logger;
@@ -53,7 +52,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   private ExecutionResult execute(Host host, CommandUnit commandUnit, SupportedOp op) {
     SshSessionConfig sshSessionConfig = getSshSessionConfig(host, commandUnit.getExecutionId());
-    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig); // TODO: Reuse executor
+    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
+    executor.init(sshSessionConfig);
     ExecutionResult executionResult;
     executionResult = executeByCommandType(executor, commandUnit, op);
     commandUnit.setExecutionResult(executionResult);
@@ -86,7 +86,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           .withSudoAppPassword(credential.getAppUserPassword());
     }
 
-    if (executorType.equals(SSH)) {
+    if (executorType.equals(KEY_AUTH)) {
       HostConnectionAttributes hostConnectionAttrs = (HostConnectionAttributes) host.getHostConnAttr().getValue();
       builder.withKey(hostConnectionAttrs.getKey()).withKeyPassphrase(hostConnectionAttrs.getKeyPassphrase());
     }
@@ -108,10 +108,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       executorType = BASTION_HOST;
     } else {
       AccessType accessType = ((HostConnectionAttributes) host.getHostConnAttr().getValue()).getAccessType();
-      if (accessType.equals(KEY) || accessType.equals(KEY_SU_APP_USER) || accessType.equals(KEY_SUDO_APP_USER)) {
-        executorType = SSH;
+      if (accessType.equals(AccessType.KEY) || accessType.equals(KEY_SU_APP_USER)
+          || accessType.equals(KEY_SUDO_APP_USER)) {
+        executorType = KEY_AUTH;
       } else {
-        executorType = PASSWORD;
+        executorType = PASSWORD_AUTH;
       }
     }
     return executorType;

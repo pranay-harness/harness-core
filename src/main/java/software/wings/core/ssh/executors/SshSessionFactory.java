@@ -40,7 +40,7 @@ public class SshSessionFactory {
     JSch.setLogger(new MyLogger());
 
     Session session = null;
-    if ("KEY".equals(getSessionType(config))) {
+    if ("KEY_AUTH".equals(getSessionType(config))) {
       if (null == config.getKeyPassphrase()) {
         jsch.addIdentity(config.getKey());
       } else {
