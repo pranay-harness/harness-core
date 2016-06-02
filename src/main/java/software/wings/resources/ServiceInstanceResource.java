@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiParam;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
@@ -24,6 +26,7 @@ import javax.ws.rs.QueryParam;
  * Created by anubhaw on 5/26/16.
  */
 
+@Api("/service-instances")
 @Path("service-instances")
 @Timed
 @ExceptionMetered
@@ -33,8 +36,8 @@ public class ServiceInstanceResource {
   @Inject ServiceInstanceService instanceService;
 
   @GET
-  public RestResponse<PageResponse<ServiceInstance>> list(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceInstance> pageRequest) {
+  public RestResponse<PageResponse<ServiceInstance>> list(@ApiParam @QueryParam("appId") String appId,
+      @ApiParam @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceInstance> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("envId", envId, EQ);
     return new RestResponse<>(instanceService.list(pageRequest));
