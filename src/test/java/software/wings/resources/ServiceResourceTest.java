@@ -5,16 +5,19 @@ import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
+import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Service.Builder.aService;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -111,5 +114,31 @@ public class ServiceResourceTest {
         RESOURCES.client().target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID)).request().delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
     verify(RESOURCE_SERVICE).delete(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldAddCommand() {
+    when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(Graph.class))).thenReturn(aSERVICE);
+
+    RestResponse<Service> restResponse =
+        RESOURCES.client()
+            .target(format("/services/%s/commands?appId=%s", SERVICE_ID, APP_ID))
+            .request()
+            .post(Entity.entity(aGraph().build(), APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
+    assertThat(restResponse.getResource()).isInstanceOf(Service.class);
+    verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(Graph.class));
+  }
+
+  @Test
+  public void shouldDeleteCommand() {
+    when(RESOURCE_SERVICE.deleteCommand(APP_ID, SERVICE_ID, "START")).thenReturn(aSERVICE);
+
+    RestResponse<Service> restResponse =
+        RESOURCES.client()
+            .target(format("/services/%s/commands/%s?appId=%s", SERVICE_ID, "START", APP_ID))
+            .request()
+            .delete(new GenericType<RestResponse<Service>>() {});
+    assertThat(restResponse.getResource()).isInstanceOf(Service.class);
+    verify(RESOURCE_SERVICE).deleteCommand(APP_ID, SERVICE_ID, "START");
   }
 }

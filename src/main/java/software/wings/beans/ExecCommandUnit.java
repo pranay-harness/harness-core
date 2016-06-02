@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.beans.CommandUnit.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -32,6 +33,21 @@ public class ExecCommandUnit extends CommandUnit {
 
   public void setCommandString(String commandString) {
     this.commandString = commandString;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    ExecCommandUnit that = (ExecCommandUnit) o;
+    return Objects.equal(commandPath, that.commandPath) && Objects.equal(commandString, that.commandString);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(commandPath, commandString);
   }
 
   @Override

@@ -1,16 +1,16 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ErrorConstants.DUPLICATE_COMMAND_NAMES;
 
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.BasicDBObject;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -72,23 +72,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   @Override
-  public Service addCommand(String appId, String serviceId, Command command) {
+  public Service addCommand(String appId, String serviceId, Graph commandGraph) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
-    if (isEmpty(service.getCommands())) {
-      wingsPersistence.addToListIfNotExists(Service.class, appId, serviceId, "commands", command);
 
-    } else {
-      if (service.getCommands()
-              .stream()
-              .map(Command::getName)
-              .filter(commandName -> equalsIgnoreCase(command.getName(), command.getName()))
-              .findFirst()
-              .isPresent()) {
-        throw new WingsException(ErrorConstants.DUPLICATE_COMMAND_NAMES, "commandName", command.getName());
-      }
-      wingsPersistence.compareAndAddToList(Service.class, appId, serviceId, "commands", command, service.getCommands());
+    if (!commandGraph.isLinear()) {
+      throw new IllegalArgumentException("Graph is not a pipeline");
     }
+
+    Command command = aCommand().withGraph(commandGraph).build();
+    command.transformGraph();
+    command.setServiceId(serviceId);
+
+    if (!wingsPersistence.addToList(Service.class, appId, serviceId,
+            wingsPersistence.createQuery(Service.class).field("commands.name").notEqual(command.getName()), "commands",
+            command)) {
+      throw new WingsException(DUPLICATE_COMMAND_NAMES, "commandName", command.getName());
+    }
+
     return get(appId, serviceId);
   }
 

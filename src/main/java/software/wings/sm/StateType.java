@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static org.joor.Reflect.on;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
 
@@ -37,38 +38,39 @@ import java.util.List;
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
-  REPEAT(ORCHESTRATION_STENCILS),
-  FORK(ORCHESTRATION_STENCILS),
+  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, ORCHESTRATION_STENCILS),
 
   // STATE_MACHINE(ORCHESTRATION_STENCILS),
 
-  WAIT(ORCHESTRATION_STENCILS),
-  PAUSE(ORCHESTRATION_STENCILS),
+  WAIT(WaitState.class, ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, ORCHESTRATION_STENCILS),
 
   // DEPLOY(ORCHESTRATION_STENCILS),
-  START(ORCHESTRATION_STENCILS),
-  STOP(ORCHESTRATION_STENCILS),
+  START(StartState.class, ORCHESTRATION_STENCILS),
+  STOP(StopState.class, ORCHESTRATION_STENCILS),
   // RESTART(ORCHESTRATION_STENCILS),
 
-  HTTP(ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, ORCHESTRATION_STENCILS),
   // SPLUNK(ORCHESTRATION_STENCILS), APP_DYNAMICS(ORCHESTRATION_STENCILS),
-  EMAIL(ORCHESTRATION_STENCILS),
+  EMAIL(EmailState.class, ORCHESTRATION_STENCILS),
 
-  BUILD(PIPELINE_STENCILS),
-  ENV_STATE(PIPELINE_STENCILS),
-  APPROVAL(ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
+  BUILD(BuildState.class, PIPELINE_STENCILS),
+  ENV_STATE(EnvState.class, PIPELINE_STENCILS),
+  APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
+  private Class<? extends State> stateClass;
   private static final String stencilsPath = "/templates/stencils/";
-  private static final String jsonSchemaSuffix = "-JSONSchema.json";
   private static final String uiSchemaSuffix = "-UISchema.json";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
 
-  StateType(StateTypeScope... scopes) {
+  StateType(Class<? extends State> stateClass, StateTypeScope... scopes) {
+    this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
-    // this.jsonSchema = loadJsonSchema();
+    this.jsonSchema = loadJsonSchema();
     this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
@@ -93,7 +95,7 @@ public enum StateType implements StateTypeDescriptor {
 
   @Override
   public Object getJsonSchema() {
-    return loadJsonSchema();
+    return jsonSchema;
   }
 
   @Override
@@ -113,81 +115,10 @@ public enum StateType implements StateTypeDescriptor {
    */
   @Override
   public State newInstance(String id) {
-    switch (this) {
-      case REPEAT: {
-        return new RepeatState(id);
-      }
-      case FORK: {
-        return new ForkState(id);
-      }
-      case HTTP: {
-        return new HttpState(id);
-      }
-      case WAIT: {
-        return new WaitState(id);
-      }
-      case PAUSE: {
-        return new PauseState(id);
-      }
-      case BUILD: {
-        return new BuildState(id);
-      }
-      case ENV_STATE: {
-        return new EnvState(id);
-      }
-
-      case STOP: {
-        return new StopState(id);
-      }
-      case START: {
-        return new StartState(id);
-      }
-      case APPROVAL: {
-        return new ApprovalState(id);
-      }
-      case EMAIL: {
-        return new EmailState(id);
-      }
-      default: { throw new WingsException("State implementation is not supported for " + id); }
-    }
+    return on(stateClass).create(id).get();
   }
 
   private JsonNode loadJsonSchema() {
-    switch (this) {
-      case REPEAT: {
-        return JsonUtils.jsonSchema(RepeatState.class);
-      }
-      case FORK: {
-        return JsonUtils.jsonSchema(ForkState.class);
-      }
-      case HTTP: {
-        return JsonUtils.jsonSchema(HttpState.class);
-      }
-      case WAIT: {
-        return JsonUtils.jsonSchema(WaitState.class);
-      }
-      case PAUSE: {
-        return JsonUtils.jsonSchema(PauseState.class);
-      }
-      case BUILD: {
-        return JsonUtils.jsonSchema(BuildState.class);
-      }
-      case ENV_STATE: {
-        return JsonUtils.jsonSchema(EnvState.class);
-      }
-      case STOP: {
-        return JsonUtils.jsonSchema(StopState.class);
-      }
-      case START: {
-        return JsonUtils.jsonSchema(StartState.class);
-      }
-      case APPROVAL: {
-        return JsonUtils.jsonSchema(ApprovalState.class);
-      }
-      case EMAIL: {
-        return JsonUtils.jsonSchema(EmailState.class);
-      }
-      default: { throw new WingsException("State implementation is not supported for type " + this); }
-    }
+    return JsonUtils.jsonSchema(stateClass);
   }
 }

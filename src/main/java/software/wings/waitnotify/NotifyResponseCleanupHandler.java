@@ -1,6 +1,9 @@
 package software.wings.waitnotify;
 
+import static com.google.common.collect.Iterables.concat;
+import static com.google.common.collect.Lists.newArrayList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
@@ -12,7 +15,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,10 +60,13 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       PageRequest<WaitQueue> req = new PageRequest<>();
       req.addFilter(filter);
 
-      Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
+      Map<String, Iterable<WaitQueue>> waitQueueMap = new HashMap<>();
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
       if (isEmpty(waitQueuesResponse)) {
-        waitQueueMap = CollectionUtils.hierarchy(waitQueuesResponse, "correlationId");
+        waitQueuesResponse.stream().collect(toMap(WaitQueue::getCorrelationId,
+            waitQueue
+            -> newArrayList(waitQueue),
+            (waitQueues, waitQueues2) -> newArrayList(concat(waitQueues, waitQueues2))));
       }
 
       for (NotifyResponse notifyResponse : notifyPageResponses) {

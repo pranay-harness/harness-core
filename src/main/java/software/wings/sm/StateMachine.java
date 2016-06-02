@@ -1,6 +1,5 @@
 package software.wings.sm;
 
-import org.modelmapper.ModelMapper;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
@@ -15,10 +14,8 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
-import software.wings.utils.CollectionUtils;
+import software.wings.utils.MapperUtils;
 
-import java.beans.IntrospectionException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -64,40 +61,51 @@ public class StateMachine extends Base {
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
     String originStateId = null;
     for (Node node : graph.getNodes()) {
-      if (Graph.ORIGIN_STATE.equals(node.getName()) || Graph.ORIGIN_STATE.equals(node.getType())) {
+      if (node.isOrigin()) {
         originStateId = node.getId();
         continue;
       }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown stencil type");
       }
+
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
+
       State state = stateTypeDesc.newInstance(node.getName());
 
       Map<String, Object> properties = node.getProperties();
+
       // populate properties
-      ModelMapper modelMapper = new ModelMapper();
-      modelMapper.map(properties, state);
+      MapperUtils.mapObject(properties, state);
+
       addState(state);
     }
 
     if (originStateId == null) {
       throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Origin state missing");
     }
+
     try {
-      Map<String, Node> linkIdMap = CollectionUtils.hierarchyOnUniqueFieldValue(graph.getNodes(), "id");
+      Map<String, Node> nodeIdMap = graph.getNodesMap();
       Map<String, State> statesMap = getStatesMap();
+
       if (graph.getLinks() != null) {
         for (Link link : graph.getLinks()) {
-          if (Graph.ORIGIN_STATE.equals(linkIdMap.get(link.getFrom()).getName())) {
-            setInitialStateName(linkIdMap.get(link.getTo()).getName());
+          Node nodeFrom = nodeIdMap.get(link.getFrom());
+          Node nodeTo = nodeIdMap.get(link.getTo());
+
+          if (nodeFrom.isOrigin()) {
+            setInitialStateName(nodeTo.getName());
             continue;
           }
-          State stateFrom = statesMap.get(linkIdMap.get(link.getFrom()).getName());
-          State stateTo = statesMap.get(linkIdMap.get(link.getTo()).getName());
+
+          State stateFrom = statesMap.get(nodeFrom.getName());
+          State stateTo = statesMap.get(nodeTo.getName());
+
           TransitionType transitionType = TransitionType.valueOf(link.getType().toUpperCase());
+
           if (transitionType == TransitionType.FORK) {
-            ((ForkState) statesMap.get(stateFrom.getName())).addForkState(stateTo);
+            ((ForkState) stateFrom).addForkState(stateTo);
           } else {
             addTransition(Transition.Builder.aTransition()
                               .withFromState(stateFrom)
@@ -108,7 +116,7 @@ public class StateMachine extends Base {
         }
       }
       validate();
-    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | IntrospectionException e) {
+    } catch (IllegalArgumentException e) {
       throw new WingsException(e);
     }
   }

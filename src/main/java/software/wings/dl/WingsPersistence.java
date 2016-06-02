@@ -43,10 +43,10 @@ public interface WingsPersistence {
 
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
 
-  <T> void addToListIfNotExists(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
+  <T> void addToList(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
 
-  <T> void compareAndAddToList(
-      Class<T> cls, String appId, String entityId, String listFieldName, Object object, List oldList);
+  <T> boolean addToList(
+      Class<T> cls, String appId, String entityId, Query<T> query, String listFieldName, Object object);
 
   <T> void addToList(Class<T> cls, String entityId, String listFieldName, Object object);
 

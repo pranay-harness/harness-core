@@ -3,13 +3,23 @@
  */
 package software.wings.beans;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
+
+import com.google.common.base.Throwables;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.common.Constants;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Rishi
@@ -21,6 +31,8 @@ public class Graph {
   private List<Node> nodes = new ArrayList<>();
 
   private List<Link> links = new ArrayList<>();
+
+  private Optional<Node> originState = null;
 
   public String getGraphName() {
     return graphName;
@@ -44,6 +56,57 @@ public class Graph {
 
   public void setLinks(List<Link> links) {
     this.links = links;
+  }
+
+  @JsonIgnore
+  public Map<String, Node> getNodesMap() {
+    return getNodes().stream().collect(toMap(Node::getId, identity()));
+  }
+
+  @JsonIgnore
+  public boolean isLinear() {
+    if (getNodes() != null && getLinks() != null) {
+      Optional<Node> originState = getOriginNode();
+      if (originState.isPresent()) {
+        List<Node> visitedNodes = newArrayList(getLinearGraphIterator());
+        return visitedNodes.containsAll(getNodes());
+      }
+    }
+    return false;
+  }
+
+  @JsonIgnore
+  public Iterator<Node> getLinearGraphIterator() {
+    Optional<Node> originNode = getOriginNode();
+    Map<String, Node> nodesMap = getNodesMap();
+    Map<String, Link> linkMap = null;
+
+    try {
+      linkMap = getLinks().stream().collect(toMap(Link::getFrom, identity()));
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+
+    Map<String, Link> finalLinkMap = linkMap;
+    return new Iterator<Node>() {
+      private Node node = originNode.get();
+
+      @Override
+      public boolean hasNext() {
+        return node != null;
+      }
+
+      @Override
+      public Node next() {
+        Node currentNode = node;
+        node = null;
+        Link link = finalLinkMap.get(currentNode.getId());
+        if (link != null) {
+          node = nodesMap.get(link.getTo());
+        }
+        return currentNode;
+      }
+    };
   }
 
   @Override
@@ -81,6 +144,13 @@ public class Graph {
     } else if (!nodes.equals(other.nodes))
       return false;
     return true;
+  }
+
+  private Optional<Node> getOriginNode() {
+    if (originState == null) {
+      originState = getNodes().stream().filter(Node::isOrigin).findFirst();
+    }
+    return originState;
   }
 
   public static class Node implements Serializable {
@@ -141,6 +211,10 @@ public class Graph {
       this.properties = properties;
     }
 
+    public boolean isOrigin() {
+      return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
+    }
+
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -188,6 +262,71 @@ public class Graph {
       if (y != other.y)
         return false;
       return true;
+    }
+
+    public static final class Builder {
+      private String id;
+      private String name;
+      private String type;
+      private int x;
+      private int y;
+      private Map<String, Object> properties = new HashMap<>();
+
+      private Builder() {}
+
+      public static Builder aNode() {
+        return new Builder();
+      }
+
+      public Builder withId(String id) {
+        this.id = id;
+        return this;
+      }
+
+      public Builder withName(String name) {
+        this.name = name;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder withX(int x) {
+        this.x = x;
+        return this;
+      }
+
+      public Builder withY(int y) {
+        this.y = y;
+        return this;
+      }
+
+      public Builder addProperty(String name, Object value) {
+        this.properties.put(name, value);
+        return this;
+      }
+
+      public Builder withProperties(Map<String, Object> properties) {
+        this.properties = properties;
+        return this;
+      }
+
+      public Builder but() {
+        return aNode().withId(id).withName(name).withType(type).withX(x).withY(y).withProperties(properties);
+      }
+
+      public Node build() {
+        Node node = new Node();
+        node.setId(id);
+        node.setName(name);
+        node.setType(type);
+        node.setX(x);
+        node.setY(y);
+        node.setProperties(properties);
+        return node;
+      }
     }
   }
 
@@ -272,6 +411,101 @@ public class Graph {
       } else if (!type.equals(other.type))
         return false;
       return true;
+    }
+
+    public static final class Builder {
+      private String id;
+      private String from;
+      private String to;
+      private String type;
+
+      private Builder() {}
+
+      public static Builder aLink() {
+        return new Builder();
+      }
+
+      public Builder withId(String id) {
+        this.id = id;
+        return this;
+      }
+
+      public Builder withFrom(String from) {
+        this.from = from;
+        return this;
+      }
+
+      public Builder withTo(String to) {
+        this.to = to;
+        return this;
+      }
+
+      public Builder withType(String type) {
+        this.type = type;
+        return this;
+      }
+
+      public Builder but() {
+        return aLink().withId(id).withFrom(from).withTo(to).withType(type);
+      }
+
+      public Link build() {
+        Link link = new Link();
+        link.setId(id);
+        link.setFrom(from);
+        link.setTo(to);
+        link.setType(type);
+        return link;
+      }
+    }
+  }
+
+  public static final class Builder {
+    private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
+    private List<Node> nodes = new ArrayList<>();
+    private List<Link> links = new ArrayList<>();
+
+    private Builder() {}
+
+    public static Builder aGraph() {
+      return new Builder();
+    }
+
+    public Builder withGraphName(String graphName) {
+      this.graphName = graphName;
+      return this;
+    }
+
+    public Builder addNodes(Node... nodes) {
+      this.nodes.addAll(Arrays.asList(nodes));
+      return this;
+    }
+
+    public Builder withNodes(List<Node> nodes) {
+      this.nodes = nodes;
+      return this;
+    }
+
+    public Builder addLinks(Link... links) {
+      this.links.addAll(Arrays.asList(links));
+      return this;
+    }
+
+    public Builder withLinks(List<Link> links) {
+      this.links = links;
+      return this;
+    }
+
+    public Builder but() {
+      return aGraph().withGraphName(graphName).withNodes(nodes).withLinks(links);
+    }
+
+    public Graph build() {
+      Graph graph = new Graph();
+      graph.setGraphName(graphName);
+      graph.setNodes(nodes);
+      graph.setLinks(links);
+      return graph;
     }
   }
 }
