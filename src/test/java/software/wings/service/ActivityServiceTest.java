@@ -18,6 +18,7 @@ import software.wings.service.intfc.ActivityService;
  */
 public class ActivityServiceTest extends WingsBaseTest {
   private static final Activity activity = anActivity()
+                                               .withEnvironmentId("ENV_ID")
                                                .withAppId("APP_ID")
                                                .withArtifactName("ARTIFACT")
                                                .withCommandName("COMMAND")
@@ -38,7 +39,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Test
   public void shouldListActivities() {
     wingsPersistence.save(activity);
-    assertThat(activityService.list(new PageRequest<>())).hasSize(1).containsExactly(activity);
+    assertThat(activityService.list("APP_ID", "ENV_ID", new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
 
   @Test

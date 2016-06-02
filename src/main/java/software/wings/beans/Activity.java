@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "activities", noClassnameStored = true)
 public class Activity extends Base {
+  @NotEmpty private String environmentId;
   @NotEmpty private String commandName;
   @NotEmpty private String commandType;
   @NotEmpty private String serviceId;
@@ -21,6 +22,14 @@ public class Activity extends Base {
   private String releaseName;
   private String artifactName;
   private Status status = Status.RUNNING;
+
+  public String getEnvironmentId() {
+    return environmentId;
+  }
+
+  public void setEnvironmentId(String environmentId) {
+    this.environmentId = environmentId;
+  }
 
   public String getCommandName() {
     return commandName;
@@ -113,6 +122,7 @@ public class Activity extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("environmentId", environmentId)
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("serviceId", serviceId)
@@ -130,6 +140,7 @@ public class Activity extends Base {
   public enum Status { RUNNING, COMPLETED, ABORTED, FAILED }
 
   public static final class Builder {
+    private String environmentId;
     private String commandName;
     private String commandType;
     private String serviceId;
@@ -153,6 +164,11 @@ public class Activity extends Base {
 
     public static Builder anActivity() {
       return new Builder();
+    }
+
+    public Builder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
     }
 
     public Builder withCommandName(String commandName) {
@@ -247,6 +263,7 @@ public class Activity extends Base {
 
     public Builder but() {
       return anActivity()
+          .withEnvironmentId(environmentId)
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withServiceId(serviceId)
@@ -269,6 +286,7 @@ public class Activity extends Base {
 
     public Activity build() {
       Activity activity = new Activity();
+      activity.setEnvironmentId(environmentId);
       activity.setCommandName(commandName);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);
