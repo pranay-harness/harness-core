@@ -25,7 +25,6 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 5/26/16.
  */
-
 @Api("/service-instances")
 @Path("service-instances")
 @Timed

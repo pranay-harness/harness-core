@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 /**
  * @author Rishi
  *
@@ -35,18 +37,17 @@ import java.util.stream.Collectors;
 public class InstanceExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "instances()";
   private static final String INSTANCE_EXPR_PROCESSOR = "instanceExpressionProcessor";
-  private ServiceInstanceService serviceInstanceService;
-  private ServiceResourceService serviceResourceService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private ExecutionContextImpl context;
 
   private String serviceName;
   private String[] serviceTemplateNames;
   private String[] hostNames;
-  private String[] serviceInstanceIds;
+  private String[] instanceIds;
 
-  public InstanceExpressionProcessor(ExecutionContext context, ServiceInstanceService serviceInstanceService) {
-    this.serviceInstanceService = serviceInstanceService;
+  public InstanceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
   }
@@ -69,7 +70,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   public InstanceExpressionProcessor instances(String... serviceInstanceIds) {
-    this.serviceInstanceIds = serviceInstanceIds;
+    this.instanceIds = serviceInstanceIds;
     return this;
   }
 
@@ -85,6 +86,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   public InstanceExpressionProcessor withHosts(String... hosts) {
     this.hostNames = hosts;
+    return this;
+  }
+  public InstanceExpressionProcessor withInstanceIds(String... instanceIds) {
+    this.instanceIds = instanceIds;
     return this;
   }
 
@@ -116,9 +121,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   private void applyServiceInstanceIdsFilter(String appId, Builder pageRequest) {
-    if (!ArrayUtils.isEmpty(serviceInstanceIds)) {
-      pageRequest.addFilter(
-          SearchFilter.Builder.aSearchFilter().withField("uuid", Operator.IN, serviceInstanceIds).build());
+    if (!ArrayUtils.isEmpty(instanceIds)) {
+      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("uuid", Operator.IN, instanceIds).build());
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
       if (element != null) {
@@ -164,5 +168,13 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       pageRequest.addFilter(
           SearchFilter.Builder.aSearchFilter().withField("service", Operator.EQ, serviceIds.toArray()).build());
     }
+  }
+
+  void setServiceInstanceService(ServiceInstanceService serviceInstanceService) {
+    this.serviceInstanceService = serviceInstanceService;
+  }
+
+  void setServiceResourceService(ServiceResourceService serviceResourceService) {
+    this.serviceResourceService = serviceResourceService;
   }
 }

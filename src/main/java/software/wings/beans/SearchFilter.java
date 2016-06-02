@@ -82,7 +82,6 @@ public class SearchFilter {
 
   public static final class Builder {
     private String fieldName;
-    private Object fieldValue;
     private Object[] fieldValues;
     private Operator op;
 

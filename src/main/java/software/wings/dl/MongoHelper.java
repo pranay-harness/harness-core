@@ -7,8 +7,6 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -20,8 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MongoHelper {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   public static <T> PageResponse<T> queryPageRequest(Datastore datastore, Class<T> cls, PageRequest<T> req) {
     Query q = datastore.createQuery(cls);
     q = MongoHelper.applyPageRequest(q, req);

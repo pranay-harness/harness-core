@@ -60,5 +60,5 @@ public class WorkflowExecution extends Base {
     this.status = status;
   }
 
-  public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SUB_WORKFLOW }
+  public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SIMPLE, SUB_WORKFLOW }
 }

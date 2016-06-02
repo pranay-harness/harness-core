@@ -6,6 +6,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
+import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.ConfigFile;
@@ -41,7 +42,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  *
  * @author Rishi
  */
-
+@Api("configs")
 @Path("/configs")
 @Produces("application/json")
 public class ConfigResource {

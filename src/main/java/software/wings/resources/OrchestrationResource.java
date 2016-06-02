@@ -3,6 +3,7 @@
  */
 package software.wings.resources;
 
+import io.swagger.annotations.Api;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
@@ -29,6 +30,7 @@ import javax.ws.rs.QueryParam;
 /**
  * @author Rishi
  */
+@Api("orchestrations")
 @Path("/orchestrations")
 public class OrchestrationResource {
   private WorkflowService workflowService;

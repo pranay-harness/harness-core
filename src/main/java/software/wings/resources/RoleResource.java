@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
@@ -25,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * Created by anubhaw on 3/22/16.
  */
+@Api("roles")
 @Path("/roles")
 @AuthRule
 @Timed

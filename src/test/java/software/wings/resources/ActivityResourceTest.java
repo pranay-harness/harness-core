@@ -47,6 +47,7 @@ public class ActivityResourceTest {
 
   public static final String APP_ID = "APP_ID";
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
+  public static final String ENV_ID = "ENV_ID";
 
   public static final Activity ACTUAL_ACTIVITY = anActivity().build();
   public static final Log ACTUAL_LOG = aLog().build();
@@ -65,7 +66,7 @@ public class ActivityResourceTest {
     PageResponse<Activity> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL_ACTIVITY));
     pageResponse.setTotal(1);
-    when(ACTIVITY_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(ACTIVITY_SERVICE.list(anyString(), anyString(), any(PageRequest.class))).thenReturn(pageResponse);
     when(ACTIVITY_SERVICE.get(anyString(), anyString())).thenReturn(ACTUAL_ACTIVITY);
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
@@ -77,42 +78,41 @@ public class ActivityResourceTest {
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =
         RESOURCES.client()
-            .target("/activities?appId=" + APP_ID)
+            .target("/activities?appId=" + APP_ID + "&envId=" + ENV_ID)
             .request()
             .get(new GenericType<RestResponse<PageResponse<Activity>>>() {});
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
     PageRequest<Activity> expectedPageRequest = new PageRequest<>();
-    expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
 
-    verify(ACTIVITY_SERVICE).list(expectedPageRequest);
+    verify(ACTIVITY_SERVICE).list(APP_ID, ENV_ID, expectedPageRequest);
   }
 
   @Test
   public void shouldGetActivity() {
     RestResponse<Activity> restResponse = RESOURCES.client()
-                                              .target("/activities/ACTIVITY_ID?appId=" + APP_ID)
+                                              .target("/activities/" + ACTIVITY_ID + "?appId=" + APP_ID)
                                               .request()
                                               .get(new GenericType<RestResponse<Activity>>() {});
 
     assertThat(restResponse.getResource()).isInstanceOf(Activity.class);
 
-    verify(ACTIVITY_SERVICE).get("ACTIVITY_ID", APP_ID);
+    verify(ACTIVITY_SERVICE).get(ACTIVITY_ID, APP_ID);
   }
 
   @Test
   public void shouldListLogs() {
     RestResponse<PageResponse<Log>> restResponse = RESOURCES.client()
-                                                       .target("/activities/ACTIVITY_ID/logs?appId=" + APP_ID)
+                                                       .target("/activities/" + ACTIVITY_ID + "/logs?appId=" + APP_ID)
                                                        .request()
                                                        .get(new GenericType<RestResponse<PageResponse<Log>>>() {});
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
     PageRequest<Log> expectedPageRequest = new PageRequest<>();
     expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
-    expectedPageRequest.addFilter("activityId", "ACTIVITY_ID", Operator.EQ);
+    expectedPageRequest.addFilter("activityId", ACTIVITY_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
 

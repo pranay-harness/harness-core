@@ -44,9 +44,8 @@ public class ActivityResource {
 
   @GET
   public RestResponse<PageResponse<Activity>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<Activity> request) {
-    request.addFilter("appId", appId, EQ);
-    return new RestResponse<>(activityService.list(request));
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
+    return new RestResponse<>(activityService.list(appId, envId, request));
   }
 
   @GET

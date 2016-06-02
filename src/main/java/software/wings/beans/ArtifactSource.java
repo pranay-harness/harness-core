@@ -7,9 +7,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -28,8 +27,6 @@ public abstract class ArtifactSource {
   @NotNull private SourceType sourceType;
 
   @NotNull private ArtifactType artifactType;
-
-  private Map<String, String> svcAppContainerMap = new HashMap<>();
 
   public ArtifactSource(SourceType sourceType) {
     this.sourceType = sourceType;

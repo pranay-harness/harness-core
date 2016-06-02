@@ -13,18 +13,19 @@ import software.wings.sm.ExpressionProcessor;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 /**
  * @author Rishi
  */
 public class HostExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "hosts()";
   private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";
-  private HostService hostService;
+  @Inject private HostService hostService;
   private String[] hostNames;
   private String appId;
 
-  public HostExpressionProcessor(ExecutionContext context, HostService hostService) {
-    this.hostService = hostService;
+  public HostExpressionProcessor(ExecutionContext context) {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 

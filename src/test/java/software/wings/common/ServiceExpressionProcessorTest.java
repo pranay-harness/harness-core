@@ -9,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Service.Builder.aService;
 
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.junit.Test;
@@ -31,8 +32,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnMatchingServices() {
-    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
-        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
+        aService().withName("B1234").build(), aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -40,7 +41,8 @@ public class ServiceExpressionProcessorTest {
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
 
     List<Service> matchingServices = processor.matchingServices(services, "A1234", "B1234");
     assertThat(matchingServices).isNotNull();
@@ -65,8 +67,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnListAll() {
-    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
-        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
+        aService().withName("B1234").build(), aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -79,7 +81,9 @@ public class ServiceExpressionProcessorTest {
 
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(3);
@@ -90,10 +94,10 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnListAllFromContext() {
-    Service serviceC = Service.ServiceBuilder.aService().withName("C1234").build();
+    Service serviceC = aService().withName("C1234").build();
 
-    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
-        Service.ServiceBuilder.aService().withName("B1234").build(), serviceC);
+    List<Service> services =
+        Lists.newArrayList(aService().withName("A1234").build(), aService().withName("B1234").build(), serviceC);
 
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
@@ -107,7 +111,8 @@ public class ServiceExpressionProcessorTest {
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.list();
     assertThat(matchingServices).isNotNull();
@@ -117,8 +122,8 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnListSomeByName() {
-    List<Service> services = Lists.newArrayList(Service.Builder.aService().withName("A1234").build(),
-        Service.Builder.aService().withName("B1234").build(), Service.Builder.aService().withName("C1234").build());
+    List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
+        aService().withName("B1234").build(), aService().withName("C1234").build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -131,7 +136,9 @@ public class ServiceExpressionProcessorTest {
 
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(2);
@@ -141,10 +148,10 @@ public class ServiceExpressionProcessorTest {
 
   @Test
   public void shouldReturnNotFromContext() {
-    Service serviceC = Service.ServiceBuilder.aService().withName("C1234").build();
+    Service serviceC = aService().withName("C1234").build();
 
-    List<Service> services = Lists.newArrayList(Service.ServiceBuilder.aService().withName("A1234").build(),
-        Service.ServiceBuilder.aService().withName("B1234").build(), serviceC);
+    List<Service> services =
+        Lists.newArrayList(aService().withName("A1234").build(), aService().withName("B1234").build(), serviceC);
 
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
@@ -160,7 +167,9 @@ public class ServiceExpressionProcessorTest {
     res.setResponse(services);
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);
 
-    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context, serviceResourceService);
+    ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    processor.setServiceResourceService(serviceResourceService);
+
     List<ServiceElement> matchingServices = processor.withNames("A*").list();
     assertThat(matchingServices).isNotNull();
     assertThat(matchingServices.size()).isEqualTo(1);
