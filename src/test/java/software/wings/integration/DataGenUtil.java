@@ -80,7 +80,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APP_CONTAINER_PER_APP = 1; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 1; /* Max 10   */
+  private static final int NUM_ENV_PER_APP = 2; /* Max 10   */
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
@@ -213,6 +213,7 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> appNames = new ArrayList<String>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
+  private SettingAttribute envAttr = null;
 
   /**
    * Generated Data for across the API use
@@ -285,6 +286,7 @@ public class DataGenUtil extends WingsBaseTest {
         hosts.forEach(host
             -> wingsPersistence.save(aServiceInstance()
                                          .withAppId(host.getAppId())
+                                         .withEnvId(environment.getUuid())
                                          .withHost(host)
                                          .withService(service)
                                          .withServiceTemplate(template)
@@ -457,8 +459,10 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void addHostsToEnv(Environment env) throws IOException {
-    SettingAttribute envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
+    if (envAttr == null) {
+      envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+          aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
+    }
 
     WebTarget target =
         client.target(format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
