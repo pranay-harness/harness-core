@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
@@ -27,7 +28,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 5/17/16.
  */
-
+@Api("settings")
 @Path("/settings")
 @Timed
 @ExceptionMetered

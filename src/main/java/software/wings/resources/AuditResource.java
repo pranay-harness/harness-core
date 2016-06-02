@@ -3,6 +3,7 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
+import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -16,6 +17,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+@Api("audits")
 @Path("/audits")
 public class AuditResource {
   private AuditService httpAuditService;

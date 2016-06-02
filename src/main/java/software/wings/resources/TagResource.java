@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Tag;
 import software.wings.beans.UuidList;
@@ -28,7 +29,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 4/25/16.
  */
-
+@Api("tags")
 @AuthRule
 @Timed
 @ExceptionMetered
