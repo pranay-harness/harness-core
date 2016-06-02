@@ -36,7 +36,7 @@ public class HostElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(ContextElementType.HOST.getDisplayName(), this);
+    map.put(HOST_OBJECT_NAME, this);
     return map;
   }
 }

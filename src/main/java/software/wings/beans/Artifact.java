@@ -45,7 +45,7 @@ public class Artifact extends Base {
 
   @Indexed @NotEmpty private String displayName;
 
-  @Indexed @NotEmpty private String revision;
+  @Indexed @NotEmpty(groups = Create.class) private String revision;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 
