@@ -24,6 +24,7 @@ import java.util.Objects;
 public class Host extends Base {
   private String infraId;
   private String hostName;
+  private String osType;
 
   @FormDataParam("hostConnAttr") @Reference(idOnly = true, ignoreMissing = true) private SettingAttribute hostConnAttr;
 
@@ -95,10 +96,27 @@ public class Host extends Base {
     this.hostNames = hostNames;
   }
 
+  public HostConnectionCredential getHostConnectionCredential() {
+    return hostConnectionCredential;
+  }
+
+  public void setHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
+    this.hostConnectionCredential = hostConnectionCredential;
+  }
+
+  public String getOsType() {
+    return osType;
+  }
+
+  public void setOsType(String osType) {
+    this.osType = osType;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, hostConnAttr, bastionConnAttr, tags, hostNames, configFiles);
+        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, tags, hostNames, configFiles,
+              hostConnectionCredential);
   }
 
   @Override
@@ -114,22 +132,16 @@ public class Host extends Base {
     }
     final Host other = (Host) obj;
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.hostConnAttr, other.hostConnAttr)
+        && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
         && Objects.equals(this.bastionConnAttr, other.bastionConnAttr) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles);
-  }
-
-  public HostConnectionCredential getHostConnectionCredential() {
-    return hostConnectionCredential;
-  }
-
-  public void setHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
-    this.hostConnectionCredential = hostConnectionCredential;
+        && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential);
   }
 
   public static final class HostBuilder {
     private String infraId;
     private String hostName;
+    private String osType;
     private SettingAttribute hostConnAttr;
     private SettingAttribute bastionConnAttr;
     private List<Tag> tags = new ArrayList<>();
@@ -157,6 +169,11 @@ public class Host extends Base {
 
     public HostBuilder withHostName(String hostName) {
       this.hostName = hostName;
+      return this;
+    }
+
+    public HostBuilder withOsType(String osType) {
+      this.osType = osType;
       return this;
     }
 
@@ -229,6 +246,7 @@ public class Host extends Base {
       return aHost()
           .withInfraId(infraId)
           .withHostName(hostName)
+          .withOsType(osType)
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
           .withTags(tags)
@@ -248,6 +266,7 @@ public class Host extends Base {
       Host host = new Host();
       host.setInfraId(infraId);
       host.setHostName(hostName);
+      host.setOsType(osType);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
       host.setTags(tags);

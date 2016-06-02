@@ -6,8 +6,8 @@ package software.wings.beans;
 public class HostConnectionCredential {
   private String sshUser;
   private String sshPassword;
-  private String appAccount;
-  private String appAccountPassword;
+  private String appUser;
+  private String appUserPassword;
 
   public String getSshUser() {
     return sshUser;
@@ -25,19 +25,69 @@ public class HostConnectionCredential {
     this.sshPassword = sshPassword;
   }
 
-  public String getAppAccount() {
-    return appAccount;
+  public String getAppUser() {
+    return appUser;
   }
 
-  public void setAppAccount(String appAccount) {
-    this.appAccount = appAccount;
+  public void setAppUser(String appUser) {
+    this.appUser = appUser;
   }
 
-  public String getAppAccountPassword() {
-    return appAccountPassword;
+  public String getAppUserPassword() {
+    return appUserPassword;
   }
 
-  public void setAppAccountPassword(String appAccountPassword) {
-    this.appAccountPassword = appAccountPassword;
+  public void setAppUserPassword(String appUserPassword) {
+    this.appUserPassword = appUserPassword;
+  }
+
+  public static final class HostConnectionCredentialBuilder {
+    private String sshUser;
+    private String sshPassword;
+    private String appUser;
+    private String appUserPassword;
+
+    private HostConnectionCredentialBuilder() {}
+
+    public static HostConnectionCredentialBuilder aHostConnectionCredential() {
+      return new HostConnectionCredentialBuilder();
+    }
+
+    public HostConnectionCredentialBuilder withSshUser(String sshUser) {
+      this.sshUser = sshUser;
+      return this;
+    }
+
+    public HostConnectionCredentialBuilder withSshPassword(String sshPassword) {
+      this.sshPassword = sshPassword;
+      return this;
+    }
+
+    public HostConnectionCredentialBuilder withAppUser(String appUser) {
+      this.appUser = appUser;
+      return this;
+    }
+
+    public HostConnectionCredentialBuilder withAppUserPassword(String appUserPassword) {
+      this.appUserPassword = appUserPassword;
+      return this;
+    }
+
+    public HostConnectionCredentialBuilder but() {
+      return aHostConnectionCredential()
+          .withSshUser(sshUser)
+          .withSshPassword(sshPassword)
+          .withAppUser(appUser)
+          .withAppUserPassword(appUserPassword);
+    }
+
+    public HostConnectionCredential build() {
+      HostConnectionCredential hostConnectionCredential = new HostConnectionCredential();
+      hostConnectionCredential.setSshUser(sshUser);
+      hostConnectionCredential.setSshPassword(sshPassword);
+      hostConnectionCredential.setAppUser(appUser);
+      hostConnectionCredential.setAppUserPassword(appUserPassword);
+      return hostConnectionCredential;
+    }
   }
 }

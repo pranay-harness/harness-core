@@ -16,14 +16,14 @@ public class SshSessionConfig {
   private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
   private Integer retryInterval;
   private String host;
-  private Integer port;
+  private Integer port = 22;
   private String userName;
   private String password;
   private String key;
   private String keyPassphrase;
-  private String sudoUserName;
-  private String sudoUserPassword;
-  private SshSessionConfig jumpboxConfig;
+  private String sudoAppName;
+  private String sudoAppPassword;
+  private SshSessionConfig bastionHostConfig;
 
   public ExecutorType getExecutorType() {
     return executorType;
@@ -113,34 +113,34 @@ public class SshSessionConfig {
     this.keyPassphrase = keyPassphrase;
   }
 
-  public String getSudoUserName() {
-    return sudoUserName;
+  public String getSudoAppName() {
+    return sudoAppName;
   }
 
-  public void setSudoUserName(String sudoUserName) {
-    this.sudoUserName = sudoUserName;
+  public void setSudoAppName(String sudoAppName) {
+    this.sudoAppName = sudoAppName;
   }
 
-  public String getSudoUserPassword() {
-    return sudoUserPassword;
+  public String getSudoAppPassword() {
+    return sudoAppPassword;
   }
 
-  public void setSudoUserPassword(String sudoUserPassword) {
-    this.sudoUserPassword = sudoUserPassword;
+  public void setSudoAppPassword(String sudoAppPassword) {
+    this.sudoAppPassword = sudoAppPassword;
   }
 
-  public SshSessionConfig getJumpboxConfig() {
-    return jumpboxConfig;
+  public SshSessionConfig getBastionHostConfig() {
+    return bastionHostConfig;
   }
 
-  public void setJumpboxConfig(SshSessionConfig jumpboxConfig) {
-    this.jumpboxConfig = jumpboxConfig;
+  public void setBastionHostConfig(SshSessionConfig bastionHostConfig) {
+    this.bastionHostConfig = bastionHostConfig;
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(executorType, executionId, sshConnectionTimeout, sshSessionTimeout, retryInterval, host, port,
-        userName, password, key, keyPassphrase, sudoUserName, sudoUserPassword, jumpboxConfig);
+        userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword, bastionHostConfig);
   }
 
   @Override
@@ -159,9 +159,9 @@ public class SshSessionConfig {
         && Objects.equals(this.port, other.port) && Objects.equals(this.userName, other.userName)
         && Objects.equals(this.password, other.password) && Objects.equals(this.key, other.key)
         && Objects.equals(this.keyPassphrase, other.keyPassphrase)
-        && Objects.equals(this.sudoUserName, other.sudoUserName)
-        && Objects.equals(this.sudoUserPassword, other.sudoUserPassword)
-        && Objects.equals(this.jumpboxConfig, other.jumpboxConfig);
+        && Objects.equals(this.sudoAppName, other.sudoAppName)
+        && Objects.equals(this.sudoAppPassword, other.sudoAppPassword)
+        && Objects.equals(this.bastionHostConfig, other.bastionHostConfig);
   }
 
   @Override
@@ -178,9 +178,9 @@ public class SshSessionConfig {
         .add("password", password)
         .add("key", key)
         .add("keyPassphrase", keyPassphrase)
-        .add("sudoUserName", sudoUserName)
-        .add("sudoUserPassword", sudoUserPassword)
-        .add("jumpboxConfig", jumpboxConfig)
+        .add("sudoAppName", sudoAppName)
+        .add("sudoAppPassword", sudoAppPassword)
+        .add("bastionHostConfig", bastionHostConfig)
         .toString();
   }
 
@@ -191,14 +191,14 @@ public class SshSessionConfig {
     private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
     private Integer retryInterval;
     private String host;
-    private Integer port;
+    private Integer port = 22;
     private String userName;
     private String password;
     private String key;
     private String keyPassphrase;
-    private String sudoUserName;
-    private String sudoUserPassword;
-    private SshSessionConfig jumpboxConfig;
+    private String sudoAppName;
+    private String sudoAppPassword;
+    private SshSessionConfig bastionHostConfig;
 
     private SshSessionConfigBuilder() {}
 
@@ -261,18 +261,18 @@ public class SshSessionConfig {
       return this;
     }
 
-    public SshSessionConfigBuilder withSudoUserName(String sudoUserName) {
-      this.sudoUserName = sudoUserName;
+    public SshSessionConfigBuilder withSudoAppName(String sudoAppName) {
+      this.sudoAppName = sudoAppName;
       return this;
     }
 
-    public SshSessionConfigBuilder withSudoUserPassword(String sudoUserPassword) {
-      this.sudoUserPassword = sudoUserPassword;
+    public SshSessionConfigBuilder withSudoAppPassword(String sudoAppPassword) {
+      this.sudoAppPassword = sudoAppPassword;
       return this;
     }
 
     public SshSessionConfigBuilder withJumpboxConfig(SshSessionConfig jumpboxConfig) {
-      this.jumpboxConfig = jumpboxConfig;
+      this.bastionHostConfig = jumpboxConfig;
       return this;
     }
 
@@ -289,9 +289,9 @@ public class SshSessionConfig {
           .withPassword(password)
           .withKey(key)
           .withKeyPassphrase(keyPassphrase)
-          .withSudoUserName(sudoUserName)
-          .withSudoUserPassword(sudoUserPassword)
-          .withJumpboxConfig(jumpboxConfig);
+          .withSudoAppName(sudoAppName)
+          .withSudoAppPassword(sudoAppPassword)
+          .withJumpboxConfig(bastionHostConfig);
     }
 
     public SshSessionConfig build() {
@@ -307,9 +307,9 @@ public class SshSessionConfig {
       sshSessionConfig.setPassword(password);
       sshSessionConfig.setKey(key);
       sshSessionConfig.setKeyPassphrase(keyPassphrase);
-      sshSessionConfig.setSudoUserName(sudoUserName);
-      sshSessionConfig.setSudoUserPassword(sudoUserPassword);
-      sshSessionConfig.setJumpboxConfig(jumpboxConfig);
+      sshSessionConfig.setSudoAppName(sudoAppName);
+      sshSessionConfig.setSudoAppPassword(sudoAppPassword);
+      sshSessionConfig.setBastionHostConfig(bastionHostConfig);
       return sshSessionConfig;
     }
   }

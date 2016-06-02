@@ -17,7 +17,7 @@ public class SshSessionFactory {
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
-      Session jumpboxSession = getSSHSession(config.getJumpboxConfig());
+      Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
       int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
       logger.info("portforwarding port " + forwardingPort);
 
@@ -40,7 +40,7 @@ public class SshSessionFactory {
     JSch.setLogger(new MyLogger());
 
     Session session = null;
-    if ("KEY".equals(getSessionType(config))) {
+    if ("KEY_AUTH".equals(getSessionType(config))) {
       if (null == config.getKeyPassphrase()) {
         jsch.addIdentity(config.getKey());
       } else {

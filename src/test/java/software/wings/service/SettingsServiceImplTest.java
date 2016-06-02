@@ -1,10 +1,11 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -25,15 +26,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldListConnectionAttributes() {
-    SettingAttribute settingAttribute = settingsService.save(
-        aSettingAttribute()
-            .withAppId("APP_ID")
-            .withName("PASSWORD")
-            .withValue(aHostConnectionAttributes().withAccessType(PASSWORD).withConnectionType(SSH).build())
-            .build());
+    SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
+                                                                 .withAppId("APP_ID")
+                                                                 .withName("USER_PASSWORD")
+                                                                 .withValue(aHostConnectionAttributes()
+                                                                                .withType(HOST_CONNECTION_ATTRIBUTES)
+                                                                                .withAccessType(USER_PASSWORD)
+                                                                                .withConnectionType(SSH)
+                                                                                .build())
+                                                                 .build());
 
     List<SettingAttribute> connectionAttributes =
-        settingsService.getSettingAttributesByType("APP_ID", SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES);
+        settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES);
     assertThat(connectionAttributes).isNotNull();
     assertThat((connectionAttributes.get(0).getValue())).isInstanceOf(HostConnectionAttributes.class);
   }
@@ -42,7 +46,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldListBastionHostConnectionAttributes() {
     SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
                                                                  .withAppId("APP_ID")
-                                                                 .withName("PASSWORD")
+                                                                 .withName("USER_PASSWORD")
                                                                  .withValue(new BastionConnectionAttributes())
                                                                  .build());
 

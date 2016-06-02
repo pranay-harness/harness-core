@@ -1,11 +1,12 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD_SUDO_APP_ACCOUNT;
-import static software.wings.beans.HostConnectionAttributes.AccessType.PASSWORD_SU_APP_ACCOUNT;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -70,26 +71,33 @@ public class SettingsServiceImpl implements SettingsService {
 
   @Override
   public void createDefaultSettings(String appId) {
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withName("PASSWORD")
-            .withValue(aHostConnectionAttributes().withConnectionType(SSH).withAccessType(PASSWORD).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withName("PASSWORD_SU_APP_ACCOUNT")
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(PASSWORD_SU_APP_ACCOUNT).build())
-            .build());
-    wingsPersistence.save(
-        aSettingAttribute()
-            .withAppId(appId)
-            .withName("PASSWORD_SUDO_APP_ACCOUNT")
-            .withValue(
-                aHostConnectionAttributes().withConnectionType(SSH).withAccessType(PASSWORD_SUDO_APP_ACCOUNT).build())
-            .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withName("USER_PASSWORD")
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withType(HOST_CONNECTION_ATTRIBUTES)
+                                             .withAccessType(USER_PASSWORD)
+                                             .build())
+                              .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withName("USER_PASSWORD_SU_APP_USER")
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withType(HOST_CONNECTION_ATTRIBUTES)
+                                             .withAccessType(USER_PASSWORD_SU_APP_USER)
+                                             .build())
+                              .build());
+    wingsPersistence.save(aSettingAttribute()
+                              .withAppId(appId)
+                              .withName("USER_PASSWORD_SUDO_APP_USER")
+                              .withValue(aHostConnectionAttributes()
+                                             .withConnectionType(SSH)
+                                             .withType(HOST_CONNECTION_ATTRIBUTES)
+                                             .withAccessType(USER_PASSWORD_SUDO_APP_USER)
+                                             .build())
+                              .build());
   }
 
   @Override
