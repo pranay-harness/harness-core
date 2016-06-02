@@ -58,6 +58,8 @@ import javax.inject.Inject;
 14. Successfully release channel on success/failure/exceptions
 -15. Return Success status on successful command execution
 -16. Return Failure status on failed command execution
+17. Sudo app user
+18. su app user
 */
 
 @RealMongo

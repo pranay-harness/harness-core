@@ -84,8 +84,8 @@ public class HostConnectionAttributes extends SettingValue {
   }
 
   public static final class HostConnectionAttributesBuilder {
-    private AccessType accessType;
     private ConnectionType connectionType;
+    private AccessType accessType;
     private String key;
     private String keyPassphrase;
     private SettingVariableTypes type;
@@ -96,13 +96,13 @@ public class HostConnectionAttributes extends SettingValue {
       return new HostConnectionAttributesBuilder();
     }
 
-    public HostConnectionAttributesBuilder withAccessType(AccessType accessType) {
-      this.accessType = accessType;
+    public HostConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
+      this.connectionType = connectionType;
       return this;
     }
 
-    public HostConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
-      this.connectionType = connectionType;
+    public HostConnectionAttributesBuilder withAccessType(AccessType accessType) {
+      this.accessType = accessType;
       return this;
     }
 
@@ -123,8 +123,8 @@ public class HostConnectionAttributes extends SettingValue {
 
     public HostConnectionAttributesBuilder but() {
       return aHostConnectionAttributes()
-          .withAccessType(accessType)
           .withConnectionType(connectionType)
+          .withAccessType(accessType)
           .withKey(key)
           .withKeyPassphrase(keyPassphrase)
           .withType(type);
@@ -132,8 +132,8 @@ public class HostConnectionAttributes extends SettingValue {
 
     public HostConnectionAttributes build() {
       HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
-      hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setConnectionType(connectionType);
+      hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setKey(key);
       hostConnectionAttributes.setKeyPassphrase(keyPassphrase);
       hostConnectionAttributes.setType(type);

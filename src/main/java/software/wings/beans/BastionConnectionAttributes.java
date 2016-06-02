@@ -48,4 +48,70 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
   public String toString() {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
+
+  public static final class BastionConnectionAttributesBuilder {
+    private String hostName;
+    private ConnectionType connectionType;
+    private AccessType accessType;
+    private String key;
+    private String keyPassphrase;
+    private SettingVariableTypes type;
+
+    private BastionConnectionAttributesBuilder() {}
+
+    public static BastionConnectionAttributesBuilder aBastionConnectionAttributes() {
+      return new BastionConnectionAttributesBuilder();
+    }
+
+    public BastionConnectionAttributesBuilder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
+      this.connectionType = connectionType;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder withAccessType(AccessType accessType) {
+      this.accessType = accessType;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder withKey(String key) {
+      this.key = key;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder withKeyPassphrase(String keyPassphrase) {
+      this.keyPassphrase = keyPassphrase;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder withType(SettingVariableTypes type) {
+      this.type = type;
+      return this;
+    }
+
+    public BastionConnectionAttributesBuilder but() {
+      return aBastionConnectionAttributes()
+          .withHostName(hostName)
+          .withConnectionType(connectionType)
+          .withAccessType(accessType)
+          .withKey(key)
+          .withKeyPassphrase(keyPassphrase)
+          .withType(type);
+    }
+
+    public BastionConnectionAttributes build() {
+      BastionConnectionAttributes bastionConnectionAttributes = new BastionConnectionAttributes();
+      bastionConnectionAttributes.setHostName(hostName);
+      bastionConnectionAttributes.setConnectionType(connectionType);
+      bastionConnectionAttributes.setAccessType(accessType);
+      bastionConnectionAttributes.setKey(key);
+      bastionConnectionAttributes.setKeyPassphrase(keyPassphrase);
+      bastionConnectionAttributes.setType(type);
+      return bastionConnectionAttributes;
+    }
+  }
 }

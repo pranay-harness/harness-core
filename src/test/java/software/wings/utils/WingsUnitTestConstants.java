@@ -3,7 +3,7 @@ package software.wings.utils;
 /**
  * Created by anubhaw on 5/26/16.
  */
-public class EntityNameConstants {
+public class WingsUnitTestConstants {
   public static final String APP_ID = "APP_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
   public static final String ENV_ID = "ENV_ID";
@@ -17,6 +17,12 @@ public class EntityNameConstants {
   public static final String TEMPLATE_ID = "TEMPLATE_ID";
   public static final String TEMPLATE_NAME = "TEMPLATE_NAME";
   public static final String TEMPLATE_DESCRIPTION = "TEMPLATE_DESCRIPTION";
+  public static final String FILE_NAME = "FILE_NAME";
+  public static final String FILE_PATH = "FILE_PATH";
+  public static final String FILE_ID = "FILE_ID";
+  public static final String GRIDFS_FILE_ID = "GRIDFS_FILE_ID";
   public static final String SSH_USER_NAME = "SSH_USER_NAME";
   public static final String SSH_USER_PASSWORD = "SSH_USER_PASSWORD";
+  public static final String SSH_KEY = "SSH_KEY";
+  public static final String SSH_KEY_PASS_PHRASE = "SSH_KEY_PASS_PHRASE";
 }

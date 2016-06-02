@@ -18,7 +18,7 @@ public class SshExecutorFactory {
       case PASSWORD:
         executor = new SshPwdAuthExecutor(executionLogs, fileService);
         break;
-      case SSHKEY:
+      case SSH:
         executor = new SshPubKeyAuthExecutor(executionLogs, fileService);
         break;
       case BASTION_HOST:

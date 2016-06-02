@@ -17,5 +17,5 @@ public interface SshExecutor {
 
   void destroy();
 
-  enum ExecutorType { PASSWORD, SSHKEY, BASTION_HOST }
+  enum ExecutorType { PASSWORD, SSH, BASTION_HOST }
 }

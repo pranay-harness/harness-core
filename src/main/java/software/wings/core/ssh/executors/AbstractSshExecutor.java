@@ -151,8 +151,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   public abstract Session getSession(SshSessionConfig config) throws JSchException;
 
-  public void postChannelConnect() {}
-
   protected String normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();

@@ -1,5 +1,7 @@
 package software.wings.core.ssh.executors;
 
+import com.google.common.base.MoreObjects;
+
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
@@ -160,6 +162,26 @@ public class SshSessionConfig {
         && Objects.equals(this.sudoAppName, other.sudoAppName)
         && Objects.equals(this.sudoAppPassword, other.sudoAppPassword)
         && Objects.equals(this.bastionHostConfig, other.bastionHostConfig);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("executorType", executorType)
+        .add("executionId", executionId)
+        .add("sshConnectionTimeout", sshConnectionTimeout)
+        .add("sshSessionTimeout", sshSessionTimeout)
+        .add("retryInterval", retryInterval)
+        .add("host", host)
+        .add("port", port)
+        .add("userName", userName)
+        .add("password", password)
+        .add("key", key)
+        .add("keyPassphrase", keyPassphrase)
+        .add("sudoAppName", sudoAppName)
+        .add("sudoAppPassword", sudoAppPassword)
+        .add("bastionHostConfig", bastionHostConfig)
+        .toString();
   }
 
   public static final class SshSessionConfigBuilder {
