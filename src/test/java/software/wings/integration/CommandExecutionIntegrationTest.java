@@ -17,6 +17,7 @@ import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServi
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.utils.WingsUnitTestConstants.APP_ID;
+import static software.wings.utils.WingsUnitTestConstants.ENV_ID;
 import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsUnitTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsUnitTestConstants.TEMPLATE_ID;
@@ -71,6 +72,14 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).build();
+  public static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
+                                                             .withAppId(APP_ID)
+                                                             .withEnvId(ENV_ID)
+                                                             .withHost(HOST)
+                                                             .withService(SERVICE)
+                                                             .withServiceTemplate(SERVICE_TEMPLATE)
+                                                             .build();
+
   private static String fileId;
 
   @Before
@@ -83,13 +92,6 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteCommand() {
-    ServiceInstance serviceInstance = aServiceInstance()
-                                          .withAppId(APP_ID)
-                                          .withHost(HOST)
-                                          .withService(SERVICE)
-                                          .withServiceTemplate(SERVICE_TEMPLATE)
-                                          .build();
-
     Command command = aCommand()
                           .withName("COPY_CONTAINER")
                           .addCommandUnits(anExecCommandUnit().withCommandString("rm -f $HOME/jetty").build(),
@@ -101,7 +103,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                               anExecCommandUnit().withCommandString("chmod +x $HOME/jetty && $HOME/jetty").build())
                           .build();
 
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(serviceInstance, command);
+    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);
     assertThat(command.getCommandUnits().get(0).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(1).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(2).getExecutionResult()).isEqualTo(SUCCESS);
@@ -110,13 +112,6 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldCaptureFailedExecutionCommandUnit() {
-    ServiceInstance serviceInstance = aServiceInstance()
-                                          .withAppId(APP_ID)
-                                          .withHost(HOST)
-                                          .withService(SERVICE)
-                                          .withServiceTemplate(SERVICE_TEMPLATE)
-                                          .build();
-
     Command command = aCommand()
                           .withName("COPY_CONTAINER")
                           .addCommandUnits(anExecCommandUnit().withCommandString("rm -f $HOME/jetty").build(),
@@ -128,7 +123,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                               anExecCommandUnit().withCommandString("chmod +x $HOME/jetty && $HOME/XYZ").build())
                           .build();
 
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(serviceInstance, command);
+    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);
 
     assertThat(command.getCommandUnits().get(0).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(1).getExecutionResult()).isEqualTo(SUCCESS);

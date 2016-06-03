@@ -41,6 +41,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private Activity getPersistedActivity(ServiceInstance serviceInstance, Command command) {
     Activity activity = anActivity()
                             .withAppId(serviceInstance.getAppId())
+                            .withEnvironmentId(serviceInstance.getEnvId())
                             .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
                             .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
                             .withServiceId(serviceInstance.getService().getUuid())
