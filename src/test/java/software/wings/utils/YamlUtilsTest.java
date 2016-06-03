@@ -16,12 +16,21 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class YamlUtilsTest.
+ *
  * @author Rishi.
  */
 public class YamlUtilsTest extends WingsBaseTest {
   @Inject private YamlUtils yamlUtils;
 
+  /**
+   * Should read catalogs.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReadCatalogs() throws IOException {
     URL url = this.getClass().getResource("/configs/catalogs.yml");

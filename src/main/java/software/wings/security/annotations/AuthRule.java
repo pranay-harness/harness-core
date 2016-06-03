@@ -8,6 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import javax.ws.rs.NameBinding;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/10/16.
  */
@@ -15,5 +17,10 @@ import javax.ws.rs.NameBinding;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @NameBinding
 public @interface AuthRule {
+  /**
+   * Value.
+   *
+   * @return the permission attr[]
+   */
   PermissionAttr[] value() default {};
 }

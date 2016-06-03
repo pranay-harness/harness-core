@@ -13,20 +13,33 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class ExecutorModule extends AbstractModule {
   private ExecutorService executorService;
 
+  /**
+   * Instantiates a new executor module.
+   */
   public ExecutorModule() {
     executorService = create(20, 1000, 500L, TimeUnit.MILLISECONDS);
   }
 
+  /**
+   * Instantiates a new executor module.
+   *
+   * @param executorService the executor service
+   */
   public ExecutorModule(ExecutorService executorService) {
     this.executorService = executorService;
   }
 
+  /* (non-Javadoc)
+   * @see com.google.inject.AbstractModule#configure()
+   */
   @Override
   protected void configure() {
     bind(ExecutorService.class).toInstance(new ManagedExecutorService(executorService));

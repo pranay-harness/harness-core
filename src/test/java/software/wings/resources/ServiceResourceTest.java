@@ -30,6 +30,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/23/16.
  */
@@ -52,6 +54,9 @@ public class ServiceResourceTest {
           .withAppContainer(AppContainer.AppContainerBuilder.anAppContainer().withAppId(APP_ID).build())
           .build();
 
+  /**
+   * Should list services.
+   */
   @Test
   public void shouldListServices() {
     PageResponse<Service> pageResponse = new PageResponse<>();
@@ -72,6 +77,9 @@ public class ServiceResourceTest {
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }
 
+  /**
+   * Should get service.
+   */
   @Test
   public void shouldGetService() {
     when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID)).thenReturn(aSERVICE);
@@ -83,6 +91,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).get(APP_ID, SERVICE_ID);
   }
 
+  /**
+   * Should save service.
+   */
   @Test
   public void shouldSaveService() {
     when(RESOURCE_SERVICE.save(any(Service.class))).thenReturn(aSERVICE);
@@ -95,6 +106,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).save(aSERVICE);
   }
 
+  /**
+   * Should update service.
+   */
   @Test
   public void shouldUpdateService() {
     Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).build();
@@ -108,6 +122,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).update(service);
   }
 
+  /**
+   * Should delete service.
+   */
   @Test
   public void shouldDeleteService() {
     Response restResponse =
@@ -116,6 +133,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).delete(APP_ID, SERVICE_ID);
   }
 
+  /**
+   * Should add command.
+   */
   @Test
   public void shouldAddCommand() {
     when(RESOURCE_SERVICE.addCommand(eq(APP_ID), eq(SERVICE_ID), any(Graph.class))).thenReturn(aSERVICE);
@@ -129,6 +149,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).addCommand(eq(APP_ID), eq(SERVICE_ID), any(Graph.class));
   }
 
+  /**
+   * Should delete command.
+   */
   @Test
   public void shouldDeleteCommand() {
     when(RESOURCE_SERVICE.deleteCommand(APP_ID, SERVICE_ID, "START")).thenReturn(aSERVICE);

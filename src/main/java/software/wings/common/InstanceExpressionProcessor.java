@@ -29,7 +29,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class InstanceExpressionProcessor.
+ *
  * @author Rishi
  */
 public class InstanceExpressionProcessor implements ExpressionProcessor {
@@ -45,6 +49,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   private String[] hostNames;
   private String[] instanceIds;
 
+  /**
+   * Instantiates a new instance expression processor.
+   *
+   * @param context the context
+   */
   public InstanceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
@@ -55,6 +64,9 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return INSTANCE_EXPR_PROCESSOR;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
+   */
   @Override
   public String normalizeExpression(String expression) {
     if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
@@ -67,31 +79,66 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return expression;
   }
 
+  /**
+   * Instances.
+   *
+   * @param serviceInstanceIds the service instance ids
+   * @return the instance expression processor
+   */
   public InstanceExpressionProcessor instances(String... serviceInstanceIds) {
     this.instanceIds = serviceInstanceIds;
     return this;
   }
 
+  /**
+   * With service.
+   *
+   * @param serviceName the service name
+   * @return the instance expression processor
+   */
   public InstanceExpressionProcessor withService(String serviceName) {
     this.serviceName = serviceName;
     return this;
   }
 
+  /**
+   * With service templates.
+   *
+   * @param serviceTemplateNames the service template names
+   * @return the instance expression processor
+   */
   public InstanceExpressionProcessor withServiceTemplates(String... serviceTemplateNames) {
     this.serviceTemplateNames = serviceTemplateNames;
     return this;
   }
 
+  /**
+   * With hosts.
+   *
+   * @param hosts the hosts
+   * @return the instance expression processor
+   */
   public InstanceExpressionProcessor withHosts(String... hosts) {
     this.hostNames = hosts;
     return this;
   }
 
+  /**
+   * With instance ids.
+   *
+   * @param instanceIds the instance ids
+   * @return the instance expression processor
+   */
   public InstanceExpressionProcessor withInstanceIds(String... instanceIds) {
     this.instanceIds = instanceIds;
     return this;
   }
 
+  /**
+   * Lists.
+   *
+   * @return the list
+   */
   public List<InstanceElement> lists() {
     String appId = context.getStateExecutionInstance().getAppId();
     Builder pageRequest = PageRequest.Builder.aPageRequest();

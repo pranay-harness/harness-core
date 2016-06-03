@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
  *
@@ -23,8 +25,17 @@ public class WaitInstance extends Base {
 
   private ExecutionStatus status = ExecutionStatus.NEW;
 
+  /**
+   * Instantiates a new wait instance.
+   */
   public WaitInstance() {}
 
+  /**
+   * Instantiates a new wait instance.
+   *
+   * @param callback       the callback
+   * @param correlationIds the correlation ids
+   */
   public WaitInstance(NotifyCallback callback, String[] correlationIds) {
     this(0, callback, correlationIds);
   }
@@ -74,6 +85,9 @@ public class WaitInstance extends Base {
     this.status = status;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -90,6 +104,9 @@ public class WaitInstance extends Base {
         && Objects.equals(callback, that.callback) && status == that.status;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), correlationIds, callback, timeoutMsec, status);

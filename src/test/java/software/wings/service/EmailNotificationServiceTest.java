@@ -25,6 +25,8 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.SettingsService;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
@@ -58,12 +60,20 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   };
   @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
 
+  /**
+   * Setup mocks.
+   */
   @Before
   public void setupMocks() {
     when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP))
         .thenReturn(newArrayList(aSettingAttribute().withValue(smtpConfig).build()));
   }
 
+  /**
+   * Should send email with template.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendEmailWithTemplate() throws Exception {
     emailDataNotificationService.send(emailTemplateData.getTo(), emailTemplateData.getCc(),
@@ -72,6 +82,11 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
   }
 
+  /**
+   * Should send email with body.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendEmailWithBody() throws Exception {
     emailDataNotificationService.send(
@@ -80,6 +95,11 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
   }
 
+  /**
+   * Should send email with email data.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendEmailWithEmailData() throws Exception {
     emailDataNotificationService.send(emailBodyData);
@@ -87,6 +107,11 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     verify(settingsService).getGlobalSettingAttributesByType(SettingVariableTypes.SMTP);
   }
 
+  /**
+   * Should send async email with template.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendAsyncEmailWithTemplate() throws Exception {
     emailDataNotificationService.sendAsync(emailTemplateData.getTo(), emailTemplateData.getCc(),
@@ -94,6 +119,11 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
     verify(queue).send(emailTemplateData);
   }
 
+  /**
+   * Send async with body.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void sendAsyncWithBody() throws Exception {
     emailDataNotificationService.sendAsync(

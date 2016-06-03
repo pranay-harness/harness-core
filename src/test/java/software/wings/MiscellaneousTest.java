@@ -19,6 +19,8 @@ import software.wings.utils.ToStringTester;
 
 import java.util.regex.Pattern;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/18/16.
  */
@@ -45,6 +47,9 @@ public class MiscellaneousTest {
       new FilterEnum(), new FilterPackageInfo(), NO_TEST_FILTER, EXCLUDE_PACKAGES_FOR_GETTER_SETTER_TO_STRING,
       new FilterClassName("^((?!Test$).)*$"), new FilterClassName("^((?!Tester$).)*$")};
 
+  /**
+   * Should provide coverage to getter setter and to string.
+   */
   @Test
   public void shouldProvideCoverageToGetterSetterAndToString() {
     Validator validator =
@@ -53,6 +58,9 @@ public class MiscellaneousTest {
     validator.validateRecursively("software.wings", classFilters);
   }
 
+  /**
+   * Should validate code governance rules.
+   */
   @Test
   public void shouldValidateCodeGovernanceRules() {
     Validator validator = ValidatorBuilder.create()
@@ -64,6 +72,9 @@ public class MiscellaneousTest {
     validator.validateRecursively("software.wings", NO_TEST_FILTER, new FilterEnum(), new FilterNonConcrete());
   }
 
+  /**
+   * Should validate test governance rules.
+   */
   @Test
   public void shouldValidateTestGovernanceRules() {
     Validator validator = ValidatorBuilder.create().with(new TestClassMustBeProperlyNamedRule()).build();

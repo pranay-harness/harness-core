@@ -18,9 +18,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * PageRequest bean class.
  *
+ * @param <T> the generic type
  * @author Rishi
  */
 public class PageRequest<T> {
@@ -44,10 +47,13 @@ public class PageRequest<T> {
 
   @JsonIgnore private boolean isOr = false;
 
+  /**
+   * Instantiates a new page request.
+   */
   public PageRequest() {}
 
   /**
-   * Copy Constructor for PageRequest
+   * Copy Constructor for PageRequest.
    *
    * @param req PageRequest to copy.
    */
@@ -111,6 +117,11 @@ public class PageRequest<T> {
     this.fieldsIncluded = fieldsIncluded;
   }
 
+  /**
+   * Adds the fields included.
+   *
+   * @param fieldsIncluded the fields included
+   */
   public void addFieldsIncluded(String fieldsIncluded) {
     this.fieldsIncluded.add(fieldsIncluded);
   }
@@ -123,6 +134,11 @@ public class PageRequest<T> {
     this.fieldsExcluded = fieldsExcluded;
   }
 
+  /**
+   * Adds the fields excluded.
+   *
+   * @param fieldsExcluded the fields excluded
+   */
   public void addFieldsExcluded(String fieldsExcluded) {
     this.fieldsExcluded.add(fieldsExcluded);
   }
@@ -184,6 +200,11 @@ public class PageRequest<T> {
     this.filters = filters;
   }
 
+  /**
+   * Adds the filter.
+   *
+   * @param filter the filter
+   */
   public void addFilter(SearchFilter filter) {
     this.filters.add(filter);
   }
@@ -196,12 +217,17 @@ public class PageRequest<T> {
     this.orders = orders;
   }
 
+  /**
+   * Adds the order.
+   *
+   * @param order the order
+   */
   public void addOrder(SortOrder order) {
     this.orders.add(order);
   }
 
   /**
-   * Creates and adds a new search filter to PageRequest
+   * Creates and adds a new search filter to PageRequest.
    *
    * @param fieldName  name of field to apply filter on.
    * @param fieldValue value for RHS.
@@ -215,6 +241,9 @@ public class PageRequest<T> {
     filters.add(filter);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -230,11 +259,17 @@ public class PageRequest<T> {
         && Objects.equal(fieldsExcluded, that.fieldsExcluded);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(offset, start, limit, pageSize, filters, orders, fieldsIncluded, fieldsExcluded, isOr);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -251,6 +286,9 @@ public class PageRequest<T> {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String offset;
     private String limit;
@@ -262,45 +300,97 @@ public class PageRequest<T> {
 
     private Builder() {}
 
+    /**
+     * A page request.
+     *
+     * @return the builder
+     */
     public static Builder aPageRequest() {
       return new Builder();
     }
 
+    /**
+     * With offset.
+     *
+     * @param offset the offset
+     * @return the builder
+     */
     public Builder withOffset(String offset) {
       this.offset = offset;
       return this;
     }
 
+    /**
+     * With limit.
+     *
+     * @param limit the limit
+     * @return the builder
+     */
     public Builder withLimit(String limit) {
       this.limit = limit;
       return this;
     }
 
+    /**
+     * Adds the filter.
+     *
+     * @param filter the filter
+     * @return the builder
+     */
     public Builder addFilter(SearchFilter filter) {
       this.filters.add(filter);
       return this;
     }
 
+    /**
+     * Adds the order.
+     *
+     * @param order the order
+     * @return the builder
+     */
     public Builder addOrder(SortOrder order) {
       this.orders.add(order);
       return this;
     }
 
+    /**
+     * With fields included.
+     *
+     * @param fieldsIncluded the fields included
+     * @return the builder
+     */
     public Builder withFieldsIncluded(List<String> fieldsIncluded) {
       this.fieldsIncluded = fieldsIncluded;
       return this;
     }
 
+    /**
+     * With fields excluded.
+     *
+     * @param fieldsExcluded the fields excluded
+     * @return the builder
+     */
     public Builder withFieldsExcluded(List<String> fieldsExcluded) {
       this.fieldsExcluded = fieldsExcluded;
       return this;
     }
 
+    /**
+     * With uri info.
+     *
+     * @param uriInfo the uri info
+     * @return the builder
+     */
     public Builder withUriInfo(UriInfo uriInfo) {
       this.uriInfo = uriInfo;
       return this;
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the page request
+     */
     public PageRequest build() {
       PageRequest pageRequest = new PageRequest();
       pageRequest.setOffset(offset);

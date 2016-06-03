@@ -14,13 +14,20 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class CatalogServiceTest.
+ *
  * @author Rishi.
  */
 public class CatalogServiceTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   @Inject private CatalogService catalogService;
 
+  /**
+   * Should get cardview sort by.
+   */
   @Test
   public void shouldGetCardviewSortBy() {
     List<CatalogItem> catalogItems = catalogService.getCatalogItems("CARD_VIEW_SORT_BY");
@@ -29,6 +36,9 @@ public class CatalogServiceTest extends WingsBaseTest {
     assertThat(catalogItems.size()).isEqualTo(3);
   }
 
+  /**
+   * Should get catalogs.
+   */
   @Test
   public void shouldGetCatalogs() {
     Map<String, List<CatalogItem>> catalogs = catalogService.getCatalogs("CARD_VIEW_SORT_BY", "ARTIFACT_TYPE");

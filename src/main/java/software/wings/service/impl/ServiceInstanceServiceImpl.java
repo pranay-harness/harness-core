@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/26/16.
  */
@@ -23,31 +25,51 @@ import javax.inject.Inject;
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Inject private WingsPersistence wingsPersistence;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
     return wingsPersistence.query(ServiceInstance.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#save(software.wings.beans.ServiceInstance)
+   */
   @Override
   public ServiceInstance save(ServiceInstance serviceInstance) {
     return wingsPersistence.saveAndGet(ServiceInstance.class, serviceInstance);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#update(software.wings.beans.ServiceInstance)
+   */
   @Override
   public ServiceInstance update(ServiceInstance serviceInstance) {
     return wingsPersistence.saveAndGet(ServiceInstance.class, serviceInstance);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#delete(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public void delete(String appId, String envId, String instanceId) {
     wingsPersistence.delete(ServiceInstance.class, instanceId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#get(java.lang.String, java.lang.String, java.lang.String)
+   */
   @Override
   public ServiceInstance get(String appId, String envId, String instanceId) {
     return wingsPersistence.get(ServiceInstance.class, instanceId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#updateHostMappings(software.wings.beans.ServiceTemplate,
+   * java.util.List, java.util.List)
+   */
   @Override
   public void updateHostMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
     List<String> deletedHostIds = deletedHosts.stream().map(Host::getUuid).collect(Collectors.toList());

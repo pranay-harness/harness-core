@@ -6,6 +6,8 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 2/8/16.
  */
@@ -137,12 +139,18 @@ public class SshSessionConfig {
     this.bastionHostConfig = bastionHostConfig;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(executorType, executionId, sshConnectionTimeout, sshSessionTimeout, retryInterval, host, port,
         userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword, bastionHostConfig);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -164,6 +172,9 @@ public class SshSessionConfig {
         && Objects.equals(this.bastionHostConfig, other.bastionHostConfig);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -184,6 +195,9 @@ public class SshSessionConfig {
         .toString();
   }
 
+  /**
+   * The Class SshSessionConfigBuilder.
+   */
   public static final class SshSessionConfigBuilder {
     private ExecutorType executorType;
     private String executionId;
@@ -202,80 +216,174 @@ public class SshSessionConfig {
 
     private SshSessionConfigBuilder() {}
 
+    /**
+     * A ssh session config.
+     *
+     * @return the ssh session config builder
+     */
     public static SshSessionConfigBuilder aSshSessionConfig() {
       return new SshSessionConfigBuilder();
     }
 
+    /**
+     * With executor type.
+     *
+     * @param executorType the executor type
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withExecutorType(ExecutorType executorType) {
       this.executorType = executorType;
       return this;
     }
 
+    /**
+     * With execution id.
+     *
+     * @param executionId the execution id
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withExecutionId(String executionId) {
       this.executionId = executionId;
       return this;
     }
 
+    /**
+     * With ssh connection timeout.
+     *
+     * @param sshConnectionTimeout the ssh connection timeout
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withSshConnectionTimeout(Integer sshConnectionTimeout) {
       this.sshConnectionTimeout = sshConnectionTimeout;
       return this;
     }
 
+    /**
+     * With ssh session timeout.
+     *
+     * @param sshSessionTimeout the ssh session timeout
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withSshSessionTimeout(Integer sshSessionTimeout) {
       this.sshSessionTimeout = sshSessionTimeout;
       return this;
     }
 
+    /**
+     * With retry interval.
+     *
+     * @param retryInterval the retry interval
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withRetryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
       return this;
     }
 
+    /**
+     * With host.
+     *
+     * @param host the host
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withHost(String host) {
       this.host = host;
       return this;
     }
 
+    /**
+     * With port.
+     *
+     * @param port the port
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withPort(Integer port) {
       this.port = port;
       return this;
     }
 
+    /**
+     * With user name.
+     *
+     * @param userName the user name
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withUserName(String userName) {
       this.userName = userName;
       return this;
     }
 
+    /**
+     * With password.
+     *
+     * @param password the password
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * With key.
+     *
+     * @param key the key
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withKey(String key) {
       this.key = key;
       return this;
     }
 
+    /**
+     * With key passphrase.
+     *
+     * @param keyPassphrase the key passphrase
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withKeyPassphrase(String keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }
 
+    /**
+     * With sudo app name.
+     *
+     * @param sudoAppName the sudo app name
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withSudoAppName(String sudoAppName) {
       this.sudoAppName = sudoAppName;
       return this;
     }
 
+    /**
+     * With sudo app password.
+     *
+     * @param sudoAppPassword the sudo app password
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withSudoAppPassword(String sudoAppPassword) {
       this.sudoAppPassword = sudoAppPassword;
       return this;
     }
 
+    /**
+     * With jumpbox config.
+     *
+     * @param jumpboxConfig the jumpbox config
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder withJumpboxConfig(SshSessionConfig jumpboxConfig) {
       this.bastionHostConfig = jumpboxConfig;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the ssh session config builder
+     */
     public SshSessionConfigBuilder but() {
       return aSshSessionConfig()
           .withExecutorType(executorType)
@@ -294,6 +402,11 @@ public class SshSessionConfig {
           .withJumpboxConfig(bastionHostConfig);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the ssh session config
+     */
     public SshSessionConfig build() {
       SshSessionConfig sshSessionConfig = new SshSessionConfig();
       sshSessionConfig.setExecutorType(executorType);

@@ -20,8 +20,9 @@ import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+// TODO: Auto-generated Javadoc
 /**
- *
+ * The Class WingsPersistenceTest.
  */
 
 /**
@@ -30,6 +31,9 @@ import javax.ws.rs.core.UriInfo;
 public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Should query by in operator.
+   */
   @Test
   public void shouldQueryByINOperator() {
     TestEntity entity = new TestEntity();
@@ -56,6 +60,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(res.size()).isEqualTo(2);
   }
 
+  /**
+   * Should paginate filter sort.
+   */
   @Test
   public void shouldPaginateFilterSort() {
     createEntitiesForPagination();
@@ -79,6 +86,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertPaginationResult(res);
   }
 
+  /**
+   * Should take query params.
+   */
   @Test
   public void shouldTakeQueryParams() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -140,6 +150,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(entity);
   }
 
+  /**
+   * The Class TestEntity.
+   */
   public static class TestEntity extends Base {
     private String fieldA;
 

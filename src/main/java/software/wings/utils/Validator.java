@@ -7,6 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class Validator.
+ */
 public class Validator {
   /**
    * Checks that value is not null.

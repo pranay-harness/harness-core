@@ -9,10 +9,21 @@ import software.wings.service.intfc.FileService;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * A factory for creating SshExecutor objects.
+ */
 public class SshExecutorFactory {
   @Inject private FileService fileService;
   @Inject private ExecutionLogs executionLogs;
 
+  /**
+   * Gets the executor.
+   *
+   * @param executorType the executor type
+   * @return the executor
+   */
   public SshExecutor getExecutor(ExecutorType executorType) {
     SshExecutor executor;
     switch (executorType) {

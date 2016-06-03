@@ -17,6 +17,11 @@ import software.wings.service.intfc.AppService;
 
 import javax.ws.rs.core.GenericType;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class AppResourceTest.
+ */
 public class AppResourceTest {
   private static final AppService appService = mock(AppService.class);
 
@@ -27,6 +32,9 @@ public class AppResourceTest {
   private final String TEST_UUID = "TEST-UUID-" + System.currentTimeMillis();
   private final Application testApp = anApplication().withUuid(TEST_UUID).build();
 
+  /**
+   * Tear down.
+   */
   @After
   public void tearDown() {
     // we have to reset the mock after each test because of the
@@ -34,6 +42,9 @@ public class AppResourceTest {
     reset(appService);
   }
 
+  /**
+   * Test find by name.
+   */
   @Test
   public void testFindByName() {
     when(appService.findByUuid(TEST_UUID)).thenReturn(testApp);

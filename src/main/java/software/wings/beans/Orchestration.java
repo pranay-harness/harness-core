@@ -10,6 +10,8 @@ import org.mongodb.morphia.annotations.Reference;
 import javax.validation.constraints.NotNull;
 
 /**
+ * The Class Orchestration.
+ *
  * @author Rishi
  */
 @Entity(value = "orchestrations", noClassnameStored = true)

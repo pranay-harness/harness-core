@@ -22,6 +22,8 @@ import java.io.IOException;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
@@ -31,11 +33,22 @@ public class MailerTest extends WingsBaseTest {
   @Rule public GreenMailRule greenMail = new GreenMailRule(ServerSetupTest.SMTP);
   @Inject private Mailer mailer;
 
+  /**
+   * Setup.
+   */
   @Before
   public void setup() {
     greenMail.setUser(EMAIL, EMAIL, PASSWORD);
   }
 
+  /**
+   * Should send normal email.
+   *
+   * @throws EmailException     the email exception
+   * @throws TemplateException  the template exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   * @throws MessagingException the messaging exception
+   */
   @Test
   public void shouldSendNormalEmail() throws EmailException, TemplateException, IOException, MessagingException {
     mailer.send(aSmtpConfig()
@@ -55,6 +68,14 @@ public class MailerTest extends WingsBaseTest {
         .containsExactly("recieve@email.com");
   }
 
+  /**
+   * Should send templated email.
+   *
+   * @throws EmailException     the email exception
+   * @throws TemplateException  the template exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   * @throws MessagingException the messaging exception
+   */
   @Test
   public void shouldSendTemplatedEmail() throws EmailException, TemplateException, IOException, MessagingException {
     mailer.send(aSmtpConfig()

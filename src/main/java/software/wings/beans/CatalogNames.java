@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 /**
+ * The Interface CatalogNames.
+ *
  * @author Rishi.
  */
 public interface CatalogNames {

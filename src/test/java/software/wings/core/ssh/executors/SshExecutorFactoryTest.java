@@ -12,6 +12,8 @@ import software.wings.service.intfc.FileService;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/18/16.
  */
@@ -22,6 +24,9 @@ public class SshExecutorFactoryTest extends WingsBaseTest {
 
   @Inject @InjectMocks SshExecutorFactory sshExecutorFactory;
 
+  /**
+   * Should get password based executor.
+   */
   @Test
   public void shouldGetPasswordBasedExecutor() {
     SshExecutor executor = sshExecutorFactory.getExecutor(PASSWORD_AUTH);

@@ -25,6 +25,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/17/16.
  */
@@ -37,6 +39,13 @@ import javax.ws.rs.QueryParam;
 public class SettingResource {
   @Inject private SettingsService attributeService;
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<SettingAttribute>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<SettingAttribute> pageRequest) {
@@ -44,18 +53,40 @@ public class SettingResource {
     return new RestResponse<>(attributeService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId    the app id
+   * @param variable the variable
+   * @return the rest response
+   */
   @POST
   public RestResponse<SettingAttribute> save(@QueryParam("appId") String appId, SettingAttribute variable) {
     variable.setAppId(appId);
     return new RestResponse<>(attributeService.save(variable));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId  the app id
+   * @param attrId the attr id
+   * @return the rest response
+   */
   @GET
   @Path("{attrId}")
   public RestResponse<SettingAttribute> get(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
     return new RestResponse<>(attributeService.get(appId, appId));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId    the app id
+   * @param attrId   the attr id
+   * @param variable the variable
+   * @return the rest response
+   */
   @PUT
   @Path("{attrId}")
   public RestResponse<SettingAttribute> update(
@@ -65,6 +96,13 @@ public class SettingResource {
     return new RestResponse<>(attributeService.update(variable));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId  the app id
+   * @param attrId the attr id
+   * @return the rest response
+   */
   @DELETE
   @Path("{attrId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {

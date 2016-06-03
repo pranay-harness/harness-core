@@ -35,6 +35,8 @@ import java.io.File;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/4/16.
  */
@@ -70,17 +72,26 @@ public class ArtifactServiceTest extends WingsBaseTest {
     wingsRule.getDatastore().save(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build());
   }
 
+  /**
+   * Should create artifact when valid.
+   */
   @Test
   public void shouldCreateArtifactWhenValid() {
     assertThat(artifactService.create(builder.but().build())).isNotNull();
   }
 
+  /**
+   * Should throw exception when app id does not match for artifac to be created.
+   */
   @Test
   public void shouldThrowExceptionWhenAppIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> artifactService.create(builder.but().withAppId("BAD_APP_ID").build()));
   }
 
+  /**
+   * Should throw exception when release id does not match for artifac to be created.
+   */
   @Test
   public void shouldThrowExceptionWhenReleaseIdDoesNotMatchForArtifacToBeCreated() {
     assertThatExceptionOfType(WingsException.class)
@@ -89,12 +100,18 @@ public class ArtifactServiceTest extends WingsBaseTest {
                             builder.but().withRelease(aRelease().withUuid("RELEASE_ID1").build()).build()));
   }
 
+  /**
+   * Should throw exception when artifact to be created is invalid.
+   */
   @Test
   public void shouldThrowExceptionWhenArtifactToBeCreatedIsInvalid() {
     assertThatExceptionOfType(ConstraintViolationException.class)
         .isThrownBy(() -> artifactService.create(builder.but().withRevision(null).build()));
   }
 
+  /**
+   * Should update artifact when valid.
+   */
   @Test
   public void shouldUpdateArtifactWhenValid() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
@@ -103,6 +120,9 @@ public class ArtifactServiceTest extends WingsBaseTest {
     assertThat(artifactService.update(savedArtifact)).isEqualTo(savedArtifact);
   }
 
+  /**
+   * Should throw exception when artifact to be updated is invalid.
+   */
   @Test
   public void shouldThrowExceptionWhenArtifactToBeUpdatedIsInvalid() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
@@ -112,12 +132,18 @@ public class ArtifactServiceTest extends WingsBaseTest {
         .isThrownBy(() -> artifactService.create(savedArtifact));
   }
 
+  /**
+   * Should not download file for artifact when not ready.
+   */
   @Test
   public void shouldNotDownloadFileForArtifactWhenNotReady() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.download(APP_ID, savedArtifact.getUuid(), SERVICE_ID)).isNull();
   }
 
+  /**
+   * Should download file for artifact when ready.
+   */
   @Test
   public void shouldDownloadFileForArtifactWhenReady() {
     File file = null;
@@ -149,18 +175,27 @@ public class ArtifactServiceTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should list artifact.
+   */
   @Test
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.list(new PageRequest<>())).hasSize(1).containsExactly(savedArtifact);
   }
 
+  /**
+   * Should get artifact.
+   */
   @Test
   public void shouldGetArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid())).isEqualTo(savedArtifact);
   }
 
+  /**
+   * Should soft delete artifact.
+   */
   @Test
   public void shouldSoftDeleteArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());

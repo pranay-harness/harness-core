@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+/**
+ * The Interface ErrorConstants.
+ */
 public interface ErrorConstants {
   String DEFAULT_ERROR_CODE = "DEFAULT_ERROR_CODE";
   String INVALID_APP_NAME = "INVALID_APP_NAME";

@@ -17,6 +17,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * AuditResponseFilter preserves the http response details.
  *
@@ -28,9 +30,16 @@ public class AuditResponseFilter implements Filter {
 
   @Inject private AuditHelper auditHelper;
 
+  /* (non-Javadoc)
+   * @see javax.servlet.Filter#init(javax.servlet.FilterConfig)
+   */
   @Override
   public void init(FilterConfig arg0) throws ServletException {}
 
+  /* (non-Javadoc)
+   * @see javax.servlet.Filter#doFilter(javax.servlet.ServletRequest, javax.servlet.ServletResponse,
+   * javax.servlet.FilterChain)
+   */
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
       throws ServletException, IOException {
@@ -57,6 +66,9 @@ public class AuditResponseFilter implements Filter {
     }
   }
 
+  /* (non-Javadoc)
+   * @see javax.servlet.Filter#destroy()
+   */
   @Override
   public void destroy() {}
 }

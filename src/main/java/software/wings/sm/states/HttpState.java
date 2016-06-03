@@ -9,6 +9,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Http state which makes a call to http service.
  *
@@ -121,6 +123,9 @@ public class HttpState extends State {
     this.assertion = assertion;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.State#toString()
+   */
   @Override
   public String toString() {
     return "HttpState [url=" + url + ", method=" + method + ", header=" + header + ", body=" + body

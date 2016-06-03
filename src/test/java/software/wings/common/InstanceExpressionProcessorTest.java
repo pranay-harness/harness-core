@@ -21,12 +21,19 @@ import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class InstanceExpressionProcessorTest.
+ *
  * @author Rishi
  */
 public class InstanceExpressionProcessorTest {
   private String appId = UUIDGenerator.getUuid();
 
+  /**
+   * Should return instances.
+   */
   @Test
   public void shouldReturnInstances() {
     StateExecutionInstance stateExecutionInstance =

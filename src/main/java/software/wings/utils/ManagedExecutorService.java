@@ -11,21 +11,34 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/18/16.
  */
 public class ManagedExecutorService implements ExecutorService, Managed {
   private ExecutorService executorService;
 
+  /**
+   * Instantiates a new managed executor service.
+   *
+   * @param executorService the executor service
+   */
   public ManagedExecutorService(ExecutorService executorService) {
     this.executorService = executorService;
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#shutdown()
+   */
   @Override
   public void shutdown() {
     executorService.shutdown();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#shutdownNow()
+   */
   @Override
   public List<Runnable> shutdownNow() {
     return executorService.shutdownNow();
@@ -41,48 +54,75 @@ public class ManagedExecutorService implements ExecutorService, Managed {
     return executorService.isTerminated();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#awaitTermination(long, java.util.concurrent.TimeUnit)
+   */
   @Override
   public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
     return executorService.awaitTermination(timeout, unit);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#submit(java.util.concurrent.Callable)
+   */
   @Override
   public <T> Future<T> submit(Callable<T> task) {
     return executorService.submit(task);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#submit(java.lang.Runnable, java.lang.Object)
+   */
   @Override
   public <T> Future<T> submit(Runnable task, T result) {
     return executorService.submit(task, result);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#submit(java.lang.Runnable)
+   */
   @Override
   public Future<?> submit(Runnable task) {
     return executorService.submit(task);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#invokeAll(java.util.Collection)
+   */
   @Override
   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
     return executorService.invokeAll(tasks);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#invokeAll(java.util.Collection, long, java.util.concurrent.TimeUnit)
+   */
   @Override
   public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
       throws InterruptedException {
     return executorService.invokeAll(tasks, timeout, unit);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#invokeAny(java.util.Collection)
+   */
   @Override
   public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
     return executorService.invokeAny(tasks);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ExecutorService#invokeAny(java.util.Collection, long, java.util.concurrent.TimeUnit)
+   */
   @Override
   public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
       throws InterruptedException, ExecutionException, TimeoutException {
     return executorService.invokeAny(tasks, timeout, unit);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.Executor#execute(java.lang.Runnable)
+   */
   @Override
   public void execute(Runnable command) {
     executorService.execute(command);
@@ -92,11 +132,17 @@ public class ManagedExecutorService implements ExecutorService, Managed {
     return executorService;
   }
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.lifecycle.Managed#start()
+   */
   @Override
   public void start() throws Exception {
     // do nothing
   }
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.lifecycle.Managed#stop()
+   */
   @Override
   public void stop() throws Exception {
     for (Runnable runnable : executorService.shutdownNow()) {

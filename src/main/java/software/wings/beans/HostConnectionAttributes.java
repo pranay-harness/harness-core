@@ -4,6 +4,8 @@ import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNEC
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/16/16.
  */
@@ -13,10 +15,18 @@ public class HostConnectionAttributes extends SettingValue {
   private String key;
   private String keyPassphrase;
 
+  /**
+   * Instantiates a new host connection attributes.
+   */
   public HostConnectionAttributes() {
     super(HOST_CONNECTION_ATTRIBUTES);
   }
 
+  /**
+   * Instantiates a new host connection attributes.
+   *
+   * @param type the type
+   */
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type);
   }
@@ -53,11 +63,17 @@ public class HostConnectionAttributes extends SettingValue {
     this.keyPassphrase = keyPassphrase;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(accessType, connectionType, key, keyPassphrase);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -72,6 +88,9 @@ public class HostConnectionAttributes extends SettingValue {
         && Objects.equals(this.keyPassphrase, other.keyPassphrase);
   }
 
+  /**
+   * The Enum AccessType.
+   */
   public enum AccessType {
     USER_PASSWORD,
     USER_PASSWORD_SU_APP_USER,
@@ -81,8 +100,14 @@ public class HostConnectionAttributes extends SettingValue {
     KEY_SUDO_APP_USER
   }
 
+  /**
+   * The Enum ConnectionType.
+   */
   public enum ConnectionType { SSH }
 
+  /**
+   * The Class HostConnectionAttributesBuilder.
+   */
   public static final class HostConnectionAttributesBuilder {
     private ConnectionType connectionType;
     private AccessType accessType;
@@ -92,35 +117,75 @@ public class HostConnectionAttributes extends SettingValue {
 
     private HostConnectionAttributesBuilder() {}
 
+    /**
+     * A host connection attributes.
+     *
+     * @return the host connection attributes builder
+     */
     public static HostConnectionAttributesBuilder aHostConnectionAttributes() {
       return new HostConnectionAttributesBuilder();
     }
 
+    /**
+     * With connection type.
+     *
+     * @param connectionType the connection type
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
 
+    /**
+     * With access type.
+     *
+     * @param accessType the access type
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
+    /**
+     * With key.
+     *
+     * @param key the key
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder withKey(String key) {
       this.key = key;
       return this;
     }
 
+    /**
+     * With key passphrase.
+     *
+     * @param keyPassphrase the key passphrase
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder withKeyPassphrase(String keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }
 
+    /**
+     * With type.
+     *
+     * @param type the type
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder withType(SettingVariableTypes type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the host connection attributes builder
+     */
     public HostConnectionAttributesBuilder but() {
       return aHostConnectionAttributes()
           .withConnectionType(connectionType)
@@ -130,6 +195,11 @@ public class HostConnectionAttributes extends SettingValue {
           .withType(type);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the host connection attributes
+     */
     public HostConnectionAttributes build() {
       HostConnectionAttributes hostConnectionAttributes = new HostConnectionAttributes();
       hostConnectionAttributes.setConnectionType(connectionType);

@@ -11,7 +11,11 @@ import software.wings.utils.XmlUtils;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class HttpStateExecutionData.
+ *
  * @author Rishi
  */
 public class HttpStateExecutionData extends StateExecutionData {
@@ -73,6 +77,11 @@ public class HttpStateExecutionData extends StateExecutionData {
     this.assertionStatus = assertionStatus;
   }
 
+  /**
+   * Xml format.
+   *
+   * @return true, if successful
+   */
   public boolean xmlFormat() {
     try {
       document();
@@ -82,6 +91,12 @@ public class HttpStateExecutionData extends StateExecutionData {
     }
   }
 
+  /**
+   * Xpath.
+   *
+   * @param path the path
+   * @return the string
+   */
   public String xpath(String path) {
     try {
       return XmlUtils.xpath(document(), path);

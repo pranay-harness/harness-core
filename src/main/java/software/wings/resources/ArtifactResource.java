@@ -28,6 +28,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * ArtifactResource.
  *
@@ -41,11 +43,23 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class ArtifactResource {
   private ArtifactService artifactService;
 
+  /**
+   * Instantiates a new artifact resource.
+   *
+   * @param artifactService the artifact service
+   */
   @Inject
   public ArtifactResource(ArtifactService artifactService) {
     this.artifactService = artifactService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
@@ -53,18 +67,40 @@ public class ArtifactResource {
     return new RestResponse<>(artifactService.list(pageRequest));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId      the app id
+   * @param artifactId the artifact id
+   * @return the rest response
+   */
   @GET
   @Path("{artifactId}")
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.get(appId, artifactId));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId    the app id
+   * @param artifact the artifact
+   * @return the rest response
+   */
   @POST
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
     return new RestResponse<>(artifactService.create(artifact));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId      the app id
+   * @param artifactId the artifact id
+   * @param artifact   the artifact
+   * @return the rest response
+   */
   @PUT
   @Path("{artifactId}")
   public RestResponse<Artifact> update(
@@ -74,12 +110,29 @@ public class ArtifactResource {
     return new RestResponse<>(artifactService.update(artifact));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId      the app id
+   * @param artifactId the artifact id
+   * @return the rest response
+   */
   @DELETE
   @Path("{artifactId}")
   public RestResponse<Artifact> update(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.softDelete(appId, artifactId));
   }
 
+  /**
+   * Download.
+   *
+   * @param appId      the app id
+   * @param artifactId the artifact id
+   * @param serviceId  the service id
+   * @return the response
+   * @throws IOException              Signals that an I/O exception has occurred.
+   * @throws GeneralSecurityException the general security exception
+   */
   @GET
   @Path("{artifactId}/artifactFile/{serviceId}")
   @Encoded

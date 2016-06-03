@@ -40,14 +40,14 @@ import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 2/10/16.
  */
 public abstract class AbstractSshExecutor implements SshExecutor {
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
-  private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   public static final String LINE_BREAK_PATTERN = "\\R+";
-  private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -58,13 +58,24 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected InputStream inputStream;
   protected ExecutionLogs executionLogs;
   protected FileService fileService;
+  private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
+  private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
 
+  /**
+   * Instantiates a new abstract ssh executor.
+   *
+   * @param executionLogs the execution logs
+   * @param fileService   the file service
+   */
   @Inject
   public AbstractSshExecutor(ExecutionLogs executionLogs, FileService fileService) {
     this.executionLogs = executionLogs;
     this.fileService = fileService;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.ssh.executors.SshExecutor#init(software.wings.core.ssh.executors.SshSessionConfig)
+   */
   @Override
   public void init(SshSessionConfig config) {
     if (null == config.getExecutionId() || config.getExecutionId().length() == 0) {
@@ -87,6 +98,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.ssh.executors.SshExecutor#execute(java.lang.String)
+   */
   @Override
   public ExecutionResult execute(String command) {
     return genericExecute(command);
@@ -174,6 +188,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return lastLine.charAt(lastLine.length() - 1) != text.charAt(text.length() - 1);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.ssh.executors.SshExecutor#destroy()
+   */
   @Override
   public void destroy() {
     logger.info("Disconnecting ssh session");
@@ -185,6 +202,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.ssh.executors.SshExecutor#abort()
+   */
   @Override
   public void abort() {
     try {
@@ -195,8 +215,21 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  /**
+   * Gets the session.
+   *
+   * @param config the config
+   * @return the session
+   * @throws JSchException the j sch exception
+   */
   public abstract Session getSession(SshSessionConfig config) throws JSchException;
 
+  /**
+   * Normalize error.
+   *
+   * @param jschexception the jschexception
+   * @return the string
+   */
   protected String normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
@@ -235,9 +268,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return errorConst;
   }
 
-  /****
+  /**
+   * **
    * SCP.
-   ****/
+   * **
+   *
+   * @param gridFsFileId   the grid fs file id
+   * @param remoteFilePath the remote file path
+   * @param gridFsBucket   the grid fs bucket
+   * @return the execution result
+   */
   @Override
   public ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket gridFsBucket) {
     try {
@@ -293,6 +333,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return SUCCESS;
   }
 
+  /**
+   * Check ack.
+   *
+   * @param in the in
+   * @return the int
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   int checkAck(InputStream in) throws IOException {
     int b = in.read();
     // b may be 0 for success,

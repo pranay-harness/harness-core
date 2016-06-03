@@ -24,12 +24,19 @@ import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class ServiceExpressionProcessorTest.
+ *
  * @author Rishi
  */
 public class ServiceExpressionProcessorTest {
   private String appId = UUIDGenerator.getUuid();
 
+  /**
+   * Should return matching services.
+   */
   @Test
   public void shouldReturnMatchingServices() {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
@@ -65,6 +72,9 @@ public class ServiceExpressionProcessorTest {
     assertThat(matchingServices.get(1).getName()).isIn("B1234", "C1234");
   }
 
+  /**
+   * Should return list all.
+   */
   @Test
   public void shouldReturnListAll() {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
@@ -92,6 +102,9 @@ public class ServiceExpressionProcessorTest {
     assertThat(matchingServices.get(2).getName()).isEqualTo("C1234");
   }
 
+  /**
+   * Should return list all from context.
+   */
   @Test
   public void shouldReturnListAllFromContext() {
     Service serviceC = aService().withName("C1234").build();
@@ -120,6 +133,9 @@ public class ServiceExpressionProcessorTest {
     assertThat(matchingServices.get(0).getName()).isEqualTo("C1234");
   }
 
+  /**
+   * Should return list some by name.
+   */
   @Test
   public void shouldReturnListSomeByName() {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
@@ -146,6 +162,9 @@ public class ServiceExpressionProcessorTest {
     assertThat(matchingServices.get(1).getName()).isEqualTo("C1234");
   }
 
+  /**
+   * Should return not from context.
+   */
   @Test
   public void shouldReturnNotFromContext() {
     Service serviceC = aService().withName("C1234").build();

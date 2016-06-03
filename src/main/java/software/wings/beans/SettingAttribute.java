@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/16/16.
  */
@@ -37,11 +39,17 @@ public class SettingAttribute extends Base {
     this.value = value;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(name, value);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -57,6 +65,9 @@ public class SettingAttribute extends Base {
     return Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value);
   }
 
+  /**
+   * The Class SettingAttributeBuilder.
+   */
   public static final class SettingAttributeBuilder {
     private String name;
     private SettingValue value;
@@ -70,55 +81,119 @@ public class SettingAttribute extends Base {
 
     private SettingAttributeBuilder() {}
 
+    /**
+     * A setting attribute.
+     *
+     * @return the setting attribute builder
+     */
     public static SettingAttributeBuilder aSettingAttribute() {
       return new SettingAttributeBuilder();
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With value.
+     *
+     * @param value the value
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withValue(SettingValue value) {
       this.value = value;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the setting attribute builder
+     */
     public SettingAttributeBuilder but() {
       return aSettingAttribute()
           .withName(name)
@@ -132,6 +207,11 @@ public class SettingAttribute extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the setting attribute
+     */
     public SettingAttribute build() {
       SettingAttribute settingAttribute = new SettingAttribute();
       settingAttribute.setName(name);

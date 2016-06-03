@@ -7,6 +7,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * ForceQueuePolicy based on https://github.com/AndroidDeveloperLB/ListViewVariants
  * /blob/master/app/src/main
@@ -19,6 +21,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 public class ForceQueuePolicy implements RejectedExecutionHandler {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.RejectedExecutionHandler#rejectedExecution(java.lang.Runnable,
+   * java.util.concurrent.ThreadPoolExecutor)
+   */
   @Override
   public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
     try {

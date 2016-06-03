@@ -2,6 +2,8 @@ package software.wings.sm;
 
 import java.io.Serializable;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Represents transition between states.
  *
@@ -13,6 +15,9 @@ public class Transition implements Serializable {
   private State toState;
   private TransitionType transitionType;
 
+  /**
+   * Instantiates a new transition.
+   */
   public Transition() {}
 
   /**
@@ -52,11 +57,17 @@ public class Transition implements Serializable {
     this.transitionType = transitionType;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "Transition [fromState=" + fromState + ", toState=" + toState + ", transitionType=" + transitionType + "]";
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private State fromState;
     private State toState;
@@ -64,25 +75,53 @@ public class Transition implements Serializable {
 
     private Builder() {}
 
+    /**
+     * A transition.
+     *
+     * @return the builder
+     */
     public static Builder aTransition() {
       return new Builder();
     }
 
+    /**
+     * With from state.
+     *
+     * @param fromState the from state
+     * @return the builder
+     */
     public Builder withFromState(State fromState) {
       this.fromState = fromState;
       return this;
     }
 
+    /**
+     * With to state.
+     *
+     * @param toState the to state
+     * @return the builder
+     */
     public Builder withToState(State toState) {
       this.toState = toState;
       return this;
     }
 
+    /**
+     * With transition type.
+     *
+     * @param transitionType the transition type
+     * @return the builder
+     */
     public Builder withTransitionType(TransitionType transitionType) {
       this.transitionType = transitionType;
       return this;
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the transition
+     */
     public Transition build() {
       Transition transition = new Transition();
       transition.setFromState(fromState);

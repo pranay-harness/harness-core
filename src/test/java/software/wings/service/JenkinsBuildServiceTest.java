@@ -34,6 +34,8 @@ import software.wings.service.intfc.JenkinsBuildService;
 import java.io.IOException;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/13/16.
  */
@@ -54,6 +56,8 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
 
   /**
    * setups all mocks for test.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Before
   public void setupMocks() throws IOException {
@@ -84,12 +88,22 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
             .build());
   }
 
+  /**
+   * Should fail validation when release id is null.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldFailValidationWhenReleaseIdIsNull() throws IOException {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> jenkinsBuildService.getBuilds(new MultivaluedStringMap(), new JenkinsConfig()));
   }
 
+  /**
+   * Should fail validation when artifact source name is null.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldFailValidationWhenArtifactSourceNameIsNull() throws IOException {
     assertThatExceptionOfType(WingsException.class)
@@ -101,6 +115,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
         }, jenkinsConfig));
   }
 
+  /**
+   * Should fail validation when release does not exists.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldFailValidationWhenReleaseDoesNotExists() throws IOException {
     assertThatExceptionOfType(WingsException.class)
@@ -113,6 +132,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
         }, jenkinsConfig));
   }
 
+  /**
+   * Should fail validation when job does not exists.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldFailValidationWhenJobDoesNotExists() throws IOException {
     assertThatExceptionOfType(WingsException.class)
@@ -125,6 +149,11 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
         }, jenkinsConfig));
   }
 
+  /**
+   * Should return list of builds.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnListOfBuilds() throws IOException {
     assertThat(jenkinsBuildService.getBuilds(

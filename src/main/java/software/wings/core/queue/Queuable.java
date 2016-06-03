@@ -10,6 +10,8 @@ import software.wings.common.UUIDGenerator;
 
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/11/16.
  */
@@ -29,9 +31,14 @@ public abstract class Queuable {
   private Date created = new Date();
   private int retries = 0;
 
+  /**
+   * Instantiates a new queuable.
+   */
   protected Queuable() {}
 
   /**
+   * Instantiates a new queuable.
+   *
    * @param other Queueable to copy from.
    */
   public Queuable(Queuable other) {

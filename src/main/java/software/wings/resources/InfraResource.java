@@ -24,6 +24,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class InfraResource.
+ */
 @Api("infrastructures")
 @Path("/infrastructures")
 @AuthRule
@@ -34,6 +39,14 @@ import javax.ws.rs.QueryParam;
 public class InfraResource {
   @Inject private InfraService infraService;
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Infra>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Infra> pageRequest) {
@@ -42,6 +55,14 @@ public class InfraResource {
     return new RestResponse<>(infraService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param infra the infra
+   * @return the rest response
+   */
   @POST
   public RestResponse<Infra> save(@QueryParam("appId") String appId, @QueryParam("envId") String envId, Infra infra) {
     infra.setAppId(appId);
@@ -49,6 +70,14 @@ public class InfraResource {
     return new RestResponse<>(infraService.save(infra));
   }
 
+  /**
+   * Delete.
+   *
+   * @param infraId the infra id
+   * @param appId   the app id
+   * @param envId   the env id
+   * @return the rest response
+   */
   @DELETE
   public RestResponse delete(
       @PathParam("infraId") String infraId, @QueryParam("appId") String appId, @QueryParam("envId") String envId) {

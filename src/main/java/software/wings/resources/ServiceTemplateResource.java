@@ -30,6 +30,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/4/16.
  */
@@ -44,6 +46,14 @@ public class ServiceTemplateResource {
   @Inject ServiceTemplateService serviceTemplateService;
   @Inject private HostService hostService;
 
+  /**
+   * List.
+   *
+   * @param envId       the env id
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<ServiceTemplate>> list(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
@@ -52,6 +62,14 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.list(pageRequest));
   }
 
+  /**
+   * Creates the.
+   *
+   * @param envId           the env id
+   * @param appId           the app id
+   * @param serviceTemplate the service template
+   * @return the rest response
+   */
   @POST
   public RestResponse<ServiceTemplate> create(
       @QueryParam("envId") String envId, @QueryParam("appId") String appId, ServiceTemplate serviceTemplate) {
@@ -60,6 +78,14 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.save(serviceTemplate));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param envId             the env id
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @return the rest response
+   */
   @GET
   @Path("{templateId}")
   public RestResponse<ServiceTemplate> get(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
@@ -67,6 +93,15 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId));
   }
 
+  /**
+   * Update.
+   *
+   * @param envId             the env id
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @param serviceTemplate   the service template
+   * @return the rest response
+   */
   @PUT
   @Path("{templateId}")
   public RestResponse<ServiceTemplate> update(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
@@ -77,6 +112,14 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.update(serviceTemplate));
   }
 
+  /**
+   * Delete.
+   *
+   * @param envId             the env id
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @return the rest response
+   */
   @DELETE
   @Path("{templateId}")
   public RestResponse delete(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
@@ -85,6 +128,15 @@ public class ServiceTemplateResource {
     return new RestResponse();
   }
 
+  /**
+   * Map hosts.
+   *
+   * @param envId             the env id
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @param hostIds           the host ids
+   * @return the rest response
+   */
   @PUT
   @Path("{templateId}/map-hosts")
   public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
@@ -92,6 +144,15 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.updateHosts(appId, serviceTemplateId, hostIds));
   }
 
+  /**
+   * Map tags.
+   *
+   * @param envId             the env id
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @param tagIds            the tag ids
+   * @return the rest response
+   */
   @PUT
   @Path("{templateId}/map-tags")
   public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
@@ -99,6 +160,14 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.updateTags(appId, serviceTemplateId, tagIds));
   }
 
+  /**
+   * Host configs.
+   *
+   * @param envId      the env id
+   * @param appId      the app id
+   * @param templateId the template id
+   * @return the rest response
+   */
   @GET
   @Path("{templateId}/host-configs")
   public RestResponse<Map<String, List<ConfigFile>>> hostConfigs(@QueryParam("envId") String envId,
@@ -106,6 +175,15 @@ public class ServiceTemplateResource {
     return new RestResponse<>(serviceTemplateService.computedConfigFiles(appId, envId, templateId));
   }
 
+  /**
+   * Host configs.
+   *
+   * @param envId       the env id
+   * @param appId       the app id
+   * @param templateId  the template id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Path("{templateId}/tagged-hosts")
   public RestResponse<PageResponse<Host>> hostConfigs(@QueryParam("envId") String envId,

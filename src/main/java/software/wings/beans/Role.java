@@ -6,6 +6,8 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/16/16.
  */
@@ -15,6 +17,9 @@ public class Role extends Base {
   private String description;
   @Embedded private List<Permission> permissions;
 
+  /**
+   * Instantiates a new role.
+   */
   public Role() {}
 
   /**

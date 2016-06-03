@@ -23,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Users Resource class.
  *
@@ -37,16 +39,35 @@ import javax.ws.rs.core.MediaType;
 public class UserResource {
   @Inject private UserService userService;
 
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
     return new RestResponse<>(userService.list(pageRequest));
   }
 
+  /**
+   * Register.
+   *
+   * @param user the user
+   * @return the rest response
+   */
   @POST
   public RestResponse<User> register(User user) {
     return new RestResponse<>(userService.register(user));
   }
 
+  /**
+   * Update.
+   *
+   * @param userId the user id
+   * @param user   the user
+   * @return the rest response
+   */
   @PUT
   @Path("{userId}")
   public RestResponse<User> update(@PathParam("userId") String userId, User user) {
@@ -54,6 +75,12 @@ public class UserResource {
     return new RestResponse<>(userService.update(user));
   }
 
+  /**
+   * Delete.
+   *
+   * @param userId the user id
+   * @return the rest response
+   */
   @DELETE
   @Path("{userId}")
   public RestResponse delete(@PathParam("userId") String userId) {
@@ -61,24 +88,50 @@ public class UserResource {
     return new RestResponse();
   }
 
+  /**
+   * Gets the.
+   *
+   * @param userId the user id
+   * @return the rest response
+   */
   @GET
   @Path("{userId}")
   public RestResponse<User> get(@PathParam("userId") String userId) {
     return new RestResponse<>(userService.get(userId));
   }
 
+  /**
+   * Login.
+   *
+   * @param user the user
+   * @return the rest response
+   */
   @GET
   @Path("login")
   public RestResponse<User> login(@Auth User user) {
     return new RestResponse<>(user); // TODO: mask fields
   }
 
+  /**
+   * Assign role.
+   *
+   * @param userId the user id
+   * @param roleId the role id
+   * @return the rest response
+   */
   @PUT
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.addRole(userId, roleId));
   }
 
+  /**
+   * Revoke role.
+   *
+   * @param userId the user id
+   * @param roleId the role id
+   * @return the rest response
+   */
   @DELETE
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {

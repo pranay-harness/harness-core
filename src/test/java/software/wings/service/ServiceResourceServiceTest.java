@@ -53,6 +53,8 @@ import software.wings.service.intfc.ServiceResourceService;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/4/16.
  */
@@ -84,6 +86,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .withArtifactType(JAR)
                                 .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
+  /**
+   * Sets the up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(builder.but().build());
@@ -93,6 +100,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(datastore.createUpdateOperations(Service.class));
   }
 
+  /**
+   * Should list services.
+   */
   @Test
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
@@ -106,6 +116,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(filter.getOp()).isEqualTo(EQ);
   }
 
+  /**
+   * Should save service.
+   */
   @Test
   public void shouldSaveService() {
     Service service = srs.save(builder.but().build());
@@ -114,6 +127,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Service.class, service);
   }
 
+  /**
+   * Should fetch service.
+   */
   @Test
   public void shouldFetchService() {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
@@ -124,6 +140,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should update service.
+   */
   @Test
   public void shouldUpdateService() {
     Service service = builder.withName("UPDATED_SERVICE_NAME")
@@ -139,12 +158,18 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
   }
 
+  /**
+   * Should delete service.
+   */
   @Test
   public void shouldDeleteService() {
     srs.delete(APP_ID, SERVICE_ID);
     verify(wingsPersistence).delete(Service.class, SERVICE_ID);
   }
 
+  /**
+   * Should add command state.
+   */
   @Test
   public void shouldAddCommandState() {
     when(wingsPersistence.addToList(
@@ -182,6 +207,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should fail when command state is duplicate.
+   */
   @Test
   public void shouldFailWhenCommandStateIsDuplicate() {
     when(wingsPersistence.addToList(
@@ -218,6 +246,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createQuery(Service.class);
   }
 
+  /**
+   * Should delete command state.
+   */
   @Test
   public void shouldDeleteCommandState() {
     srs.deleteCommand(APP_ID, SERVICE_ID, "START");
@@ -229,6 +260,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should get command stencils.
+   */
   @Test
   public void shouldGetCommandStencils() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))

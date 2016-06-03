@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/11/16.
  */
@@ -34,6 +36,10 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
   @Inject private FileService fileService;
   @Inject private JenkinsFactory jenkinsFactory;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactCollectorService#collect(software.wings.beans.ArtifactSource,
+   * java.util.Map)
+   */
   @Override
   public List<ArtifactFile> collect(ArtifactSource artifactSource, Map<String, String> arguments) {
     JenkinsArtifactSource jenkinsArtifactSource = (JenkinsArtifactSource) artifactSource;

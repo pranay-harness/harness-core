@@ -9,16 +9,31 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WingsTimestamp.
+ *
  * @author Rishi
  */
 public class WingsTimestamp {
   private long timestamp;
 
+  /**
+   * Instantiates a new wings timestamp.
+   *
+   * @param timestamp the timestamp
+   */
   public WingsTimestamp(long timestamp) {
     this.timestamp = timestamp;
   }
 
+  /**
+   * Format.
+   *
+   * @param format the format
+   * @return the string
+   */
   public String format(String format) {
     try {
       DateFormat df = new SimpleDateFormat(format);
@@ -28,6 +43,13 @@ public class WingsTimestamp {
     }
   }
 
+  /**
+   * Format.
+   *
+   * @param format   the format
+   * @param timezone the timezone
+   * @return the string
+   */
   public String format(String format, String timezone) {
     try {
       TimeZone timeZone = TimeZone.getTimeZone(timezone);
@@ -40,6 +62,11 @@ public class WingsTimestamp {
     }
   }
 
+  /**
+   * Utc.
+   *
+   * @return the int
+   */
   public int utc() {
     return (int) (timestamp / 1000);
   }
@@ -52,6 +79,9 @@ public class WingsTimestamp {
     }
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return String.valueOf(timestamp);

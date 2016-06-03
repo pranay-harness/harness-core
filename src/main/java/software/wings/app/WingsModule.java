@@ -76,6 +76,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExpressionProcessorFactory;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Guice Module for initializing all beans.
  *
@@ -93,6 +95,9 @@ public class WingsModule extends AbstractModule {
     this.configuration = configuration;
   }
 
+  /* (non-Javadoc)
+   * @see com.google.inject.AbstractModule#configure()
+   */
   @Override
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);

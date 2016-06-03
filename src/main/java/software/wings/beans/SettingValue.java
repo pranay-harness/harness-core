@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/16/16.
  */
@@ -18,6 +20,11 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 public abstract class SettingValue {
   private SettingVariableTypes type;
 
+  /**
+   * Instantiates a new setting value.
+   *
+   * @param type the type
+   */
   public SettingValue(SettingVariableTypes type) {
     this.type = type;
   }
@@ -30,5 +37,8 @@ public abstract class SettingValue {
     this.type = type;
   }
 
+  /**
+   * The Enum SettingVariableTypes.
+   */
   public enum SettingVariableTypes { HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, SMTP, JENKINS }
 }

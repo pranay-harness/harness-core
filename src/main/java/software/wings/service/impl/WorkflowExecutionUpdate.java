@@ -18,7 +18,11 @@ import software.wings.sm.StateMachineExecutionCallback;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowExecutionUpdate.
+ *
  * @author Rishi
  */
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
@@ -27,8 +31,17 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Instantiates a new workflow execution update.
+   */
   public WorkflowExecutionUpdate() {}
 
+  /**
+   * Instantiates a new workflow execution update.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   */
   public WorkflowExecutionUpdate(String appId, String workflowExecutionId) {
     this.appId = appId;
     this.workflowExecutionId = workflowExecutionId;
@@ -50,6 +63,10 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     this.workflowExecutionId = workflowExecutionId;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.StateMachineExecutionCallback#callback(software.wings.sm.ExecutionContext,
+   * software.wings.sm.ExecutionStatus, java.lang.Exception)
+   */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     List<ExecutionStatus> runningStatuses = new ArrayList<>();

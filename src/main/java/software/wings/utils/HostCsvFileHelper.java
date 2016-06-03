@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/15/16.
  */
@@ -43,6 +45,13 @@ public class HostCsvFileHelper {
   @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
+  /**
+   * Parses the hosts.
+   *
+   * @param infra       the infra
+   * @param inputStream the input stream
+   * @return the list
+   */
   public List<Host> parseHosts(Infra infra, BoundedInputStream inputStream) {
     List<Host> hosts = new ArrayList<>();
     CSVParser csvParser = null;
@@ -76,6 +85,12 @@ public class HostCsvFileHelper {
     return hosts;
   }
 
+  /**
+   * Creates the hosts file.
+   *
+   * @param hosts the hosts
+   * @return the file
+   */
   public File createHostsFile(List<Host> hosts) {
     File tempDir = FileUtils.createTempDirPath();
     File file =

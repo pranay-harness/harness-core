@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/29/16.
  */
@@ -53,6 +55,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @InjectMocks @Inject private ServiceTemplateService templateService;
 
+  /**
+   * Should list saved service templates.
+   */
   @Test
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse = new PageResponse<>();
@@ -63,6 +68,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(templates).containsAll(asList(builder.build()));
   }
 
+  /**
+   * Should save service template.
+   */
   @Test
   public void shouldSaveServiceTemplate() {
     when(wingsPersistence.saveAndGet(eq(ServiceTemplate.class), any(ServiceTemplate.class)))
@@ -72,6 +80,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(template.getService().getUuid()).isEqualTo("SERVICE_ID");
   }
 
+  /**
+   * Should update service template.
+   */
   @Test
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
@@ -82,6 +93,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                 aService().withUuid("SERVICE_ID").build()));
   }
 
+  /**
+   * Should update host and tags.
+   */
   @Test
   public void shouldUpdateHostAndTags() {
     when(tagService.saveTag(eq("PARENT_TAG"), any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
@@ -102,6 +116,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
         .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
   }
 
+  /**
+   * Should override config files.
+   */
   @Test
   public void shouldOverrideConfigFiles() {
     List<ConfigFile> existingFiles = asList(aConfigFile().withUuid("FILE_ID_1").withName("app.properties").build(),
@@ -114,6 +131,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(computedConfigFiles).isEqualTo(newFiles);
   }
 
+  /**
+   * Should compute config files for hosts.
+   */
   @Test
   public void shouldComputeConfigFilesForHosts() {
     when(wingsPersistence.get(ServiceTemplate.class, "TEMPLATE_ID"))

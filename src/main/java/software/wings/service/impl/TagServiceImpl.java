@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/25/16.
  */
@@ -29,11 +31,17 @@ public class TagServiceImpl implements TagService {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#listRootTags(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Tag> listRootTags(PageRequest<Tag> request) {
     return wingsPersistence.query(Tag.class, request);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#saveTag(java.lang.String, software.wings.beans.Tag)
+   */
   @Override
   public Tag saveTag(String parentTagId, Tag tag) {
     if (parentTagId == null || parentTagId.length() == 0) {
@@ -48,11 +56,17 @@ public class TagServiceImpl implements TagService {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#getTag(java.lang.String, java.lang.String)
+   */
   @Override
   public Tag getTag(String appId, String tagId) {
     return wingsPersistence.get(Tag.class, tagId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#updateTag(software.wings.beans.Tag)
+   */
   @Override
   public Tag updateTag(Tag tag) {
     Builder<String, Object> mapBuilder =
@@ -67,6 +81,9 @@ public class TagServiceImpl implements TagService {
     return wingsPersistence.get(Tag.class, tag.getUuid());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#deleteTag(java.lang.String, java.lang.String)
+   */
   @Override
   public void deleteTag(String appId, String tagId) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
@@ -96,11 +113,17 @@ public class TagServiceImpl implements TagService {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#getRootConfigTag(java.lang.String, java.lang.String)
+   */
   @Override
   public Tag getRootConfigTag(String appId, String envId) {
     return wingsPersistence.createQuery(Tag.class).field("envId").equal(envId).field("rootTag").equal(true).get();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#tagHosts(java.lang.String, java.lang.String, java.util.List)
+   */
   @Override
   public void tagHosts(String appId, String tagId, List<String> hostIds) {
     Tag tag = wingsPersistence.get(Tag.class, tagId);
@@ -141,6 +164,9 @@ public class TagServiceImpl implements TagService {
     return tags;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#getTagsByName(java.lang.String, java.lang.String, java.util.List)
+   */
   @Override
   public List<Tag> getTagsByName(String appId, String envId, List<String> tagNames) {
     List<Tag> tags = new ArrayList<>();

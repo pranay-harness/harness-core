@@ -9,6 +9,8 @@ import java.io.OutputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * HttpServletResponseCopier that creates a copy of the http response payload. Based on
  * https://github.com/ukwa/interject/blob/master/interject-servlet-filter
@@ -21,11 +23,19 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
   private OutputStream outputStream;
   private ByteArrayOutputStream copy;
 
+  /**
+   * Instantiates a new servlet output stream copier.
+   *
+   * @param outputStream the output stream
+   */
   public ServletOutputStreamCopier(OutputStream outputStream) {
     this.outputStream = outputStream;
     this.copy = new ByteArrayOutputStream(1024);
   }
 
+  /* (non-Javadoc)
+   * @see java.io.OutputStream#write(int)
+   */
   @Override
   public void write(int b) throws IOException {
     try {
@@ -39,6 +49,9 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
     return copy.toByteArray();
   }
 
+  /**
+   * Flush stream.
+   */
   public void flushStream() {
     try {
     } finally {

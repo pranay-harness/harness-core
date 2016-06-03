@@ -3,11 +3,18 @@ package software.wings.core.ssh.executors;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 2/8/16.
  */
 @Ignore
 public class SshPubKeyExecutorTest {
+  /**
+   * Test execute.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testExecute() throws Exception {
     //    SshSessionConfig config =

@@ -37,6 +37,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Application Resource class.
  *
@@ -48,6 +50,14 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class ConfigResource {
   @Inject private ConfigService configService;
 
+  /**
+   * List.
+   *
+   * @param entityId    the entity id
+   * @param templateId  the template id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entityId") String entityId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
@@ -57,6 +67,15 @@ public class ConfigResource {
     return new RestResponse<>(configService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param entityId            the entity id
+   * @param uploadedInputStream the uploaded input stream
+   * @param fileDetail          the file detail
+   * @param configFile          the config file
+   * @return the rest response
+   */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("entityId") String entityId,
@@ -67,12 +86,27 @@ public class ConfigResource {
     return new RestResponse<>(fileId);
   }
 
+  /**
+   * Gets the.
+   *
+   * @param configId the config id
+   * @return the rest response
+   */
   @GET
   @Path("{configId}")
   public RestResponse<ConfigFile> get(@PathParam("configId") String configId) {
     return new RestResponse<>(configService.get(configId));
   }
 
+  /**
+   * Update.
+   *
+   * @param configId            the config id
+   * @param uploadedInputStream the uploaded input stream
+   * @param fileDetail          the file detail
+   * @param configFile          the config file
+   * @return the rest response
+   */
   @PUT
   @Path("{configId}")
   @Consumes(MULTIPART_FORM_DATA)
@@ -83,6 +117,12 @@ public class ConfigResource {
     return new RestResponse();
   }
 
+  /**
+   * Delete.
+   *
+   * @param configId the config id
+   * @return the rest response
+   */
   @DELETE
   @Path("{configId}")
   public RestResponse delete(@PathParam("configId") String configId) {
@@ -90,6 +130,14 @@ public class ConfigResource {
     return new RestResponse();
   }
 
+  /**
+   * Download.
+   *
+   * @param appId the app id
+   * @return the response
+   * @throws IOException              Signals that an I/O exception has occurred.
+   * @throws GeneralSecurityException the general security exception
+   */
   @GET
   @Path("download/{appId}")
   @Encoded

@@ -5,6 +5,9 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
 
+/**
+ * The Class Deployment.
+ */
 @Entity(value = "deployments", noClassnameStored = true)
 public class Deployment extends Execution {
   @Reference(idOnly = true) private Release release;

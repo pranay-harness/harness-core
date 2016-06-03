@@ -17,7 +17,21 @@ import software.wings.exception.WingsException;
 import java.util.Arrays;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class MongoHelper.
+ */
 public class MongoHelper {
+  /**
+   * Query page request.
+   *
+   * @param <T>       the generic type
+   * @param datastore the datastore
+   * @param cls       the cls
+   * @param req       the req
+   * @return the page response
+   */
   public static <T> PageResponse<T> queryPageRequest(Datastore datastore, Class<T> cls, PageRequest<T> req) {
     Query q = datastore.createQuery(cls);
     q = MongoHelper.applyPageRequest(q, req);
@@ -38,6 +52,14 @@ public class MongoHelper {
     return response;
   }
 
+  /**
+   * Apply page request.
+   *
+   * @param <T>   the generic type
+   * @param query the query
+   * @param req   the req
+   * @return the query
+   */
   public static <T> Query<T> applyPageRequest(Query<T> query, PageRequest<T> req) {
     if (req == null) {
       return query;
@@ -99,6 +121,15 @@ public class MongoHelper {
     return null;
   }
 
+  /**
+   * Sets the unset.
+   *
+   * @param <T>   the generic type
+   * @param ops   the ops
+   * @param field the field
+   * @param value the value
+   * @return the update operations
+   */
   public static <T> UpdateOperations<T> setUnset(UpdateOperations<T> ops, String field, Object value) {
     if (value == null || (value instanceof String && isBlank((String) value))) {
       return ops.unset(field);

@@ -15,16 +15,30 @@ import org.apache.commons.mail.SimpleEmail;
 import java.io.IOException;
 import java.io.StringWriter;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
 public class Mailer {
   private final Configuration cfg = new Configuration(VERSION_2_3_23);
 
+  /**
+   * Instantiates a new mailer.
+   */
   public Mailer() {
     cfg.setTemplateLoader(new ClassTemplateLoader(Mailer.class, "/mailtemplates"));
   }
 
+  /**
+   * Send.
+   *
+   * @param smtpConfig the smtp config
+   * @param emailData  the email data
+   * @throws EmailException    the email exception
+   * @throws IOException       Signals that an I/O exception has occurred.
+   * @throws TemplateException the template exception
+   */
   public void send(SmtpConfig smtpConfig, EmailData emailData) throws EmailException, IOException, TemplateException {
     Email email = new SimpleEmail();
     email.setHostName(smtpConfig.getHost());

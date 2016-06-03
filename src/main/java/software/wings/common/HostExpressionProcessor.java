@@ -14,7 +14,11 @@ import software.wings.sm.ExpressionProcessor;
 import java.util.List;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class HostExpressionProcessor.
+ *
  * @author Rishi
  */
 public class HostExpressionProcessor implements ExpressionProcessor {
@@ -24,6 +28,11 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   private String[] hostNames;
   private String appId;
 
+  /**
+   * Instantiates a new host expression processor.
+   *
+   * @param context the context
+   */
   public HostExpressionProcessor(ExecutionContext context) {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
@@ -33,6 +42,9 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return HOST_EXPR_PROCESSOR;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
+   */
   @Override
   public String normalizeExpression(String expression) {
     if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
@@ -45,16 +57,33 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return expression;
   }
 
+  /**
+   * Hosts.
+   *
+   * @param hostNames the host names
+   * @return the host expression processor
+   */
   public HostExpressionProcessor hosts(String... hostNames) {
     this.hostNames = hostNames;
     return this;
   }
 
+  /**
+   * With names.
+   *
+   * @param hostNames the host names
+   * @return the host expression processor
+   */
   public HostExpressionProcessor withNames(String... hostNames) {
     this.hostNames = hostNames;
     return this;
   }
 
+  /**
+   * List.
+   *
+   * @return the list
+   */
   public List<Host> list() {
     List<Host> hosts = null;
     PageRequest<Host> pageRequest =

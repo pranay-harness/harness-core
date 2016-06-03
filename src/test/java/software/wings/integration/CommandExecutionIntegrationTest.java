@@ -45,6 +45,8 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 6/2/16.
  */
@@ -79,6 +81,11 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   @Inject AppContainerService appContainerService;
   @Inject WingsPersistence wingsPersistence;
 
+  /**
+   * Sets the up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     wingsPersistence.getDatastore().getCollection(AppContainer.class).drop();
@@ -87,6 +94,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
     fileId = wingsPersistence.get(AppContainer.class, uuid).getFileUuid();
   }
 
+  /**
+   * Should execute command.
+   */
   @Test
   public void shouldExecuteCommand() {
     Command command = aCommand()
@@ -107,6 +117,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
+  /**
+   * Should capture failed execution command unit.
+   */
   @Test
   public void shouldCaptureFailedExecutionCommandUnit() {
     Command command = aCommand()

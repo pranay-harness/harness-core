@@ -10,12 +10,17 @@ import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/25/16.
  */
 public class PageResponseTest extends WingsBaseTest {
   @Inject private JsonUtils jsonUtils;
 
+  /**
+   * Should return page response as an object.
+   */
   @Test
   public void shouldReturnPageResponseAsAnObject() {
     PageResponse pageResponse = new PageResponse();

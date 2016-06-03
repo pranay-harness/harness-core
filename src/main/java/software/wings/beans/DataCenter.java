@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+/**
+ * The Class DataCenter.
+ */
 public class DataCenter {
   private String name;
   private String description;

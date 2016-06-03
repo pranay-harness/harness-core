@@ -26,6 +26,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/25/16.
  */
@@ -39,6 +41,14 @@ import javax.ws.rs.QueryParam;
 public class TagResource {
   @Inject private TagService tagService;
 
+  /**
+   * List.
+   *
+   * @param appId   the app id
+   * @param envId   the env id
+   * @param request the request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Tag>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Tag> request) {
@@ -48,6 +58,15 @@ public class TagResource {
     return new RestResponse<>(tagService.listRootTags(request));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param parentTagId the parent tag id
+   * @param tag         the tag
+   * @return the rest response
+   */
   @POST
   public RestResponse<Tag> save(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @QueryParam("parentTagId") String parentTagId, Tag tag) {
@@ -56,12 +75,27 @@ public class TagResource {
     return new RestResponse<>(tagService.saveTag(parentTagId, tag));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId the app id
+   * @param tagId the tag id
+   * @return the rest response
+   */
   @GET
   @Path("{tagId}")
   public RestResponse<Tag> get(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
     return new RestResponse<>(tagService.getTag(appId, tagId));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId the app id
+   * @param tagId the tag id
+   * @param tag   the tag
+   * @return the rest response
+   */
   @PUT
   @Path("{tagId}")
   public RestResponse<Tag> update(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, Tag tag) {
@@ -70,6 +104,13 @@ public class TagResource {
     return new RestResponse<>(tagService.updateTag(tag));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId the app id
+   * @param tagId the tag id
+   * @return the rest response
+   */
   @DELETE
   @Path("{tagId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
@@ -77,6 +118,14 @@ public class TagResource {
     return new RestResponse();
   }
 
+  /**
+   * Tag hosts.
+   *
+   * @param appId    the app id
+   * @param tagId    the tag id
+   * @param uuidList the uuid list
+   * @return the rest response
+   */
   @POST
   @Path("{tagId}/tag-hosts")
   public RestResponse tagHosts(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {

@@ -11,6 +11,11 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ResponseCodeCache.
+ */
 public class ResponseCodeCache {
   private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 

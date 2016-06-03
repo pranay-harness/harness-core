@@ -25,6 +25,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/25/16.
  */
@@ -37,11 +39,23 @@ import javax.ws.rs.QueryParam;
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
 
+  /**
+   * Instantiates a new service resource.
+   *
+   * @param serviceResourceService the service resource service
+   */
   @Inject
   public ServiceResource(ServiceResourceService serviceResourceService) {
     this.serviceResourceService = serviceResourceService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Service>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Service> pageRequest) {
@@ -49,18 +63,40 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.list(pageRequest));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
   @GET
   @Path("{serviceId}")
   public RestResponse<Service> get(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
     return new RestResponse<>(serviceResourceService.get(appId, serviceId));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId   the app id
+   * @param service the service
+   * @return the rest response
+   */
   @POST
   public RestResponse<Service> save(@QueryParam("appId") String appId, Service service) {
     service.setAppId(appId);
     return new RestResponse<>(serviceResourceService.save(service));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param service   the service
+   * @return the rest response
+   */
   @PUT
   @Path("{serviceId}")
   public RestResponse<Service> update(
@@ -70,6 +106,13 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.update(service));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
   @DELETE
   @Path("{serviceId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
@@ -77,6 +120,14 @@ public class ServiceResource {
     return new RestResponse();
   }
 
+  /**
+   * Save command.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param command   the command
+   * @return the rest response
+   */
   @POST
   @Path("{serviceId}/commands")
   public RestResponse<Service> saveCommand(
@@ -84,6 +135,14 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
   }
 
+  /**
+   * Delete command.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @return the rest response
+   */
   @DELETE
   @Path("{serviceId}/commands/{commandName}")
   public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,

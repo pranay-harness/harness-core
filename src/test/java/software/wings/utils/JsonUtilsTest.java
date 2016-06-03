@@ -14,7 +14,11 @@ import software.wings.utils.JsonUtilsTest.Base.BaseType;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class JsonUtilsTest.
+ *
  * @author Rishi.
  */
 public class JsonUtilsTest {
@@ -26,6 +30,9 @@ public class JsonUtilsTest {
       + ",\"bicycle\":{\"color\":\"red\",\"price\":19.95}},\"expensive\":10}";
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /**
+   * Should get authors.
+   */
   @Test
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
@@ -34,6 +41,9 @@ public class JsonUtilsTest {
     assertThat(authors.size()).isEqualTo(4);
   }
 
+  /**
+   * Should get title and cheap books.
+   */
   @Test
   public void shouldGetTitleAndCheapBooks() {
     DocumentContext ctx = JsonUtils.parseJson(json);
@@ -48,6 +58,9 @@ public class JsonUtilsTest {
     assertThat(cheapBooks.size()).isEqualTo(2);
   }
 
+  /**
+   * Should return correct object in case of inheritence.
+   */
   @Test
   public void shouldReturnCorrectObjectInCaseOfInheritence() {
     BaseA baseA = new BaseA();
@@ -72,6 +85,9 @@ public class JsonUtilsTest {
         .containsExactly(BaseType.B);
   }
 
+  /**
+   * Should generate json schema.
+   */
   @Test
   public void shouldGenerateJsonSchema() {
     assertThatJson(JsonUtils.jsonSchema(BaseA.class))
@@ -91,6 +107,9 @@ public class JsonUtilsTest {
             + "}");
   }
 
+  /**
+   * The Class Base.
+   */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = BaseA.class, name = "A")
@@ -107,13 +126,22 @@ public class JsonUtilsTest {
       this.baseType = baseType;
     }
 
+    /**
+     * The Enum BaseType.
+     */
     public enum BaseType { A, B, C }
   }
 
+  /**
+   * The Class BaseA.
+   */
   @Attributes(title = "BaseA")
   public static class BaseA extends Base {
     @Attributes(required = true) private String name = BaseA.class.getName();
 
+    /**
+     * Instantiates a new base a.
+     */
     public BaseA() {
       super();
       setBaseType(BaseType.A);
@@ -128,9 +156,15 @@ public class JsonUtilsTest {
     }
   }
 
+  /**
+   * The Class BaseB.
+   */
   public static class BaseB extends Base {
     private String name = BaseB.class.getName();
 
+    /**
+     * Instantiates a new base b.
+     */
     public BaseB() {
       super();
       setBaseType(BaseType.B);
@@ -145,9 +179,15 @@ public class JsonUtilsTest {
     }
   }
 
+  /**
+   * The Class BaseC.
+   */
   public static class BaseC extends Base {
     private String name = BaseC.class.getName();
 
+    /**
+     * Instantiates a new base c.
+     */
     public BaseC() {
       super();
       setBaseType(BaseType.C);

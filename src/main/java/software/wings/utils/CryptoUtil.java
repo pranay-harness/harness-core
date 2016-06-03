@@ -3,11 +3,22 @@ package software.wings.utils;
 import java.security.SecureRandom;
 import java.util.Random;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class CryptoUtil.
+ */
 /* http://stackoverflow.com/a/19597101 */
 public class CryptoUtil {
   private static final char[] VALID_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456879".toCharArray();
 
+  /**
+   * Secure rand alpha num string.
+   *
+   * @param length the length
+   * @return the string
+   */
   public static String secureRandAlphaNumString(int length) {
     SecureRandom srand = new SecureRandom();
     Random rand = new Random();

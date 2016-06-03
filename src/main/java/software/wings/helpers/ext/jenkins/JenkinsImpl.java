@@ -27,25 +27,50 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Pattern;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class JenkinsImpl.
+ */
 public class JenkinsImpl implements Jenkins {
   private JenkinsServer jenkinsServer;
 
+  /**
+   * Instantiates a new jenkins impl.
+   *
+   * @param jenkinsUrl the jenkins url
+   * @throws URISyntaxException the URI syntax exception
+   */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl) throws URISyntaxException {
     jenkinsServer = new JenkinsServer(new URI(jenkinsUrl));
   }
 
+  /**
+   * Instantiates a new jenkins impl.
+   *
+   * @param jenkinsUrl the jenkins url
+   * @param username   the username
+   * @param password   the password
+   * @throws URISyntaxException the URI syntax exception
+   */
   @AssistedInject
   public JenkinsImpl(@Assisted(value = "url") String jenkinsUrl, @Assisted(value = "username") String username,
       @Assisted(value = "password") String password) throws URISyntaxException {
     jenkinsServer = new JenkinsServer(new URI(jenkinsUrl), username, password);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#getJob(java.lang.String)
+   */
   @Override
   public JobWithDetails getJob(String jobname) throws IOException {
     return jenkinsServer.getJob(jobname);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#getBuildsForJob(java.lang.String, int)
+   */
   @Override
   public List<BuildDetails> getBuildsForJob(String jobname, int lastN) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
@@ -75,31 +100,50 @@ public class JenkinsImpl implements Jenkins {
         .collect(toList());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#trigger(java.lang.String)
+   */
   @Override
   public String trigger(String jobname) {
     throw new NotImplementedException();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#checkStatus(java.lang.String)
+   */
   @Override
   public String checkStatus(String jobname) {
     throw new NotImplementedException();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#checkStatus(java.lang.String, java.lang.String)
+   */
   @Override
   public String checkStatus(String jobname, String buildNo) {
     throw new NotImplementedException();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#checkArtifactStatus(java.lang.String, java.lang.String)
+   */
   @Override
   public String checkArtifactStatus(String jobname, String artifactpathRegex) {
     throw new NotImplementedException();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#checkArtifactStatus(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public String checkArtifactStatus(String jobname, String buildNo, String artifactpathRegex) {
     throw new NotImplementedException();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String)
+   */
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
       throws IOException, URISyntaxException {
@@ -111,6 +155,10 @@ public class JenkinsImpl implements Jenkins {
     return downloadArtifactFromABuild(build, artifactpathRegex);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String buildNo, String artifactpathRegex)
       throws IOException, URISyntaxException {

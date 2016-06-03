@@ -17,6 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class Host.
+ */
 @Entity(value = "hosts", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Indexes(@Index(fields = { @Field("infraId")
@@ -112,6 +117,9 @@ public class Host extends Base {
     this.osType = osType;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -119,6 +127,9 @@ public class Host extends Base {
               hostConnectionCredential);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -138,6 +149,9 @@ public class Host extends Base {
         && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential);
   }
 
+  /**
+   * The Class HostBuilder.
+   */
   public static final class HostBuilder {
     private String infraId;
     private String hostName;
@@ -158,90 +172,196 @@ public class Host extends Base {
 
     private HostBuilder() {}
 
+    /**
+     * A host.
+     *
+     * @return the host builder
+     */
     public static HostBuilder aHost() {
       return new HostBuilder();
     }
 
+    /**
+     * With infra id.
+     *
+     * @param infraId the infra id
+     * @return the host builder
+     */
     public HostBuilder withInfraId(String infraId) {
       this.infraId = infraId;
       return this;
     }
 
+    /**
+     * With host name.
+     *
+     * @param hostName the host name
+     * @return the host builder
+     */
     public HostBuilder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With os type.
+     *
+     * @param osType the os type
+     * @return the host builder
+     */
     public HostBuilder withOsType(String osType) {
       this.osType = osType;
       return this;
     }
 
+    /**
+     * With host conn attr.
+     *
+     * @param hostConnAttr the host conn attr
+     * @return the host builder
+     */
     public HostBuilder withHostConnAttr(SettingAttribute hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
       return this;
     }
 
+    /**
+     * With bastion conn attr.
+     *
+     * @param bastionConnAttr the bastion conn attr
+     * @return the host builder
+     */
     public HostBuilder withBastionConnAttr(SettingAttribute bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
+    /**
+     * With tags.
+     *
+     * @param tags the tags
+     * @return the host builder
+     */
     public HostBuilder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
+    /**
+     * With host names.
+     *
+     * @param hostNames the host names
+     * @return the host builder
+     */
     public HostBuilder withHostNames(List<String> hostNames) {
       this.hostNames = hostNames;
       return this;
     }
 
+    /**
+     * With config files.
+     *
+     * @param configFiles the config files
+     * @return the host builder
+     */
     public HostBuilder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With host connection credential.
+     *
+     * @param hostConnectionCredential the host connection credential
+     * @return the host builder
+     */
     public HostBuilder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
       this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the host builder
+     */
     public HostBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the host builder
+     */
     public HostBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the host builder
+     */
     public HostBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the host builder
+     */
     public HostBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the host builder
+     */
     public HostBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the host builder
+     */
     public HostBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the host builder
+     */
     public HostBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the host builder
+     */
     public HostBuilder but() {
       return aHost()
           .withInfraId(infraId)
@@ -262,6 +382,11 @@ public class Host extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the host
+     */
     public Host build() {
       Host host = new Host();
       host.setInfraId(infraId);

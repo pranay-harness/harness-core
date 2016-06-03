@@ -15,12 +15,19 @@ import software.wings.sm.StateExecutionInstance;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class HttpStateTest.
+ *
  * @author Rishi
  */
 public class HttpStateTest extends WingsBaseTest {
   @Inject private Injector injector;
 
+  /**
+   * Should assert response.
+   */
   @Test
   public void shouldAssertResponse() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();

@@ -28,16 +28,30 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class SshCommandUnitExecutorServiceImpl.
+ */
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private SshExecutorFactory sshExecutorFactory;
 
+  /**
+   * Instantiates a new ssh command unit executor service impl.
+   *
+   * @param sshExecutorFactory the ssh executor factory
+   */
   @Inject
   public SshCommandUnitExecutorServiceImpl(SshExecutorFactory sshExecutorFactory) {
     this.sshExecutorFactory = sshExecutorFactory;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.CommandUnitExecutorService#execute(software.wings.beans.Host,
+   * software.wings.beans.CommandUnit, java.lang.String)
+   */
   @Override
   public ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId) {
     if (commandUnit instanceof ExecCommandUnit) {
