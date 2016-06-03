@@ -77,13 +77,12 @@ public class Command extends CommandUnit {
       return false;
     }
     Command command = (Command) obj;
-    return Objects.equal(referenceId, command.referenceId) && Objects.equal(graph, command.graph)
-        && Objects.equal(commandUnits, command.commandUnits);
+    return Objects.equal(referenceId, command.referenceId) && Objects.equal(commandUnits, command.commandUnits);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(referenceId, graph, commandUnits);
+    return Objects.hashCode(referenceId, commandUnits);
   }
 
   @Override
