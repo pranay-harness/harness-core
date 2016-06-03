@@ -50,10 +50,12 @@ public class EmailStateExecutionData extends StateExecutionData {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o)
+    if (this == o) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (o == null || getClass() != o.getClass()) {
       return false;
+    }
     EmailStateExecutionData that = (EmailStateExecutionData) o;
     return Objects.equal(toAddress, that.toAddress) && Objects.equal(ccAddress, that.ccAddress)
         && Objects.equal(subject, that.subject) && Objects.equal(body, that.body);
