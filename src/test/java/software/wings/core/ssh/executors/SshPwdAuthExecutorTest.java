@@ -148,7 +148,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   }
 
   @Test
-  public void testSCP() throws IOException {
+  public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
     BufferedWriter out = new BufferedWriter(new FileWriter(file));
     out.write("ANY_TEXT");

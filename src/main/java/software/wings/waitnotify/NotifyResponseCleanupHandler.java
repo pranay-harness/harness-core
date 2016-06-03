@@ -7,6 +7,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import com.google.common.collect.Lists;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SearchFilter;
@@ -53,20 +55,20 @@ public final class NotifyResponseCleanupHandler implements Runnable {
       // Get wait queue entries
       SearchFilter filter = new SearchFilter();
       filter.setFieldName("correlationId");
-      ArrayList<Object> fieldValues = new ArrayList();
+      ArrayList<Object> fieldValues = new ArrayList<>();
       fieldValues.addAll(correlationIds);
       filter.setFieldValues(fieldValues);
       filter.setOp(Operator.IN);
       PageRequest<WaitQueue> req = new PageRequest<>();
       req.addFilter(filter);
 
-      Map<String, Iterable<WaitQueue>> waitQueueMap = new HashMap<>();
+      Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
       PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
       if (isEmpty(waitQueuesResponse)) {
-        waitQueuesResponse.stream().collect(toMap(WaitQueue::getCorrelationId,
+        waitQueueMap = waitQueuesResponse.stream().collect(toMap(WaitQueue::getCorrelationId,
             waitQueue
-            -> newArrayList(waitQueue),
-            (waitQueues, waitQueues2) -> newArrayList(concat(waitQueues, waitQueues2))));
+            -> (List<WaitQueue>) newArrayList(waitQueue),
+            (waitQueues, waitQueues2) -> Lists.<WaitQueue>newArrayList(concat(waitQueues, waitQueues2))));
       }
 
       for (NotifyResponse notifyResponse : notifyPageResponses) {

@@ -37,6 +37,7 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 /**
@@ -44,6 +45,9 @@ import javax.inject.Inject;
  */
 public abstract class AbstractSshExecutor implements SshExecutor {
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
+  private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
+  public static final String LINE_BREAK_PATTERN = "\\R+";
+  private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -94,24 +98,27 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       channel.connect();
 
       int totalBytesRead = 0;
-      byte[] tmp = new byte[1024]; // FIXME: Improve stream reading/writing logic
+      byte[] byteBuffer = new byte[1024]; // FIXME: Improve stream reading/writing logic
+      String text = "";
+
       while (true) {
         while (inputStream.available() > 0) {
-          int numOfBytesRead = inputStream.read(tmp, 0, 1024);
+          int numOfBytesRead = inputStream.read(byteBuffer, 0, 1024);
           if (numOfBytesRead < 0) {
             break;
           }
           totalBytesRead += numOfBytesRead;
           if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
-            throw new WingsException(UNKNOWN_ERROR);
+            throw new WingsException(UNKNOWN_ERROR); // TODO: better error reporting
           }
-          String line = new String(tmp, 0, numOfBytesRead, UTF_8);
-          if (line.matches(DEFAULT_SUDO_PROMPT_PATTERN)) {
-            outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
-            outputStream.flush();
-          }
-          executionLogs.appendLogs(config.getExecutionId(), line);
+          text += new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+          text = processStreamData(text, false);
         }
+
+        if (text.length() > 0) {
+          text = processStreamData(text, true); // finished reading. update logs
+        }
+
         if (channel.isClosed()) {
           return channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
         }
@@ -126,6 +133,45 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     } finally {
       destroy();
     }
+  }
+
+  private void passwordPromtResponder(String line) throws IOException {
+    if (matchesPasswordPromptPattern(line)) {
+      outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
+      outputStream.flush();
+    }
+  }
+
+  private boolean matchesPasswordPromptPattern(String line) {
+    return sudoPasswordPromptPattern.matcher(line).find();
+  }
+
+  private String processStreamData(String text, boolean finishedReading) throws IOException {
+    if (text == null || text.length() == 0) {
+      return text;
+    }
+
+    String[] lines = lineBreakPattern.split(text);
+    if (lines.length == 0) {
+      return "";
+    }
+
+    for (int i = 0; i < lines.length - 1; i++) { // Ignore last line.
+      executionLogs.appendLogs(config.getExecutionId(), lines[i]);
+    }
+
+    String lastLine = lines[lines.length - 1];
+    // last line is processed only if it ends with new line char or stream closed
+    if (textEndsAtNewLineChar(text, lastLine) || finishedReading) {
+      passwordPromtResponder(lastLine);
+      executionLogs.appendLogs(config.getExecutionId(), lastLine);
+      return ""; // nothing left to carry over
+    }
+    return lastLine;
+  }
+
+  private boolean textEndsAtNewLineChar(String text, String lastLine) {
+    return lastLine.charAt(lastLine.length() - 1) != text.charAt(text.length() - 1);
   }
 
   @Override
