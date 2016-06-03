@@ -33,25 +33,24 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private SshExecutorFactory sshExecutorFactory;
 
+  private enum SupportedOp { EXEC, SCP }
+
   @Inject
   public SshCommandUnitExecutorServiceImpl(SshExecutorFactory sshExecutorFactory) {
     this.sshExecutorFactory = sshExecutorFactory;
   }
 
-  private enum SupportedOp { EXEC, SCP }
-
   @Override
-  public ExecutionResult execute(Host host, ExecCommandUnit commandUnit) {
-    return execute(host, commandUnit, SupportedOp.EXEC);
+  public ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId) {
+    if (commandUnit instanceof ExecCommandUnit) {
+      return execute(host, commandUnit, activityId, SupportedOp.EXEC);
+    } else {
+      return execute(host, commandUnit, activityId, SupportedOp.SCP);
+    }
   }
 
-  @Override
-  public ExecutionResult execute(Host host, CopyCommandUnit commandUnit) {
-    return execute(host, commandUnit, SupportedOp.SCP);
-  }
-
-  private ExecutionResult execute(Host host, CommandUnit commandUnit, SupportedOp op) {
-    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, commandUnit.getExecutionId());
+  private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
+    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId);
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
     ExecutionResult executionResult;

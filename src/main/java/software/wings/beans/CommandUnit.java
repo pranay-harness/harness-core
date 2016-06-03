@@ -9,21 +9,12 @@ import javax.validation.constraints.NotNull;
  */
 public class CommandUnit {
   private String name;
-  private String executionId;
   @NotNull private String serviceId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
 
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
-  }
-
-  public String getExecutionId() {
-    return executionId;
-  }
-
-  public void setExecutionId(String executionId) {
-    this.executionId = executionId;
   }
 
   public String getServiceId() {

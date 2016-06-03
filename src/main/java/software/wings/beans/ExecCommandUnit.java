@@ -61,7 +61,9 @@ public class ExecCommandUnit extends CommandUnit {
   public static final class Builder {
     private String commandPath;
     private String commandString;
+    private String name;
     private String serviceId;
+    private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
     private Builder() {}
@@ -80,8 +82,18 @@ public class ExecCommandUnit extends CommandUnit {
       return this;
     }
 
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withCommandUnitType(CommandUnitType commandUnitType) {
+      this.commandUnitType = commandUnitType;
       return this;
     }
 
@@ -94,7 +106,9 @@ public class ExecCommandUnit extends CommandUnit {
       return anExecCommandUnit()
           .withCommandPath(commandPath)
           .withCommandString(commandString)
+          .withName(name)
           .withServiceId(serviceId)
+          .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult);
     }
 
@@ -102,7 +116,9 @@ public class ExecCommandUnit extends CommandUnit {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandPath(commandPath);
       execCommandUnit.setCommandString(commandString);
+      execCommandUnit.setName(name);
       execCommandUnit.setServiceId(serviceId);
+      execCommandUnit.setCommandUnitType(commandUnitType);
       execCommandUnit.setExecutionResult(executionResult);
       return execCommandUnit;
     }

@@ -32,6 +32,8 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     private String fileId;
     private FileBucket fileBucket;
     private String destinationFilePath;
+    private String name;
+    private String serviceId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
@@ -61,6 +63,16 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
       return this;
     }
 
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
     public Builder withCommandUnitType(CommandUnitType commandUnitType) {
       this.commandUnitType = commandUnitType;
       return this;
@@ -77,6 +89,8 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
           .withFileId(fileId)
           .withFileBucket(fileBucket)
           .withDestinationFilePath(destinationFilePath)
+          .withName(name)
+          .withServiceId(serviceId)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult);
     }
@@ -87,6 +101,8 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
       copyArtifactCommandUnit.setFileId(fileId);
       copyArtifactCommandUnit.setFileBucket(fileBucket);
       copyArtifactCommandUnit.setDestinationFilePath(destinationFilePath);
+      copyArtifactCommandUnit.setName(name);
+      copyArtifactCommandUnit.setServiceId(serviceId);
       copyArtifactCommandUnit.setCommandUnitType(commandUnitType);
       copyArtifactCommandUnit.setExecutionResult(executionResult);
       return copyArtifactCommandUnit;

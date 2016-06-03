@@ -6,6 +6,7 @@ package software.wings.utils;
 public class WingsUnitTestConstants {
   public static final String APP_ID = "APP_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
+  public static final String SERVICE_NAME = "SERVICE_NAME";
   public static final String ENV_ID = "ENV_ID";
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
   public static final String RELEASE_ID = "RELEASE_ID";
@@ -25,4 +26,5 @@ public class WingsUnitTestConstants {
   public static final String SSH_USER_PASSWORD = "SSH_USER_PASSWORD";
   public static final String SSH_KEY = "SSH_KEY";
   public static final String SSH_KEY_PASS_PHRASE = "SSH_KEY_PASS_PHRASE";
+  public static final String ACTIVITY_ID = "ACTIVITY_ID";
 }

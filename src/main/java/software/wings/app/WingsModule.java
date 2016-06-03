@@ -40,6 +40,7 @@ import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
+import software.wings.service.impl.ServiceCommandExecutorService;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
@@ -68,6 +69,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PlatformService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.ServiceCommandExecutorServiceImpl;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -141,6 +143,7 @@ public class WingsModule extends AbstractModule {
     bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(LogService.class).to(LogServiceImpl.class);
+    bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

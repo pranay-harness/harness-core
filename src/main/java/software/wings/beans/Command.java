@@ -83,7 +83,6 @@ public class Command extends CommandUnit {
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
-    private String executionId;
     private String serviceId;
     private ExecutionResult executionResult;
 
@@ -113,11 +112,6 @@ public class Command extends CommandUnit {
       return this;
     }
 
-    public Builder withExecutionId(String executionId) {
-      this.executionId = executionId;
-      return this;
-    }
-
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
@@ -133,7 +127,6 @@ public class Command extends CommandUnit {
           .withGraph(graph)
           .withCommandUnits(commandUnits)
           .withName(name)
-          .withExecutionId(executionId)
           .withServiceId(serviceId)
           .withExecutionResult(executionResult);
     }
@@ -143,7 +136,6 @@ public class Command extends CommandUnit {
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
-      command.setExecutionId(executionId);
       command.setServiceId(serviceId);
       command.setExecutionResult(executionResult);
       return command;
