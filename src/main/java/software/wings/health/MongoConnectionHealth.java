@@ -1,8 +1,9 @@
 package software.wings.health;
 
+import com.google.common.collect.Lists;
+
 import com.codahale.metrics.health.HealthCheck;
 import com.mongodb.MongoClient;
-import jersey.repackaged.com.google.common.collect.Lists;
 
 import java.util.HashMap;
 import java.util.Map;
