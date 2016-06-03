@@ -10,7 +10,6 @@ import com.jayway.jsonpath.DocumentContext;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.sm.states.EmailState;
 import software.wings.utils.JsonUtilsTest.Base.BaseType;
 
 import java.util.List;
@@ -75,13 +74,21 @@ public class JsonUtilsTest {
 
   @Test
   public void shouldGenerateJsonSchema() {
-    System.out.println(JsonUtils.jsonSchema(EmailState.class));
-    // assertThatJson(JsonUtils.jsonSchema(BaseA.class)).isEqualTo("{\n" + "  \"type\" : \"object\",\n" + "
-    // \"properties\" : {\n" + "    \"baseType\" : {\n"
-    //    + "      \"enum\" : [ \"A\", \"B\", \"C\" ]\n" + "    },\n" + "    \"name\" : {\n" + "      \"type\" :
-    //    \"string\"\n" + "    }\n" + "  },\n"
-    //    + "  \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n" + "  \"title\" : \"BaseA\",\n" + "
-    //    \"required\" : [ \"name\" ]\n" + "}");
+    assertThatJson(JsonUtils.jsonSchema(BaseA.class))
+        .isEqualTo("{\n"
+            + "  \"type\" : \"object\",\n"
+            + "  \"properties\" : {\n"
+            + "    \"baseType\" : {\n"
+            + "      \"enum\" : [ \"A\", \"B\", \"C\" ]\n"
+            + "    },\n"
+            + "    \"name\" : {\n"
+            + "      \"type\" : \"string\"\n"
+            + "    }\n"
+            + "  },\n"
+            + "  \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n"
+            + "  \"title\" : \"BaseA\",\n"
+            + "  \"required\" : [ \"name\" ]\n"
+            + "}");
   }
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
