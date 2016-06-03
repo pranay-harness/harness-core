@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 /**
@@ -823,8 +824,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerOrchestration() {
     Orchestration orchestration = createOrchestration();
-    WorkflowExecution execution =
-        workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), Lists.newArrayList("123"));
+    WorkflowExecution execution = workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), null);
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
     logger.debug("Orchestration executionId: {}", executionId);

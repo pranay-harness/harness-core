@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionCredential;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -31,6 +32,9 @@ public class WorkflowStandardParams implements ContextElement {
   private String appId;
   private String envId;
   private List<String> artifactIds;
+
+  // TODO: centralized in-memory executionCredential and special encrypted mapping
+  private ExecutionCredential executionCredential;
 
   @JsonIgnore @Transient private transient Application app;
   @JsonIgnore @Transient private transient Environment env;
@@ -77,6 +81,14 @@ public class WorkflowStandardParams implements ContextElement {
 
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
+  }
+
+  public ExecutionCredential getExecutionCredential() {
+    return executionCredential;
+  }
+
+  public void setExecutionCredential(ExecutionCredential executionCredential) {
+    this.executionCredential = executionCredential;
   }
 
   @Override

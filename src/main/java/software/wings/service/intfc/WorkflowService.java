@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
@@ -12,6 +13,7 @@ import software.wings.sm.StateTypeScope;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -52,7 +54,9 @@ public interface WorkflowService {
   WorkflowExecution triggerPipelineExecution(@NotNull String appId, @NotNull String pipelineId);
 
   WorkflowExecution triggerOrchestrationExecution(
-      @NotNull String appId, @NotNull String orchestrationId, @NotNull List<String> artifactIds);
+      @NotNull String appId, @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
+
+  WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
   WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId);
 }
