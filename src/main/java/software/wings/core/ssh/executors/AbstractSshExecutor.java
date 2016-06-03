@@ -51,6 +51,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected final Logger logger = LoggerFactory.getLogger(getClass());
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
+  protected final Logger logger = LoggerFactory.getLogger(getClass());
   protected Session session;
   protected Channel channel;
   protected SshSessionConfig config;

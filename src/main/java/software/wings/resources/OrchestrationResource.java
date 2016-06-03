@@ -13,9 +13,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -34,10 +36,12 @@ import javax.ws.rs.QueryParam;
 @Path("/orchestrations")
 public class OrchestrationResource {
   private WorkflowService workflowService;
+  private EnvironmentService environmentService;
 
   @Inject
-  public OrchestrationResource(WorkflowService workflowService) {
+  public OrchestrationResource(WorkflowService workflowService, EnvironmentService environmentService) {
     this.workflowService = workflowService;
+    this.environmentService = environmentService;
   }
 
   @GET
@@ -45,7 +49,7 @@ public class OrchestrationResource {
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    pageRequest.addFilter("environment.uuid", envId, SearchFilter.Operator.EQ);
+    pageRequest.addFilter("environment", environmentService.get(appId, envId), SearchFilter.Operator.EQ);
     return new RestResponse<>(workflowService.listOrchestration(pageRequest));
   }
 

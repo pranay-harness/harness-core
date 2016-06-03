@@ -11,7 +11,6 @@ import software.wings.common.UUIDGenerator;
 
 /**
  * @author Rishi
- *
  */
 public class ExecutionContextImplTest {
   @Test

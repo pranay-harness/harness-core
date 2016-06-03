@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Set;
-
 import javax.validation.constraints.NotNull;
 
 /**

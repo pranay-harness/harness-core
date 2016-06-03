@@ -13,17 +13,6 @@ public class HostConnectionAttributes extends SettingValue {
   private String key;
   private String keyPassphrase;
 
-  public enum AccessType {
-    USER_PASSWORD,
-    USER_PASSWORD_SU_APP_USER,
-    USER_PASSWORD_SUDO_APP_USER,
-    KEY,
-    KEY_SU_APP_USER,
-    KEY_SUDO_APP_USER
-  }
-
-  public enum ConnectionType { SSH }
-
   public HostConnectionAttributes() {
     super(HOST_CONNECTION_ATTRIBUTES);
   }
@@ -82,6 +71,17 @@ public class HostConnectionAttributes extends SettingValue {
         && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.key, other.key)
         && Objects.equals(this.keyPassphrase, other.keyPassphrase);
   }
+
+  public enum AccessType {
+    USER_PASSWORD,
+    USER_PASSWORD_SU_APP_USER,
+    USER_PASSWORD_SUDO_APP_USER,
+    KEY,
+    KEY_SU_APP_USER,
+    KEY_SUDO_APP_USER
+  }
+
+  public enum ConnectionType { SSH }
 
   public static final class HostConnectionAttributesBuilder {
     private ConnectionType connectionType;

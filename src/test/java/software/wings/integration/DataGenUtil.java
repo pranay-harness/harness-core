@@ -408,7 +408,7 @@ public class DataGenUtil extends WingsBaseTest {
   private void addLogLine(
       Application application, ServiceTemplate template, Host host, Activity activity, String logLine) {
     wingsPersistence.save(aLog()
-                              .withAppId(application.getAppId())
+                              .withAppId(application.getUuid())
                               .withActivityId(activity.getUuid())
                               .withHostName(host.getHostName())
                               .withServiceTemplateId(template.getUuid())

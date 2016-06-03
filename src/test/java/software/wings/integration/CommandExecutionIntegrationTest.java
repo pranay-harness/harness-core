@@ -52,14 +52,9 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
-  @Inject ServiceCommandExecutorService serviceCommandExecutorService;
-  @Inject AppContainerService appContainerService;
-  @Inject WingsPersistence wingsPersistence;
-
   private static final String HOST_NAME = "192.168.1.52";
   private static final String USER = "ssh_user";
   private static final String PASSWORD = "Wings@123";
-
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
   private static final HostConnectionCredential CREDENTIAL =
@@ -79,8 +74,10 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                                              .withService(SERVICE)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
-
   private static String fileId;
+  @Inject ServiceCommandExecutorService serviceCommandExecutorService;
+  @Inject AppContainerService appContainerService;
+  @Inject WingsPersistence wingsPersistence;
 
   @Before
   public void setUp() throws Exception {

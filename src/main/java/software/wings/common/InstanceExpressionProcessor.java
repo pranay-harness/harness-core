@@ -27,12 +27,10 @@ import software.wings.sm.ExpressionProcessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class InstanceExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "instances()";
@@ -88,6 +86,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     this.hostNames = hosts;
     return this;
   }
+
   public InstanceExpressionProcessor withInstanceIds(String... instanceIds) {
     this.instanceIds = instanceIds;
     return this;
