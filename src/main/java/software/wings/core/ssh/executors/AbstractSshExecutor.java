@@ -48,7 +48,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   public static final String LINE_BREAK_PATTERN = "\\R+";
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
-  protected final Logger logger = LoggerFactory.getLogger(getClass());
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   protected final Logger logger = LoggerFactory.getLogger(getClass());
