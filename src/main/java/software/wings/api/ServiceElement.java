@@ -28,6 +28,7 @@ public class ServiceElement implements ContextElement {
   public ContextElementType getElementType() {
     return ContextElementType.SERVICE;
   }
+
   public String getUuid() {
     return uuid;
   }

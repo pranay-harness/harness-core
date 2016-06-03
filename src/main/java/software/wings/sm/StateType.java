@@ -51,18 +51,18 @@ public enum StateType implements StateTypeDescriptor {
   STOP(StopState.class, ORCHESTRATION_STENCILS),
   // RESTART(ORCHESTRATION_STENCILS),
 
-  HTTP(HttpState.class, ORCHESTRATION_STENCILS),
-  // SPLUNK(ORCHESTRATION_STENCILS), APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, ORCHESTRATION_STENCILS), // SPLUNK(ORCHESTRATION_STENCILS),
+                                                 // APP_DYNAMICS(ORCHESTRATION_STENCILS),
   EMAIL(EmailState.class, ORCHESTRATION_STENCILS),
 
   BUILD(BuildState.class, PIPELINE_STENCILS),
   ENV_STATE(EnvState.class, PIPELINE_STENCILS),
   APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
-  private Class<? extends State> stateClass;
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  private Class<? extends State> stateClass;
   private Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();

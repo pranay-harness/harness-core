@@ -33,8 +33,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private SshExecutorFactory sshExecutorFactory;
 
-  private enum SupportedOp { EXEC, SCP }
-
   @Inject
   public SshCommandUnitExecutorServiceImpl(SshExecutorFactory sshExecutorFactory) {
     this.sshExecutorFactory = sshExecutorFactory;
@@ -116,4 +114,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
     return executorType;
   }
+
+  private enum SupportedOp { EXEC, SCP }
 }

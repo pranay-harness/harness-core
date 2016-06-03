@@ -8,8 +8,8 @@ import software.wings.beans.Deployment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.service.intfc.DeploymentService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;

@@ -50,31 +50,25 @@ import javax.inject.Inject;
 
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public static final String EXEC_CMD = "ls";
-  @Mock SshExecutorFactory sshExecutorFactory;
-  @Mock SshPwdAuthExecutor sshPwdAuthExecutor;
-  @Mock SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
-  @Mock SshJumpboxExecutor sshJumpboxExecutor;
-
-  @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
-
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
-
   private static final SettingAttribute BASTION_HOST_ATTR =
       aSettingAttribute()
           .withValue(aBastionConnectionAttributes().withHostName(HOST_NAME).withKey(SSH_KEY).build())
           .build();
-
   private static final SettingAttribute HOST_CONN_ATTR_KEY =
       aSettingAttribute()
           .withValue(aHostConnectionAttributes().withAccessType(AccessType.KEY).withKey(SSH_KEY).build())
           .build();
-
   private static final HostConnectionCredential CREDENTIAL =
       aHostConnectionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build();
-
-  private HostBuilder hostBuilder = aHost().withHostName(HOST_NAME);
   private static final ExecCommandUnit EXEC_COMMAND_UNIT = anExecCommandUnit().withCommandString(EXEC_CMD).build();
+  @Mock SshExecutorFactory sshExecutorFactory;
+  @Mock SshPwdAuthExecutor sshPwdAuthExecutor;
+  @Mock SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
+  @Mock SshJumpboxExecutor sshJumpboxExecutor;
+  @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
+  private HostBuilder hostBuilder = aHost().withHostName(HOST_NAME);
 
   @Test
   public void shouldCreatePasswordBasedSshConfig() {
