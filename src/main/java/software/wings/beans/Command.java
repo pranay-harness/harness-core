@@ -17,12 +17,21 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class Command extends CommandUnit {
+  private String referenceId;
   @NotNull private Graph graph;
 
   @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   public Command() {
     super(CommandUnitType.COMMAND);
+  }
+
+  public String getReferenceId() {
+    return referenceId;
+  }
+
+  public void setReferenceId(String referenceId) {
+    this.referenceId = referenceId;
   }
 
   public Graph getGraph() {
@@ -60,26 +69,34 @@ public class Command extends CommandUnit {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o)
+  public boolean equals(Object obj) {
+    if (this == obj) {
       return true;
-    if (o == null || getClass() != o.getClass())
+    }
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
-    Command command = (Command) o;
-    return Objects.equal(commandUnits, command.commandUnits);
+    }
+    Command command = (Command) obj;
+    return Objects.equal(referenceId, command.referenceId) && Objects.equal(graph, command.graph)
+        && Objects.equal(commandUnits, command.commandUnits);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(commandUnits);
+    return Objects.hashCode(referenceId, graph, commandUnits);
   }
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("graph", graph).add("commandUnits", commandUnits).toString();
+    return MoreObjects.toStringHelper(this)
+        .add("referenceId", referenceId)
+        .add("graph", graph)
+        .add("commandUnits", commandUnits)
+        .toString();
   }
 
   public static final class Builder {
+    private String referenceId;
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
@@ -90,6 +107,11 @@ public class Command extends CommandUnit {
 
     public static Builder aCommand() {
       return new Builder();
+    }
+
+    public Builder withReferenceId(String referenceId) {
+      this.referenceId = referenceId;
+      return this;
     }
 
     public Builder withGraph(Graph graph) {
@@ -124,6 +146,7 @@ public class Command extends CommandUnit {
 
     public Builder but() {
       return aCommand()
+          .withReferenceId(referenceId)
           .withGraph(graph)
           .withCommandUnits(commandUnits)
           .withName(name)
@@ -133,6 +156,7 @@ public class Command extends CommandUnit {
 
     public Command build() {
       Command command = new Command();
+      command.setReferenceId(referenceId);
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
