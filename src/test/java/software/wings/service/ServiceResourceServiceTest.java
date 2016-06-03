@@ -38,6 +38,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
 import software.wings.beans.SearchFilter;
@@ -50,6 +51,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anubhaw on 5/4/16.
@@ -224,6 +226,32 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createUpdateOperations(Service.class);
     verify(wingsPersistence).createQuery(Service.class);
     verify(wingsPersistence).update(any(Query.class), any());
+    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldGetCommandStencils() {
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(builder.but()
+                        .addCommands(aCommand()
+                                         .withName("START")
+                                         .withServiceId(SERVICE_ID)
+                                         .addCommandUnits(anExecCommandUnit()
+                                                              .withServiceId(SERVICE_ID)
+                                                              .withCommandPath("/home/xxx/tomcat")
+                                                              .withCommandString("bin/startup.sh")
+                                                              .build())
+                                         .build())
+                        .build());
+
+    List<Object> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID);
+
+    assertThat(commandStencils)
+        .isNotNull()
+        .hasSize(1)
+        .contains(ImmutableMap.of("name", "START", "type", CommandUnitType.COMMAND));
+
+    verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 }

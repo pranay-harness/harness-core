@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static org.joor.Reflect.on;
-
 import javax.validation.constraints.NotNull;
 
 /**
@@ -47,22 +45,6 @@ public class CommandUnit {
 
   public void setName(String name) {
     this.name = name;
-  }
-
-  public enum CommandUnitType {
-    EXEC(ExecCommandUnit.class),
-    COMMAND(Command.class),
-    COPY_ARTIFACT(CopyArtifactCommandUnit.class),
-    ;
-
-    private Class<? extends CommandUnit> commandUnitClass;
-
-    private CommandUnitType(Class<? extends CommandUnit> commandUnitClass) {
-      this.commandUnitClass = commandUnitClass;
-    }
-    public CommandUnit newInstance() {
-      return on(commandUnitClass).create().get();
-    }
   }
 
   public enum ExecutionResult { SUCCESS, FAILURE }

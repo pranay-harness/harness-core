@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.CommandUnit.CommandUnitType.EXEC;
+import static software.wings.beans.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

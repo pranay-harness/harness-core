@@ -3,7 +3,7 @@ package software.wings.service;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.BastionConnectionAttributesBuilder.aBastionConnectionAttributes;
-import static software.wings.beans.CommandUnit.CommandUnitType.COPY_ARTIFACT;
+import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.HostBuilder.aHost;

@@ -7,13 +7,17 @@ package software.wings.resources;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
+import com.google.common.collect.Lists;
+
 import io.swagger.annotations.Api;
 import software.wings.beans.CatalogNames;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeDescriptor;
@@ -29,6 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -38,11 +43,14 @@ import javax.ws.rs.core.UriInfo;
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {
+  public static final String APP_ID = "appId";
+  public static final String SERVICE_ID = "serviceId";
   public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
   private WorkflowService workflowService;
   private CatalogService catalogService;
   private JenkinsBuildService jenkinsBuildService;
   private SettingsService settingsService;
+  private ServiceResourceService serviceResourceService;
 
   /**
    * Creates a new calalog resource.
@@ -54,11 +62,13 @@ public class CatalogResource {
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
-      JenkinsBuildService jenkinsBuildService, SettingsService settingsService) {
+      JenkinsBuildService jenkinsBuildService, SettingsService settingsService,
+      ServiceResourceService serviceResourceService) {
     this.catalogService = catalogService;
     this.workflowService = workflowService;
     this.jenkinsBuildService = jenkinsBuildService;
     this.settingsService = settingsService;
+    this.serviceResourceService = serviceResourceService;
   }
 
   /**
@@ -79,6 +89,7 @@ public class CatalogResource {
       for (StateTypeScope stencil : stencils.keySet()) {
         catalogs.put(stencil.name(), stencils.get(stencil));
       }
+      catalogs.put(CatalogNames.COMMAND_STENCILS, getCommandStencils(uriInfo.getQueryParameters()));
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
@@ -94,14 +105,13 @@ public class CatalogResource {
             break;
           }
           case CatalogNames.COMMAND_STENCILS: {
-            StateTypeScope scope = StateTypeScope.valueOf(catalogType);
-            catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
+            catalogs.put(catalogType, getCommandStencils(uriInfo.getQueryParameters()));
             break;
           }
           case CatalogNames.JENKINS_CONFIG: {
             catalogs.put(catalogType,
                 settingsService.getSettingAttributesByType(
-                    uriInfo.getQueryParameters().getFirst("appId"), SettingVariableTypes.JENKINS));
+                    uriInfo.getQueryParameters().getFirst(APP_ID), SettingVariableTypes.JENKINS));
             break;
           }
           case CatalogNames.JENKINS_BUILD: {
@@ -114,12 +124,12 @@ public class CatalogResource {
           case CONNECTION_ATTRIBUTES: {
             catalogs.put(CONNECTION_ATTRIBUTES,
                 settingsService.getSettingAttributesByType(
-                    uriInfo.getQueryParameters().getFirst("appId"), SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES));
+                    uriInfo.getQueryParameters().getFirst(APP_ID), SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES));
             break;
           }
           case BASTION_HOST_ATTRIBUTES: {
             catalogs.put(BASTION_HOST_ATTRIBUTES,
-                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst("appId"),
+                settingsService.getSettingAttributesByType(uriInfo.getQueryParameters().getFirst(APP_ID),
                     SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES));
             break;
           }
@@ -128,5 +138,14 @@ public class CatalogResource {
       }
     }
     return new RestResponse<>(catalogs);
+  }
+
+  private List<Object> getCommandStencils(MultivaluedMap<String, String> queryParameters) {
+    List<Object> stencils = Lists.newArrayList(CommandUnitType.getStencils());
+    if (queryParameters.containsKey(SERVICE_ID) && queryParameters.containsKey(APP_ID)) {
+      stencils.addAll(serviceResourceService.getCommandStencils(
+          queryParameters.getFirst(APP_ID), queryParameters.getFirst(SERVICE_ID)));
+    }
+    return stencils;
   }
 }

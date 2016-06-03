@@ -9,6 +9,7 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.util.List;
 import javax.validation.Valid;
 
 /**
@@ -28,4 +29,6 @@ public interface ServiceResourceService {
   Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, Graph commandGraph);
 
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+
+  List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId);
 }

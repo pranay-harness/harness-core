@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.mongodb.morphia.annotations.Entity;
@@ -22,7 +25,7 @@ public class Service extends Base {
   private String name;
   private String description;
   private ArtifactType artifactType;
-  private List<Command> commands;
+  private List<Command> commands = Lists.newArrayList();
 
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
@@ -107,7 +110,7 @@ public class Service extends Base {
     private String name;
     private String description;
     private ArtifactType artifactType;
-    private List<Command> commands;
+    private List<Command> commands = Lists.newArrayList();
     private AppContainer appContainer;
     private List<ConfigFile> configFiles;
     private String uuid;
@@ -136,6 +139,11 @@ public class Service extends Base {
 
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
+      return this;
+    }
+
+    public Builder addCommands(Command... commands) {
+      this.commands.addAll(asList(commands));
       return this;
     }
 

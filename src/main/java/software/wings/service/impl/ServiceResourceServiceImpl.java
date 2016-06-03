@@ -1,15 +1,21 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorConstants.DUPLICATE_COMMAND_NAMES;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import com.mongodb.BasicDBObject;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -20,6 +26,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -104,5 +111,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
             .removeAll("commands", new BasicDBObject("name", commandName)));
 
     return get(appId, serviceId);
+  }
+
+  @Override
+  public List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
+    Service service = get(appId, serviceId);
+    if (isEmpty(service.getCommands())) {
+      return emptyList();
+    } else {
+      return service.getCommands()
+          .stream()
+          .map(command -> Maps.newHashMap(ImmutableMap.of("name", command.getName(), "type", CommandUnitType.COMMAND)))
+          .collect(toList());
+    }
   }
 }
