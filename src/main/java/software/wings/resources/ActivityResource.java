@@ -26,7 +26,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-@Api("activity")
+@Api("activities")
 @Path("/activities")
 @Produces("application/json")
 @AuthRule
