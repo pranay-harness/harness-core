@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.Artifact;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
@@ -32,7 +33,11 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  *
  * @author Rishi
  */
+@Api("artifacts")
 @Path("/artifacts")
+@Timed
+@ExceptionMetered
+@Produces("application/json")
 public class ArtifactResource {
   private ArtifactService artifactService;
 
@@ -42,9 +47,6 @@ public class ArtifactResource {
   }
 
   @GET
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<PageResponse<Artifact>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Artifact> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
@@ -53,17 +55,11 @@ public class ArtifactResource {
 
   @GET
   @Path("{artifactId}")
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Artifact> get(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.get(appId, artifactId));
   }
 
   @POST
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Artifact> save(@QueryParam("appId") String appId, Artifact artifact) {
     artifact.setAppId(appId);
     return new RestResponse<>(artifactService.create(artifact));
@@ -71,9 +67,6 @@ public class ArtifactResource {
 
   @PUT
   @Path("{artifactId}")
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Artifact> update(
       @QueryParam("appId") String appId, @PathParam("artifactId") String artifactId, Artifact artifact) {
     artifact.setUuid(artifactId);
@@ -83,9 +76,6 @@ public class ArtifactResource {
 
   @DELETE
   @Path("{artifactId}")
-  @Timed
-  @ExceptionMetered
-  @Produces("application/json")
   public RestResponse<Artifact> update(@QueryParam("appId") String appId, @PathParam("artifactId") String artifactId) {
     return new RestResponse<>(artifactService.softDelete(appId, artifactId));
   }

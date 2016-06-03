@@ -4,6 +4,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
@@ -31,6 +32,7 @@ import javax.ws.rs.QueryParam;
  *
  * @author Rishi
  */
+@Api("releases")
 @Path("/releases")
 @Produces("application/json")
 @Consumes("application/json")

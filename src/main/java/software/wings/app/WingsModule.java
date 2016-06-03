@@ -1,17 +1,13 @@
 package software.wings.app;
 
-import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 
-import com.deftlabs.lock.mongo.DistributedLockSvc;
-import org.mongodb.morphia.Datastore;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ArtifactSource.SourceType;
-import software.wings.beans.ReadPref;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.dl.WingsMongoPersistence;
@@ -80,8 +76,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExpressionProcessorFactory;
 
-import java.util.Map;
-
 /**
  * Guice Module for initializing all beans.
  *
@@ -89,14 +83,6 @@ import java.util.Map;
  */
 public class WingsModule extends AbstractModule {
   private MainConfiguration configuration;
-
-  private Datastore primaryDatastore;
-
-  private Datastore secondaryDatastore;
-
-  private DistributedLockSvc distributedLockSvc;
-
-  private Map<ReadPref, Datastore> datastoreMap = Maps.newHashMap();
 
   /**
    * Creates a guice module for portal app.

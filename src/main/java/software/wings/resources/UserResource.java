@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
+import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
@@ -27,6 +28,7 @@ import javax.ws.rs.core.MediaType;
  *
  * @author Rishi
  */
+@Api("users")
 @Path("/users")
 @Timed
 @ExceptionMetered

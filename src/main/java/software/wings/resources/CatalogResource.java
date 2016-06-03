@@ -7,6 +7,7 @@ package software.wings.resources;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
+import io.swagger.annotations.Api;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.UriInfo;
 /**
  * @author Rishi.
  */
+@Api("catalogs")
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {

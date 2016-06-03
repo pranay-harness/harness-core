@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import io.swagger.annotations.Api;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -12,6 +14,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+@Api("bins")
 @Path("/bins")
 public class BinaryResource {
   @GET

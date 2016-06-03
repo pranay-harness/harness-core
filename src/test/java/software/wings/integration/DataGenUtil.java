@@ -3,15 +3,18 @@ package software.wings.integration;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.shuffle;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
@@ -35,6 +38,8 @@ import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.utils.ReflectionUtils;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.Status;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -49,6 +54,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
+import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
@@ -59,10 +65,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -80,7 +90,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APP_CONTAINER_PER_APP = 1; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 1; /* Max 10   */
+  private static final int NUM_ENV_PER_APP = 2; /* Max 10   */
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
@@ -213,6 +223,7 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> appNames = new ArrayList<String>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
+  private SettingAttribute envAttr = null;
 
   /**
    * Generated Data for across the API use
@@ -261,6 +272,7 @@ public class DataGenUtil extends WingsBaseTest {
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       addServiceInstances(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
     }
   }
 
@@ -285,6 +297,7 @@ public class DataGenUtil extends WingsBaseTest {
         hosts.forEach(host
             -> wingsPersistence.save(aServiceInstance()
                                          .withAppId(host.getAppId())
+                                         .withEnvId(environment.getUuid())
                                          .withHost(host)
                                          .withService(service)
                                          .withServiceTemplate(template)
@@ -293,6 +306,121 @@ public class DataGenUtil extends WingsBaseTest {
                                          .build()));
       });
     });
+  }
+
+  private void addActivitiesAndLogs(Application application, List<Service> services, List<Environment> appEnvs) {
+    // TODO: improve make http calls and use better generation scheme
+    appEnvs.forEach(environment -> {
+      String infraId =
+          wingsPersistence.createQuery(Infra.class).field("envId").equal(environment.getUuid()).get().getUuid();
+      List<Host> hosts = wingsPersistence.createQuery(Host.class)
+                             .field("appId")
+                             .equal(environment.getAppId())
+                             .field("infraId")
+                             .equal(infraId)
+                             .asList();
+      ServiceTemplate template = wingsPersistence.query(ServiceTemplate.class, new PageRequest<>()).get(0);
+      template.setService(services.get(0));
+      Release release = wingsPersistence.query(Release.class, new PageRequest<>()).get(0);
+      Artifact artifact = wingsPersistence.query(Artifact.class, new PageRequest<>()).get(0);
+
+      shuffle(hosts);
+      createDeployActivity(application, environment, template, hosts.get(0), release, artifact, Status.RUNNING);
+      createStartActivity(application, environment, template, hosts.get(1), Status.COMPLETED);
+      createStopActivity(application, environment, template, hosts.get(2), Status.FAILED);
+      createDeployActivity(application, environment, template, hosts.get(0), release, artifact, Status.ABORTED);
+    });
+  }
+
+  private void createStopActivity(
+      Application application, Environment environment, ServiceTemplate template, Host host, Status status) {
+    Activity activity = wingsPersistence.saveAndGet(Activity.class,
+        anActivity()
+            .withAppId(application.getUuid())
+            .withCommandType("COMMAND")
+            .withCommandName("STOP")
+            .withEnvironmentId(environment.getUuid())
+            .withHostName(host.getHostName())
+            .withServiceId(template.getService().getUuid())
+            .withServiceName(template.getService().getName())
+            .withServiceTemplateId(template.getUuid())
+            .withServiceTemplateName(template.getName())
+            .withStatus(status)
+            .build());
+
+    addLogLine(application, template, host, activity,
+        "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
+  }
+
+  private void createStartActivity(
+      Application application, Environment environment, ServiceTemplate template, Host host, Status status) {
+    Activity activity = wingsPersistence.saveAndGet(Activity.class,
+        anActivity()
+            .withAppId(application.getUuid())
+            .withCommandType("COMMAND")
+            .withCommandName("START")
+            .withEnvironmentId(environment.getUuid())
+            .withHostName(host.getHostName())
+            .withServiceId(template.getService().getUuid())
+            .withServiceName(template.getService().getName())
+            .withServiceTemplateId(template.getUuid())
+            .withServiceTemplateName(template.getName())
+            .withStatus(status)
+            .build());
+
+    addLogLine(application, template, host, activity,
+        "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
+  }
+
+  private void createDeployActivity(Application application, Environment environment, ServiceTemplate template,
+      Host host, Release release, Artifact artifact, Status status) {
+    Activity activity = wingsPersistence.saveAndGet(Activity.class,
+        anActivity()
+            .withAppId(application.getUuid())
+            .withArtifactName(artifact.getDisplayName())
+            .withCommandType("COMMAND")
+            .withCommandName("DEPLOY")
+            .withEnvironmentId(environment.getUuid())
+            .withHostName(host.getHostName())
+            .withReleaseName(release.getReleaseName())
+            .withReleaseId(release.getUuid())
+            .withServiceId(template.getService().getUuid())
+            .withServiceName(template.getService().getName())
+            .withServiceTemplateId(template.getUuid())
+            .withServiceTemplateName(template.getName())
+            .withStatus(status)
+            .build());
+
+    addLogLine(application, template, host, activity,
+        "------ deploying to " + host.getHostName() + ":" + template.getName() + " -------");
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO connecting to " + host.getHostName());
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO stopping tomcat ./bin/shutdown.sh");
+    addLogLine(application, template, host, activity,
+        getTimeStamp() + "INFO copying artifact artifact.war to stating /home/staging");
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO untar artifact to /home/tomcat");
+    addLogLine(application, template, host, activity, getTimeStamp() + "INFO starting tomcat ./bin/startup.sh");
+  }
+
+  private void addLogLine(
+      Application application, ServiceTemplate template, Host host, Activity activity, String logLine) {
+    wingsPersistence.save(aLog()
+                              .withAppId(application.getAppId())
+                              .withActivityId(activity.getUuid())
+                              .withHostName(host.getHostName())
+                              .withServiceTemplateId(template.getUuid())
+                              .withLogLine(logLine)
+                              .build());
+  }
+
+  private String getTimeStamp() {
+    TimeZone tz = TimeZone.getTimeZone("UTC");
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
+    df.setTimeZone(tz);
+    return df.format(new Date());
   }
 
   private void createGlobalSettings() {
@@ -457,8 +585,10 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void addHostsToEnv(Environment env) throws IOException {
-    SettingAttribute envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-        aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
+    if (envAttr == null) {
+      envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
+          aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
+    }
 
     WebTarget target =
         client.target(format("http://localhost:9090/wings/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));

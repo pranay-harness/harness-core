@@ -3,6 +3,8 @@
  */
 package software.wings.common;
 
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.modelmapper.ModelMapper;
 import software.wings.api.ServiceElement;
@@ -12,6 +14,7 @@ import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
@@ -22,22 +25,23 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
+
 /**
  * @author Rishi
  */
 public class ServiceExpressionProcessor implements ExpressionProcessor {
   static final String EXPRESSION_START_PATTERN = "services()";
   private static final String SERVICE_EXPR_PROCESSOR = "serviceExpressionProcessor";
-  private ServiceResourceService serviceResourceService;
-  private String appId;
+
+  @Inject private ServiceResourceService serviceResourceService;
 
   private String[] serviceNames;
+  private ExecutionContextImpl context;
 
-  public ServiceExpressionProcessor(ExecutionContext context, ServiceResourceService serviceResourceService) {
-    this.serviceResourceService = serviceResourceService;
+  public ServiceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
-    // retrieve appId from the context
-    this.appId = contextImpl.getStateExecutionInstance().getAppId();
+    this.context = contextImpl;
   }
 
   @Override
@@ -51,8 +55,8 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
       return null;
     }
     expression = SERVICE_EXPR_PROCESSOR + "." + expression;
-    if (!expression.endsWith(".list()")) {
-      expression = expression + ".list()";
+    if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
+      expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
     }
     return expression;
   }
@@ -68,14 +72,22 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   public List<ServiceElement> list() {
+    String appId = context.getStateExecutionInstance().getAppId();
+
+    List<Service> services = null;
+
     Builder pageRequest =
         PageRequest.Builder.aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
-    List<Service> services = null;
 
     if (ArrayUtils.isEmpty(serviceNames)) {
-      services = serviceResourceService.list(pageRequest.build());
+      ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
+      if (element != null) {
+        services = Lists.newArrayList(serviceResourceService.get(appId, element.getUuid()));
+      } else {
+        services = serviceResourceService.list(pageRequest.build());
+      }
     } else if (Misc.isWildCharPresent(serviceNames)) {
       services = serviceResourceService.list(pageRequest.build());
       services = matchingServices(services, serviceNames);
@@ -88,6 +100,10 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   List<Service> matchingServices(List<Service> services, String... names) {
+    if (services == null) {
+      return null;
+    }
+
     List<Pattern> patterns = new ArrayList<>();
     for (String name : names) {
       patterns.add(Pattern.compile(name.replaceAll("\\" + Constants.WILD_CHAR, "." + Constants.WILD_CHAR)));
@@ -107,6 +123,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   private List<ServiceElement> convertToServiceElements(List<Service> services) {
+    if (services == null) {
+      return null;
+    }
     ModelMapper mm = new ModelMapper();
 
     List<ServiceElement> elements = new ArrayList<>();
@@ -117,5 +136,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
+  }
+
+  void setServiceResourceService(ServiceResourceService serviceResourceService) {
+    this.serviceResourceService = serviceResourceService;
   }
 }

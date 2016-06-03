@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.dl.PageRequest;
@@ -12,7 +13,7 @@ import javax.validation.Valid;
  * Created by peeyushaggarwal on 5/27/16.
  */
 public interface ActivityService {
-  PageResponse<Activity> list(PageRequest<Activity> pageRequest);
+  PageResponse<Activity> list(@NotEmpty String appId, @NotEmpty String envId, PageRequest<Activity> pageRequest);
 
   Activity get(String id, String appId);
 

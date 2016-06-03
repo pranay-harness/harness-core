@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.AppContainer;
@@ -37,7 +38,7 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 5/4/16.
  */
-
+@Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
 @AuthRule

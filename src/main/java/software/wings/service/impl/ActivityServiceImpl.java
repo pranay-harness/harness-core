@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -20,7 +21,10 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
-  public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
+  public PageResponse<Activity> list(String appId, String envId, PageRequest<Activity> pageRequest) {
+    pageRequest.addFilter("appId", appId, Operator.EQ);
+    pageRequest.addFilter("environmentId", envId, Operator.EQ);
+
     return wingsPersistence.query(Activity.class, pageRequest);
   }
 

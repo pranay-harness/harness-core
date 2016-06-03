@@ -34,7 +34,7 @@ import javax.validation.Payload;
  * @author Rishi
  */
 @Entity(value = "artifacts", noClassnameStored = true)
-@Artifact.ValidArtifact
+@Artifact.ValidArtifact(groups = Create.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
   @Indexed @Reference(idOnly = true) private Release release;
@@ -45,7 +45,7 @@ public class Artifact extends Base {
 
   @Indexed @NotEmpty private String displayName;
 
-  @Indexed @NotEmpty private String revision;
+  @Indexed @NotEmpty(groups = Create.class) private String revision;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 

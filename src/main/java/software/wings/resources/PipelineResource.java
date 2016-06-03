@@ -3,6 +3,7 @@
  */
 package software.wings.resources;
 
+import io.swagger.annotations.Api;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
@@ -27,6 +28,7 @@ import javax.ws.rs.QueryParam;
 /**
  * @author Rishi
  */
+@Api("pipelines")
 @Path("/pipelines")
 public class PipelineResource {
   private WorkflowService workflowService;
