@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.Entity;
 public class Log extends Base {
   private String activityId;
   private String hostName;
-  private String serviceTemplateId;
   private String logLine;
 
   public String getActivityId() {
@@ -30,14 +29,6 @@ public class Log extends Base {
     this.hostName = hostName;
   }
 
-  public String getServiceTemplateId() {
-    return serviceTemplateId;
-  }
-
-  public void setServiceTemplateId(String serviceTemplateId) {
-    this.serviceTemplateId = serviceTemplateId;
-  }
-
   public String getLogLine() {
     return logLine;
   }
@@ -51,7 +42,6 @@ public class Log extends Base {
     return MoreObjects.toStringHelper(this)
         .add("activityId", activityId)
         .add("hostName", hostName)
-        .add("serviceTemplateId", serviceTemplateId)
         .add("logLine", logLine)
         .toString();
   }
@@ -59,7 +49,6 @@ public class Log extends Base {
   public static final class Builder {
     private String activityId;
     private String hostName;
-    private String serviceTemplateId;
     private String logLine;
     private String uuid;
     private String appId;
@@ -82,11 +71,6 @@ public class Log extends Base {
 
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
-      return this;
-    }
-
-    public Builder withServiceTemplateId(String serviceTemplateId) {
-      this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
@@ -134,7 +118,6 @@ public class Log extends Base {
       return aLog()
           .withActivityId(activityId)
           .withHostName(hostName)
-          .withServiceTemplateId(serviceTemplateId)
           .withLogLine(logLine)
           .withUuid(uuid)
           .withAppId(appId)
@@ -149,7 +132,6 @@ public class Log extends Base {
       Log log = new Log();
       log.setActivityId(activityId);
       log.setHostName(hostName);
-      log.setServiceTemplateId(serviceTemplateId);
       log.setLogLine(logLine);
       log.setUuid(uuid);
       log.setAppId(appId);

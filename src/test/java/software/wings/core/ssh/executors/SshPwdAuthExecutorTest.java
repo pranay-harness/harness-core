@@ -20,15 +20,14 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
-import software.wings.rules.RealMongo;
-import software.wings.service.intfc.ExecutionLogs;
+import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.LogService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -62,10 +61,10 @@ import javax.inject.Inject;
 18. su app user
 */
 
-@RealMongo
+@Integration
 @Ignore
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "192.168.1.13";
+  private final String HOST = "192.168.1.52";
   private final Integer PORT = 22;
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";
@@ -74,13 +73,14 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private SshSessionConfig config;
   private SshExecutor executor;
   @Inject private FileService fileService;
-  @Mock private ExecutionLogs executionLogs;
+  @Inject private LogService logService;
 
   @Before
   public void setUp() throws Exception {
-    executor = new SshPwdAuthExecutor(executionLogs, fileService);
+    executor = new SshPwdAuthExecutor(fileService, logService);
     config = aSshSessionConfig()
-                 .withExecutionId(EXECUTION_ID)
+                 .withAppId("APP_ID")
+                 .withExecutionId(getUuid())
                  .withExecutorType(ExecutorType.PASSWORD_AUTH)
                  .withHost(HOST)
                  .withPort(PORT)

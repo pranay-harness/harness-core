@@ -119,7 +119,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .withUserName(SSH_USER_NAME)
             .withExecutorType(BASTION_HOST)
             .withPassword(SSH_USER_PASSWORD)
-            .withJumpboxConfig(aSshSessionConfig().withHost(HOST_NAME).withKey(SSH_KEY).build())
+            .withBastionHostConfig(aSshSessionConfig().withHost(HOST_NAME).withKey(SSH_KEY).build())
             .build();
 
     when(sshExecutorFactory.getExecutor(BASTION_HOST)).thenReturn(sshJumpboxExecutor);

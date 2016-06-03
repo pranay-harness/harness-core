@@ -13,6 +13,7 @@ import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.beans.ErrorConstants.UNREACHABLE_HOST;
+import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.Channel;
@@ -24,9 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.LogService;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -56,12 +57,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
-  protected ExecutionLogs executionLogs;
+  protected LogService logService;
   protected FileService fileService;
 
   @Inject
-  public AbstractSshExecutor(ExecutionLogs executionLogs, FileService fileService) {
-    this.executionLogs = executionLogs;
+  public AbstractSshExecutor(FileService fileService, LogService logService) {
+    this.logService = logService;
     this.fileService = fileService;
   }
 
@@ -157,14 +158,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
 
     for (int i = 0; i < lines.length - 1; i++) { // Ignore last line.
-      executionLogs.appendLogs(config.getExecutionId(), lines[i]);
+      logService.save(
+          aLog().withAppId(config.getAppId()).withActivityId(config.getExecutionId()).withLogLine(lines[i]).build());
     }
 
     String lastLine = lines[lines.length - 1];
     // last line is processed only if it ends with new line char or stream closed
     if (textEndsAtNewLineChar(text, lastLine) || finishedReading) {
       passwordPromtResponder(lastLine);
-      executionLogs.appendLogs(config.getExecutionId(), lastLine);
+      logService.save(
+          aLog().withAppId(config.getAppId()).withActivityId(config.getExecutionId()).withLogLine(lastLine).build());
       return ""; // nothing left to carry over
     }
     return lastLine;

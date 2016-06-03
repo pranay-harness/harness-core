@@ -10,6 +10,7 @@ import java.util.Objects;
  * Created by anubhaw on 2/8/16.
  */
 public class SshSessionConfig {
+  private String appId;
   private ExecutorType executorType;
   private String executionId;
   private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
@@ -24,6 +25,14 @@ public class SshSessionConfig {
   private String sudoAppName;
   private String sudoAppPassword;
   private SshSessionConfig bastionHostConfig;
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
 
   public ExecutorType getExecutorType() {
     return executorType;
@@ -139,8 +148,8 @@ public class SshSessionConfig {
 
   @Override
   public int hashCode() {
-    return Objects.hash(executorType, executionId, sshConnectionTimeout, sshSessionTimeout, retryInterval, host, port,
-        userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword, bastionHostConfig);
+    return Objects.hash(appId, executorType, executionId, sshConnectionTimeout, sshSessionTimeout, retryInterval, host,
+        port, userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword, bastionHostConfig);
   }
 
   @Override
@@ -152,7 +161,8 @@ public class SshSessionConfig {
       return false;
     }
     final SshSessionConfig other = (SshSessionConfig) obj;
-    return Objects.equals(this.executorType, other.executorType) && Objects.equals(this.executionId, other.executionId)
+    return Objects.equals(this.appId, other.appId) && Objects.equals(this.executorType, other.executorType)
+        && Objects.equals(this.executionId, other.executionId)
         && Objects.equals(this.sshConnectionTimeout, other.sshConnectionTimeout)
         && Objects.equals(this.sshSessionTimeout, other.sshSessionTimeout)
         && Objects.equals(this.retryInterval, other.retryInterval) && Objects.equals(this.host, other.host)
@@ -167,6 +177,7 @@ public class SshSessionConfig {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("appId", appId)
         .add("executorType", executorType)
         .add("executionId", executionId)
         .add("sshConnectionTimeout", sshConnectionTimeout)
@@ -185,6 +196,7 @@ public class SshSessionConfig {
   }
 
   public static final class SshSessionConfigBuilder {
+    private String appId;
     private ExecutorType executorType;
     private String executionId;
     private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
@@ -204,6 +216,11 @@ public class SshSessionConfig {
 
     public static SshSessionConfigBuilder aSshSessionConfig() {
       return new SshSessionConfigBuilder();
+    }
+
+    public SshSessionConfigBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
     }
 
     public SshSessionConfigBuilder withExecutorType(ExecutorType executorType) {
@@ -271,13 +288,14 @@ public class SshSessionConfig {
       return this;
     }
 
-    public SshSessionConfigBuilder withJumpboxConfig(SshSessionConfig jumpboxConfig) {
-      this.bastionHostConfig = jumpboxConfig;
+    public SshSessionConfigBuilder withBastionHostConfig(SshSessionConfig bastionHostConfig) {
+      this.bastionHostConfig = bastionHostConfig;
       return this;
     }
 
     public SshSessionConfigBuilder but() {
       return aSshSessionConfig()
+          .withAppId(appId)
           .withExecutorType(executorType)
           .withExecutionId(executionId)
           .withSshConnectionTimeout(sshConnectionTimeout)
@@ -291,11 +309,12 @@ public class SshSessionConfig {
           .withKeyPassphrase(keyPassphrase)
           .withSudoAppName(sudoAppName)
           .withSudoAppPassword(sudoAppPassword)
-          .withJumpboxConfig(bastionHostConfig);
+          .withBastionHostConfig(bastionHostConfig);
     }
 
     public SshSessionConfig build() {
       SshSessionConfig sshSessionConfig = new SshSessionConfig();
+      sshSessionConfig.setAppId(appId);
       sshSessionConfig.setExecutorType(executorType);
       sshSessionConfig.setExecutionId(executionId);
       sshSessionConfig.setSshConnectionTimeout(sshConnectionTimeout);

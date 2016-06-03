@@ -411,7 +411,6 @@ public class DataGenUtil extends WingsBaseTest {
                               .withAppId(application.getUuid())
                               .withActivityId(activity.getUuid())
                               .withHostName(host.getHostName())
-                              .withServiceTemplateId(template.getUuid())
                               .withLogLine(logLine)
                               .build());
   }

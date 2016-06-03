@@ -7,7 +7,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 
 import javax.inject.Inject;

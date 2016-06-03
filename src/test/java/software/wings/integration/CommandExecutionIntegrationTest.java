@@ -60,6 +60,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final HostConnectionCredential CREDENTIAL =
       aHostConnectionCredential().withSshUser(USER).withSshPassword(PASSWORD).build();
   private static final Host HOST = aHost()
+                                       .withAppId(APP_ID)
                                        .withHostName(HOST_NAME)
                                        .withHostConnAttr(HOST_CONN_ATTR_PWD)
                                        .withHostConnectionCredential(CREDENTIAL)

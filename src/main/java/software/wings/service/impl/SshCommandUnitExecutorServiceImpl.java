@@ -72,8 +72,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   private SshSessionConfig getSshSessionConfig(Host host, String executionId) {
     ExecutorType executorType = getExecutorType(host);
-    SshSessionConfigBuilder builder =
-        aSshSessionConfig().withExecutionId(executionId).withExecutorType(executorType).withHost(host.getHostName());
+    SshSessionConfigBuilder builder = aSshSessionConfig()
+                                          .withAppId(host.getAppId())
+                                          .withExecutionId(executionId)
+                                          .withExecutorType(executorType)
+                                          .withHost(host.getHostName());
 
     if (host.getHostConnectionCredential() != null) {
       HostConnectionCredential credential = host.getHostConnectionCredential();
@@ -90,11 +93,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
     if (host.getBastionConnAttr() != null) {
       BastionConnectionAttributes bastionAttrs = (BastionConnectionAttributes) host.getBastionConnAttr().getValue();
-      builder.withJumpboxConfig(aSshSessionConfig()
-                                    .withHost(bastionAttrs.getHostName())
-                                    .withKey(bastionAttrs.getKey())
-                                    .withKeyPassphrase(bastionAttrs.getKeyPassphrase())
-                                    .build());
+      builder.withBastionHostConfig(aSshSessionConfig()
+                                        .withHost(bastionAttrs.getHostName())
+                                        .withKey(bastionAttrs.getKey())
+                                        .withKeyPassphrase(bastionAttrs.getKeyPassphrase())
+                                        .build());
     }
     return builder.build();
   }
