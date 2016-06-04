@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.LogService;
 
 import javax.inject.Inject;
 
@@ -19,7 +20,7 @@ import javax.inject.Inject;
 
 public class SshExecutorFactoryTest extends WingsBaseTest {
   @Mock FileService fileService;
-  @Mock ExecutionLogs executionLogs;
+  @Mock LogService logService;
 
   @Inject @InjectMocks SshExecutorFactory sshExecutorFactory;
 

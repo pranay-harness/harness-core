@@ -33,6 +33,7 @@
     <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="3" />
     <option name="KEEP_BLANK_LINES_IN_CODE" value="3" />
     <option name="KEEP_BLANK_LINES_BEFORE_RBRACE" value="3" />
+    <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
     <option name="BLANK_LINES_BEFORE_IMPORTS" value="0" />
     <option name="BLANK_LINES_AROUND_CLASS" value="2" />
     <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />

@@ -33,46 +33,101 @@ public class Service extends Base {
 
   @Transient private List<ConfigFile> configFiles;
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets artifact type.
+   *
+   * @return the artifact type
+   */
   public ArtifactType getArtifactType() {
     return artifactType;
   }
 
+  /**
+   * Sets artifact type.
+   *
+   * @param artifactType the artifact type
+   */
   public void setArtifactType(ArtifactType artifactType) {
     this.artifactType = artifactType;
   }
 
+  /**
+   * Gets commands.
+   *
+   * @return the commands
+   */
   public List<Command> getCommands() {
     return commands;
   }
 
+  /**
+   * Sets commands.
+   *
+   * @param commands the commands
+   */
   public void setCommands(List<Command> commands) {
     this.commands = commands;
   }
 
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Gets app container.
+   *
+   * @return the app container
+   */
   public AppContainer getAppContainer() {
     return appContainer;
   }
 
+  /**
+   * Sets app container.
+   *
+   * @param appContainer the app container
+   */
   public void setAppContainer(AppContainer appContainer) {
     this.appContainer = appContainer;
   }
@@ -310,7 +365,7 @@ public class Service extends Base {
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withCommands(commands)
+          .withCommands(Lists.newArrayList(commands))
           .withAppContainer(appContainer)
           .withConfigFiles(configFiles)
           .withUuid(uuid)

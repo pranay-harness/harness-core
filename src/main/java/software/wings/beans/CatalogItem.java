@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 import java.util.Comparator;

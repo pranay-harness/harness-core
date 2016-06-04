@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.utils;
 
 import com.fasterxml.jackson.core.JsonParseException;

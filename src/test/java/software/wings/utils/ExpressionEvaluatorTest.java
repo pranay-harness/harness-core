@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
