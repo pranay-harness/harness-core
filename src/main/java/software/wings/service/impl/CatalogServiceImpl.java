@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.service.impl;
 
 import com.google.common.base.Charsets;

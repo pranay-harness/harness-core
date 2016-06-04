@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.sm.states;
 
 import static software.wings.api.EmailStateExecutionData.Builder.anEmailStateExecutionData;

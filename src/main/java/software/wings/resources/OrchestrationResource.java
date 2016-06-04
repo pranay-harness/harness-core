@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.resources;
 
 import io.swagger.annotations.Api;

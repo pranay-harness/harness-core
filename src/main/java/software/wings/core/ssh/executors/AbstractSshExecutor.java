@@ -65,8 +65,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   /**
    * Instantiates a new abstract ssh executor.
    *
-   * @param logService    the log service
-   * @param fileService   the file service
+   * @param logService  the log service
+   * @param fileService the file service
    */
   @Inject
   public AbstractSshExecutor(FileService fileService, LogService logService) {
