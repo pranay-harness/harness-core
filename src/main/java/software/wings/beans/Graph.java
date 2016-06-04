@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 import static com.google.common.collect.Lists.newArrayList;

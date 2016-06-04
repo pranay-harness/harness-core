@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.common;
 
 import software.wings.beans.Host;
