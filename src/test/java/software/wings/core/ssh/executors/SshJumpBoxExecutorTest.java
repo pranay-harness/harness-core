@@ -3,11 +3,18 @@ package software.wings.core.ssh.executors;
 import org.junit.Ignore;
 import org.junit.Test;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 2/5/16.
  */
 @Ignore
 public class SshJumpBoxExecutorTest {
+  /**
+   * Test execute.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testExecute() throws Exception {
     //    SshSessionConfig jumpboxConfig =

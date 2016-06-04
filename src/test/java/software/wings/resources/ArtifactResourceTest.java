@@ -37,6 +37,8 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
@@ -67,6 +69,11 @@ public class ArtifactResourceTest {
 
   private File tempFile;
 
+  /**
+   * Sets the up.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Before
   public void setUp() throws IOException {
     reset(ARTIFACT_SERVICE);
@@ -84,6 +91,9 @@ public class ArtifactResourceTest {
     when(ARTIFACT_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
   }
 
+  /**
+   * Should create new artifact.
+   */
   @Test
   public void shouldCreateNewArtifact() {
     Artifact artifact = anArtifact().withAppId(APP_ID).build();
@@ -97,6 +107,9 @@ public class ArtifactResourceTest {
     verify(ARTIFACT_SERVICE).create(artifact);
   }
 
+  /**
+   * Should update artifact.
+   */
   @Test
   public void shouldUpdateArtifact() {
     Artifact artifact = anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build();
@@ -110,6 +123,9 @@ public class ArtifactResourceTest {
     verify(ARTIFACT_SERVICE).update(artifact);
   }
 
+  /**
+   * Should get artifact.
+   */
   @Test
   public void shouldGetArtifact() {
     RestResponse<Artifact> restResponse = RESOURCES.client()
@@ -120,6 +136,11 @@ public class ArtifactResourceTest {
     verify(ARTIFACT_SERVICE).get(APP_ID, ARTIFACT_ID);
   }
 
+  /**
+   * Should download artifact.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldDownloadArtifact() throws IOException {
     Response restResponse =
@@ -135,6 +156,11 @@ public class ArtifactResourceTest {
     verify(ARTIFACT_SERVICE).download(APP_ID, ARTIFACT_ID, SERVICE_ID);
   }
 
+  /**
+   * Should list artifact.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldListArtifact() throws IOException {
     RestResponse<PageResponse<Artifact>> restResponse =
@@ -149,6 +175,11 @@ public class ArtifactResourceTest {
     verify(ARTIFACT_SERVICE).list(expectedPageRequest);
   }
 
+  /**
+   * Should delete artifact.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldDeleteArtifact() throws IOException {
     RestResponse<PageResponse<Artifact>> restResponse =

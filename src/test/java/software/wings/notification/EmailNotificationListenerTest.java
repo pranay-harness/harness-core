@@ -12,6 +12,8 @@ import software.wings.WingsBaseTest;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
@@ -21,6 +23,11 @@ public class EmailNotificationListenerTest extends WingsBaseTest {
 
   @InjectMocks @Inject private EmailNotificationListener emailNotificationListener;
 
+  /**
+   * Should send email on receiving message.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendEmailOnReceivingMessage() throws Exception {
     emailNotificationListener.onMessage(testEmailData);

@@ -35,6 +35,11 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ArtifactServiceImpl.
+ */
 @Singleton
 @ValidateOnExecution
 public class ArtifactServiceImpl implements ArtifactService {
@@ -44,11 +49,17 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private FileService fileService;
   @Inject private Queue<CollectEvent> collectQueue;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Artifact> list(PageRequest<Artifact> pageRequest) {
     return wingsPersistence.query(Artifact.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#create(software.wings.beans.Artifact)
+   */
   @Override
   @ValidationGroups(Create.class)
   public Artifact create(@Valid Artifact artifact) {
@@ -69,6 +80,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     return savedArtifact;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#update(software.wings.beans.Artifact)
+   */
   @Override
   @ValidationGroups(Update.class)
   public Artifact update(@Valid Artifact artifact) {
@@ -81,6 +95,10 @@ public class ArtifactServiceImpl implements ArtifactService {
     return wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#updateStatus(java.lang.String, java.lang.String,
+   * software.wings.beans.Artifact.Status)
+   */
   @Override
   public void updateStatus(String artifactId, String appId, Artifact.Status status) {
     Query<Artifact> query =
@@ -89,6 +107,10 @@ public class ArtifactServiceImpl implements ArtifactService {
     wingsPersistence.update(query, ops);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#addArtifactFile(java.lang.String, java.lang.String,
+   * java.util.List)
+   */
   @Override
   public void addArtifactFile(String artifactId, String appId, List<ArtifactFile> artifactFile) {
     Query<Artifact> query =
@@ -98,6 +120,9 @@ public class ArtifactServiceImpl implements ArtifactService {
     wingsPersistence.update(query, ops);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#download(java.lang.String, java.lang.String, java.lang.String)
+   */
   @Override
   public File download(String appId, String artifactId, String serviceId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
@@ -137,11 +162,17 @@ public class ArtifactServiceImpl implements ArtifactService {
     return file;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#get(java.lang.String, java.lang.String)
+   */
   @Override
   public Artifact get(String appId, String artifactId) {
     return wingsPersistence.get(Artifact.class, appId, artifactId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ArtifactService#softDelete(java.lang.String, java.lang.String)
+   */
   @Override
   public Artifact softDelete(String appId, String artifactId) {
     wingsPersistence.update(

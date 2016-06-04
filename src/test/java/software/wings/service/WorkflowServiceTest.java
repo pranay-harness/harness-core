@@ -46,7 +46,11 @@ import java.util.Map;
 import java.util.Random;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowServiceTest.
+ *
  * @author Rishi
  */
 @Listeners(NotifyEventListener.class)
@@ -64,6 +68,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return env;
   }
 
+  /**
+   * Should save and read.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -98,6 +107,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     System.out.println("All Done!");
   }
 
+  /**
+   * Should trigger.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTrigger() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -143,6 +157,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
+  /**
+   * Should trigger failed transition.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerFailedTransition() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -197,6 +216,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
+  /**
+   * Should trigger asynch.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerAsynch() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -260,6 +284,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
+  /**
+   * Should trigger failed asynch.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerFailedAsynch() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -359,6 +388,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return sm;
   }
 
+  /**
+   * Should trigger simple fork.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerSimpleFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -396,6 +430,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Thread.sleep(2000);
   }
 
+  /**
+   * Should trigger mixed fork.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerMixedFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
@@ -449,11 +488,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Thread.sleep(10000);
   }
 
+  /**
+   * Should create pipeline with graph.
+   */
   @Test
   public void shouldCreatePipelineWithGraph() {
     createPipeline();
   }
 
+  /**
+   * Should update pipeline with no graph.
+   */
   @Test
   public void shouldUpdatePipelineWithNoGraph() {
     Pipeline pipeline = createPipelineNoGraph();
@@ -463,12 +508,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     updatePipeline(pipeline, 1);
   }
 
+  /**
+   * Should update pipeline with graph.
+   */
   @Test
   public void shouldUpdatePipelineWithGraph() {
     Pipeline pipeline = createPipeline();
     updatePipeline(pipeline, 2);
   }
 
+  /**
+   * Update pipeline.
+   *
+   * @param pipeline   the pipeline
+   * @param graphCount the graph count
+   */
   public void updatePipeline(Pipeline pipeline, int graphCount) {
     pipeline.setDescription("newDescription");
     pipeline.setName("pipeline2");
@@ -662,11 +716,17 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return pipeline;
   }
 
+  /**
+   * Should create orchestration.
+   */
   @Test
   public void shouldCreateOrchestration() {
     createOrchestration();
   }
 
+  /**
+   * Should update orchestration.
+   */
   @Test
   public void shouldUpdateOrchestration() {
     Orchestration orchestration = createOrchestration();
@@ -718,6 +778,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
 
+  /**
+   * Should delete orchestration.
+   */
   @Test
   public void shouldDeleteOrchestration() {
     Orchestration orchestration = createOrchestration();
@@ -821,6 +884,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return orchestration;
   }
 
+  /**
+   * Should trigger orchestration.
+   */
   @Test
   public void shouldTriggerOrchestration() {
     Orchestration orchestration = createOrchestration();
@@ -838,6 +904,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
+  /**
+   * Should list orchestration.
+   */
   @Test
   public void shouldListOrchestration() {
     shouldTriggerOrchestration();
@@ -851,6 +920,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res.size()).isEqualTo(2);
   }
 
+  /**
+   * Trigger pipeline.
+   */
   @Test
   public void triggerPipeline() {
     Pipeline pipeline = createPipeline();
@@ -866,6 +938,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
 
+  /**
+   * Stencils.
+   *
+   * @throws IllegalAccessException    the illegal access exception
+   * @throws IllegalArgumentException  the illegal argument exception
+   * @throws InvocationTargetException the invocation target exception
+   * @throws IntrospectionException    the introspection exception
+   */
   @Test
   public void stencils()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
@@ -878,6 +958,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(/*"DEPLOY",*/ "START", "STOP");
   }
 
+  /**
+   * Stencils for pipeline.
+   *
+   * @throws IllegalAccessException    the illegal access exception
+   * @throws IllegalArgumentException  the illegal argument exception
+   * @throws InvocationTargetException the invocation target exception
+   * @throws IntrospectionException    the introspection exception
+   */
   @Test
   public void stencilsForPipeline()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
@@ -891,6 +979,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .doesNotContain("START", "STOP");
   }
 
+  /**
+   * Stencils for orchestration.
+   *
+   * @throws IllegalAccessException    the illegal access exception
+   * @throws IllegalArgumentException  the illegal argument exception
+   * @throws InvocationTargetException the invocation target exception
+   * @throws IntrospectionException    the introspection exception
+   */
   @Test
   public void stencilsForOrchestration()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {

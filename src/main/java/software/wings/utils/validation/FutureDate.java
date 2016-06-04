@@ -7,6 +7,8 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
@@ -15,16 +17,22 @@ import javax.validation.Payload;
 @Constraint(validatedBy = FutureDateValidator.class)
 public @interface FutureDate {
   /**
+   * Message.
+   *
    * @return Validation message or key to show.
    */
   String message() default "{javax.validation.constraints.Future.message}";
 
   /**
+   * Groups.
+   *
    * @return List of groups on which this validation is part of.
    */
   Class<?>[] groups() default {};
 
   /**
+   * Payload.
+   *
    * @return validation payload.
    */
   Class<? extends Payload>[] payload() default {};

@@ -4,6 +4,8 @@ import ro.fortsoft.pf4j.ExtensionPoint;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Plugin interface for adding state.
  *
@@ -18,5 +20,11 @@ public interface StateTypeDescriptor extends ExtensionPoint {
 
   public Object getUiSchema();
 
+  /**
+   * New instance.
+   *
+   * @param id the id
+   * @return the state
+   */
   public State newInstance(String id);
 }

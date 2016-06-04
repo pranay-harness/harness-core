@@ -6,6 +6,9 @@ import software.wings.beans.CommandUnit.ExecutionResult;
 
 import java.util.List;
 
+/**
+ * The Class Execution.
+ */
 @Entity(value = "executions")
 public abstract class Execution extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Host host;

@@ -8,6 +8,8 @@ import static software.wings.security.PermissionAttr.Resource.ANY;
 import static software.wings.security.PermissionAttr.Resource.APP;
 import static software.wings.security.PermissionAttr.Resource.PLATFORM;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/10/16.
  */
@@ -33,11 +35,25 @@ public enum PermissionAttr {
   private boolean onApp = true;
   private boolean onEnv = true;
 
+  /**
+   * Instantiates a new permission attr.
+   *
+   * @param resource the resource
+   * @param action   the action
+   */
   PermissionAttr(Resource resource, Action action) {
     this.resource = resource;
     this.action = action;
   }
 
+  /**
+   * Instantiates a new permission attr.
+   *
+   * @param resource the resource
+   * @param action   the action
+   * @param onApp    the on app
+   * @param onEnv    the on env
+   */
   PermissionAttr(Resource resource, Action action, boolean onApp, boolean onEnv) {
     this.resource = resource;
     this.action = action;
@@ -61,6 +77,9 @@ public enum PermissionAttr {
     return onEnv;
   }
 
+  /**
+   * The Enum Resource.
+   */
   public enum Resource {
     ANY,
     APP,
@@ -77,6 +96,9 @@ public enum PermissionAttr {
     USER;
   }
 
+  /**
+   * The Enum Action.
+   */
   public enum Action {
     ALL,
     CREATE,

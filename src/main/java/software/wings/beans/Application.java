@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Application bean class.
  *
@@ -47,6 +49,11 @@ public class Application extends Base {
     this.services = services;
   }
 
+  /**
+   * Adds the service.
+   *
+   * @param service the service
+   */
   public void addService(Service service) {
     if (this.services == null) {
       this.services = new ArrayList<>();
@@ -62,6 +69,11 @@ public class Application extends Base {
     this.environments = environments;
   }
 
+  /**
+   * Adds the environment.
+   *
+   * @param environment the environment
+   */
   public void addEnvironment(Environment environment) {
     if (this.environments == null) {
       this.environments = new ArrayList<>();
@@ -69,6 +81,9 @@ public class Application extends Base {
     this.environments.add(environment);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -85,11 +100,17 @@ public class Application extends Base {
         && Objects.equals(services, that.services);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), name, description, services);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -105,6 +126,9 @@ public class Application extends Base {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static class Builder {
     private String name;
     private String description;
@@ -118,55 +142,119 @@ public class Application extends Base {
 
     private Builder() {}
 
+    /**
+     * An application.
+     *
+     * @return the builder
+     */
     public static Builder anApplication() {
       return new Builder();
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With services.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anApplication()
           .withName(name)
@@ -180,6 +268,11 @@ public class Application extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the application
+     */
     public Application build() {
       Application application = new Application();
       application.setName(name);

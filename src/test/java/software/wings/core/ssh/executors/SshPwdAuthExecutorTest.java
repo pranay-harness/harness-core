@@ -20,15 +20,14 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
-import software.wings.rules.RealMongo;
-import software.wings.service.intfc.ExecutionLogs;
+import software.wings.rules.Integration;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.LogService;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -36,6 +35,8 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import javax.inject.Inject;
+
+// TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 2/10/16.
@@ -62,10 +63,10 @@ import javax.inject.Inject;
 18. su app user
 */
 
-@RealMongo
+@Integration
 @Ignore
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "192.168.1.13";
+  private final String HOST = "192.168.1.52";
   private final Integer PORT = 22;
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";
@@ -74,13 +75,19 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private SshSessionConfig config;
   private SshExecutor executor;
   @Inject private FileService fileService;
-  @Mock private ExecutionLogs executionLogs;
+  @Inject private LogService logService;
 
+  /**
+   * Sets the up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
-    executor = new SshPwdAuthExecutor(executionLogs, fileService);
+    executor = new SshPwdAuthExecutor(fileService, logService);
     config = aSshSessionConfig()
-                 .withExecutionId(EXECUTION_ID)
+                 .withAppId("APP_ID")
+                 .withExecutionId(getUuid())
                  .withExecutorType(ExecutorType.PASSWORD_AUTH)
                  .withHost(HOST)
                  .withPort(PORT)
@@ -90,23 +97,35 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                  .build();
   }
 
+  /**
+   * Should connect to remote host.
+   */
   @Test
   public void shouldConnectToRemoteHost() {
     executor.init(config);
   }
 
+  /**
+   * Should throw unknown host exception for invalid host.
+   */
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
     config.setHost("INVALID_HOST");
     assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(UNKNOWN_HOST);
   }
 
+  /**
+   * Should throw unknown host exception for invalid port.
+   */
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
     config.setPort(3333);
     assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(INVALID_PORT);
   }
 
+  /**
+   * Should throw exception for invalid credential.
+   */
   @Test
   public void shouldThrowExceptionForInvalidCredential() {
     config.setPassword("INVALID_PASSWORD");
@@ -115,6 +134,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .hasMessageContaining(INVALID_CREDENTIAL);
   }
 
+  /**
+   * Should return success for successful command execution.
+   */
   @Test
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
     executor.init(config);
@@ -123,6 +145,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     assertThat(execute).isEqualTo(SUCCESS);
   }
 
+  /**
+   * Should return failure for failed command execution.
+   */
   @Test
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(config);
@@ -130,6 +155,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     assertThat(execute).isEqualTo(FAILURE);
   }
 
+  /**
+   * Should throw exception for connection timeout.
+   */
   @Test
   public void shouldThrowExceptionForConnectionTimeout() {
     config.setSshConnectionTimeout(1); // 1ms
@@ -138,6 +166,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .hasMessage(SOCKET_CONNECTION_TIMEOUT);
   }
 
+  /**
+   * Should throw exception for session timeout.
+   */
   @Test
   public void shouldThrowExceptionForSessionTimeout() {
     config.setSshSessionTimeout(1); // 1ms
@@ -147,6 +178,11 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .hasMessage(SSH_SESSION_TIMEOUT);
   }
 
+  /**
+   * Test scp.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();

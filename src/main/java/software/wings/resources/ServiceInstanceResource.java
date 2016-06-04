@@ -22,6 +22,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/26/16.
  */
@@ -34,6 +36,14 @@ import javax.ws.rs.QueryParam;
 public class ServiceInstanceResource {
   @Inject ServiceInstanceService instanceService;
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<ServiceInstance>> list(@ApiParam @QueryParam("appId") String appId,
       @ApiParam @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceInstance> pageRequest) {

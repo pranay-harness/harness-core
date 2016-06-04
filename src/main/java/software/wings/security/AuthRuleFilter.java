@@ -33,6 +33,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/11/16.
  */
@@ -48,6 +50,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   @Inject private AuditHelper auditHelper;
 
+  /* (non-Javadoc)
+   * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
+   */
   @Override
   public void filter(ContainerRequestContext requestContext) {
     AuthToken authToken = extractToken(requestContext);

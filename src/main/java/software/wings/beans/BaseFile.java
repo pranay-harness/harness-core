@@ -9,6 +9,8 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/13/16.
  */
@@ -20,8 +22,17 @@ public class BaseFile extends Base {
   private ChecksumType checksumType = MD5;
   @FormDataParam("md5") private String checksum;
 
+  /**
+   * Instantiates a new base file.
+   */
   public BaseFile() {}
 
+  /**
+   * Instantiates a new base file.
+   *
+   * @param fileName the file name
+   * @param md5      the md5
+   */
   public BaseFile(String fileName, String md5) {
     this.name = fileName;
     if (StringUtils.isNotBlank(md5)) {
@@ -77,11 +88,17 @@ public class BaseFile extends Base {
     this.checksum = checksum;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(fileUuid, name, mimeType, size, checksumType, checksum);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -99,6 +116,9 @@ public class BaseFile extends Base {
         && Objects.equals(this.checksumType, other.checksumType) && Objects.equals(this.checksum, other.checksum);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

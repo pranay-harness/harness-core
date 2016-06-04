@@ -9,6 +9,8 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
+ * The Class Pipeline.
+ *
  * @author Rishi
  */
 @Entity(value = "pipelines", noClassnameStored = true)

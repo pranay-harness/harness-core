@@ -15,7 +15,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class ExpressionEvaluator.
+ *
  * @author Rishi
  */
 public class ExpressionEvaluator {
@@ -27,6 +31,14 @@ public class ExpressionEvaluator {
     return instance;
   }
 
+  /**
+   * Evaluate.
+   *
+   * @param expression the expression
+   * @param name       the name
+   * @param value      the value
+   * @return the object
+   */
   public Object evaluate(String expression, String name, Object value) {
     logger.debug("evaluate request - expression: {}, name: {}, value: {}", expression, name, value);
     JexlEngine jexl = new JexlBuilder().create();
@@ -39,6 +51,13 @@ public class ExpressionEvaluator {
     return retValue;
   }
 
+  /**
+   * Evaluate.
+   *
+   * @param expression the expression
+   * @param context    the context
+   * @return the object
+   */
   public Object evaluate(String expression, Map<String, Object> context) {
     logger.debug("evaluate request - expression: {}, context: {}", expression, context);
     JexlEngine jexl = new JexlBuilder().create();
@@ -54,6 +73,14 @@ public class ExpressionEvaluator {
     return retValue;
   }
 
+  /**
+   * Evaluate.
+   *
+   * @param expression          the expression
+   * @param context             the context
+   * @param defaultObjectPrefix the default object prefix
+   * @return the object
+   */
   public Object evaluate(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     expression = normalizeExpression(expression, context, defaultObjectPrefix);
     return evaluate(expression, context);
@@ -86,10 +113,25 @@ public class ExpressionEvaluator {
     return sb.toString();
   }
 
+  /**
+   * Merge.
+   *
+   * @param expression the expression
+   * @param context    the context
+   * @return the string
+   */
   public String merge(String expression, Map<String, Object> context) {
     return merge(expression, context, null);
   }
 
+  /**
+   * Merge.
+   *
+   * @param expression          the expression
+   * @param context             the context
+   * @param defaultObjectPrefix the default object prefix
+   * @return the string
+   */
   public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix) {
     Matcher matcher = wingsVariablePattern.matcher(expression);
 

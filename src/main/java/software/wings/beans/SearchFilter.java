@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 
 import java.util.Arrays;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * SearchFilter bean class.
  *
@@ -38,6 +40,9 @@ public class SearchFilter {
     this.fieldValues = fieldValues;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -48,6 +53,9 @@ public class SearchFilter {
     return result;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -69,6 +77,9 @@ public class SearchFilter {
     return true;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -78,8 +89,14 @@ public class SearchFilter {
         .toString();
   }
 
+  /**
+   * The Enum Operator.
+   */
   public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String fieldName;
     private Object[] fieldValues;
@@ -87,10 +104,23 @@ public class SearchFilter {
 
     private Builder() {}
 
+    /**
+     * A search filter.
+     *
+     * @return the builder
+     */
     public static Builder aSearchFilter() {
       return new Builder();
     }
 
+    /**
+     * With field.
+     *
+     * @param fieldName   the field name
+     * @param op          the op
+     * @param fieldValues the field values
+     * @return the builder
+     */
     public Builder withField(String fieldName, Operator op, Object... fieldValues) {
       this.fieldName = fieldName;
       this.fieldValues = fieldValues;
@@ -98,6 +128,11 @@ public class SearchFilter {
       return this;
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the search filter
+     */
     public SearchFilter build() {
       SearchFilter searchFilter = new SearchFilter();
       searchFilter.setFieldName(fieldName);

@@ -20,6 +20,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.core.MultivaluedMap;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/13/16.
  */
@@ -33,6 +35,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
 
   @Inject private MainConfiguration configuration;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.JenkinsBuildService#getBuilds(javax.ws.rs.core.MultivaluedMap,
+   * software.wings.beans.JenkinsConfig)
+   */
   @Override
   public List<BuildDetails> getBuilds(MultivaluedMap<String, String> queryParameters, JenkinsConfig jenkinsConfig)
       throws IOException {

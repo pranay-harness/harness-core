@@ -19,6 +19,8 @@ import software.wings.service.intfc.UserService;
 import java.util.Collections;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/9/16.
  */
@@ -28,6 +30,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject private UserService userService;
   @Inject private RoleService roleService;
 
+  /**
+   * Test register.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testRegister() throws Exception {
     User user = new User();
@@ -44,6 +51,9 @@ public class UserServiceTest extends WingsBaseTest {
     userService.register(user);
   }
 
+  /**
+   * Test create role.
+   */
   @Test
   public void testCreateRole() {
     Permission permission = new Permission("ALL", "ALL", "ALL", "ALL");
@@ -57,6 +67,9 @@ public class UserServiceTest extends WingsBaseTest {
     wingsPersistence.save(role);
   }
 
+  /**
+   * Test assign role to user.
+   */
   @Test
   public void testAssignRoleToUser() {
     Role role = new Role();
@@ -73,16 +86,27 @@ public class UserServiceTest extends WingsBaseTest {
     userService.addRole("4D92F1B445EB4C2C8BD0C2898AF95F03", "2C496ED72DDC48FEA51E5C3736DD33B9");
   }
 
+  /**
+   * Test revoke role to user.
+   */
   @Test
   public void testRevokeRoleToUser() {
     userService.revokeRole("51968DC229D7479EAA1D8B56D6C8EB6D", "AFBC5F9953BB4F20A56B84CE845EF7A3");
   }
 
+  /**
+   * Delete role.
+   */
   @Test
   public void deleteRole() {
     roleService.delete("2C496ED72DDC48FEA51E5C3736DD33B9");
   }
 
+  /**
+   * Test match password.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void testMatchPassword() throws Exception {
     long startTime = System.currentTimeMillis();
@@ -91,6 +115,9 @@ public class UserServiceTest extends WingsBaseTest {
     System.out.println(System.currentTimeMillis() - startTime);
   }
 
+  /**
+   * Test helper.
+   */
   @Test
   public void testHelper() {
     User user = wingsPersistence.get(User.class, "D3BB4DEA57D043BCA73597CCDE01E637");

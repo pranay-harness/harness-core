@@ -12,6 +12,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/23/16.
  */
@@ -20,26 +22,41 @@ public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.RoleService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Role> list(PageRequest<Role> pageRequest) {
     return wingsPersistence.query(Role.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.RoleService#save(software.wings.beans.Role)
+   */
   @Override
   public Role save(Role role) {
     return wingsPersistence.saveAndGet(Role.class, role);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.RoleService#findByUuid(java.lang.String)
+   */
   @Override
   public Role findByUuid(String uuid) {
     return wingsPersistence.get(Role.class, uuid);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.RoleService#update(software.wings.beans.Role)
+   */
   @Override
   public Role update(Role role) {
     return save(role);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.RoleService#delete(java.lang.String)
+   */
   @Override
   public void delete(String roleId) {
     wingsPersistence.delete(Role.class, roleId);

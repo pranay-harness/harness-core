@@ -24,6 +24,8 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */
@@ -33,6 +35,11 @@ public class QueueListenerTest extends WingsBaseTest {
 
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
+  /**
+   * Setup.
+   *
+   * @throws UnknownHostException the unknown host exception
+   */
   @Before
   public void setup() throws UnknownHostException {
     queue = spy(new MongoQueueImpl<>(QueuableObject.class, datastore));
@@ -43,6 +50,11 @@ public class QueueListenerTest extends WingsBaseTest {
     listener = spy(listener);
   }
 
+  /**
+   * Should process when recieved message from queue.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldProcessWhenRecievedMessageFromQueue() throws Exception {
     QueuableObject message = new QueuableObject(1);
@@ -53,6 +65,11 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(listener).onMessage(message);
   }
 
+  /**
+   * Should stop on interrupted exception.
+   *
+   * @throws Exception the exception
+   */
   @Test(timeout = 1000)
   public void shouldStopOnInterruptedException() throws Exception {
     listener.setRunOnce(false);
@@ -69,6 +86,11 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(listener, times(0)).onMessage(any(QueuableObject.class));
   }
 
+  /**
+   * Should extend reset duration.
+   *
+   * @throws Exception the exception
+   */
   @Test(timeout = 5000)
   public void shouldExtendResetDuration() throws Exception {
     QueuableObject message = new QueuableObject(1);
@@ -96,6 +118,11 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(queue, atLeast(1)).updateResetDuration(any(QueuableObject.class));
   }
 
+  /**
+   * Should continue processing on any other exception.
+   *
+   * @throws Exception the exception
+   */
   @Test(timeout = 5000)
   public void shouldContinueProcessingOnAnyOtherException() throws Exception {
     listener.setRunOnce(false);
@@ -121,6 +148,11 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(listener, times(0)).onMessage(any(QueuableObject.class));
   }
 
+  /**
+   * Should requeue message when retries are set.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldRequeueMessageWhenRetriesAreSet() throws Exception {
     QueuableObject message = new QueuableObject(1);
@@ -137,6 +169,11 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(queue).requeue(message);
   }
 
+  /**
+   * Should not requeue message when retries are zero.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldNotRequeueMessageWhenRetriesAreZero() throws Exception {
     QueuableObject message = new QueuableObject(1);

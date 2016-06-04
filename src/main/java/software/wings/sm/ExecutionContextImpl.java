@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Describes execution context for a state machine execution.
  *
@@ -29,10 +31,22 @@ public class ExecutionContextImpl implements ExecutionContext {
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
+  /**
+   * Instantiates a new execution context impl.
+   *
+   * @param stateExecutionInstance the state execution instance
+   */
   ExecutionContextImpl(StateExecutionInstance stateExecutionInstance) {
     this.stateExecutionInstance = stateExecutionInstance;
   }
 
+  /**
+   * Instantiates a new execution context impl.
+   *
+   * @param stateExecutionInstance the state execution instance
+   * @param stateMachine           the state machine
+   * @param injector               the injector
+   */
   public ExecutionContextImpl(
       StateExecutionInstance stateExecutionInstance, StateMachine stateMachine, Injector injector) {
     injector.injectMembers(this);
@@ -51,12 +65,18 @@ public class ExecutionContextImpl implements ExecutionContext {
     return stateExecutionInstance;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExecutionContext#renderExpression(java.lang.String)
+   */
   @Override
   public String renderExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return renderExpression(expression, context);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExecutionContext#renderExpression(java.lang.String, software.wings.sm.StateExecutionData)
+   */
   @Override
   public String renderExpression(String expression, StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
@@ -67,12 +87,18 @@ public class ExecutionContextImpl implements ExecutionContext {
     return evaluator.merge(expression, context, stateExecutionInstance.getStateName());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExecutionContext#evaluateExpression(java.lang.String)
+   */
   @Override
   public Object evaluateExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return evaluateExpression(expression, context);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExecutionContext#evaluateExpression(java.lang.String, software.wings.sm.StateExecutionData)
+   */
   @Override
   public Object evaluateExpression(String expression, StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
@@ -115,12 +141,21 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   /**
-   * @param contextElement
+   * Push context element.
+   *
+   * @param contextElement the context element
    */
   public void pushContextElement(ContextElement contextElement) {
     stateExecutionInstance.getContextElements().push(contextElement);
   }
 
+  /**
+   * Gets the context element.
+   *
+   * @param <T>                the generic type
+   * @param contextElementType the context element type
+   * @return the context element
+   */
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
     ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
     for (ContextElement contextElement : contextElements) {

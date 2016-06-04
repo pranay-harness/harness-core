@@ -7,6 +7,8 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * HttpServletResponseCopier based on https://github.com/ukwa/interject/blob/master
  * /interject-servlet-filter/src/main /java/uk/bl/wa/interject/filter/HttpServletResponseCopier.java
@@ -18,6 +20,12 @@ public class HttpServletResponseCopier extends HttpServletResponseWrapper {
   private PrintWriter writer;
   private ServletOutputStreamCopier copier;
 
+  /**
+   * Instantiates a new http servlet response copier.
+   *
+   * @param response the response
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   public HttpServletResponseCopier(HttpServletResponse response) throws IOException {
     super(response);
   }
@@ -50,6 +58,9 @@ public class HttpServletResponseCopier extends HttpServletResponseWrapper {
     return writer;
   }
 
+  /* (non-Javadoc)
+   * @see javax.servlet.ServletResponseWrapper#flushBuffer()
+   */
   @Override
   public void flushBuffer() throws IOException {
     try {

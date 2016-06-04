@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.security.auth.Subject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * User bean class.
  *
@@ -58,6 +60,9 @@ public class User extends Base implements Principal {
     this.name = name;
   }
 
+  /* (non-Javadoc)
+   * @see java.security.Principal#implies(javax.security.auth.Subject)
+   */
   @Override
   public boolean implies(Subject subject) {
     return false;
@@ -123,6 +128,9 @@ public class User extends Base implements Principal {
     this.password = password;
   }
 
+  /**
+   * The Class Builder.
+   */
   public static class Builder {
     private String name;
     private String email;
@@ -140,11 +148,18 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
+    /**
+     * An user.
+     *
+     * @return the builder
+     */
     public static Builder anUser() {
       return new Builder();
     }
 
     /**
+     * But.
+     *
      * @return copy of builder object.
      */
     public Builder but() {
@@ -164,72 +179,152 @@ public class User extends Base implements Principal {
           .withActive(active);
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With token.
+     *
+     * @param token the token
+     * @return the builder
+     */
     public Builder withToken(String token) {
       this.token = token;
       return this;
     }
 
+    /**
+     * With password.
+     *
+     * @param password the password
+     * @return the builder
+     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * With last login.
+     *
+     * @param lastLogin the last login
+     * @return the builder
+     */
     public Builder withLastLogin(long lastLogin) {
       this.lastLogin = lastLogin;
       return this;
     }
 
+    /**
+     * With roles.
+     *
+     * @param roles the roles
+     * @return the builder
+     */
     public Builder withRoles(List<Role> roles) {
       this.roles = roles;
       return this;
     }
 
+    /**
+     * With password hash.
+     *
+     * @param passwordHash the password hash
+     * @return the builder
+     */
     public Builder withPasswordHash(String passwordHash) {
       this.passwordHash = passwordHash;
       return this;
     }
 
+    /**
+     * With email.
+     *
+     * @param email the email
+     * @return the builder
+     */
     public Builder withEmail(String email) {
       this.email = email;
       return this;
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
     /**
+     * Builds the.
+     *
      * @return Newly built User object.
      */
     public User build() {

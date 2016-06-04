@@ -30,6 +30,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/25/16.
  */
@@ -38,17 +40,29 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   private WingsPersistence wingsPersistence;
   private ConfigService configService;
 
+  /**
+   * Instantiates a new service resource service impl.
+   *
+   * @param wingsPersistence the wings persistence
+   * @param configService    the config service
+   */
   @Inject
   public ServiceResourceServiceImpl(WingsPersistence wingsPersistence, ConfigService configService) {
     this.wingsPersistence = wingsPersistence;
     this.configService = configService;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Service> list(PageRequest<Service> request) {
     return wingsPersistence.query(Service.class, request);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#save(software.wings.beans.Service)
+   */
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
@@ -56,6 +70,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return savedService;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#update(software.wings.beans.Service)
+   */
   @Override
   public Service update(Service service) {
     wingsPersistence.updateFields(Service.class, service.getUuid(),
@@ -64,6 +81,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#get(java.lang.String, java.lang.String)
+   */
   @Override
   public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -73,11 +93,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return service;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#delete(java.lang.String, java.lang.String)
+   */
   @Override
   public void delete(String appId, String serviceId) {
     wingsPersistence.delete(Service.class, serviceId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#addCommand(java.lang.String, java.lang.String,
+   * software.wings.beans.Graph)
+   */
   @Override
   public Service addCommand(String appId, String serviceId, Graph commandGraph) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -100,6 +127,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#deleteCommand(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public Service deleteCommand(String appId, String serviceId, String commandName) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -113,6 +144,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceResourceService#getCommandStencils(java.lang.String, java.lang.String)
+   */
   @Override
   public List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
     Service service = get(appId, serviceId);

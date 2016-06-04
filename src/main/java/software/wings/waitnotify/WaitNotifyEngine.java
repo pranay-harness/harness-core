@@ -20,6 +20,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
  *
@@ -33,6 +35,13 @@ public class WaitNotifyEngine {
 
   @Inject private Queue<NotifyEvent> notifyQueue;
 
+  /**
+   * Wait for all.
+   *
+   * @param callback       the callback
+   * @param correlationIds the correlation ids
+   * @return the string
+   */
   public String waitForAll(NotifyCallback callback, String... correlationIds) {
     return waitForAll(NO_TIMEOUT, callback, correlationIds);
   }
@@ -66,9 +75,9 @@ public class WaitNotifyEngine {
   /**
    * Notifies WaitNotifyEngine when a correlationId is finished.
    *
+   * @param <T>           ResponseObject type should be serializable.
    * @param correlationId id which is finished.
    * @param response      response object for the task.
-   * @param <T>           ResponseObject type should be serializable.
    * @return id of notification response object.
    */
   public <T extends Serializable> String notify(String correlationId, T response) {

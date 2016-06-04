@@ -27,6 +27,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * ReleaseResource class.
  *
@@ -41,6 +43,12 @@ public class ReleaseResource {
 
   private AppService appService;
 
+  /**
+   * Instantiates a new release resource.
+   *
+   * @param releaseService the release service
+   * @param appService     the app service
+   */
   @Inject
   public ReleaseResource(ReleaseService releaseService, AppService appService) {
     this.appService = appService;
@@ -55,6 +63,13 @@ public class ReleaseResource {
     this.appService = appService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Timed
   @ExceptionMetered
@@ -64,6 +79,13 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.list(pageRequest));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId the app id
+   * @param id    the id
+   * @return the rest response
+   */
   @GET
   @Timed
   @ExceptionMetered
@@ -100,6 +122,7 @@ public class ReleaseResource {
    * Endpoint to update a release.
    *
    * @param appId   QueryParam app_id.
+   * @param id      the id
    * @param release release to be created.
    * @return release to be updated.
    */
@@ -113,6 +136,13 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.update(release));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId the app id
+   * @param id    the id
+   * @return the rest response
+   */
   @DELETE
   @Timed
   @ExceptionMetered
@@ -121,6 +151,14 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.softDelete(id, appId));
   }
 
+  /**
+   * Adds the artifact source.
+   *
+   * @param appId          the app id
+   * @param id             the id
+   * @param artifactSource the artifact source
+   * @return the rest response
+   */
   @POST
   @Timed
   @ExceptionMetered
@@ -130,6 +168,14 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.addArtifactSource(id, appId, artifactSource));
   }
 
+  /**
+   * Delete artifact source.
+   *
+   * @param appId              the app id
+   * @param id                 the id
+   * @param artifactSourceName the artifact source name
+   * @return the rest response
+   */
   @DELETE
   @Timed
   @ExceptionMetered

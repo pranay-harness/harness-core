@@ -3,8 +3,10 @@ package software.wings.health;
 import com.codahale.metrics.health.HealthCheck;
 import software.wings.app.MainConfiguration;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * HealthCheck class for the Wings Application
+ * HealthCheck class for the Wings Application.
  *
  * @author Rishi
  */
@@ -12,7 +14,9 @@ public class WingsHealthCheck extends HealthCheck {
   private MainConfiguration configuration;
 
   /**
-   * @param configuration
+   * Instantiates a new wings health check.
+   *
+   * @param configuration the configuration
    */
   public WingsHealthCheck(MainConfiguration configuration) {
     this.configuration = configuration;

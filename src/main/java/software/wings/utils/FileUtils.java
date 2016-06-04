@@ -3,7 +3,17 @@ package software.wings.utils;
 import java.io.File;
 import java.util.Random;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class FileUtils.
+ */
 public class FileUtils {
+  /**
+   * Creates the temp dir path.
+   *
+   * @return the file
+   */
   public static File createTempDirPath() {
     String tempDirPath = System.getProperty("java.io.tmpdir");
 

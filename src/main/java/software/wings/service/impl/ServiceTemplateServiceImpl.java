@@ -33,6 +33,8 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/4/16.
  */
@@ -45,6 +47,15 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   private ServiceInstanceService serviceInstanceService;
   private HostService hostService;
 
+  /**
+   * Instantiates a new service template service impl.
+   *
+   * @param wingsPersistence       the wings persistence
+   * @param tagService             the tag service
+   * @param configService          the config service
+   * @param serviceInstanceService the service instance service
+   * @param hostService            the host service
+   */
   @Inject
   public ServiceTemplateServiceImpl(WingsPersistence wingsPersistence, TagService tagService,
       ConfigService configService, ServiceInstanceService serviceInstanceService, HostService hostService) {
@@ -55,16 +66,25 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     this.hostService = hostService;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest) {
     return wingsPersistence.query(ServiceTemplate.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#save(software.wings.beans.ServiceTemplate)
+   */
   @Override
   public ServiceTemplate save(ServiceTemplate serviceTemplate) {
     return wingsPersistence.saveAndGet(ServiceTemplate.class, serviceTemplate);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#update(software.wings.beans.ServiceTemplate)
+   */
   @Override
   public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
@@ -73,6 +93,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#updateHosts(java.lang.String, java.lang.String,
+   * java.util.List)
+   */
   @Override
   public ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds) {
     List<Host> hosts = new ArrayList<>();
@@ -87,6 +111,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return serviceTemplate;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#updateTags(java.lang.String, java.lang.String,
+   * java.util.List)
+   */
   @Override
   public ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds) {
     List<Tag> tags = new ArrayList<>();
@@ -103,6 +131,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#getTaggedHosts(java.lang.String,
+   * software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
@@ -111,6 +143,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return wingsPersistence.query(Host.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#computedConfigFiles(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public Map<String, List<ConfigFile>> computedConfigFiles(String appId, String envId, String templateId) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
@@ -161,16 +197,26 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return computedHostConfigs;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#delete(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public void delete(String appId, String envId, String serviceTemplateId) {
     wingsPersistence.delete(ServiceTemplate.class, serviceTemplateId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#get(java.lang.String, java.lang.String, java.lang.String)
+   */
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId) {
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#overrideConfigFiles(java.util.List, java.util.List)
+   */
   @Override
   public List<ConfigFile> overrideConfigFiles(List<ConfigFile> existingFiles, List<ConfigFile> newFiles) {
     logger.info("Config files before overrides [{}]", existingFiles.toString());

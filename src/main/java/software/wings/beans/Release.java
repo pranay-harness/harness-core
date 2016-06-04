@@ -15,6 +15,8 @@ import software.wings.utils.validation.FutureDate;
 import java.util.List;
 import java.util.Set;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Release bean class.
  *
@@ -78,6 +80,12 @@ public class Release extends Base {
         .collect(toSet());
   }
 
+  /**
+   * Gets the.
+   *
+   * @param artifactSourceName the artifact source name
+   * @return the artifact source
+   */
   public ArtifactSource get(String artifactSourceName) {
     return getArtifactSources()
         .stream()
@@ -86,6 +94,9 @@ public class Release extends Base {
         .orElse(null);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -103,11 +114,17 @@ public class Release extends Base {
         && status == release.status;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(super.hashCode(), releaseName, description, targetDate, artifactSources, status);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -119,12 +136,18 @@ public class Release extends Base {
         .toString();
   }
 
+  /**
+   * The Enum Status.
+   */
   public enum Status {
     ACTIVE,
     INACTIVE,
     FINALIZED;
   }
 
+  /**
+   * The Class ReleaseBuilder.
+   */
   public static final class ReleaseBuilder {
     private String releaseName;
     private String description;
@@ -141,70 +164,152 @@ public class Release extends Base {
 
     private ReleaseBuilder() {}
 
+    /**
+     * A release.
+     *
+     * @return the release builder
+     */
     public static ReleaseBuilder aRelease() {
       return new ReleaseBuilder();
     }
 
+    /**
+     * With release name.
+     *
+     * @param releaseName the release name
+     * @return the release builder
+     */
     public ReleaseBuilder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
+    /**
+     * With description.
+     *
+     * @param description the description
+     * @return the release builder
+     */
     public ReleaseBuilder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With target date.
+     *
+     * @param targetDate the target date
+     * @return the release builder
+     */
     public ReleaseBuilder withTargetDate(long targetDate) {
       this.targetDate = targetDate;
       return this;
     }
 
+    /**
+     * With artifact sources.
+     *
+     * @param artifactSources the artifact sources
+     * @return the release builder
+     */
     public ReleaseBuilder withArtifactSources(List<ArtifactSource> artifactSources) {
       this.artifactSources = artifactSources;
       return this;
     }
 
+    /**
+     * With status.
+     *
+     * @param status the status
+     * @return the release builder
+     */
     public ReleaseBuilder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the release builder
+     */
     public ReleaseBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the release builder
+     */
     public ReleaseBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the release builder
+     */
     public ReleaseBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the release builder
+     */
     public ReleaseBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the release builder
+     */
     public ReleaseBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the release builder
+     */
     public ReleaseBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the release builder
+     */
     public ReleaseBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the release builder
+     */
     public ReleaseBuilder but() {
       return aRelease()
           .withReleaseName(releaseName)
@@ -221,6 +326,11 @@ public class Release extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the release
+     */
     public Release build() {
       Release release = new Release();
       release.setReleaseName(releaseName);

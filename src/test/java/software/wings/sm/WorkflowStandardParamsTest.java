@@ -17,7 +17,11 @@ import software.wings.service.intfc.EnvironmentService;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowStandardParamsTest.
+ *
  * @author Rishi
  */
 public class WorkflowStandardParamsTest extends WingsBaseTest {
@@ -25,6 +29,9 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Inject EnvironmentService environmentService;
   @Inject MembersInjector<WorkflowStandardParams> injector;
 
+  /**
+   * Should get app.
+   */
   @Test
   public void shouldGetApp() {
     Application app = Application.Builder.anApplication().withName("AppA").build();

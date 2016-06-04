@@ -6,6 +6,8 @@ import com.google.common.base.Objects;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.hibernate.validator.constraints.URL;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/26/16.
  */
@@ -14,6 +16,9 @@ public class JenkinsConfig extends SettingValue {
   @NotEmpty private String username;
   @NotEmpty private String password;
 
+  /**
+   * Instantiates a new jenkins config.
+   */
   public JenkinsConfig() {
     super(SettingVariableTypes.JENKINS);
   }
@@ -42,6 +47,9 @@ public class JenkinsConfig extends SettingValue {
     this.password = password;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -53,11 +61,17 @@ public class JenkinsConfig extends SettingValue {
         && Objects.equal(password, that.password);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(jenkinsUrl, username, password);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -67,6 +81,9 @@ public class JenkinsConfig extends SettingValue {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String jenkinsUrl;
     private String username;
@@ -74,29 +91,62 @@ public class JenkinsConfig extends SettingValue {
 
     private Builder() {}
 
+    /**
+     * A jenkins config.
+     *
+     * @return the builder
+     */
     public static Builder aJenkinsConfig() {
       return new Builder();
     }
 
+    /**
+     * With jenkins url.
+     *
+     * @param jenkinsUrl the jenkins url
+     * @return the builder
+     */
     public Builder withJenkinsUrl(String jenkinsUrl) {
       this.jenkinsUrl = jenkinsUrl;
       return this;
     }
 
+    /**
+     * With username.
+     *
+     * @param username the username
+     * @return the builder
+     */
     public Builder withUsername(String username) {
       this.username = username;
       return this;
     }
 
+    /**
+     * With password.
+     *
+     * @param password the password
+     * @return the builder
+     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aJenkinsConfig().withJenkinsUrl(jenkinsUrl).withUsername(username).withPassword(password);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the jenkins config
+     */
     public JenkinsConfig build() {
       JenkinsConfig jenkinsConfig = new JenkinsConfig();
       jenkinsConfig.setJenkinsUrl(jenkinsUrl);

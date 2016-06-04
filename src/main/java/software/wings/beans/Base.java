@@ -15,6 +15,8 @@ import software.wings.utils.validation.Update;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * The Base class is used to extend all the bean classes that requires persistence. The base class
  * includes common fields such as uuid, createdBy, create timestamp, updatedBy and update timestamp.
@@ -93,11 +95,17 @@ public class Base {
     this.appId = appId;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(uuid, appId, active);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -130,6 +138,9 @@ public class Base {
     lastUpdatedBy = UserThreadLocal.get();
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

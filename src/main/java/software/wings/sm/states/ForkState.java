@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Describes a ForkState by which we can fork execution to multiple threads in state machine.
  *
@@ -28,6 +30,11 @@ public class ForkState extends State {
 
   private List<String> forkStateNames = new ArrayList<>();
 
+  /**
+   * Instantiates a new fork state.
+   *
+   * @param name the name
+   */
   public ForkState(String name) {
     super(name, StateType.FORK.name());
   }
@@ -60,6 +67,9 @@ public class ForkState extends State {
     return executionResponse;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+   */
   @Override
   public ExecutionResponse handleAsynchResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
@@ -83,6 +93,11 @@ public class ForkState extends State {
     this.forkStateNames = forkStateNames;
   }
 
+  /**
+   * Adds the fork state.
+   *
+   * @param state the state
+   */
   public void addForkState(State state) {
     this.forkStateNames.add(state.getName());
   }

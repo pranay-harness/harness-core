@@ -18,12 +18,17 @@ import software.wings.service.intfc.SettingsService;
 import java.util.List;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/23/16.
  */
 public class SettingsServiceImplTest extends WingsBaseTest {
   @Inject private SettingsService settingsService;
 
+  /**
+   * Should list connection attributes.
+   */
   @Test
   public void shouldListConnectionAttributes() {
     SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()
@@ -42,6 +47,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     assertThat((connectionAttributes.get(0).getValue())).isInstanceOf(HostConnectionAttributes.class);
   }
 
+  /**
+   * Should list bastion host connection attributes.
+   */
   @Test
   public void shouldListBastionHostConnectionAttributes() {
     SettingAttribute settingAttribute = settingsService.save(aSettingAttribute()

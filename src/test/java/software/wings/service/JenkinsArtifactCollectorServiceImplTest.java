@@ -45,6 +45,8 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/12/16.
  */
@@ -78,6 +80,9 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
 
   /**
    * setup all mocks for test.
+   *
+   * @throws IOException        Signals that an I/O exception has occurred.
+   * @throws URISyntaxException the URI syntax exception
    */
   @Before
   public void setupMocks() throws IOException, URISyntaxException {
@@ -96,6 +101,11 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
                         .build());
   }
 
+  /**
+   * Should collect artifact from jenkins.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldCollectArtifactFromJenkins() throws Exception {
     assertThat(jenkinsArtifactCollectorService.collect(
@@ -116,6 +126,11 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
         .containsExactly(ARTIFACTS.getName());
   }
 
+  /**
+   * Should fail to collect when file is null.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldFailToCollectWhenFileIsNull() throws Exception {
     reset(jenkins);

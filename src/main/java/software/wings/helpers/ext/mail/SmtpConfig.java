@@ -5,6 +5,8 @@ import com.google.common.base.Objects;
 
 import software.wings.beans.SettingValue;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */
@@ -16,6 +18,9 @@ public class SmtpConfig extends SettingValue {
   private String username;
   private String password;
 
+  /**
+   * Instantiates a new smtp config.
+   */
   public SmtpConfig() {
     super(SettingVariableTypes.SMTP);
   }
@@ -68,6 +73,9 @@ public class SmtpConfig extends SettingValue {
     this.fromAddress = fromAddress;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -80,11 +88,17 @@ public class SmtpConfig extends SettingValue {
         && Objects.equal(password, config.password);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(host, port, fromAddress, useSSL, username, password);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -97,6 +111,9 @@ public class SmtpConfig extends SettingValue {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String host;
     private int port;
@@ -107,40 +124,86 @@ public class SmtpConfig extends SettingValue {
 
     private Builder() {}
 
+    /**
+     * A smtp config.
+     *
+     * @return the builder
+     */
     public static Builder aSmtpConfig() {
       return new Builder();
     }
 
+    /**
+     * With host.
+     *
+     * @param host the host
+     * @return the builder
+     */
     public Builder withHost(String host) {
       this.host = host;
       return this;
     }
 
+    /**
+     * With port.
+     *
+     * @param port the port
+     * @return the builder
+     */
     public Builder withPort(int port) {
       this.port = port;
       return this;
     }
 
+    /**
+     * With from address.
+     *
+     * @param fromAddress the from address
+     * @return the builder
+     */
     public Builder withFromAddress(String fromAddress) {
       this.fromAddress = fromAddress;
       return this;
     }
 
+    /**
+     * With use ssl.
+     *
+     * @param useSSL the use ssl
+     * @return the builder
+     */
     public Builder withUseSSL(boolean useSSL) {
       this.useSSL = useSSL;
       return this;
     }
 
+    /**
+     * With username.
+     *
+     * @param username the username
+     * @return the builder
+     */
     public Builder withUsername(String username) {
       this.username = username;
       return this;
     }
 
+    /**
+     * With password.
+     *
+     * @param password the password
+     * @return the builder
+     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aSmtpConfig()
           .withHost(host)
@@ -151,6 +214,11 @@ public class SmtpConfig extends SettingValue {
           .withPassword(password);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the smtp config
+     */
     public SmtpConfig build() {
       SmtpConfig smtpConfig = new SmtpConfig();
       smtpConfig.setHost(host);

@@ -13,12 +13,19 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class ExpressionEvaluatorTest.
+ *
  * @author Rishi
  */
 public class ExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private ExpressionEvaluator expressionEvaluator;
 
+  /**
+   * Should evaluate host url.
+   */
   @Test
   public void shouldEvaluateHostUrl() {
     String expression = "http://${host.hostName}:8080/health/status";
@@ -30,6 +37,9 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(retValue).isEqualTo("http://app123.application.com:8080/health/status");
   }
 
+  /**
+   * Should evaluate with name value.
+   */
   @Test
   public void shouldEvaluateWithNameValue() {
     Person sam = new Person();
@@ -57,6 +67,9 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(retValue).isEqualTo("San Francisco");
   }
 
+  /**
+   * Should evaluate with map.
+   */
   @Test
   public void shouldEvaluateWithMap() {
     Person sam = new Person();
@@ -81,6 +94,9 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     assertThat(retValue).isEqualTo(true);
   }
 
+  /**
+   * The Class Person.
+   */
   public static class Person {
     private Address address;
     private int age;
@@ -102,6 +118,9 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The Class Address.
+   */
   public static class Address {
     private String city;
 

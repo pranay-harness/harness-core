@@ -21,6 +21,8 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/11/16.
  */
@@ -29,11 +31,19 @@ public class MongoQueueTest extends WingsBaseTest {
 
   private MongoQueueImpl<QueuableObject> queue;
 
+  /**
+   * Setup.
+   *
+   * @throws UnknownHostException the unknown host exception
+   */
   @Before
   public void setup() throws UnknownHostException {
     queue = new MongoQueueImpl<QueuableObject>(QueuableObject.class, datastore);
   }
 
+  /**
+   * Should get with negative wait.
+   */
   @Test
   public void shouldGetWithNegativeWait() {
     assertThat(queue.get(Integer.MIN_VALUE)).isNull();
@@ -43,6 +53,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get(Integer.MIN_VALUE)).isNotNull();
   }
 
+  /**
+   * Should get when negative poll.
+   */
   @Test
   public void shouldGetWhenNegativePoll() {
     assertThat(queue.get(100, Long.MIN_VALUE)).isNull();
@@ -52,6 +65,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get(100, Long.MIN_VALUE)).isNotNull();
   }
 
+  /**
+   * Should not get message once acquired.
+   */
   @Test
   public void shouldNotGetMessageOnceAcquired() {
     queue.send(new QueuableObject(1));
@@ -62,6 +78,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get(0)).isNull();
   }
 
+  /**
+   * Should return message based on priority.
+   */
   @Test
   public void shouldReturnMessageBasedOnPriority() {
     QueuableObject messageOne = new QueuableObject(1);
@@ -80,6 +99,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get()).isEqualTo(messageThree);
   }
 
+  /**
+   * Should return message in time order.
+   */
   @Test
   public void shouldReturnMessageInTimeOrder() {
     QueuableObject messageOne = new QueuableObject(1);
@@ -95,6 +117,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get()).isEqualTo(messageThree);
   }
 
+  /**
+   * Should wait for specified time period for get when no messages.
+   */
   @Test
   public void shouldWaitForSpecifiedTimePeriodForGetWhenNoMessages() {
     Date start = new Date();
@@ -104,6 +129,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(elapsed).isBetween(1000L, 2000L);
   }
 
+  /**
+   * Should get message when available within wait period.
+   */
   @Test
   public void shouldGetMessageWhenAvailableWithinWaitPeriod() {
     Date start = new Date();
@@ -115,6 +143,11 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(new Date().getTime() - start.getTime()).isLessThan(2000);
   }
 
+  /**
+   * Should not get message before earliest get.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldNotGetMessageBeforeEarliestGet() throws InterruptedException {
     QueuableObject message = new QueuableObject(1);
@@ -128,6 +161,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get()).isNotNull();
   }
 
+  /**
+   * Should reset stuck message when reset duration has expired.
+   */
   @Test
   public void shouldResetStuckMessageWhenResetDurationHasExpired() {
     queue.send(new QueuableObject(1));
@@ -138,11 +174,17 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.get()).isNotNull();
   }
 
+  /**
+   * Should throw npe when try to update reset duration for null message.
+   */
   @Test
   public void shouldThrowNpeWhenTryToUpdateResetDurationForNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.updateResetDuration(null));
   }
 
+  /**
+   * Should not extend reset timestamp of already expired message.
+   */
   @Test
   public void shouldNotExtendResetTimestampOfAlreadyExpiredMessage() {
     queue.send(new QueuableObject(1));
@@ -156,6 +198,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual.getResetTimestamp()).isEqualTo(message.getResetTimestamp());
   }
 
+  /**
+   * Should not extend reset timestamp of message which is not running.
+   */
   @Test
   public void shouldNotExtendResetTimestampOfMessageWhichIsNotRunning() {
     QueuableObject message = new QueuableObject(1);
@@ -169,6 +214,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
 
+  /**
+   * Should extend reset timestamp of message which is running and not expired.
+   */
   @Test
   public void shouldExtendResetTimestampOfMessageWhichIsRunningAndNotExpired() {
     queue.resetDuration(10);
@@ -191,6 +239,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
 
+  /**
+   * Should return count of objects in the queue.
+   */
   @Test
   public void shouldReturnCountOfObjectsInTheQueue() {
     assertThat(queue.count(true)).isEqualTo(0);
@@ -210,6 +261,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(queue.count()).isEqualTo(1);
   }
 
+  /**
+   * Should ack message.
+   */
   @Test
   public void shouldAckMessage() {
     queue.send(new QueuableObject(0));
@@ -226,11 +280,17 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
   }
 
+  /**
+   * Should throw npe when acking null message.
+   */
   @Test
   public void shouldThrowNpeWhenAckingNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ack(null));
   }
 
+  /**
+   * Should replace message keeping same id on ack send.
+   */
   @Test
   public void shouldReplaceMessageKeepingSameIdOnAckSend() {
     QueuableObject message = new QueuableObject(0);
@@ -264,16 +324,27 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
   }
 
+  /**
+   * Should throw npe when ack send is called with null message.
+   */
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(null, new QueuableObject(1)));
   }
 
+  /**
+   * Should throw npe when ack send is called with null replacement message.
+   */
   @Test
   public void shouldThrowNpeWhenAckSendIsCalledWithNullReplacementMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.ackSend(new QueuableObject(1), null));
   }
 
+  /**
+   * Should requeue message.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldRequeueMessage() throws Exception {
     QueuableObject message = new QueuableObject(0);
@@ -302,27 +373,46 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
   }
 
+  /**
+   * Should throw illegal argument exception when requeued with priority na n.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldThrowIllegalArgumentExceptionWhenRequeuedWithPriorityNaN() throws Exception {
     assertThatExceptionOfType(IllegalArgumentException.class)
         .isThrownBy(() -> queue.requeue(new QueuableObject(1), new Date(), Double.NaN));
   }
 
+  /**
+   * Should throw npe when requeue null message.
+   */
   @Test
   public void shouldThrowNpeWhenRequeueNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(null));
   }
 
+  /**
+   * Should throw npe when requeuing with null earliest get.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldThrowNpeWhenRequeuingWithNullEarliestGet() throws Exception {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.requeue(new QueuableObject(1), null));
   }
 
+  /**
+   * Should throw npe when send is called with null message.
+   */
   @Test
   public void shouldThrowNpeWhenSendIsCalledWithNullMessage() {
     assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> queue.send(null));
   }
 
+  /**
+   * Should send message.
+   */
   @Test
   public void shouldSendMessage() {
     QueuableObject message = new QueuableObject(1);
@@ -349,6 +439,9 @@ public class MongoQueueTest extends WingsBaseTest {
     assertThat(actual).isEqualToIgnoringGivenFields(expected, "id");
   }
 
+  /**
+   * Should send and get message with entity reference.
+   */
   @Test
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
@@ -425,17 +518,33 @@ public class MongoQueueTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The Class TestQueuableWithEntity.
+   */
   @Entity(value = "testEntityQueue", noClassnameStored = true)
   public static class TestQueuableWithEntity extends Queuable {
     @Reference private TestEntity entity;
 
+    /**
+     * Instantiates a new test queuable with entity.
+     */
     public TestQueuableWithEntity() {}
 
+    /**
+     * Instantiates a new test queuable with entity.
+     *
+     * @param other the other
+     */
     public TestQueuableWithEntity(TestQueuableWithEntity other) {
       super(other);
       this.entity = other.entity;
     }
 
+    /**
+     * Instantiates a new test queuable with entity.
+     *
+     * @param entity the entity
+     */
     public TestQueuableWithEntity(TestEntity entity) {
       this.entity = entity;
     }
@@ -448,6 +557,9 @@ public class MongoQueueTest extends WingsBaseTest {
       this.entity = entity;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object obj) {
       if (this == obj) {
@@ -460,11 +572,17 @@ public class MongoQueueTest extends WingsBaseTest {
       return Objects.equals(entity, that.entity);
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
       return Objects.hash(entity);
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
       return MoreObjects.toStringHelper(this).add("entity", entity).toString();

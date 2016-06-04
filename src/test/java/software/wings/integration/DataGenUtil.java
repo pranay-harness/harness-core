@@ -80,6 +80,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/6/16.
  */
@@ -226,7 +228,9 @@ public class DataGenUtil extends WingsBaseTest {
   private SettingAttribute envAttr = null;
 
   /**
-   * Generated Data for across the API use
+   * Generated Data for across the API use.
+   *
+   * @throws Exception the exception
    */
 
   @Before
@@ -258,6 +262,11 @@ public class DataGenUtil extends WingsBaseTest {
     }
   }
 
+  /**
+   * Populate data.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void populateData() throws IOException {
     createGlobalSettings();
@@ -411,7 +420,6 @@ public class DataGenUtil extends WingsBaseTest {
                               .withAppId(application.getUuid())
                               .withActivityId(activity.getUuid())
                               .withHostName(host.getHostName())
-                              .withServiceTemplateId(template.getUuid())
                               .withLogLine(logLine)
                               .build());
   }

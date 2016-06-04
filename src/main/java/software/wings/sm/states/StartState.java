@@ -8,7 +8,11 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class StartState.
+ *
  * @author Rishi
  */
 public class StartState extends State {
@@ -16,13 +20,17 @@ public class StartState extends State {
   private String serviceId;
 
   /**
-   * @param name
-   * @param stateType
+   * Instantiates a new start state.
+   *
+   * @param name the name
    */
   public StartState(String name) {
     super(name, StateType.START.name());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     return new ExecutionResponse();

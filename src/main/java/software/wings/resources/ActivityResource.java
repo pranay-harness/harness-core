@@ -23,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
@@ -36,24 +38,53 @@ public class ActivityResource {
   private ActivityService activityService;
   private LogService logService;
 
+  /**
+   * Instantiates a new activity resource.
+   *
+   * @param activityService the activity service
+   * @param logService      the log service
+   */
   @Inject
   public ActivityResource(ActivityService activityService, LogService logService) {
     this.activityService = activityService;
     this.logService = logService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId   the app id
+   * @param envId   the env id
+   * @param request the request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Activity>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     return new RestResponse<>(activityService.list(appId, envId, request));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the rest response
+   */
   @GET
   @Path("{activityId}")
   public RestResponse<Activity> get(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.get(activityId, appId));
   }
 
+  /**
+   * List logs.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @param request    the request
+   * @return the rest response
+   */
   @GET
   @Path("{activityId}/logs")
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,

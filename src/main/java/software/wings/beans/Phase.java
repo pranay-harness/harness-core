@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The Class Phase.
+ */
 @Entity(value = "phases", noClassnameStored = true)
 public class Phase {
   @Id private ObjectId id;

@@ -58,7 +58,11 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowServiceImpl.
+ *
  * @author Rishi
  */
 @Singleton
@@ -72,22 +76,34 @@ public class WorkflowServiceImpl implements WorkflowService {
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)
+   */
   @Override
   public StateMachine create(StateMachine stateMachine) {
     stateMachine.validate();
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<StateMachine> list(PageRequest<StateMachine> req) {
     return wingsPersistence.query(StateMachine.class, req);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#trigger(java.lang.String, java.lang.String, java.lang.String)
+   */
   @Override
   public void trigger(String appId, String stateMachineId, String executionUuid) {
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#stencils(software.wings.sm.StateTypeScope[])
+   */
   @Override
   public Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes) {
     Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = loadStateTypes();
@@ -148,11 +164,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     return cachedStencilMap;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#listPipelines(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
     return wingsPersistence.query(Pipeline.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#createWorkflow(java.lang.Class, software.wings.beans.Workflow)
+   */
   @Override
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
@@ -165,6 +187,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflow;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#updateWorkflow(software.wings.beans.Workflow)
+   */
   @Override
   public <T extends Workflow> T updateWorkflow(T workflow) {
     Graph graph = workflow.getGraph();
@@ -176,6 +201,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflow;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#updatePipeline(software.wings.beans.Pipeline)
+   */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
     UpdateOperations<Pipeline> ops = wingsPersistence.createUpdateOperations(Pipeline.class);
@@ -197,6 +225,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pipeline;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#readPipeline(java.lang.String, java.lang.String)
+   */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
@@ -207,6 +238,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pipeline;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)
+   */
   @Override
   public StateMachine readLatest(String originId, String name) {
     if (StringUtils.isBlank(name)) {
@@ -240,11 +274,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     return res.get(0);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#listOrchestration(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
     return wingsPersistence.query(Orchestration.class, pageRequest);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#updateOrchestration(software.wings.beans.Orchestration)
+   */
   @Override
   public Orchestration updateOrchestration(Orchestration orchestration) {
     UpdateOperations<Orchestration> ops = wingsPersistence.createUpdateOperations(Orchestration.class);
@@ -262,6 +302,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     return orchestration;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#readOrchestration(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public Orchestration readOrchestration(String appId, String envId, String orchestrationId) {
     Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
@@ -275,6 +319,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return orchestration;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#listExecutions(software.wings.dl.PageRequest, boolean)
+   */
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
@@ -291,6 +338,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return res;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#getExecutionDetails(java.lang.String, java.lang.String)
+   */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
@@ -355,6 +405,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return graph;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#triggerPipelineExecution(java.lang.String, java.lang.String)
+   */
   @Override
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
@@ -391,6 +444,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerExecution(workflowExecution, stateMachine, stdParams);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#triggerOrchestrationExecution(java.lang.String, java.lang.String,
+   * java.util.List)
+   */
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String orchestrationId, ExecutionArgs executionArgs) {
@@ -547,6 +604,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pageResponse.getResponse();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.WorkflowService#deleteWorkflow(java.lang.Class, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
     UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);

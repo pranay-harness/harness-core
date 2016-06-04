@@ -6,8 +6,10 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * A Pause state to pause state machine execution.
+ * A Env state to pause state machine execution.
  *
  * @author Rishi
  */
@@ -18,7 +20,7 @@ public class EnvState extends State {
   private String workflowId;
 
   /**
-   * Creates pause state with given name.
+   * Creates env state with given name.
    *
    * @param name name of the state.
    */

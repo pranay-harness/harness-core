@@ -26,7 +26,6 @@ import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.service.impl.ExecutionLogsImpl;
 import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfraServiceImpl;
@@ -56,7 +55,6 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.ExecutionLogs;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
@@ -76,6 +74,8 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExpressionProcessorFactory;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Guice Module for initializing all beans.
  *
@@ -93,6 +93,9 @@ public class WingsModule extends AbstractModule {
     this.configuration = configuration;
   }
 
+  /* (non-Javadoc)
+   * @see com.google.inject.AbstractModule#configure()
+   */
   @Override
   protected void configure() {
     bind(MainConfiguration.class).toInstance(configuration);
@@ -119,7 +122,6 @@ public class WingsModule extends AbstractModule {
     bind(CatalogService.class).to(CatalogServiceImpl.class);
     bind(HostService.class).to(HostServiceImpl.class);
     bind(JenkinsBuildService.class).to(JenkinsBuildServiceImpl.class);
-    bind(ExecutionLogs.class).to(ExecutionLogsImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);

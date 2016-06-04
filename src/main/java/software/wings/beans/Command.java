@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
@@ -22,6 +24,9 @@ public class Command extends CommandUnit {
 
   @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
+  /**
+   * Instantiates a new command.
+   */
   public Command() {
     super(CommandUnitType.COMMAND);
   }
@@ -50,6 +55,9 @@ public class Command extends CommandUnit {
     this.commandUnits = commandUnits;
   }
 
+  /**
+   * Transform graph.
+   */
   public void transformGraph() {
     setName(graph.getGraphName());
     Iterator<Node> pipelineIterator = graph.getLinearGraphIterator();
@@ -68,6 +76,9 @@ public class Command extends CommandUnit {
     }
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -80,11 +91,17 @@ public class Command extends CommandUnit {
     return Objects.equal(referenceId, command.referenceId) && Objects.equal(commandUnits, command.commandUnits);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(referenceId, commandUnits);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -94,6 +111,9 @@ public class Command extends CommandUnit {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String referenceId;
     private Graph graph;
@@ -104,45 +124,97 @@ public class Command extends CommandUnit {
 
     private Builder() {}
 
+    /**
+     * A command.
+     *
+     * @return the builder
+     */
     public static Builder aCommand() {
       return new Builder();
     }
 
+    /**
+     * With reference id.
+     *
+     * @param referenceId the reference id
+     * @return the builder
+     */
     public Builder withReferenceId(String referenceId) {
       this.referenceId = referenceId;
       return this;
     }
 
+    /**
+     * With graph.
+     *
+     * @param graph the graph
+     * @return the builder
+     */
     public Builder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
+    /**
+     * Adds the command units.
+     *
+     * @param commandUnits the command units
+     * @return the builder
+     */
     public Builder addCommandUnits(CommandUnit... commandUnits) {
       this.commandUnits.addAll(Arrays.asList(commandUnits));
       return this;
     }
 
+    /**
+     * With command units.
+     *
+     * @param commandUnits the command units
+     * @return the builder
+     */
     public Builder withCommandUnits(List<CommandUnit> commandUnits) {
       this.commandUnits = commandUnits;
       return this;
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With service id.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With execution result.
+     *
+     * @param executionResult the execution result
+     * @return the builder
+     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aCommand()
           .withReferenceId(referenceId)
@@ -153,6 +225,11 @@ public class Command extends CommandUnit {
           .withExecutionResult(executionResult);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the command
+     */
     public Command build() {
       Command command = new Command();
       command.setReferenceId(referenceId);

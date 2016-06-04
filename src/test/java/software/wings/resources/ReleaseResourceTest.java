@@ -39,6 +39,8 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
@@ -88,6 +90,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     when(RELEASE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
   }
 
+  /**
+   * Should create new release.
+   */
   @Test
   public void shouldCreateNewRelease() {
     Release release = releaseBuilder.but().build();
@@ -102,6 +107,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).create(release);
   }
 
+  /**
+   * Should update release.
+   */
   @Test
   public void shouldUpdateRelease() {
     Release release = releaseBuilder.but().build();
@@ -115,6 +123,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).update(releaseBuilder.but().withUuid(RELEASE_ID).build());
   }
 
+  /**
+   * Should throw exception when app id does not exist.
+   */
   @Test
   public void shouldThrowExceptionWhenAppIdDoesNotExist() {
     Release release = releaseBuilder.but().build();
@@ -129,6 +140,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(APP_SERVICE).findByUuid("BAD_APP_ID");
   }
 
+  /**
+   * Should add artifact source.
+   */
   @Test
   public void shouldAddArtifactSource() {
     ArtifactSource jenkinsArtifactSource = aJenkinsArtifactSource().build();
@@ -141,6 +155,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, APP_ID, jenkinsArtifactSource);
   }
 
+  /**
+   * Should delete artifact source.
+   */
   @Test
   public void shouldDeleteArtifactSource() {
     RestResponse<Release> restResponse =
@@ -152,6 +169,11 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).deleteArtifactSource(RELEASE_ID, APP_ID, "artifactSource");
   }
 
+  /**
+   * Should list resource.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldListResource() throws IOException {
     RestResponse<PageResponse<Release>> restResponse =
@@ -166,6 +188,11 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).list(expectedPageRequest);
   }
 
+  /**
+   * Should get release.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldGetRelease() throws IOException {
     RestResponse<Release> restResponse = RESOURCES.client()
@@ -176,6 +203,11 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).get(RELEASE_ID, APP_ID);
   }
 
+  /**
+   * Should delete release.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldDeleteRelease() throws IOException {
     RestResponse<Release> restResponse = RESOURCES.client()

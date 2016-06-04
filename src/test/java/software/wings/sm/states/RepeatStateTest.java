@@ -25,12 +25,19 @@ import software.wings.sm.states.RepeatState.RepeatStrategy;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class RepeatStateTest.
+ *
  * @author Rishi
  */
 public class RepeatStateTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /**
+   * Should execute serial.
+   */
   @Test
   public void shouldExecuteSerial() {
     String stateName = "test";
@@ -57,6 +64,9 @@ public class RepeatStateTest {
     assertThat(((SpawningExecutionResponse) response).getStateExecutionInstanceList().size()).isEqualTo(1);
   }
 
+  /**
+   * Should execute parallel.
+   */
   @Test
   public void shouldExecuteParallel() {
     List<ContextElement> repeatElements = getTestRepeatElements();

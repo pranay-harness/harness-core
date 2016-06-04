@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/25/16.
  */
@@ -23,22 +25,34 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<ConfigFile> list(PageRequest<ConfigFile> request) {
     return wingsPersistence.query(ConfigFile.class, request);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#save(software.wings.beans.ConfigFile, java.io.InputStream)
+   */
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
     fileService.saveFile(configFile, inputStream, CONFIGS);
     return wingsPersistence.save(configFile);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#get(java.lang.String)
+   */
   @Override
   public ConfigFile get(String configId) {
     return wingsPersistence.get(ConfigFile.class, configId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#update(software.wings.beans.ConfigFile, java.io.InputStream)
+   */
   @Override
   public void update(ConfigFile configFile, InputStream uploadedInputStream) {
     if (uploadedInputStream != null) {
@@ -54,6 +68,9 @@ public class ConfigServiceImpl implements ConfigService {
     wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#delete(java.lang.String)
+   */
   @Override
   public void delete(String configId) {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, configId);
@@ -61,6 +78,9 @@ public class ConfigServiceImpl implements ConfigService {
     wingsPersistence.delete(configFile);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
+   */
   @Override
   public List<ConfigFile> getConfigFilesForEntity(String templateId, String entityId) {
     List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)

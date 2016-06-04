@@ -11,12 +11,17 @@ import com.openpojo.validation.rule.Rule;
 import java.util.LinkedList;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/19/16.
  */
 public class NoFieldShadowingRule implements Rule {
   private static final List<String> ignoredFields = Lists.newArrayList("logger", "serialVersionUID");
 
+  /* (non-Javadoc)
+   * @see com.openpojo.validation.rule.Rule#evaluate(com.openpojo.reflection.PojoClass)
+   */
   public void evaluate(final PojoClass pojoClass) {
     final List<PojoField> parentPojoFields = new LinkedList<PojoField>();
     PojoClass parentPojoClass = pojoClass.getSuperClass();

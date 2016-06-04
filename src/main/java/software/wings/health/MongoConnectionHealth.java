@@ -8,19 +8,29 @@ import com.mongodb.MongoClient;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * HealthCheck class for the MongoDB
+ * HealthCheck class for the MongoDB.
  *
  * @author Rishi
  */
 public class MongoConnectionHealth extends HealthCheck {
   private final MongoClient mongo;
 
+  /**
+   * Instantiates a new mongo connection health.
+   *
+   * @param mongo the mongo
+   */
   public MongoConnectionHealth(MongoClient mongo) {
     this.mongo = mongo;
     mongo.listDatabaseNames();
   }
 
+  /* (non-Javadoc)
+   * @see com.codahale.metrics.health.HealthCheck#check()
+   */
   @Override
   protected Result check() throws Exception {
     Map<String, String> messageMap = new HashMap<>();

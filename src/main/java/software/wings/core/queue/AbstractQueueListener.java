@@ -11,8 +11,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/13/16.
+ *
+ * @param <T> the generic type
+ * @see AbstractQueueEvent
  */
 public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
@@ -25,6 +30,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
   @Inject @Named("timer") private ScheduledExecutorService timer;
 
+  /* (non-Javadoc)
+   * @see java.lang.Runnable#run()
+   */
   @Override
   public void run() {
     String threadName = queue.name() + "-handler-" + UUIDGenerator.getUuid();
@@ -66,8 +74,20 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     } while (run && !shouldStop.get());
   }
 
+  /**
+   * On message.
+   *
+   * @param message the message
+   * @throws Exception the exception
+   */
   protected abstract void onMessage(T message) throws Exception;
 
+  /**
+   * On exception.
+   *
+   * @param exception the exception
+   * @param message   the message
+   */
   protected void onException(Exception exception, T message) {
     logger.error("Exception happened while processing message " + message, exception);
     if (message.getRetries() > 0) {
@@ -84,6 +104,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     this.queue = queue;
   }
 
+  /**
+   * Shut down.
+   */
   public void shutDown() {
     shouldStop.set(true);
   }

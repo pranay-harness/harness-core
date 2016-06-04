@@ -22,7 +22,11 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class CatalogServiceImpl.
+ *
  * @author Rishi
  */
 @Singleton
@@ -30,6 +34,11 @@ public class CatalogServiceImpl implements CatalogService {
   private final Logger logger = LoggerFactory.getLogger(CatalogServiceImpl.class);
   private Map<String, List<CatalogItem>> catalogs;
 
+  /**
+   * Instantiates a new catalog service impl.
+   *
+   * @param yamlUtils the yaml utils
+   */
   @Inject
   public CatalogServiceImpl(YamlUtils yamlUtils) {
     try {
@@ -45,6 +54,9 @@ public class CatalogServiceImpl implements CatalogService {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.CatalogService#getCatalogItems(java.lang.String)
+   */
   @Override
   public List<CatalogItem> getCatalogItems(String catalogType) {
     if (catalogs == null) {
@@ -53,6 +65,9 @@ public class CatalogServiceImpl implements CatalogService {
     return catalogs.get(catalogType);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.CatalogService#getCatalogs(java.lang.String[])
+   */
   @Override
   public Map<String, List<CatalogItem>> getCatalogs(String... catalogTypes) {
     if (catalogs == null) {

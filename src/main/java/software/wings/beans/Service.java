@@ -14,6 +14,8 @@ import software.wings.beans.ArtifactSource.ArtifactType;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Component bean class.
  *
@@ -75,6 +77,9 @@ public class Service extends Base {
     this.appContainer = appContainer;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -89,11 +94,17 @@ public class Service extends Base {
         && Objects.equal(appContainer, service.appContainer) && Objects.equal(configFiles, service.configFiles);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(super.hashCode(), name, description, artifactType, commands, appContainer, configFiles);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -106,6 +117,9 @@ public class Service extends Base {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String name;
     private String description;
@@ -123,80 +137,174 @@ public class Service extends Base {
 
     private Builder() {}
 
+    /**
+     * A service.
+     *
+     * @return the builder
+     */
     public static Builder aService() {
       return new Builder();
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With artifact type.
+     *
+     * @param artifactType the artifact type
+     * @return the builder
+     */
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
+    /**
+     * Adds the commands.
+     *
+     * @param commands the commands
+     * @return the builder
+     */
     public Builder addCommands(Command... commands) {
       this.commands.addAll(asList(commands));
       return this;
     }
 
+    /**
+     * With commands.
+     *
+     * @param commands the commands
+     * @return the builder
+     */
     public Builder withCommands(List<Command> commands) {
       this.commands = commands;
       return this;
     }
 
+    /**
+     * With app container.
+     *
+     * @param appContainer the app container
+     * @return the builder
+     */
     public Builder withAppContainer(AppContainer appContainer) {
       this.appContainer = appContainer;
       return this;
     }
 
+    /**
+     * With config files.
+     *
+     * @param configFiles the config files
+     * @return the builder
+     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aService()
           .withName(name)
@@ -214,6 +322,11 @@ public class Service extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the service
+     */
     public Service build() {
       Service service = new Service();
       service.setName(name);

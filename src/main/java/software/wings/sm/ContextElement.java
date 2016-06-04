@@ -2,6 +2,8 @@ package software.wings.sm;
 
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Interface for all RepeatElements.
  *
@@ -17,5 +19,10 @@ public interface ContextElement {
 
   public String getName();
 
+  /**
+   * Param map.
+   *
+   * @return the map
+   */
   public Map<String, Object> paramMap();
 }

@@ -27,7 +27,11 @@ import software.wings.sm.StateExecutionInstance;
 import java.io.IOException;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class EmailStateTest.
+ *
  * @author paggarwal.
  */
 public class EmailStateTest extends WingsBaseTest {
@@ -44,6 +48,9 @@ public class EmailStateTest extends WingsBaseTest {
 
   private ExecutionContextImpl context;
 
+  /**
+   * Sets the up context and state.
+   */
   @Before
   public void setUpContextAndState() {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -60,6 +67,13 @@ public class EmailStateTest extends WingsBaseTest {
     emailState.setCcAddress("cc1,cc2");
   }
 
+  /**
+   * Should send email.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldSendEmail() throws EmailException, TemplateException, IOException {
     emailState.setBody("body");
@@ -78,6 +92,13 @@ public class EmailStateTest extends WingsBaseTest {
         .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
   }
 
+  /**
+   * Should evaluate context elements for email subject and body.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldEvaluateContextElementsForEmailSubjectAndBody()
       throws EmailException, TemplateException, IOException {
@@ -101,6 +122,13 @@ public class EmailStateTest extends WingsBaseTest {
             "Deployed to host app123.application.com");
   }
 
+  /**
+   * Should capture error message when failed to send email.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldCaptureErrorMessageWhenFailedToSendEmail() throws EmailException, TemplateException, IOException {
     doThrow(new EmailException("Test exception"))
@@ -123,6 +151,13 @@ public class EmailStateTest extends WingsBaseTest {
         .send(Lists.newArrayList("to1", "to2"), Lists.newArrayList("cc1", "cc2"), "subject", "body");
   }
 
+  /**
+   * Should return execution result as error when not ignored.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnExecutionResultAsErrorWhenNotIgnored() throws EmailException, TemplateException, IOException {
     doThrow(new EmailException("Test exception"))

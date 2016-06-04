@@ -23,6 +23,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/22/16.
  */
@@ -36,16 +38,35 @@ import javax.ws.rs.core.MediaType;
 public class RoleResource {
   @Inject private RoleService roleService;
 
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Role>> list(@BeanParam PageRequest<Role> pageRequest) {
     return new RestResponse<>(roleService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param role the role
+   * @return the rest response
+   */
   @POST
   public RestResponse<Role> save(Role role) {
     return new RestResponse<>(roleService.save(role));
   }
 
+  /**
+   * Update.
+   *
+   * @param roleId the role id
+   * @param role   the role
+   * @return the rest response
+   */
   @PUT
   @Path("{roleId}")
   public RestResponse<Role> update(@PathParam("roleId") String roleId, Role role) {
@@ -53,6 +74,12 @@ public class RoleResource {
     return new RestResponse<>(roleService.update(role));
   }
 
+  /**
+   * Delete.
+   *
+   * @param roleId the role id
+   * @return the rest response
+   */
   @DELETE
   @Path("{roleId}")
   public RestResponse delete(@PathParam("{roleId}") String roleId) {
@@ -60,6 +87,12 @@ public class RoleResource {
     return new RestResponse();
   }
 
+  /**
+   * Gets the.
+   *
+   * @param roleId the role id
+   * @return the rest response
+   */
   @GET
   @Path("{roleId}")
   public RestResponse<Role> get(@PathParam("roleId") String roleId) {

@@ -17,26 +17,54 @@ import java.net.URISyntaxException;
 import java.util.List;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class JenkinsTest.
+ */
 public class JenkinsTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
   @Inject private JenkinsFactory jenkinsFactory;
   private Jenkins jenkins;
 
+  /**
+   * Sets the up.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   */
   @Before
   public void setUp() throws URISyntaxException {
     jenkins = jenkinsFactory.create("http://localhost:8089", "admin", "admin");
   }
 
+  /**
+   * Should get job from jenkins.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldGetJobFromJenkins() throws URISyntaxException, IOException {
     assertThat(jenkins.getJob("scheduler")).isNotNull();
   }
 
+  /**
+   * Should return null when job does not exist.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnNullWhenJobDoesNotExist() throws URISyntaxException, IOException {
     assertThat(jenkins.getJob("scheduler1")).isNull();
   }
 
+  /**
+   * Should return artifacts by build number.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -45,6 +73,12 @@ public class JenkinsTest extends WingsBaseTest {
     IOUtils.closeQuietly(fileInfo.getValue());
   }
 
+  /**
+   * Should return last completed build artifacts.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
@@ -52,6 +86,12 @@ public class JenkinsTest extends WingsBaseTest {
     IOUtils.closeQuietly(fileInfo.getValue());
   }
 
+  /**
+   * Should return null artifact if job is missing.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnNullArtifactIfJobIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -59,6 +99,12 @@ public class JenkinsTest extends WingsBaseTest {
     assertThat(fileInfo).isNull();
   }
 
+  /**
+   * Should return null artifact if build is missing.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnNullArtifactIfBuildIsMissing() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
@@ -66,12 +112,24 @@ public class JenkinsTest extends WingsBaseTest {
     assertThat(fileInfo).isNull();
   }
 
+  /**
+   * Should return null artifact when artifact path doesnot match.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldReturnNullArtifactWhenArtifactPathDoesnotMatch() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "57", "build/libs/dummy-*.jar");
     assertThat(fileInfo).isNull();
   }
 
+  /**
+   * Should get last n build details for git jobs.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldGetLastNBuildDetailsForGitJobs() throws URISyntaxException, IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler", 5);
@@ -81,6 +139,12 @@ public class JenkinsTest extends WingsBaseTest {
         .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
   }
 
+  /**
+   * Should get last n build details for svn jobs.
+   *
+   * @throws URISyntaxException the URI syntax exception
+   * @throws IOException        Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldGetLastNBuildDetailsForSvnJobs() throws URISyntaxException, IOException {
     List<BuildDetails> buildDetails = jenkins.getBuildsForJob("scheduler-svn", 5);

@@ -49,7 +49,11 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class CatalogResourceTest.
+ *
  * @author Rishi.
  */
 @RunWith(JUnitParamsRunner.class)
@@ -76,6 +80,11 @@ public class CatalogResourceTest extends WingsBaseTest {
     }
   };
 
+  /**
+   * Setup mocks.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Before
   public void setupMocks() throws IOException {
     when(settingsService.get(anyString())).thenReturn(aSettingAttribute().withValue(new JenkinsConfig()).build());
@@ -86,11 +95,17 @@ public class CatalogResourceTest extends WingsBaseTest {
     when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(Lists.newArrayList());
   }
 
+  /**
+   * Tear down.
+   */
   @After
   public void tearDown() {
     reset(catalogService, workflowService, jenkinsBuildService, settingsService, serviceResourceService);
   }
 
+  /**
+   * Should list catalogs.
+   */
   @Test
   public void shouldListCatalogs() {
     when(catalogService.getCatalogItems(anyString())).thenReturn(new ArrayList<>());
@@ -120,6 +135,11 @@ public class CatalogResourceTest extends WingsBaseTest {
     };
   }
 
+  /**
+   * Should list catalogs for.
+   *
+   * @param catalogNameForDisplay the catalog name for display
+   */
   @Test
   @TestCaseName("{method}{0}")
   @Parameters(method = "catalogNames")
@@ -138,6 +158,9 @@ public class CatalogResourceTest extends WingsBaseTest {
         .isNotNull();
   }
 
+  /**
+   * Should list catalogs for command stencils and service.
+   */
   @Test
   public void shouldListCatalogsForCommandStencilsAndService() {
     System.out.println(

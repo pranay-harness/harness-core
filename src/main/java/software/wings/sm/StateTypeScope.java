@@ -4,6 +4,8 @@
 package software.wings.sm;
 
 /**
+ * The Enum StateTypeScope.
+ *
  * @author Rishi
  */
 public enum StateTypeScope {

@@ -9,7 +9,11 @@ import software.wings.sm.ContextElementType;
 import java.util.HashMap;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class HostElement.
+ *
  * @author Rishi
  */
 public class HostElement implements ContextElement {
@@ -33,6 +37,9 @@ public class HostElement implements ContextElement {
     return ContextElementType.HOST;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ContextElement#paramMap()
+   */
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();

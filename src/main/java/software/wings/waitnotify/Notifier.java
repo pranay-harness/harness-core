@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
  *
@@ -31,6 +33,9 @@ public class Notifier implements Runnable {
 
   @Inject private Queue<NotifyEvent> notifyQueue;
 
+  /* (non-Javadoc)
+   * @see java.lang.Runnable#run()
+   */
   @Override
   public void run() {
     boolean lockAcquired = false;

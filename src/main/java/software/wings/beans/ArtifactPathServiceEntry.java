@@ -9,6 +9,8 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
@@ -34,6 +36,9 @@ public class ArtifactPathServiceEntry {
     this.services = services;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -46,11 +51,17 @@ public class ArtifactPathServiceEntry {
     return Objects.equal(artifactPathRegex, that.artifactPathRegex) && Objects.equal(services, that.services);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(artifactPathRegex, services);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -59,27 +70,49 @@ public class ArtifactPathServiceEntry {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String artifactPathRegex;
     private List<Service> services;
 
     private Builder() {}
 
+    /**
+     * An artifact path service entry.
+     *
+     * @return the builder
+     */
     public static Builder anArtifactPathServiceEntry() {
       return new Builder();
     }
 
+    /**
+     * With artifact path regex.
+     *
+     * @param artifactPathRegex the artifact path regex
+     * @return the builder
+     */
     public Builder withArtifactPathRegex(String artifactPathRegex) {
       this.artifactPathRegex = artifactPathRegex;
       return this;
     }
 
+    /**
+     * With services.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
     /**
+     * Builds the.
+     *
      * @return A new ArtifactPathServiceEntry object.
      */
     public ArtifactPathServiceEntry build() {

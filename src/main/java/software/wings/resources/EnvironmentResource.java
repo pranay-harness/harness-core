@@ -25,6 +25,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/1/16.
  */
@@ -38,6 +40,13 @@ import javax.ws.rs.QueryParam;
 public class EnvironmentResource {
   @Inject private EnvironmentService envService;
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
@@ -45,18 +54,40 @@ public class EnvironmentResource {
     return new RestResponse<>(envService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId       the app id
+   * @param environment the environment
+   * @return the rest response
+   */
   @POST
   public RestResponse<Environment> save(@QueryParam("appId") String appId, Environment environment) {
     environment.setAppId(appId);
     return new RestResponse<>(envService.save(environment));
   }
 
+  /**
+   * List.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the rest response
+   */
   @GET
   @Path("{envId}")
   public RestResponse<Environment> list(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return new RestResponse<>(envService.get(appId, envId));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param environment the environment
+   * @return the rest response
+   */
   @PUT
   @Path("{envId}")
   public RestResponse<Environment> update(
@@ -66,6 +97,13 @@ public class EnvironmentResource {
     return new RestResponse<>(envService.update(environment));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the rest response
+   */
   @DELETE
   @Path("{envId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {

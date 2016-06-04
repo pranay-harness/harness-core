@@ -24,6 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/3/16.
  */
@@ -37,6 +39,12 @@ public class GridFsDbFileExt {
   private String chunkCollectionName = LOGS.getName() + ".chunks";
   private int chunkSize = (int) LOGS.getChunkSize();
 
+  /**
+   * Append to file.
+   *
+   * @param fileName the file name
+   * @param content  the content
+   */
   public void appendToFile(String fileName, String content) {
     GridFSFile file = fileBucketHelper.getOrCreateFileBucket(LOGS).find(eq("filename", fileName)).first();
     if (null == file) { // Write first chunk
@@ -102,6 +110,12 @@ public class GridFsDbFileExt {
     updateFileMetaData(file, substring.length());
   }
 
+  /**
+   * Put.
+   *
+   * @param fileName the file name
+   * @param content  the content
+   */
   public void put(String fileName, String content) {
     InputStream streamToUploadFrom;
     streamToUploadFrom = new ByteArrayInputStream(content.getBytes(UTF_8));
@@ -110,10 +124,22 @@ public class GridFsDbFileExt {
     logger.info(String.format("content [%s] for fileName [%s] saved in gridfs", content, fileName));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param fileName the file name
+   * @return the grid fs file
+   */
   public GridFSFile get(String fileName) {
     return fileBucketHelper.getOrCreateFileBucket(LOGS).find(eq("filename", fileName)).first();
   }
 
+  /**
+   * Download to stream.
+   *
+   * @param fileName         the file name
+   * @param fileOutputStream the file output stream
+   */
   public void downloadToStream(String fileName, FileOutputStream fileOutputStream) {
     try {
       fileBucketHelper.getOrCreateFileBucket(LOGS).downloadToStreamByName(fileName, fileOutputStream);

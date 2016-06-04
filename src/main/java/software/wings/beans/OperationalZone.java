@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+/**
+ * The Class OperationalZone.
+ */
 public class OperationalZone {
   private String name;
   private String description;
