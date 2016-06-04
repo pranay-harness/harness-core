@@ -68,6 +68,11 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
+    Environment env = environmentService.get(appId, envId);
+    if (env == null) {
+      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown environment");
+    }
+    orchestration.setEnvironment(env);
     return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
   }
 
@@ -78,6 +83,11 @@ public class OrchestrationResource {
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
     orchestration.setUuid(orchestrationId);
+    Environment env = environmentService.get(appId, envId);
+    if (env == null) {
+      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown environment");
+    }
+    orchestration.setEnvironment(env);
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));
   }
 

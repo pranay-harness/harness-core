@@ -421,16 +421,20 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private WorkflowExecution triggerExecution(
-      WorkflowExecution workflowExecution, StateMachine stateMachine, WorkflowStandardParams stdParams) {
+      WorkflowExecution workflowExecution, StateMachine stateMachine, ContextElement... contextElements) {
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     stateExecutionInstance.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
 
-    WingsDeque<ContextElement> contextElements = new WingsDeque<>();
-    contextElements.push(stdParams);
-    stateExecutionInstance.setContextElements(contextElements);
+    WingsDeque<ContextElement> elements = new WingsDeque<>();
+    if (contextElements != null) {
+      for (ContextElement contextElement : contextElements) {
+        elements.push(contextElement);
+      }
+    }
+    stateExecutionInstance.setContextElements(elements);
     stateMachineExecutor.execute(stateMachine, stateExecutionInstance);
 
     // TODO: findAndModify
@@ -471,15 +475,37 @@ public class WorkflowServiceImpl implements WorkflowService {
             ErrorConstants.INVALID_REQUEST, "message", "serviceInstanceIds is empty for a simple execution");
       }
 
-      return triggerSimpleExecution(appId, executionArgs);
+      return triggerSimpleExecution(appId, envId, executionArgs);
     }
   }
 
-  private WorkflowExecution triggerSimpleExecution(String appId, ExecutionArgs executionArgs) {
+  private WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
+    Workflow workflow = readLatestSimpleWorkflow(appId, envId);
+    String orchestrationId = workflow.getUuid();
+
+    StateMachine stateMachine = readLatest(orchestrationId, null);
+    if (stateMachine == null) {
+      throw new WingsException("No stateMachine associated with " + orchestrationId);
+    }
+
+    WorkflowExecution workflowExecution = new WorkflowExecution();
+    workflowExecution.setAppId(appId);
+    workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.SIMPLE);
+    workflowExecution.setStateMachineId(stateMachine.getUuid());
+
+    WorkflowStandardParams stdParams = new WorkflowStandardParams();
+    stdParams.setAppId(appId);
+    stdParams.setArtifactIds(executionArgs.getArtifactIds());
+    stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
+
     SimpleOrchestrationParams simpleOrchestrationParams = new SimpleOrchestrationParams();
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
 
+    return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
+  }
+
+  private Workflow readLatestSimpleWorkflow(String appId, String envId) {
     return null;
   }
 
