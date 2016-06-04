@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -27,11 +28,14 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("infraId")
                            , @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class Host extends Base {
-  private String infraId;
+  @NotEmpty private String infraId;
   private String hostName;
   private String osType;
 
-  @FormDataParam("hostConnAttr") @Reference(idOnly = true, ignoreMissing = true) private SettingAttribute hostConnAttr;
+  @FormDataParam("hostConnAttr")
+  @Reference(idOnly = true, ignoreMissing = true)
+  @NotEmpty
+  private SettingAttribute hostConnAttr;
 
   @FormDataParam("bastionConnAttr")
   @Reference(idOnly = true, ignoreMissing = true)

@@ -3,6 +3,9 @@ package software.wings.core.ssh.executors;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -14,7 +17,7 @@ public interface SshExecutor {
    *
    * @param config the config
    */
-  void init(SshSessionConfig config);
+  void init(@Valid SshSessionConfig config);
 
   /**
    * Execute.
@@ -22,7 +25,7 @@ public interface SshExecutor {
    * @param command the command
    * @return the execution result
    */
-  ExecutionResult execute(String command);
+  ExecutionResult execute(@NotNull String command);
 
   /**
    * Transfer file.
@@ -32,7 +35,8 @@ public interface SshExecutor {
    * @param fileBucket     the file bucket
    * @return the execution result
    */
-  ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket fileBucket);
+  ExecutionResult transferFile(
+      @NotNull String gridFsFileId, @NotNull String remoteFilePath, @NotNull FileBucket fileBucket);
 
   /**
    * Abort.

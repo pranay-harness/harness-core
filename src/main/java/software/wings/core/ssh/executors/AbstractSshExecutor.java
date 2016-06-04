@@ -40,12 +40,15 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
+import javax.validation.Valid;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 2/10/16.
  */
+@ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
   public static final String LINE_BREAK_PATTERN = "\\R+";
@@ -78,7 +81,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @see software.wings.core.ssh.executors.SshExecutor#init(software.wings.core.ssh.executors.SshSessionConfig)
    */
   @Override
-  public void init(SshSessionConfig config) {
+  public void init(@Valid SshSessionConfig config) {
     if (null == config.getExecutionId() || config.getExecutionId().length() == 0) {
       throw new WingsException(UNKNOWN_ERROR, new Throwable("INVALID_EXECUTION_ID"));
     }
