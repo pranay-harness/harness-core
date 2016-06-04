@@ -16,6 +16,8 @@ import software.wings.exception.WingsException;
 
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/10/16.
  */
@@ -23,6 +25,9 @@ import javax.inject.Singleton;
 public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, User> {
   @Inject private WingsPersistence wingsPersistence;
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.auth.Authenticator#authenticate(java.lang.Object)
+   */
   @Override
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {
     User user = wingsPersistence.createQuery(User.class).field("email").equal(basicCredentials.getUsername()).get();

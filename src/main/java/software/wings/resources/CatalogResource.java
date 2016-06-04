@@ -36,7 +36,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class CatalogResource.
+ *
  * @author Rishi.
  */
 @Api("catalogs")
@@ -55,10 +59,11 @@ public class CatalogResource {
   /**
    * Creates a new calalog resource.
    *
-   * @param catalogService      catalogService object.
-   * @param workflowService     workflowService object.
-   * @param jenkinsBuildService JenkinsBuildService object.
-   * @param settingsService     SettingService object
+   * @param catalogService         catalogService object.
+   * @param workflowService        workflowService object.
+   * @param jenkinsBuildService    JenkinsBuildService object.
+   * @param settingsService        SettingService object
+   * @param serviceResourceService the service resource service
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,

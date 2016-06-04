@@ -7,6 +7,8 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */
@@ -15,15 +17,28 @@ import java.util.Objects;
 public class QueuableObject extends Queuable {
   private int data;
 
+  /**
+   * Instantiates a new queuable object.
+   */
   public QueuableObject() {
     super();
   }
 
+  /**
+   * Instantiates a new queuable object.
+   *
+   * @param data the data
+   */
   public QueuableObject(int data) {
     super();
     this.data = data;
   }
 
+  /**
+   * Instantiates a new queuable object.
+   *
+   * @param other the other
+   */
   public QueuableObject(QueuableObject other) {
     super(other);
   }
@@ -36,11 +51,17 @@ public class QueuableObject extends Queuable {
     this.data = data;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(data);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -53,6 +74,9 @@ public class QueuableObject extends Queuable {
     return data == that.data;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("data", data).toString();

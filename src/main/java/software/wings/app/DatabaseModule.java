@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */
@@ -72,6 +74,13 @@ public class DatabaseModule extends AbstractModule {
     datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
+  /**
+   * Instantiates a new database module.
+   *
+   * @param primaryDatastore   the primary datastore
+   * @param secondaryDatastore the secondary datastore
+   * @param distributedLockSvc the distributed lock svc
+   */
   public DatabaseModule(
       Datastore primaryDatastore, Datastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
     this.primaryDatastore = primaryDatastore;
@@ -82,6 +91,9 @@ public class DatabaseModule extends AbstractModule {
     this.distributedLockSvc = distributedLockSvc;
   }
 
+  /* (non-Javadoc)
+   * @see com.google.inject.AbstractModule#configure()
+   */
   @Override
   protected void configure() {
     bind(Datastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);

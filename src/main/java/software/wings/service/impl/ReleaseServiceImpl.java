@@ -28,6 +28,11 @@ import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ReleaseServiceImpl.
+ */
 @Singleton
 @ValidateOnExecution
 public class ReleaseServiceImpl implements ReleaseService {
@@ -35,6 +40,9 @@ public class ReleaseServiceImpl implements ReleaseService {
 
   @Inject private SettingsService settingsService;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
     req.addFilter("active", true, Operator.EQ);
@@ -43,6 +51,9 @@ public class ReleaseServiceImpl implements ReleaseService {
     return releases;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#get(java.lang.String, java.lang.String)
+   */
   @Override
   public Release get(String id, String appId) {
     Release release = wingsPersistence.get(Release.class, appId, id);
@@ -52,6 +63,9 @@ public class ReleaseServiceImpl implements ReleaseService {
     return release;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#create(software.wings.beans.Release)
+   */
   @Override
   @ValidationGroups(Create.class)
   public Release create(Release release) {
@@ -59,6 +73,9 @@ public class ReleaseServiceImpl implements ReleaseService {
     return get(id, release.getAppId());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#update(software.wings.beans.Release)
+   */
   @Override
   @ValidationGroups(Update.class)
   public Release update(Release release) {
@@ -77,6 +94,10 @@ public class ReleaseServiceImpl implements ReleaseService {
     return get(release.getUuid(), release.getAppId());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#addArtifactSource(java.lang.String, java.lang.String,
+   * software.wings.beans.ArtifactSource)
+   */
   @Override
   public Release addArtifactSource(String id, String appId, ArtifactSource artifactSource) {
     Release release = wingsPersistence.get(Release.class, appId, id);
@@ -105,6 +126,10 @@ public class ReleaseServiceImpl implements ReleaseService {
     return get(id, appId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#deleteArtifactSource(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public <T extends ArtifactSource> Release deleteArtifactSource(String id, String appId, String artifactSourceName) {
     Release release = wingsPersistence.get(Release.class, appId, id);
@@ -120,6 +145,9 @@ public class ReleaseServiceImpl implements ReleaseService {
     return get(id, appId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#delete(java.lang.String, java.lang.String)
+   */
   @Override
   public boolean delete(String id, String appId) {
     return wingsPersistence.getDatastore()
@@ -134,6 +162,9 @@ public class ReleaseServiceImpl implements ReleaseService {
         > 0;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ReleaseService#softDelete(java.lang.String, java.lang.String)
+   */
   @Override
   public Release softDelete(String id, String appId) {
     Query<Release> query =

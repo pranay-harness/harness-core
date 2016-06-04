@@ -17,6 +17,8 @@ import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by rishi on 5/19/16.
  */
@@ -27,6 +29,11 @@ public class AuditServiceTest extends WingsBaseTest {
 
   private String appId = UUIDGenerator.getUuid();
 
+  /**
+   * Should create.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldCreate() throws Exception {
     createAuditHeader();
@@ -71,6 +78,11 @@ public class AuditServiceTest extends WingsBaseTest {
   //
   //  }
 
+  /**
+   * Should list.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldList() throws Exception {
     createAuditHeader();
@@ -94,6 +106,11 @@ public class AuditServiceTest extends WingsBaseTest {
     assertThat(res.getResponse().size()).isEqualTo(2);
   }
 
+  /**
+   * Should update user.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldUpdateUser() throws Exception {
     AuditHeader header = createAuditHeader();

@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Class responsible for executing state machine.
  *
@@ -33,20 +35,56 @@ public class StateMachineExecutor {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Injector injector;
 
+  /**
+   * Execute.
+   *
+   * @param appId         the app id
+   * @param smId          the sm id
+   * @param executionUuid the execution uuid
+   * @return the state execution instance
+   */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid) {
     return execute(appId, smId, executionUuid, null);
   }
 
+  /**
+   * Execute.
+   *
+   * @param appId         the app id
+   * @param smId          the sm id
+   * @param executionUuid the execution uuid
+   * @param contextParams the context params
+   * @return the state execution instance
+   */
   public StateExecutionInstance execute(
       String appId, String smId, String executionUuid, List<ContextElement> contextParams) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, null);
   }
 
+  /**
+   * Execute.
+   *
+   * @param appId         the app id
+   * @param smId          the sm id
+   * @param executionUuid the execution uuid
+   * @param contextParams the context params
+   * @param callback      the callback
+   * @return the state execution instance
+   */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, callback);
   }
 
+  /**
+   * Execute.
+   *
+   * @param sm            the sm
+   * @param executionUuid the execution uuid
+   * @param contextParams the context params
+   * @param callback      the callback
+   * @return the state execution instance
+   */
   public StateExecutionInstance execute(StateMachine sm, String executionUuid, List<ContextElement> contextParams,
       StateMachineExecutionCallback callback) {
     if (sm == null) {
@@ -70,6 +108,13 @@ public class StateMachineExecutor {
     return execute(sm, stateExecutionInstance);
   }
 
+  /**
+   * Execute.
+   *
+   * @param stateMachine           the state machine
+   * @param stateExecutionInstance the state execution instance
+   * @return the state execution instance
+   */
   public StateExecutionInstance execute(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
       throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateExecutionInstance");
@@ -92,6 +137,11 @@ public class StateMachineExecutor {
     return stateExecutionInstance;
   }
 
+  /**
+   * Start execution.
+   *
+   * @param context the context
+   */
   void startExecution(ExecutionContextImpl context) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine stateMachine = context.getStateMachine();
@@ -111,6 +161,7 @@ public class StateMachineExecutor {
   /**
    * Resumes execution of a StateMachineInstance.
    *
+   * @param appId                    the app id
    * @param stateExecutionInstanceId stateMachineInstance to resume.
    * @param response                 map of responses from state machine instances this state was waiting on.
    */

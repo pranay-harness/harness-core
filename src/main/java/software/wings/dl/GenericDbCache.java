@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/18/16.
  */
@@ -31,6 +33,13 @@ public class GenericDbCache {
             }
           });
 
+  /**
+   * Put.
+   *
+   * @param cls    the cls
+   * @param objKey the obj key
+   * @param value  the value
+   */
   public void put(Class cls, String objKey, Object value) {
     cache.put(makeCacheKey(cls, objKey), value);
   }
@@ -39,6 +48,14 @@ public class GenericDbCache {
     return cls.getCanonicalName() + "~" + objKey;
   }
 
+  /**
+   * Gets the.
+   *
+   * @param <T>    the generic type
+   * @param cls    the cls
+   * @param objKey the obj key
+   * @return the t
+   */
   public <T> T get(Class<T> cls, String objKey) {
     try {
       Object obj = cache.get(makeCacheKey(cls, objKey));

@@ -28,6 +28,8 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BadRequestException;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
@@ -68,6 +70,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
             .build());
   }
 
+  /**
+   * Should create valid release.
+   */
   @Test
   public void shouldCreateValidRelease() {
     assertThat(
@@ -75,6 +80,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
         .isNotNull();
   }
 
+  /**
+   * Should update release.
+   */
   @Test
   public void shouldUpdateRelease() {
     Release release =
@@ -89,6 +97,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(updatedRelease.getDescription()).isEqualTo("RELEASE 1.1");
   }
 
+  /**
+   * Should list all releases.
+   */
   @Test
   public void shouldListAllReleases() {
     List<Release> releases = Lists.newArrayList();
@@ -104,6 +115,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(releaseService.list(new PageRequest<>())).containsExactlyElementsOf(releases);
   }
 
+  /**
+   * Should soft delete release.
+   */
   @Test
   public void shouldSoftDeleteRelease() {
     Release release =
@@ -112,6 +126,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
 
+  /**
+   * Should delete inactive release.
+   */
   @Test
   public void shouldDeleteInactiveRelease() {
     Release release = releaseService.create(
@@ -119,6 +136,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(releaseService.list(new PageRequest<>())).hasSize(0);
   }
 
+  /**
+   * Should not delete active release.
+   */
   @Test
   public void shouldNotDeleteActiveRelease() {
     Release release =
@@ -127,6 +147,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(releaseService.list(new PageRequest<>())).hasSize(1);
   }
 
+  /**
+   * Should add artifact source.
+   */
   @Test
   public void shouldAddArtifactSource() {
     Release release =
@@ -138,6 +161,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
     assertThat(release.getArtifactSources()).hasSize(1).containsExactly(artifactSource);
   }
 
+  /**
+   * Should not add artifact source of different type.
+   */
   @Test
   public void shouldNotAddArtifactSourceOfDifferentType() {
     Release release =
@@ -155,6 +181,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
                             aFileUrlSource().withArtifactType(ArtifactType.WAR).withSourceName("filesource").build()));
   }
 
+  /**
+   * Should delete artifact source.
+   */
   @Test
   public void shouldDeleteArtifactSource() {
     Release release =

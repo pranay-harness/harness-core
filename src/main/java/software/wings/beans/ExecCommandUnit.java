@@ -7,6 +7,8 @@ import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/25/16.
  */
@@ -15,6 +17,9 @@ public class ExecCommandUnit extends CommandUnit {
 
   @NotEmpty private String commandString;
 
+  /**
+   * Instantiates a new exec command unit.
+   */
   public ExecCommandUnit() {
     super(EXEC);
   }
@@ -35,6 +40,9 @@ public class ExecCommandUnit extends CommandUnit {
     this.commandString = commandString;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -45,11 +53,17 @@ public class ExecCommandUnit extends CommandUnit {
     return Objects.equal(commandPath, that.commandPath) && Objects.equal(commandString, that.commandString);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(commandPath, commandString);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -58,6 +72,9 @@ public class ExecCommandUnit extends CommandUnit {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String commandPath;
     private String commandString;
@@ -68,40 +85,86 @@ public class ExecCommandUnit extends CommandUnit {
 
     private Builder() {}
 
+    /**
+     * An exec command unit.
+     *
+     * @return the builder
+     */
     public static Builder anExecCommandUnit() {
       return new Builder();
     }
 
+    /**
+     * With command path.
+     *
+     * @param commandPath the command path
+     * @return the builder
+     */
     public Builder withCommandPath(String commandPath) {
       this.commandPath = commandPath;
       return this;
     }
 
+    /**
+     * With command string.
+     *
+     * @param commandString the command string
+     * @return the builder
+     */
     public Builder withCommandString(String commandString) {
       this.commandString = commandString;
       return this;
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With service id.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With command unit type.
+     *
+     * @param commandUnitType the command unit type
+     * @return the builder
+     */
     public Builder withCommandUnitType(CommandUnitType commandUnitType) {
       this.commandUnitType = commandUnitType;
       return this;
     }
 
+    /**
+     * With execution result.
+     *
+     * @param executionResult the execution result
+     * @return the builder
+     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anExecCommandUnit()
           .withCommandPath(commandPath)
@@ -112,6 +175,11 @@ public class ExecCommandUnit extends CommandUnit {
           .withExecutionResult(executionResult);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the exec command unit
+     */
     public ExecCommandUnit build() {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandPath(commandPath);

@@ -18,6 +18,8 @@ import software.wings.sm.ExecutionStatus;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Test for checking notify cleanup handler.
  *
@@ -28,6 +30,11 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Should cleanup.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldCleanup() throws InterruptedException {
     String corrId = UUIDGenerator.getUuid();

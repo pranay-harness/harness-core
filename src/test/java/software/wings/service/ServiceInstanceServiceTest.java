@@ -36,6 +36,8 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/26/16.
  */
@@ -54,6 +56,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                                                .withAppId(APP_ID)
                                                .withEnvId(ENV_ID);
 
+  /**
+   * Should list service instances.
+   */
   @Test
   public void shouldListServiceInstances() {
     PageResponse<ServiceInstance> pageResponse = new PageResponse<>();
@@ -73,6 +78,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     assertThat(serviceInstances.getResponse().get(0)).isInstanceOf(ServiceInstance.class);
   }
 
+  /**
+   * Should save service instance.
+   */
   @Test
   public void shouldSaveServiceInstance() {
     ServiceInstance serviceInstance = builder.build();
@@ -82,6 +90,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
   }
 
+  /**
+   * Should update service instance.
+   */
   @Test
   public void shouldUpdateServiceInstance() {
     ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).build();
@@ -91,6 +102,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
   }
 
+  /**
+   * Should get service instance.
+   */
   @Test
   public void shouldGetServiceInstance() {
     ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).build();
@@ -101,6 +115,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
   }
 
+  /**
+   * Should delete service instance.
+   */
   @Test
   public void shouldDeleteServiceInstance() {
     serviceInstanceService.delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);

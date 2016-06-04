@@ -8,7 +8,11 @@ import software.wings.sm.ContextElementType;
 
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class ServiceElement.
+ *
  * @author Rishi
  */
 public class ServiceElement implements ContextElement {
@@ -37,6 +41,9 @@ public class ServiceElement implements ContextElement {
     this.uuid = uuid;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ContextElement#paramMap()
+   */
   @Override
   public Map<String, Object> paramMap() {
     return null;

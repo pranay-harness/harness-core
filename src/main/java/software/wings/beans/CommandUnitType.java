@@ -17,6 +17,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 6/2/16.
  */
@@ -45,6 +47,12 @@ public enum CommandUnitType {
   private boolean isStencil = false;
   private Class<? extends CommandUnit> commandUnitClass;
 
+  /**
+   * Instantiates a new command unit type.
+   *
+   * @param commandUnitClass the command unit class
+   * @param isStencil        the is stencil
+   */
   CommandUnitType(Class<? extends CommandUnit> commandUnitClass, boolean isStencil) {
     this.commandUnitClass = commandUnitClass;
     this.isStencil = isStencil;
@@ -69,6 +77,11 @@ public enum CommandUnitType {
     }
   }
 
+  /**
+   * New instance.
+   *
+   * @return the command unit
+   */
   public CommandUnit newInstance() {
     return on(commandUnitClass).create().get();
   }

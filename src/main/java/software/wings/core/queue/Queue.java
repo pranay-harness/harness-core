@@ -5,16 +5,23 @@ package software.wings.core.queue;
  */
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Interface Queue.
+ *
+ * @param <T> the generic type
+ */
 public interface Queue<T> {
   /**
-   * Get a non running message from queue with a wait of 3 seconds and poll of 1 second
+   * Get a non running message from queue with a wait of 3 seconds and poll of 1 second.
    *
    * @return message or null
    */
   T get();
 
   /**
-   * Get a non running message from queue with a poll of 1 second
+   * Get a non running message from queue with a poll of 1 second.
    *
    * @param waitDuration duration in milliseconds to keep polling before returning null
    * @return message or null
@@ -22,7 +29,7 @@ public interface Queue<T> {
   T get(final int waitDuration);
 
   /**
-   * Get a non running message from queue
+   * Get a non running message from queue.
    *
    * @param waitDuration duration in milliseconds to keep polling before returning null
    * @param pollDuration duration in milliseconds between poll attempts
@@ -38,14 +45,14 @@ public interface Queue<T> {
   void updateResetDuration(final T message);
 
   /**
-   * Count in queue, running true or false
+   * Count in queue, running true or false.
    *
    * @return count
    */
   long count();
 
   /**
-   * Count in queue
+   * Count in queue.
    *
    * @param running count running messages or not running
    * @return count
@@ -53,7 +60,7 @@ public interface Queue<T> {
   long count(final boolean running);
 
   /**
-   * Acknowledge a message was processed and remove from queue
+   * Acknowledge a message was processed and remove from queue.
    *
    * @param message message received from get(). Should not be null.
    */
@@ -107,7 +114,9 @@ public interface Queue<T> {
   long resetDurationMillis();
 
   /**
-   * Returns the name of the queue
+   * Returns the name of the queue.
+   *
+   * @return the string
    */
   String name();
 }

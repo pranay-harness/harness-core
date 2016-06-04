@@ -13,7 +13,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class GridFSTest.
+ */
 public class GridFSTest {
+  /**
+   * Test grid fs.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   //@Test
   public void testGridFS() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);
@@ -31,6 +41,12 @@ public class GridFSTest {
     streamToUploadFrom.close();
   }
 
+  /**
+   * Gets the data.
+   *
+   * @return the data
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   //@Test
   public void getData() throws IOException {
     MongoClient mongoClient = new MongoClient("localhost", 12345);

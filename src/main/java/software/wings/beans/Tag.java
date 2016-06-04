@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/30/16.
  */
@@ -93,12 +95,18 @@ public class Tag extends Base {
     this.rootTagId = rootTagId;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(name, description, autoTaggingRule, rootTag, rootTagId, envId, children, configFiles);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -117,6 +125,9 @@ public class Tag extends Base {
         && Objects.equals(this.children, other.children) && Objects.equals(this.configFiles, other.configFiles);
   }
 
+  /**
+   * The Class TagBuilder.
+   */
   public static final class TagBuilder {
     private String name;
     private String description;
@@ -136,85 +147,185 @@ public class Tag extends Base {
 
     private TagBuilder() {}
 
+    /**
+     * A tag.
+     *
+     * @return the tag builder
+     */
     public static TagBuilder aTag() {
       return new TagBuilder();
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the tag builder
+     */
     public TagBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description.
+     *
+     * @param description the description
+     * @return the tag builder
+     */
     public TagBuilder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With auto tagging rule.
+     *
+     * @param autoTaggingRule the auto tagging rule
+     * @return the tag builder
+     */
     public TagBuilder withAutoTaggingRule(String autoTaggingRule) {
       this.autoTaggingRule = autoTaggingRule;
       return this;
     }
 
+    /**
+     * With root tag.
+     *
+     * @param rootTag the root tag
+     * @return the tag builder
+     */
     public TagBuilder withRootTag(boolean rootTag) {
       this.rootTag = rootTag;
       return this;
     }
 
+    /**
+     * With root tag id.
+     *
+     * @param rootTagId the root tag id
+     * @return the tag builder
+     */
     public TagBuilder withRootTagId(String rootTagId) {
       this.rootTagId = rootTagId;
       return this;
     }
 
+    /**
+     * With env id.
+     *
+     * @param envId the env id
+     * @return the tag builder
+     */
     public TagBuilder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With children.
+     *
+     * @param children the children
+     * @return the tag builder
+     */
     public TagBuilder withChildren(List<Tag> children) {
       this.children = children;
       return this;
     }
 
+    /**
+     * With config files.
+     *
+     * @param configFiles the config files
+     * @return the tag builder
+     */
     public TagBuilder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the tag builder
+     */
     public TagBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the tag builder
+     */
     public TagBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the tag builder
+     */
     public TagBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the tag builder
+     */
     public TagBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the tag builder
+     */
     public TagBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the tag builder
+     */
     public TagBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the tag builder
+     */
     public TagBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the tag builder
+     */
     public TagBuilder but() {
       return aTag()
           .withName(name)
@@ -234,6 +345,11 @@ public class Tag extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the tag
+     */
     public Tag build() {
       Tag tag = new Tag();
       tag.setName(name);

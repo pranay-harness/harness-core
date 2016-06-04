@@ -8,6 +8,8 @@ import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * HttpAuditHeader bean class.
  *
@@ -205,10 +207,19 @@ public class AuditHeader extends Base {
     this.responsePayloadUuid = responsePayloadUuid;
   }
 
+  /**
+   * The Enum RequestType.
+   */
   public enum RequestType { REQUEST, RESPONSE }
 
+  /**
+   * The Enum ResponseType.
+   */
   public enum ResponseType { SUCCESS, FAILED }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     protected User remoteUser;
     protected Application application;
@@ -241,150 +252,328 @@ public class AuditHeader extends Base {
 
     private Builder() {}
 
+    /**
+     * An audit header.
+     *
+     * @return the builder
+     */
     public static Builder anAuditHeader() {
       return new Builder();
     }
 
+    /**
+     * With remote user.
+     *
+     * @param remoteUser the remote user
+     * @return the builder
+     */
     public Builder withRemoteUser(User remoteUser) {
       this.remoteUser = remoteUser;
       return this;
     }
 
+    /**
+     * With application.
+     *
+     * @param application the application
+     * @return the builder
+     */
     public Builder withApplication(Application application) {
       this.application = application;
       return this;
     }
 
+    /**
+     * With component.
+     *
+     * @param component the component
+     * @return the builder
+     */
     public Builder withComponent(Service component) {
       this.component = component;
       return this;
     }
 
+    /**
+     * With environment.
+     *
+     * @param environment the environment
+     * @return the builder
+     */
     public Builder withEnvironment(Environment environment) {
       this.environment = environment;
       return this;
     }
 
+    /**
+     * With url.
+     *
+     * @param url the url
+     * @return the builder
+     */
     public Builder withUrl(String url) {
       this.url = url;
       return this;
     }
 
+    /**
+     * With resource path.
+     *
+     * @param resourcePath the resource path
+     * @return the builder
+     */
     public Builder withResourcePath(String resourcePath) {
       this.resourcePath = resourcePath;
       return this;
     }
 
+    /**
+     * With query params.
+     *
+     * @param queryParams the query params
+     * @return the builder
+     */
     public Builder withQueryParams(String queryParams) {
       this.queryParams = queryParams;
       return this;
     }
 
+    /**
+     * With request method.
+     *
+     * @param requestMethod the request method
+     * @return the builder
+     */
     public Builder withRequestMethod(HttpMethod requestMethod) {
       this.requestMethod = requestMethod;
       return this;
     }
 
+    /**
+     * With header string.
+     *
+     * @param headerString the header string
+     * @return the builder
+     */
     public Builder withHeaderString(String headerString) {
       this.headerString = headerString;
       return this;
     }
 
+    /**
+     * With response type.
+     *
+     * @param responseType the response type
+     * @return the builder
+     */
     public Builder withResponseType(ResponseType responseType) {
       this.responseType = responseType;
       return this;
     }
 
+    /**
+     * With response status code.
+     *
+     * @param responseStatusCode the response status code
+     * @return the builder
+     */
     public Builder withResponseStatusCode(Integer responseStatusCode) {
       this.responseStatusCode = responseStatusCode;
       return this;
     }
 
+    /**
+     * With error code.
+     *
+     * @param errorCode the error code
+     * @return the builder
+     */
     public Builder withErrorCode(String errorCode) {
       this.errorCode = errorCode;
       return this;
     }
 
+    /**
+     * With remote host name.
+     *
+     * @param remoteHostName the remote host name
+     * @return the builder
+     */
     public Builder withRemoteHostName(String remoteHostName) {
       this.remoteHostName = remoteHostName;
       return this;
     }
 
+    /**
+     * With remote host port.
+     *
+     * @param remoteHostPort the remote host port
+     * @return the builder
+     */
     public Builder withRemoteHostPort(Integer remoteHostPort) {
       this.remoteHostPort = remoteHostPort;
       return this;
     }
 
+    /**
+     * With remote ip address.
+     *
+     * @param remoteIpAddress the remote ip address
+     * @return the builder
+     */
     public Builder withRemoteIpAddress(String remoteIpAddress) {
       this.remoteIpAddress = remoteIpAddress;
       return this;
     }
 
+    /**
+     * With local host name.
+     *
+     * @param localHostName the local host name
+     * @return the builder
+     */
     public Builder withLocalHostName(String localHostName) {
       this.localHostName = localHostName;
       return this;
     }
 
+    /**
+     * With local ip address.
+     *
+     * @param localIpAddress the local ip address
+     * @return the builder
+     */
     public Builder withLocalIpAddress(String localIpAddress) {
       this.localIpAddress = localIpAddress;
       return this;
     }
 
+    /**
+     * With request payload uuid.
+     *
+     * @param requestPayloadUuid the request payload uuid
+     * @return the builder
+     */
     public Builder withRequestPayloadUuid(String requestPayloadUuid) {
       this.requestPayloadUuid = requestPayloadUuid;
       return this;
     }
 
+    /**
+     * With response payload uuid.
+     *
+     * @param responsePayloadUuid the response payload uuid
+     * @return the builder
+     */
     public Builder withResponsePayloadUuid(String responsePayloadUuid) {
       this.responsePayloadUuid = responsePayloadUuid;
       return this;
     }
 
+    /**
+     * With request time.
+     *
+     * @param requestTime the request time
+     * @return the builder
+     */
     public Builder withRequestTime(Long requestTime) {
       this.requestTime = requestTime;
       return this;
     }
 
+    /**
+     * With response time.
+     *
+     * @param responseTime the response time
+     * @return the builder
+     */
     public Builder withResponseTime(Long responseTime) {
       this.responseTime = responseTime;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the audit header
+     */
     public AuditHeader build() {
       AuditHeader auditHeader = new AuditHeader();
       auditHeader.setRemoteUser(remoteUser);

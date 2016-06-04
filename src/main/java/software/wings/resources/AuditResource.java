@@ -17,6 +17,11 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class AuditResource.
+ */
 @Api("audits")
 @Path("/audits")
 public class AuditResource {
@@ -31,6 +36,12 @@ public class AuditResource {
     this.httpAuditService = httpAuditService;
   }
 
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Timed
   @ExceptionMetered

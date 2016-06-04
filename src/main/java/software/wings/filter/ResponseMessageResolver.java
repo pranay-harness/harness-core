@@ -13,9 +13,19 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ResponseMessageResolver.
+ *
+ * @param <T> the generic type
+ */
 public class ResponseMessageResolver<T> implements ExceptionMapper<Throwable> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /* (non-Javadoc)
+   * @see javax.ws.rs.ext.ExceptionMapper#toResponse(java.lang.Throwable)
+   */
   @Override
   public Response toResponse(Throwable exception) {
     logger.error("Exception occured", exception);

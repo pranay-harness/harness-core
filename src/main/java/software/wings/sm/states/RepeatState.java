@@ -24,7 +24,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class RepeatState.
+ *
  * @author Rishi
  */
 public class RepeatState extends State {
@@ -37,6 +41,11 @@ public class RepeatState extends State {
 
   private String repeatTransitionStateName;
 
+  /**
+   * Instantiates a new repeat state.
+   *
+   * @param name the name
+   */
   public RepeatState(String name) {
     super(name, StateType.REPEAT.name());
   }
@@ -52,6 +61,13 @@ public class RepeatState extends State {
     return execute((ExecutionContextImpl) context, repeatStateExecutionData);
   }
 
+  /**
+   * Execute.
+   *
+   * @param context                  the context
+   * @param repeatStateExecutionData the repeat state execution data
+   * @return the execution response
+   */
   ExecutionResponse execute(ExecutionContextImpl context, RepeatStateExecutionData repeatStateExecutionData) {
     if (repeatStateExecutionData == null) {
       repeatStateExecutionData = new RepeatStateExecutionData();
@@ -112,6 +128,9 @@ public class RepeatState extends State {
     correlationIds.add(notifyId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+   */
   @Override
   public ExecutionResponse handleAsynchResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
@@ -182,8 +201,14 @@ public class RepeatState extends State {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }
 
+  /**
+   * The Enum RepeatStrategy.
+   */
   public enum RepeatStrategy { SERIAL, PARALLEL }
 
+  /**
+   * The Class RepeatStateExecutionData.
+   */
   public static class RepeatStateExecutionData extends StateExecutionData {
     private static final long serialVersionUID = 5043797016447183954L;
     private List<ContextElement> repeatElements = new ArrayList<>();
@@ -205,6 +230,11 @@ public class RepeatState extends State {
       this.repeatElementIndex = repeatElementIndex;
     }
 
+    /**
+     * Index reached max.
+     *
+     * @return true, if successful
+     */
     boolean indexReachedMax() {
       if (repeatElements != null && repeatElementIndex != null && repeatElementIndex == repeatElements.size()) {
         return true;

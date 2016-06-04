@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Transient;
 import javax.validation.constraints.NotNull;
 
 /**
+ * The Class Workflow.
+ *
  * @author Rishi
  */
 public class Workflow extends Base {

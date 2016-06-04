@@ -12,7 +12,7 @@ import software.wings.beans.Base;
 import java.util.Date;
 
 /**
- * Lock bean class
+ * Lock bean class.
  *
  * @author Rishi
  */

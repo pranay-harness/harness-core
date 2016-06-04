@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/11/16.
  */
@@ -57,11 +59,19 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     }
   };
 
+  /**
+   * Setup mocks.
+   */
   @Before
   public void setupMocks() {
     when(collectorServiceMap.get(anyString())).thenReturn(artifactCollectorService);
   }
 
+  /**
+   * Should fail when artifact not available.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldFailWhenArtifactNotAvailable() throws Exception {
     artifactCollectEventListener.onMessage(
@@ -83,6 +93,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.FAILED);
   }
 
+  /**
+   * Should collect and update artifact.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldCollectAndUpdateArtifact() throws Exception {
     when(artifactCollectorService.collect(ARTIFACT_SOURCE, Collections.emptyMap()))
@@ -109,6 +124,11 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.READY);
   }
 
+  /**
+   * Should fail to collect artifact when source is missing.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldFailToCollectArtifactWhenSourceIsMissing() throws Exception {
     when(artifactCollectorService.collect(ARTIFACT_SOURCE, Collections.emptyMap()))

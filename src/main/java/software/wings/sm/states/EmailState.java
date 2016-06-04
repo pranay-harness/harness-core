@@ -20,7 +20,11 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class EmailState.
+ *
  * @author Rishi
  */
 @Attributes(title = "Email")
@@ -37,10 +41,18 @@ public class EmailState extends State {
 
   @Inject private transient NotificationService<EmailData> emailNotificationService;
 
+  /**
+   * Instantiates a new email state.
+   *
+   * @param name the name
+   */
   public EmailState(String name) {
     super(name, StateType.EMAIL.name());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionResponse executionResponse = new ExecutionResponse();

@@ -2,6 +2,9 @@ package software.wings.app;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * The Class PortalConfig.
+ */
 public class PortalConfig {
   @JsonProperty private String url;
 

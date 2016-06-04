@@ -6,6 +6,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * ThreadPoolExecutor based on https://github.com/AndroidDeveloperLB/ListViewVariants
  * /blob/master/app/src/main /java/lb/listviewvariants/utils/async_task_thread_pool
@@ -20,10 +22,22 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
    */
   private final AtomicInteger activeCount = new AtomicInteger();
 
+  /**
+   * Instantiates a new scaling thread pool executor.
+   */
   public ScalingThreadPoolExecutor() {
     super(1, 1, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<>(100));
   }
 
+  /**
+   * Instantiates a new scaling thread pool executor.
+   *
+   * @param corePoolSize    the core pool size
+   * @param maximumPoolSize the maximum pool size
+   * @param keepAliveTime   the keep alive time
+   * @param unit            the unit
+   * @param workQueue       the work queue
+   */
   public ScalingThreadPoolExecutor(
       int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue workQueue) {
     super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
@@ -34,11 +48,17 @@ public class ScalingThreadPoolExecutor extends ThreadPoolExecutor {
     return activeCount.get();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ThreadPoolExecutor#beforeExecute(java.lang.Thread, java.lang.Runnable)
+   */
   @Override
   protected void beforeExecute(Thread t, Runnable r) {
     activeCount.incrementAndGet();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.concurrent.ThreadPoolExecutor#afterExecute(java.lang.Runnable, java.lang.Throwable)
+   */
   @Override
   protected void afterExecute(Runnable r, Throwable t) {
     activeCount.decrementAndGet();

@@ -5,6 +5,8 @@ import software.wings.common.Constants;
 
 import java.io.Closeable;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Miscellaneous utility class.
  *
@@ -41,6 +43,12 @@ public class Misc {
     }
   }
 
+  /**
+   * As int.
+   *
+   * @param value the value
+   * @return the int
+   */
   public static int asInt(String value) {
     return asInt(value, 0);
   }
@@ -60,6 +68,11 @@ public class Misc {
     }
   }
 
+  /**
+   * Ignore exception.
+   *
+   * @param callable the callable
+   */
   public static void ignoreException(ThrowingCallable callable) {
     try {
       callable.run();
@@ -68,6 +81,14 @@ public class Misc {
     }
   }
 
+  /**
+   * Ignore exception.
+   *
+   * @param <T>          the generic type
+   * @param callable     the callable
+   * @param defaultValue the default value
+   * @return the t
+   */
   public static <T> T ignoreException(ReturningThrowingCallable<T> callable, T defaultValue) {
     try {
       return callable.run();
@@ -77,6 +98,12 @@ public class Misc {
     }
   }
 
+  /**
+   * Checks if is wild char present.
+   *
+   * @param names the names
+   * @return true, if is wild char present
+   */
   public static boolean isWildCharPresent(String... names) {
     if (ArrayUtils.isEmpty(names)) {
       return false;
@@ -89,7 +116,30 @@ public class Misc {
     return false;
   }
 
-  public interface ThrowingCallable { void run() throws Exception; }
+  /**
+   * The Interface ThrowingCallable.
+   */
+  public interface ThrowingCallable {
+    /**
+     * Run.
+     *
+     * @throws Exception the exception
+     */
+    void run() throws Exception;
+  }
 
-  public interface ReturningThrowingCallable<T> { T run() throws Exception; }
+  /**
+   * The Interface ReturningThrowingCallable.
+   *
+   * @param <T> the generic type
+   */
+  public interface ReturningThrowingCallable<T> {
+    /**
+     * Run.
+     *
+     * @return the t
+     * @throws Exception the exception
+     */
+    T run() throws Exception;
+  }
 }

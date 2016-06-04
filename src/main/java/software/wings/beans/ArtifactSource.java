@@ -10,6 +10,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * ArtifactSource bean class.
  *
@@ -27,6 +29,11 @@ public abstract class ArtifactSource {
 
   @NotNull private ArtifactType artifactType;
 
+  /**
+   * Instantiates a new artifact source.
+   *
+   * @param sourceType the source type
+   */
   public ArtifactSource(SourceType sourceType) {
     this.sourceType = sourceType;
   }
@@ -57,6 +64,9 @@ public abstract class ArtifactSource {
 
   public abstract Set<Service> getServices();
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -70,11 +80,17 @@ public abstract class ArtifactSource {
         && artifactType == that.artifactType;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return com.google.common.base.Objects.hashCode(sourceName, sourceType, artifactType);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -84,7 +100,13 @@ public abstract class ArtifactSource {
         .toString();
   }
 
+  /**
+   * The Enum SourceType.
+   */
   public enum SourceType { JENKINS, NEXUS, ARTIFACTORY, SVN, GIT, HTTP, FILE_UPLOAD }
 
+  /**
+   * The Enum ArtifactType.
+   */
   public enum ArtifactType { JAR, WAR, TAR, ZIP, OTHER }
 }

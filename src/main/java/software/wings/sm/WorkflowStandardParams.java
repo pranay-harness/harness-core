@@ -16,7 +16,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowStandardParams.
+ *
  * @author Rishi.
  */
 public class WorkflowStandardParams implements ContextElement {
@@ -79,6 +83,9 @@ public class WorkflowStandardParams implements ContextElement {
     this.endTs = endTs;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ContextElement#paramMap()
+   */
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();

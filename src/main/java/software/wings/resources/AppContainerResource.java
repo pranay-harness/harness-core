@@ -35,6 +35,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/4/16.
  */
@@ -47,6 +49,13 @@ import javax.ws.rs.QueryParam;
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
 
+  /**
+   * List.
+   *
+   * @param appId   the app id
+   * @param request the request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<AppContainer>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<AppContainer> request) {
@@ -54,12 +63,29 @@ public class AppContainerResource {
     return new RestResponse<>(appContainerService.list(request));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appContainerId the app container id
+   * @return the rest response
+   */
   @GET
   @Path("{appContainerId}")
   public RestResponse<AppContainer> get(@PathParam("appContainerId") String appContainerId) {
     return new RestResponse<>(appContainerService.get(appContainerId));
   }
 
+  /**
+   * Upload platform.
+   *
+   * @param appId               the app id
+   * @param sourceType          the source type
+   * @param urlString           the url string
+   * @param uploadedInputStream the uploaded input stream
+   * @param fileDetail          the file detail
+   * @param appContainer        the app container
+   * @return the rest response
+   */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> uploadPlatform(@QueryParam("appId") String appId,
@@ -74,6 +100,18 @@ public class AppContainerResource {
     return new RestResponse<>(fileId);
   }
 
+  /**
+   * Update platform.
+   *
+   * @param appId               the app id
+   * @param appContainerId      the app container id
+   * @param sourceType          the source type
+   * @param urlString           the url string
+   * @param uploadedInputStream the uploaded input stream
+   * @param fileDetail          the file detail
+   * @param appContainer        the app container
+   * @return the rest response
+   */
   @PUT
   @Path("{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
@@ -98,6 +136,12 @@ public class AppContainerResource {
     }
   }
 
+  /**
+   * Delete platform.
+   *
+   * @param appId          the app id
+   * @param appContainerId the app container id
+   */
   @DELETE
   @Path("{appContainerId}")
   public void deletePlatform(@PathParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {

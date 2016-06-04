@@ -26,6 +26,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * AuditRequestFilter preserves the rest endpoint header and payload.
  *
@@ -40,6 +42,9 @@ public class AuditRequestFilter implements ContainerRequestFilter {
 
   @Inject private AuditHelper auditHelper;
 
+  /* (non-Javadoc)
+   * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
+   */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
     AuditHeader header = new AuditHeader();

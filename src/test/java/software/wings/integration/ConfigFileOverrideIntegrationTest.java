@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
 /**
  * Created by anubhaw on 4/28/16.
  */
@@ -98,6 +99,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   Tag orOz1;
   Tag orOz2;
 
+  /**
+   * Sets the up.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Before
   public void setUp() throws IOException {
     // DB cleanup
@@ -141,6 +147,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     templateService.updateTags(app.getUuid(), template.getUuid(), selectedTags);
   }
 
+  /**
+   * Should apply service config files it.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldApplyServiceConfigFilesIT() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
@@ -152,6 +163,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, template.getService().getUuid()));
   }
 
+  /**
+   * Should apply env config file override.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldApplyEnvConfigFileOverride() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
@@ -164,6 +180,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), template.getEnvId()));
   }
 
+  /**
+   * Should apply host configs override for tagged host.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldApplyHostConfigsOverrideForTaggedHost() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
@@ -177,6 +198,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), ncOz1.getUuid()));
   }
 
+  /**
+   * Should apply host configs override for untagged host.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldApplyHostConfigsOverrideForUntaggedHost() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
@@ -191,6 +217,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(0).getUuid()));
   }
 
+  /**
+   * Should apply tag config file override.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldApplyTagConfigFileOverride() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), DEFAULT_TEMPLATE_ID);
@@ -205,6 +236,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         .isEqualTo(configService.getConfigFilesForEntity(template.getUuid(), hosts.get(8).getUuid()));
   }
 
+  /**
+   * Should override config files in all scenarios it.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Test
   public void shouldOverrideConfigFilesInAllScenariosIT() throws IOException {
     // prepare config files

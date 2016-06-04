@@ -20,9 +20,12 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * PageResponse bean class.
  *
+ * @param <T> the generic type
  * @author Rishi
  */
 @JsonFormat(shape = Shape.OBJECT)
@@ -31,8 +34,16 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
   private List<T> response;
   private long total;
 
+  /**
+   * Instantiates a new page response.
+   */
   public PageResponse() {}
 
+  /**
+   * Instantiates a new page response.
+   *
+   * @param req the req
+   */
   public PageResponse(PageRequest<T> req) {
     super(req);
   }
@@ -69,6 +80,9 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
     return pageno;
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#size()
+   */
   @Override
   public int size() {
     return response.size();
@@ -79,146 +93,233 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
     return response.isEmpty();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#contains(java.lang.Object)
+   */
   @Override
   public boolean contains(Object item) {
     return response.contains(item);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#iterator()
+   */
   @Override
   public Iterator<T> iterator() {
     return response.iterator();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#toArray()
+   */
   @Override
   public Object[] toArray() {
     return response.toArray();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#toArray(java.lang.Object[])
+   */
   @Override
   public <T1> T1[] toArray(T1[] array) {
     return response.toArray(array);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#add(java.lang.Object)
+   */
   @Override
   public boolean add(T item) {
     return response.add(item);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#add(int, java.lang.Object)
+   */
   @Override
   public void add(int index, T element) {
     response.add(index, element);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#remove(java.lang.Object)
+   */
   @Override
   public boolean remove(Object item) {
     return response.remove(item);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#remove(int)
+   */
   @Override
   public T remove(int index) {
     return response.remove(index);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#containsAll(java.util.Collection)
+   */
   @Override
   public boolean containsAll(Collection<?> collection) {
     return response.containsAll(collection);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#addAll(java.util.Collection)
+   */
   @Override
   public boolean addAll(Collection<? extends T> collection) {
     return response.addAll(collection);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#addAll(int, java.util.Collection)
+   */
   @Override
   public boolean addAll(int index, Collection<? extends T> collection) {
     return response.addAll(index, collection);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#removeAll(java.util.Collection)
+   */
   @Override
   public boolean removeAll(Collection<?> collection) {
     return response.removeAll(collection);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#retainAll(java.util.Collection)
+   */
   @Override
   public boolean retainAll(Collection<?> collection) {
     return response.retainAll(collection);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#replaceAll(java.util.function.UnaryOperator)
+   */
   @Override
   public void replaceAll(UnaryOperator<T> operator) {
     response.replaceAll(operator);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#sort(java.util.Comparator)
+   */
   @Override
   public void sort(Comparator<? super T> comparator) {
     response.sort(comparator);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#clear()
+   */
   @Override
   public void clear() {
     response.clear();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#get(int)
+   */
   @Override
   public T get(int index) {
     return response.get(index);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#set(int, java.lang.Object)
+   */
   @Override
   public T set(int index, T element) {
     return response.set(index, element);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#indexOf(java.lang.Object)
+   */
   @Override
   public int indexOf(Object item) {
     return response.indexOf(item);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#lastIndexOf(java.lang.Object)
+   */
   @Override
   public int lastIndexOf(Object item) {
     return response.lastIndexOf(item);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#listIterator()
+   */
   @Override
   public ListIterator<T> listIterator() {
     return response.listIterator();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#listIterator(int)
+   */
   @Override
   public ListIterator<T> listIterator(int index) {
     return response.listIterator(index);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#subList(int, int)
+   */
   @Override
   public List<T> subList(int fromIndex, int toIndex) {
     return response.subList(fromIndex, toIndex);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.List#spliterator()
+   */
   @Override
   public Spliterator<T> spliterator() {
     return response.spliterator();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.Collection#removeIf(java.util.function.Predicate)
+   */
   @Override
   public boolean removeIf(Predicate<? super T> filter) {
     return response.removeIf(filter);
   }
 
+  /* (non-Javadoc)
+   * @see java.util.Collection#stream()
+   */
   @Override
   public Stream<T> stream() {
     return response.stream();
   }
 
+  /* (non-Javadoc)
+   * @see java.util.Collection#parallelStream()
+   */
   @Override
   public Stream<T> parallelStream() {
     return response.parallelStream();
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Iterable#forEach(java.util.function.Consumer)
+   */
   @Override
   public void forEach(Consumer<? super T> action) {
     response.forEach(action);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.dl.PageRequest#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -231,11 +332,17 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
     return total == that.total && Objects.equal(response, that.response);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.dl.PageRequest#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(response, total);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.dl.PageRequest#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

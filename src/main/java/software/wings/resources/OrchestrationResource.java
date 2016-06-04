@@ -17,7 +17,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -29,7 +28,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class OrchestrationResource.
+ *
  * @author Rishi
  */
 @Api("orchestrations")
@@ -38,12 +41,26 @@ public class OrchestrationResource {
   private WorkflowService workflowService;
   private EnvironmentService environmentService;
 
+  /**
+   * Instantiates a new orchestration resource.
+   *
+   * @param workflowService    the workflow service
+   * @param environmentService the environment service
+   */
   @Inject
   public OrchestrationResource(WorkflowService workflowService, EnvironmentService environmentService) {
     this.workflowService = workflowService;
     this.environmentService = environmentService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Produces("application/json")
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
@@ -53,6 +70,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.listOrchestration(pageRequest));
   }
 
+  /**
+   * Read.
+   *
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param orchestrationId the orchestration id
+   * @return the rest response
+   */
   @GET
   @Path("{orchestrationId}")
   @Produces("application/json")
@@ -61,6 +86,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.readOrchestration(appId, envId, orchestrationId));
   }
 
+  /**
+   * Creates the.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param orchestration the orchestration
+   * @return the rest response
+   */
   @POST
   @Produces("application/json")
   public RestResponse<Orchestration> create(
@@ -69,6 +102,15 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param orchestrationId the orchestration id
+   * @param orchestration   the orchestration
+   * @return the rest response
+   */
   @PUT
   @Path("{orchestrationId}")
   @Produces("application/json")
@@ -79,6 +121,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   * @param pipeline   the pipeline
+   * @return the rest response
+   */
   @DELETE
   @Path("{pipelineId}")
   @Produces("application/json")
@@ -88,6 +138,15 @@ public class OrchestrationResource {
     return new RestResponse();
   }
 
+  /**
+   * List executions.
+   *
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param orchestrationId the orchestration id
+   * @param pageRequest     the page request
+   * @return the rest response
+   */
   @GET
   @Path("{orchestrationId}/executions")
   @Produces("application/json")
@@ -109,6 +168,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.listExecutions(pageRequest, false));
   }
 
+  /**
+   * Gets the execution details.
+   *
+   * @param appId               the app id
+   * @param envId               the env id
+   * @param workflowExecutionId the workflow execution id
+   * @return the execution details
+   */
   @GET
   @Path("executions/{workflowExecutionId}")
   @Produces("application/json")
@@ -117,6 +184,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId));
   }
 
+  /**
+   * Trigger execution.
+   *
+   * @param appId           the app id
+   * @param orchestrationId the orchestration id
+   * @param artifactIds     the artifact ids
+   * @return the rest response
+   */
   @POST
   @Path("{orchestrationId}/executions")
   @Produces("application/json")
@@ -125,6 +200,14 @@ public class OrchestrationResource {
     return new RestResponse<>(workflowService.triggerOrchestrationExecution(appId, orchestrationId, artifactIds));
   }
 
+  /**
+   * Update execution details.
+   *
+   * @param appId               the app id
+   * @param envId               the env id
+   * @param workflowExecutionId the workflow execution id
+   * @return the rest response
+   */
   @PUT
   @Path("executions/{workflowExecutionId}")
   @Produces("application/json")

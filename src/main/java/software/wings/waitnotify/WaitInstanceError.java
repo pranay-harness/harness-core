@@ -8,6 +8,8 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Represents errors thrown by callback of wait instance.
  *
@@ -45,6 +47,9 @@ public class WaitInstanceError extends Base {
     this.errorStackTrace = errorStackTrace;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -61,6 +66,9 @@ public class WaitInstanceError extends Base {
         && Objects.equals(errorStackTrace, that.errorStackTrace);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), waitInstanceId, responseMap, errorStackTrace);

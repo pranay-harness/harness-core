@@ -3,7 +3,11 @@
  */
 package software.wings.sm;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Interface ExpressionProcessor.
+ *
  * @author Rishi
  */
 public interface ExpressionProcessor {
@@ -11,5 +15,11 @@ public interface ExpressionProcessor {
 
   String getPrefixObjectName();
 
+  /**
+   * Normalize expression.
+   *
+   * @param expression the expression
+   * @return the string
+   */
   String normalizeExpression(String expression);
 }

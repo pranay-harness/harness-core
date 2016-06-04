@@ -8,7 +8,11 @@ import software.wings.sm.ContextElementType;
 
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class InstanceElement.
+ *
  * @author Rishi
  */
 public class InstanceElement implements ContextElement {
@@ -26,6 +30,9 @@ public class InstanceElement implements ContextElement {
     return ContextElementType.INSTANCE;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ContextElement#paramMap()
+   */
   @Override
   public Map<String, Object> paramMap() {
     return null;

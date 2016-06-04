@@ -6,12 +6,19 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/24/16.
+ *
+ * @see EmailNotificationEvent
  */
 public class EmailNotificationListener extends AbstractQueueListener<EmailData> {
   @Inject private NotificationService<EmailData> emailNotificationService;
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
+   */
   @Override
   protected void onMessage(EmailData message) throws Exception {
     emailNotificationService.send(message);

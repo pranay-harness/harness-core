@@ -13,6 +13,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
@@ -36,18 +38,27 @@ public class ActivityServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Should list activities.
+   */
   @Test
   public void shouldListActivities() {
     wingsPersistence.save(activity);
     assertThat(activityService.list("APP_ID", "ENV_ID", new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
 
+  /**
+   * Should get activity.
+   */
   @Test
   public void shouldGetActivity() {
     wingsPersistence.save(activity);
     assertThat(activityService.get(activity.getUuid(), activity.getAppId())).isEqualTo(activity);
   }
 
+  /**
+   * Should save activity.
+   */
   @Test
   public void shouldSaveActivity() {
     activityService.save(activity);

@@ -19,8 +19,12 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/11/16.
+ *
+ * @see ArtifactCollectEventEvent
  */
 @Singleton
 public class ArtifactCollectEventListener extends AbstractQueueListener<CollectEvent> {
@@ -30,6 +34,9 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
   @Inject private Map<String, ArtifactCollectorService> artifactCollectorServiceMap;
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
+   */
   @Override
   protected void onMessage(CollectEvent message) throws Exception {
     Artifact artifact = message.getArtifact();

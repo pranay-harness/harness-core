@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Represents type of state.
  *
@@ -67,6 +69,12 @@ public enum StateType implements StateTypeDescriptor {
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
 
+  /**
+   * Instantiates a new state type.
+   *
+   * @param stateClass the state class
+   * @param scopes     the scopes
+   */
   StateType(Class<? extends State> stateClass, StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);

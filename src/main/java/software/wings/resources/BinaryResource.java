@@ -14,9 +14,21 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class BinaryResource.
+ */
 @Api("bins")
 @Path("/bins")
 public class BinaryResource {
+  /**
+   * Framework.
+   *
+   * @return the response
+   * @throws IOException              Signals that an I/O exception has occurred.
+   * @throws GeneralSecurityException the general security exception
+   */
   @GET
   @Path("framework")
   @Encoded
@@ -35,6 +47,13 @@ public class BinaryResource {
     }
   }
 
+  /**
+   * Sample.
+   *
+   * @return the response
+   * @throws IOException              Signals that an I/O exception has occurred.
+   * @throws GeneralSecurityException the general security exception
+   */
   @GET
   @Path("sample")
   @Encoded

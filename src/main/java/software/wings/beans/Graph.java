@@ -21,7 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class Graph.
+ *
  * @author Rishi
  */
 public class Graph {
@@ -109,6 +113,9 @@ public class Graph {
     };
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     final int prime = 31;
@@ -119,6 +126,9 @@ public class Graph {
     return result;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -153,6 +163,9 @@ public class Graph {
     return originState;
   }
 
+  /**
+   * The Class Node.
+   */
   public static class Node implements Serializable {
     private static final long serialVersionUID = 7894954599933362678L;
 
@@ -215,6 +228,9 @@ public class Graph {
       return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -228,6 +244,9 @@ public class Graph {
       return result;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object obj) {
       if (this == obj)
@@ -264,6 +283,9 @@ public class Graph {
       return true;
     }
 
+    /**
+     * The Class Builder.
+     */
     public static final class Builder {
       private String id;
       private String name;
@@ -274,49 +296,107 @@ public class Graph {
 
       private Builder() {}
 
+      /**
+       * A node.
+       *
+       * @return the builder
+       */
       public static Builder aNode() {
         return new Builder();
       }
 
+      /**
+       * With id.
+       *
+       * @param id the id
+       * @return the builder
+       */
       public Builder withId(String id) {
         this.id = id;
         return this;
       }
 
+      /**
+       * With name.
+       *
+       * @param name the name
+       * @return the builder
+       */
       public Builder withName(String name) {
         this.name = name;
         return this;
       }
 
+      /**
+       * With type.
+       *
+       * @param type the type
+       * @return the builder
+       */
       public Builder withType(String type) {
         this.type = type;
         return this;
       }
 
+      /**
+       * With x.
+       *
+       * @param x the x
+       * @return the builder
+       */
       public Builder withX(int x) {
         this.x = x;
         return this;
       }
 
+      /**
+       * With y.
+       *
+       * @param y the y
+       * @return the builder
+       */
       public Builder withY(int y) {
         this.y = y;
         return this;
       }
 
+      /**
+       * Adds the property.
+       *
+       * @param name  the name
+       * @param value the value
+       * @return the builder
+       */
       public Builder addProperty(String name, Object value) {
         this.properties.put(name, value);
         return this;
       }
 
+      /**
+       * With properties.
+       *
+       * @param properties the properties
+       * @return the builder
+       */
       public Builder withProperties(Map<String, Object> properties) {
         this.properties = properties;
         return this;
       }
 
+      /**
+       * But.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aNode().withId(id).withName(name).withType(type).withX(x).withY(y).withProperties(properties);
       }
 
+      /**
+       * Builds the.
+       *
+       * @return the node
+       */
       public Node build() {
         Node node = new Node();
         node.setId(id);
@@ -330,6 +410,9 @@ public class Graph {
     }
   }
 
+  /**
+   * The Class Link.
+   */
   public static class Link implements Serializable {
     private static final long serialVersionUID = 7894954599933362678L;
 
@@ -370,6 +453,9 @@ public class Graph {
       this.type = type;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
     public int hashCode() {
       final int prime = 31;
@@ -381,6 +467,9 @@ public class Graph {
       return result;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
     @Override
     public boolean equals(Object obj) {
       if (this == obj)
@@ -413,6 +502,9 @@ public class Graph {
       return true;
     }
 
+    /**
+     * The Class Builder.
+     */
     public static final class Builder {
       private String id;
       private String from;
@@ -421,34 +513,73 @@ public class Graph {
 
       private Builder() {}
 
+      /**
+       * A link.
+       *
+       * @return the builder
+       */
       public static Builder aLink() {
         return new Builder();
       }
 
+      /**
+       * With id.
+       *
+       * @param id the id
+       * @return the builder
+       */
       public Builder withId(String id) {
         this.id = id;
         return this;
       }
 
+      /**
+       * With from.
+       *
+       * @param from the from
+       * @return the builder
+       */
       public Builder withFrom(String from) {
         this.from = from;
         return this;
       }
 
+      /**
+       * With to.
+       *
+       * @param to the to
+       * @return the builder
+       */
       public Builder withTo(String to) {
         this.to = to;
         return this;
       }
 
+      /**
+       * With type.
+       *
+       * @param type the type
+       * @return the builder
+       */
       public Builder withType(String type) {
         this.type = type;
         return this;
       }
 
+      /**
+       * But.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aLink().withId(id).withFrom(from).withTo(to).withType(type);
       }
 
+      /**
+       * Builds the.
+       *
+       * @return the link
+       */
       public Link build() {
         Link link = new Link();
         link.setId(id);
@@ -460,6 +591,9 @@ public class Graph {
     }
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
     private List<Node> nodes = new ArrayList<>();
@@ -467,39 +601,84 @@ public class Graph {
 
     private Builder() {}
 
+    /**
+     * A graph.
+     *
+     * @return the builder
+     */
     public static Builder aGraph() {
       return new Builder();
     }
 
+    /**
+     * With graph name.
+     *
+     * @param graphName the graph name
+     * @return the builder
+     */
     public Builder withGraphName(String graphName) {
       this.graphName = graphName;
       return this;
     }
 
+    /**
+     * Adds the nodes.
+     *
+     * @param nodes the nodes
+     * @return the builder
+     */
     public Builder addNodes(Node... nodes) {
       this.nodes.addAll(Arrays.asList(nodes));
       return this;
     }
 
+    /**
+     * With nodes.
+     *
+     * @param nodes the nodes
+     * @return the builder
+     */
     public Builder withNodes(List<Node> nodes) {
       this.nodes = nodes;
       return this;
     }
 
+    /**
+     * Adds the links.
+     *
+     * @param links the links
+     * @return the builder
+     */
     public Builder addLinks(Link... links) {
       this.links.addAll(Arrays.asList(links));
       return this;
     }
 
+    /**
+     * With links.
+     *
+     * @param links the links
+     * @return the builder
+     */
     public Builder withLinks(List<Link> links) {
       this.links = links;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aGraph().withGraphName(graphName).withNodes(nodes).withLinks(links);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the graph
+     */
     public Graph build() {
       Graph graph = new Graph();
       graph.setGraphName(graphName);

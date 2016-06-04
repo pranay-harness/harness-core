@@ -28,6 +28,8 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Artifact bean class.
  *
@@ -126,6 +128,9 @@ public class Artifact extends Base {
     return null;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -141,12 +146,18 @@ public class Artifact extends Base {
         && status == artifact.status;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(
         super.hashCode(), release, artifactSourceName, metadata, displayName, revision, artifactFiles, status);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -162,6 +173,9 @@ public class Artifact extends Base {
         .toString();
   }
 
+  /**
+   * The Enum Status.
+   */
   public enum Status { NEW, RUNNING, QUEUED, WAITING, READY, ABORTED, FAILED, ERROR }
 
   /**
@@ -170,17 +184,42 @@ public class Artifact extends Base {
   @Retention(RetentionPolicy.RUNTIME)
   @Constraint(validatedBy = ValidArtifact.Validator.class)
   public static @interface ValidArtifact {
+    /**
+     * Message.
+     *
+     * @return the string
+     */
     String
     message() default "bean isNotBlank(bean.getApplication().getUuid()) have id for updating and application id is not same.";
 
+    /**
+     * Groups.
+     *
+     * @return the class[]
+     */
     Class<?>[] groups() default {};
 
+    /**
+     * Payload.
+     *
+     * @return the class<? extends payload>[]
+     */
     Class<? extends Payload>[] payload() default {};
 
+    /**
+     * The Class Validator.
+     */
     public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
+      /* (non-Javadoc)
+       * @see javax.validation.ConstraintValidator#initialize(java.lang.annotation.Annotation)
+       */
       @Override
       public void initialize(final ValidArtifact validateForUpdate) {}
 
+      /* (non-Javadoc)
+       * @see javax.validation.ConstraintValidator#isValid(java.lang.Object,
+       * javax.validation.ConstraintValidatorContext)
+       */
       @Override
       public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
         return isNotBlank(bean.getAppId()) && isNotBlank(bean.getRelease().getUuid());
@@ -188,6 +227,9 @@ public class Artifact extends Base {
     }
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private Release release;
     private String artifactSourceName;
@@ -206,80 +248,174 @@ public class Artifact extends Base {
 
     private Builder() {}
 
+    /**
+     * An artifact.
+     *
+     * @return the builder
+     */
     public static Builder anArtifact() {
       return new Builder();
     }
 
+    /**
+     * With release.
+     *
+     * @param release the release
+     * @return the builder
+     */
     public Builder withRelease(Release release) {
       this.release = release;
       return this;
     }
 
+    /**
+     * With artifact source name.
+     *
+     * @param artifactSourceName the artifact source name
+     * @return the builder
+     */
     public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
+    /**
+     * With metadata.
+     *
+     * @param metadata the metadata
+     * @return the builder
+     */
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
+    /**
+     * With display name.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
     public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
+    /**
+     * With revision.
+     *
+     * @param revision the revision
+     * @return the builder
+     */
     public Builder withRevision(String revision) {
       this.revision = revision;
       return this;
     }
 
+    /**
+     * With artifact files.
+     *
+     * @param artifactFiles the artifact files
+     * @return the builder
+     */
     public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
       this.artifactFiles = artifactFiles;
       return this;
     }
 
+    /**
+     * With status.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anArtifact()
           .withRelease(release)
@@ -298,6 +434,11 @@ public class Artifact extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the artifact
+     */
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setRelease(release);

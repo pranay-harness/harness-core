@@ -5,9 +5,17 @@ import software.wings.WingsBaseTest;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class PersistentLockerTest.
+ */
 public class PersistentLockerTest extends WingsBaseTest {
   @Inject private PersistentLocker persistentLocker;
 
+  /**
+   * Test acquire lock.
+   */
   @Test
   public void testAcquireLock() {
     String uuid = "" + System.currentTimeMillis();

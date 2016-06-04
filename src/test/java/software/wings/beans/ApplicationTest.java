@@ -10,8 +10,10 @@ import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * Test case
+ * Test case.
  *
  * @author Rishi
  */
@@ -19,6 +21,9 @@ public class ApplicationTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private JsonUtils jsonUtils;
 
+  /**
+   * Test serialize deserialize.
+   */
   @Test
   public void testSerializeDeserialize() {
     Application app = new Application();

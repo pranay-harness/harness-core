@@ -22,8 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class StateMachineTest.
+ */
 @Listeners(NotifyEventListener.class)
 public class StateMachineTest extends WingsBaseTest {
+  /**
+   * Should validate.
+   */
   @Test
   public void shouldValidate() {
     StateMachine sm = new StateMachine();
@@ -37,6 +45,9 @@ public class StateMachineTest extends WingsBaseTest {
     assertThat(true).as("Validate result").isEqualTo(sm.validate());
   }
 
+  /**
+   * Should throw dup error code.
+   */
   @Test
   public void shouldThrowDupErrorCode() {
     try {
@@ -57,6 +68,9 @@ public class StateMachineTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw null transition.
+   */
   @Test
   public void shouldThrowNullTransition() {
     try {
@@ -75,6 +89,9 @@ public class StateMachineTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The Class Notifier.
+   */
   static class Notifier implements Runnable {
     @Inject private WaitNotifyEngine waitNotifyEngine;
     private boolean shouldFail;
@@ -86,12 +103,21 @@ public class StateMachineTest extends WingsBaseTest {
      * Creates a new Notifier object.
      *
      * @param name     name of notifier.
+     * @param uuid     the uuid
      * @param duration duration to sleep for.
      */
     public Notifier(String name, String uuid, int duration) {
       this(name, uuid, duration, false);
     }
 
+    /**
+     * Instantiates a new notifier.
+     *
+     * @param name       the name
+     * @param uuid       the uuid
+     * @param duration   the duration
+     * @param shouldFail the should fail
+     */
     public Notifier(String name, String uuid, int duration, boolean shouldFail) {
       this.name = name;
       this.uuid = uuid;
@@ -123,15 +149,28 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   /**
+   * The Class StateSynch.
+   *
    * @author Rishi
    */
   public static class StateSynch extends State {
     private boolean shouldFail;
 
+    /**
+     * Instantiates a new state synch.
+     *
+     * @param name the name
+     */
     public StateSynch(String name) {
       this(name, false);
     }
 
+    /**
+     * Instantiates a new state synch.
+     *
+     * @param name       the name
+     * @param shouldFail the should fail
+     */
     public StateSynch(String name, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.shouldFail = shouldFail;
@@ -158,6 +197,8 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   /**
+   * The Class StateAsynch.
+   *
    * @author Rishi
    */
   public static class StateAsynch extends State {
@@ -166,10 +207,23 @@ public class StateMachineTest extends WingsBaseTest {
 
     @Inject private Injector injector;
 
+    /**
+     * Instantiates a new state asynch.
+     *
+     * @param name     the name
+     * @param duration the duration
+     */
     public StateAsynch(String name, int duration) {
       this(name, duration, false);
     }
 
+    /**
+     * Instantiates a new state asynch.
+     *
+     * @param name       the name
+     * @param duration   the duration
+     * @param shouldFail the should fail
+     */
     public StateAsynch(String name, int duration, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
@@ -197,6 +251,9 @@ public class StateMachineTest extends WingsBaseTest {
       return response;
     }
 
+    /* (non-Javadoc)
+     * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+     */
     @Override
     public ExecutionResponse handleAsynchResponse(
         ExecutionContextImpl context, Map<String, ? extends Serializable> responseMap) {
@@ -210,13 +267,25 @@ public class StateMachineTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The Class TestStateExecutionData.
+   */
   public static class TestStateExecutionData extends StateExecutionData {
     private static final long serialVersionUID = -4839494609772157079L;
     private String key;
     private String value;
 
+    /**
+     * Instantiates a new test state execution data.
+     */
     public TestStateExecutionData() {}
 
+    /**
+     * Instantiates a new test state execution data.
+     *
+     * @param key   the key
+     * @param value the value
+     */
     public TestStateExecutionData(String key, String value) {
       super();
       this.key = key;
@@ -239,6 +308,9 @@ public class StateMachineTest extends WingsBaseTest {
       this.value = value;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
     @Override
     public String toString() {
       return "TestStateExecutionData [key=" + key + ", value=" + value + "]";

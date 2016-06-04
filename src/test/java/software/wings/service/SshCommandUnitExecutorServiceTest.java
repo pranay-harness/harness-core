@@ -44,6 +44,8 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/31/16.
  */
@@ -70,6 +72,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
   private HostBuilder hostBuilder = aHost().withHostName(HOST_NAME);
 
+  /**
+   * Should create password based ssh config.
+   */
   @Test
   public void shouldCreatePasswordBasedSshConfig() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
@@ -87,6 +92,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(sshPwdAuthExecutor).init(expectedSshConfig);
   }
 
+  /**
+   * Should create key based ssh config.
+   */
   @Test
   public void shouldCreateKeyBasedSshConfig() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_KEY)
@@ -106,6 +114,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(sshPubKeyAuthExecutor).init(expectedSshConfig);
   }
 
+  /**
+   * Should create bastion host based ssh config.
+   */
   @Test
   public void shouldCreateBastionHostBasedSshConfig() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD)
@@ -128,6 +139,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(sshJumpboxExecutor).init(expectedSshConfig);
   }
 
+  /**
+   * Should execute exec command.
+   */
   @Test
   public void shouldExecuteExecCommand() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
@@ -137,6 +151,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(sshPwdAuthExecutor).execute(EXEC_CMD);
   }
 
+  /**
+   * Should execute copy command.
+   */
   @Test
   public void shouldExecuteCopyCommand() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();

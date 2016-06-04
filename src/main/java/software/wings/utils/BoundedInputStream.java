@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/14/16.
  */
@@ -19,15 +21,33 @@ public class BoundedInputStream extends InputStream {
   private final long size;
   private long totalBytesRead;
 
+  /**
+   * Instantiates a new bounded input stream.
+   *
+   * @param inputStream the input stream
+   */
   public BoundedInputStream(InputStream inputStream) {
     this(inputStream, -1); // no size limit imposed
   }
 
+  /**
+   * Instantiates a new bounded input stream.
+   *
+   * @param inputStream the input stream
+   * @param size        the size
+   */
   public BoundedInputStream(InputStream inputStream, long size) {
     this.inputStream = inputStream;
     this.size = size;
   }
 
+  /**
+   * Gets the bounded stream for url.
+   *
+   * @param urlString the url string
+   * @param size      the size
+   * @return the bounded stream for url
+   */
   public static BoundedInputStream getBoundedStreamForUrl(String urlString, int size) {
     try {
       URL url = new URL(urlString);
@@ -49,16 +69,25 @@ public class BoundedInputStream extends InputStream {
     return bytesRead;
   }
 
+  /* (non-Javadoc)
+   * @see java.io.InputStream#read()
+   */
   @Override
   public int read() throws IOException {
     return updateTotalBytesRead(inputStream.read());
   }
 
+  /* (non-Javadoc)
+   * @see java.io.InputStream#read(byte[])
+   */
   @Override
   public int read(byte bytes[]) throws IOException {
     return read(bytes, 0, bytes.length);
   }
 
+  /* (non-Javadoc)
+   * @see java.io.InputStream#read(byte[], int, int)
+   */
   @Override
   public int read(byte bytes[], int off, int len) throws IOException {
     return updateTotalBytesRead(inputStream.read(bytes, off, len));

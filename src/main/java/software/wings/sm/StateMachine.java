@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Describes a StateMachine.
  *
@@ -48,8 +50,18 @@ public class StateMachine extends Base {
 
   @Transient private transient Map<String, Map<TransitionType, List<State>>> cachedTransitionFlowMap = null;
 
+  /**
+   * Instantiates a new state machine.
+   */
   public StateMachine() {}
 
+  /**
+   * Instantiates a new state machine.
+   *
+   * @param workflow   the workflow
+   * @param graph      the graph
+   * @param stencilMap the stencil map
+   */
   public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
@@ -205,6 +217,12 @@ public class StateMachine extends Base {
     return statesMap;
   }
 
+  /**
+   * Gets the success transition.
+   *
+   * @param fromStateName the from state name
+   * @return the success transition
+   */
   public State getSuccessTransition(String fromStateName) {
     return getNextState(fromStateName, TransitionType.SUCCESS);
   }
@@ -344,6 +362,12 @@ public class StateMachine extends Base {
     return flowMap;
   }
 
+  /**
+   * Gets the failure transition.
+   *
+   * @param fromStateName the from state name
+   * @return the failure transition
+   */
   public State getFailureTransition(String fromStateName) {
     return getNextState(fromStateName, TransitionType.FAILURE);
   }
@@ -362,6 +386,9 @@ public class StateMachine extends Base {
     return statesMap.get(stateName);
   }
 
+  /**
+   * After load.
+   */
   @PostLoad
   public void afterLoad() {
     validate();
@@ -405,12 +432,18 @@ public class StateMachine extends Base {
     this.graph = graph;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return "StateMachine [initialStateName=" + initialStateName + ", states=" + states + ", transitions=" + transitions
         + "]";
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String originId;
     private String name;
@@ -428,75 +461,163 @@ public class StateMachine extends Base {
 
     private Builder() {}
 
+    /**
+     * A state machine.
+     *
+     * @return the builder
+     */
     public static Builder aStateMachine() {
       return new Builder();
     }
 
+    /**
+     * With origin id.
+     *
+     * @param originId the origin id
+     * @return the builder
+     */
     public Builder withOriginId(String originId) {
       this.originId = originId;
       return this;
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With graph.
+     *
+     * @param graph the graph
+     * @return the builder
+     */
     public Builder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
+    /**
+     * With states.
+     *
+     * @param states the states
+     * @return the builder
+     */
     public Builder withStates(List<State> states) {
       this.states = states;
       return this;
     }
 
+    /**
+     * With transitions.
+     *
+     * @param transitions the transitions
+     * @return the builder
+     */
     public Builder withTransitions(List<Transition> transitions) {
       this.transitions = transitions;
       return this;
     }
 
+    /**
+     * With initial state name.
+     *
+     * @param initialStateName the initial state name
+     * @return the builder
+     */
     public Builder withInitialStateName(String initialStateName) {
       this.initialStateName = initialStateName;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the state machine
+     */
     public StateMachine build() {
       StateMachine stateMachine = new StateMachine();
       stateMachine.setOriginId(originId);

@@ -23,6 +23,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Application Resource class.
  *
@@ -37,22 +39,46 @@ import javax.ws.rs.Produces;
 public class AppResource {
   private AppService appService;
 
+  /**
+   * Instantiates a new app resource.
+   *
+   * @param appService the app service
+   */
   @Inject
   public AppResource(AppService appService) {
     this.appService = appService;
   }
 
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest) {
     return new RestResponse<>(appService.list(pageRequest));
   }
 
+  /**
+   * Save.
+   *
+   * @param app the app
+   * @return the rest response
+   */
   @POST
   public RestResponse<Application> save(
       @ApiParam(examples = @Example(@ExampleProperty("{ \"name\": \"app1\"}"))) Application app) {
     return new RestResponse<>(appService.save(app));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId the app id
+   * @param app   the app
+   * @return the rest response
+   */
   @PUT
   @Path("{appId}")
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
@@ -60,12 +86,24 @@ public class AppResource {
     return new RestResponse<>(appService.update(app));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId the app id
+   * @return the rest response
+   */
   @GET
   @Path("{appId}")
   public RestResponse<Application> get(@PathParam("appId") String appId) {
     return new RestResponse<>(appService.findByUuid(appId));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId the app id
+   * @return the rest response
+   */
   @DELETE
   @Path("{appId}")
   public RestResponse delete(@PathParam("appId") String appId) {

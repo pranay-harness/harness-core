@@ -34,6 +34,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/9/16.
  */
@@ -47,6 +49,15 @@ import javax.ws.rs.core.Response;
 public class HostResource {
   @Inject private HostService hostService;
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param infraId     the infra id
+   * @param envId       the env id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Host>> list(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Host> pageRequest) {
@@ -56,6 +67,15 @@ public class HostResource {
     return new RestResponse<>(hostService.list(pageRequest));
   }
 
+  /**
+   * Gets the.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   * @param envId   the env id
+   * @param hostId  the host id
+   * @return the rest response
+   */
   @GET
   @Path("{hostId}")
   public RestResponse<Host> get(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
@@ -64,6 +84,15 @@ public class HostResource {
     return new RestResponse<>(hostService.get(appId, infraId, hostId));
   }
 
+  /**
+   * Save.
+   *
+   * @param appId    the app id
+   * @param infraId  the infra id
+   * @param envId    the env id
+   * @param baseHost the base host
+   * @return the rest response
+   */
   @POST
   public RestResponse save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, Host baseHost) {
@@ -74,6 +103,16 @@ public class HostResource {
     return new RestResponse();
   }
 
+  /**
+   * Update.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   * @param envId   the env id
+   * @param hostId  the host id
+   * @param host    the host
+   * @return the rest response
+   */
   @PUT
   @Path("{hostId}")
   public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
@@ -85,6 +124,15 @@ public class HostResource {
     return new RestResponse<Host>(hostService.update(host));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   * @param envId   the env id
+   * @param hostId  the host id
+   * @return the rest response
+   */
   @DELETE
   @Path("{hostId}")
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
@@ -94,6 +142,16 @@ public class HostResource {
     return new RestResponse();
   }
 
+  /**
+   * Import hosts.
+   *
+   * @param appId               the app id
+   * @param infraId             the infra id
+   * @param envId               the env id
+   * @param uploadedInputStream the uploaded input stream
+   * @param fileDetail          the file detail
+   * @return the rest response
+   */
   @POST
   @Path("import")
   @Consumes(MULTIPART_FORM_DATA)
@@ -106,6 +164,14 @@ public class HostResource {
     return new RestResponse();
   }
 
+  /**
+   * Export hosts.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   * @param envId   the env id
+   * @return the response
+   */
   @GET
   @Path("export")
   @Encoded

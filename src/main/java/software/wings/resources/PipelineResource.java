@@ -25,7 +25,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class PipelineResource.
+ *
  * @author Rishi
  */
 @Api("pipelines")
@@ -33,11 +37,23 @@ import javax.ws.rs.QueryParam;
 public class PipelineResource {
   private WorkflowService workflowService;
 
+  /**
+   * Instantiates a new pipeline resource.
+   *
+   * @param workflowService the workflow service
+   */
   @Inject
   public PipelineResource(WorkflowService workflowService) {
     this.workflowService = workflowService;
   }
 
+  /**
+   * List.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Produces("application/json")
   public RestResponse<PageResponse<Pipeline>> list(
@@ -46,6 +62,13 @@ public class PipelineResource {
     return new RestResponse<>(workflowService.listPipelines(pageRequest));
   }
 
+  /**
+   * Read.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   * @return the rest response
+   */
   @GET
   @Path("{pipelineId}")
   @Produces("application/json")
@@ -53,6 +76,13 @@ public class PipelineResource {
     return new RestResponse<>(workflowService.readPipeline(appId, pipelineId));
   }
 
+  /**
+   * Creates the.
+   *
+   * @param appId    the app id
+   * @param pipeline the pipeline
+   * @return the rest response
+   */
   @POST
   @Produces("application/json")
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
@@ -60,6 +90,14 @@ public class PipelineResource {
     return new RestResponse<>(workflowService.createWorkflow(Pipeline.class, pipeline));
   }
 
+  /**
+   * Update.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   * @param pipeline   the pipeline
+   * @return the rest response
+   */
   @PUT
   @Path("{pipelineId}")
   @Produces("application/json")
@@ -70,6 +108,14 @@ public class PipelineResource {
     return new RestResponse<>(workflowService.updatePipeline(pipeline));
   }
 
+  /**
+   * Delete.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   * @param pipeline   the pipeline
+   * @return the rest response
+   */
   @DELETE
   @Path("{pipelineId}")
   @Produces("application/json")
@@ -79,6 +125,14 @@ public class PipelineResource {
     return new RestResponse();
   }
 
+  /**
+   * List executions.
+   *
+   * @param appId       the app id
+   * @param pipelineId  the pipeline id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Path("{pipelineId}/executions")
   @Produces("application/json")
@@ -99,6 +153,13 @@ public class PipelineResource {
     return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
   }
 
+  /**
+   * Trigger execution.
+   *
+   * @param appId      the app id
+   * @param pipelineId the pipeline id
+   * @return the rest response
+   */
   @POST
   @Path("{pipelineId}/executions")
   @Produces("application/json")

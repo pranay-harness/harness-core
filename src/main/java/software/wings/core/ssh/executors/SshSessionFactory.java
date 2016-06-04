@@ -8,12 +8,20 @@ import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 2/8/16.
  */
 public class SshSessionFactory {
   private static final Logger logger = LoggerFactory.getLogger(SshSessionFactory.class);
 
+  /**
+   * Gets the SSH session with jumpbox.
+   *
+   * @param config the config
+   * @return the SSH session with jumpbox
+   */
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
     Session session = null;
     try {
@@ -35,6 +43,13 @@ public class SshSessionFactory {
     return session;
   }
 
+  /**
+   * Gets the SSH session.
+   *
+   * @param config the config
+   * @return the SSH session
+   * @throws JSchException the j sch exception
+   */
   public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
     JSch.setLogger(new MyLogger());
@@ -61,6 +76,9 @@ public class SshSessionFactory {
     return config.getKey() != null && config.getKey().length() > 0 ? "KEY" : "PASSWORD";
   }
 
+  /**
+   * The Class MyLogger.
+   */
   public static class MyLogger implements com.jcraft.jsch.Logger {
     static java.util.Hashtable name = new java.util.Hashtable();
 
@@ -72,10 +90,16 @@ public class SshSessionFactory {
       name.put(FATAL, "FATAL: ");
     }
 
+    /* (non-Javadoc)
+     * @see com.jcraft.jsch.Logger#isEnabled(int)
+     */
     public boolean isEnabled(int level) {
       return true;
     }
 
+    /* (non-Javadoc)
+     * @see com.jcraft.jsch.Logger#log(int, java.lang.String)
+     */
     public void log(int level, String message) {
       switch (level) {
         case DEBUG:

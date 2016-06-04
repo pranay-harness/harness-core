@@ -8,6 +8,8 @@ import software.wings.beans.Base;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Represents WaitQueue.
  *
@@ -19,6 +21,9 @@ public class WaitQueue extends Base {
 
   @Indexed private String correlationId;
 
+  /**
+   * Instantiates a new wait queue.
+   */
   public WaitQueue() {}
 
   /**
@@ -49,6 +54,9 @@ public class WaitQueue extends Base {
     this.correlationId = correlationId;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -57,6 +65,9 @@ public class WaitQueue extends Base {
         .toString();
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -73,6 +84,9 @@ public class WaitQueue extends Base {
         && Objects.equals(correlationId, waitQueue.correlationId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), waitInstanceId, correlationId);

@@ -8,7 +8,11 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.sm.ExecutionStatus;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class WorkflowExecution.
+ *
  * @author Rishi
  */
 @Entity(value = "workflowExecutions", noClassnameStored = true)
@@ -60,5 +64,8 @@ public class WorkflowExecution extends Base {
     this.status = status;
   }
 
+  /**
+   * The Enum WorkflowExecutionType.
+   */
   public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SIMPLE, SUB_WORKFLOW }
 }

@@ -10,18 +10,35 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/11/16.
+ *
+ * @param <T> the generic type
  */
 public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   private Datastore datastore;
   private Class<T> klass;
   private int resetDurationInSeconds;
 
+  /**
+   * Instantiates a new mongo queue impl.
+   *
+   * @param klass     the klass
+   * @param datastore the datastore
+   */
   public MongoQueueImpl(Class<T> klass, final Datastore datastore) {
     this(klass, datastore, 5);
   }
 
+  /**
+   * Instantiates a new mongo queue impl.
+   *
+   * @param klass                  the klass
+   * @param datastore              the datastore
+   * @param resetDurationInSeconds the reset duration in seconds
+   */
   public MongoQueueImpl(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
     Objects.requireNonNull(datastore);
     Objects.requireNonNull(klass);
@@ -31,16 +48,25 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     datastore.ensureIndexes(klass);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#get()
+   */
   @Override
   public T get() {
     return get(3000, 1000);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#get(int)
+   */
   @Override
   public T get(final int waitDuration) {
     return get(waitDuration, 1000);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#get(int, long)
+   */
   @Override
   public T get(final int waitDuration, long pollDuration) {
     // reset stuck messages
@@ -83,6 +109,9 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#updateResetDuration(java.lang.Object)
+   */
   @Override
   public void updateResetDuration(T message) {
     Objects.requireNonNull(message);
@@ -107,16 +136,25 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#count()
+   */
   @Override
   public long count() {
     return datastore.getCount(klass);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#count(boolean)
+   */
   @Override
   public long count(final boolean running) {
     return datastore.getCount(datastore.createQuery(klass).field("running").equal(running));
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#ack(java.lang.Object)
+   */
   @Override
   public void ack(final T message) {
     Objects.requireNonNull(message);
@@ -124,6 +162,9 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     datastore.delete(klass, id);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#ackSend(java.lang.Object, java.lang.Object)
+   */
   @Override
   public void ackSend(final T message, final T payload) {
     Objects.requireNonNull(message);
@@ -139,16 +180,25 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     datastore.save(payload);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#requeue(java.lang.Object)
+   */
   @Override
   public void requeue(final T message) {
     requeue(message, new Date());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#requeue(java.lang.Object, java.util.Date)
+   */
   @Override
   public void requeue(final T message, final Date earliestGet) {
     requeue(message, earliestGet, 0.0);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#requeue(java.lang.Object, java.util.Date, double)
+   */
   @Override
   public void requeue(final T message, final Date earliestGet, final double priority) {
     Objects.requireNonNull(message);
@@ -164,22 +214,36 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
     ackSend(message, forRequeue);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#send(java.lang.Object)
+   */
   @Override
   public void send(final T payload) {
     Objects.requireNonNull(payload);
     datastore.save(payload);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#resetDurationMillis()
+   */
   @Override
   public long resetDurationMillis() {
     return TimeUnit.SECONDS.toMillis(resetDurationInSeconds);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.Queue#name()
+   */
   @Override
   public String name() {
     return datastore.getCollection(klass).getName();
   }
 
+  /**
+   * Reset duration.
+   *
+   * @param resetDurationInSeconds the reset duration in seconds
+   */
   // package protected
   void resetDuration(int resetDurationInSeconds) {
     this.resetDurationInSeconds = resetDurationInSeconds;

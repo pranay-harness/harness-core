@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * SortOrder bean class.
  *
@@ -25,5 +27,8 @@ public class SortOrder {
     this.orderType = orderType;
   }
 
+  /**
+   * The Enum OrderType.
+   */
   public enum OrderType { ASC, DESC }
 }

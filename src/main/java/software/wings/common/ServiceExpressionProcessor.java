@@ -26,7 +26,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class ServiceExpressionProcessor.
+ *
  * @author Rishi
  */
 public class ServiceExpressionProcessor implements ExpressionProcessor {
@@ -38,6 +42,11 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   private String[] serviceNames;
   private ExecutionContextImpl context;
 
+  /**
+   * Instantiates a new service expression processor.
+   *
+   * @param context the context
+   */
   public ServiceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
@@ -48,6 +57,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     return SERVICE_EXPR_PROCESSOR;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
+   */
   @Override
   public String normalizeExpression(String expression) {
     if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
@@ -60,16 +72,33 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     return expression;
   }
 
+  /**
+   * Services.
+   *
+   * @param serviceNames the service names
+   * @return the service expression processor
+   */
   public ServiceExpressionProcessor services(String... serviceNames) {
     this.serviceNames = serviceNames;
     return this;
   }
 
+  /**
+   * With names.
+   *
+   * @param serviceNames the service names
+   * @return the service expression processor
+   */
   public ServiceExpressionProcessor withNames(String... serviceNames) {
     this.serviceNames = serviceNames;
     return this;
   }
 
+  /**
+   * List.
+   *
+   * @return the list
+   */
   public List<ServiceElement> list() {
     String appId = context.getStateExecutionInstance().getAppId();
 
@@ -98,6 +127,13 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     return convertToServiceElements(services);
   }
 
+  /**
+   * Matching services.
+   *
+   * @param services the services
+   * @param names    the names
+   * @return the list
+   */
   List<Service> matchingServices(List<Service> services, String... names) {
     if (services == null) {
       return null;

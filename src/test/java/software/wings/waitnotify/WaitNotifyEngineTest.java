@@ -17,6 +17,11 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class WaitNotifyEngineTest.
+ */
 @Listeners(NotifyEventListener.class)
 public class WaitNotifyEngineTest extends WingsBaseTest {
   private static AtomicInteger callCount;
@@ -28,12 +33,18 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
   @Inject private Queue<NotifyEvent> notifyEventQueue;
 
+  /**
+   * Setup response map.
+   */
   @Before
   public void setupResponseMap() {
     callCount = new AtomicInteger(0);
     responseMap = new HashMap<>();
   }
 
+  /**
+   * Should wait for correlation id.
+   */
   @Test
   public void shouldWaitForCorrelationId() {
     String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
@@ -60,6 +71,9 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     assertThat(callCount.get()).isEqualTo(1);
   }
 
+  /**
+   * Should wait for correlation ids.
+   */
   @Test
   public void shouldWaitForCorrelationIds() {
     String waitInstanceId = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123", "456", "789");
@@ -114,6 +128,9 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     assertThat(callCount.get()).isEqualTo(1);
   }
 
+  /**
+   * Should wait for correlation id for multiple wait instances.
+   */
   @Test
   public void shouldWaitForCorrelationIdForMultipleWaitInstances() {
     String waitInstanceId1 = waitNotifyEngine.waitForAll(new TestNotifyCallback(), "123");
@@ -149,6 +166,9 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
    * Created by peeyushaggarwal on 4/5/16.
    */
   public static class TestNotifyCallback implements NotifyCallback {
+    /* (non-Javadoc)
+     * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
+     */
     @Override
     public void notify(Map<String, ? extends Serializable> response) {
       callCount.incrementAndGet();

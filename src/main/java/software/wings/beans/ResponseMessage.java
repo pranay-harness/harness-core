@@ -2,6 +2,11 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ResponseMessage.
+ */
 public class ResponseMessage {
   private String code;
   private ResponseTypeEnum errorType;
@@ -31,6 +36,9 @@ public class ResponseMessage {
     this.message = message;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -40,5 +48,8 @@ public class ResponseMessage {
         .toString();
   }
 
+  /**
+   * The Enum ResponseTypeEnum.
+   */
   public enum ResponseTypeEnum { INFO, WARN, ERROR }
 }

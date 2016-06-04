@@ -7,8 +7,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+// TODO: Auto-generated Javadoc
+
 /**
- * This is a common threadpool for the entire application
+ * This is a common threadpool for the entire application.
  *
  * @author Rishi
  */
@@ -19,6 +21,15 @@ public class ThreadPool {
   private static final ThreadPoolExecutor commonPool =
       create(CORE_POOL_SIZE, MAX_POOL_SIZE, IDLE_TIME, TimeUnit.MILLISECONDS);
 
+  /**
+   * Creates the.
+   *
+   * @param corePoolSize the core pool size
+   * @param maxPoolSize  the max pool size
+   * @param idleTime     the idle time
+   * @param unit         the unit
+   * @return the thread pool executor
+   */
   public static ThreadPoolExecutor create(int corePoolSize, int maxPoolSize, long idleTime, TimeUnit unit) {
     ScalingQueue queue = new ScalingQueue();
     ThreadPoolExecutor executor = new ScalingThreadPoolExecutor(corePoolSize, maxPoolSize, idleTime, unit, queue);
@@ -27,22 +38,46 @@ public class ThreadPool {
     return executor;
   }
 
+  /**
+   * Execute.
+   *
+   * @param task  the task
+   * @param delay the delay
+   */
   public static void execute(Runnable task, int delay) {
     execute(new Delayed(task, delay));
   }
 
+  /**
+   * Execute.
+   *
+   * @param task the task
+   */
   public static void execute(Runnable task) {
     commonPool.execute(task);
   }
 
+  /**
+   * Submit.
+   *
+   * @param <T>  the generic type
+   * @param task the task
+   * @return the future
+   */
   public static <T> Future<T> submit(Callable<T> task) {
     return commonPool.submit(task);
   }
 
+  /**
+   * Shutdown.
+   */
   public static void shutdown() {
     commonPool.shutdown();
   }
 
+  /**
+   * Shutdown now.
+   */
   public static void shutdownNow() {
     commonPool.shutdownNow();
   }

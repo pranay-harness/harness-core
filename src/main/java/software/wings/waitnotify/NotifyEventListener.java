@@ -26,8 +26,12 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/13/16.
+ *
+ * @see NotifyEventEvent
  */
 @Singleton
 public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
@@ -39,6 +43,9 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
   @Inject private PersistentLocker persistentLocker;
 
+  /* (non-Javadoc)
+   * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
+   */
   @Override
   protected void onMessage(NotifyEvent message) throws Exception {
     logger.trace("Processing message {}", message);

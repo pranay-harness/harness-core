@@ -14,6 +14,11 @@ import software.wings.service.intfc.DeploymentService;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class DeploymentServiceImpl.
+ */
 @Singleton
 public class DeploymentServiceImpl implements DeploymentService {
   @Inject private ExecutorService executorService;
@@ -22,11 +27,17 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Inject private DeploymentExecutor.Factory deploymentExecutorFactory;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.DeploymentService#list(software.wings.dl.PageRequest)
+   */
   @Override
   public PageResponse<Deployment> list(PageRequest<Deployment> req) {
     return wingsPersistence.query(Deployment.class, req);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.DeploymentService#create(software.wings.beans.Deployment)
+   */
   @Override
   public Deployment create(Deployment deployment) {
     deployment = wingsPersistence.saveAndGet(Deployment.class, deployment);
@@ -34,21 +45,43 @@ public class DeploymentServiceImpl implements DeploymentService {
     return deployment;
   }
 
+  /**
+   * The Class DeploymentExecutor.
+   */
   public static class DeploymentExecutor implements Runnable {
     private Deployment deployment;
 
     @Inject private CommandUnitExecutorService commandUnitExecutorService;
 
+    /**
+     * Instantiates a new deployment executor.
+     *
+     * @param deployment the deployment
+     */
     @AssistedInject
     public DeploymentExecutor(@Assisted Deployment deployment) {
       this.deployment = deployment;
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
     @Override
     public void run() {
       //      commandUnitExecutorService.execute(deployment);
     }
 
-    public interface Factory { DeploymentExecutor create(@Assisted Deployment deployment); }
+    /**
+     * The Interface Factory.
+     */
+    public interface Factory {
+      /**
+       * Creates the.
+       *
+       * @param deployment the deployment
+       * @return the deployment executor
+       */
+      DeploymentExecutor create(@Assisted Deployment deployment);
+    }
   }
 }

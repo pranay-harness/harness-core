@@ -32,6 +32,8 @@ import software.wings.service.intfc.LogService;
 import java.io.IOException;
 import javax.ws.rs.core.GenericType;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */
@@ -60,6 +62,11 @@ public class ActivityResourceTest {
     }
   };
 
+  /**
+   * Sets the up.
+   *
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Before
   public void setUp() throws IOException {
     reset(ACTIVITY_SERVICE, LOG_SERVICE);
@@ -74,6 +81,9 @@ public class ActivityResourceTest {
     when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(logPageResponse);
   }
 
+  /**
+   * Should list activities.
+   */
   @Test
   public void shouldListActivities() {
     RestResponse<PageResponse<Activity>> restResponse =
@@ -90,6 +100,9 @@ public class ActivityResourceTest {
     verify(ACTIVITY_SERVICE).list(APP_ID, ENV_ID, expectedPageRequest);
   }
 
+  /**
+   * Should get activity.
+   */
   @Test
   public void shouldGetActivity() {
     RestResponse<Activity> restResponse = RESOURCES.client()
@@ -102,6 +115,9 @@ public class ActivityResourceTest {
     verify(ACTIVITY_SERVICE).get(ACTIVITY_ID, APP_ID);
   }
 
+  /**
+   * Should list logs.
+   */
   @Test
   public void shouldListLogs() {
     RestResponse<PageResponse<Log>> restResponse = RESOURCES.client()

@@ -18,6 +18,8 @@ import software.wings.service.intfc.SettingsService;
 import java.io.IOException;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/23/16.
  */
@@ -28,18 +30,29 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
 
   @Inject private Queue<EmailData> emailEventQueue;
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.NotificationService#send(java.util.List, java.util.List, java.lang.String,
+   * java.lang.Object)
+   */
   @Override
   public void send(List<String> to, List<String> cc, String templateName, Object templateModel)
       throws EmailException, TemplateException, IOException {
     send(anEmailData().withTo(to).withCc(cc).withTemplateName(templateName).withTemplateModel(templateModel).build());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.NotificationService#send(java.util.List, java.util.List, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public void send(List<String> to, List<String> cc, String subject, String body)
       throws EmailException, TemplateException, IOException {
     send(anEmailData().withTo(to).withCc(cc).withSubject(subject).withBody(body).build());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.NotificationService#send(java.lang.Object)
+   */
   @Override
   public void send(EmailData emailData) throws EmailException, TemplateException, IOException {
     SmtpConfig config = getSmtpConfig();
@@ -47,12 +60,20 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
     mailer.send(config, emailData);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.NotificationService#sendAsync(java.util.List, java.util.List, java.lang.String,
+   * java.lang.String)
+   */
   @Override
   public void sendAsync(List<String> to, List<String> cc, String subject, String body) {
     emailEventQueue.send(
         anEmailData().withTo(to).withCc(cc).withSubject(subject).withBody(body).withRetries(3).build());
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.NotificationService#sendAsync(java.util.List, java.util.List, java.lang.String,
+   * java.lang.Object)
+   */
   @Override
   public void sendAsync(List<String> to, List<String> cc, String templateName, Object templateModel) {
     emailEventQueue.send(anEmailData()

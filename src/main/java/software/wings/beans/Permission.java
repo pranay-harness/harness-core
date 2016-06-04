@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Embedded;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/17/16.
  */
@@ -12,6 +14,9 @@ public class Permission {
   private String envId;
   private String serviceId;
 
+  /**
+   * Instantiates a new permission.
+   */
   public Permission() {}
 
   /**

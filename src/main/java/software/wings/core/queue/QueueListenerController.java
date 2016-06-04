@@ -10,6 +10,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 import javax.inject.Singleton;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/14/16.
  */
@@ -17,15 +19,27 @@ import javax.inject.Singleton;
 public class QueueListenerController implements Managed {
   private ExecutorService executorService = Executors.newCachedThreadPool();
 
+  /**
+   * Register.
+   *
+   * @param listener the listener
+   * @param threads  the threads
+   */
   public void register(AbstractQueueListener<?> listener, int threads) {
     IntStream.rangeClosed(1, threads).forEach(value -> executorService.submit(listener));
   }
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.lifecycle.Managed#start()
+   */
   @Override
   public void start() throws Exception {
     // Do nothing
   }
 
+  /* (non-Javadoc)
+   * @see io.dropwizard.lifecycle.Managed#stop()
+   */
   @Override
   public void stop() throws Exception {
     for (Runnable runnable : executorService.shutdownNow()) {

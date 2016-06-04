@@ -4,6 +4,8 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/1/16.
  */
@@ -28,11 +30,17 @@ public class Infra extends Base {
     this.envId = envId;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(infraType, envId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -48,8 +56,14 @@ public class Infra extends Base {
     return Objects.equals(this.infraType, other.infraType) && Objects.equals(this.envId, other.envId);
   }
 
+  /**
+   * The Enum InfraType.
+   */
   public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }
 
+  /**
+   * The Class InfraBuilder.
+   */
   public static final class InfraBuilder {
     private InfraType infraType;
     private String envId;
@@ -63,55 +77,119 @@ public class Infra extends Base {
 
     private InfraBuilder() {}
 
+    /**
+     * An infra.
+     *
+     * @return the infra builder
+     */
     public static InfraBuilder anInfra() {
       return new InfraBuilder();
     }
 
+    /**
+     * With infra type.
+     *
+     * @param infraType the infra type
+     * @return the infra builder
+     */
     public InfraBuilder withInfraType(InfraType infraType) {
       this.infraType = infraType;
       return this;
     }
 
+    /**
+     * With env id.
+     *
+     * @param envId the env id
+     * @return the infra builder
+     */
     public InfraBuilder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the infra builder
+     */
     public InfraBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the infra builder
+     */
     public InfraBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the infra builder
+     */
     public InfraBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the infra builder
+     */
     public InfraBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the infra builder
+     */
     public InfraBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the infra builder
+     */
     public InfraBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the infra builder
+     */
     public InfraBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the infra builder
+     */
     public InfraBuilder but() {
       return anInfra()
           .withInfraType(infraType)
@@ -125,6 +203,11 @@ public class Infra extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the infra
+     */
     public Infra build() {
       Infra infra = new Infra();
       infra.setInfraType(infraType);

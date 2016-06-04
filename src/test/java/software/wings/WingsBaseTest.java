@@ -9,6 +9,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.rules.WingsRule;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/28/16.
  */
@@ -17,11 +19,19 @@ public abstract class WingsBaseTest {
   @Rule public WingsRule wingsRule = new WingsRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+  /**
+   * Log test case name.
+   */
   @Before
   public void logTestCaseName() {
     System.out.println(String.format("Running test %s", testName.getMethodName()));
   }
 
+  /**
+   * Log.
+   *
+   * @return the logger
+   */
   protected Logger log() {
     return LoggerFactory.getLogger(getClass());
   }

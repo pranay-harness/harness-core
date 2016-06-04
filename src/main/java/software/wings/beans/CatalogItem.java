@@ -5,7 +5,11 @@ package software.wings.beans;
 
 import java.util.Comparator;
 
+// TODO: Auto-generated Javadoc
+
 /**
+ * The Class CatalogItem.
+ *
  * @author Rishi
  */
 public class CatalogItem {
@@ -64,6 +68,9 @@ public class CatalogItem {
     this.displayOrder = displayOrder;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return "CatalogItem [name=" + name + ", value=" + value + ", displayText=" + displayText

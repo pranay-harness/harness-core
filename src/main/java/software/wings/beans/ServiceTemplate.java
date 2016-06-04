@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 4/4/16.
  */
@@ -67,11 +69,17 @@ public class ServiceTemplate extends Base {
     this.service = service;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -89,6 +97,9 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.tags, other.tags) && Objects.equals(this.hosts, other.hosts);
   }
 
+  /**
+   * The Class ServiceTemplateBuilder.
+   */
   public static final class ServiceTemplateBuilder {
     private String envId;
     private String name;
@@ -106,75 +117,163 @@ public class ServiceTemplate extends Base {
 
     private ServiceTemplateBuilder() {}
 
+    /**
+     * A service template.
+     *
+     * @return the service template builder
+     */
     public static ServiceTemplateBuilder aServiceTemplate() {
       return new ServiceTemplateBuilder();
     }
 
+    /**
+     * With env id.
+     *
+     * @param envId the env id
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With name.
+     *
+     * @param name the name
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description.
+     *
+     * @param description the description
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With service.
+     *
+     * @param service the service
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withService(Service service) {
       this.service = service;
       return this;
     }
 
+    /**
+     * With tags.
+     *
+     * @param tags the tags
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
+    /**
+     * With hosts.
+     *
+     * @param hosts the hosts
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withHosts(List<Host> hosts) {
       this.hosts = hosts;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the service template builder
+     */
     public ServiceTemplateBuilder but() {
       return aServiceTemplate()
           .withEnvId(envId)
@@ -192,6 +291,11 @@ public class ServiceTemplate extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the service template
+     */
     public ServiceTemplate build() {
       ServiceTemplate serviceTemplate = new ServiceTemplate();
       serviceTemplate.setEnvId(envId);

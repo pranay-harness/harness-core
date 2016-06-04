@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import software.wings.service.intfc.FileService.FileBucket;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/25/16.
  */
@@ -10,6 +12,11 @@ public abstract class CopyCommandUnit extends CommandUnit {
   private FileBucket fileBucket;
   private String destinationFilePath;
 
+  /**
+   * Instantiates a new copy command unit.
+   *
+   * @param commandUnitType the command unit type
+   */
   public CopyCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
   }

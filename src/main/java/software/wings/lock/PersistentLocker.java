@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Persistent Locker implementation using Mongo DB.
  *
@@ -19,11 +21,17 @@ public class PersistentLocker implements Locker {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private DistributedLockSvc distributedLockSvc;
 
+  /* (non-Javadoc)
+   * @see software.wings.lock.Locker#acquireLock(java.lang.Class, java.lang.String)
+   */
   @Override
   public boolean acquireLock(Class entityClass, String entityId) {
     return acquireLock(entityClass.getName(), entityId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.lock.Locker#acquireLock(java.lang.String, java.lang.String)
+   */
   @Override
   public boolean acquireLock(String entityType, String entityId) {
     DistributedLock lock = distributedLockSvc.create(entityType + "-" + entityId);
@@ -35,11 +43,17 @@ public class PersistentLocker implements Locker {
     }
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.lock.Locker#releaseLock(java.lang.Class, java.lang.String)
+   */
   @Override
   public boolean releaseLock(Class entityClass, String entityId) {
     return releaseLock(entityClass.getName(), entityId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.lock.Locker#releaseLock(java.lang.String, java.lang.String)
+   */
   @Override
   public boolean releaseLock(String entityType, String entityId) {
     DistributedLock lock = distributedLockSvc.create(entityType + "-" + entityId);

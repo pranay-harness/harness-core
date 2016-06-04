@@ -11,6 +11,11 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.Objects;
 
+// TODO: Auto-generated Javadoc
+
+/**
+ * The Class ServiceInstance.
+ */
 @Entity(value = "serviceInstance", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("host"), @Field("serviceTemplate") },
@@ -71,11 +76,17 @@ public class ServiceInstance extends Base {
     this.artifact = artifact;
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#hashCode()
+   */
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(envId, host, service, serviceTemplate, release, artifact);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -93,6 +104,9 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.release, other.release) && Objects.equals(this.artifact, other.artifact);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.beans.Base#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -105,6 +119,9 @@ public class ServiceInstance extends Base {
         .toString();
   }
 
+  /**
+   * The Class ServiceInstanceBuilder.
+   */
   public static final class ServiceInstanceBuilder {
     private String envId;
     private Host host;
@@ -122,75 +139,163 @@ public class ServiceInstance extends Base {
 
     private ServiceInstanceBuilder() {}
 
+    /**
+     * A service instance.
+     *
+     * @return the service instance builder
+     */
     public static ServiceInstanceBuilder aServiceInstance() {
       return new ServiceInstanceBuilder();
     }
 
+    /**
+     * With env id.
+     *
+     * @param envId the env id
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With host.
+     *
+     * @param host the host
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withHost(Host host) {
       this.host = host;
       return this;
     }
 
+    /**
+     * With service.
+     *
+     * @param service the service
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withService(Service service) {
       this.service = service;
       return this;
     }
 
+    /**
+     * With service template.
+     *
+     * @param serviceTemplate the service template
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceTemplate = serviceTemplate;
       return this;
     }
 
+    /**
+     * With release.
+     *
+     * @param release the release
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withRelease(Release release) {
       this.release = release;
       return this;
     }
 
+    /**
+     * With artifact.
+     *
+     * @param artifact the artifact
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withArtifact(Artifact artifact) {
       this.artifact = artifact;
       return this;
     }
 
+    /**
+     * With uuid.
+     *
+     * @param uuid the uuid
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id.
+     *
+     * @param appId the app id
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by.
+     *
+     * @param createdBy the created by
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at.
+     *
+     * @param createdAt the created at
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active.
+     *
+     * @param active the active
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the service instance builder
+     */
     public ServiceInstanceBuilder but() {
       return aServiceInstance()
           .withEnvId(envId)
@@ -208,6 +313,11 @@ public class ServiceInstance extends Base {
           .withActive(active);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the service instance
+     */
     public ServiceInstance build() {
       ServiceInstance serviceInstance = new ServiceInstance();
       serviceInstance.setEnvId(envId);

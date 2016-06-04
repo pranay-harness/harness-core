@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import javax.validation.constraints.NotNull;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 5/25/16.
  */
@@ -11,6 +13,11 @@ public class CommandUnit {
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
 
+  /**
+   * Instantiates a new command unit.
+   *
+   * @param commandUnitType the command unit type
+   */
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
   }
@@ -47,5 +54,8 @@ public class CommandUnit {
     this.name = name;
   }
 
+  /**
+   * The Enum ExecutionResult.
+   */
   public enum ExecutionResult { SUCCESS, FAILURE }
 }

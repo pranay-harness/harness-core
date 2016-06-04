@@ -49,6 +49,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 4/5/16.
  */
@@ -61,6 +63,10 @@ public class WingsRule implements MethodRule {
   private int port = 0;
   private ExecutorService executorService = new CurrentThreadExecutor();
 
+  /* (non-Javadoc)
+   * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
+   * java.lang.Object)
+   */
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
     return new Statement() {
@@ -83,6 +89,12 @@ public class WingsRule implements MethodRule {
     return datastore;
   }
 
+  /**
+   * Before.
+   *
+   * @param annotations the annotations
+   * @throws Throwable the throwable
+   */
   protected void before(List<Annotation> annotations) throws Throwable {
     MongoClient mongoClient;
     if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
@@ -131,6 +143,9 @@ public class WingsRule implements MethodRule {
     }
   }
 
+  /**
+   * After.
+   */
   protected void after() {
     try {
       log().info("Stopping executorService...");

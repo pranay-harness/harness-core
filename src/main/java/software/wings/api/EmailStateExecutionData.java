@@ -6,6 +6,8 @@ import com.google.common.base.Objects;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/26/16.
  */
@@ -48,6 +50,9 @@ public class EmailStateExecutionData extends StateExecutionData {
     this.body = body;
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#equals(java.lang.Object)
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -61,11 +66,17 @@ public class EmailStateExecutionData extends StateExecutionData {
         && Objects.equal(subject, that.subject) && Objects.equal(body, that.body);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#hashCode()
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(toAddress, ccAddress, subject, body);
   }
 
+  /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -76,6 +87,9 @@ public class EmailStateExecutionData extends StateExecutionData {
         .toString();
   }
 
+  /**
+   * The Class Builder.
+   */
   public static final class Builder {
     private String toAddress;
     private String ccAddress;
@@ -88,50 +102,108 @@ public class EmailStateExecutionData extends StateExecutionData {
 
     private Builder() {}
 
+    /**
+     * An email state execution data.
+     *
+     * @return the builder
+     */
     public static Builder anEmailStateExecutionData() {
       return new Builder();
     }
 
+    /**
+     * With to address.
+     *
+     * @param toAddress the to address
+     * @return the builder
+     */
     public Builder withToAddress(String toAddress) {
       this.toAddress = toAddress;
       return this;
     }
 
+    /**
+     * With cc address.
+     *
+     * @param ccAddress the cc address
+     * @return the builder
+     */
     public Builder withCcAddress(String ccAddress) {
       this.ccAddress = ccAddress;
       return this;
     }
 
+    /**
+     * With subject.
+     *
+     * @param subject the subject
+     * @return the builder
+     */
     public Builder withSubject(String subject) {
       this.subject = subject;
       return this;
     }
 
+    /**
+     * With body.
+     *
+     * @param body the body
+     * @return the builder
+     */
     public Builder withBody(String body) {
       this.body = body;
       return this;
     }
 
+    /**
+     * With state name.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
+    /**
+     * With start ts.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With end ts.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With status.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * But.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anEmailStateExecutionData()
           .withToAddress(toAddress)
@@ -144,6 +216,11 @@ public class EmailStateExecutionData extends StateExecutionData {
           .withStatus(status);
     }
 
+    /**
+     * Builds the.
+     *
+     * @return the email state execution data
+     */
     public EmailStateExecutionData build() {
       EmailStateExecutionData emailStateExecutionData = new EmailStateExecutionData();
       emailStateExecutionData.setToAddress(toAddress);

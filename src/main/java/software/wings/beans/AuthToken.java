@@ -5,6 +5,8 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by anubhaw on 3/14/16.
  */
@@ -14,8 +16,16 @@ public class AuthToken extends Base {
 
   private long expireAt;
 
+  /**
+   * Instantiates a new auth token.
+   */
   public AuthToken() {}
 
+  /**
+   * Instantiates a new auth token.
+   *
+   * @param user the user
+   */
   public AuthToken(User user) {
     this.user = user;
     setUuid(secureRandAlphaNumString(32));

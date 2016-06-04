@@ -12,6 +12,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.LogService;
 
+// TODO: Auto-generated Javadoc
+
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
@@ -23,12 +25,18 @@ public class LogServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  /**
+   * Should list logs.
+   */
   @Test
   public void shouldListLogs() {
     wingsPersistence.save(log);
     assertThat(logService.list(new PageRequest<>())).hasSize(1).containsExactly(log);
   }
 
+  /**
+   * Should save log.
+   */
   @Test
   public void shouldSaveLog() {
     logService.save(log);
