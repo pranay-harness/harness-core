@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Command;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -80,7 +81,17 @@ public interface ServiceResourceService {
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
   /**
-   * Gets the command stencils.
+   * Gets command by name.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @return the command by name
+   */
+  Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+
+  /**
+   * Gets command stencils.
    *
    * @param appId     the app id
    * @param serviceId the service id

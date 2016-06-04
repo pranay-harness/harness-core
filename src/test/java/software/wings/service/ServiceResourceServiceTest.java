@@ -21,6 +21,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.WingsUnitTestConstants.APP_ID;
+import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -59,15 +61,29 @@ import java.util.List;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
-  private final String SERVICE_ID = "SERVICE_ID";
-  private final String APP_ID = "APP_ID";
+  private static final Command command = aCommand()
+                                             .withName("START")
+                                             .withServiceId(SERVICE_ID)
+                                             .addCommandUnits(anExecCommandUnit()
+                                                                  .withServiceId(SERVICE_ID)
+                                                                  .withCommandPath("/home/xxx/tomcat")
+                                                                  .withCommandString("bin/startup.sh")
+                                                                  .build())
+                                             .build();
+  private static final Builder builder = aService()
+                                             .withUuid(SERVICE_ID)
+                                             .withAppId(APP_ID)
+                                             .withName("SERVICE_NAME")
+                                             .withDescription("SERVICE_DESC")
+                                             .withArtifactType(JAR)
+                                             .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
   @Inject @Named("primaryDatastore") private Datastore datastore;
-
   @Mock private WingsPersistence wingsPersistence;
-
   @Mock private ConfigService configService;
-
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override
@@ -75,16 +91,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(configService, wingsPersistence);
     }
   };
-
   @Inject @InjectMocks private ServiceResourceService srs;
-
-  private Builder builder = aService()
-                                .withUuid(SERVICE_ID)
-                                .withAppId(APP_ID)
-                                .withName("SERVICE_NAME")
-                                .withDescription("SERVICE_DESC")
-                                .withArtifactType(JAR)
-                                .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
   /**
    * Sets the up.
@@ -189,15 +196,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
             .build();
 
-    Command command = aCommand()
-                          .withName("START")
-                          .withServiceId(SERVICE_ID)
-                          .addCommandUnits(anExecCommandUnit()
-                                               .withServiceId(SERVICE_ID)
-                                               .withCommandPath("/home/xxx/tomcat")
-                                               .withCommandString("bin/startup.sh")
-                                               .build())
-                          .build();
     srs.addCommand(APP_ID, SERVICE_ID, commandGraph);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
@@ -229,15 +227,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
             .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
             .build();
 
-    Command command = aCommand()
-                          .withName("START")
-                          .withServiceId(SERVICE_ID)
-                          .addCommandUnits(anExecCommandUnit()
-                                               .withServiceId(SERVICE_ID)
-                                               .withCommandPath("/home/xxx/tomcat")
-                                               .withCommandString("bin/startup.sh")
-                                               .build())
-                          .build();
     assertThatExceptionOfType(WingsException.class).isThrownBy(() -> srs.addCommand(APP_ID, SERVICE_ID, commandGraph));
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
@@ -266,17 +255,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandStencils() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(builder.but()
-                        .addCommands(aCommand()
-                                         .withName("START")
-                                         .withServiceId(SERVICE_ID)
-                                         .addCommandUnits(anExecCommandUnit()
-                                                              .withServiceId(SERVICE_ID)
-                                                              .withCommandPath("/home/xxx/tomcat")
-                                                              .withCommandString("bin/startup.sh")
-                                                              .build())
-                                         .build())
-                        .build());
+        .thenReturn(builder.but().addCommands(command).build());
 
     List<Object> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID);
 
@@ -284,6 +263,20 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .isNotNull()
         .hasSize(1)
         .contains(ImmutableMap.of("name", "START", "type", CommandUnitType.COMMAND));
+
+    verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
+  /**
+   * Should get command by name.
+   */
+  @Test
+  public void shouldGetCommandByName() {
+    when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
+        .thenReturn(builder.but().addCommands(command).build());
+
+    assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);

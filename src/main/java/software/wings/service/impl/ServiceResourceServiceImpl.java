@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
@@ -52,17 +53,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     this.configService = configService;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#list(software.wings.dl.PageRequest)
-   */
+  /** {@inheritDoc} */
   @Override
   public PageResponse<Service> list(PageRequest<Service> request) {
     return wingsPersistence.query(Service.class, request);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#save(software.wings.beans.Service)
-   */
+  /** {@inheritDoc} */
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
@@ -70,9 +67,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return savedService;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#update(software.wings.beans.Service)
-   */
+  /** {@inheritDoc} */
   @Override
   public Service update(Service service) {
     wingsPersistence.updateFields(Service.class, service.getUuid(),
@@ -81,9 +76,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#get(java.lang.String, java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -93,18 +86,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return service;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#delete(java.lang.String, java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public void delete(String appId, String serviceId) {
     wingsPersistence.delete(Service.class, serviceId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#addCommand(java.lang.String, java.lang.String,
-   * software.wings.beans.Graph)
-   */
+  /** {@inheritDoc} */
   @Override
   public Service addCommand(String appId, String serviceId, Graph commandGraph) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -127,10 +115,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#deleteCommand(java.lang.String, java.lang.String,
-   * java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public Service deleteCommand(String appId, String serviceId, String commandName) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -144,9 +129,18 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceResourceService#getCommandStencils(java.lang.String, java.lang.String)
-   */
+  /** {@inheritDoc} */
+  @Override
+  public Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
+    Service service = get(appId, serviceId);
+    return service.getCommands()
+        .stream()
+        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** {@inheritDoc} */
   @Override
   public List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
     Service service = get(appId, serviceId);
