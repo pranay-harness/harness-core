@@ -20,6 +20,7 @@ import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServi
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.beans.User.Builder.anUser;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
@@ -58,6 +59,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
+import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -80,6 +82,7 @@ import java.util.TimeZone;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -108,6 +111,7 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
+  private static String userToken = "INVALID_TOKEN";
 
   /**
    * Generated Data for across the API use.
@@ -152,7 +156,7 @@ public class DataGenUtil extends WingsBaseTest {
   @Test
   public void populateData() throws IOException {
     createGlobalSettings();
-
+    addAdminUser();
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
     Map<String, List<Service>> services = new HashMap<>();
@@ -165,6 +169,25 @@ public class DataGenUtil extends WingsBaseTest {
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
     }
+  }
+
+  private void addAdminUser() {
+    WebTarget target = client.target("http://localhost:9090/wings/users/");
+    RestResponse<User> response = target.request().post(
+        Entity.entity(anUser().withEmail("admin").withPassword("admin").build(), APPLICATION_JSON),
+        new GenericType<RestResponse<User>>() {});
+    assertThat(response.getResource()).isInstanceOf(User.class);
+    response = client.target("http://localhost:9090/wings/users/login")
+                   .request()
+                   .header("Authorization", "Basic YWRtaW46YWRtaW4=")
+                   .get(new GenericType<RestResponse<User>>() {});
+    if (response.getResource() != null) {
+      userToken = response.getResource().getToken();
+    }
+  }
+
+  private Builder getRequestWithAuthHeader(WebTarget target) {
+    return target.request().header("Authorization", "Bearer " + userToken);
   }
 
   private void addServiceInstances(List<Service> services, List<Environment> appEnvs) {
@@ -322,27 +345,28 @@ public class DataGenUtil extends WingsBaseTest {
                                                            .withPassword("W!ngs")
                                                            .build())
                                             .build()));
-    target.request().post(Entity.entity(aSettingAttribute()
-                                            .withName("Wings Jenkins")
-                                            .withValue(aJenkinsConfig()
-                                                           .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
-                                                           .withUsername("admin")
-                                                           .withPassword("W!ngs")
-                                                           .build())
-                                            .build(),
-                              APPLICATION_JSON),
+    getRequestWithAuthHeader(target).post(
+        Entity.entity(aSettingAttribute()
+                          .withName("Wings Jenkins")
+                          .withValue(aJenkinsConfig()
+                                         .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
+                                         .withUsername("admin")
+                                         .withPassword("W!ngs")
+                                         .build())
+                          .build(),
+            APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
-    target.request().post(Entity.entity(aSettingAttribute()
-                                            .withName("SMTP")
-                                            .withValue(aSmtpConfig()
-                                                           .withFromAddress("wings_test@wings.software")
-                                                           .withUsername("wings_test")
-                                                           .withPassword("@wes0me@pp")
-                                                           .withPort(465)
-                                                           .withUseSSL(true)
-                                                           .build())
-                                            .build(),
-                              APPLICATION_JSON),
+    getRequestWithAuthHeader(target).post(Entity.entity(aSettingAttribute()
+                                                            .withName("SMTP")
+                                                            .withValue(aSmtpConfig()
+                                                                           .withFromAddress("wings_test@wings.software")
+                                                                           .withUsername("wings_test")
+                                                                           .withPassword("@wes0me@pp")
+                                                                           .withPort(465)
+                                                                           .withUseSSL(true)
+                                                                           .build())
+                                                            .build(),
+                                              APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
   }
 
@@ -353,7 +377,7 @@ public class DataGenUtil extends WingsBaseTest {
 
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
-      RestResponse<Application> response = target.request().post(
+      RestResponse<Application> response = getRequestWithAuthHeader(target).post(
           Entity.entity(anApplication().withName(name).withDescription(name).build(), APPLICATION_JSON),
           new GenericType<RestResponse<Application>>() {});
       assertThat(response.getResource()).isInstanceOf(Application.class);
@@ -375,7 +399,7 @@ public class DataGenUtil extends WingsBaseTest {
       serviceMap.put("appId", appId);
       serviceMap.put("artifactType", WAR.name());
       serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size())));
-      RestResponse<Service> response = target.request().post(
+      RestResponse<Service> response = getRequestWithAuthHeader(target).post(
           Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
       assertThat(response.getResource()).isInstanceOf(Service.class);
       services.add(response.getResource());
@@ -401,7 +425,7 @@ public class DataGenUtil extends WingsBaseTest {
     FormDataMultiPart multiPart =
         new FormDataMultiPart().field("name", file.getName()).field("relativePath", "./configs/");
     multiPart.bodyPart(filePart);
-    Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+    Response response = getRequestWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
     return response.getStatus() == 200;
   }
 
@@ -417,8 +441,7 @@ public class DataGenUtil extends WingsBaseTest {
 
   private List<AppContainer> getAppContainers(String appId) {
     RestResponse<PageResponse<AppContainer>> response =
-        client.target("http://localhost:9090/wings/app-containers/?appId=" + appId)
-            .request()
+        getRequestWithAuthHeader(client.target("http://localhost:9090/wings/app-containers/?appId=" + appId))
             .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
     return response.getResource().getResponse();
   }
@@ -438,7 +461,7 @@ public class DataGenUtil extends WingsBaseTest {
                                         .field("sourceType", "FILE_UPLOAD")
                                         .field("standard", "false");
       multiPart.bodyPart(filePart);
-      Response response = target.request().post(Entity.entity(multiPart, multiPart.getMediaType()));
+      Response response = getRequestWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
       return response.getStatus() == 200;
     } catch (IOException e) {
       log().info("Error occured in uploading app container" + e.getMessage());
@@ -450,7 +473,7 @@ public class DataGenUtil extends WingsBaseTest {
     List<Environment> environments = new ArrayList<>();
     WebTarget target = client.target("http://localhost:9090/wings/environments?appId=" + appId);
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
-      RestResponse<Environment> response = target.request().post(
+      RestResponse<Environment> response = getRequestWithAuthHeader(target).post(
           Entity.entity(
               anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
               APPLICATION_JSON),
@@ -465,10 +488,8 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void createAndTagHosts(Environment environment) {
     RestResponse<PageResponse<Tag>> response =
-        client
-            .target(format("http://localhost:9090/wings/tag-types?appId=%s&envId=%s", environment.getAppId(),
-                environment.getUuid()))
-            .request()
+        getRequestWithAuthHeader(client.target(format("http://localhost:9090/wings/tag-types?appId=%s&envId=%s",
+                                     environment.getAppId(), environment.getUuid())))
             .get(new GenericType<RestResponse<PageResponse<Tag>>>() {});
     log().info(response.getResource().getResponse().toString());
   }
@@ -490,7 +511,7 @@ public class DataGenUtil extends WingsBaseTest {
                                                       .asList();
 
     for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
-      Response response = target.request().post(
+      Response response = getRequestWithAuthHeader(target).post(
           Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
                             connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttr", envAttr),
               APPLICATION_JSON));

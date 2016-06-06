@@ -109,7 +109,7 @@ public class UserResource {
   @GET
   @Path("login")
   public RestResponse<User> login(@Auth User user) {
-    return new RestResponse<>(user); // TODO: mask fields
+    return new RestResponse<>(user);
   }
 
   /**
