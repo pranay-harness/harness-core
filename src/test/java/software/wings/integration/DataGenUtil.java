@@ -162,12 +162,12 @@ public class DataGenUtil extends WingsBaseTest {
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-      addServiceInstances(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
     }
   }
 
-  private void addServiceInstances(Application application, List<Service> services, List<Environment> appEnvs) {
+  private void addServiceInstances(List<Service> services, List<Environment> appEnvs) {
     // TODO: improve make http calls and use better generation scheme
     services.forEach(service -> {
       appEnvs.forEach(environment -> {
@@ -179,8 +179,8 @@ public class DataGenUtil extends WingsBaseTest {
                                .field("infraId")
                                .equal(infraId)
                                .asList();
-        ServiceTemplate template =
-            wingsPersistence.saveAndGet(ServiceTemplate.class, aServiceTemplate().withName("catalog:8080").build());
+        ServiceTemplate template = wingsPersistence.saveAndGet(
+            ServiceTemplate.class, aServiceTemplate().withService(service).withName("catalog:8080").build());
         Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
         Artifact artifact =
             wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
@@ -190,7 +190,6 @@ public class DataGenUtil extends WingsBaseTest {
                                          .withAppId(host.getAppId())
                                          .withEnvId(environment.getUuid())
                                          .withHost(host)
-                                         .withService(service)
                                          .withServiceTemplate(template)
                                          .withRelease(release)
                                          .withArtifact(artifact)

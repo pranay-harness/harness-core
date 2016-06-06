@@ -47,14 +47,15 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
 
-  private ServiceInstanceBuilder builder = aServiceInstance()
-                                               .withHost(HostBuilder.aHost().withUuid(HOST_ID).build())
-                                               .withService(aService().withUuid(SERVICE_ID).build())
-                                               .withServiceTemplate(aServiceTemplate().withUuid(TEMPLATE_ID).build())
-                                               .withRelease(ReleaseBuilder.aRelease().withUuid(RELEASE_ID).build())
-                                               .withArtifact(Builder.anArtifact().withUuid(ARTIFACT_ID).build())
-                                               .withAppId(APP_ID)
-                                               .withEnvId(ENV_ID);
+  private ServiceInstanceBuilder builder =
+      aServiceInstance()
+          .withHost(HostBuilder.aHost().withUuid(HOST_ID).build())
+          .withServiceTemplate(
+              aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build())
+          .withRelease(ReleaseBuilder.aRelease().withUuid(RELEASE_ID).build())
+          .withArtifact(Builder.anArtifact().withUuid(ARTIFACT_ID).build())
+          .withAppId(APP_ID)
+          .withEnvId(ENV_ID);
 
   /**
    * Should list service instances.

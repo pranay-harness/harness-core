@@ -23,70 +23,105 @@ import java.util.Objects;
 public class ServiceInstance extends Base {
   private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private Host host;
-  @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
   @Reference(idOnly = true, ignoreMissing = true) private Release release;
   @Reference(idOnly = true, ignoreMissing = true) private Artifact artifact;
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets host.
+   *
+   * @return the host
+   */
   public Host getHost() {
     return host;
   }
 
+  /**
+   * Sets host.
+   *
+   * @param host the host
+   */
   public void setHost(Host host) {
     this.host = host;
   }
 
-  public Service getService() {
-    return service;
-  }
-
-  public void setService(Service service) {
-    this.service = service;
-  }
-
+  /**
+   * Gets service template.
+   *
+   * @return the service template
+   */
   public ServiceTemplate getServiceTemplate() {
     return serviceTemplate;
   }
 
+  /**
+   * Sets service template.
+   *
+   * @param serviceTemplate the service template
+   */
   public void setServiceTemplate(ServiceTemplate serviceTemplate) {
     this.serviceTemplate = serviceTemplate;
   }
 
+  /**
+   * Gets release.
+   *
+   * @return the release
+   */
   public Release getRelease() {
     return release;
   }
 
+  /**
+   * Sets release.
+   *
+   * @param release the release
+   */
   public void setRelease(Release release) {
     this.release = release;
   }
 
+  /**
+   * Gets artifact.
+   *
+   * @return the artifact
+   */
   public Artifact getArtifact() {
     return artifact;
   }
 
+  /**
+   * Sets artifact.
+   *
+   * @param artifact the artifact
+   */
   public void setArtifact(Artifact artifact) {
     this.artifact = artifact;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, host, service, serviceTemplate, release, artifact);
+    return 31 * super.hashCode() + Objects.hash(envId, host, serviceTemplate, release, artifact);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -100,19 +135,15 @@ public class ServiceInstance extends Base {
     }
     final ServiceInstance other = (ServiceInstance) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.host, other.host)
-        && Objects.equals(this.service, other.service) && Objects.equals(this.serviceTemplate, other.serviceTemplate)
-        && Objects.equals(this.release, other.release) && Objects.equals(this.artifact, other.artifact);
+        && Objects.equals(this.serviceTemplate, other.serviceTemplate) && Objects.equals(this.release, other.release)
+        && Objects.equals(this.artifact, other.artifact);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("envId", envId)
         .add("host", host)
-        .add("service", service)
         .add("serviceTemplate", serviceTemplate)
         .add("release", release)
         .add("artifact", artifact)
@@ -125,7 +156,6 @@ public class ServiceInstance extends Base {
   public static final class ServiceInstanceBuilder {
     private String envId;
     private Host host;
-    private Service service;
     private ServiceTemplate serviceTemplate;
     private Release release;
     private Artifact artifact;
@@ -140,7 +170,7 @@ public class ServiceInstance extends Base {
     private ServiceInstanceBuilder() {}
 
     /**
-     * A service instance.
+     * A service instance service instance builder.
      *
      * @return the service instance builder
      */
@@ -149,7 +179,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With env id.
+     * With env id service instance builder.
      *
      * @param envId the env id
      * @return the service instance builder
@@ -160,7 +190,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With host.
+     * With host service instance builder.
      *
      * @param host the host
      * @return the service instance builder
@@ -171,18 +201,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With service.
-     *
-     * @param service the service
-     * @return the service instance builder
-     */
-    public ServiceInstanceBuilder withService(Service service) {
-      this.service = service;
-      return this;
-    }
-
-    /**
-     * With service template.
+     * With service template service instance builder.
      *
      * @param serviceTemplate the service template
      * @return the service instance builder
@@ -193,7 +212,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With release.
+     * With release service instance builder.
      *
      * @param release the release
      * @return the service instance builder
@@ -204,7 +223,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With artifact.
+     * With artifact service instance builder.
      *
      * @param artifact the artifact
      * @return the service instance builder
@@ -215,7 +234,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With uuid.
+     * With uuid service instance builder.
      *
      * @param uuid the uuid
      * @return the service instance builder
@@ -226,7 +245,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With app id.
+     * With app id service instance builder.
      *
      * @param appId the app id
      * @return the service instance builder
@@ -237,7 +256,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With created by.
+     * With created by service instance builder.
      *
      * @param createdBy the created by
      * @return the service instance builder
@@ -248,7 +267,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With created at.
+     * With created at service instance builder.
      *
      * @param createdAt the created at
      * @return the service instance builder
@@ -259,7 +278,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With last updated by.
+     * With last updated by service instance builder.
      *
      * @param lastUpdatedBy the last updated by
      * @return the service instance builder
@@ -270,7 +289,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With last updated at.
+     * With last updated at service instance builder.
      *
      * @param lastUpdatedAt the last updated at
      * @return the service instance builder
@@ -281,7 +300,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With active.
+     * With active service instance builder.
      *
      * @param active the active
      * @return the service instance builder
@@ -292,7 +311,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * But.
+     * But service instance builder.
      *
      * @return the service instance builder
      */
@@ -300,7 +319,6 @@ public class ServiceInstance extends Base {
       return aServiceInstance()
           .withEnvId(envId)
           .withHost(host)
-          .withService(service)
           .withServiceTemplate(serviceTemplate)
           .withRelease(release)
           .withArtifact(artifact)
@@ -314,7 +332,7 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * Builds the.
+     * Build service instance.
      *
      * @return the service instance
      */
@@ -322,7 +340,6 @@ public class ServiceInstance extends Base {
       ServiceInstance serviceInstance = new ServiceInstance();
       serviceInstance.setEnvId(envId);
       serviceInstance.setHost(host);
-      serviceInstance.setService(service);
       serviceInstance.setServiceTemplate(serviceTemplate);
       serviceInstance.setRelease(release);
       serviceInstance.setArtifact(artifact);
