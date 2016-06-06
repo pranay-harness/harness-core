@@ -114,7 +114,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Infra infra = infraService.save(anInfra().withEnvId(environment.getUuid()).withInfraType(STATIC).build());
+    Infra infra = infraService.save(
+        anInfra().withAppId(app.getUuid()).withEnvId(environment.getUuid()).withInfraType(STATIC).build());
 
     hosts = importAndGetHosts(infra); // FIXME split
 
@@ -136,8 +137,12 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     tagService.tagHosts(app.getUuid(), ncOz3.getUuid(),
         Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
 
-    template = templateService.save(
-        aServiceTemplate().withService(service).withEnvId(environment.getUuid()).withName("Catalog:8080").build());
+    template = templateService.save(aServiceTemplate()
+                                        .withAppId(app.getUuid())
+                                        .withService(service)
+                                        .withEnvId(environment.getUuid())
+                                        .withName("Catalog:8080")
+                                        .build());
     log().info("Template id {}", template.getUuid());
 
     // add hosts and tags to template
