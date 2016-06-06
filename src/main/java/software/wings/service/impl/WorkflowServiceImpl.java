@@ -169,7 +169,16 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
-    return wingsPersistence.query(Pipeline.class, pageRequest);
+    PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
+    if (res != null && res.size() > 0) {
+      for (Pipeline pipeline : res.getResponse()) {
+        StateMachine stateMachine = readLatest(pipeline.getUuid(), null);
+        if (stateMachine != null) {
+          pipeline.setGraph(stateMachine.getGraph());
+        }
+      }
+    }
+    return res;
   }
 
   /* (non-Javadoc)
