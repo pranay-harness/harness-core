@@ -10,6 +10,7 @@ import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNEC
 
 import com.google.common.collect.ImmutableMap;
 
+import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
@@ -134,7 +135,7 @@ public class SettingsServiceImpl implements SettingsService {
   public List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
-        .in(Arrays.asList(appId, SettingAttribute.GLOBAL_APP_ID))
+        .in(Arrays.asList(appId, Base.GLOBAL_APP_ID))
         .field("value.type")
         .equal(type)
         .asList();
@@ -146,6 +147,6 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type) {
-    return getSettingAttributesByType(SettingAttribute.GLOBAL_APP_ID, type);
+    return getSettingAttributesByType(Base.GLOBAL_APP_ID, type);
   }
 }

@@ -25,6 +25,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 public class Base {
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
+
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Indexed @NotNull private String appId;

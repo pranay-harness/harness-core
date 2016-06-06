@@ -14,12 +14,14 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.UserService;
 
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 3/9/16.
  */
+@ValidateOnExecution
 public class UserServiceImpl implements UserService {
   @Inject private WingsPersistence wingsPersistence;
 

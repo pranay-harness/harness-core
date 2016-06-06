@@ -4,7 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.hibernate.validator.constraints.Email;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
@@ -27,7 +27,7 @@ import javax.security.auth.Subject;
 public class User extends Base implements Principal {
   private String name;
 
-  @Indexed(unique = true) @NotEmpty private String email;
+  @Indexed(unique = true) @Email private String email;
 
   @JsonIgnore private String passwordHash;
 
@@ -132,7 +132,8 @@ public class User extends Base implements Principal {
   /**
    * The Class Builder.
    */
-  public static class Builder {
+
+  public static final class Builder {
     private String name;
     private String email;
     private String passwordHash;
@@ -141,6 +142,7 @@ public class User extends Base implements Principal {
     private String password;
     private String token;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -149,20 +151,80 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
-    /**
-     * An user.
-     *
-     * @return the builder
-     */
     public static Builder anUser() {
       return new Builder();
     }
 
-    /**
-     * But.
-     *
-     * @return copy of builder object.
-     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withEmail(String email) {
+      this.email = email;
+      return this;
+    }
+
+    public Builder withPasswordHash(String passwordHash) {
+      this.passwordHash = passwordHash;
+      return this;
+    }
+
+    public Builder withRoles(List<Role> roles) {
+      this.roles = roles;
+      return this;
+    }
+
+    public Builder withLastLogin(long lastLogin) {
+      this.lastLogin = lastLogin;
+      return this;
+    }
+
+    public Builder withPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public Builder withToken(String token) {
+      this.token = token;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
     public Builder but() {
       return anUser()
           .withName(name)
@@ -173,6 +235,7 @@ public class User extends Base implements Principal {
           .withPassword(password)
           .withToken(token)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -180,154 +243,6 @@ public class User extends Base implements Principal {
           .withActive(active);
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the builder
-     */
-    public Builder withActive(boolean active) {
-      this.active = active;
-      return this;
-    }
-
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
-    public Builder withLastUpdatedAt(long lastUpdatedAt) {
-      this.lastUpdatedAt = lastUpdatedAt;
-      return this;
-    }
-
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
-    public Builder withLastUpdatedBy(User lastUpdatedBy) {
-      this.lastUpdatedBy = lastUpdatedBy;
-      return this;
-    }
-
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
-    public Builder withCreatedAt(long createdAt) {
-      this.createdAt = createdAt;
-      return this;
-    }
-
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
-    public Builder withCreatedBy(User createdBy) {
-      this.createdBy = createdBy;
-      return this;
-    }
-
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
-    public Builder withUuid(String uuid) {
-      this.uuid = uuid;
-      return this;
-    }
-
-    /**
-     * With token.
-     *
-     * @param token the token
-     * @return the builder
-     */
-    public Builder withToken(String token) {
-      this.token = token;
-      return this;
-    }
-
-    /**
-     * With password.
-     *
-     * @param password the password
-     * @return the builder
-     */
-    public Builder withPassword(String password) {
-      this.password = password;
-      return this;
-    }
-
-    /**
-     * With last login.
-     *
-     * @param lastLogin the last login
-     * @return the builder
-     */
-    public Builder withLastLogin(long lastLogin) {
-      this.lastLogin = lastLogin;
-      return this;
-    }
-
-    /**
-     * With roles.
-     *
-     * @param roles the roles
-     * @return the builder
-     */
-    public Builder withRoles(List<Role> roles) {
-      this.roles = roles;
-      return this;
-    }
-
-    /**
-     * With password hash.
-     *
-     * @param passwordHash the password hash
-     * @return the builder
-     */
-    public Builder withPasswordHash(String passwordHash) {
-      this.passwordHash = passwordHash;
-      return this;
-    }
-
-    /**
-     * With email.
-     *
-     * @param email the email
-     * @return the builder
-     */
-    public Builder withEmail(String email) {
-      this.email = email;
-      return this;
-    }
-
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the builder
-     */
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    /**
-     * Builds the.
-     *
-     * @return Newly built User object.
-     */
     public User build() {
       User user = new User();
       user.setName(name);
@@ -338,6 +253,7 @@ public class User extends Base implements Principal {
       user.setPassword(password);
       user.setToken(token);
       user.setUuid(uuid);
+      user.setAppId(appId);
       user.setCreatedBy(createdBy);
       user.setCreatedAt(createdAt);
       user.setLastUpdatedBy(lastUpdatedBy);

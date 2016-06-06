@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -58,6 +60,7 @@ public class UserResource {
    */
   @POST
   public RestResponse<User> register(User user) {
+    user.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.register(user));
   }
 

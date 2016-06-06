@@ -25,7 +25,7 @@ portal:
 
 jenkinsBuildQuerySize: 50
 
-enableAuth: true
+enableAuth: false
 
 swagger:
   resourcePackage: software.wings.resources

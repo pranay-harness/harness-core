@@ -5,6 +5,8 @@ import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
+import javax.validation.constraints.NotNull;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -12,7 +14,7 @@ import org.mongodb.morphia.annotations.Reference;
  */
 @Entity(value = "authTokens", noClassnameStored = true)
 public class AuthToken extends Base {
-  @Reference(idOnly = true) private User user;
+  @Reference(idOnly = true) @NotNull private User user;
 
   private long expireAt;
 
@@ -29,6 +31,7 @@ public class AuthToken extends Base {
   public AuthToken(User user) {
     this.user = user;
     setUuid(secureRandAlphaNumString(32));
+    setAppId(Base.GLOBAL_APP_ID);
     expireAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000; // 24 hrs expiry
   }
 

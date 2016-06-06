@@ -65,6 +65,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.utils.JsonUtils;
+import wiremock.org.apache.commons.codec.binary.Base64;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -174,12 +175,12 @@ public class DataGenUtil extends WingsBaseTest {
   private void addAdminUser() {
     WebTarget target = client.target("http://localhost:9090/wings/users/");
     RestResponse<User> response = target.request().post(
-        Entity.entity(anUser().withEmail("admin").withPassword("admin").build(), APPLICATION_JSON),
+        Entity.entity(anUser().withEmail("admin@wings.com").withPassword("admin").build(), APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
     response = client.target("http://localhost:9090/wings/users/login")
                    .request()
-                   .header("Authorization", "Basic YWRtaW46YWRtaW4=")
+                   .header("Authorization", "Basic " + Base64.encodeBase64String("admin@wings.com:admin".getBytes()))
                    .get(new GenericType<RestResponse<User>>() {});
     if (response.getResource() != null) {
       userToken = response.getResource().getToken();
@@ -336,7 +337,7 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void createGlobalSettings() {
-    WebTarget target = client.target("http://localhost:9090/wings/settings/?appId=" + SettingAttribute.GLOBAL_APP_ID);
+    WebTarget target = client.target("http://localhost:9090/wings/settings/?appId=" + Base.GLOBAL_APP_ID);
     System.out.println(JsonUtils.asJson(aSettingAttribute()
                                             .withName("Wings Jenkins")
                                             .withValue(aJenkinsConfig()

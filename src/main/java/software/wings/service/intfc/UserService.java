@@ -1,8 +1,14 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
+
+import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
 
@@ -16,7 +22,7 @@ public interface UserService {
    * @param user the user
    * @return the user
    */
-  public User register(User user);
+  @ValidationGroups(Create.class) public User register(@Valid User user);
 
   /**
    * Match password.
@@ -42,7 +48,7 @@ public interface UserService {
    * @param user the user
    * @return the user
    */
-  public User update(User user);
+  @ValidationGroups(Update.class) public User update(@Valid User user);
 
   /**
    * List.
@@ -57,7 +63,7 @@ public interface UserService {
    *
    * @param userId the user id
    */
-  public void delete(String userId);
+  public void delete(@NotEmpty String userId);
 
   /**
    * Gets the.
@@ -65,7 +71,7 @@ public interface UserService {
    * @param userId the user id
    * @return the user
    */
-  public User get(String userId);
+  public User get(@NotEmpty String userId);
 
   /**
    * Revoke role.
