@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -34,7 +35,7 @@ public class Host extends Base {
 
   @FormDataParam("hostConnAttr")
   @Reference(idOnly = true, ignoreMissing = true)
-  @NotEmpty
+  @NotNull
   private SettingAttribute hostConnAttr;
 
   @FormDataParam("bastionConnAttr")

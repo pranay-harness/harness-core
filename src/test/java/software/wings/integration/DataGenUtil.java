@@ -491,8 +491,8 @@ public class DataGenUtil extends WingsBaseTest {
 
     for (int i = 1; i <= NUM_HOSTS_PER_INFRA; i++) {
       Response response = target.request().post(
-          Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttrs",
-                            connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttrs", envAttr),
+          Entity.entity(ImmutableMap.of("hostNames", asList("host" + i + ".ec2.aws.com"), "hostConnAttr",
+                            connectionAttributes.get(i % connectionAttributes.size()), "bastionConnAttr", envAttr),
               APPLICATION_JSON));
       assertThat(response.getStatus()).isEqualTo(OK.getStatusCode());
     }
