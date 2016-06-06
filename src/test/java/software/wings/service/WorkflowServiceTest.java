@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -565,7 +566,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(graphCount);
 
-    StateMachine sm = workflowService.readLatest(updatedPipeline.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid(), null);
     assertThat(sm.getGraph()).isNotNull();
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
@@ -773,7 +774,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
 
-    StateMachine sm = workflowService.readLatest(updatedOrchestration.getUuid(), null);
+    StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid(), null);
     assertThat(sm.getGraph()).isNotNull();
     assertThat(sm.getGraph()).isEqualTo(graph);
   }

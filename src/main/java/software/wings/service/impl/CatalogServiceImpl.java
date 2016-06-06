@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogItem;
+import software.wings.common.Constants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CatalogService;
 import software.wings.utils.YamlUtils;
@@ -20,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -43,7 +45,7 @@ public class CatalogServiceImpl implements CatalogService {
   @Inject
   public CatalogServiceImpl(YamlUtils yamlUtils) {
     try {
-      URL url = this.getClass().getResource("/configs/catalogs.yml");
+      URL url = this.getClass().getResource(Constants.STATIC_CATALOG_URL);
       String yaml = Resources.toString(url, Charsets.UTF_8);
       catalogs = yamlUtils.read(yaml, new TypeReference<Map<String, List<CatalogItem>>>() {});
       for (List<CatalogItem> catalogItems : catalogs.values()) {

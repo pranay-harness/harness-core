@@ -94,7 +94,7 @@ public interface WorkflowService {
    * @param name     the name
    * @return the state machine
    */
-  StateMachine readLatest(String originId, String name);
+  StateMachine readLatest(String appId, String originId, String name);
 
   /**
    * List.

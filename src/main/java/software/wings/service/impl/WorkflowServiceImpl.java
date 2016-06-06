@@ -7,6 +7,8 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -25,19 +27,21 @@ import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
+import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
+import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -48,7 +52,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.utils.JsonUtils;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -73,6 +80,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
+  @Inject private EnvironmentService environmentService;
+
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
@@ -231,7 +240,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public Pipeline readPipeline(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
-    StateMachine stateMachine = readLatest(pipelineId, null);
+    StateMachine stateMachine = readLatest(appId, pipelineId, null);
     if (stateMachine != null) {
       pipeline.setGraph(stateMachine.getGraph());
     }
@@ -242,13 +251,18 @@ public class WorkflowServiceImpl implements WorkflowService {
    * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)
    */
   @Override
-  public StateMachine readLatest(String originId, String name) {
+  public StateMachine readLatest(String appId, String originId, String name) {
     if (StringUtils.isBlank(name)) {
       name = Constants.DEFAULT_WORKFLOW_NAME;
     }
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
     filter.setFieldName("originId");
     filter.setFieldValues(originId);
     filter.setOp(Operator.EQ);
@@ -265,13 +279,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     order.setOrderType(OrderType.DESC);
     req.addOrder(order);
 
-    req.setLimit("1");
-
-    PageResponse<StateMachine> res = list(req);
-    if (res == null || res.size() == 0) {
-      return null;
-    }
-    return res.get(0);
+    return wingsPersistence.get(StateMachine.class, req);
   }
 
   /* (non-Javadoc)
@@ -313,7 +321,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (orchestration == null) {
       return orchestration;
     }
-    StateMachine stateMachine = readLatest(orchestrationId, null);
+    StateMachine stateMachine = readLatest(appId, orchestrationId, null);
 
     orchestration.setGraph(stateMachine.getGraph());
     return orchestration;
@@ -415,7 +423,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new WingsException(ErrorConstants.NON_EXISTING_PIPELINE);
     }
     List<WorkflowExecution> runningWorkflowExecutions =
-        getRunningWorkflowExecutions(WorkflowExecutionType.PIPELINE, appId, pipelineId);
+        getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
     if (runningWorkflowExecutions != null) {
       for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
         if (workflowExecution.getStatus() == ExecutionStatus.NEW) {
@@ -427,7 +435,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
 
-    StateMachine stateMachine = readLatest(pipelineId, null);
+    StateMachine stateMachine = readLatest(appId, pipelineId, null);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
@@ -435,7 +443,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(pipelineId);
-    workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.PIPELINE);
+    workflowExecution.setWorkflowType(WorkflowType.PIPELINE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
@@ -452,13 +460,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String orchestrationId, ExecutionArgs executionArgs) {
     List<WorkflowExecution> runningWorkflowExecutions =
-        getRunningWorkflowExecutions(WorkflowExecutionType.ORCHESTRATION, appId, orchestrationId);
+        getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, orchestrationId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
       throw new WingsException("Orchestration has already been triggered");
     }
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
-    StateMachine stateMachine = readLatest(orchestrationId, null);
+    StateMachine stateMachine = readLatest(appId, orchestrationId, null);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
@@ -466,7 +474,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(orchestrationId);
-    workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.ORCHESTRATION);
+    workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
@@ -540,14 +548,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
 
-    StateMachine stateMachine = readLatest(orchestrationId, null);
+    StateMachine stateMachine = readLatest(appId, orchestrationId, null);
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
-    workflowExecution.setWorkflowExecutionType(WorkflowExecutionType.SIMPLE);
+    workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
@@ -563,11 +571,59 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private Workflow readLatestSimpleWorkflow(String appId, String envId) {
-    return null;
+    PageRequest<Orchestration> req = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("name");
+    filter.setFieldValues(Constants.DEFAULT_WORKFLOW_NAME);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("workflowType");
+    filter.setFieldValues(WorkflowType.SIMPLE);
+    filter.setOp(Operator.EQ);
+    req.addFilter(filter);
+
+    SortOrder order = new SortOrder();
+    order.setFieldName("lastUpdatedAt");
+    order.setOrderType(OrderType.DESC);
+    req.addOrder(order);
+
+    Orchestration workflow = wingsPersistence.get(Orchestration.class, req, ReadPref.CRITICAL);
+    if (workflow == null) {
+      workflow = createDefaultSimpleWorkflow(appId, envId);
+    }
+
+    return workflow;
+  }
+
+  private Orchestration createDefaultSimpleWorkflow(String appId, String envId) {
+    Orchestration orchestration = new Orchestration();
+    orchestration.setWorkflowType(WorkflowType.SIMPLE);
+    orchestration.setAppId(appId);
+    orchestration.setEnvironment(environmentService.get(appId, envId));
+
+    URL url = this.getClass().getResource(Constants.SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL);
+    String json;
+    try {
+      json = Resources.toString(url, Charsets.UTF_8);
+    } catch (IOException e) {
+      throw new WingsException("Error in loading simple workflow default graph");
+    }
+    Graph graph = JsonUtils.asObject(json, Graph.class);
+    orchestration.setGraph(graph);
+
+    return createWorkflow(Orchestration.class, orchestration);
   }
 
   private List<WorkflowExecution> getRunningWorkflowExecutions(
-      WorkflowExecutionType workflowExecutionType, String appId, String workflowId) {
+      WorkflowType workflowType, String appId, String workflowId) {
     PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
 
     SearchFilter filter = new SearchFilter();
@@ -583,8 +639,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
-    filter.setFieldName("workflowExecutionType");
-    filter.setFieldValues(workflowExecutionType);
+    filter.setFieldName("workflowType");
+    filter.setFieldValues(workflowType);
     filter.setOp(Operator.EQ);
     pageRequest.addFilter(filter);
 
@@ -604,10 +660,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pageResponse.getResponse();
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#deleteWorkflow(java.lang.Class, java.lang.String,
-   * java.lang.String)
-   */
   @Override
   public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
     UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
