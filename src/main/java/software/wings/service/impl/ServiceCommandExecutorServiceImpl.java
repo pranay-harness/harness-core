@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service.impl;
 
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
@@ -9,7 +9,9 @@ import software.wings.beans.Command;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ServiceInstance;
-import software.wings.service.impl.ServiceCommandExecutorService;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -24,7 +26,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   @Inject CommandUnitExecutorService commandUnitExecutorService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.impl.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
+   * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
    * software.wings.beans.Command)
    */
   @Override
