@@ -19,11 +19,21 @@ import javax.validation.constraints.NotNull;
 public class Orchestration extends Workflow {
   @Indexed @Reference(idOnly = true) @NotNull private Environment environment;
 
+  private WorkflowType workflowType;
+
   public Environment getEnvironment() {
     return environment;
   }
 
   public void setEnvironment(Environment environment) {
     this.environment = environment;
+  }
+
+  public WorkflowType getWorkflowType() {
+    return workflowType;
+  }
+
+  public void setWorkflowType(WorkflowType workflowType) {
+    this.workflowType = workflowType;
   }
 }
