@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -115,6 +116,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
+    req.setLimit("1");
     PageResponse<T> res = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
     if (isEmpty(res)) {
       return null;

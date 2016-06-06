@@ -6,12 +6,14 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.LogService;
 
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 2/8/16.
  */
+@ValidateOnExecution
 public class SshPwdAuthExecutor extends AbstractSshExecutor {
   /**
    * Instantiates a new ssh pwd auth executor.

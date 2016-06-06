@@ -89,7 +89,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
           aServiceInstance()
               .withAppId(template.getAppId())
               .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
-              .withService(template.getService())
+              .withServiceTemplate(template)
               .withHost(host)
               .build());
     });

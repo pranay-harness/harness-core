@@ -3,6 +3,7 @@
  */
 package software.wings.api;
 
+import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 
@@ -15,8 +16,6 @@ import java.util.Map;
  *
  */
 public class SimpleOrchestrationParams implements ContextElement {
-  public static final String SIMPLE_ORCHESTRATION_PARAMS = "SIMPLE_ORCHESTRATION_PARAMS";
-
   private String serviceId;
   private List<String> instanceIds;
 
@@ -27,14 +26,14 @@ public class SimpleOrchestrationParams implements ContextElement {
 
   @Override
   public String getName() {
-    return SIMPLE_ORCHESTRATION_PARAMS;
+    return Constants.SIMPLE_ORCHESTRATION_PARAMS;
   }
 
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(SIMPLE_ORCHESTRATION_PARAMS + ".serviceId", serviceId);
-    map.put(SIMPLE_ORCHESTRATION_PARAMS + ".instanceIds", instanceIds);
+    map.put(Constants.SIMPLE_ORCHESTRATION_PARAMS + ".serviceId", serviceId);
+    map.put(Constants.SIMPLE_ORCHESTRATION_PARAMS + ".instanceIds", instanceIds);
     return map;
   }
 

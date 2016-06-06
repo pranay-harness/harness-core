@@ -10,7 +10,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
+import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
@@ -146,8 +146,8 @@ public class PipelineResource {
     pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
-    filter.setFieldName("workflowExecutionType");
-    filter.setFieldValues(WorkflowExecutionType.PIPELINE);
+    filter.setFieldName("workflowType");
+    filter.setFieldValues(WorkflowType.PIPELINE);
     filter.setOp(Operator.EQ);
     pageRequest.addFilter(filter);
 

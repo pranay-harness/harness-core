@@ -1,13 +1,18 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Host;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
+import software.wings.utils.validation.Update;
 
 import java.io.File;
 import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -31,7 +36,7 @@ public interface HostService {
    * @param hostId  the host id
    * @return the host
    */
-  public Host get(String appId, String infraId, String hostId);
+  public Host get(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
 
   /**
    * Save.
@@ -39,7 +44,7 @@ public interface HostService {
    * @param host the host
    * @return the host
    */
-  public Host save(Host host);
+  public Host save(@Valid Host host);
 
   /**
    * Update.
@@ -47,7 +52,7 @@ public interface HostService {
    * @param host the host
    * @return the host
    */
-  public Host update(Host host);
+  @ValidationGroups(Update.class) public Host update(@Valid Host host);
 
   /**
    * Export hosts.
@@ -56,7 +61,7 @@ public interface HostService {
    * @param infraId the infra id
    * @return the file
    */
-  File exportHosts(String appId, String infraId);
+  File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
 
   /**
    * Gets the infra id.
@@ -65,7 +70,7 @@ public interface HostService {
    * @param appId the app id
    * @return the infra id
    */
-  String getInfraId(String envId, String appId);
+  String getInfraId(@NotEmpty String envId, @NotEmpty String appId);
 
   /**
    * Delete.
@@ -74,7 +79,7 @@ public interface HostService {
    * @param infraId the infra id
    * @param hostId  the host id
    */
-  void delete(String appId, String infraId, String hostId);
+  void delete(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
 
   /**
    * Bulk save.
@@ -92,7 +97,7 @@ public interface HostService {
    * @param boundedInputStream the bounded input stream
    * @return the int
    */
-  int importHosts(String appId, String infraId, BoundedInputStream boundedInputStream);
+  int importHosts(@NotEmpty String appId, @NotEmpty String infraId, @NotNull BoundedInputStream boundedInputStream);
 
   /**
    * Gets the hosts by id.
@@ -101,7 +106,7 @@ public interface HostService {
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
-  List<Host> getHostsById(String appId, List<String> hostUuids);
+  List<Host> getHostsById(@NotEmpty String appId, @NotNull List<String> hostUuids);
 
   /**
    * Gets the hosts by tags.
@@ -110,5 +115,5 @@ public interface HostService {
    * @param tags  the tags
    * @return the hosts by tags
    */
-  List<Host> getHostsByTags(String appId, List<Tag> tags);
+  List<Host> getHostsByTags(@NotEmpty String appId, @NotNull List<Tag> tags);
 }

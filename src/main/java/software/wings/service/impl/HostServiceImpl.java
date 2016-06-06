@@ -18,12 +18,14 @@ import software.wings.utils.HostCsvFileHelper;
 import java.io.File;
 import java.util.List;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/9/16.
  */
+@ValidateOnExecution
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;

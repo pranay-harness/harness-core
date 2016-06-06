@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import com.google.common.base.MoreObjects;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
@@ -12,13 +13,13 @@ import java.util.Objects;
  * Created by anubhaw on 2/8/16.
  */
 public class SshSessionConfig {
-  private String appId;
-  private ExecutorType executorType;
-  private String executionId;
+  @NotEmpty private String appId;
+  @NotEmpty private ExecutorType executorType;
+  @NotEmpty private String executionId;
   private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
   private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
   private Integer retryInterval;
-  private String host;
+  @NotEmpty private String host;
   private Integer port = 22;
   private String userName;
   private String password;

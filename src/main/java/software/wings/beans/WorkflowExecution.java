@@ -21,7 +21,7 @@ public class WorkflowExecution extends Base {
   @Indexed private String workflowId;
 
   private String stateMachineId;
-  @Indexed private WorkflowExecutionType workflowExecutionType;
+  @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
 
@@ -41,12 +41,12 @@ public class WorkflowExecution extends Base {
     this.stateMachineId = stateMachineId;
   }
 
-  public WorkflowExecutionType getWorkflowExecutionType() {
-    return workflowExecutionType;
+  public WorkflowType getWorkflowType() {
+    return workflowType;
   }
 
-  public void setWorkflowExecutionType(WorkflowExecutionType workflowExecutionType) {
-    this.workflowExecutionType = workflowExecutionType;
+  public void setWorkflowType(WorkflowType workflowType) {
+    this.workflowType = workflowType;
   }
 
   public Graph getGraph() {
@@ -64,9 +64,4 @@ public class WorkflowExecution extends Base {
   public void setStatus(ExecutionStatus status) {
     this.status = status;
   }
-
-  /**
-   * The Enum WorkflowExecutionType.
-   */
-  public enum WorkflowExecutionType { PIPELINE, ORCHESTRATION, SIMPLE, SUB_WORKFLOW }
 }
