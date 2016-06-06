@@ -41,7 +41,9 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
   @Inject private PersistentLocker persistentLocker;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void onMessage(NotifyEvent message) throws Exception {
     logger.trace("Processing message {}", message);

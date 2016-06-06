@@ -289,27 +289,6 @@ public class JsonUtils {
   }
 
   /**
-   * Deserializes json string to list of objects of given type.
-   *
-   * @param <T>            collection type.
-   * @param <U>            targetClassType.
-   * @param jsonString     json to deserialize.
-   * @param collectionType collection type. i.e. List, Set etc.
-   * @param classToConvert target class type.
-   * @return Deserialized Collection object.
-   */
-  @JsonDeserialize
-  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
-    try {
-      return mapper.readValue(
-          jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
-    } catch (Exception exception) {
-      logger.error(exception.getMessage(), exception);
-      throw new RuntimeException(exception);
-    }
-  }
-
-  /**
    * Converts object to jsonNode for advanced processing.
    *
    * @param object the object
@@ -332,6 +311,27 @@ public class JsonUtils {
     } catch (Exception e) {
       logger.error("", e);
       throw Throwables.propagate(e);
+    }
+  }
+
+  /**
+   * Deserializes json string to list of objects of given type.
+   *
+   * @param <T>            collection type.
+   * @param <U>            targetClassType.
+   * @param jsonString     json to deserialize.
+   * @param collectionType collection type. i.e. List, Set etc.
+   * @param classToConvert target class type.
+   * @return Deserialized Collection object.
+   */
+  @JsonDeserialize
+  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
+    try {
+      return mapper.readValue(
+          jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
+    } catch (Exception exception) {
+      logger.error(exception.getMessage(), exception);
+      throw new RuntimeException(exception);
     }
   }
 }

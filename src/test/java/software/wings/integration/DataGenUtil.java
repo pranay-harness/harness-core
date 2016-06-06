@@ -104,15 +104,14 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
+  private static String userToken = "INVALID_TOKEN";
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Client client;
   @Inject private WingsPersistence wingsPersistence;
-
   private List<String> appNames = new ArrayList<String>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
-  private static String userToken = "INVALID_TOKEN";
 
   /**
    * Generated Data for across the API use.

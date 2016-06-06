@@ -53,13 +53,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     this.configService = configService;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public PageResponse<Service> list(PageRequest<Service> request) {
     return wingsPersistence.query(Service.class, request);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
@@ -67,7 +71,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return savedService;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Service update(Service service) {
     wingsPersistence.updateFields(Service.class, service.getUuid(),
@@ -76,7 +82,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -86,13 +94,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return service;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void delete(String appId, String serviceId) {
     wingsPersistence.delete(Service.class, serviceId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Service addCommand(String appId, String serviceId, Graph commandGraph) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -115,7 +127,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Service deleteCommand(String appId, String serviceId, String commandName) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
@@ -129,7 +143,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     return get(appId, serviceId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = get(appId, serviceId);
@@ -140,7 +156,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
         .orElse(null);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
     Service service = get(appId, serviceId);

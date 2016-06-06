@@ -38,8 +38,8 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.AppContainerService;
+import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

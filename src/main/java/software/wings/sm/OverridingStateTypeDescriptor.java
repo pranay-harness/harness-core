@@ -38,25 +38,33 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
     this.overridingJsonSchema = overridingJsonSchema;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getType() {
     return stateTypeDescriptor.getType();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<StateTypeScope> getScopes() {
     return stateTypeDescriptor.getScopes();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<? extends State> getStateClass() {
     return stateTypeDescriptor.getStateClass();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getJsonSchema() {
     if (getOverridingJsonSchema() != null) {
@@ -66,13 +74,17 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object getUiSchema() {
     return stateTypeDescriptor.getUiSchema();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public State newInstance(String id) {
     return stateTypeDescriptor.newInstance(id);

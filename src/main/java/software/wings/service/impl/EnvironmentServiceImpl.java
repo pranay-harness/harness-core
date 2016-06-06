@@ -31,13 +31,17 @@ import javax.inject.Singleton;
 public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public PageResponse<Environment> list(PageRequest<Environment> request) {
     return wingsPersistence.query(Environment.class, request);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, String> listForEnum(String appId) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
@@ -45,7 +49,9 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     return list(pageRequest).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Environment save(Environment env) {
     env = wingsPersistence.saveAndGet(Environment.class, env);
@@ -69,13 +75,17 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     return env;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Environment get(String appId, String envId) {
     return wingsPersistence.get(Environment.class, envId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Environment update(Environment environment) {
     wingsPersistence.updateFields(Environment.class, environment.getUuid(),
@@ -83,7 +93,9 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     return wingsPersistence.get(Environment.class, environment.getUuid());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void delete(String envId) {
     wingsPersistence.delete(Environment.class, envId);
