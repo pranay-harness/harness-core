@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.shuffle;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -65,7 +66,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.utils.JsonUtils;
-import wiremock.org.apache.commons.codec.binary.Base64;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -173,14 +173,17 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void addAdminUser() {
+    String userName = "admin@wings.software";
+    String password = "admin";
+    String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
     WebTarget target = client.target("http://localhost:9090/wings/users/");
     RestResponse<User> response = target.request().post(
-        Entity.entity(anUser().withEmail("admin@wings.com").withPassword("admin").build(), APPLICATION_JSON),
+        Entity.entity(anUser().withEmail("admin@wings.software").withPassword("admin").build(), APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
     response = client.target("http://localhost:9090/wings/users/login")
                    .request()
-                   .header("Authorization", "Basic " + Base64.encodeBase64String("admin@wings.com:admin".getBytes()))
+                   .header("Authorization", basicAuthValue)
                    .get(new GenericType<RestResponse<User>>() {});
     if (response.getResource() != null) {
       userToken = response.getResource().getToken();
