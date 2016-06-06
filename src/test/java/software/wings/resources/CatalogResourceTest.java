@@ -2,6 +2,9 @@ package software.wings.resources;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -13,9 +16,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.CatalogNames.ORCHESTRATION_STENCILS;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.utils.WingsUnitTestConstants.APP_ID;
+import static software.wings.utils.WingsUnitTestConstants.ENV_ID;
 import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
-
-import com.google.common.collect.Lists;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import junitparams.JUnitParamsRunner;
@@ -34,10 +36,12 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 
@@ -63,20 +67,21 @@ public class CatalogResourceTest extends WingsBaseTest {
   private static final JenkinsBuildService jenkinsBuildService = mock(JenkinsBuildService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
+  private static final EnvironmentService environmentService = mock(EnvironmentService.class);
 
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
-          .addResource(new CatalogResource(
-              catalogService, workflowService, jenkinsBuildService, settingsService, serviceResourceService))
+          .addResource(new CatalogResource(catalogService, workflowService, jenkinsBuildService, settingsService,
+              serviceResourceService, environmentService))
           .build();
 
   @Rule
   public Verifier verifier = new Verifier() {
     @Override
     protected void verify() throws Throwable {
-      verifyNoMoreInteractions(
-          catalogService, workflowService, jenkinsBuildService, settingsService, serviceResourceService);
+      verifyNoMoreInteractions(catalogService, workflowService, jenkinsBuildService, settingsService,
+          serviceResourceService, environmentService);
     }
   };
 
@@ -88,11 +93,11 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(settingsService.get(anyString())).thenReturn(aSettingAttribute().withValue(new JenkinsConfig()).build());
-    when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class), any(JenkinsConfig.class)))
-        .thenReturn(Lists.newArrayList());
+    when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class), any(JenkinsConfig.class))).thenReturn(newArrayList());
     when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
-        .thenReturn(Lists.newArrayList());
-    when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(Lists.newArrayList());
+        .thenReturn(newArrayList());
+    when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(newArrayList());
+    when(environmentService.listForEnum(APP_ID)).thenReturn(of(ENV_ID, "ENV"));
   }
 
   /**
@@ -100,7 +105,8 @@ public class CatalogResourceTest extends WingsBaseTest {
    */
   @After
   public void tearDown() {
-    reset(catalogService, workflowService, jenkinsBuildService, settingsService, serviceResourceService);
+    reset(catalogService, workflowService, jenkinsBuildService, settingsService, serviceResourceService,
+        environmentService);
   }
 
   /**
@@ -125,12 +131,12 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   private Object[][] catalogNames() {
-    return new Object[][] {
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_BUILD)},
+    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_BUILD)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.COMMAND_STENCILS)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES)},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENTS)}
 
     };
   }
@@ -163,8 +169,6 @@ public class CatalogResourceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListCatalogsForCommandStencilsAndService() {
-    System.out.println(
-        "/catalogs?catalogType=" + CatalogNames.COMMAND_STENCILS + "&appId=" + APP_ID + "&serviceId=" + SERVICE_ID);
     RestResponse<Map<String, Object>> actual = resources.client()
                                                    .target("/catalogs?catalogType=" + CatalogNames.COMMAND_STENCILS
                                                        + "&appId=" + APP_ID + "&serviceId=" + SERVICE_ID)
@@ -178,5 +182,26 @@ public class CatalogResourceTest extends WingsBaseTest {
         .extracting(o -> ((Map<String, Object>) o).get(CatalogNames.COMMAND_STENCILS))
         .isNotNull();
     verify(serviceResourceService).getCommandStencils(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldListStencilsWithPostProcessing() {
+    when(workflowService.stencils(StateTypeScope.PIPELINE_STENCILS))
+        .thenReturn(newHashMap(of(StateTypeScope.PIPELINE_STENCILS, newArrayList(StateType.ENV_STATE))));
+
+    RestResponse<Map<String, Object>> actual =
+        resources.client()
+            .target("/catalogs?catalogType=" + CatalogNames.PIPELINE_STENCILS + "&appId=" + APP_ID)
+            .request()
+            .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+
+    assertThat(actual)
+        .isNotNull()
+        .extracting(RestResponse::getResource)
+        .hasSize(1)
+        .extracting(o -> ((Map<String, Object>) o).get(CatalogNames.PIPELINE_STENCILS))
+        .isNotNull();
+    verify(workflowService).stencils(StateTypeScope.PIPELINE_STENCILS);
+    verify(environmentService).listForEnum(APP_ID);
   }
 }

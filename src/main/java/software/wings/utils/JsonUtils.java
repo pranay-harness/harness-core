@@ -308,4 +308,30 @@ public class JsonUtils {
       throw new RuntimeException(exception);
     }
   }
+
+  /**
+   * Converts object to jsonNode for advanced processing.
+   *
+   * @param object the object
+   * @return the json node
+   */
+  public static JsonNode asTree(Object object) {
+    return asTree(mapper, object);
+  }
+
+  /**
+   * Converts object to jsonNode for advanced processing.
+   *
+   * @param objectMapper the object mapper
+   * @param object       the object
+   * @return the json node
+   */
+  public static JsonNode asTree(ObjectMapper objectMapper, Object object) {
+    try {
+      return objectMapper.valueToTree(object);
+    } catch (Exception e) {
+      logger.error("", e);
+      throw Throwables.propagate(e);
+    }
+  }
 }

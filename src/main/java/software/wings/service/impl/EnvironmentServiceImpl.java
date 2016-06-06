@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
@@ -11,11 +12,13 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -28,17 +31,21 @@ import javax.inject.Singleton;
 public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EnvironmentService#list(software.wings.dl.PageRequest)
-   */
+  /** {@inheritDoc} */
   @Override
   public PageResponse<Environment> list(PageRequest<Environment> request) {
     return wingsPersistence.query(Environment.class, request);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EnvironmentService#save(software.wings.beans.Environment)
-   */
+  /** {@inheritDoc} */
+  @Override
+  public Map<String, String> listForEnum(String appId) {
+    PageRequest<Environment> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", appId, Operator.EQ);
+    return list(pageRequest).stream().collect(toMap(Environment::getUuid, Environment::getName));
+  }
+
+  /** {@inheritDoc} */
   @Override
   public Environment save(Environment env) {
     env = wingsPersistence.saveAndGet(Environment.class, env);
@@ -62,17 +69,13 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     return env;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EnvironmentService#get(java.lang.String, java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public Environment get(String appId, String envId) {
     return wingsPersistence.get(Environment.class, envId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EnvironmentService#update(software.wings.beans.Environment)
-   */
+  /** {@inheritDoc} */
   @Override
   public Environment update(Environment environment) {
     wingsPersistence.updateFields(Environment.class, environment.getUuid(),
@@ -80,9 +83,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
     return wingsPersistence.get(Environment.class, environment.getUuid());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.EnvironmentService#delete(java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public void delete(String envId) {
     wingsPersistence.delete(Environment.class, envId);

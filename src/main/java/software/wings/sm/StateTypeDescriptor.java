@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;
 
 import java.util.List;
@@ -12,13 +13,15 @@ import java.util.List;
  * @author Rishi
  */
 public interface StateTypeDescriptor extends ExtensionPoint {
-  public String getType();
+  String getType();
 
-  public List<StateTypeScope> getScopes();
+  List<StateTypeScope> getScopes();
 
-  public Object getJsonSchema();
+  @JsonIgnore Class<? extends State> getStateClass();
 
-  public Object getUiSchema();
+  Object getJsonSchema();
+
+  Object getUiSchema();
 
   /**
    * New instance.
@@ -26,5 +29,5 @@ public interface StateTypeDescriptor extends ExtensionPoint {
    * @param id the id
    * @return the state
    */
-  public State newInstance(String id);
+  State newInstance(String id);
 }
