@@ -181,7 +181,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Pipeline pipeline : res.getResponse()) {
-        StateMachine stateMachine = readLatest(pipeline.getUuid(), null);
+        StateMachine stateMachine = readLatest(pipeline.getAppId(), pipeline.getUuid(), null);
         if (stateMachine != null) {
           pipeline.setGraph(stateMachine.getGraph());
         }
