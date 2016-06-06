@@ -1,5 +1,9 @@
 package software.wings.sm.states;
 
+import static software.wings.beans.CatalogNames.ENVIRONMENTS;
+
+import com.github.reinert.jjschema.Attributes;
+import software.wings.sm.EnumData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -13,11 +17,13 @@ import software.wings.utils.Misc;
  *
  * @author Rishi
  */
+@Attributes(title = "Env")
 public class EnvState extends State {
   private static final long serialVersionUID = 1L;
 
-  private String envId;
-  private String workflowId;
+  @EnumData(catalog = ENVIRONMENTS) @Attributes(required = true) private String envId;
+
+  @Attributes(required = true) private String workflowId;
 
   /**
    * Creates env state with given name.

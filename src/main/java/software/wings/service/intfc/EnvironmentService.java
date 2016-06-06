@@ -4,6 +4,8 @@ import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.Map;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -16,7 +18,15 @@ public interface EnvironmentService {
    * @param request the request
    * @return the page response
    */
-  public PageResponse<Environment> list(PageRequest<Environment> request);
+  PageResponse<Environment> list(PageRequest<Environment> request);
+
+  /**
+   * List for enum map.
+   *
+   * @param appId the app id
+   * @return the map
+   */
+  Map<String, String> listForEnum(String appId);
 
   /**
    * Gets the.
@@ -25,7 +35,7 @@ public interface EnvironmentService {
    * @param envId the env id
    * @return the environment
    */
-  public Environment get(String appId, String envId);
+  Environment get(String appId, String envId);
 
   /**
    * Save.
@@ -33,7 +43,7 @@ public interface EnvironmentService {
    * @param environment the environment
    * @return the environment
    */
-  public Environment save(Environment environment);
+  Environment save(Environment environment);
 
   /**
    * Update.
@@ -41,12 +51,12 @@ public interface EnvironmentService {
    * @param environment the environment
    * @return the environment
    */
-  public Environment update(Environment environment);
+  Environment update(Environment environment);
 
   /**
    * Delete.
    *
    * @param envId the env id
    */
-  public void delete(String envId);
+  void delete(String envId);
 }

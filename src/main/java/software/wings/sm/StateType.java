@@ -102,8 +102,13 @@ public enum StateType implements StateTypeDescriptor {
   }
 
   @Override
+  public Class<? extends State> getStateClass() {
+    return stateClass;
+  }
+
+  @Override
   public Object getJsonSchema() {
-    return jsonSchema;
+    return ((JsonNode) jsonSchema).deepCopy();
   }
 
   @Override

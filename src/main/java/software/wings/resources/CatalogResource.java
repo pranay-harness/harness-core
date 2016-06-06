@@ -4,24 +4,35 @@
 
 package software.wings.resources;
 
+import static java.util.Arrays.stream;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.CommandUnitType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.EnumData;
+import software.wings.sm.OverridingStateTypeDescriptor;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -50,14 +61,18 @@ public class CatalogResource {
   public static final String APP_ID = "appId";
   public static final String SERVICE_ID = "serviceId";
   public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+
   private WorkflowService workflowService;
   private CatalogService catalogService;
   private JenkinsBuildService jenkinsBuildService;
   private SettingsService settingsService;
   private ServiceResourceService serviceResourceService;
+  private EnvironmentService environmentService;
 
   /**
-   * Creates a new calalog resource.
+   * Creates a new catalog resource.
    *
    * @param catalogService         catalogService object.
    * @param workflowService        workflowService object.
@@ -68,12 +83,14 @@ public class CatalogResource {
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,
       JenkinsBuildService jenkinsBuildService, SettingsService settingsService,
-      ServiceResourceService serviceResourceService) {
+      ServiceResourceService serviceResourceService, EnvironmentService environmentService) {
     this.catalogService = catalogService;
     this.workflowService = workflowService;
     this.jenkinsBuildService = jenkinsBuildService;
     this.settingsService = settingsService;
     this.serviceResourceService = serviceResourceService;
+    this.environmentService = environmentService;
+    this.environmentService = environmentService;
   }
 
   /**
@@ -87,12 +104,17 @@ public class CatalogResource {
   @GET
   public RestResponse<Map<String, Object>> list(
       @QueryParam("catalogType") List<String> catalogTypes, @Context UriInfo uriInfo) throws IOException {
+    Map<String, Object> catalogs = getCatalogs(catalogTypes, uriInfo);
+    return new RestResponse<>(catalogs);
+  }
+
+  private Map<String, Object> getCatalogs(List<String> catalogTypes, UriInfo uriInfo) throws IOException {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
       Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
       for (StateTypeScope stencil : stencils.keySet()) {
-        catalogs.put(stencil.name(), stencils.get(stencil));
+        catalogs.put(stencil.name(), postProcess(stencils.get(stencil), uriInfo));
       }
       catalogs.put(CatalogNames.COMMAND_STENCILS, getCommandStencils(uriInfo.getQueryParameters()));
       catalogs.putAll(catalogService.getCatalogs());
@@ -101,7 +123,7 @@ public class CatalogResource {
         switch (catalogType) {
           case CatalogNames.PIPELINE_STENCILS: {
             StateTypeScope scope = StateTypeScope.valueOf(catalogType);
-            catalogs.put(catalogType, workflowService.stencils(scope).get(scope));
+            catalogs.put(catalogType, postProcess(workflowService.stencils(scope).get(scope), uriInfo));
             break;
           }
           case CatalogNames.ORCHESTRATION_STENCILS: {
@@ -138,11 +160,47 @@ public class CatalogResource {
                     SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES));
             break;
           }
+          case CatalogNames.ENVIRONMENTS: {
+            catalogs.put(catalogType, environmentService.listForEnum(uriInfo.getQueryParameters().getFirst(APP_ID)));
+            break;
+          }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
       }
     }
-    return new RestResponse<>(catalogs);
+    return catalogs;
+  }
+
+  private Object postProcess(List<StateTypeDescriptor> stateTypeDescriptors, UriInfo uriInfo) {
+    return stateTypeDescriptors.stream()
+        .map(stateTypeDescriptor -> processStateTypeDescriptor(stateTypeDescriptor, uriInfo))
+        .collect(toList());
+  }
+
+  private StateTypeDescriptor processStateTypeDescriptor(StateTypeDescriptor stateTypeDescriptor, UriInfo uriInfo) {
+    OverridingStateTypeDescriptor result = new OverridingStateTypeDescriptor(stateTypeDescriptor);
+    JsonNode jsonSchema = ((JsonNode) stateTypeDescriptor.getJsonSchema());
+
+    stream(stateTypeDescriptor.getStateClass().getDeclaredFields())
+        .filter(field -> field.getAnnotation(EnumData.class) != null)
+        .forEach(field -> {
+          String catalogName = field.getAnnotation(EnumData.class).catalog();
+          try {
+            Map<String, Object> catalogs = getCatalogs(singletonList(catalogName), uriInfo);
+            Map<String, Object> catalogData = (Map<String, Object>) catalogs.get(catalogName);
+            if (catalogData != null) {
+              ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(field.getName()));
+              jsonSchemaField.set("enum", JsonUtils.asTree(catalogData.keySet()));
+              jsonSchemaField.set("enumNames", JsonUtils.asTree(catalogData.values()));
+            }
+          } catch (Exception e) {
+            logger.warn("Unable to fill in values for stateType {}:field {} with catalog {}", stateTypeDescriptor,
+                field.getName(), catalogName);
+          }
+        });
+
+    result.setOverridingJsonSchema(jsonSchema);
+    return result;
   }
 
   private List<Object> getCommandStencils(MultivaluedMap<String, String> queryParameters) {
