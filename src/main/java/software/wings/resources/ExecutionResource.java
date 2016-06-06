@@ -1,19 +1,26 @@
 package software.wings.resources;
 
-import com.codahale.metrics.annotation.ExceptionMetered;
-import com.codahale.metrics.annotation.Timed;
-import software.wings.beans.Deployment;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionArgs.OrchestrationType;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.service.intfc.DeploymentService;
+import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 // TODO: Auto-generated Javadoc
 
@@ -22,7 +29,7 @@ import javax.ws.rs.Produces;
  */
 @Path("/executions")
 public class ExecutionResource {
-  private DeploymentService deploymentService;
+  private WorkflowService workflowService;
 
   /**
    * Instantiates a new execution resource.
@@ -30,8 +37,8 @@ public class ExecutionResource {
    * @param deploymentService the deployment service
    */
   @Inject
-  public ExecutionResource(DeploymentService deploymentService) {
-    this.deploymentService = deploymentService;
+  public ExecutionResource(WorkflowService workflowService) {
+    this.workflowService = workflowService;
   }
 
   /**
@@ -41,12 +48,39 @@ public class ExecutionResource {
    * @return the rest response
    */
   @GET
-  @Path("deploy/{appId}")
-  @Timed
-  @ExceptionMetered
+  @Path("executions")
   @Produces("application/json")
-  public RestResponse<PageResponse<Deployment>> list(@BeanParam PageRequest<Deployment> pageRequest) {
-    return new RestResponse<PageResponse<Deployment>>(deploymentService.list(pageRequest));
+  public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
+      @BeanParam PageRequest<WorkflowExecution> pageRequest) {
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    pageRequest.addFilter(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("workflowExecutionType");
+    filter.setFieldValues(WorkflowExecutionType.ORCHESTRATION, WorkflowExecutionType.SIMPLE);
+    filter.setOp(Operator.IN);
+    pageRequest.addFilter(filter);
+
+    if (StringUtils.isNotBlank(orchestrationId)) {
+      filter = new SearchFilter();
+      filter.setFieldName("workflowId");
+      filter.setFieldValues(orchestrationId);
+      filter.setOp(Operator.EQ);
+      pageRequest.addFilter(filter);
+    }
+    return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
+  }
+
+  @GET
+  @Path("executions/{workflowExecutionId}")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId));
   }
 
   /**
@@ -56,11 +90,37 @@ public class ExecutionResource {
    * @return the rest response
    */
   @POST
-  @Path("deploy/{appId}")
-  @Timed
-  @ExceptionMetered
+  @Path("executions")
   @Produces("application/json")
-  public RestResponse<Deployment> save(Deployment deployment) {
-    return new RestResponse<Deployment>(deploymentService.create(deployment));
+  public RestResponse<WorkflowExecution> triggerExecution(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowService.triggerEnvExecution(appId, envId, executionArgs));
+  }
+
+  @POST
+  @Path("executions/orchestrated")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+    executionArgs.setOrchestrationType(OrchestrationType.ORCHESTRATED);
+    return triggerExecution(appId, envId, executionArgs);
+  }
+
+  @POST
+  @Path("executions/simple")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> triggerSimpleExecution(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+    executionArgs.setOrchestrationType(OrchestrationType.SIMPLE);
+    return triggerExecution(appId, envId, executionArgs);
+  }
+
+  @PUT
+  @Path("executions/{workflowExecutionId}")
+  @Produces("application/json")
+  public RestResponse<WorkflowExecution> updateExecutionDetails(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    // TODO - implement abort and pause functionality
+    return null;
   }
 }

@@ -48,8 +48,6 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.Path;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The main application - entry point for the entire Wings Application.
  *
@@ -58,12 +56,6 @@ import javax.ws.rs.Path;
 public class WingsApplication extends Application<MainConfiguration> {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  /**
-   * The main method.
-   *
-   * @param args the arguments
-   * @throws Exception the exception
-   */
   public static void main(String[] args) throws Exception {
     new WingsApplication().run(args);
   }
@@ -73,9 +65,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     return "Wings Application";
   }
 
-  /* (non-Javadoc)
-   * @see io.dropwizard.Application#initialize(io.dropwizard.setup.Bootstrap)
-   */
   @Override
   public void initialize(Bootstrap<MainConfiguration> bootstrap) {
     logger.info("bootstrapping ...");
@@ -93,9 +82,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("bootstrapping done.");
   }
 
-  /* (non-Javadoc)
-   * @see io.dropwizard.Application#run(io.dropwizard.Configuration, io.dropwizard.setup.Environment)
-   */
   @Override
   public void run(MainConfiguration configuration, Environment environment) {
     logger.info("Starting app ...");

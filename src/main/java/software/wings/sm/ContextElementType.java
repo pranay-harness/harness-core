@@ -11,5 +11,6 @@ public enum ContextElementType {
   HOST,
   INSTANCE,
   STANDARD,
+  PARAM,
   OTHER;
 }

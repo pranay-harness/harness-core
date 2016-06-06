@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentBuilder;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -889,8 +890,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void shouldTriggerOrchestration() {
     Orchestration orchestration = createOrchestration();
+    ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecution execution =
-        workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), Lists.newArrayList("123"));
+        workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), executionArgs);
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
     logger.debug("Orchestration executionId: {}", executionId);
