@@ -8,6 +8,7 @@ public class WingsUnitTestConstants {
   public static final String SERVICE_ID = "SERVICE_ID";
   public static final String SERVICE_NAME = "SERVICE_NAME";
   public static final String ENV_ID = "ENV_ID";
+  public static final String INFRA_ID = "INFRA_ID";
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
   public static final String RELEASE_ID = "RELEASE_ID";
   public static final String SERVICE_INSTANCE_ID = "SERVICE_INSTANCE_ID";

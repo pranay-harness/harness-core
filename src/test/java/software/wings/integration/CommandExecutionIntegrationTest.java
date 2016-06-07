@@ -5,6 +5,8 @@ import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContain
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
+import static software.wings.beans.CommandUnitType.EXEC;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.HostBuilder.aHost;
@@ -38,8 +40,8 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.AppContainerService;
+import software.wings.service.intfc.ServiceCommandExecutorService;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -54,7 +56,7 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
-  private static final String HOST_NAME = "192.168.1.52";
+  private static final String HOST_NAME = "192.168.1.106";
   private static final String USER = "ssh_user";
   private static final String PASSWORD = "Wings@123";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
@@ -101,13 +103,23 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   public void shouldExecuteCommand() {
     Command command = aCommand()
                           .withName("COPY_CONTAINER")
-                          .addCommandUnits(anExecCommandUnit().withCommandString("rm -f $HOME/jetty").build(),
+                          .addCommandUnits(anExecCommandUnit()
+                                               .withName("Exec")
+                                               .withCommandUnitType(EXEC)
+                                               .withCommandString("rm -f $HOME/jetty")
+                                               .build(),
                               aCopyArtifactCommandUnit()
+                                  .withName("Copy")
+                                  .withCommandUnitType(COPY_ARTIFACT)
                                   .withFileBucket(PLATFORMS)
                                   .withFileId(fileId)
                                   .withDestinationFilePath("$HOME")
                                   .build(),
-                              anExecCommandUnit().withCommandString("chmod +x $HOME/jetty && $HOME/jetty").build())
+                              anExecCommandUnit()
+                                  .withName("EXEC")
+                                  .withCommandUnitType(EXEC)
+                                  .withCommandString("chmod +x $HOME/jetty && $HOME/jetty")
+                                  .build())
                           .build();
 
     ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);
@@ -124,13 +136,23 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   public void shouldCaptureFailedExecutionCommandUnit() {
     Command command = aCommand()
                           .withName("COPY_CONTAINER")
-                          .addCommandUnits(anExecCommandUnit().withCommandString("rm -f $HOME/jetty").build(),
+                          .addCommandUnits(anExecCommandUnit()
+                                               .withName("Exec")
+                                               .withCommandUnitType(EXEC)
+                                               .withCommandString("rm -f $HOME/jetty")
+                                               .build(),
                               aCopyArtifactCommandUnit()
+                                  .withName("Copy")
+                                  .withCommandUnitType(COPY_ARTIFACT)
                                   .withFileBucket(PLATFORMS)
                                   .withFileId(fileId)
                                   .withDestinationFilePath("$HOME")
                                   .build(),
-                              anExecCommandUnit().withCommandString("chmod +x $HOME/jetty && $HOME/XYZ").build())
+                              anExecCommandUnit()
+                                  .withName("EXEC")
+                                  .withCommandUnitType(EXEC)
+                                  .withCommandString("chmod +x $HOME/jetty && $HOME/XYZ")
+                                  .build())
                           .build();
 
     ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);

@@ -17,9 +17,11 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWOR
 import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsUnitTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsUnitTestConstants.APP_ID;
 import static software.wings.utils.WingsUnitTestConstants.FILE_ID;
 import static software.wings.utils.WingsUnitTestConstants.FILE_PATH;
 import static software.wings.utils.WingsUnitTestConstants.HOST_NAME;
+import static software.wings.utils.WingsUnitTestConstants.INFRA_ID;
 import static software.wings.utils.WingsUnitTestConstants.SSH_KEY;
 import static software.wings.utils.WingsUnitTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsUnitTestConstants.SSH_USER_PASSWORD;
@@ -41,6 +43,7 @@ import software.wings.core.ssh.executors.SshPubKeyAuthExecutor;
 import software.wings.core.ssh.executors.SshPwdAuthExecutor;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.service.intfc.LogService;
 
 import javax.inject.Inject;
 
@@ -69,8 +72,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Mock SshPwdAuthExecutor sshPwdAuthExecutor;
   @Mock SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
   @Mock SshJumpboxExecutor sshJumpboxExecutor;
+  @Mock LogService logService;
+
   @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
-  private HostBuilder hostBuilder = aHost().withHostName(HOST_NAME);
+  private HostBuilder hostBuilder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME);
 
   /**
    * Should create password based ssh config.
@@ -79,6 +84,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldCreatePasswordBasedSshConfig() {
     Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
+                                             .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
                                              .withHost(HOST_NAME)
                                              .withUserName(SSH_USER_NAME)
@@ -101,6 +107,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                     .withHostConnectionCredential(aHostConnectionCredential().withSshUser(SSH_USER_NAME).build())
                     .build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
+                                             .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
                                              .withHost(HOST_NAME)
                                              .withUserName(SSH_USER_NAME)
@@ -125,6 +132,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                     .build();
     SshSessionConfig expectedSshConfig =
         aSshSessionConfig()
+            .withAppId(APP_ID)
             .withExecutionId(ACTIVITY_ID)
             .withHost(HOST_NAME)
             .withUserName(SSH_USER_NAME)
