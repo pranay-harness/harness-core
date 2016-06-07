@@ -14,7 +14,7 @@ import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSet
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
-import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
+import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 import static software.wings.utils.WingsUnitTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsUnitTestConstants.APP_ID;

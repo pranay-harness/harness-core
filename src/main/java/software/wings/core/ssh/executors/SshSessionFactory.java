@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
+import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;

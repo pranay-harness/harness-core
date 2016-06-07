@@ -204,6 +204,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                         .withAppId(config.getAppId())
                         .withActivityId(config.getExecutionId())
                         .withLogLevel(INFO)
+                        .withCommandUnitName(config.getCommandUnitName())
                         .withLogLine(line)
                         .build());
   }
