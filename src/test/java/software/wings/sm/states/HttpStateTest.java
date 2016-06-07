@@ -210,6 +210,6 @@ public class HttpStateTest extends WingsBaseTest {
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode");
     assertThat(((HttpStateExecutionData) response.getStateExecutionData()).getHttpResponseBody())
-        .startsWith("HttpHostConnectException: Connect to www.google.com:81 ");
+        .contains("Connect to www.google.com:81 ");
   }
 }
