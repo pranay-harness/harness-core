@@ -18,7 +18,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
-import software.wings.api.SimpleOrchestrationParams;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgs.OrchestrationType;
@@ -553,7 +553,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
+  WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
 
@@ -572,14 +572,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    SimpleOrchestrationParams simpleOrchestrationParams = new SimpleOrchestrationParams();
+    SimpleWorkflowParam simpleOrchestrationParams = new SimpleWorkflowParam();
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
-
+    simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
   }
 
-  private Workflow readLatestSimpleWorkflow(String appId, String envId) {
+  Orchestration readLatestSimpleWorkflow(String appId, String envId) {
     PageRequest<Orchestration> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -614,6 +614,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private Orchestration createDefaultSimpleWorkflow(String appId, String envId) {
     Orchestration orchestration = new Orchestration();
+    orchestration.setName(Constants.SIMPLE_ORCHESTRATION_NAME);
+    orchestration.setDescription(Constants.SIMPLE_ORCHESTRATION_DESC);
     orchestration.setWorkflowType(WorkflowType.SIMPLE);
     orchestration.setAppId(appId);
     orchestration.setEnvironment(environmentService.get(appId, envId));

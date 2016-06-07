@@ -12,6 +12,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ServiceElement;
+import software.wings.beans.ExecutionStrategy;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -20,7 +21,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
-import software.wings.sm.states.RepeatState.RepeatStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +48,8 @@ public class RepeatStateTest {
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setRepeatElementType(ContextElementType.SERVICE);
-    repeatState.setRepeatStrategy(RepeatStrategy.SERIAL);
+    repeatState.setExecutionStrategy(ExecutionStrategy.SERIAL);
+    repeatState.setRepeatTransitionStateName("abc");
 
     ExecutionResponse response = repeatState.execute(context, null);
 
@@ -77,7 +78,8 @@ public class RepeatStateTest {
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setRepeatElementExpression("services()");
     repeatState.setRepeatElementType(ContextElementType.SERVICE);
-    repeatState.setRepeatStrategy(RepeatStrategy.PARALLEL);
+    repeatState.setExecutionStrategy(ExecutionStrategy.PARALLEL);
+    repeatState.setRepeatTransitionStateName("abc");
 
     ExecutionResponse response = repeatState.execute(context, null);
 

@@ -129,7 +129,11 @@ public class ExecutionContextImpl implements ExecutionContext {
     Iterator<ContextElement> it = stateExecutionInstance.getContextElements().descendingIterator();
     while (it.hasNext()) {
       ContextElement contextElement = it.next();
-      context.putAll(contextElement.paramMap());
+
+      Map<String, Object> map = contextElement.paramMap();
+      if (map != null) {
+        context.putAll(map);
+      }
     }
 
     return context;
@@ -164,6 +168,24 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
     return null;
+  }
+
+  /**
+   * Gets the context element list.
+   *
+   * @param <T>                the generic type
+   * @param contextElementType the context element type
+   * @return the context element list
+   */
+  public <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType) {
+    ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+    List<T> selected = new ArrayList<>();
+    for (ContextElement contextElement : contextElements) {
+      if (contextElement.getElementType() == contextElementType) {
+        selected.add((T) contextElement);
+      }
+    }
+    return selected;
   }
 
   private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
@@ -202,6 +224,7 @@ public class ExecutionContextImpl implements ExecutionContext {
         ExpressionProcessor expressionProcessor = expressionProcessorFactory.getExpressionProcessor(variable, this);
         if (expressionProcessor != null) {
           variable = expressionProcessor.normalizeExpression(variable);
+          expressionProcessors.add(expressionProcessor);
           unknownObject = false;
         }
       }

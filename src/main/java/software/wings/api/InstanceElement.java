@@ -7,6 +7,7 @@ package software.wings.api;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 
+import java.util.HashMap;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -23,7 +24,8 @@ public class InstanceElement implements ContextElement {
 
   @Override
   public String getName() {
-    return hostName + ":" + serviceTemplateName;
+    return uuid;
+    //    return hostName + ":" + serviceTemplateName;
   }
 
   @Override
@@ -31,12 +33,11 @@ public class InstanceElement implements ContextElement {
     return ContextElementType.INSTANCE;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ContextElement#paramMap()
-   */
   @Override
   public Map<String, Object> paramMap() {
-    return null;
+    Map<String, Object> map = new HashMap<>();
+    map.put(INSTANCE_OBJECT_NAME, this);
+    return map;
   }
 
   public String getUuid() {

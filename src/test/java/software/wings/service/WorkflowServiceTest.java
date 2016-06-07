@@ -23,6 +23,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -60,6 +61,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private WingsPersistence wingsPersistence;
+
+  @Inject private ServiceInstanceService serviceInstanceService;
+
   private Environment env;
 
   public Environment getEnvironment() {

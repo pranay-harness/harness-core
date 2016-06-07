@@ -14,6 +14,7 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ForkState;
+import software.wings.sm.states.RepeatState;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
@@ -118,6 +119,8 @@ public class StateMachine extends Base {
 
           if (transitionType == TransitionType.FORK) {
             ((ForkState) stateFrom).addForkState(stateTo);
+          } else if (transitionType == TransitionType.REPEAT) {
+            ((RepeatState) stateFrom).setRepeatTransitionStateName(stateTo.getName());
           } else {
             addTransition(Transition.Builder.aTransition()
                               .withFromState(stateFrom)

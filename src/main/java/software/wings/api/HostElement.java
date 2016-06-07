@@ -38,9 +38,6 @@ public class HostElement implements ContextElement {
     return ContextElementType.HOST;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ContextElement#paramMap()
-   */
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
