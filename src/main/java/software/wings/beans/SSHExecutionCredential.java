@@ -1,21 +1,20 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 /**
  * @author Rishi
- *
  */
 public class SSHExecutionCredential extends ExecutionCredential {
-  public SSHExecutionCredential() {
-    super(ExecutionType.SSH);
-  }
-
   private String sshUser;
   private String sshPassword;
   private String appAccount;
   private String appAccountPassword;
+  public SSHExecutionCredential() {
+    super(ExecutionType.SSH);
+  }
 
   public String getSshUser() {
     return sshUser;

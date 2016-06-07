@@ -1,29 +1,25 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 import java.util.List;
 
 /**
  * @author Rishi
- *
  */
 public class ExecutionArgs {
-  public enum OrchestrationType { ORCHESTRATED, SIMPLE }
-  ;
-
   private OrchestrationType orchestrationType;
+
+  ;
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;
-
   private String releaseId;
   private List<String> artifactIds;
-
   private String orchestrationId;
   private List<String> serviceInstanceIds;
-
   private ExecutionCredential executionCredential;
 
   public String getServiceId() {
@@ -97,4 +93,6 @@ public class ExecutionArgs {
   public void setServiceInstanceIds(List<String> serviceInstanceIds) {
     this.serviceInstanceIds = serviceInstanceIds;
   }
+
+  public enum OrchestrationType { ORCHESTRATED, SIMPLE }
 }
