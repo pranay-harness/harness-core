@@ -42,7 +42,6 @@ public class YamlUtilsTest extends WingsBaseTest {
     assertThat(catalogs).isNotNull();
 
     List<CatalogItem> cardViewSortBy = catalogs.get("CARD_VIEW_SORT_BY");
-    assertThat(cardViewSortBy).isNotNull();
-    assertThat(cardViewSortBy.size()).isEqualTo(3);
+    assertThat(cardViewSortBy).isNotNull().hasSize(3);
   }
 }

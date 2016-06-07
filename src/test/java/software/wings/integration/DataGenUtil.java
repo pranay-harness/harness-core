@@ -93,7 +93,6 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/6/16.
  */
-
 @Integration
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
@@ -104,22 +103,23 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
+  private static String userToken = "INVALID_TOKEN";
+  /**
+   * The Test folder.
+   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Client client;
   @Inject private WingsPersistence wingsPersistence;
-
   private List<String> appNames = new ArrayList<String>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
-  private static String userToken = "INVALID_TOKEN";
 
   /**
    * Generated Data for across the API use.
    *
    * @throws Exception the exception
    */
-
   @Before
   public void setUp() throws Exception {
     assertThat(NUM_APPS).isBetween(1, 1000);
@@ -178,7 +178,8 @@ public class DataGenUtil extends WingsBaseTest {
     String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
     WebTarget target = client.target("http://localhost:9090/wings/users/");
     RestResponse<User> response = target.request().post(
-        Entity.entity(anUser().withEmail("admin@wings.software").withPassword("admin").build(), APPLICATION_JSON),
+        Entity.entity(anUser().withName("Admin").withEmail("admin@wings.software").withPassword("admin").build(),
+            APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
     response = client.target("http://localhost:9090/wings/users/login")

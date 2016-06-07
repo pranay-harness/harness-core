@@ -19,7 +19,9 @@ import java.util.List;
 public class NoFieldShadowingRule implements Rule {
   private static final List<String> ignoredFields = Lists.newArrayList("logger", "serialVersionUID");
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   public void evaluate(final PojoClass pojoClass) {
     final List<PojoField> parentPojoFields = new LinkedList<PojoField>();
     PojoClass parentPojoClass = pojoClass.getSuperClass();

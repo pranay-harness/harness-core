@@ -43,7 +43,6 @@ public class ExecutionContextImplTest {
     context.pushContextElement(element3);
 
     ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
-    assertThat(element).isNotNull();
-    assertThat(element).isEqualToComparingFieldByField(element3);
+    assertThat(element).isNotNull().isEqualToComparingFieldByField(element3);
   }
 }

@@ -260,6 +260,12 @@
             <version>0.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>4.5.1</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -690,9 +696,19 @@
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit implementation="org.jacoco.report.check.Limit">
+                                            <counter>INSTRUCTION</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.54</minimum>
+                                        </limit>
+                                        <limit implementation="org.jacoco.report.check.Limit">
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.39</minimum>
+                                        </limit>
+                                        <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.33</minimum>
+                                            <minimum>0.45</minimum>
                                         </limit>
                                     </limits>
                                 </rule>

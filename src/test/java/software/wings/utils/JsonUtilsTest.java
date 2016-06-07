@@ -37,8 +37,7 @@ public class JsonUtilsTest {
   public void shouldGetAuthors() {
     List<String> authors = JsonUtils.jsonPath(json, "$.store.book[*].author");
     logger.debug("authors: {}", authors);
-    assertThat(authors).isNotNull();
-    assertThat(authors.size()).isEqualTo(4);
+    assertThat(authors).isNotNull().hasSize(4);
   }
 
   /**
@@ -49,13 +48,11 @@ public class JsonUtilsTest {
     DocumentContext ctx = JsonUtils.parseJson(json);
     List<String> titles = JsonUtils.jsonPath(ctx, "$.store.book[*].title");
     logger.debug("authors: {}", titles);
-    assertThat(titles).isNotNull();
-    assertThat(titles.size()).isEqualTo(4);
+    assertThat(titles).isNotNull().hasSize(4);
 
     List<Object> cheapBooks = JsonUtils.jsonPath(ctx, "$.store.book[?(@.price < 10)]");
     logger.debug("cheapBooks: {}", cheapBooks);
-    assertThat(cheapBooks).isNotNull();
-    assertThat(cheapBooks.size()).isEqualTo(2);
+    assertThat(cheapBooks).isNotNull().hasSize(2);
   }
 
   /**

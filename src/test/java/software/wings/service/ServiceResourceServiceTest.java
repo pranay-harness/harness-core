@@ -21,8 +21,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.utils.WingsUnitTestConstants.APP_ID;
-import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
