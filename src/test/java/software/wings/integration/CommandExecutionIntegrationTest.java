@@ -18,12 +18,12 @@ import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServi
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
-import static software.wings.utils.WingsUnitTestConstants.APP_ID;
-import static software.wings.utils.WingsUnitTestConstants.ENV_ID;
-import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsUnitTestConstants.SERVICE_NAME;
-import static software.wings.utils.WingsUnitTestConstants.TEMPLATE_ID;
-import static software.wings.utils.WingsUnitTestConstants.TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import org.junit.Before;
 import org.junit.Ignore;

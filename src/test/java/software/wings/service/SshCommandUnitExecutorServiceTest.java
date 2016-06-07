@@ -16,15 +16,15 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUT
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
-import static software.wings.utils.WingsUnitTestConstants.ACTIVITY_ID;
-import static software.wings.utils.WingsUnitTestConstants.APP_ID;
-import static software.wings.utils.WingsUnitTestConstants.FILE_ID;
-import static software.wings.utils.WingsUnitTestConstants.FILE_PATH;
-import static software.wings.utils.WingsUnitTestConstants.HOST_NAME;
-import static software.wings.utils.WingsUnitTestConstants.INFRA_ID;
-import static software.wings.utils.WingsUnitTestConstants.SSH_KEY;
-import static software.wings.utils.WingsUnitTestConstants.SSH_USER_NAME;
-import static software.wings.utils.WingsUnitTestConstants.SSH_USER_PASSWORD;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.FILE_ID;
+import static software.wings.utils.WingsTestConstants.FILE_PATH;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_ID;
+import static software.wings.utils.WingsTestConstants.SSH_KEY;
+import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
+import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
