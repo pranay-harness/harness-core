@@ -5,12 +5,14 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorConstants.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
+import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -195,6 +197,16 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
+    if (cls == Pipeline.class && graph != null) {
+      try {
+        if (!graph.isLinear()) {
+          throw new WingsException(INVALID_PIPELINE);
+        }
+      } catch (Exception e) {
+        throw new WingsException(INVALID_PIPELINE, e);
+      }
+    }
+
     workflow = wingsPersistence.saveAndGet(cls, workflow);
     if (graph != null) {
       StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());

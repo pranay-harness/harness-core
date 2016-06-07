@@ -1,6 +1,11 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Pipeline.Builder.aPipeline;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -11,8 +16,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentBuilder;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
-import software.wings.beans.Graph.Link;
-import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
@@ -97,13 +100,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
     sm = wingsPersistence.get(StateMachine.class, smId);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
     System.out.println("All Done!");
   }
 
@@ -136,8 +137,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
@@ -193,8 +193,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
@@ -261,8 +260,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
     String executionUuid = UUIDGenerator.getUuid();
@@ -322,8 +320,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
     String executionUuid = UUIDGenerator.getUuid();
@@ -383,8 +380,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = svc.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
     return sm;
   }
 
@@ -420,8 +416,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     System.out.println("Going to trigger state machine");
     String executionUuid = UUIDGenerator.getUuid();
@@ -477,8 +472,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                          .build());
 
     sm = workflowService.create(sm);
-    assertThat(sm).isNotNull();
-    assertThat(sm.getUuid()).isNotNull();
+    assertThat(sm).isNotNull().extracting(StateMachine::getUuid).doesNotContainNull();
 
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
@@ -530,29 +524,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     pipeline.setServices(newServices);
 
     Graph graph = pipeline.getGraph();
-    Node node = new Node();
-    node.setId("n5");
-    node.setName("PROD");
-    node.setX(350);
-    node.setY(50);
-    node.getProperties().put("envId", "34567");
-    node.setType(StateType.ENV_STATE.name());
-    graph.getNodes().add(node);
-
-    Link link = new Link();
-    link.setId("l3");
-    link.setFrom("n4");
-    link.setTo("n5");
-    link.setType("success");
-    graph.getLinks().add(link);
+    graph.getNodes().add(aNode()
+                             .withId("n5")
+                             .withName("PROD")
+                             .withX(350)
+                             .withY(50)
+                             .addProperty("envId", "34567")
+                             .withType(StateType.ENV_STATE.name())
+                             .build());
+    graph.getLinks().add(aLink().withId("l3").withFrom("n4").withTo("n5").withType("success").build());
 
     Pipeline updatedPipeline = workflowService.updatePipeline(pipeline);
-    assertThat(updatedPipeline).isNotNull();
-    assertThat(updatedPipeline.getUuid()).isNotNull();
-    assertThat(updatedPipeline.getUuid()).isEqualTo(pipeline.getUuid());
-    assertThat(updatedPipeline.getName()).isEqualTo("pipeline2");
-    assertThat(updatedPipeline.getDescription()).isEqualTo("newDescription");
-    assertThat(updatedPipeline.getServices()).isEqualTo(newServices);
+    assertThat(updatedPipeline)
+        .isNotNull()
+        .extracting(Pipeline::getUuid, Pipeline::getName, Pipeline::getDescription, Pipeline::getServices)
+        .containsExactly(pipeline.getUuid(), "pipeline2", "newDescription", newServices);
 
     PageRequest<StateMachine> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
@@ -562,24 +548,21 @@ public class WorkflowServiceTest extends WingsBaseTest {
     req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(graphCount);
+    assertThat(res).isNotNull().hasSize(graphCount);
 
     StateMachine sm = workflowService.readLatest(appId, updatedPipeline.getUuid(), null);
-    assertThat(sm.getGraph()).isNotNull();
     assertThat(sm.getGraph()).isEqualTo(graph);
   }
 
   private Pipeline createPipeline() {
-    Pipeline pipeline = new Pipeline();
-    pipeline.setAppId(appId);
-    pipeline.setName("pipeline1");
-    pipeline.setDescription("Sample Pipeline");
-
-    pipeline.setServices(Lists.newArrayList("service1", "service2"));
     Graph graph = createInitialGraph();
-
-    pipeline.setGraph(graph);
+    Pipeline pipeline = aPipeline()
+                            .withAppId(appId)
+                            .withName("pipeline1")
+                            .withDescription("Sample Pipeline")
+                            .addServices("service1", "service2")
+                            .withGraph(graph)
+                            .build();
 
     pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
     assertThat(pipeline).isNotNull();
@@ -593,14 +576,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(1);
-    assertThat(res.get(0)).isNotNull();
-
-    StateMachine sm = res.get(0);
-    assertThat(sm.getGraph()).isNotNull();
-    assertThat(sm.getGraph()).isEqualTo(graph);
-
+    assertThat(res)
+        .isNotNull()
+        .hasSize(1)
+        .doesNotContainNull()
+        .extracting(StateMachine::getGraph)
+        .doesNotContainNull()
+        .containsExactly(graph);
     return pipeline;
   }
 
@@ -608,86 +590,38 @@ public class WorkflowServiceTest extends WingsBaseTest {
    * @return
    */
   private Graph createInitialGraph() {
-    Graph graph = new Graph();
-    List<Node> nodes = new ArrayList<>();
-
-    Node node = new Node();
-    node.setId("n0");
-    node.setName("ORIGIN");
-    node.setX(200);
-    node.setY(50);
-    node.setType(StateType.BUILD.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n1");
-    node.setName("BUILD");
-    node.setX(200);
-    node.setY(50);
-    node.setType(StateType.BUILD.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n2");
-    node.setName("IT");
-    node.setX(250);
-    node.setY(50);
-    node.getProperties().put("envId", "12345");
-    node.setType(StateType.ENV_STATE.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n3");
-    node.setName("QA");
-    node.setX(300);
-    node.setY(50);
-    node.getProperties().put("envId", "23456");
-    node.setType(StateType.ENV_STATE.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n4");
-    node.setName("UAT");
-    node.setX(350);
-    node.setY(50);
-    node.getProperties().put("envId", "34567");
-    node.setType(StateType.ENV_STATE.name());
-    nodes.add(node);
-
-    graph.setNodes(nodes);
-
-    List<Link> links = new ArrayList<>();
-
-    Link link = new Link();
-    link.setId("l0");
-    link.setFrom("n0");
-    link.setTo("n1");
-    link.setType("success");
-    links.add(link);
-
-    link = new Link();
-    link.setId("l1");
-    link.setFrom("n1");
-    link.setTo("n2");
-    link.setType("success");
-    links.add(link);
-
-    link = new Link();
-    link.setId("l2");
-    link.setFrom("n2");
-    link.setTo("n3");
-    link.setType("success");
-    links.add(link);
-
-    link = new Link();
-    link.setId("l3");
-    link.setFrom("n3");
-    link.setTo("n4");
-    link.setType("success");
-    links.add(link);
-
-    graph.setLinks(links);
-    return graph;
+    return aGraph()
+        .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+        .addNodes(aNode().withId("n1").withName("BUILD").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+        .addNodes(aNode()
+                      .withId("n2")
+                      .withName("IT")
+                      .withX(250)
+                      .withY(50)
+                      .withType(StateType.ENV_STATE.name())
+                      .addProperty("envId", "12345")
+                      .build())
+        .addNodes(aNode()
+                      .withId("n3")
+                      .withName("QA")
+                      .withX(300)
+                      .withY(50)
+                      .withType(StateType.ENV_STATE.name())
+                      .addProperty("envId", "23456")
+                      .build())
+        .addNodes(aNode()
+                      .withId("n4")
+                      .withName("UAT")
+                      .withX(300)
+                      .withY(50)
+                      .withType(StateType.ENV_STATE.name())
+                      .addProperty("envId", "34567")
+                      .build())
+        .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+        .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+        .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+        .addLinks(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build())
+        .build();
   }
 
   private Pipeline createPipelineNoGraph() {
@@ -710,8 +644,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(0);
+    assertThat(res).isNotNull().hasSize(0);
 
     return pipeline;
   }
@@ -741,20 +674,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     orchestration.setDescription(null);
     Graph graph = orchestration.getGraph();
 
-    Node node = new Node();
-    node.setId("n5");
-    node.setName("http");
-    node.setX(350);
-    node.setY(50);
-    node.setType(StateType.HTTP.name());
-    graph.getNodes().add(node);
-
-    Link link = new Link();
-    link.setId("l3");
-    link.setFrom("n3");
-    link.setTo("n5");
-    link.setType("success");
-    graph.getLinks().add(link);
+    graph.getNodes().add(aNode().withId("n5").withName("http").withX(350).withType(StateType.HTTP.name()).build());
+    graph.getLinks().add(aLink().withId("l3").withFrom("n3").withTo("n5").withType("success").build());
 
     Orchestration updatedOrchestration = workflowService.updateOrchestration(orchestration);
     assertThat(updatedOrchestration).isNotNull();
@@ -770,12 +691,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(2);
+    assertThat(res).isNotNull().hasSize(2);
 
     StateMachine sm = workflowService.readLatest(appId, updatedOrchestration.getUuid(), null);
-    assertThat(sm.getGraph()).isNotNull();
-    assertThat(sm.getGraph()).isEqualTo(graph);
+    assertThat(sm.getGraph()).isNotNull().isEqualTo(graph);
   }
 
   /**
@@ -791,75 +710,34 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private Orchestration createOrchestration() {
-    Orchestration orchestration = new Orchestration();
-    orchestration.setAppId(appId);
-    orchestration.setName("workflow1");
-    orchestration.setDescription("Sample Workflow");
-    orchestration.setEnvironment(getEnvironment());
+    Graph graph =
+        aGraph()
+            .addNodes(
+                aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+            .addNodes(
+                aNode().withId("n1").withName("stop").withX(200).withY(50).withType(StateType.STOP.name()).build())
+            .addNodes(aNode()
+                          .withId("n2")
+                          .withName("wait")
+                          .withX(250)
+                          .withY(50)
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 5000l)
+                          .build())
+            .addNodes(
+                aNode().withId("n3").withName("start").withX(300).withY(50).withType(StateType.START.name()).build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+            .build();
 
-    Graph graph = new Graph();
-    List<Node> nodes = new ArrayList<>();
-
-    Node node = new Node();
-    node.setId("n0");
-    node.setName("ORIGIN");
-    node.setX(200);
-    node.setY(50);
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n1");
-    node.setName("stop");
-    node.setX(200);
-    node.setY(50);
-    node.setType(StateType.STOP.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n2");
-    node.setName("wait");
-    node.setX(250);
-    node.setY(50);
-    node.getProperties().put("duration", 5000l);
-    node.setType(StateType.WAIT.name());
-    nodes.add(node);
-
-    node = new Node();
-    node.setId("n3");
-    node.setName("start");
-    node.setX(300);
-    node.setY(50);
-    node.setType(StateType.START.name());
-    nodes.add(node);
-
-    graph.setNodes(nodes);
-
-    List<Link> links = new ArrayList<>();
-
-    Link link = new Link();
-    link.setId("l0");
-    link.setFrom("n0");
-    link.setTo("n1");
-    link.setType("success");
-    links.add(link);
-
-    link = new Link();
-    link.setId("l1");
-    link.setFrom("n1");
-    link.setTo("n2");
-    link.setType("success");
-    links.add(link);
-
-    link = new Link();
-    link.setId("l2");
-    link.setFrom("n2");
-    link.setTo("n3");
-    link.setType("success");
-    links.add(link);
-
-    graph.setLinks(links);
-
-    orchestration.setGraph(graph);
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(appId)
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withEnvironment(getEnvironment())
+                                      .withGraph(graph)
+                                      .build();
 
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();
@@ -873,13 +751,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     req.addFilter(filter);
     PageResponse<StateMachine> res = workflowService.list(req);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(1);
-    assertThat(res.get(0)).isNotNull();
-
-    StateMachine sm = res.get(0);
-    assertThat(sm.getGraph()).isNotNull();
-    assertThat(sm.getGraph()).isEqualTo(graph);
+    assertThat(res)
+        .isNotNull()
+        .hasSize(1)
+        .doesNotContainNull()
+        .extracting(StateMachine::getGraph)
+        .doesNotContainNull()
+        .containsExactly(graph);
 
     return orchestration;
   }
@@ -899,9 +777,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
     Misc.quietSleep(2000);
     execution = workflowService.getExecutionDetails(appId, executionId);
-    assertThat(execution).isNotNull();
-    assertThat(execution.getUuid()).isEqualTo(executionId);
-    assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
   }
 
   /**
@@ -916,8 +795,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
     PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
 
-    assertThat(res).isNotNull();
-    assertThat(res.size()).isEqualTo(2);
+    assertThat(res).isNotNull().hasSize(2);
   }
 
   /**
@@ -933,9 +811,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(executionId).isNotNull();
     Misc.quietSleep(2000);
     execution = workflowService.getExecutionDetails(appId, executionId);
-    assertThat(execution).isNotNull();
-    assertThat(execution.getUuid()).isEqualTo(executionId);
-    assertThat(execution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
   }
 
   /**

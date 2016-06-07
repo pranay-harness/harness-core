@@ -42,4 +42,102 @@ public class Workflow extends Base {
   public void setGraph(Graph graph) {
     this.graph = graph;
   }
+
+  public static final class Builder {
+    private String name;
+    private String description;
+    private Graph graph;
+    private String uuid;
+    private String appId;
+    private User createdBy;
+    private long createdAt;
+    private User lastUpdatedBy;
+    private long lastUpdatedAt;
+    private boolean active = true;
+
+    private Builder() {}
+
+    public static Builder aWorkflow() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withGraph(Graph graph) {
+      this.graph = graph;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withCreatedBy(User createdBy) {
+      this.createdBy = createdBy;
+      return this;
+    }
+
+    public Builder withCreatedAt(long createdAt) {
+      this.createdAt = createdAt;
+      return this;
+    }
+
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
+      this.lastUpdatedBy = lastUpdatedBy;
+      return this;
+    }
+
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
+      this.lastUpdatedAt = lastUpdatedAt;
+      return this;
+    }
+
+    public Builder withActive(boolean active) {
+      this.active = active;
+      return this;
+    }
+
+    public Builder but() {
+      return aWorkflow()
+          .withName(name)
+          .withDescription(description)
+          .withGraph(graph)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withActive(active);
+    }
+
+    public Workflow build() {
+      Workflow workflow = new Workflow();
+      workflow.setName(name);
+      workflow.setDescription(description);
+      workflow.setGraph(graph);
+      workflow.setUuid(uuid);
+      workflow.setAppId(appId);
+      workflow.setCreatedBy(createdBy);
+      workflow.setCreatedAt(createdAt);
+      workflow.setLastUpdatedBy(lastUpdatedBy);
+      workflow.setLastUpdatedAt(lastUpdatedAt);
+      workflow.setActive(active);
+      return workflow;
+    }
+  }
 }

@@ -50,12 +50,12 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = httpState.execute(context);
     assertThat(response).isNotNull();
-    assertThat(response.isAsynch()).as("Asynch Execution").isEqualTo(false);
-    assertThat(response.getStateExecutionData()).isNotNull();
-    assertThat(response.getStateExecutionData()).isInstanceOf(HttpStateExecutionData.class);
+    assertThat(response.isAsynch()).as("Asynch Execution").isFalse();
+    assertThat(response.getStateExecutionData()).isNotNull().isInstanceOf(HttpStateExecutionData.class);
 
     HttpStateExecutionData stateExecutionData = (HttpStateExecutionData) response.getStateExecutionData();
-    assertThat(stateExecutionData.getHttpUrl()).isNotNull();
-    assertThat(stateExecutionData.getHttpUrl()).isEqualTo("http://app123.application.com:8080/health/status");
+    assertThat(stateExecutionData.getHttpUrl())
+        .isNotNull()
+        .isEqualTo("http://app123.application.com:8080/health/status");
   }
 }

@@ -47,10 +47,9 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     std.setEnvId(env.getUuid());
 
     Map<String, Object> map = std.paramMap();
-    assertThat(map).isNotNull();
-    assertThat(map.get(ContextElement.APP_OBJECT_NAME)).isNotNull();
-    assertThat(map.get(ContextElement.APP_OBJECT_NAME)).isEqualTo(app);
-    assertThat(map.get(ContextElement.ENV_OBJECT_NAME)).isNotNull();
-    assertThat(map.get(ContextElement.ENV_OBJECT_NAME)).isEqualTo(env);
+    assertThat(map)
+        .isNotNull()
+        .containsEntry(ContextElement.APP_OBJECT_NAME, app)
+        .containsEntry(ContextElement.ENV_OBJECT_NAME, env);
   }
 }
