@@ -34,12 +34,6 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class HttpStateTest extends WingsBaseTest {
-  /**
-   * The Wire mock rule.
-   */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8088);
-  @Inject private Injector injector;
-
   private static final HttpState.Builder httpStateBuilder =
       aHttpState()
           .withName("healthCheck1")
@@ -48,7 +42,11 @@ public class HttpStateTest extends WingsBaseTest {
           .withHeader("Content-Type: application/json, Accept: */*")
           .withAssertion(
               "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
-
+  /**
+   * The Wire mock rule.
+   */
+  @Rule public WireMockRule wireMockRule = new WireMockRule(8088);
+  @Inject private Injector injector;
   private ExecutionContextImpl context;
 
   /**

@@ -52,8 +52,10 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 5/31/16.
  */
-
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
+  /**
+   * The constant EXEC_CMD.
+   */
   public static final String EXEC_CMD = "ls";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
@@ -68,10 +70,25 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   private static final HostConnectionCredential CREDENTIAL =
       aHostConnectionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build();
   private static final ExecCommandUnit EXEC_COMMAND_UNIT = anExecCommandUnit().withCommandString(EXEC_CMD).build();
+  /**
+   * The Ssh executor factory.
+   */
   @Mock SshExecutorFactory sshExecutorFactory;
+  /**
+   * The Ssh pwd auth executor.
+   */
   @Mock SshPwdAuthExecutor sshPwdAuthExecutor;
+  /**
+   * The Ssh pub key auth executor.
+   */
   @Mock SshPubKeyAuthExecutor sshPubKeyAuthExecutor;
+  /**
+   * The Ssh jumpbox executor.
+   */
   @Mock SshJumpboxExecutor sshJumpboxExecutor;
+  /**
+   * The Log service.
+   */
   @Mock LogService logService;
 
   @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;

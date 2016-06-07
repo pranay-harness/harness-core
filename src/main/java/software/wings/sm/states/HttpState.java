@@ -54,7 +54,9 @@ public class HttpState extends State {
     super(name, StateType.HTTP.name());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String evaluatedUrl = context.renderExpression(url);
@@ -252,7 +254,9 @@ public class HttpState extends State {
     this.socketTimeoutMillis = socketTimeoutMillis;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -277,7 +281,9 @@ public class HttpState extends State {
     private String assertion;
     private int socketTimeoutMillis = 10000;
 
-    /** Do not instantiate Builder. */
+    /**
+     * Do not instantiate Builder.
+     */
     private Builder() {}
 
     /**

@@ -42,13 +42,17 @@ import javax.inject.Singleton;
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private SshExecutorFactory sshExecutorFactory;
+  /**
+   * The Log service.
+   */
   protected LogService logService;
+  private SshExecutorFactory sshExecutorFactory;
 
   /**
    * Instantiates a new ssh command unit executor service impl.
    *
    * @param sshExecutorFactory the ssh executor factory
+   * @param logService         the log service
    */
   @Inject
   public SshCommandUnitExecutorServiceImpl(SshExecutorFactory sshExecutorFactory, LogService logService) {
@@ -56,9 +60,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     this.logService = logService;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.CommandUnitExecutorService#execute(software.wings.beans.Host,
-   * software.wings.beans.CommandUnit, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId) {
@@ -156,5 +159,13 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     return executorType;
   }
 
-  private enum SupportedOp { EXEC, SCP }
+  private enum SupportedOp {
+    /**
+     * Exec supported op.
+     */
+    EXEC, /**
+           * Scp supported op.
+           */
+    SCP
+  }
 }
