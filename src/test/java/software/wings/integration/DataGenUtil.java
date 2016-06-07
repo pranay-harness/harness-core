@@ -93,7 +93,6 @@ import javax.ws.rs.core.Response;
 /**
  * Created by anubhaw on 5/6/16.
  */
-
 @Integration
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
@@ -105,6 +104,9 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private static String userToken = "INVALID_TOKEN";
+  /**
+   * The Test folder.
+   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Client client;
   @Inject private WingsPersistence wingsPersistence;
@@ -118,7 +120,6 @@ public class DataGenUtil extends WingsBaseTest {
    *
    * @throws Exception the exception
    */
-
   @Before
   public void setUp() throws Exception {
     assertThat(NUM_APPS).isBetween(1, 1000);

@@ -19,8 +19,6 @@ import javax.validation.constraints.NotNull;
 @Indexes(@Index(fields = { @Field("activityId")
                            , @Field("hostName") }))
 public class Log extends Base {
-  public enum LogLevel { DEBUG, INFO, WARN, ERROR, FATAL }
-
   @NotEmpty private String activityId;
   @NotEmpty private String hostName;
   @NotEmpty private String commandUnitName;
@@ -82,26 +80,56 @@ public class Log extends Base {
     this.logLine = logLine;
   }
 
+  /**
+   * Gets log level.
+   *
+   * @return the log level
+   */
   public LogLevel getLogLevel() {
     return logLevel;
   }
 
+  /**
+   * Sets log level.
+   *
+   * @param logLevel the log level
+   */
   public void setLogLevel(LogLevel logLevel) {
     this.logLevel = logLevel;
   }
 
+  /**
+   * Gets command unit name.
+   *
+   * @return the command unit name
+   */
   public String getCommandUnitName() {
     return commandUnitName;
   }
 
+  /**
+   * Sets command unit name.
+   *
+   * @param commandUnitName the command unit name
+   */
   public void setCommandUnitName(String commandUnitName) {
     this.commandUnitName = commandUnitName;
   }
 
+  /**
+   * Gets execution result.
+   *
+   * @return the execution result
+   */
   public ExecutionResult getExecutionResult() {
     return executionResult;
   }
 
+  /**
+   * Sets execution result.
+   *
+   * @param executionResult the execution result
+   */
   public void setExecutionResult(ExecutionResult executionResult) {
     this.executionResult = executionResult;
   }
@@ -129,6 +157,31 @@ public class Log extends Base {
         && Objects.equals(this.logLevel, other.logLevel) && Objects.equals(this.executionResult, other.executionResult);
   }
 
+  /**
+   * The enum Log level.
+   */
+  public enum LogLevel {
+    /**
+     * Debug log level.
+     */
+    DEBUG, /**
+            * Info log level.
+            */
+    INFO, /**
+           * Warn log level.
+           */
+    WARN, /**
+           * Error log level.
+           */
+    ERROR, /**
+            * Fatal log level.
+            */
+    FATAL
+  }
+
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String activityId;
     private String hostName;
@@ -146,75 +199,163 @@ public class Log extends Base {
 
     private Builder() {}
 
+    /**
+     * A log builder.
+     *
+     * @return the builder
+     */
     public static Builder aLog() {
       return new Builder();
     }
 
+    /**
+     * With activity id builder.
+     *
+     * @param activityId the activity id
+     * @return the builder
+     */
     public Builder withActivityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With command unit name builder.
+     *
+     * @param commandUnitName the command unit name
+     * @return the builder
+     */
     public Builder withCommandUnitName(String commandUnitName) {
       this.commandUnitName = commandUnitName;
       return this;
     }
 
+    /**
+     * With log line builder.
+     *
+     * @param logLine the log line
+     * @return the builder
+     */
     public Builder withLogLine(String logLine) {
       this.logLine = logLine;
       return this;
     }
 
+    /**
+     * With log level builder.
+     *
+     * @param logLevel the log level
+     * @return the builder
+     */
     public Builder withLogLevel(LogLevel logLevel) {
       this.logLevel = logLevel;
       return this;
     }
 
+    /**
+     * With execution result builder.
+     *
+     * @param executionResult the execution result
+     * @return the builder
+     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aLog()
           .withActivityId(activityId)
@@ -232,6 +373,11 @@ public class Log extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build log.
+     *
+     * @return the log
+     */
     public Log build() {
       Log log = new Log();
       log.setActivityId(activityId);
