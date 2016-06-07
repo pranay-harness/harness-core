@@ -4,6 +4,7 @@ import static com.google.common.base.Ascii.toUpperCase;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 
 import org.apache.http.HttpEntity;
@@ -53,11 +54,7 @@ public class HttpState extends State {
     super(name, StateType.HTTP.name());
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-   */
+  /** {@inheritDoc} */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     String evaluatedUrl = context.renderExpression(url);
@@ -147,63 +144,130 @@ public class HttpState extends State {
     return response;
   }
 
+  /**
+   * Gets url.
+   *
+   * @return the url
+   */
   public String getUrl() {
     return url;
   }
 
+  /**
+   * Sets url.
+   *
+   * @param url the url
+   */
   public void setUrl(String url) {
     this.url = url;
   }
 
+  /**
+   * Gets method.
+   *
+   * @return the method
+   */
   public String getMethod() {
     return method;
   }
 
+  /**
+   * Sets method.
+   *
+   * @param method the method
+   */
   public void setMethod(String method) {
     this.method = method;
   }
 
+  /**
+   * Gets body.
+   *
+   * @return the body
+   */
   public String getBody() {
     return body;
   }
 
+  /**
+   * Sets body.
+   *
+   * @param body the body
+   */
   public void setBody(String body) {
     this.body = body;
   }
 
+  /**
+   * Gets header.
+   *
+   * @return the header
+   */
   public String getHeader() {
     return header;
   }
 
+  /**
+   * Sets header.
+   *
+   * @param header the header
+   */
   public void setHeader(String header) {
     this.header = header;
   }
 
+  /**
+   * Gets assertion.
+   *
+   * @return the assertion
+   */
   public String getAssertion() {
     return assertion;
   }
 
+  /**
+   * Sets assertion.
+   *
+   * @param assertion the assertion
+   */
   public void setAssertion(String assertion) {
     this.assertion = assertion;
   }
 
+  /**
+   * Gets socket timeout millis.
+   *
+   * @return the socket timeout millis
+   */
   public int getSocketTimeoutMillis() {
     return socketTimeoutMillis;
   }
 
+  /**
+   * Sets socket timeout millis.
+   *
+   * @param socketTimeoutMillis the socket timeout millis
+   */
   public void setSocketTimeoutMillis(int socketTimeoutMillis) {
     this.socketTimeoutMillis = socketTimeoutMillis;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#toString()
-   */
+  /** {@inheritDoc} */
   @Override
   public String toString() {
-    return "HttpState [url=" + url + ", method=" + method + ", header=" + header + ", body=" + body
-        + ", assertion=" + assertion + "]";
+    return MoreObjects.toStringHelper(this)
+        .add("url", url)
+        .add("method", method)
+        .add("header", header)
+        .add("body", body)
+        .add("assertion", assertion)
+        .add("socketTimeoutMillis", socketTimeoutMillis)
+        .toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String url;
@@ -213,47 +277,100 @@ public class HttpState extends State {
     private String assertion;
     private int socketTimeoutMillis = 10000;
 
+    /** Do not instantiate Builder. */
     private Builder() {}
 
+    /**
+     * A http state builder.
+     *
+     * @return the builder
+     */
     public static Builder aHttpState() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With url builder.
+     *
+     * @param url the url
+     * @return the builder
+     */
     public Builder withUrl(String url) {
       this.url = url;
       return this;
     }
 
+    /**
+     * With method builder.
+     *
+     * @param method the method
+     * @return the builder
+     */
     public Builder withMethod(String method) {
       this.method = method;
       return this;
     }
 
+    /**
+     * With header builder.
+     *
+     * @param header the header
+     * @return the builder
+     */
     public Builder withHeader(String header) {
       this.header = header;
       return this;
     }
 
+    /**
+     * With body builder.
+     *
+     * @param body the body
+     * @return the builder
+     */
     public Builder withBody(String body) {
       this.body = body;
       return this;
     }
 
+    /**
+     * With assertion builder.
+     *
+     * @param assertion the assertion
+     * @return the builder
+     */
     public Builder withAssertion(String assertion) {
       this.assertion = assertion;
       return this;
     }
 
+    /**
+     * With socket timeout millis builder.
+     *
+     * @param socketTimeoutMillis the socket timeout millis
+     * @return the builder
+     */
     public Builder withSocketTimeoutMillis(int socketTimeoutMillis) {
       this.socketTimeoutMillis = socketTimeoutMillis;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aHttpState()
           .withName(name)
@@ -265,6 +382,11 @@ public class HttpState extends State {
           .withSocketTimeoutMillis(socketTimeoutMillis);
     }
 
+    /**
+     * Build http state.
+     *
+     * @return the http state
+     */
     public HttpState build() {
       HttpState httpState = new HttpState(name);
       httpState.setUrl(url);
