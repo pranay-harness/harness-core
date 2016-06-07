@@ -260,6 +260,12 @@
             <version>0.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>4.5.1</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
