@@ -7,7 +7,7 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -90,7 +90,7 @@ public class MongoHelper {
 
   private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
     if (ArrayUtils.isEmpty(filter.getFieldValues())) {
-      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
     if (op == null) {

@@ -5,7 +5,7 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorConstants.INVALID_PIPELINE;
+import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.base.Charsets;
@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgs.OrchestrationType;
 import software.wings.beans.Graph;
@@ -449,14 +449,14 @@ public class WorkflowServiceImpl implements WorkflowService {
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
-      throw new WingsException(ErrorConstants.NON_EXISTING_PIPELINE);
+      throw new WingsException(ErrorCodes.NON_EXISTING_PIPELINE);
     }
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
     if (runningWorkflowExecutions != null) {
       for (WorkflowExecution workflowExecution : runningWorkflowExecutions) {
         if (workflowExecution.getStatus() == ExecutionStatus.NEW) {
-          throw new WingsException(ErrorConstants.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
+          throw new WingsException(ErrorCodes.PIPELINE_ALREADY_TRIGGERED, "pilelineName", pipeline.getName());
         }
         if (workflowExecution.getStatus() == ExecutionStatus.RUNNING) {
           // Analyze if pipeline is in initial stage
@@ -556,19 +556,19 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
         throw new WingsException(
-            ErrorConstants.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+            ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
       return triggerOrchestrationExecution(appId, executionArgs.getOrchestrationId(), executionArgs);
     } else {
       logger.info("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
-        throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
       }
       if (executionArgs.getServiceInstanceIds() == null || executionArgs.getServiceInstanceIds().size() == 0) {
         logger.error("serviceInstanceIds is empty for a simple execution");
         throw new WingsException(
-            ErrorConstants.INVALID_REQUEST, "message", "serviceInstanceIds is empty for a simple execution");
+            ErrorCodes.INVALID_REQUEST, "message", "serviceInstanceIds is empty for a simple execution");
       }
 
       return triggerSimpleExecution(appId, envId, executionArgs);

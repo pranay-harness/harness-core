@@ -6,7 +6,7 @@ import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -79,7 +79,7 @@ public class StateMachine extends Base {
         continue;
       }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
-        throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown stencil type");
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown stencil type");
       }
 
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
@@ -95,7 +95,7 @@ public class StateMachine extends Base {
     }
 
     if (originStateId == null) {
-      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Origin state missing");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Origin state missing");
     }
 
     try {
@@ -250,7 +250,7 @@ public class StateMachine extends Base {
       }
     }
     if (dupNames.size() > 0) {
-      throw new WingsException(ErrorConstants.DUPLICATE_STATE_NAMES, "dupStateNames", dupNames.toString());
+      throw new WingsException(ErrorCodes.DUPLICATE_STATE_NAMES, "dupStateNames", dupNames.toString());
     }
 
     cachedStatesMap = statesMap;
@@ -318,12 +318,12 @@ public class StateMachine extends Base {
     if (transitions != null) {
       for (Transition transition : transitions) {
         if (transition.getTransitionType() == null) {
-          throw new WingsException(ErrorConstants.TRANSITION_TYPE_NULL);
+          throw new WingsException(ErrorCodes.TRANSITION_TYPE_NULL);
         }
         State fromState = transition.getFromState();
         State toState = transition.getToState();
         if (fromState == null || toState == null) {
-          throw new WingsException(ErrorConstants.TRANSITION_NOT_LINKED);
+          throw new WingsException(ErrorCodes.TRANSITION_NOT_LINKED);
         }
         boolean invalidState = false;
         if (statesMap.get(fromState.getName()) == null) {
@@ -383,17 +383,17 @@ public class StateMachine extends Base {
     }
     if (invalidStateNames.size() > 0) {
       throw new WingsException(
-          ErrorConstants.TRANSITION_TO_INCORRECT_STATE, "invalidStateNames", invalidStateNames.toString());
+          ErrorCodes.TRANSITION_TO_INCORRECT_STATE, "invalidStateNames", invalidStateNames.toString());
     }
     if (nonForkStates.size() > 0) {
-      throw new WingsException(ErrorConstants.NON_FORK_STATES, "nonForkStates", nonForkStates.toString());
+      throw new WingsException(ErrorCodes.NON_FORK_STATES, "nonForkStates", nonForkStates.toString());
     }
     if (nonRepeatStates.size() > 0) {
-      throw new WingsException(ErrorConstants.NON_REPEAT_STATES, "nonRepeatStates", nonRepeatStates.toString());
+      throw new WingsException(ErrorCodes.NON_REPEAT_STATES, "nonRepeatStates", nonRepeatStates.toString());
     }
     if (statesWithDupTransitions.size() > 0) {
       throw new WingsException(
-          ErrorConstants.STATES_WITH_DUP_TRANSITIONS, "statesWithDupTransitions", statesWithDupTransitions.toString());
+          ErrorCodes.STATES_WITH_DUP_TRANSITIONS, "statesWithDupTransitions", statesWithDupTransitions.toString());
     }
     for (String forkStateName : forkStateNamesMap.keySet()) {
       ForkState forkFromState = (ForkState) statesMap.get(forkStateName);
@@ -444,7 +444,7 @@ public class StateMachine extends Base {
   public boolean validate() {
     Map<String, State> statesMap = getStatesMap();
     if (initialStateName == null || statesMap.get(initialStateName) == null) {
-      throw new WingsException(ErrorConstants.INITIAL_STATE_NOT_DEFINED);
+      throw new WingsException(ErrorCodes.INITIAL_STATE_NOT_DEFINED);
     }
     getTransitionFlowMap();
     return true;

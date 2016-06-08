@@ -1,6 +1,6 @@
 package software.wings.security;
 
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;

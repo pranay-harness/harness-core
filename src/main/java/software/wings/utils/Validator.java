@@ -1,6 +1,6 @@
 package software.wings.utils;
 
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public class Validator {
       Map<String, Object> map = new HashMap<>();
       map.put("name", name);
       map.put("value", value);
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
     }
   }
 
@@ -39,7 +39,7 @@ public class Validator {
       Map<String, Object> map = new HashMap<>();
       map.put("appId", appId);
       map.put("uuid", uuid);
-      throw new WingsException(map, ErrorConstants.INVALID_ARGUMENT);
+      throw new WingsException(map, ErrorCodes.INVALID_ARGUMENT);
     }
   }
 }

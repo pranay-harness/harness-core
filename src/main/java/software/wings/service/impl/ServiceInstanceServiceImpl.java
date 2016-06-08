@@ -23,8 +23,8 @@ import javax.inject.Inject;
  * Created by anubhaw on 5/26/16.
  */
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
-  @Inject private WingsPersistence wingsPersistence;
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceInstanceService#list(software.wings.dl.PageRequest)

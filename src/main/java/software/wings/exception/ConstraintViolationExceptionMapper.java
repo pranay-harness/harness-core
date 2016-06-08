@@ -1,7 +1,7 @@
 package software.wings.exception;
 
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorConstants.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 

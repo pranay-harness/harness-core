@@ -1,9 +1,9 @@
 package software.wings.security;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
-import static software.wings.beans.ErrorConstants.ACCESS_DENIED;
-import static software.wings.beans.ErrorConstants.EXPIRED_TOKEN;
-import static software.wings.beans.ErrorConstants.INVALID_TOKEN;
+import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
+import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
+import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

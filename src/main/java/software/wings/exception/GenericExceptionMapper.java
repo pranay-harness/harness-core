@@ -2,7 +2,7 @@ package software.wings.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.RestResponse;
 import software.wings.common.cache.ResponseCodeCache;
 
@@ -31,7 +31,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
     // No known exception or error code
     if (restResponse.getResponseMessages().size() == 0) {
       restResponse.getResponseMessages().add(
-          ResponseCodeCache.getInstance().getResponseMessage(ErrorConstants.DEFAULT_ERROR_CODE));
+          ResponseCodeCache.getInstance().getResponseMessage(ErrorCodes.DEFAULT_ERROR_CODE));
     }
 
     return Response.status(Response.Status.INTERNAL_SERVER_ERROR)

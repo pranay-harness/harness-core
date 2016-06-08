@@ -6,7 +6,7 @@ import com.google.inject.Singleton;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -89,7 +89,7 @@ public class StateMachineExecutor {
       StateMachineExecutionCallback callback) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT);
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
     }
 
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
@@ -120,10 +120,10 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance == null) {
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateExecutionInstance");
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateExecutionInstance");
     }
     if (stateMachine == null) {
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateMachine");
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateMachine");
     }
     if (stateExecutionInstance.getStateName() == null) {
       stateExecutionInstance.setStateName(stateMachine.getInitialStateName());
@@ -141,7 +141,7 @@ public class StateMachineExecutor {
    */
   StateExecutionInstance triggerExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getStateName() == null) {
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateName");
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateName");
     }
 
     stateExecutionInstance.setStateType(stateMachine.getState(stateExecutionInstance.getStateName()).getStateType());

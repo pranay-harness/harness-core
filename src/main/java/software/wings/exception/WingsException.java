@@ -1,6 +1,6 @@
 package software.wings.exception;
 
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ResponseMessage;
 
 import java.util.ArrayList;
@@ -54,7 +54,7 @@ public class WingsException extends WebApplicationException {
    *
    * @param errorCode the error code
    */
-  public WingsException(ErrorConstants errorCode) {
+  public WingsException(ErrorCodes errorCode) {
     this(errorCode, (Throwable) null);
   }
 
@@ -65,7 +65,7 @@ public class WingsException extends WebApplicationException {
    * @param key       the key
    * @param value     the value
    */
-  public WingsException(ErrorConstants errorCode, String key, Object value) {
+  public WingsException(ErrorCodes errorCode, String key, Object value) {
     this(errorCode, (Throwable) null);
     addParam(key, value);
   }
@@ -76,8 +76,8 @@ public class WingsException extends WebApplicationException {
    * @param errorCode the error code
    * @param cause     the cause
    */
-  public WingsException(ErrorConstants errorCode, Throwable cause) {
-    this(errorCode, errorCode.getErrorCode(), cause);
+  public WingsException(ErrorCodes errorCode, Throwable cause) {
+    this(errorCode, errorCode.getCode(), cause);
   }
 
   /**
@@ -87,7 +87,7 @@ public class WingsException extends WebApplicationException {
    * @param message   the message
    * @param cause     the cause
    */
-  public WingsException(ErrorConstants errorCode, String message, Throwable cause) {
+  public WingsException(ErrorCodes errorCode, String message, Throwable cause) {
     super(message, cause);
     ResponseMessage responseMessage = new ResponseMessage();
     responseMessage.setCode(errorCode);
@@ -101,7 +101,7 @@ public class WingsException extends WebApplicationException {
    * @param params    the params
    * @param errorCode the error code
    */
-  public WingsException(Map<String, Object> params, ErrorConstants errorCode) {
+  public WingsException(Map<String, Object> params, ErrorCodes errorCode) {
     this(errorCode, (Throwable) null);
     this.params = params;
   }

@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
  * The Class ResponseMessage.
  */
 public class ResponseMessage {
-  private ErrorConstants code;
+  private ErrorCodes code;
   private ResponseTypeEnum errorType;
   private String message;
 
@@ -17,7 +17,7 @@ public class ResponseMessage {
    *
    * @return the code
    */
-  public ErrorConstants getCode() {
+  public ErrorCodes getCode() {
     return code;
   }
 
@@ -26,7 +26,7 @@ public class ResponseMessage {
    *
    * @param code the code
    */
-  public void setCode(ErrorConstants code) {
+  public void setCode(ErrorCodes code) {
     this.code = code;
   }
 
@@ -66,9 +66,11 @@ public class ResponseMessage {
     this.message = message;
   }
 
-  /** {@inheritDoc} */ /* (non-Javadoc)
-                        * @see java.lang.Object#toString()
-                        */
+  /**
+   * {@inheritDoc}
+   */ /* (non-Javadoc)
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -98,18 +100,20 @@ public class ResponseMessage {
    * The type Builder.
    */
   public static final class Builder {
-    private ErrorConstants code;
+    private ErrorCodes code;
     private ResponseTypeEnum errorType;
     private String message;
 
-    /** Do not instantiate Builder. */
+    /**
+     * Do not instantiate Builder.
+     */
     private Builder() {}
 
     public static Builder aResponseMessage() {
       return new Builder();
     }
 
-    public Builder withCode(ErrorConstants code) {
+    public Builder withCode(ErrorCodes code) {
       this.code = code;
       return this;
     }

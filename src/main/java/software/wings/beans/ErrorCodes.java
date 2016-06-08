@@ -6,7 +6,7 @@ import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response.Status;
 
-public enum ErrorConstants {
+public enum ErrorCodes {
   DEFAULT_ERROR_CODE("DEFAULT_ERROR_CODE"),
   INVALID_ARGUMENT("INVALID_ARGUMENT"),
   INVALID_TOKEN("INVALID_TOKEN", UNAUTHORIZED),
@@ -46,20 +46,20 @@ public enum ErrorConstants {
   INVALID_PIPELINE("INVALID_PIPELINE");
 
   public static final String ARGS_NAME = "ARGS_NAME";
-  private String errorCode;
+  private String code;
   private Status status = BAD_REQUEST;
 
-  ErrorConstants(String errorCode) {
-    this.errorCode = errorCode;
+  ErrorCodes(String code) {
+    this.code = code;
   }
 
-  ErrorConstants(String errorCode, Status status) {
-    this.errorCode = errorCode;
+  ErrorCodes(String code, Status status) {
+    this.code = code;
     this.status = status;
   }
 
-  public String getErrorCode() {
-    return errorCode;
+  public String getCode() {
+    return code;
   }
 
   public Status getStatus() {
