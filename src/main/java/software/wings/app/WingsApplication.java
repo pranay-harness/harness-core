@@ -7,10 +7,10 @@ import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.dropwizard.Application;
-import io.dropwizard.assets.AssetsBundle;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
+import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.lifecycle.Managed;
@@ -77,7 +77,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    bootstrap.addBundle(new AssetsBundle("/static", "/static", "index.html"));
+    bootstrap.addBundle(new ConfiguredAssetsBundle("/static", "/static", "index.html"));
     bootstrap.addBundle(new SwaggerBundle<MainConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MainConfiguration mainConfiguration) {

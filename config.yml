@@ -25,7 +25,11 @@ portal:
 
 jenkinsBuildQuerySize: 50
 
-enableAuth: false
+enableAuth: true
+
+assets:
+  mimeTypes:
+    js: application/json; charset=UTF-8
 
 swagger:
   resourcePackage: software.wings.resources

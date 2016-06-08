@@ -2,15 +2,20 @@ package software.wings.app;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
+import io.dropwizard.bundles.assets.AssetsBundleConfiguration;
+import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import software.wings.dl.MongoConfig;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Used to load all the application configuration.
  *
  * @author Rishi
  */
-public class MainConfiguration extends Configuration {
+public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
 
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
@@ -20,6 +25,8 @@ public class MainConfiguration extends Configuration {
   @JsonProperty private boolean enableAuth;
 
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
+
+  @Valid @NotNull @JsonProperty private final AssetsConfiguration assets = new AssetsConfiguration();
 
   /**
    * Gets swagger bundle configuration.
@@ -109,5 +116,11 @@ public class MainConfiguration extends Configuration {
    */
   public void setJenkinsBuildQuerySize(int jenkinsBuildQuerySize) {
     this.jenkinsBuildQuerySize = jenkinsBuildQuerySize;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public AssetsConfiguration getAssetsConfiguration() {
+    return assets;
   }
 }
