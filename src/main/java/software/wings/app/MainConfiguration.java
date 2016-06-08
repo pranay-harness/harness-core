@@ -16,17 +16,12 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
-  @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
-
-  @JsonProperty private PortalConfig portal;
-
-  @JsonProperty private boolean enableAuth;
-
-  @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
-
   @Valid @NotNull @JsonProperty private final AssetsConfiguration assets = new AssetsConfiguration();
+  @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
+  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
+  @JsonProperty private PortalConfig portal;
+  @JsonProperty private boolean enableAuth;
+  @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
 
   /**
    * Gets swagger bundle configuration.
@@ -118,7 +113,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     this.jenkinsBuildQuerySize = jenkinsBuildQuerySize;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assets;

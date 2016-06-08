@@ -26,19 +26,25 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public PageResponse<AppContainer> list(PageRequest<AppContainer> request) {
     return wingsPersistence.query(AppContainer.class, request);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public AppContainer get(String platformId) {
     return wingsPersistence.get(AppContainer.class, platformId);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     String fileId = fileService.saveFile(appContainer, in, fileBucket);
@@ -46,7 +52,9 @@ public class AppContainerServiceImpl implements AppContainerService {
     return wingsPersistence.save(appContainer);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String update(String platformId, AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     AppContainer storedAppContainer = wingsPersistence.get(AppContainer.class, platformId);
@@ -59,7 +67,9 @@ public class AppContainerServiceImpl implements AppContainerService {
     return wingsPersistence.save(appContainer);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void delete(String appContainerId) {
     Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();

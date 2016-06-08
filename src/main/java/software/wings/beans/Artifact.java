@@ -208,7 +208,9 @@ public class Artifact extends Base {
     return null;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -224,14 +226,18 @@ public class Artifact extends Base {
         && status == artifact.status;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public int hashCode() {
     return Objects.hashCode(
         super.hashCode(), release, artifactSourceName, metadata, displayName, revision, artifactFiles, status);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -310,11 +316,15 @@ public class Artifact extends Base {
      * The Class Validator.
      */
     class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
-      /** {@inheritDoc} */
+      /**
+       * {@inheritDoc}
+       */
       @Override
       public void initialize(final ValidArtifact validateForUpdate) {}
 
-      /** {@inheritDoc} */
+      /**
+       * {@inheritDoc}
+       */
       @Override
       public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
         return isNotBlank(bean.getAppId()) && isNotBlank(bean.getRelease().getUuid());
@@ -341,7 +351,9 @@ public class Artifact extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    /** Do not instantiate Builder. */
+    /**
+     * Do not instantiate Builder.
+     */
     private Builder() {}
 
     /**

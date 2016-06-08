@@ -43,7 +43,9 @@ public class FileServiceImpl implements FileService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileBucketHelper fileBucketHelper;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {
     try {
@@ -57,13 +59,17 @@ public class FileServiceImpl implements FileService {
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void downloadToStream(String fileId, OutputStream outputStream, FileBucket fileBucket) {
     fileBucketHelper.getOrCreateFileBucket(fileBucket).downloadToStream(new ObjectId(fileId), outputStream);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket) {
     GridFSFindIterable filemetaData =
@@ -71,14 +77,18 @@ public class FileServiceImpl implements FileService {
     return filemetaData.first();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options) {
     ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(fileBucket).uploadFromStream(filename, in, options);
     return fileId.toHexString();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket) {
     List<ObjectId> objIDs = new ArrayList<>();
@@ -90,7 +100,9 @@ public class FileServiceImpl implements FileService {
     return dbObjects;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
     Document metadata = new Document();
@@ -116,7 +128,9 @@ public class FileServiceImpl implements FileService {
     return fileId.toHexString();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
     GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
@@ -131,7 +145,9 @@ public class FileServiceImpl implements FileService {
     return fileId;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
     fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileId));

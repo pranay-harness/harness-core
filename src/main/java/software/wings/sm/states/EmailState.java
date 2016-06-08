@@ -53,7 +53,9 @@ public class EmailState extends State {
     super(name, StateType.EMAIL.name());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionResponse executionResponse = new ExecutionResponse();
