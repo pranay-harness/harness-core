@@ -113,7 +113,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
     config.setHost("INVALID_HOST");
-    assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(UNKNOWN_HOST);
+    assertThatThrownBy(() -> executor.init(config))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(UNKNOWN_HOST.getErrorCode());
   }
 
   /**
@@ -122,7 +124,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
     config.setPort(3333);
-    assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(INVALID_PORT);
+    assertThatThrownBy(() -> executor.init(config))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_PORT.getErrorCode());
   }
 
   /**
@@ -133,7 +137,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     config.setPassword("INVALID_PASSWORD");
     Assertions.assertThatThrownBy(() -> executor.init(config))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining(INVALID_CREDENTIAL);
+        .hasMessageContaining(INVALID_CREDENTIAL.getErrorCode());
   }
 
   /**
@@ -165,7 +169,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     config.setSshConnectionTimeout(1); // 1ms
     assertThatThrownBy(() -> executor.init(config))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT);
+        .hasMessage(SOCKET_CONNECTION_TIMEOUT.getErrorCode());
   }
 
   /**
@@ -178,7 +182,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(config);
     assertThatThrownBy(() -> executor.execute("ls -lh"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SSH_SESSION_TIMEOUT);
+        .hasMessage(SSH_SESSION_TIMEOUT.getErrorCode());
   }
 
   /**

@@ -25,6 +25,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactService;
 
@@ -54,6 +55,7 @@ public class ArtifactResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ArtifactResource(ARTIFACT_SERVICE))
+                                                       .addProvider(ConstraintViolationExceptionMapper.class)
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
 

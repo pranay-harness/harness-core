@@ -26,6 +26,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.ErrorConstants;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -285,11 +286,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @param jschexception the jschexception
    * @return the string
    */
-  protected String normalizeError(JSchException jschexception) {
+  protected ErrorConstants normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
 
-    String errorConst = null;
+    ErrorConstants errorConst = null;
 
     if (cause != null) { // TODO: Refactor use enums, maybe ?
       if (cause instanceof NoRouteToHostException) {

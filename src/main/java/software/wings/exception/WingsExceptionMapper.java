@@ -1,5 +1,6 @@
 package software.wings.exception;
 
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import org.slf4j.Logger;
@@ -26,16 +27,20 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   @Override
   public Response toResponse(WingsException ex) {
     logger.error("Exception occured", ex);
-    return Response.status(resolveHttpErrorCode(ex.getResponseMessageList()))
+    return Response.status(resolveHttpStatus(ex.getResponseMessageList()))
         .entity(aRestResponse().withResponseMessages(ex.getResponseMessageList()).build())
         .build();
   }
 
-  private Status resolveHttpErrorCode(List<ResponseMessage> responseMessageList) {
-    String errorCode = null;
+  private Status resolveHttpStatus(List<ResponseMessage> responseMessageList) {
+    ErrorConstants errorCode = null;
     if (responseMessageList != null && responseMessageList.size() > 0) {
       errorCode = responseMessageList.get(responseMessageList.size() - 1).getCode();
     }
-    return ErrorConstants.httpErrorCodeMapper(errorCode);
+    if (errorCode != null) {
+      return errorCode.getStatus();
+    } else {
+      return INTERNAL_SERVER_ERROR;
+    }
   }
 }

@@ -64,7 +64,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorConstants.DUPLICATE_STATE_NAMES);
+      assertThat(exception).hasMessage(ErrorConstants.DUPLICATE_STATE_NAMES.getErrorCode());
     }
   }
 
@@ -85,7 +85,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorConstants.TRANSITION_TYPE_NULL);
+      assertThat(exception).hasMessage(ErrorConstants.TRANSITION_TYPE_NULL.getErrorCode());
     }
   }
 
