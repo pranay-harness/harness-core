@@ -106,7 +106,7 @@ public class ExecutionResource {
   @POST
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowService.triggerEnvExecution(appId, envId, executionArgs));
   }
 
@@ -122,7 +122,7 @@ public class ExecutionResource {
   @Path("orchestrated")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     executionArgs.setOrchestrationType(OrchestrationType.ORCHESTRATED);
     return triggerExecution(appId, envId, executionArgs);
   }
@@ -139,7 +139,7 @@ public class ExecutionResource {
   @Path("simple")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerSimpleExecution(
-      @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     executionArgs.setOrchestrationType(OrchestrationType.SIMPLE);
     return triggerExecution(appId, envId, executionArgs);
   }
