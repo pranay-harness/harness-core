@@ -25,8 +25,8 @@ import java.util.Set;
 @Entity(value = "releases")
 public class Release extends Base {
   @NotEmpty private String releaseName;
-  @NotEmpty private String description;
-  @FutureDate private long targetDate;
+  private String description;
+  @FutureDate private Long targetDate;
 
   private List<ArtifactSource> artifactSources = Lists.newArrayList();
 
@@ -73,7 +73,7 @@ public class Release extends Base {
    *
    * @return the target date
    */
-  public long getTargetDate() {
+  public Long getTargetDate() {
     return targetDate;
   }
 
@@ -82,7 +82,7 @@ public class Release extends Base {
    *
    * @param targetDate the target date
    */
-  public void setTargetDate(long targetDate) {
+  public void setTargetDate(Long targetDate) {
     this.targetDate = targetDate;
   }
 
@@ -149,9 +149,6 @@ public class Release extends Base {
         .orElse(null);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -164,14 +161,11 @@ public class Release extends Base {
       return false;
     }
     Release release = (Release) obj;
-    return targetDate == release.targetDate && Objects.equal(releaseName, release.releaseName)
-        && Objects.equal(description, release.description) && Objects.equal(artifactSources, release.artifactSources)
+    return Objects.equal(releaseName, release.releaseName) && Objects.equal(description, release.description)
+        && Objects.equal(targetDate, release.targetDate) && Objects.equal(artifactSources, release.artifactSources)
         && status == release.status;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
   @Override
   public int hashCode() {
     return Objects.hashCode(super.hashCode(), releaseName, description, targetDate, artifactSources, status);
@@ -213,7 +207,7 @@ public class Release extends Base {
   public static final class ReleaseBuilder {
     private String releaseName;
     private String description;
-    private long targetDate;
+    private Long targetDate;
     private List<ArtifactSource> artifactSources = Lists.newArrayList();
     private Status status = Status.ACTIVE;
     private String uuid;
@@ -263,7 +257,7 @@ public class Release extends Base {
      * @param targetDate the target date
      * @return the release builder
      */
-    public ReleaseBuilder withTargetDate(long targetDate) {
+    public ReleaseBuilder withTargetDate(Long targetDate) {
       this.targetDate = targetDate;
       return this;
     }
