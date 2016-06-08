@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
-import static software.wings.utils.WingsUnitTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsUnitTestConstants.HOST_ID;
-import static software.wings.utils.WingsUnitTestConstants.RELEASE_ID;
-import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsUnitTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.HOST_ID;
+import static software.wings.utils.WingsTestConstants.RELEASE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -32,7 +32,6 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 
 /**
