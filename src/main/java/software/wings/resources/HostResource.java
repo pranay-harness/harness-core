@@ -48,6 +48,11 @@ import javax.ws.rs.core.Response;
 public class HostResource {
   private HostService hostService;
 
+  /**
+   * Instantiates a new Host resource.
+   *
+   * @param hostService the host service
+   */
   @Inject
   public HostResource(HostService hostService) {
     this.hostService = hostService;

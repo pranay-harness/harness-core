@@ -89,6 +89,7 @@ public interface WorkflowService {
   /**
    * Read latest.
    *
+   * @param appId    the app id
    * @param originId the origin id
    * @param name     the name
    * @return the state machine
@@ -169,7 +170,7 @@ public interface WorkflowService {
    *
    * @param appId           the app id
    * @param orchestrationId the orchestration id
-   * @param artifactIds     the artifact ids
+   * @param executionArgs   the execution args
    * @return the workflow execution
    */
   WorkflowExecution triggerOrchestrationExecution(
@@ -184,5 +185,13 @@ public interface WorkflowService {
    */
   WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId);
 
+  /**
+   * Trigger env execution workflow execution.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the workflow execution
+   */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 }

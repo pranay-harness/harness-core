@@ -21,50 +21,110 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets tags.
+   *
+   * @return the tags
+   */
   public List<Tag> getTags() {
     return tags;
   }
 
+  /**
+   * Sets tags.
+   *
+   * @param tags the tags
+   */
   public void setTags(List<Tag> tags) {
     this.tags = tags;
   }
 
+  /**
+   * Gets hosts.
+   *
+   * @return the hosts
+   */
   public List<Host> getHosts() {
     return hosts;
   }
 
+  /**
+   * Sets hosts.
+   *
+   * @param hosts the hosts
+   */
   public void setHosts(List<Host> hosts) {
     this.hosts = hosts;
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets service.
+   *
+   * @return the service
+   */
   public Service getService() {
     return service;
   }
 
+  /**
+   * Sets service.
+   *
+   * @param service the service
+   */
   public void setService(Service service) {
     this.service = service;
   }

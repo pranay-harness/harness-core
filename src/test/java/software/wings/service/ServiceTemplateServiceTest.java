@@ -41,8 +41,10 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 4/29/16.
  */
-
 public class ServiceTemplateServiceTest extends WingsBaseTest {
+  /**
+   * The Builder.
+   */
   ServiceTemplateBuilder builder = aServiceTemplate()
                                        .withUuid("TEMPLATE_ID")
                                        .withEnvId("ENV_ID")

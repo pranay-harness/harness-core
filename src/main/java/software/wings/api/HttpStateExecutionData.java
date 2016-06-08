@@ -33,50 +33,110 @@ public class HttpStateExecutionData extends StateExecutionData {
 
   private transient Document document;
 
+  /**
+   * Gets http url.
+   *
+   * @return the http url
+   */
   public String getHttpUrl() {
     return httpUrl;
   }
 
+  /**
+   * Sets http url.
+   *
+   * @param httpUrl the http url
+   */
   public void setHttpUrl(String httpUrl) {
     this.httpUrl = httpUrl;
   }
 
+  /**
+   * Gets http method.
+   *
+   * @return the http method
+   */
   public String getHttpMethod() {
     return httpMethod;
   }
 
+  /**
+   * Sets http method.
+   *
+   * @param httpMethod the http method
+   */
   public void setHttpMethod(String httpMethod) {
     this.httpMethod = httpMethod;
   }
 
+  /**
+   * Gets http response code.
+   *
+   * @return the http response code
+   */
   public int getHttpResponseCode() {
     return httpResponseCode;
   }
 
+  /**
+   * Sets http response code.
+   *
+   * @param httpResponseCode the http response code
+   */
   public void setHttpResponseCode(int httpResponseCode) {
     this.httpResponseCode = httpResponseCode;
   }
 
+  /**
+   * Gets http response body.
+   *
+   * @return the http response body
+   */
   public String getHttpResponseBody() {
     return httpResponseBody;
   }
 
+  /**
+   * Sets http response body.
+   *
+   * @param httpResponseBody the http response body
+   */
   public void setHttpResponseBody(String httpResponseBody) {
     this.httpResponseBody = httpResponseBody;
   }
 
+  /**
+   * Gets assertion statement.
+   *
+   * @return the assertion statement
+   */
   public String getAssertionStatement() {
     return assertionStatement;
   }
 
+  /**
+   * Sets assertion statement.
+   *
+   * @param assertionStatement the assertion statement
+   */
   public void setAssertionStatement(String assertionStatement) {
     this.assertionStatement = assertionStatement;
   }
 
+  /**
+   * Gets assertion status.
+   *
+   * @return the assertion status
+   */
   public String getAssertionStatus() {
     return assertionStatus;
   }
 
+  /**
+   * Sets assertion status.
+   *
+   * @param assertionStatus the assertion status
+   */
   public void setAssertionStatus(String assertionStatus) {
     this.assertionStatus = assertionStatus;
   }
@@ -129,6 +189,9 @@ public class HttpStateExecutionData extends StateExecutionData {
     return document;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String stateName;
     private Long startTs;
@@ -143,60 +206,130 @@ public class HttpStateExecutionData extends StateExecutionData {
 
     private Builder() {}
 
+    /**
+     * A http state execution data builder.
+     *
+     * @return the builder
+     */
     public static Builder aHttpStateExecutionData() {
       return new Builder();
     }
 
+    /**
+     * With state name builder.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
+    /**
+     * With start ts builder.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With end ts builder.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With http url builder.
+     *
+     * @param httpUrl the http url
+     * @return the builder
+     */
     public Builder withHttpUrl(String httpUrl) {
       this.httpUrl = httpUrl;
       return this;
     }
 
+    /**
+     * With http method builder.
+     *
+     * @param httpMethod the http method
+     * @return the builder
+     */
     public Builder withHttpMethod(String httpMethod) {
       this.httpMethod = httpMethod;
       return this;
     }
 
+    /**
+     * With http response code builder.
+     *
+     * @param httpResponseCode the http response code
+     * @return the builder
+     */
     public Builder withHttpResponseCode(int httpResponseCode) {
       this.httpResponseCode = httpResponseCode;
       return this;
     }
 
+    /**
+     * With http response body builder.
+     *
+     * @param httpResponseBody the http response body
+     * @return the builder
+     */
     public Builder withHttpResponseBody(String httpResponseBody) {
       this.httpResponseBody = httpResponseBody;
       return this;
     }
 
+    /**
+     * With assertion statement builder.
+     *
+     * @param assertionStatement the assertion statement
+     * @return the builder
+     */
     public Builder withAssertionStatement(String assertionStatement) {
       this.assertionStatement = assertionStatement;
       return this;
     }
 
+    /**
+     * With assertion status builder.
+     *
+     * @param assertionStatus the assertion status
+     * @return the builder
+     */
     public Builder withAssertionStatus(String assertionStatus) {
       this.assertionStatus = assertionStatus;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aHttpStateExecutionData()
           .withStateName(stateName)
@@ -211,6 +344,11 @@ public class HttpStateExecutionData extends StateExecutionData {
           .withAssertionStatus(assertionStatus);
     }
 
+    /**
+     * Build http state execution data.
+     *
+     * @return the http state execution data
+     */
     public HttpStateExecutionData build() {
       HttpStateExecutionData httpStateExecutionData = new HttpStateExecutionData();
       httpStateExecutionData.setStateName(stateName);

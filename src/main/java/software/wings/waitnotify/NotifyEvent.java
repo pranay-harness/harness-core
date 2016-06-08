@@ -35,18 +35,38 @@ public class NotifyEvent extends Queuable {
     this.correlationIds = other.correlationIds;
   }
 
+  /**
+   * Gets wait instance id.
+   *
+   * @return the wait instance id
+   */
   public String getWaitInstanceId() {
     return waitInstanceId;
   }
 
+  /**
+   * Sets wait instance id.
+   *
+   * @param waitInstanceId the wait instance id
+   */
   public void setWaitInstanceId(String waitInstanceId) {
     this.waitInstanceId = waitInstanceId;
   }
 
+  /**
+   * Gets correlation ids.
+   *
+   * @return the correlation ids
+   */
   public List<String> getCorrelationIds() {
     return correlationIds;
   }
 
+  /**
+   * Sets correlation ids.
+   *
+   * @param correlationIds the correlation ids
+   */
   public void setCorrelationIds(List<String> correlationIds) {
     this.correlationIds = correlationIds;
   }

@@ -572,6 +572,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
+  /**
+   * Trigger simple execution workflow execution.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the workflow execution
+   */
   WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
@@ -598,6 +606,13 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
   }
 
+  /**
+   * Read latest simple workflow orchestration.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the orchestration
+   */
   Orchestration readLatestSimpleWorkflow(String appId, String envId) {
     PageRequest<Orchestration> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();

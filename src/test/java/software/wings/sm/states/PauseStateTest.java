@@ -57,6 +57,13 @@ public class PauseStateTest extends WingsBaseTest {
     pauseState.setCcAddress("cc1,cc2");
   }
 
+  /**
+   * Should send email and return correlation id on execute.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       the io exception
+   */
   @Test
   public void shouldSendEmailAndReturnCorrelationIdOnExecute() throws EmailException, TemplateException, IOException {
     pauseState.setBody("body");

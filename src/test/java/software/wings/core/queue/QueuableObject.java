@@ -43,10 +43,20 @@ public class QueuableObject extends Queuable {
     super(other);
   }
 
+  /**
+   * Gets data.
+   *
+   * @return the data
+   */
   public int getData() {
     return data;
   }
 
+  /**
+   * Sets data.
+   *
+   * @param data the data
+   */
   public void setData(int data) {
     this.data = data;
   }

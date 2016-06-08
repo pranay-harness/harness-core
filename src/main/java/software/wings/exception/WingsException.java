@@ -18,6 +18,9 @@ import javax.ws.rs.WebApplicationException;
 public class WingsException extends WebApplicationException {
   private static final long serialVersionUID = -3266129015976960503L;
 
+  /**
+   * The Response message list.
+   */
   List<ResponseMessage> responseMessageList = new ArrayList<ResponseMessage>();
   private Map<String, Object> params = new HashMap<String, Object>();
 
@@ -106,10 +109,20 @@ public class WingsException extends WebApplicationException {
     this.responseMessageList = messageList;
   }
 
+  /**
+   * Gets params.
+   *
+   * @return the params
+   */
   public Map<String, Object> getParams() {
     return params;
   }
 
+  /**
+   * Sets params.
+   *
+   * @param params the params
+   */
   public void setParams(Map<String, Object> params) {
     this.params = params;
   }
@@ -124,10 +137,20 @@ public class WingsException extends WebApplicationException {
     this.params.put(key, value);
   }
 
+  /**
+   * Gets response message list.
+   *
+   * @return the response message list
+   */
   public List<ResponseMessage> getResponseMessageList() {
     return responseMessageList;
   }
 
+  /**
+   * Sets response message list.
+   *
+   * @param messageList the message list
+   */
   public void setResponseMessageList(List<ResponseMessage> messageList) {
     this.responseMessageList = messageList;
   }

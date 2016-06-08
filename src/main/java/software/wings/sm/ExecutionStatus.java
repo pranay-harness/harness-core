@@ -8,10 +8,23 @@ import java.io.Serializable;
  * @author Rishi
  */
 public enum ExecutionStatus implements Serializable {
-  NEW,
-  RUNNING,
-  SUCCESS,
-  ABORTED,
-  FAILED,
+  /**
+   * New execution status.
+   */
+  NEW, /**
+        * Running execution status.
+        */
+  RUNNING, /**
+            * Success execution status.
+            */
+  SUCCESS, /**
+            * Aborted execution status.
+            */
+  ABORTED, /**
+            * Failed execution status.
+            */
+  FAILED, /**
+           * Error execution status.
+           */
   ERROR;
 }

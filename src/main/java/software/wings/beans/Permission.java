@@ -34,34 +34,74 @@ public class Permission {
     this.serviceId = serviceId;
   }
 
+  /**
+   * Gets resource.
+   *
+   * @return the resource
+   */
   public String getResource() {
     return resource;
   }
 
+  /**
+   * Sets resource.
+   *
+   * @param resource the resource
+   */
   public void setResource(String resource) {
     this.resource = resource.toUpperCase();
   }
 
+  /**
+   * Gets action.
+   *
+   * @return the action
+   */
   public String getAction() {
     return action;
   }
 
+  /**
+   * Sets action.
+   *
+   * @param action the action
+   */
   public void setAction(String action) {
     this.action = action.toUpperCase();
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
   public String getServiceId() {
     return serviceId;
   }
 
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }

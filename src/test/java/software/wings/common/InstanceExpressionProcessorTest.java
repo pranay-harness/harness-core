@@ -75,6 +75,9 @@ public class InstanceExpressionProcessorTest {
     assertThat(elements.get(2).getUuid()).isEqualTo(instance3.getUuid());
   }
 
+  /**
+   * Should return instances from param.
+   */
   @Test
   public void shouldReturnInstancesFromParam() {
     StateExecutionInstance stateExecutionInstance =
@@ -116,6 +119,9 @@ public class InstanceExpressionProcessorTest {
     assertThat(instanceIdsMatched).isTrue();
   }
 
+  /**
+   * Should return common instances from param.
+   */
   @Test
   public void shouldReturnCommonInstancesFromParam() {
     StateExecutionInstance stateExecutionInstance =
@@ -159,6 +165,9 @@ public class InstanceExpressionProcessorTest {
     assertThat(instanceIdsMatched).isTrue();
   }
 
+  /**
+   * Should return common instances from param 2.
+   */
   @Test
   public void shouldReturnCommonInstancesFromParam2() {
     StateExecutionInstance stateExecutionInstance =

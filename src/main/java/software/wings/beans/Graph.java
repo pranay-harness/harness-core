@@ -30,6 +30,9 @@ import java.util.Optional;
  * @author Rishi
  */
 public class Graph {
+  /**
+   * The constant ORIGIN_STATE.
+   */
   public static final String ORIGIN_STATE = "ORIGIN";
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
@@ -39,35 +42,75 @@ public class Graph {
 
   private Optional<Node> originState = null;
 
+  /**
+   * Gets graph name.
+   *
+   * @return the graph name
+   */
   public String getGraphName() {
     return graphName;
   }
 
+  /**
+   * Sets graph name.
+   *
+   * @param graphName the graph name
+   */
   public void setGraphName(String graphName) {
     this.graphName = graphName;
   }
 
+  /**
+   * Gets nodes.
+   *
+   * @return the nodes
+   */
   public List<Node> getNodes() {
     return nodes;
   }
 
+  /**
+   * Sets nodes.
+   *
+   * @param nodes the nodes
+   */
   public void setNodes(List<Node> nodes) {
     this.nodes = nodes;
   }
 
+  /**
+   * Gets links.
+   *
+   * @return the links
+   */
   public List<Link> getLinks() {
     return links;
   }
 
+  /**
+   * Sets links.
+   *
+   * @param links the links
+   */
   public void setLinks(List<Link> links) {
     this.links = links;
   }
 
+  /**
+   * Gets nodes map.
+   *
+   * @return the nodes map
+   */
   @JsonIgnore
   public Map<String, Node> getNodesMap() {
     return getNodes().stream().collect(toMap(Node::getId, identity()));
   }
 
+  /**
+   * Is linear boolean.
+   *
+   * @return the boolean
+   */
   @JsonIgnore
   public boolean isLinear() {
     if (getNodes() != null && getLinks() != null) {
@@ -80,6 +123,11 @@ public class Graph {
     return false;
   }
 
+  /**
+   * Gets linear graph iterator.
+   *
+   * @return the linear graph iterator
+   */
   @JsonIgnore
   public Iterator<Node> getLinearGraphIterator() {
     Optional<Node> originNode = getOriginNode();
@@ -177,54 +225,119 @@ public class Graph {
     private int y;
     private Map<String, Object> properties = new HashMap<>();
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
       this.id = id;
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
       this.name = name;
     }
 
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
     public String getType() {
       return type;
     }
 
+    /**
+     * Sets type.
+     *
+     * @param type the type
+     */
     public void setType(String type) {
       this.type = type;
     }
 
+    /**
+     * Gets x.
+     *
+     * @return the x
+     */
     public int getX() {
       return x;
     }
 
+    /**
+     * Sets x.
+     *
+     * @param x the x
+     */
     public void setX(int x) {
       this.x = x;
     }
 
+    /**
+     * Gets y.
+     *
+     * @return the y
+     */
     public int getY() {
       return y;
     }
 
+    /**
+     * Sets y.
+     *
+     * @param y the y
+     */
     public void setY(int y) {
       this.y = y;
     }
 
+    /**
+     * Gets properties.
+     *
+     * @return the properties
+     */
     public Map<String, Object> getProperties() {
       return properties;
     }
 
+    /**
+     * Sets properties.
+     *
+     * @param properties the properties
+     */
     public void setProperties(Map<String, Object> properties) {
       this.properties = properties;
     }
 
+    /**
+     * Is origin boolean.
+     *
+     * @return the boolean
+     */
     @JsonIgnore
     public boolean isOrigin() {
       return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
@@ -423,34 +536,74 @@ public class Graph {
     private String to;
     private String type;
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
       this.id = id;
     }
 
+    /**
+     * Gets from.
+     *
+     * @return the from
+     */
     public String getFrom() {
       return from;
     }
 
+    /**
+     * Sets from.
+     *
+     * @param from the from
+     */
     public void setFrom(String from) {
       this.from = from;
     }
 
+    /**
+     * Gets to.
+     *
+     * @return the to
+     */
     public String getTo() {
       return to;
     }
 
+    /**
+     * Sets to.
+     *
+     * @param to the to
+     */
     public void setTo(String to) {
       this.to = to;
     }
 
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
     public String getType() {
       return type;
     }
 
+    /**
+     * Sets type.
+     *
+     * @param type the type
+     */
     public void setType(String type) {
       this.type = type;
     }

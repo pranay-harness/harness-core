@@ -6,11 +6,26 @@ package software.wings.sm;
  * @author Rishi
  */
 public enum ContextElementType {
-  SERVICE,
-  TAG,
-  HOST,
-  INSTANCE,
-  STANDARD,
-  PARAM,
+  /**
+   * Service context element type.
+   */
+  SERVICE, /**
+            * Tag context element type.
+            */
+  TAG, /**
+        * Host context element type.
+        */
+  HOST, /**
+         * Instance context element type.
+         */
+  INSTANCE, /**
+             * Standard context element type.
+             */
+  STANDARD, /**
+             * Param context element type.
+             */
+  PARAM, /**
+          * Other context element type.
+          */
   OTHER;
 }

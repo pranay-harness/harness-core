@@ -83,42 +83,92 @@ public class EmailState extends State {
     return executionResponse;
   }
 
+  /**
+   * Gets to address.
+   *
+   * @return the to address
+   */
   public String getToAddress() {
     return toAddress;
   }
 
+  /**
+   * Sets to address.
+   *
+   * @param toAddress the to address
+   */
   public void setToAddress(String toAddress) {
     this.toAddress = toAddress;
   }
 
+  /**
+   * Gets cc address.
+   *
+   * @return the cc address
+   */
   public String getCcAddress() {
     return ccAddress;
   }
 
+  /**
+   * Sets cc address.
+   *
+   * @param ccAddress the cc address
+   */
   public void setCcAddress(String ccAddress) {
     this.ccAddress = ccAddress;
   }
 
+  /**
+   * Gets subject.
+   *
+   * @return the subject
+   */
   public String getSubject() {
     return subject;
   }
 
+  /**
+   * Sets subject.
+   *
+   * @param subject the subject
+   */
   public void setSubject(String subject) {
     this.subject = subject;
   }
 
+  /**
+   * Gets body.
+   *
+   * @return the body
+   */
   public String getBody() {
     return body;
   }
 
+  /**
+   * Sets body.
+   *
+   * @param body the body
+   */
   public void setBody(String body) {
     this.body = body;
   }
 
+  /**
+   * Is ignore delivery failure boolean.
+   *
+   * @return the boolean
+   */
   public boolean isIgnoreDeliveryFailure() {
     return ignoreDeliveryFailure;
   }
 
+  /**
+   * Sets ignore delivery failure.
+   *
+   * @param ignoreDeliveryFailure the ignore delivery failure
+   */
   public void setIgnoreDeliveryFailure(boolean ignoreDeliveryFailure) {
     this.ignoreDeliveryFailure = ignoreDeliveryFailure;
   }

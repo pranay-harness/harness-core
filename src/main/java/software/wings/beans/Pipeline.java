@@ -24,22 +24,45 @@ public class Pipeline extends Workflow {
 
   private String cronSchedule;
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<String> getServices() {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(List<String> services) {
     this.services = services;
   }
 
+  /**
+   * Gets cron schedule.
+   *
+   * @return the cron schedule
+   */
   public String getCronSchedule() {
     return cronSchedule;
   }
 
+  /**
+   * Sets cron schedule.
+   *
+   * @param cronSchedule the cron schedule
+   */
   public void setCronSchedule(String cronSchedule) {
     this.cronSchedule = cronSchedule;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String description;
@@ -56,75 +79,163 @@ public class Pipeline extends Workflow {
 
     private Builder() {}
 
+    /**
+     * A pipeline builder.
+     *
+     * @return the builder
+     */
     public static Builder aPipeline() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With graph builder.
+     *
+     * @param graph the graph
+     * @return the builder
+     */
     public Builder withGraph(Graph graph) {
       this.graph = graph;
       return this;
     }
 
+    /**
+     * Add services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder addServices(String... services) {
       this.services.addAll(asList(services));
       return this;
     }
 
+    /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<String> services) {
       this.services = services;
       return this;
     }
 
+    /**
+     * With cron schedule builder.
+     *
+     * @param cronSchedule the cron schedule
+     * @return the builder
+     */
     public Builder withCronSchedule(String cronSchedule) {
       this.cronSchedule = cronSchedule;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aPipeline()
           .withName(name)
@@ -141,6 +252,11 @@ public class Pipeline extends Workflow {
           .withActive(active);
     }
 
+    /**
+     * Build pipeline.
+     *
+     * @return the pipeline
+     */
     public Pipeline build() {
       Pipeline pipeline = new Pipeline();
       pipeline.setName(name);

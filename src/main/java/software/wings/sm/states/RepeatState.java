@@ -182,42 +182,92 @@ public class RepeatState extends State {
     }
   }
 
+  /**
+   * Gets repeat element type.
+   *
+   * @return the repeat element type
+   */
   public ContextElementType getRepeatElementType() {
     return repeatElementType;
   }
 
+  /**
+   * Sets repeat element type.
+   *
+   * @param repeatElementType the repeat element type
+   */
   public void setRepeatElementType(ContextElementType repeatElementType) {
     this.repeatElementType = repeatElementType;
   }
 
+  /**
+   * Gets repeat element expression.
+   *
+   * @return the repeat element expression
+   */
   public String getRepeatElementExpression() {
     return repeatElementExpression;
   }
 
+  /**
+   * Sets repeat element expression.
+   *
+   * @param repeatElementExpression the repeat element expression
+   */
   public void setRepeatElementExpression(String repeatElementExpression) {
     this.repeatElementExpression = repeatElementExpression;
   }
 
+  /**
+   * Gets execution strategy.
+   *
+   * @return the execution strategy
+   */
   public ExecutionStrategy getExecutionStrategy() {
     return executionStrategy;
   }
 
+  /**
+   * Sets execution strategy.
+   *
+   * @param executionStrategy the execution strategy
+   */
   public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
     this.executionStrategy = executionStrategy;
   }
 
+  /**
+   * Gets execution strategy expression.
+   *
+   * @return the execution strategy expression
+   */
   public String getExecutionStrategyExpression() {
     return executionStrategyExpression;
   }
 
+  /**
+   * Sets execution strategy expression.
+   *
+   * @param executionStrategyExpression the execution strategy expression
+   */
   public void setExecutionStrategyExpression(String executionStrategyExpression) {
     this.executionStrategyExpression = executionStrategyExpression;
   }
 
+  /**
+   * Gets repeat transition state name.
+   *
+   * @return the repeat transition state name
+   */
   public String getRepeatTransitionStateName() {
     return repeatTransitionStateName;
   }
 
+  /**
+   * Sets repeat transition state name.
+   *
+   * @param repeatTransitionStateName the repeat transition state name
+   */
   public void setRepeatTransitionStateName(String repeatTransitionStateName) {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }
@@ -230,18 +280,38 @@ public class RepeatState extends State {
     private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
 
+    /**
+     * Gets repeat elements.
+     *
+     * @return the repeat elements
+     */
     public List<ContextElement> getRepeatElements() {
       return repeatElements;
     }
 
+    /**
+     * Sets repeat elements.
+     *
+     * @param repeatElements the repeat elements
+     */
     public void setRepeatElements(List<ContextElement> repeatElements) {
       this.repeatElements = repeatElements;
     }
 
+    /**
+     * Gets repeat element index.
+     *
+     * @return the repeat element index
+     */
     public Integer getRepeatElementIndex() {
       return repeatElementIndex;
     }
 
+    /**
+     * Sets repeat element index.
+     *
+     * @param repeatElementIndex the repeat element index
+     */
     public void setRepeatElementIndex(Integer repeatElementIndex) {
       this.repeatElementIndex = repeatElementIndex;
     }

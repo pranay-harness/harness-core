@@ -18,7 +18,6 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -133,6 +132,13 @@ public class StateMachineExecutor {
     return triggerExecution(stateMachine, stateExecutionInstance);
   }
 
+  /**
+   * Trigger execution state execution instance.
+   *
+   * @param stateMachine           the state machine
+   * @param stateExecutionInstance the state execution instance
+   * @return the state execution instance
+   */
   StateExecutionInstance triggerExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
     if (stateExecutionInstance.getStateName() == null) {
       throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateName");
@@ -359,8 +365,10 @@ public class StateMachineExecutor {
     private StateMachineExecutor stateMachineExecutor;
 
     /**
-     * @param context
-     * @param stateMachineExecutor
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param stateMachineExecutor the state machine executor
      */
     public SmExecutionDispatcher(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
       this.context = context;

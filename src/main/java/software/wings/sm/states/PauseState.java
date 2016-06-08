@@ -31,7 +31,9 @@ public class PauseState extends EmailState {
     setStateType(StateType.PAUSE.getType());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionResponse emailExecutionResponse = super.execute(context);

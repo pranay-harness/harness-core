@@ -34,6 +34,9 @@ import javax.ws.rs.BadRequestException;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ReleaseServiceTest extends WingsBaseTest {
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
   private static final ReleaseBuilder releaseBuilder =
       aRelease().withAppId(APP_ID).withReleaseName("REL1").withDescription("RELEASE 1");

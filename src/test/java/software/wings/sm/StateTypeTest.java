@@ -24,6 +24,12 @@ public class StateTypeTest {
     return data;
   }
 
+  /**
+   * Should create new instance for.
+   *
+   * @param stateTypeName the state type name
+   * @throws Exception the exception
+   */
   @Test
   @Parameters(method = "getData")
   @TestCaseName("{method}{0}")

@@ -40,25 +40,53 @@ import java.util.List;
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StateType implements StateTypeDescriptor {
-  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS),
+  /**
+   * Repeat state type.
+   */
+  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS), /**
+                                                      * Fork state type.
+                                                      */
   FORK(ForkState.class, ORCHESTRATION_STENCILS),
 
   // STATE_MACHINE(ORCHESTRATION_STENCILS),
 
-  WAIT(WaitState.class, ORCHESTRATION_STENCILS),
+  /**
+   * Wait state type.
+   */
+  WAIT(WaitState.class, ORCHESTRATION_STENCILS), /**
+                                                  * Pause state type.
+                                                  */
   PAUSE(PauseState.class, ORCHESTRATION_STENCILS),
 
+  /**
+   * Start state type.
+   */
   // DEPLOY(ORCHESTRATION_STENCILS),
-  START(StartState.class, ORCHESTRATION_STENCILS),
+  START(StartState.class, ORCHESTRATION_STENCILS), /**
+                                                    * Stop state type.
+                                                    */
   STOP(StopState.class, ORCHESTRATION_STENCILS),
   // RESTART(ORCHESTRATION_STENCILS),
 
+  /**
+   * Http state type.
+   */
   HTTP(HttpState.class, ORCHESTRATION_STENCILS), // SPLUNK(ORCHESTRATION_STENCILS),
                                                  // APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  /**
+   * Email state type.
+   */
   EMAIL(EmailState.class, ORCHESTRATION_STENCILS),
 
-  BUILD(BuildState.class, PIPELINE_STENCILS),
-  ENV_STATE(EnvState.class, PIPELINE_STENCILS),
+  /**
+   * Build state type.
+   */
+  BUILD(BuildState.class, PIPELINE_STENCILS), /**
+                                               * Env state state type.
+                                               */
+  ENV_STATE(EnvState.class, PIPELINE_STENCILS), /**
+                                                 * Approval state type.
+                                                 */
   APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

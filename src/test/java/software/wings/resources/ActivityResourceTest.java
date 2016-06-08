@@ -38,22 +38,49 @@ import javax.ws.rs.core.GenericType;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class ActivityResourceTest {
+  /**
+   * The constant ACTIVITY_SERVICE.
+   */
   public static final ActivityService ACTIVITY_SERVICE = mock(ActivityService.class);
+  /**
+   * The constant LOG_SERVICE.
+   */
   public static final LogService LOG_SERVICE = mock(LogService.class);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
 
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
+  /**
+   * The constant ACTIVITY_ID.
+   */
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
+  /**
+   * The constant ENV_ID.
+   */
   public static final String ENV_ID = "ENV_ID";
 
+  /**
+   * The constant ACTUAL_ACTIVITY.
+   */
   public static final Activity ACTUAL_ACTIVITY = anActivity().build();
+  /**
+   * The constant ACTUAL_LOG.
+   */
   public static final Log ACTUAL_LOG = aLog().build();
 
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override

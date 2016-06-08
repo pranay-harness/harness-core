@@ -6,9 +6,20 @@ package software.wings.beans;
  * @author Rishi
  */
 public enum HttpMethod {
-  HEAD,
-  GET,
-  POST,
-  PUT,
+  /**
+   * Head http method.
+   */
+  HEAD, /**
+         * Get http method.
+         */
+  GET, /**
+        * Post http method.
+        */
+  POST, /**
+         * Put http method.
+         */
+  PUT, /**
+        * Delete http method.
+        */
   DELETE;
 }

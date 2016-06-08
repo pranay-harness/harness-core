@@ -35,11 +35,26 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/11/16.
  */
 public class ArtifactCollectEventListenerTest extends WingsBaseTest {
+  /**
+   * The constant ARTIFACT_ID.
+   */
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
+  /**
+   * The constant ARTIFACT_FILE.
+   */
   public static final ArtifactFile ARTIFACT_FILE =
       anArtifactFile().withAppId(APP_ID).withUuid("ARTIFACT_FILE_ID").build();
+  /**
+   * The constant RELEASE_ID.
+   */
   public static final String RELEASE_ID = "RELEASE_ID";
+  /**
+   * The constant ARTIFACT_SOURCE_NAME.
+   */
   public static final String ARTIFACT_SOURCE_NAME = "job1";
   private final ArtifactSource ARTIFACT_SOURCE = aJenkinsArtifactSource().withSourceName(ARTIFACT_SOURCE_NAME).build();
 
@@ -51,6 +66,9 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
 
   @Mock private ArtifactCollectorService artifactCollectorService;
 
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override

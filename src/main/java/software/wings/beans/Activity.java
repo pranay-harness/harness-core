@@ -25,98 +25,218 @@ public class Activity extends Base {
   private String artifactName;
   private Status status = Status.RUNNING;
 
+  /**
+   * Gets environment id.
+   *
+   * @return the environment id
+   */
   public String getEnvironmentId() {
     return environmentId;
   }
 
+  /**
+   * Sets environment id.
+   *
+   * @param environmentId the environment id
+   */
   public void setEnvironmentId(String environmentId) {
     this.environmentId = environmentId;
   }
 
+  /**
+   * Gets command name.
+   *
+   * @return the command name
+   */
   public String getCommandName() {
     return commandName;
   }
 
+  /**
+   * Sets command name.
+   *
+   * @param commandName the command name
+   */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
   }
 
+  /**
+   * Gets command type.
+   *
+   * @return the command type
+   */
   public String getCommandType() {
     return commandType;
   }
 
+  /**
+   * Sets command type.
+   *
+   * @param commandType the command type
+   */
   public void setCommandType(String commandType) {
     this.commandType = commandType;
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
   public String getServiceId() {
     return serviceId;
   }
 
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }
 
+  /**
+   * Gets service name.
+   *
+   * @return the service name
+   */
   public String getServiceName() {
     return serviceName;
   }
 
+  /**
+   * Sets service name.
+   *
+   * @param serviceName the service name
+   */
   public void setServiceName(String serviceName) {
     this.serviceName = serviceName;
   }
 
+  /**
+   * Gets service template id.
+   *
+   * @return the service template id
+   */
   public String getServiceTemplateId() {
     return serviceTemplateId;
   }
 
+  /**
+   * Sets service template id.
+   *
+   * @param serviceTemplateId the service template id
+   */
   public void setServiceTemplateId(String serviceTemplateId) {
     this.serviceTemplateId = serviceTemplateId;
   }
 
+  /**
+   * Gets service template name.
+   *
+   * @return the service template name
+   */
   public String getServiceTemplateName() {
     return serviceTemplateName;
   }
 
+  /**
+   * Sets service template name.
+   *
+   * @param serviceTemplateName the service template name
+   */
   public void setServiceTemplateName(String serviceTemplateName) {
     this.serviceTemplateName = serviceTemplateName;
   }
 
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }
 
+  /**
+   * Gets release id.
+   *
+   * @return the release id
+   */
   public String getReleaseId() {
     return releaseId;
   }
 
+  /**
+   * Sets release id.
+   *
+   * @param releaseId the release id
+   */
   public void setReleaseId(String releaseId) {
     this.releaseId = releaseId;
   }
 
+  /**
+   * Gets release name.
+   *
+   * @return the release name
+   */
   public String getReleaseName() {
     return releaseName;
   }
 
+  /**
+   * Sets release name.
+   *
+   * @param releaseName the release name
+   */
   public void setReleaseName(String releaseName) {
     this.releaseName = releaseName;
   }
 
+  /**
+   * Gets artifact name.
+   *
+   * @return the artifact name
+   */
   public String getArtifactName() {
     return artifactName;
   }
 
+  /**
+   * Sets artifact name.
+   *
+   * @param artifactName the artifact name
+   */
   public void setArtifactName(String artifactName) {
     this.artifactName = artifactName;
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public Status getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(Status status) {
     this.status = status;
   }
@@ -145,7 +265,21 @@ public class Activity extends Base {
   /**
    * The Enum Status.
    */
-  public enum Status { RUNNING, COMPLETED, ABORTED, FAILED }
+  public enum Status {
+    /**
+     * Running status.
+     */
+    RUNNING, /**
+              * Completed status.
+              */
+    COMPLETED, /**
+                * Aborted status.
+                */
+    ABORTED, /**
+              * Failed status.
+              */
+    FAILED
+  }
 
   /**
    * The Class Builder.

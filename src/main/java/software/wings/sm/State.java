@@ -11,6 +11,9 @@ import java.util.Map;
  * @author Rishi
  */
 public abstract class State implements Serializable {
+  /**
+   * The constant serialVersionUID.
+   */
   protected static final long serialVersionUID = 1L;
 
   private String name;
@@ -28,18 +31,38 @@ public abstract class State implements Serializable {
     this.stateType = stateType;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets state type.
+   *
+   * @return the state type
+   */
   public String getStateType() {
     return stateType;
   }
 
+  /**
+   * Sets state type.
+   *
+   * @param stateType the state type
+   */
   public void setStateType(String stateType) {
     this.stateType = stateType;
   }

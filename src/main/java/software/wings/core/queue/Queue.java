@@ -47,7 +47,7 @@ public interface Queue<T> {
   /**
    * Count in queue, running true or false.
    *
-   * @return count
+   * @return count long
    */
   long count();
 
@@ -55,7 +55,7 @@ public interface Queue<T> {
    * Count in queue.
    *
    * @param running count running messages or not running
-   * @return count
+   * @return count long
    */
   long count(final boolean running);
 

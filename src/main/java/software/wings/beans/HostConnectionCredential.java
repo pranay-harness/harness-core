@@ -11,34 +11,74 @@ public class HostConnectionCredential {
   private String appUser;
   private String appUserPassword;
 
+  /**
+   * Gets ssh user.
+   *
+   * @return the ssh user
+   */
   public String getSshUser() {
     return sshUser;
   }
 
+  /**
+   * Sets ssh user.
+   *
+   * @param sshUser the ssh user
+   */
   public void setSshUser(String sshUser) {
     this.sshUser = sshUser;
   }
 
+  /**
+   * Gets ssh password.
+   *
+   * @return the ssh password
+   */
   public String getSshPassword() {
     return sshPassword;
   }
 
+  /**
+   * Sets ssh password.
+   *
+   * @param sshPassword the ssh password
+   */
   public void setSshPassword(String sshPassword) {
     this.sshPassword = sshPassword;
   }
 
+  /**
+   * Gets app user.
+   *
+   * @return the app user
+   */
   public String getAppUser() {
     return appUser;
   }
 
+  /**
+   * Sets app user.
+   *
+   * @param appUser the app user
+   */
   public void setAppUser(String appUser) {
     this.appUser = appUser;
   }
 
+  /**
+   * Gets app user password.
+   *
+   * @return the app user password
+   */
   public String getAppUserPassword() {
     return appUserPassword;
   }
 
+  /**
+   * Sets app user password.
+   *
+   * @param appUserPassword the app user password
+   */
   public void setAppUserPassword(String appUserPassword) {
     this.appUserPassword = appUserPassword;
   }

@@ -51,5 +51,16 @@ public interface SshExecutor {
   /**
    * The Enum ExecutorType.
    */
-  enum ExecutorType { PASSWORD_AUTH, KEY_AUTH, BASTION_HOST }
+  enum ExecutorType {
+    /**
+     * Password auth executor type.
+     */
+    PASSWORD_AUTH, /**
+                    * Key auth executor type.
+                    */
+    KEY_AUTH, /**
+               * Bastion host executor type.
+               */
+    BASTION_HOST
+  }
 }

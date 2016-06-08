@@ -18,46 +18,99 @@ public class ExecutionResponse {
   private String errorMessage;
   private StateExecutionData stateExecutionData;
 
+  /**
+   * Is asynch boolean.
+   *
+   * @return the boolean
+   */
   public boolean isAsynch() {
     return asynch;
   }
 
+  /**
+   * Sets asynch.
+   *
+   * @param asynch the asynch
+   */
   public void setAsynch(boolean asynch) {
     this.asynch = asynch;
   }
 
+  /**
+   * Gets correlation ids.
+   *
+   * @return the correlation ids
+   */
   public List<String> getCorrelationIds() {
     return correlationIds;
   }
 
+  /**
+   * Sets correlation ids.
+   *
+   * @param correlationIds the correlation ids
+   */
   public void setCorrelationIds(List<String> correlationIds) {
     this.correlationIds = correlationIds;
   }
 
+  /**
+   * Gets state execution data.
+   *
+   * @return the state execution data
+   */
   public StateExecutionData getStateExecutionData() {
     return stateExecutionData;
   }
 
+  /**
+   * Sets state execution data.
+   *
+   * @param stateExecutionData the state execution data
+   */
   public void setStateExecutionData(StateExecutionData stateExecutionData) {
     this.stateExecutionData = stateExecutionData;
   }
 
+  /**
+   * Gets execution status.
+   *
+   * @return the execution status
+   */
   public ExecutionStatus getExecutionStatus() {
     return executionStatus;
   }
 
+  /**
+   * Sets execution status.
+   *
+   * @param executionStatus the execution status
+   */
   public void setExecutionStatus(ExecutionStatus executionStatus) {
     this.executionStatus = executionStatus;
   }
 
+  /**
+   * Gets error message.
+   *
+   * @return the error message
+   */
   public String getErrorMessage() {
     return errorMessage;
   }
 
+  /**
+   * Sets error message.
+   *
+   * @param errorMessage the error message
+   */
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private boolean asynch;
     private List<String> correlationIds = Lists.newArrayList();
@@ -67,40 +120,86 @@ public class ExecutionResponse {
 
     private Builder() {}
 
+    /**
+     * An execution response builder.
+     *
+     * @return the builder
+     */
     public static Builder anExecutionResponse() {
       return new Builder();
     }
 
+    /**
+     * With asynch builder.
+     *
+     * @param asynch the asynch
+     * @return the builder
+     */
     public Builder withAsynch(boolean asynch) {
       this.asynch = asynch;
       return this;
     }
 
+    /**
+     * Add correlation ids builder.
+     *
+     * @param correlationIds the correlation ids
+     * @return the builder
+     */
     public Builder addCorrelationIds(String... correlationIds) {
       this.correlationIds.addAll(asList(correlationIds));
       return this;
     }
 
+    /**
+     * With correlation ids builder.
+     *
+     * @param correlationIds the correlation ids
+     * @return the builder
+     */
     public Builder withCorrelationIds(List<String> correlationIds) {
       this.correlationIds = correlationIds;
       return this;
     }
 
+    /**
+     * With execution status builder.
+     *
+     * @param executionStatus the execution status
+     * @return the builder
+     */
     public Builder withExecutionStatus(ExecutionStatus executionStatus) {
       this.executionStatus = executionStatus;
       return this;
     }
 
+    /**
+     * With error message builder.
+     *
+     * @param errorMessage the error message
+     * @return the builder
+     */
     public Builder withErrorMessage(String errorMessage) {
       this.errorMessage = errorMessage;
       return this;
     }
 
+    /**
+     * With state execution data builder.
+     *
+     * @param stateExecutionData the state execution data
+     * @return the builder
+     */
     public Builder withStateExecutionData(StateExecutionData stateExecutionData) {
       this.stateExecutionData = stateExecutionData;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anExecutionResponse()
           .withAsynch(asynch)
@@ -110,6 +209,11 @@ public class ExecutionResponse {
           .withStateExecutionData(stateExecutionData);
     }
 
+    /**
+     * Build execution response.
+     *
+     * @return the execution response
+     */
     public ExecutionResponse build() {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setAsynch(asynch);

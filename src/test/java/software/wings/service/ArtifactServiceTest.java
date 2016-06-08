@@ -41,8 +41,17 @@ import javax.validation.ConstraintViolationException;
  * Created by peeyushaggarwal on 4/4/16.
  */
 public class ArtifactServiceTest extends WingsBaseTest {
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
+  /**
+   * The constant RELEASE_ID.
+   */
   public static final String RELEASE_ID = "RELEASE_ID";
+  /**
+   * The constant SERVICE_ID.
+   */
   public static final String SERVICE_ID = "SERVICE_ID";
   @Mock private FileService fileService;
 

@@ -80,6 +80,11 @@ public class HttpServletResponseCopier extends HttpServletResponseWrapper {
     }
   }
 
+  /**
+   * Get copy byte [ ].
+   *
+   * @return the byte [ ]
+   */
   public byte[] getCopy() {
     if (copier != null) {
       return copier.getCopy();

@@ -15,8 +15,17 @@ import software.wings.rules.WingsRule;
  * Created by anubhaw on 4/28/16.
  */
 public abstract class WingsBaseTest {
+  /**
+   * The Test name.
+   */
   @Rule public TestName testName = new TestName();
+  /**
+   * The Wings rule.
+   */
   @Rule public WingsRule wingsRule = new WingsRule();
+  /**
+   * The Mockito rule.
+   */
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   /**

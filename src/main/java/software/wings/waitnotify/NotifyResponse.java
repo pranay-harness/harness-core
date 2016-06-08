@@ -44,26 +44,56 @@ public class NotifyResponse<T extends Serializable> extends Base {
     setResponse(response);
   }
 
+  /**
+   * Gets response.
+   *
+   * @return the response
+   */
   public T getResponse() {
     return response;
   }
 
+  /**
+   * Sets response.
+   *
+   * @param response the response
+   */
   public void setResponse(T response) {
     this.response = response;
   }
 
+  /**
+   * Gets expiry ts.
+   *
+   * @return the expiry ts
+   */
   public Date getExpiryTs() {
     return new Date(expiryTs.getTime());
   }
 
+  /**
+   * Sets expiry ts.
+   *
+   * @param expiryTs the expiry ts
+   */
   public void setExpiryTs(Date expiryTs) {
     this.expiryTs = new Date(expiryTs.getTime());
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public ExecutionStatus getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(ExecutionStatus status) {
     this.status = status;
   }

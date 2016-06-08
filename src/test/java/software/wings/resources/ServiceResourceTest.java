@@ -36,9 +36,15 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/23/16.
  */
 public class ServiceResourceTest {
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
   private static final ServiceResourceService RESOURCE_SERVICE = mock(ServiceResourceService.class);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ServiceResource(RESOURCE_SERVICE))

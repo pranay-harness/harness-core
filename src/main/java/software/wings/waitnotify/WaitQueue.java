@@ -38,18 +38,38 @@ public class WaitQueue extends Base {
     this.correlationId = correlationId;
   }
 
+  /**
+   * Gets wait instance id.
+   *
+   * @return the wait instance id
+   */
   public String getWaitInstanceId() {
     return waitInstanceId;
   }
 
+  /**
+   * Sets wait instance id.
+   *
+   * @param waitInstanceId the wait instance id
+   */
   public void setWaitInstanceId(String waitInstanceId) {
     this.waitInstanceId = waitInstanceId;
   }
 
+  /**
+   * Gets correlation id.
+   *
+   * @return the correlation id
+   */
   public String getCorrelationId() {
     return correlationId;
   }
 
+  /**
+   * Sets correlation id.
+   *
+   * @param correlationId the correlation id
+   */
   public void setCorrelationId(String correlationId) {
     this.correlationId = correlationId;
   }

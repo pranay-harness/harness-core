@@ -55,10 +55,20 @@ public class ReleaseResource {
     this.releaseService = releaseService;
   }
 
+  /**
+   * Sets release service.
+   *
+   * @param releaseService the release service
+   */
   public void setReleaseService(ReleaseService releaseService) {
     this.releaseService = releaseService;
   }
 
+  /**
+   * Sets app service.
+   *
+   * @param appService the app service
+   */
   public void setAppService(AppService appService) {
     this.appService = appService;
   }

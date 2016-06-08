@@ -32,46 +32,101 @@ public class Release extends Base {
 
   private Status status = Status.ACTIVE;
 
+  /**
+   * Gets release name.
+   *
+   * @return the release name
+   */
   public String getReleaseName() {
     return releaseName;
   }
 
+  /**
+   * Sets release name.
+   *
+   * @param releaseName the release name
+   */
   public void setReleaseName(String releaseName) {
     this.releaseName = releaseName;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets target date.
+   *
+   * @return the target date
+   */
   public long getTargetDate() {
     return targetDate;
   }
 
+  /**
+   * Sets target date.
+   *
+   * @param targetDate the target date
+   */
   public void setTargetDate(long targetDate) {
     this.targetDate = targetDate;
   }
 
+  /**
+   * Gets artifact sources.
+   *
+   * @return the artifact sources
+   */
   public List<ArtifactSource> getArtifactSources() {
     return artifactSources;
   }
 
+  /**
+   * Sets artifact sources.
+   *
+   * @param artifactSources the artifact sources
+   */
   public void setArtifactSources(List<ArtifactSource> artifactSources) {
     this.artifactSources = artifactSources;
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public Status getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(Status status) {
     this.status = status;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   @JsonProperty("services")
   public Set<Service> getServices() {
     return artifactSources.stream()
@@ -140,8 +195,15 @@ public class Release extends Base {
    * The Enum Status.
    */
   public enum Status {
-    ACTIVE,
-    INACTIVE,
+    /**
+     * Active status.
+     */
+    ACTIVE, /**
+             * Inactive status.
+             */
+    INACTIVE, /**
+               * Finalized status.
+               */
     FINALIZED;
   }
 

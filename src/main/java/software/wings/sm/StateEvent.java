@@ -6,10 +6,23 @@ package software.wings.sm;
  * @author Rishi
  */
 public enum StateEvent {
-  SUCCESS,
-  FAILURE,
-  ABORT,
-  PAUSE,
-  CONTINUE,
+  /**
+   * Success state event.
+   */
+  SUCCESS, /**
+            * Failure state event.
+            */
+  FAILURE, /**
+            * Abort state event.
+            */
+  ABORT, /**
+          * Pause state event.
+          */
+  PAUSE, /**
+          * Continue state event.
+          */
+  CONTINUE, /**
+             * Retry state event.
+             */
   RETRY;
 }

@@ -14,6 +14,9 @@ import java.util.Comparator;
  * @author Rishi
  */
 public class CatalogItem {
+  /**
+   * The constant displayOrderComparator.
+   */
   public static final Comparator<CatalogItem> displayOrderComparator = new Comparator<CatalogItem>() {
 
     @Override
@@ -34,22 +37,47 @@ public class CatalogItem {
   private String displayText;
   private Integer displayOrder;
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets value.
+   *
+   * @return the value
+   */
   public String getValue() {
     return value;
   }
 
+  /**
+   * Sets value.
+   *
+   * @param value the value
+   */
   public void setValue(String value) {
     this.value = value;
   }
 
+  /**
+   * Gets display text.
+   *
+   * @return the display text
+   */
   public String getDisplayText() {
     if (displayText == null) {
       return name;
@@ -57,14 +85,29 @@ public class CatalogItem {
     return displayText;
   }
 
+  /**
+   * Sets display text.
+   *
+   * @param displayText the display text
+   */
   public void setDisplayText(String displayText) {
     this.displayText = displayText;
   }
 
+  /**
+   * Gets display order.
+   *
+   * @return the display order
+   */
   public Integer getDisplayOrder() {
     return displayOrder;
   }
 
+  /**
+   * Sets display order.
+   *
+   * @param displayOrder the display order
+   */
   public void setDisplayOrder(Integer displayOrder) {
     this.displayOrder = displayOrder;
   }

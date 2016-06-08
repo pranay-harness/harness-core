@@ -48,18 +48,38 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     this.workflowExecutionId = workflowExecutionId;
   }
 
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
   public String getAppId() {
     return appId;
   }
 
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }
 
+  /**
+   * Gets workflow execution id.
+   *
+   * @return the workflow execution id
+   */
   public String getWorkflowExecutionId() {
     return workflowExecutionId;
   }
 
+  /**
+   * Sets workflow execution id.
+   *
+   * @param workflowExecutionId the workflow execution id
+   */
   public void setWorkflowExecutionId(String workflowExecutionId) {
     this.workflowExecutionId = workflowExecutionId;
   }

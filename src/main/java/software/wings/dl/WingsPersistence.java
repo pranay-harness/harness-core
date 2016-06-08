@@ -294,6 +294,11 @@ public interface WingsPersistence {
    */
   GridFSBucket getOrCreateGridFSBucket(String bucketName);
 
+  /**
+   * Gets datastore.
+   *
+   * @return the datastore
+   */
   Datastore getDatastore();
 
   /**

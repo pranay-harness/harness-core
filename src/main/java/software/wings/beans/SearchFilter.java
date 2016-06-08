@@ -16,26 +16,56 @@ public class SearchFilter {
   private Object[] fieldValues;
   private Operator op;
 
+  /**
+   * Gets field name.
+   *
+   * @return the field name
+   */
   public String getFieldName() {
     return fieldName;
   }
 
+  /**
+   * Sets field name.
+   *
+   * @param fieldName the field name
+   */
   public void setFieldName(String fieldName) {
     this.fieldName = fieldName;
   }
 
+  /**
+   * Gets op.
+   *
+   * @return the op
+   */
   public Operator getOp() {
     return op;
   }
 
+  /**
+   * Sets op.
+   *
+   * @param op the op
+   */
   public void setOp(Operator op) {
     this.op = op;
   }
 
+  /**
+   * Get field values object [ ].
+   *
+   * @return the object [ ]
+   */
   public Object[] getFieldValues() {
     return fieldValues;
   }
 
+  /**
+   * Sets field values.
+   *
+   * @param fieldValues the field values
+   */
   public void setFieldValues(Object... fieldValues) {
     this.fieldValues = fieldValues;
   }
@@ -92,7 +122,30 @@ public class SearchFilter {
   /**
    * The Enum Operator.
    */
-  public enum Operator { EQ, LT, GT, CONTAINS, STARTS_WITH, IN, NOT_IN }
+  public enum Operator {
+    /**
+     * Eq operator.
+     */
+    EQ, /**
+         * Lt operator.
+         */
+    LT, /**
+         * Gt operator.
+         */
+    GT, /**
+         * Contains operator.
+         */
+    CONTAINS, /**
+               * Starts with operator.
+               */
+    STARTS_WITH, /**
+                  * In operator.
+                  */
+    IN, /**
+         * Not in operator.
+         */
+    NOT_IN
+  }
 
   /**
    * The Class Builder.

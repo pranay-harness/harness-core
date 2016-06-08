@@ -19,10 +19,20 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     super(CommandUnitType.COPY_ARTIFACT);
   }
 
+  /**
+   * Gets artifact id.
+   *
+   * @return the artifact id
+   */
   public String getArtifactId() {
     return artifactId;
   }
 
+  /**
+   * Sets artifact id.
+   *
+   * @param artifactId the artifact id
+   */
   public void setArtifactId(String artifactId) {
     this.artifactId = artifactId;
   }

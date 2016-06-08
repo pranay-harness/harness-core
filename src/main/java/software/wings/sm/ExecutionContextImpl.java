@@ -57,10 +57,20 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
   }
 
+  /**
+   * Gets state machine.
+   *
+   * @return the state machine
+   */
   public StateMachine getStateMachine() {
     return stateMachine;
   }
 
+  /**
+   * Gets state execution instance.
+   *
+   * @return the state execution instance
+   */
   public StateExecutionInstance getStateExecutionInstance() {
     return stateExecutionInstance;
   }

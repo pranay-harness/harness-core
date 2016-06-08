@@ -23,6 +23,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class HostExpressionProcessor implements ExpressionProcessor {
+  /**
+   * The Expression start pattern.
+   */
   static final String EXPRESSION_START_PATTERN = "hosts()";
   private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";
   @Inject private HostService hostService;

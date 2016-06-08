@@ -37,10 +37,20 @@ public class StartState extends State {
     return new ExecutionResponse();
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
   public String getServiceId() {
     return serviceId;
   }
 
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }

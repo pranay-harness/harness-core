@@ -136,18 +136,38 @@ public class StateMachine extends Base {
     }
   }
 
+  /**
+   * Gets initial state name.
+   *
+   * @return the initial state name
+   */
   public String getInitialStateName() {
     return initialStateName;
   }
 
+  /**
+   * Sets initial state name.
+   *
+   * @param initialStateName the initial state name
+   */
   public void setInitialStateName(String initialStateName) {
     this.initialStateName = initialStateName;
   }
 
+  /**
+   * Gets states.
+   *
+   * @return the states
+   */
   public List<State> getStates() {
     return states;
   }
 
+  /**
+   * Sets states.
+   *
+   * @param states the states
+   */
   public void setStates(List<State> states) {
     this.states = states;
   }
@@ -166,10 +186,20 @@ public class StateMachine extends Base {
     return state;
   }
 
+  /**
+   * Gets transitions.
+   *
+   * @return the transitions
+   */
   public List<Transition> getTransitions() {
     return transitions;
   }
 
+  /**
+   * Sets transitions.
+   *
+   * @param transitions the transitions
+   */
   public void setTransitions(List<Transition> transitions) {
     this.transitions = transitions;
   }
@@ -188,12 +218,19 @@ public class StateMachine extends Base {
     return transition;
   }
 
+  /**
+   * Gets initial state.
+   *
+   * @return the initial state
+   */
   public State getInitialState() {
     Map<String, State> statesMap = getStatesMap();
     return statesMap.get(initialStateName);
   }
 
   /**
+   * Gets states map.
+   *
    * @return map to state to stateNames.
    */
   public Map<String, State> getStatesMap() {
@@ -261,6 +298,8 @@ public class StateMachine extends Base {
   }
 
   /**
+   * Gets transition flow map.
+   *
    * @return a transition flow map describing transition types to list of states.
    */
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
@@ -411,26 +450,56 @@ public class StateMachine extends Base {
     return true;
   }
 
+  /**
+   * Gets origin id.
+   *
+   * @return the origin id
+   */
   public String getOriginId() {
     return originId;
   }
 
+  /**
+   * Sets origin id.
+   *
+   * @param originId the origin id
+   */
   public void setOriginId(String originId) {
     this.originId = originId;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets graph.
+   *
+   * @return the graph
+   */
   public Graph getGraph() {
     return graph;
   }
 
+  /**
+   * Sets graph.
+   *
+   * @param graph the graph
+   */
   public void setGraph(Graph graph) {
     this.graph = graph;
   }

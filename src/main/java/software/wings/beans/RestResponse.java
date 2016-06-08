@@ -32,10 +32,20 @@ public class RestResponse<T> extends RestRequest<T> {
     super(resource);
   }
 
+  /**
+   * Gets response messages.
+   *
+   * @return the response messages
+   */
   public List<ResponseMessage> getResponseMessages() {
     return responseMessages;
   }
 
+  /**
+   * Sets response messages.
+   *
+   * @param responseMessages the response messages
+   */
   public void setResponseMessages(List<ResponseMessage> responseMessages) {
     this.responseMessages = responseMessages;
   }

@@ -23,6 +23,9 @@ import javax.inject.Inject;
  * The Class JenkinsTest.
  */
 public class JenkinsTest extends WingsBaseTest {
+  /**
+   * The Wire mock rule.
+   */
   @Rule public WireMockRule wireMockRule = new WireMockRule(8089);
   @Inject private JenkinsFactory jenkinsFactory;
   private Jenkins jenkins;

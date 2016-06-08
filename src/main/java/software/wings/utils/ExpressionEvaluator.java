@@ -24,10 +24,18 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public class ExpressionEvaluator {
+  /**
+   * The constant wingsVariablePattern.
+   */
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /**
+   * Gets instance.
+   *
+   * @return the instance
+   */
   public static ExpressionEvaluator getInstance() {
     return instance;
   }

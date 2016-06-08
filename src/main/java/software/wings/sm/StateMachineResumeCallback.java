@@ -38,18 +38,38 @@ public class StateMachineResumeCallback implements NotifyCallback {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
 
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
   public String getAppId() {
     return appId;
   }
 
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }
 
+  /**
+   * Gets state execution instance id.
+   *
+   * @return the state execution instance id
+   */
   public String getStateExecutionInstanceId() {
     return stateExecutionInstanceId;
   }
 
+  /**
+   * Sets state execution instance id.
+   *
+   * @param stateExecutionInstanceId the state execution instance id
+   */
   public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }

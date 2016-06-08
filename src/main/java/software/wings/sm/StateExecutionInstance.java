@@ -43,114 +43,254 @@ public class StateExecutionInstance extends Base {
   private Long startTs;
   private Long endTs;
 
+  /**
+   * Gets parent instance id.
+   *
+   * @return the parent instance id
+   */
   public String getParentInstanceId() {
     return parentInstanceId;
   }
 
+  /**
+   * Sets parent instance id.
+   *
+   * @param parentInstanceId the parent instance id
+   */
   public void setParentInstanceId(String parentInstanceId) {
     this.parentInstanceId = parentInstanceId;
   }
 
+  /**
+   * Gets clone instance id.
+   *
+   * @return the clone instance id
+   */
   public String getCloneInstanceId() {
     return cloneInstanceId;
   }
 
+  /**
+   * Sets clone instance id.
+   *
+   * @param cloneInstanceId the clone instance id
+   */
   public void setCloneInstanceId(String cloneInstanceId) {
     this.cloneInstanceId = cloneInstanceId;
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public ExecutionStatus getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(ExecutionStatus status) {
     this.status = status;
   }
 
+  /**
+   * Gets state name.
+   *
+   * @return the state name
+   */
   public String getStateName() {
     return stateName;
   }
 
+  /**
+   * Sets state name.
+   *
+   * @param stateName the state name
+   */
   public void setStateName(String stateName) {
     this.stateName = stateName;
   }
 
+  /**
+   * Gets notify id.
+   *
+   * @return the notify id
+   */
   public String getNotifyId() {
     return notifyId;
   }
 
+  /**
+   * Sets notify id.
+   *
+   * @param notifyId the notify id
+   */
   public void setNotifyId(String notifyId) {
     this.notifyId = notifyId;
   }
 
+  /**
+   * Gets state machine id.
+   *
+   * @return the state machine id
+   */
   public String getStateMachineId() {
     return stateMachineId;
   }
 
+  /**
+   * Sets state machine id.
+   *
+   * @param stateMachineId the state machine id
+   */
   public void setStateMachineId(String stateMachineId) {
     this.stateMachineId = stateMachineId;
   }
 
+  /**
+   * Gets start ts.
+   *
+   * @return the start ts
+   */
   public Long getStartTs() {
     return startTs;
   }
 
+  /**
+   * Sets start ts.
+   *
+   * @param startTs the start ts
+   */
   public void setStartTs(Long startTs) {
     this.startTs = startTs;
   }
 
+  /**
+   * Gets end ts.
+   *
+   * @return the end ts
+   */
   public Long getEndTs() {
     return endTs;
   }
 
+  /**
+   * Sets end ts.
+   *
+   * @param endTs the end ts
+   */
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
   }
 
+  /**
+   * Gets execution uuid.
+   *
+   * @return the execution uuid
+   */
   public String getExecutionUuid() {
     return executionUuid;
   }
 
+  /**
+   * Sets execution uuid.
+   *
+   * @param executionUuid the execution uuid
+   */
   public void setExecutionUuid(String executionUuid) {
     this.executionUuid = executionUuid;
   }
 
+  /**
+   * Gets prev instance id.
+   *
+   * @return the prev instance id
+   */
   public String getPrevInstanceId() {
     return prevInstanceId;
   }
 
+  /**
+   * Sets prev instance id.
+   *
+   * @param prevInstanceId the prev instance id
+   */
   public void setPrevInstanceId(String prevInstanceId) {
     this.prevInstanceId = prevInstanceId;
   }
 
+  /**
+   * Gets next instance id.
+   *
+   * @return the next instance id
+   */
   public String getNextInstanceId() {
     return nextInstanceId;
   }
 
+  /**
+   * Sets next instance id.
+   *
+   * @param nextInstanceId the next instance id
+   */
   public void setNextInstanceId(String nextInstanceId) {
     this.nextInstanceId = nextInstanceId;
   }
 
+  /**
+   * Gets context elements.
+   *
+   * @return the context elements
+   */
   public ArrayDeque<ContextElement> getContextElements() {
     return contextElements;
   }
 
+  /**
+   * Sets context elements.
+   *
+   * @param contextElements the context elements
+   */
   public void setContextElements(WingsDeque<ContextElement> contextElements) {
     this.contextElements = contextElements;
   }
 
+  /**
+   * Gets state execution map.
+   *
+   * @return the state execution map
+   */
   public Map<String, StateExecutionData> getStateExecutionMap() {
     return stateExecutionMap;
   }
 
+  /**
+   * Sets state execution map.
+   *
+   * @param stateExecutionMap the state execution map
+   */
   public void setStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
     this.stateExecutionMap = stateExecutionMap;
   }
 
+  /**
+   * Gets callback.
+   *
+   * @return the callback
+   */
   public StateMachineExecutionCallback getCallback() {
     return callback;
   }
 
+  /**
+   * Sets callback.
+   *
+   * @param callback the callback
+   */
   public void setCallback(StateMachineExecutionCallback callback) {
     this.callback = callback;
   }

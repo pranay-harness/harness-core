@@ -6,6 +6,11 @@ package software.wings.beans;
  * @author Rishi
  */
 public enum ReadPref {
-  NORMAL,
+  /**
+   * Normal read pref.
+   */
+  NORMAL, /**
+           * Critical read pref.
+           */
   CRITICAL;
 }

@@ -45,17 +45,38 @@ import javax.ws.rs.core.MediaType;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class ReleaseResourceTest extends WingsBaseTest {
+  /**
+   * The constant RELEASE_SERVICE.
+   */
   public static final ReleaseService RELEASE_SERVICE = mock(ReleaseService.class);
+  /**
+   * The constant APP_SERVICE.
+   */
   public static final AppService APP_SERVICE = mock(AppService.class);
 
+  /**
+   * The constant releaseResource.
+   */
   public static final ReleaseResource releaseResource = new ReleaseResource(RELEASE_SERVICE, APP_SERVICE);
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder().addResource(releaseResource).addProvider(WingsExceptionMapper.class).build();
 
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
+  /**
+   * The constant RELEASE_ID.
+   */
   public static final String RELEASE_ID = "RELEASE_ID";
 
+  /**
+   * The constant releaseBuilder.
+   */
   public static final ReleaseBuilder releaseBuilder = aRelease()
                                                           .withReleaseName("REL1")
                                                           .withAppId(APP_ID)
@@ -63,6 +84,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                                           .withDescription("RELEASE 1")
                                                           .withTargetDate(System.currentTimeMillis() + 1000);
 
+  /**
+   * The Collector.
+   */
   @Rule
   public Verifier collector = new Verifier() {
     @Override

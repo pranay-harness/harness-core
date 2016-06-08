@@ -14,18 +14,38 @@ public class Infra extends Base {
   private InfraType infraType;
   private String envId;
 
+  /**
+   * Gets infra type.
+   *
+   * @return the infra type
+   */
   public InfraType getInfraType() {
     return infraType;
   }
 
+  /**
+   * Sets infra type.
+   *
+   * @param infraType the infra type
+   */
   public void setInfraType(InfraType infraType) {
     this.infraType = infraType;
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
@@ -59,7 +79,21 @@ public class Infra extends Base {
   /**
    * The Enum InfraType.
    */
-  public static enum InfraType { STATIC, AWS, AZURE, CONTAINER }
+  public static enum InfraType {
+    /**
+     * Static infra type.
+     */
+    STATIC, /**
+             * Aws infra type.
+             */
+    AWS, /**
+          * Azure infra type.
+          */
+    AZURE, /**
+            * Container infra type.
+            */
+    CONTAINER
+  }
 
   /**
    * The Class InfraBuilder.

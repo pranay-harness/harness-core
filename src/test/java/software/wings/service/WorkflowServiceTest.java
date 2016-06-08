@@ -68,6 +68,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   private Environment env;
 
+  /**
+   * Gets environment.
+   *
+   * @return the environment
+   */
   public Environment getEnvironment() {
     if (env == null) {
       env = wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());

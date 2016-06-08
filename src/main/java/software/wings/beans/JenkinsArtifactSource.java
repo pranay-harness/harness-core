@@ -40,34 +40,74 @@ public class JenkinsArtifactSource extends ArtifactSource {
         .collect(toSet());
   }
 
+  /**
+   * Gets jenkins setting id.
+   *
+   * @return the jenkins setting id
+   */
   public String getJenkinsSettingId() {
     return jenkinsSettingId;
   }
 
+  /**
+   * Sets jenkins setting id.
+   *
+   * @param jenkinsSettingId the jenkins setting id
+   */
   public void setJenkinsSettingId(String jenkinsSettingId) {
     this.jenkinsSettingId = jenkinsSettingId;
   }
 
+  /**
+   * Gets jobname.
+   *
+   * @return the jobname
+   */
   public String getJobname() {
     return jobname;
   }
 
+  /**
+   * Sets jobname.
+   *
+   * @param jobname the jobname
+   */
   public void setJobname(String jobname) {
     this.jobname = jobname;
   }
 
+  /**
+   * Gets artifact path services.
+   *
+   * @return the artifact path services
+   */
   public List<ArtifactPathServiceEntry> getArtifactPathServices() {
     return artifactPathServices;
   }
 
+  /**
+   * Sets artifact path services.
+   *
+   * @param artifactPathServices the artifact path services
+   */
   public void setArtifactPathServices(List<ArtifactPathServiceEntry> artifactPathServices) {
     this.artifactPathServices = artifactPathServices;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }

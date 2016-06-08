@@ -27,10 +27,20 @@ public class HostElement implements ContextElement {
     return hostName;
   }
 
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }
@@ -52,24 +62,48 @@ public class HostElement implements ContextElement {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String hostName;
 
     private Builder() {}
 
+    /**
+     * A host element builder.
+     *
+     * @return the builder
+     */
     public static Builder aHostElement() {
       return new Builder();
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aHostElement().withHostName(hostName);
     }
 
+    /**
+     * Build host element.
+     *
+     * @return the host element
+     */
     public HostElement build() {
       HostElement hostElement = new HostElement();
       hostElement.setHostName(hostName);

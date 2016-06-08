@@ -48,18 +48,38 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
     super(req);
   }
 
+  /**
+   * Gets response.
+   *
+   * @return the response
+   */
   public List<T> getResponse() {
     return response;
   }
 
+  /**
+   * Sets response.
+   *
+   * @param response the response
+   */
   public void setResponse(List<T> response) {
     this.response = LazyList.isEmpty(response) ? Collections.emptyList() : response;
   }
 
+  /**
+   * Gets total.
+   *
+   * @return the total
+   */
   public long getTotal() {
     return total;
   }
 
+  /**
+   * Sets total.
+   *
+   * @param total the total
+   */
   public void setTotal(long total) {
     this.total = total;
   }

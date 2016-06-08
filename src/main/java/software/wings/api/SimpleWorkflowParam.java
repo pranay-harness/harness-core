@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.api;
 
 import software.wings.beans.ExecutionStrategy;
@@ -10,16 +11,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author Rishi
+ * The type Simple workflow param.
  *
+ * @author Rishi
  */
 public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
   private ExecutionStrategy executionStrategy;
 
+  /**
+   * Gets execution strategy.
+   *
+   * @return the execution strategy
+   */
   public ExecutionStrategy getExecutionStrategy() {
     return executionStrategy;
   }
 
+  /**
+   * Sets execution strategy.
+   *
+   * @param executionStrategy the execution strategy
+   */
   public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
     this.executionStrategy = executionStrategy;
   }

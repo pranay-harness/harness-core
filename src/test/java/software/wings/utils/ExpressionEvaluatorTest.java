@@ -102,18 +102,38 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     private Address address;
     private int age;
 
+    /**
+     * Gets address.
+     *
+     * @return the address
+     */
     public Address getAddress() {
       return address;
     }
 
+    /**
+     * Sets address.
+     *
+     * @param address the address
+     */
     public void setAddress(Address address) {
       this.address = address;
     }
 
+    /**
+     * Gets age.
+     *
+     * @return the age
+     */
     public int getAge() {
       return age;
     }
 
+    /**
+     * Sets age.
+     *
+     * @param age the age
+     */
     public void setAge(int age) {
       this.age = age;
     }
@@ -125,10 +145,20 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   public static class Address {
     private String city;
 
+    /**
+     * Gets city.
+     *
+     * @return the city
+     */
     public String getCity() {
       return city;
     }
 
+    /**
+     * Sets city.
+     *
+     * @param city the city
+     */
     public void setCity(String city) {
       this.city = city;
     }

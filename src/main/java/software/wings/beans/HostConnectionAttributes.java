@@ -31,34 +31,74 @@ public class HostConnectionAttributes extends SettingValue {
     super(type);
   }
 
+  /**
+   * Gets access type.
+   *
+   * @return the access type
+   */
   public AccessType getAccessType() {
     return accessType;
   }
 
+  /**
+   * Sets access type.
+   *
+   * @param accessType the access type
+   */
   public void setAccessType(AccessType accessType) {
     this.accessType = accessType;
   }
 
+  /**
+   * Gets connection type.
+   *
+   * @return the connection type
+   */
   public ConnectionType getConnectionType() {
     return connectionType;
   }
 
+  /**
+   * Sets connection type.
+   *
+   * @param connectionType the connection type
+   */
   public void setConnectionType(ConnectionType connectionType) {
     this.connectionType = connectionType;
   }
 
+  /**
+   * Gets key.
+   *
+   * @return the key
+   */
   public String getKey() {
     return key;
   }
 
+  /**
+   * Sets key.
+   *
+   * @param key the key
+   */
   public void setKey(String key) {
     this.key = key;
   }
 
+  /**
+   * Gets key passphrase.
+   *
+   * @return the key passphrase
+   */
   public String getKeyPassphrase() {
     return keyPassphrase;
   }
 
+  /**
+   * Sets key passphrase.
+   *
+   * @param keyPassphrase the key passphrase
+   */
   public void setKeyPassphrase(String keyPassphrase) {
     this.keyPassphrase = keyPassphrase;
   }
@@ -92,18 +132,36 @@ public class HostConnectionAttributes extends SettingValue {
    * The Enum AccessType.
    */
   public enum AccessType {
-    USER_PASSWORD,
-    USER_PASSWORD_SU_APP_USER,
-    USER_PASSWORD_SUDO_APP_USER,
-    KEY,
-    KEY_SU_APP_USER,
+    /**
+     * User password access type.
+     */
+    USER_PASSWORD, /**
+                    * User password su app user access type.
+                    */
+    USER_PASSWORD_SU_APP_USER, /**
+                                * User password sudo app user access type.
+                                */
+    USER_PASSWORD_SUDO_APP_USER, /**
+                                  * Key access type.
+                                  */
+    KEY, /**
+          * Key su app user access type.
+          */
+    KEY_SU_APP_USER, /**
+                      * Key sudo app user access type.
+                      */
     KEY_SUDO_APP_USER
   }
 
   /**
    * The Enum ConnectionType.
    */
-  public enum ConnectionType { SSH }
+  public enum ConnectionType {
+    /**
+     * Ssh connection type.
+     */
+    SSH
+  }
 
   /**
    * The Class HostConnectionAttributesBuilder.

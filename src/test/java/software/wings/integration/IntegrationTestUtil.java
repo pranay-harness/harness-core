@@ -13,7 +13,6 @@ import java.util.Random;
 /**
  * Created by anubhaw on 5/11/16.
  */
-
 public class IntegrationTestUtil {
   private static Random random = new Random();
 

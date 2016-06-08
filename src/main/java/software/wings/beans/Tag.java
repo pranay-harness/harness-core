@@ -31,66 +31,146 @@ public class Tag extends Base {
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets auto tagging rule.
+   *
+   * @return the auto tagging rule
+   */
   public String getAutoTaggingRule() {
     return autoTaggingRule;
   }
 
+  /**
+   * Sets auto tagging rule.
+   *
+   * @param autoTaggingRule the auto tagging rule
+   */
   public void setAutoTaggingRule(String autoTaggingRule) {
     this.autoTaggingRule = autoTaggingRule;
   }
 
+  /**
+   * Is root tag boolean.
+   *
+   * @return the boolean
+   */
   public boolean isRootTag() {
     return rootTag;
   }
 
+  /**
+   * Sets root tag.
+   *
+   * @param rootTag the root tag
+   */
   public void setRootTag(boolean rootTag) {
     this.rootTag = rootTag;
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets children.
+   *
+   * @return the children
+   */
   public List<Tag> getChildren() {
     return children;
   }
 
+  /**
+   * Sets children.
+   *
+   * @param children the children
+   */
   public void setChildren(List<Tag> children) {
     this.children = children;
   }
 
+  /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
   public List<ConfigFile> getConfigFiles() {
     return configFiles;
   }
 
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Gets root tag id.
+   *
+   * @return the root tag id
+   */
   public String getRootTagId() {
     return rootTagId;
   }
 
+  /**
+   * Sets root tag id.
+   *
+   * @param rootTagId the root tag id
+   */
   public void setRootTagId(String rootTagId) {
     this.rootTagId = rootTagId;
   }

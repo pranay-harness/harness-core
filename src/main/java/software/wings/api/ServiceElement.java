@@ -25,6 +25,11 @@ public class ServiceElement implements ContextElement {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
@@ -34,10 +39,20 @@ public class ServiceElement implements ContextElement {
     return ContextElementType.SERVICE;
   }
 
+  /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
   public String getUuid() {
     return uuid;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }

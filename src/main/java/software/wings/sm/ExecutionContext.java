@@ -29,6 +29,11 @@ public interface ExecutionContext {
    */
   public Object evaluateExpression(String expression, StateExecutionData stateExecutionData);
 
+  /**
+   * Gets state execution data.
+   *
+   * @return the state execution data
+   */
   public StateExecutionData getStateExecutionData();
 
   /**

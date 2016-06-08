@@ -104,6 +104,11 @@ public class DatabaseModule extends AbstractModule {
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
   }
 
+  /**
+   * Gets primary datastore.
+   *
+   * @return the primary datastore
+   */
   public Datastore getPrimaryDatastore() {
     return primaryDatastore;
   }

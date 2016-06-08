@@ -33,26 +33,56 @@ public class Transition implements Serializable {
     this.toState = toState;
   }
 
+  /**
+   * Gets from state.
+   *
+   * @return the from state
+   */
   public State getFromState() {
     return fromState;
   }
 
+  /**
+   * Sets from state.
+   *
+   * @param fromState the from state
+   */
   public void setFromState(State fromState) {
     this.fromState = fromState;
   }
 
+  /**
+   * Gets to state.
+   *
+   * @return the to state
+   */
   public State getToState() {
     return toState;
   }
 
+  /**
+   * Sets to state.
+   *
+   * @param toState the to state
+   */
   public void setToState(State toState) {
     this.toState = toState;
   }
 
+  /**
+   * Gets transition type.
+   *
+   * @return the transition type
+   */
   public TransitionType getTransitionType() {
     return transitionType;
   }
 
+  /**
+   * Sets transition type.
+   *
+   * @param transitionType the transition type
+   */
   public void setTransitionType(TransitionType transitionType) {
     this.transitionType = transitionType;
   }

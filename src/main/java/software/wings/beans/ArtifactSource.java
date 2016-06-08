@@ -38,30 +38,65 @@ public abstract class ArtifactSource {
     this.sourceType = sourceType;
   }
 
+  /**
+   * Gets source name.
+   *
+   * @return the source name
+   */
   public String getSourceName() {
     return sourceName;
   }
 
+  /**
+   * Sets source name.
+   *
+   * @param sourceName the source name
+   */
   public void setSourceName(String sourceName) {
     this.sourceName = sourceName;
   }
 
+  /**
+   * Gets source type.
+   *
+   * @return the source type
+   */
   public SourceType getSourceType() {
     return sourceType;
   }
 
+  /**
+   * Sets source type.
+   *
+   * @param sourceType the source type
+   */
   public void setSourceType(SourceType sourceType) {
     this.sourceType = sourceType;
   }
 
+  /**
+   * Gets artifact type.
+   *
+   * @return the artifact type
+   */
   public ArtifactType getArtifactType() {
     return artifactType;
   }
 
+  /**
+   * Sets artifact type.
+   *
+   * @param artifactType the artifact type
+   */
   public void setArtifactType(ArtifactType artifactType) {
     this.artifactType = artifactType;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public abstract Set<Service> getServices();
 
   /* (non-Javadoc)
@@ -103,10 +138,50 @@ public abstract class ArtifactSource {
   /**
    * The Enum SourceType.
    */
-  public enum SourceType { JENKINS, NEXUS, ARTIFACTORY, SVN, GIT, HTTP, FILE_UPLOAD }
+  public enum SourceType {
+    /**
+     * Jenkins source type.
+     */
+    JENKINS, /**
+              * Nexus source type.
+              */
+    NEXUS, /**
+            * Artifactory source type.
+            */
+    ARTIFACTORY, /**
+                  * Svn source type.
+                  */
+    SVN, /**
+          * Git source type.
+          */
+    GIT, /**
+          * Http source type.
+          */
+    HTTP, /**
+           * File upload source type.
+           */
+    FILE_UPLOAD
+  }
 
   /**
    * The Enum ArtifactType.
    */
-  public enum ArtifactType { JAR, WAR, TAR, ZIP, OTHER }
+  public enum ArtifactType {
+    /**
+     * Jar artifact type.
+     */
+    JAR, /**
+          * War artifact type.
+          */
+    WAR, /**
+          * Tar artifact type.
+          */
+    TAR, /**
+          * Zip artifact type.
+          */
+    ZIP, /**
+          * Other artifact type.
+          */
+    OTHER
+  }
 }

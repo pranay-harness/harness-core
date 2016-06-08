@@ -31,7 +31,13 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/11/16.
  */
 public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorService {
+  /**
+   * The constant BUILD_NO.
+   */
   public static final String BUILD_NO = "buildNo";
+  /**
+   * The Settings service.
+   */
   @Inject SettingsService settingsService;
   @Inject private FileService fileService;
   @Inject private JenkinsFactory jenkinsFactory;

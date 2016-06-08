@@ -36,10 +36,20 @@ public class ApprovalState extends State {
     return new ExecutionResponse();
   }
 
+  /**
+   * Gets group name.
+   *
+   * @return the group name
+   */
   public String getGroupName() {
     return groupName;
   }
 
+  /**
+   * Sets group name.
+   *
+   * @param groupName the group name
+   */
   public void setGroupName(String groupName) {
     this.groupName = groupName;
   }

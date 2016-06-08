@@ -26,6 +26,8 @@ import javax.ws.rs.core.UriInfo;
  */
 
 /**
+ * The type Wings persistence test.
+ *
  * @author Rishi
  */
 public class WingsPersistenceTest extends WingsBaseTest {
@@ -156,10 +158,20 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public static class TestEntity extends Base {
     private String fieldA;
 
+    /**
+     * Gets field a.
+     *
+     * @return the field a
+     */
     public String getFieldA() {
       return fieldA;
     }
 
+    /**
+     * Sets field a.
+     *
+     * @param fieldA the field a
+     */
     public void setFieldA(String fieldA) {
       this.fieldA = fieldA;
     }

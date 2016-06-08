@@ -27,8 +27,17 @@ import javax.ws.rs.core.UriInfo;
  * @author Rishi
  */
 public class PageRequest<T> {
+  /**
+   * The constant UNLIMITED.
+   */
   public static final String UNLIMITED = "UNLIMITED";
+  /**
+   * The constant DEFAULT_UNLIMITED.
+   */
   public static final int DEFAULT_UNLIMITED = 1000;
+  /**
+   * The constant DEFAULT_PAGE_SIZE.
+   */
   public static final int DEFAULT_PAGE_SIZE = 50;
 
   @DefaultValue("0") @QueryParam("offset") private String offset;
@@ -69,50 +78,110 @@ public class PageRequest<T> {
     this.fieldsExcluded = req.fieldsExcluded;
   }
 
+  /**
+   * Gets uri info.
+   *
+   * @return the uri info
+   */
   public UriInfo getUriInfo() {
     return uriInfo;
   }
 
+  /**
+   * Sets uri info.
+   *
+   * @param uriInfo the uri info
+   */
   public void setUriInfo(UriInfo uriInfo) {
     this.uriInfo = uriInfo;
   }
 
+  /**
+   * Gets offset.
+   *
+   * @return the offset
+   */
   public String getOffset() {
     return offset;
   }
 
+  /**
+   * Sets offset.
+   *
+   * @param offset the offset
+   */
   public void setOffset(String offset) {
     this.offset = offset;
   }
 
+  /**
+   * Gets limit.
+   *
+   * @return the limit
+   */
   public String getLimit() {
     return limit;
   }
 
+  /**
+   * Sets limit.
+   *
+   * @param limit the limit
+   */
   public void setLimit(String limit) {
     this.limit = limit;
   }
 
+  /**
+   * Gets page size.
+   *
+   * @return the page size
+   */
   public int getPageSize() {
     return Misc.asInt(limit, DEFAULT_PAGE_SIZE);
   }
 
+  /**
+   * Gets start.
+   *
+   * @return the start
+   */
   public int getStart() {
     return Misc.asInt(offset);
   }
 
+  /**
+   * Is or boolean.
+   *
+   * @return the boolean
+   */
   public boolean isOr() {
     return isOr;
   }
 
+  /**
+   * Sets or.
+   *
+   * @param isOr the is or
+   */
   public void setOr(boolean isOr) {
     this.isOr = isOr;
   }
 
+  /**
+   * Gets fields included.
+   *
+   * @return the fields included
+   */
   public List<String> getFieldsIncluded() {
     return new ArrayList<>(fieldsIncluded);
   }
 
+  /**
+   * Sets fields included.
+   *
+   * @param fieldsIncluded the fields included
+   */
   public void setFieldsIncluded(List<String> fieldsIncluded) {
     this.fieldsIncluded = fieldsIncluded;
   }
@@ -126,10 +195,20 @@ public class PageRequest<T> {
     this.fieldsIncluded.add(fieldsIncluded);
   }
 
+  /**
+   * Gets fields excluded.
+   *
+   * @return the fields excluded
+   */
   public List<String> getFieldsExcluded() {
     return new ArrayList<>(fieldsExcluded);
   }
 
+  /**
+   * Sets fields excluded.
+   *
+   * @param fieldsExcluded the fields excluded
+   */
   public void setFieldsExcluded(List<String> fieldsExcluded) {
     this.fieldsExcluded = fieldsExcluded;
   }
@@ -192,10 +271,20 @@ public class PageRequest<T> {
     }
   }
 
+  /**
+   * Gets filters.
+   *
+   * @return the filters
+   */
   public List<SearchFilter> getFilters() {
     return new ArrayList<>(filters);
   }
 
+  /**
+   * Sets filters.
+   *
+   * @param filters the filters
+   */
   public void setFilters(List<SearchFilter> filters) {
     this.filters = filters;
   }
@@ -209,10 +298,20 @@ public class PageRequest<T> {
     this.filters.add(filter);
   }
 
+  /**
+   * Gets orders.
+   *
+   * @return the orders
+   */
   public List<SortOrder> getOrders() {
     return new ArrayList<>(orders);
   }
 
+  /**
+   * Sets orders.
+   *
+   * @param orders the orders
+   */
   public void setOrders(List<SortOrder> orders) {
     this.orders = orders;
   }

@@ -12,18 +12,38 @@ public class BuildDetails {
   private int number;
   private String revision;
 
+  /**
+   * Gets number.
+   *
+   * @return the number
+   */
   public int getNumber() {
     return number;
   }
 
+  /**
+   * Sets number.
+   *
+   * @param number the number
+   */
   public void setNumber(int number) {
     this.number = number;
   }
 
+  /**
+   * Gets revision.
+   *
+   * @return the revision
+   */
   public String getRevision() {
     return revision;
   }
 
+  /**
+   * Sets revision.
+   *
+   * @param revision the revision
+   */
   public void setRevision(String revision) {
     this.revision = revision;
   }

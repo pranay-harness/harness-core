@@ -27,11 +27,21 @@ import javax.ws.rs.Produces;
 public class AuditResource {
   private AuditService httpAuditService;
 
+  /**
+   * Gets http audit service.
+   *
+   * @return the http audit service
+   */
   @Inject
   public AuditService getHttpAuditService() {
     return httpAuditService;
   }
 
+  /**
+   * Sets http audit service.
+   *
+   * @param httpAuditService the http audit service
+   */
   public void setHttpAuditService(AuditService httpAuditService) {
     this.httpAuditService = httpAuditService;
   }

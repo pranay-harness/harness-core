@@ -25,6 +25,9 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 public class Base {
+  /**
+   * The constant GLOBAL_APP_ID.
+   */
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
   @Id @NotNull(groups = {Update.class}) private String uuid;
@@ -41,58 +44,128 @@ public class Base {
 
   @Indexed private boolean active = true;
 
+  /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
   public String getUuid() {
     return uuid;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
 
+  /**
+   * Gets created by.
+   *
+   * @return the created by
+   */
   public User getCreatedBy() {
     return createdBy;
   }
 
+  /**
+   * Sets created by.
+   *
+   * @param createdBy the created by
+   */
   public void setCreatedBy(User createdBy) {
     this.createdBy = createdBy;
   }
 
+  /**
+   * Gets created at.
+   *
+   * @return the created at
+   */
   public long getCreatedAt() {
     return createdAt;
   }
 
+  /**
+   * Sets created at.
+   *
+   * @param createdAt the created at
+   */
   public void setCreatedAt(long createdAt) {
     this.createdAt = createdAt;
   }
 
+  /**
+   * Gets last updated by.
+   *
+   * @return the last updated by
+   */
   public User getLastUpdatedBy() {
     return lastUpdatedBy;
   }
 
+  /**
+   * Sets last updated by.
+   *
+   * @param lastUpdatedBy the last updated by
+   */
   public void setLastUpdatedBy(User lastUpdatedBy) {
     this.lastUpdatedBy = lastUpdatedBy;
   }
 
+  /**
+   * Gets last updated at.
+   *
+   * @return the last updated at
+   */
   public long getLastUpdatedAt() {
     return lastUpdatedAt;
   }
 
+  /**
+   * Sets last updated at.
+   *
+   * @param lastUpdatedAt the last updated at
+   */
   public void setLastUpdatedAt(long lastUpdatedAt) {
     this.lastUpdatedAt = lastUpdatedAt;
   }
 
+  /**
+   * Is active boolean.
+   *
+   * @return the boolean
+   */
   public boolean isActive() {
     return active;
   }
 
+  /**
+   * Sets active.
+   *
+   * @param active the active
+   */
   public void setActive(boolean active) {
     this.active = active;
   }
 
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
   public String getAppId() {
     return appId;
   }
 
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }

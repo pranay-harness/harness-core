@@ -85,10 +85,20 @@ public class ForkState extends State {
     return executionResponse;
   }
 
+  /**
+   * Gets fork state names.
+   *
+   * @return the fork state names
+   */
   public List<String> getForkStateNames() {
     return forkStateNames;
   }
 
+  /**
+   * Sets fork state names.
+   *
+   * @param forkStateNames the fork state names
+   */
   public void setForkStateNames(List<String> forkStateNames) {
     this.forkStateNames = forkStateNames;
   }

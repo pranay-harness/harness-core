@@ -25,6 +25,9 @@ import javax.ws.rs.core.GenericType;
 public class AppResourceTest {
   private static final AppService appService = mock(AppService.class);
 
+  /**
+   * The constant resources.
+   */
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder().addResource(new AppResource(appService)).build();

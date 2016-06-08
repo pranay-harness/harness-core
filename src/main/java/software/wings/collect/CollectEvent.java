@@ -19,10 +19,20 @@ import java.util.Date;
 public class CollectEvent extends Queuable {
   @Reference(idOnly = true) private Artifact artifact;
 
+  /**
+   * Gets artifact.
+   *
+   * @return the artifact
+   */
   public Artifact getArtifact() {
     return artifact;
   }
 
+  /**
+   * Sets artifact.
+   *
+   * @param artifact the artifact
+   */
   public void setArtifact(Artifact artifact) {
     this.artifact = artifact;
   }

@@ -96,10 +96,20 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     }
   }
 
+  /**
+   * Gets queue.
+   *
+   * @return the queue
+   */
   public Queue<T> getQueue() {
     return queue;
   }
 
+  /**
+   * Sets queue.
+   *
+   * @param queue the queue
+   */
   void setQueue(Queue<T> queue) {
     this.queue = queue;
   }
@@ -111,11 +121,21 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     shouldStop.set(true);
   }
 
+  /**
+   * Sets run once.
+   *
+   * @param runOnce the run once
+   */
   // Package protected for testing
   void setRunOnce(boolean runOnce) {
     this.runOnce = runOnce;
   }
 
+  /**
+   * Sets timer.
+   *
+   * @param timer the timer
+   */
   void setTimer(ScheduledExecutorService timer) {
     this.timer = timer;
   }

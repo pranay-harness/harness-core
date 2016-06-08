@@ -44,42 +44,92 @@ public class AppContainer extends BaseFile {
     super(fileName, md5);
   }
 
+  /**
+   * Is standard boolean.
+   *
+   * @return the boolean
+   */
   public boolean isStandard() {
     return standard;
   }
 
+  /**
+   * Sets standard.
+   *
+   * @param standard the standard
+   */
   public void setStandard(boolean standard) {
     this.standard = standard;
   }
 
+  /**
+   * Gets version.
+   *
+   * @return the version
+   */
   public String getVersion() {
     return version;
   }
 
+  /**
+   * Sets version.
+   *
+   * @param version the version
+   */
   public void setVersion(String version) {
     this.version = version;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets source.
+   *
+   * @return the source
+   */
   public ArtifactSource getSource() {
     return source;
   }
 
+  /**
+   * Sets source.
+   *
+   * @param source the source
+   */
   public void setSource(ArtifactSource source) {
     this.source = source;
   }
 
+  /**
+   * Is standard upload boolean.
+   *
+   * @return the boolean
+   */
   public boolean isStandardUpload() {
     return standardUpload;
   }
 
+  /**
+   * Sets standard upload.
+   *
+   * @param standardUpload the standard upload
+   */
   public void setStandardUpload(boolean standardUpload) {
     this.standardUpload = standardUpload;
   }

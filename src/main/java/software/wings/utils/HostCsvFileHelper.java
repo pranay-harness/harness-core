@@ -36,7 +36,6 @@ import javax.inject.Singleton;
 /**
  * Created by anubhaw on 4/15/16.
  */
-
 @Singleton
 public class HostCsvFileHelper {
   private final Object[] CSVHeader = {

@@ -52,17 +52,47 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
+  /**
+   * The constant DEFAULT_SUDO_PROMPT_PATTERN.
+   */
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
+  /**
+   * The constant LINE_BREAK_PATTERN.
+   */
   public static final String LINE_BREAK_PATTERN = "\\R+";
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
+  /**
+   * The Logger.
+   */
   protected final Logger logger = LoggerFactory.getLogger(getClass());
+  /**
+   * The Session.
+   */
   protected Session session;
+  /**
+   * The Channel.
+   */
   protected Channel channel;
+  /**
+   * The Config.
+   */
   protected SshSessionConfig config;
+  /**
+   * The Output stream.
+   */
   protected OutputStream outputStream;
+  /**
+   * The Input stream.
+   */
   protected InputStream inputStream;
+  /**
+   * The Log service.
+   */
   protected LogService logService;
+  /**
+   * The File service.
+   */
   protected FileService fileService;
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
@@ -70,8 +100,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   /**
    * Instantiates a new abstract ssh executor.
    *
-   * @param logService  the log service
    * @param fileService the file service
+   * @param logService  the log service
    */
   @Inject
   public AbstractSshExecutor(FileService fileService, LogService logService) {

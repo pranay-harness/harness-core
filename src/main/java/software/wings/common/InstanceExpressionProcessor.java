@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -46,6 +45,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessor implements ExpressionProcessor {
+  /**
+   * The Expression start pattern.
+   */
   static final String EXPRESSION_START_PATTERN = "instances()";
   private static final String INSTANCE_EXPR_PROCESSOR = "instanceExpressionProcessor";
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -155,6 +157,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return convertToInstanceElements(instances.getResponse());
   }
 
+  /**
+   * Build page request page request.
+   *
+   * @return the page request
+   */
   PageRequest<ServiceInstance> buildPageRequest() {
     String appId = context.getStateExecutionInstance().getAppId();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
@@ -255,10 +262,20 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
   }
 
+  /**
+   * Sets service instance service.
+   *
+   * @param serviceInstanceService the service instance service
+   */
   void setServiceInstanceService(ServiceInstanceService serviceInstanceService) {
     this.serviceInstanceService = serviceInstanceService;
   }
 
+  /**
+   * Sets service resource service.
+   *
+   * @param serviceResourceService the service resource service
+   */
   void setServiceResourceService(ServiceResourceService serviceResourceService) {
     this.serviceResourceService = serviceResourceService;
   }

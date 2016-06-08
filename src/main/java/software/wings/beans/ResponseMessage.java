@@ -12,26 +12,56 @@ public class ResponseMessage {
   private ResponseTypeEnum errorType;
   private String message;
 
+  /**
+   * Gets code.
+   *
+   * @return the code
+   */
   public String getCode() {
     return code;
   }
 
+  /**
+   * Sets code.
+   *
+   * @param code the code
+   */
   public void setCode(String code) {
     this.code = code;
   }
 
+  /**
+   * Gets error type.
+   *
+   * @return the error type
+   */
   public ResponseTypeEnum getErrorType() {
     return errorType;
   }
 
+  /**
+   * Sets error type.
+   *
+   * @param errorType the error type
+   */
   public void setErrorType(ResponseTypeEnum errorType) {
     this.errorType = errorType;
   }
 
+  /**
+   * Gets message.
+   *
+   * @return the message
+   */
   public String getMessage() {
     return message;
   }
 
+  /**
+   * Sets message.
+   *
+   * @param message the message
+   */
   public void setMessage(String message) {
     this.message = message;
   }
@@ -51,5 +81,16 @@ public class ResponseMessage {
   /**
    * The Enum ResponseTypeEnum.
    */
-  public enum ResponseTypeEnum { INFO, WARN, ERROR }
+  public enum ResponseTypeEnum {
+    /**
+     * Info response type enum.
+     */
+    INFO, /**
+           * Warn response type enum.
+           */
+    WARN, /**
+           * Error response type enum.
+           */
+    ERROR
+  }
 }

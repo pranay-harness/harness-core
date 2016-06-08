@@ -45,6 +45,11 @@ public class ServletOutputStreamCopier extends ServletOutputStream {
     }
   }
 
+  /**
+   * Get copy byte [ ].
+   *
+   * @return the byte [ ]
+   */
   public byte[] getCopy() {
     return copy.toByteArray();
   }

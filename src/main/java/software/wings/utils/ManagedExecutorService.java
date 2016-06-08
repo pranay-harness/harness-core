@@ -128,6 +128,11 @@ public class ManagedExecutorService implements ExecutorService, Managed {
     executorService.execute(command);
   }
 
+  /**
+   * Gets executor service.
+   *
+   * @return the executor service
+   */
   protected ExecutorService getExecutorService() {
     return executorService;
   }
