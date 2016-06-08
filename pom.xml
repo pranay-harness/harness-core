@@ -17,7 +17,7 @@
 
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.site.deploy.skip>true</maven.site.deploy.skip>
-        <dropwizard.version>0.9.1</dropwizard.version>
+        <dropwizard.version>0.9.2</dropwizard.version>
     </properties>
 
     <repositories>
@@ -251,7 +251,7 @@
         <dependency>
             <groupId>com.smoketurner</groupId>
             <artifactId>dropwizard-swagger</artifactId>
-            <version>0.9.1-1</version>
+            <version>0.9.2-3</version>
         </dependency>
 
         <dependency>
