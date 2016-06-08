@@ -26,10 +26,10 @@ public class PersistentLockerTest extends WingsBaseTest {
     boolean acquired2 = persistentLocker.acquireLock("abc", uuid);
     System.out.println("acquired2 : " + acquired2);
 
-    //		boolean released = persistentLocker.releaseLock("abc", uuid);
-    //		System.out.println("released : " + released);
+    // boolean released = persistentLocker.releaseLock("abc", uuid);
+    // System.out.println("released : " + released);
 
-    //		boolean acquired3 = persistentLocker.acquireLock("abc", uuid);
-    //		System.out.println("acquired3 : " + acquired3);
+    // boolean acquired3 = persistentLocker.acquireLock("abc", uuid);
+    // System.out.println("acquired3 : " + acquired3);
   }
 }
