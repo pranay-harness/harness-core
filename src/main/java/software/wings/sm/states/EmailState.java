@@ -53,9 +53,7 @@ public class EmailState extends State {
     super(name, StateType.EMAIL.name());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-   */
+  /** {@inheritDoc} */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionResponse executionResponse = new ExecutionResponse();

@@ -42,34 +42,25 @@ public class AuditServiceImpl implements AuditService {
     this.wingsPersistence = wingsPersistence;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#list(software.wings.dl.PageRequest)
-   */
+  /** {@inheritDoc} */
   @Override
   public PageResponse<AuditHeader> list(PageRequest<AuditHeader> req) {
     return wingsPersistence.query(AuditHeader.class, req);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#read(java.lang.String, java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public AuditHeader read(String appId, String auditHeaderId) {
     return wingsPersistence.get(AuditHeader.class, appId, auditHeaderId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#create(software.wings.audit.AuditHeader)
-   */
+  /** {@inheritDoc} */
   @Override
   public AuditHeader create(AuditHeader header) {
     return wingsPersistence.saveAndGet(AuditHeader.class, header);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#create(software.wings.audit.AuditHeader,
-   * software.wings.audit.AuditHeader.RequestType, byte[])
-   */
+  /** {@inheritDoc} */
   @Override
   public String create(AuditHeader header, RequestType requestType, byte[] httpBody) {
     String fileUuid = savePayload(header.getUuid(), requestType, httpBody);
@@ -96,10 +87,7 @@ public class AuditServiceImpl implements AuditService {
     return fileId;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#updateUser(software.wings.audit.AuditHeader,
-   * software.wings.beans.User)
-   */
+  /** {@inheritDoc} */
   @Override
   public void updateUser(AuditHeader header, User user) {
     Query<AuditHeader> updateQuery =
@@ -109,9 +97,7 @@ public class AuditServiceImpl implements AuditService {
     wingsPersistence.update(updateQuery, updateOperations);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AuditService#finalize(software.wings.audit.AuditHeader, byte[])
-   */
+  /** {@inheritDoc} */
   @Override
   public void finalize(AuditHeader header, byte[] payload) {
     AuditHeader auditHeader = wingsPersistence.get(AuditHeader.class, header.getUuid());

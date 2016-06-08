@@ -26,26 +26,19 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppContainerService#list(software.wings.dl.PageRequest)
-   */
+  /** {@inheritDoc} */
   @Override
   public PageResponse<AppContainer> list(PageRequest<AppContainer> request) {
     return wingsPersistence.query(AppContainer.class, request);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppContainerService#get(java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public AppContainer get(String platformId) {
     return wingsPersistence.get(AppContainer.class, platformId);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppContainerService#save(software.wings.beans.AppContainer, java.io.InputStream,
-   * software.wings.service.intfc.FileService.FileBucket)
-   */
+  /** {@inheritDoc} */
   @Override
   public String save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     String fileId = fileService.saveFile(appContainer, in, fileBucket);
@@ -53,10 +46,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     return wingsPersistence.save(appContainer);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppContainerService#update(java.lang.String, software.wings.beans.AppContainer,
-   * java.io.InputStream, software.wings.service.intfc.FileService.FileBucket)
-   */
+  /** {@inheritDoc} */
   @Override
   public String update(String platformId, AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     AppContainer storedAppContainer = wingsPersistence.get(AppContainer.class, platformId);
@@ -69,9 +59,7 @@ public class AppContainerServiceImpl implements AppContainerService {
     return wingsPersistence.save(appContainer);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppContainerService#delete(java.lang.String)
-   */
+  /** {@inheritDoc} */
   @Override
   public void delete(String appContainerId) {
     Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();

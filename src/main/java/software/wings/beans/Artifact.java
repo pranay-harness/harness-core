@@ -208,9 +208,7 @@ public class Artifact extends Base {
     return null;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
+  /** {@inheritDoc} */
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -226,18 +224,14 @@ public class Artifact extends Base {
         && status == artifact.status;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
+  /** {@inheritDoc} */
   @Override
   public int hashCode() {
     return Objects.hashCode(
         super.hashCode(), release, artifactSourceName, metadata, displayName, revision, artifactFiles, status);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
+  /** {@inheritDoc} */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -289,7 +283,7 @@ public class Artifact extends Base {
    */
   @Retention(RetentionPolicy.RUNTIME)
   @Constraint(validatedBy = ValidArtifact.Validator.class)
-  public static @interface ValidArtifact {
+  public @interface ValidArtifact {
     /**
      * Message.
      *
@@ -315,17 +309,12 @@ public class Artifact extends Base {
     /**
      * The Class Validator.
      */
-    public class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
-      /* (non-Javadoc)
-       * @see javax.validation.ConstraintValidator#initialize(java.lang.annotation.Annotation)
-       */
+    class Validator implements ConstraintValidator<ValidArtifact, Artifact> {
+      /** {@inheritDoc} */
       @Override
       public void initialize(final ValidArtifact validateForUpdate) {}
 
-      /* (non-Javadoc)
-       * @see javax.validation.ConstraintValidator#isValid(java.lang.Object,
-       * javax.validation.ConstraintValidatorContext)
-       */
+      /** {@inheritDoc} */
       @Override
       public boolean isValid(final Artifact bean, final ConstraintValidatorContext constraintValidatorContext) {
         return isNotBlank(bean.getAppId()) && isNotBlank(bean.getRelease().getUuid());
@@ -352,6 +341,7 @@ public class Artifact extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
+    /** Do not instantiate Builder. */
     private Builder() {}
 
     /**
