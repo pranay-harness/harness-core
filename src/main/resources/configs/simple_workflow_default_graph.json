@@ -1,0 +1,50 @@
+{
+  "graphName": "MAIN",
+  "nodes": [
+    {
+      "id": "ORIGIN",
+      "name": "ORIGIN",
+      "type": "ORIGIN",
+      "x": 200,
+      "y": 50,
+      "properties": {}
+    },
+    {
+      "id": "n1",
+      "name": "RepeatByInstances",
+      "type": "REPEAT",
+      "x": 200,
+      "y": 50,
+      "properties": {
+        "repeatElementExpression": "${instances()}",
+        "executionStrategyExpression":"${SIMPLE_WORKFLOW_REPEAT_STRATEGY}"
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Command",
+      "type": "EMAIL",
+      "x": 250,
+      "y": 50,
+      "properties": {
+        "toAddress": "to@abc.com",
+        "ccAddress": "cc@abc.com",
+        "subject": "${instance.name}"
+      }
+    }
+  ],
+  "links": [
+    {
+      "id": "l1",
+      "from": "ORIGIN",
+      "to": "n1",
+      "type": "success"
+    },
+    {
+      "id": "l2",
+      "from": "n1",
+      "to": "n2",
+      "type": "repeat"
+    }
+  ]
+}

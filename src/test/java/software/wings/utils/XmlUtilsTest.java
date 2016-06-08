@@ -36,7 +36,6 @@ public class XmlUtilsTest {
     String expression = "//widget/manufacturer/text()";
     String text = XmlUtils.xpath(content, expression);
 
-    assertThat(text).isNotNull();
     assertThat(text).isEqualTo("abc");
   }
 }

@@ -1,8 +1,14 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.Indexes;
+import software.wings.beans.CommandUnit.ExecutionResult;
+
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -10,10 +16,15 @@ import org.mongodb.morphia.annotations.Entity;
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("activityId")
+                           , @Field("hostName") }))
 public class Log extends Base {
-  private String activityId;
-  private String hostName;
+  @NotEmpty private String activityId;
+  @NotEmpty private String hostName;
+  @NotEmpty private String commandUnitName;
   private String logLine;
+  @NotNull private LogLevel logLevel;
+  private ExecutionResult executionResult;
 
   /**
    * Gets activity id.
@@ -69,16 +80,103 @@ public class Log extends Base {
     this.logLine = logLine;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
+  /**
+   * Gets log level.
+   *
+   * @return the log level
    */
+  public LogLevel getLogLevel() {
+    return logLevel;
+  }
+
+  /**
+   * Sets log level.
+   *
+   * @param logLevel the log level
+   */
+  public void setLogLevel(LogLevel logLevel) {
+    this.logLevel = logLevel;
+  }
+
+  /**
+   * Gets command unit name.
+   *
+   * @return the command unit name
+   */
+  public String getCommandUnitName() {
+    return commandUnitName;
+  }
+
+  /**
+   * Sets command unit name.
+   *
+   * @param commandUnitName the command unit name
+   */
+  public void setCommandUnitName(String commandUnitName) {
+    this.commandUnitName = commandUnitName;
+  }
+
+  /**
+   * Gets execution result.
+   *
+   * @return the execution result
+   */
+  public ExecutionResult getExecutionResult() {
+    return executionResult;
+  }
+
+  /**
+   * Sets execution result.
+   *
+   * @param executionResult the execution result
+   */
+  public void setExecutionResult(ExecutionResult executionResult) {
+    this.executionResult = executionResult;
+  }
+
   @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("activityId", activityId)
-        .add("hostName", hostName)
-        .add("logLine", logLine)
-        .toString();
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(activityId, hostName, commandUnitName, logLine, logLevel, executionResult);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Log other = (Log) obj;
+    return Objects.equals(this.activityId, other.activityId) && Objects.equals(this.hostName, other.hostName)
+        && Objects.equals(this.commandUnitName, other.commandUnitName) && Objects.equals(this.logLine, other.logLine)
+        && Objects.equals(this.logLevel, other.logLevel) && Objects.equals(this.executionResult, other.executionResult);
+  }
+
+  /**
+   * The enum Log level.
+   */
+  public enum LogLevel {
+    /**
+     * Debug log level.
+     */
+    DEBUG, /**
+            * Info log level.
+            */
+    INFO, /**
+           * Warn log level.
+           */
+    WARN, /**
+           * Error log level.
+           */
+    ERROR, /**
+            * Fatal log level.
+            */
+    FATAL
   }
 
   /**
@@ -87,7 +185,10 @@ public class Log extends Base {
   public static final class Builder {
     private String activityId;
     private String hostName;
+    private String commandUnitName;
     private String logLine;
+    private LogLevel logLevel;
+    private ExecutionResult executionResult;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -130,6 +231,17 @@ public class Log extends Base {
     }
 
     /**
+     * With command unit name builder.
+     *
+     * @param commandUnitName the command unit name
+     * @return the builder
+     */
+    public Builder withCommandUnitName(String commandUnitName) {
+      this.commandUnitName = commandUnitName;
+      return this;
+    }
+
+    /**
      * With log line builder.
      *
      * @param logLine the log line
@@ -137,6 +249,28 @@ public class Log extends Base {
      */
     public Builder withLogLine(String logLine) {
       this.logLine = logLine;
+      return this;
+    }
+
+    /**
+     * With log level builder.
+     *
+     * @param logLevel the log level
+     * @return the builder
+     */
+    public Builder withLogLevel(LogLevel logLevel) {
+      this.logLevel = logLevel;
+      return this;
+    }
+
+    /**
+     * With execution result builder.
+     *
+     * @param executionResult the execution result
+     * @return the builder
+     */
+    public Builder withExecutionResult(ExecutionResult executionResult) {
+      this.executionResult = executionResult;
       return this;
     }
 
@@ -226,7 +360,10 @@ public class Log extends Base {
       return aLog()
           .withActivityId(activityId)
           .withHostName(hostName)
+          .withCommandUnitName(commandUnitName)
           .withLogLine(logLine)
+          .withLogLevel(logLevel)
+          .withExecutionResult(executionResult)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -245,7 +382,10 @@ public class Log extends Base {
       Log log = new Log();
       log.setActivityId(activityId);
       log.setHostName(hostName);
+      log.setCommandUnitName(commandUnitName);
       log.setLogLine(logLine);
+      log.setLogLevel(logLevel);
+      log.setExecutionResult(executionResult);
       log.setUuid(uuid);
       log.setAppId(appId);
       log.setCreatedBy(createdBy);

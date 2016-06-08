@@ -42,7 +42,7 @@ public class StateMachineTest extends WingsBaseTest {
     state = new StateSynch("StateC");
     sm.addState(state);
     sm.setInitialStateName("StateA");
-    assertThat(true).as("Validate result").isEqualTo(sm.validate());
+    assertThat(sm.validate()).as("Validate result").isTrue();
   }
 
   /**

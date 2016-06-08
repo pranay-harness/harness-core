@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -105,7 +106,10 @@ public class StateMachineExecutor {
 
     stateExecutionInstance.setCallback(callback);
 
-    return execute(sm, stateExecutionInstance);
+    if (stateExecutionInstance.getStateName() == null) {
+      stateExecutionInstance.setStateName(sm.getInitialStateName());
+    }
+    return triggerExecution(sm, stateExecutionInstance);
   }
 
   /**
@@ -122,9 +126,16 @@ public class StateMachineExecutor {
     if (stateMachine == null) {
       throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateMachine");
     }
-
     if (stateExecutionInstance.getStateName() == null) {
       stateExecutionInstance.setStateName(stateMachine.getInitialStateName());
+    }
+
+    return triggerExecution(stateMachine, stateExecutionInstance);
+  }
+
+  StateExecutionInstance triggerExecution(StateMachine stateMachine, StateExecutionInstance stateExecutionInstance) {
+    if (stateExecutionInstance.getStateName() == null) {
+      throw new WingsException(ErrorConstants.INVALID_ARGUMENT, ErrorConstants.ARGS_NAME, "stateName");
     }
 
     if (stateExecutionInstance.getUuid() == null) {
@@ -238,10 +249,13 @@ public class StateMachineExecutor {
       SpawningExecutionResponse spawningExecutionResponse = (SpawningExecutionResponse) executionResponse;
       if (spawningExecutionResponse.getStateExecutionInstanceList() != null
           && spawningExecutionResponse.getStateExecutionInstanceList().size() > 0) {
-        for (StateExecutionInstance executionInstance : spawningExecutionResponse.getStateExecutionInstanceList()) {
-          executionInstance.setAppId(stateExecutionInstance.getAppId());
-          executionInstance.setExecutionUuid(stateExecutionInstance.getExecutionUuid());
-          execute(sm, executionInstance);
+        for (StateExecutionInstance childStateExecutionInstance :
+            spawningExecutionResponse.getStateExecutionInstanceList()) {
+          childStateExecutionInstance.setUuid(null);
+          childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
+          childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
+          childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getExecutionUuid());
+          triggerExecution(sm, childStateExecutionInstance);
         }
       }
     }
@@ -274,7 +288,7 @@ public class StateMachineExecutor {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
-      return execute(sm, cloned);
+      return triggerExecution(sm, cloned);
     }
 
     return null;
@@ -307,7 +321,7 @@ public class StateMachineExecutor {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
-      return execute(sm, cloned);
+      return triggerExecution(sm, cloned);
     }
     return null;
   }

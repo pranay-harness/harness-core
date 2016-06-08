@@ -68,13 +68,14 @@ public class EmailState extends State {
       String evaluatedBody = context.renderExpression(body);
       emailStateExecutionData.setSubject(evaluatedSubject);
       emailStateExecutionData.setBody(evaluatedBody);
+      logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
       emailNotificationService.send(COMMA_SPLITTER.splitToList(toAddress), COMMA_SPLITTER.splitToList(ccAddress),
           evaluatedSubject, evaluatedBody);
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
       executionResponse.setErrorMessage(e.getMessage());
       executionResponse.setExecutionStatus(ignoreDeliveryFailure ? ExecutionStatus.SUCCESS : ExecutionStatus.ERROR);
-      logger.error("Exception while sending email: " + e);
+      logger.error("Exception while sending email", e);
     }
 
     executionResponse.setStateExecutionData(emailStateExecutionData);

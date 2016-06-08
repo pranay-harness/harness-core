@@ -11,7 +11,7 @@ import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.common.UUIDGenerator.getUuid;
-import static software.wings.core.ssh.executors.SshSessionConfig.SshSessionConfigBuilder.aSshSessionConfig;
+import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import org.assertj.core.api.Assertions;
@@ -66,7 +66,7 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "192.168.1.52";
+  private final String HOST = "192.168.1.106";
   private final Integer PORT = 22;
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";
@@ -170,6 +170,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for session timeout.
    */
   @Test
+  @Ignore
   public void shouldThrowExceptionForSessionTimeout() {
     config.setSshSessionTimeout(1); // 1ms
     executor.init(config);

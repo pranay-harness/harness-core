@@ -14,6 +14,7 @@ public interface ContextElement {
   static final String APP_OBJECT_NAME = "app";
   static final String ENV_OBJECT_NAME = "env";
   static final String HOST_OBJECT_NAME = "host";
+  static final String INSTANCE_OBJECT_NAME = "instance";
 
   public ContextElementType getElementType();
 

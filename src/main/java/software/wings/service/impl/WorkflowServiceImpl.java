@@ -5,12 +5,14 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorConstants.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
+import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -18,7 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
-import software.wings.api.SimpleOrchestrationParams;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgs.OrchestrationType;
@@ -84,8 +86,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#create(software.wings.sm.StateMachine)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public StateMachine create(StateMachine stateMachine) {
@@ -93,24 +95,24 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.saveAndGet(StateMachine.class, stateMachine);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#list(software.wings.dl.PageRequest)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public PageResponse<StateMachine> list(PageRequest<StateMachine> req) {
     return wingsPersistence.query(StateMachine.class, req);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#trigger(java.lang.String, java.lang.String, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public void trigger(String appId, String stateMachineId, String executionUuid) {
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#stencils(software.wings.sm.StateTypeScope[])
+  /**
+   * {@inheritDoc}
    */
   @Override
   public Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes) {
@@ -127,9 +129,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  /**
-   * @return
-   */
   private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
     if (cachedStencils != null) {
       return cachedStencils;
@@ -172,8 +171,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return cachedStencilMap;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#listPipelines(software.wings.dl.PageRequest)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
@@ -189,12 +188,22 @@ public class WorkflowServiceImpl implements WorkflowService {
     return res;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#createWorkflow(java.lang.Class, software.wings.beans.Workflow)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public <T extends Workflow> T createWorkflow(Class<T> cls, T workflow) {
     Graph graph = workflow.getGraph();
+    if (cls == Pipeline.class && graph != null) {
+      try {
+        if (!graph.isLinear()) {
+          throw new WingsException(INVALID_PIPELINE);
+        }
+      } catch (Exception e) {
+        throw new WingsException(INVALID_PIPELINE, e);
+      }
+    }
+
     workflow = wingsPersistence.saveAndGet(cls, workflow);
     if (graph != null) {
       StateMachine stateMachine = new StateMachine(workflow, graph, stencilMap());
@@ -204,8 +213,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflow;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#updateWorkflow(software.wings.beans.Workflow)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public <T extends Workflow> T updateWorkflow(T workflow) {
@@ -218,8 +227,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflow;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#updatePipeline(software.wings.beans.Pipeline)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public Pipeline updatePipeline(Pipeline pipeline) {
@@ -242,8 +251,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pipeline;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#readPipeline(java.lang.String, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId) {
@@ -255,8 +264,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pipeline;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#readLatest(java.lang.String, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public StateMachine readLatest(String appId, String originId, String name) {
@@ -290,16 +299,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.get(StateMachine.class, req);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#listOrchestration(software.wings.dl.PageRequest)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
     return wingsPersistence.query(Orchestration.class, pageRequest);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#updateOrchestration(software.wings.beans.Orchestration)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public Orchestration updateOrchestration(Orchestration orchestration) {
@@ -318,9 +327,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return orchestration;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#readOrchestration(java.lang.String, java.lang.String,
-   * java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public Orchestration readOrchestration(String appId, String envId, String orchestrationId) {
@@ -336,8 +344,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return orchestration;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#listExecutions(software.wings.dl.PageRequest, boolean)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
@@ -355,8 +363,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return res;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#getExecutionDetails(java.lang.String, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
@@ -422,8 +430,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return graph;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#triggerPipelineExecution(java.lang.String, java.lang.String)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
@@ -461,9 +469,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerExecution(workflowExecution, stateMachine, stdParams);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.WorkflowService#triggerOrchestrationExecution(java.lang.String, java.lang.String,
-   * java.util.List)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
@@ -527,6 +534,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs) {
     if (executionArgs.getOrchestrationType() == OrchestrationType.ORCHESTRATED) {
@@ -553,7 +563,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
+  WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
 
@@ -572,14 +582,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    SimpleOrchestrationParams simpleOrchestrationParams = new SimpleOrchestrationParams();
+    SimpleWorkflowParam simpleOrchestrationParams = new SimpleWorkflowParam();
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
-
+    simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
   }
 
-  private Workflow readLatestSimpleWorkflow(String appId, String envId) {
+  Orchestration readLatestSimpleWorkflow(String appId, String envId) {
     PageRequest<Orchestration> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -614,6 +624,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private Orchestration createDefaultSimpleWorkflow(String appId, String envId) {
     Orchestration orchestration = new Orchestration();
+    orchestration.setName(Constants.SIMPLE_ORCHESTRATION_NAME);
+    orchestration.setDescription(Constants.SIMPLE_ORCHESTRATION_DESC);
     orchestration.setWorkflowType(WorkflowType.SIMPLE);
     orchestration.setAppId(appId);
     orchestration.setEnvironment(environmentService.get(appId, envId));
@@ -669,6 +681,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     return pageResponse.getResponse();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
     UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);

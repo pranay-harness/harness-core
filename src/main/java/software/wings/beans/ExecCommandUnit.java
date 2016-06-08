@@ -24,24 +24,44 @@ public class ExecCommandUnit extends CommandUnit {
     super(EXEC);
   }
 
+  /**
+   * Getter for property 'commandPath'.
+   *
+   * @return Value for property 'commandPath'.
+   */
   public String getCommandPath() {
     return commandPath;
   }
 
+  /**
+   * Setter for property 'commandPath'.
+   *
+   * @param commandPath Value to set for property 'commandPath'.
+   */
   public void setCommandPath(String commandPath) {
     this.commandPath = commandPath;
   }
 
+  /**
+   * Getter for property 'commandString'.
+   *
+   * @return Value for property 'commandString'.
+   */
   public String getCommandString() {
     return commandString;
   }
 
+  /**
+   * Setter for property 'commandString'.
+   *
+   * @param commandString Value to set for property 'commandString'.
+   */
   public void setCommandString(String commandString) {
     this.commandString = commandString;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public boolean equals(Object o) {
@@ -53,16 +73,16 @@ public class ExecCommandUnit extends CommandUnit {
     return Objects.equal(commandPath, that.commandPath) && Objects.equal(commandString, that.commandString);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
+  /**
+   * {@inheritDoc}
    */
   @Override
   public int hashCode() {
     return Objects.hashCode(commandPath, commandString);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
+  /**
+   * {@inheritDoc}
    */
   @Override
   public String toString() {
@@ -83,6 +103,9 @@ public class ExecCommandUnit extends CommandUnit {
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
+    /**
+     * Do not instantiate Builder.
+     */
     private Builder() {}
 
     /**

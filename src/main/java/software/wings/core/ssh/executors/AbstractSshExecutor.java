@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
@@ -14,6 +15,7 @@ import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
 import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
 import static software.wings.beans.ErrorConstants.UNREACHABLE_HOST;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.jcraft.jsch.Channel;
@@ -111,9 +113,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private ExecutionResult genericExecute(String command) {
+    ExecutionResult executionResult = FAILURE;
     try {
       ((ChannelExec) channel).setCommand(command);
+      saveExecutionLog(format("Connecting to %s ....", config.getHost()));
       channel.connect();
+      saveExecutionLog(format("Connection to %s established", config.getHost()));
+      saveExecutionLog(format("Execution started for command %s ...", command));
 
       int totalBytesRead = 0;
       byte[] byteBuffer = new byte[1024]; // FIXME: Improve stream reading/writing logic
@@ -138,16 +144,21 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         }
 
         if (channel.isClosed()) {
-          return channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+          executionResult = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+          saveExecutionLog("Command finished with status " + executionResult);
+          return executionResult;
         }
         quietSleep(1000);
       }
-    } catch (JSchException ex) {
-      logger.error("Command execution failed with error " + ex.getMessage());
-      throw new WingsException(normalizeError(ex), ex.getCause());
-    } catch (IOException ex) {
-      logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
+    } catch (JSchException | IOException ex) {
+      if (ex instanceof JSchException) {
+        logger.error("Command execution failed with error " + ex.getMessage());
+        saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
+      } else {
+        logger.error("Exception in reading InputStream " + ex.getMessage());
+        saveExecutionLog("Command execution failed with error " + UNKNOWN_ERROR);
+      }
+      return executionResult;
     } finally {
       destroy();
     }
@@ -175,19 +186,27 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
 
     for (int i = 0; i < lines.length - 1; i++) { // Ignore last line.
-      logService.save(
-          aLog().withAppId(config.getAppId()).withActivityId(config.getExecutionId()).withLogLine(lines[i]).build());
+      saveExecutionLog(lines[i]);
     }
 
     String lastLine = lines[lines.length - 1];
     // last line is processed only if it ends with new line char or stream closed
     if (textEndsAtNewLineChar(text, lastLine) || finishedReading) {
       passwordPromtResponder(lastLine);
-      logService.save(
-          aLog().withAppId(config.getAppId()).withActivityId(config.getExecutionId()).withLogLine(lastLine).build());
+      saveExecutionLog(lastLine);
       return ""; // nothing left to carry over
     }
     return lastLine;
+  }
+
+  private void saveExecutionLog(String line) {
+    logService.save(aLog()
+                        .withAppId(config.getAppId())
+                        .withActivityId(config.getExecutionId())
+                        .withLogLevel(INFO)
+                        .withCommandUnitName(config.getCommandUnitName())
+                        .withLogLine(line)
+                        .build());
   }
 
   private boolean textEndsAtNewLineChar(String text, String lastLine) {
@@ -286,6 +305,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    */
   @Override
   public ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket gridFsBucket) {
+    ExecutionResult executionResult = FAILURE;
     try {
       String command = "scp -t " + remoteFilePath;
       Channel channel = session.openChannel("exec");
@@ -294,11 +314,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       // get I/O streams for remote scp
       OutputStream out = channel.getOutputStream();
       InputStream in = channel.getInputStream();
+
+      saveExecutionLog(format("Connecting to %s ....", config.getHost()));
       channel.connect();
 
       if (checkAck(in) != 0) {
         logger.error("SCP connection initiation failed");
+        saveExecutionLog("SCP connection initiation failed");
         return FAILURE;
+      } else {
+        saveExecutionLog(format("Connection to %s established", config.getHost()));
       }
       GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
 
@@ -313,30 +338,35 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       out.write(command.getBytes(UTF_8));
       out.flush();
       if (checkAck(in) != 0) {
-        return FAILURE;
+        saveExecutionLog("SCP connection initiation failed");
+        return executionResult;
       }
+      saveExecutionLog("Begin file transfer");
       fileService.downloadToStream(gridFsFileId, out, gridFsBucket);
       out.write(new byte[1], 0, 1);
       out.flush();
 
       if (checkAck(in) != 0) {
-        logger.error("SCP connection initiation failed");
-        return FAILURE;
+        saveExecutionLog("File transfer failed");
+        logger.error("File transfer failed");
+        return executionResult;
       }
+      executionResult = SUCCESS;
+      saveExecutionLog("File successfully transferred");
       out.close();
       channel.disconnect();
       session.disconnect();
-    } catch (FileNotFoundException ex) {
-      logger.error("file [" + gridFsFileId + "] could not be found");
-      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
-    } catch (IOException ex) {
-      logger.error("Exception in reading InputStream");
-      throw new WingsException(UNKNOWN_ERROR, ex.getCause());
-    } catch (JSchException ex) {
-      logger.error("Command execution failed with errorCode ", ex);
-      throw new WingsException(normalizeError(ex), ex.getCause());
+    } catch (IOException | JSchException ex) {
+      if (ex instanceof FileNotFoundException) {
+        logger.error("file [" + gridFsFileId + "] could not be found");
+        saveExecutionLog("File not found");
+      } else {
+        logger.error("Command execution failed with error ", ex);
+        saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
+      }
+      return executionResult;
     }
-    return SUCCESS;
+    return executionResult;
   }
 
   /**

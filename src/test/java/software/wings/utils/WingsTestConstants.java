@@ -3,11 +3,12 @@ package software.wings.utils;
 /**
  * Created by anubhaw on 5/26/16.
  */
-public class WingsUnitTestConstants {
+public class WingsTestConstants {
   public static final String APP_ID = "APP_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
   public static final String SERVICE_NAME = "SERVICE_NAME";
   public static final String ENV_ID = "ENV_ID";
+  public static final String INFRA_ID = "INFRA_ID";
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
   public static final String RELEASE_ID = "RELEASE_ID";
   public static final String SERVICE_INSTANCE_ID = "SERVICE_INSTANCE_ID";
@@ -27,4 +28,6 @@ public class WingsUnitTestConstants {
   public static final String SSH_KEY = "SSH_KEY";
   public static final String SSH_KEY_PASS_PHRASE = "SSH_KEY_PASS_PHRASE";
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
+  public static final String USER_NAME = "USER_NAME";
+  public static final String USER_PASSWORD = "USER_PASSWORD";
 }

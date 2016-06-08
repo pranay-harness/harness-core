@@ -225,6 +225,7 @@ public class Graph {
       this.properties = properties;
     }
 
+    @JsonIgnore
     public boolean isOrigin() {
       return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
     }

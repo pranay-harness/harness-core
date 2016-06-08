@@ -4,6 +4,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.HostBuilder.aHost;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -59,13 +60,16 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host update(Host host) {
-    wingsPersistence.updateFields(Host.class, host.getUuid(),
-        ImmutableMap.<String, Object>builder()
-            .put("hostName", host.getHostName())
-            .put("hostConnAttr", host.getHostConnAttr())
-            .put("bastionConnAttr", host.getBastionConnAttr())
-            .put("tags", host.getTags())
-            .build());
+    Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
+                                          .put("hostName", host.getHostName())
+                                          .put("hostConnAttr", host.getHostConnAttr());
+    if (host.getBastionConnAttr() != null) {
+      builder.put("bastionConnAttr", host.getBastionConnAttr());
+    }
+    if (host.getTags() != null) {
+      builder.put("tags", host.getTags());
+    }
+    wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 

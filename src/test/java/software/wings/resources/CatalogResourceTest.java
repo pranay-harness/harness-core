@@ -15,9 +15,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CatalogNames.ORCHESTRATION_STENCILS;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
-import static software.wings.utils.WingsUnitTestConstants.APP_ID;
-import static software.wings.utils.WingsUnitTestConstants.ENV_ID;
-import static software.wings.utils.WingsUnitTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import junitparams.JUnitParamsRunner;
