@@ -21,6 +21,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -48,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -500,6 +502,33 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should list pipeline
+   */
+  @Test
+  public void shouldListPipeline() {
+    createPipelineNoGraph();
+    createPipeline();
+    createPipelineNoGraph();
+    createPipeline();
+    PageRequest<Pipeline> req = new PageRequest<>();
+    req.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
+    PageResponse<Pipeline> res = workflowService.listPipelines(req);
+    assertThat(res).isNotNull();
+    assertThat(res.getResponse()).isNotNull();
+    assertThat(res.size()).isEqualTo(4);
+  }
+
+  /**
+   * Should read pipeline
+   */
+  @Test
+  public void shouldReadPipeline() {
+    Pipeline pipeline = createPipelineNoGraph();
+    Pipeline pipeline2 = workflowService.readPipeline(appId, pipeline.getUuid());
+    assertThat(pipeline2).isNotNull();
+    assertThat(pipeline2).isEqualToComparingFieldByField(pipeline);
+  }
+  /**
    * Should update pipeline with no graph.
    */
   @Test
@@ -593,6 +622,42 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .doesNotContainNull()
         .containsExactly(graph);
     return pipeline;
+  }
+
+  /**
+   * Should update pipeline with graph.
+   * @throws InterruptedException
+   */
+  @Test
+  public void shouldListPipelinExecutions() throws InterruptedException {
+    Pipeline pipeline = createPipeline();
+    WorkflowExecution workflowExecution = workflowService.triggerPipelineExecution(appId, pipeline.getUuid());
+    PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();
+    SearchFilter filter = new SearchFilter();
+    filter.setFieldName("appId");
+    filter.setFieldValues(appId);
+    filter.setOp(Operator.EQ);
+    pageRequest.addFilter(filter);
+
+    filter = new SearchFilter();
+    filter.setFieldName("workflowType");
+    filter.setFieldValues(WorkflowType.PIPELINE);
+    filter.setOp(Operator.EQ);
+    pageRequest.addFilter(filter);
+
+    PageResponse<WorkflowExecution> pageResponse = workflowService.listExecutions(pageRequest, true);
+    assertThat(pageResponse).isNotNull().hasSize(1).doesNotContainNull();
+    WorkflowExecution workflowExecution2 = pageResponse.get(0);
+    assertThat(workflowExecution2)
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
+            WorkflowExecution::getWorkflowId)
+        .containsExactly(workflowExecution.getUuid(), appId, workflowExecution.getStateMachineId(), pipeline.getUuid());
+    if (workflowExecution2.getStatus() == ExecutionStatus.NEW
+        || workflowExecution2.getStatus() == ExecutionStatus.RUNNING) {
+      Thread.sleep(2000);
+    }
+    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution2.getGraph()).isNotNull();
   }
 
   /**
