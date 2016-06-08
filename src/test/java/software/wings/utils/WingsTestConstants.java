@@ -30,4 +30,7 @@ public class WingsTestConstants {
   public static final String ACTIVITY_ID = "ACTIVITY_ID";
   public static final String USER_NAME = "USER_NAME";
   public static final String USER_PASSWORD = "USER_PASSWORD";
+  public static final String COMMAND_NAME = "COMMAND_NAME";
+  public static final String COMMAND_UNIT_NAME = "COMMAND_UNIT_NAME";
+  public static final String COMMAND_UNIT_TYPE = "COMMAND_UNIT_TYPE";
 }
