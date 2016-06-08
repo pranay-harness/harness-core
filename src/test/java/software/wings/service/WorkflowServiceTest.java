@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -528,6 +527,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(pipeline2).isNotNull();
     assertThat(pipeline2).isEqualToComparingFieldByField(pipeline);
   }
+
   /**
    * Should update pipeline with no graph.
    */
@@ -626,6 +626,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
   /**
    * Should update pipeline with graph.
+   *
    * @throws InterruptedException
    */
   @Test
