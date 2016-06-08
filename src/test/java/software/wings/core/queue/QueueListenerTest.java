@@ -1,8 +1,8 @@
 package software.wings.core.queue;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -10,7 +10,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.ifesdjeen.timer.HashedWheelTimer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
@@ -20,7 +19,9 @@ import software.wings.WingsBaseTest;
 
 import java.net.UnknownHostException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -46,7 +47,7 @@ public class QueueListenerTest extends WingsBaseTest {
     listener = new QueuableObjectListener();
     listener.setQueue(queue);
     listener.setRunOnce(true);
-    listener.setTimer(new HashedWheelTimer());
+    listener.setTimer(new ScheduledThreadPoolExecutor(1));
     listener = spy(listener);
   }
 
