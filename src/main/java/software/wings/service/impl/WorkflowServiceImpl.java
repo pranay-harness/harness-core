@@ -330,8 +330,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       return orchestration;
     }
     StateMachine stateMachine = readLatest(appId, orchestrationId, null);
-
-    orchestration.setGraph(stateMachine.getGraph());
+    if (stateMachine != null) {
+      orchestration.setGraph(stateMachine.getGraph());
+    }
     return orchestration;
   }
 
