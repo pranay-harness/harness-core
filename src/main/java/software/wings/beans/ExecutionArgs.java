@@ -13,8 +13,6 @@ import java.util.List;
  */
 public class ExecutionArgs {
   private OrchestrationType orchestrationType;
-
-  ;
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;

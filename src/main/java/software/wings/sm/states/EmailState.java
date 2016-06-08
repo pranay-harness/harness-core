@@ -21,6 +21,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 
+import java.util.ArrayList;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -69,8 +71,9 @@ public class EmailState extends State {
       emailStateExecutionData.setSubject(evaluatedSubject);
       emailStateExecutionData.setBody(evaluatedBody);
       logger.debug("Email Notification - subject:{}, body:{}", evaluatedSubject, evaluatedBody);
-      emailNotificationService.send(COMMA_SPLITTER.splitToList(toAddress), COMMA_SPLITTER.splitToList(ccAddress),
-          evaluatedSubject, evaluatedBody);
+      emailNotificationService.send(toAddress == null ? new ArrayList<>() : COMMA_SPLITTER.splitToList(toAddress),
+          ccAddress == null ? new ArrayList<>() : COMMA_SPLITTER.splitToList(ccAddress), evaluatedSubject,
+          evaluatedBody);
       executionResponse.setExecutionStatus(ExecutionStatus.SUCCESS);
     } catch (Exception e) {
       executionResponse.setErrorMessage(e.getMessage());

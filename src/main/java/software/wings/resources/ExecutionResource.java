@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgs.OrchestrationType;
@@ -27,6 +28,7 @@ import javax.ws.rs.QueryParam;
 /**
  * The Class ExecutionResource.
  */
+@Api("executions")
 @Path("/executions")
 public class ExecutionResource {
   private WorkflowService workflowService;
@@ -51,7 +53,6 @@ public class ExecutionResource {
    * @return the rest response
    */
   @GET
-  @Path("executions")
   @Produces("application/json")
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
@@ -87,7 +88,7 @@ public class ExecutionResource {
    * @return the execution details
    */
   @GET
-  @Path("executions/{workflowExecutionId}")
+  @Path("{workflowExecutionId}")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
@@ -103,7 +104,6 @@ public class ExecutionResource {
    * @return the rest response
    */
   @POST
-  @Path("executions")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
@@ -119,7 +119,7 @@ public class ExecutionResource {
    * @return the rest response
    */
   @POST
-  @Path("executions/orchestrated")
+  @Path("orchestrated")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
@@ -136,7 +136,7 @@ public class ExecutionResource {
    * @return the rest response
    */
   @POST
-  @Path("executions/simple")
+  @Path("simple")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerSimpleExecution(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, ExecutionArgs executionArgs) {
@@ -153,7 +153,7 @@ public class ExecutionResource {
    * @return the rest response
    */
   @PUT
-  @Path("executions/{workflowExecutionId}")
+  @Path("{workflowExecutionId}")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> updateExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {

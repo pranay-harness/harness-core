@@ -21,6 +21,7 @@ import java.util.Map;
 public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String stateName;
+  private String stateType;
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -113,6 +114,24 @@ public class StateExecutionInstance extends Base {
    */
   public void setStateName(String stateName) {
     this.stateName = stateName;
+  }
+
+  /**
+   * Gets state type.
+   *
+   * @return the state type
+   */
+  public String getStateType() {
+    return stateType;
+  }
+
+  /**
+   * Sets state type.
+   *
+   * @param stateType the state type
+   */
+  public void setStateType(String stateType) {
+    this.stateType = stateType;
   }
 
   /**
