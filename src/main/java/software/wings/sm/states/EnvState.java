@@ -43,18 +43,38 @@ public class EnvState extends State {
     return new ExecutionResponse();
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets workflow id.
+   *
+   * @return the workflow id
+   */
   public String getWorkflowId() {
     return workflowId;
   }
 
+  /**
+   * Sets workflow id.
+   *
+   * @param workflowId the workflow id
+   */
   public void setWorkflowId(String workflowId) {
     this.workflowId = workflowId;
   }

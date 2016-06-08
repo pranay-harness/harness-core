@@ -43,7 +43,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 6/7/16.
  */
-
 public class HostServiceTest extends WingsBaseTest {
   @Mock private HostCsvFileHelper csvFileHelper;
   @Mock private WingsPersistence wingsPersistence;
@@ -61,6 +60,9 @@ public class HostServiceTest extends WingsBaseTest {
                                     .withHostConnAttr(HOST_CONN_ATTR_PWD)
                                     .withHostConnectionCredential(CREDENTIAL);
 
+  /**
+   * Should list hosts.
+   */
   @Test
   public void shouldListHosts() {
     PageResponse<Host> pageResponse = new PageResponse<>();
@@ -80,6 +82,9 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(hosts.getResponse().get(0)).isInstanceOf(Host.class);
   }
 
+  /**
+   * Should save host.
+   */
   @Test
   public void shouldSaveHost() {
     Host host = builder.build();
@@ -89,6 +94,9 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(savedHost).isInstanceOf(Host.class);
   }
 
+  /**
+   * Should update host.
+   */
   @Test
   public void shouldUpdateHost() {
     Host host = builder.withUuid(HOST_ID).build();
@@ -98,6 +106,9 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(savedHost).isInstanceOf(Host.class);
   }
 
+  /**
+   * Should get host.
+   */
   @Test
   public void shouldGetHost() {
     Host host = builder.withUuid(HOST_ID).build();
@@ -108,12 +119,18 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(savedHost).isInstanceOf(Host.class);
   }
 
+  /**
+   * Should delete host.
+   */
   @Test
   public void shouldDeleteHost() {
     hostService.delete(APP_ID, INFRA_ID, HOST_ID);
     verify(wingsPersistence).delete(Host.class, HOST_ID);
   }
 
+  /**
+   * Should get host by id.
+   */
   @Test
   @Ignore
   public void shouldGetHostById() {

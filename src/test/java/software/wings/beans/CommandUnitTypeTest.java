@@ -24,6 +24,12 @@ public class CommandUnitTypeTest {
     return data;
   }
 
+  /**
+   * Should create new instance for.
+   *
+   * @param commandUnitTypeName the command unit type name
+   * @throws Exception the exception
+   */
   @Test
   @Parameters(method = "getData")
   @TestCaseName("{method}{0}")

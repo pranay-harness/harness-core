@@ -4,13 +4,17 @@
 
 package software.wings.common;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import com.google.common.collect.Lists;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.modelmapper.ModelMapper;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -20,12 +24,15 @@ import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -38,6 +45,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessor implements ExpressionProcessor {
+  /**
+   * The Expression start pattern.
+   */
   static final String EXPRESSION_START_PATTERN = "instances()";
   private static final String INSTANCE_EXPR_PROCESSOR = "instanceExpressionProcessor";
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -140,18 +150,28 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    *
    * @return the list
    */
-  public List<InstanceElement> lists() {
+  public List<InstanceElement> list() {
+    PageRequest<ServiceInstance> pageRequest = buildPageRequest();
+
+    PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
+    return convertToInstanceElements(instances.getResponse());
+  }
+
+  /**
+   * Build page request page request.
+   *
+   * @return the page request
+   */
+  PageRequest<ServiceInstance> buildPageRequest() {
     String appId = context.getStateExecutionInstance().getAppId();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
 
+    pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
     applyServiceFilter(appId, pageRequest);
     applyServiceTemplatesFilter(appId, pageRequest);
     applyHostNamesFilter(appId, pageRequest);
     applyServiceInstanceIdsFilter(appId, pageRequest);
-
-    PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest.build());
-
-    return convertToInstanceElements(instances.getResponse());
+    return pageRequest.build();
   }
 
   private List<InstanceElement> convertToInstanceElements(List<ServiceInstance> instances) {
@@ -168,13 +188,25 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   private void applyServiceInstanceIdsFilter(String appId, Builder pageRequest) {
-    if (!ArrayUtils.isEmpty(instanceIds)) {
-      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("uuid", Operator.IN, instanceIds).build());
+    ServiceInstanceIdsParam serviceInstanceIdsParam = getServiceInstanceIdsParam();
+    if (serviceInstanceIdsParam != null) {
+      if (ArrayUtils.isNotEmpty(instanceIds)) {
+        Collection<String> commonInstanceIds =
+            CollectionUtils.intersection(Arrays.asList(instanceIds), serviceInstanceIdsParam.getInstanceIds());
+        instanceIds = commonInstanceIds.toArray(new String[commonInstanceIds.size()]);
+      } else {
+        instanceIds = serviceInstanceIdsParam.getInstanceIds().toArray(
+            new String[serviceInstanceIdsParam.getInstanceIds().size()]);
+      }
+    }
+
+    if (ArrayUtils.isNotEmpty(instanceIds)) {
+      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField(ID_KEY, Operator.IN, instanceIds).build());
     } else {
       InstanceElement element = context.getContextElement(ContextElementType.INSTANCE);
       if (element != null) {
         pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
-                                  .withField("uuid", Operator.IN, new Object[] {element.getUuid()})
+                                  .withField(ID_KEY, Operator.IN, new Object[] {element.getUuid()})
                                   .build());
       }
     }
@@ -186,6 +218,19 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
   private void applyServiceTemplatesFilter(String appId, Builder pageRequest) {
     // TODO
+  }
+
+  private ServiceInstanceIdsParam getServiceInstanceIdsParam() {
+    List<ContextElement> params = context.getContextElementList(ContextElementType.PARAM);
+    if (params == null) {
+      return null;
+    }
+    for (ContextElement param : params) {
+      if (Constants.SERVICE_INSTANCE_IDS_PARAMS.equals(param.getName())) {
+        return (ServiceInstanceIdsParam) param;
+      }
+    }
+    return null;
   }
 
   private void applyServiceFilter(String appId, Builder pageRequest) {
@@ -217,10 +262,20 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
   }
 
+  /**
+   * Sets service instance service.
+   *
+   * @param serviceInstanceService the service instance service
+   */
   void setServiceInstanceService(ServiceInstanceService serviceInstanceService) {
     this.serviceInstanceService = serviceInstanceService;
   }
 
+  /**
+   * Sets service resource service.
+   *
+   * @param serviceResourceService the service resource service
+   */
   void setServiceResourceService(ServiceResourceService serviceResourceService) {
     this.serviceResourceService = serviceResourceService;
   }

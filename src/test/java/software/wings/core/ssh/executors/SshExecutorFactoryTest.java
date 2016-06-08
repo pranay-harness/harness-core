@@ -17,11 +17,19 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 5/18/16.
  */
-
 public class SshExecutorFactoryTest extends WingsBaseTest {
+  /**
+   * The File service.
+   */
   @Mock FileService fileService;
+  /**
+   * The Log service.
+   */
   @Mock LogService logService;
 
+  /**
+   * The Ssh executor factory.
+   */
   @Inject @InjectMocks SshExecutorFactory sshExecutorFactory;
 
   /**

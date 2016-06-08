@@ -34,7 +34,7 @@ public class ExecutionResource {
   /**
    * Instantiates a new execution resource.
    *
-   * @param deploymentService the deployment service
+   * @param workflowService the workflow service
    */
   @Inject
   public ExecutionResource(WorkflowService workflowService) {
@@ -44,7 +44,10 @@ public class ExecutionResource {
   /**
    * List.
    *
-   * @param pageRequest the page request
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param orchestrationId the orchestration id
+   * @param pageRequest     the page request
    * @return the rest response
    */
   @GET
@@ -75,6 +78,14 @@ public class ExecutionResource {
     return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
   }
 
+  /**
+   * Gets execution details.
+   *
+   * @param appId               the app id
+   * @param envId               the env id
+   * @param workflowExecutionId the workflow execution id
+   * @return the execution details
+   */
   @GET
   @Path("executions/{workflowExecutionId}")
   @Produces("application/json")
@@ -86,7 +97,9 @@ public class ExecutionResource {
   /**
    * Save.
    *
-   * @param deployment the deployment
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
    * @return the rest response
    */
   @POST
@@ -97,6 +110,14 @@ public class ExecutionResource {
     return new RestResponse<>(workflowService.triggerEnvExecution(appId, envId, executionArgs));
   }
 
+  /**
+   * Trigger orchestrated execution rest response.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the rest response
+   */
   @POST
   @Path("executions/orchestrated")
   @Produces("application/json")
@@ -106,6 +127,14 @@ public class ExecutionResource {
     return triggerExecution(appId, envId, executionArgs);
   }
 
+  /**
+   * Trigger simple execution rest response.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the rest response
+   */
   @POST
   @Path("executions/simple")
   @Produces("application/json")
@@ -115,6 +144,14 @@ public class ExecutionResource {
     return triggerExecution(appId, envId, executionArgs);
   }
 
+  /**
+   * Update execution details rest response.
+   *
+   * @param appId               the app id
+   * @param envId               the env id
+   * @param workflowExecutionId the workflow execution id
+   * @return the rest response
+   */
   @PUT
   @Path("executions/{workflowExecutionId}")
   @Produces("application/json")

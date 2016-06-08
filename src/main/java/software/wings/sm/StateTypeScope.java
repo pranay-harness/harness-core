@@ -10,7 +10,14 @@ package software.wings.sm;
  * @author Rishi
  */
 public enum StateTypeScope {
-  PIPELINE_STENCILS,
-  ORCHESTRATION_STENCILS,
+  /**
+   * Pipeline stencils state type scope.
+   */
+  PIPELINE_STENCILS, /**
+                      * Orchestration stencils state type scope.
+                      */
+  ORCHESTRATION_STENCILS, /**
+                           * Command stencils state type scope.
+                           */
   COMMAND_STENCILS;
 }

@@ -88,20 +88,9 @@ public class JsonUtilsTest {
   @Test
   public void shouldGenerateJsonSchema() {
     assertThatJson(JsonUtils.jsonSchema(BaseA.class))
-        .isEqualTo("{\n"
-            + "  \"type\" : \"object\",\n"
-            + "  \"properties\" : {\n"
-            + "    \"baseType\" : {\n"
-            + "      \"enum\" : [ \"A\", \"B\", \"C\" ]\n"
-            + "    },\n"
-            + "    \"name\" : {\n"
-            + "      \"type\" : \"string\"\n"
-            + "    }\n"
-            + "  },\n"
-            + "  \"$schema\" : \"http://json-schema.org/draft-04/schema#\",\n"
-            + "  \"title\" : \"BaseA\",\n"
-            + "  \"required\" : [ \"name\" ]\n"
-            + "}");
+        .isEqualTo(
+            "{\"type\":\"object\",\"properties\":{\"baseType\":{\"enum\":[\"A\",\"B\",\"C\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"}},"
+            + "\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"title\":\"BaseA\",\"required\":[\"name\"]}");
   }
 
   /**
@@ -115,10 +104,20 @@ public class JsonUtilsTest {
   public static class Base {
     private BaseType baseType;
 
+    /**
+     * Gets base type.
+     *
+     * @return the base type
+     */
     public BaseType getBaseType() {
       return baseType;
     }
 
+    /**
+     * Sets base type.
+     *
+     * @param baseType the base type
+     */
     public void setBaseType(BaseType baseType) {
       this.baseType = baseType;
     }
@@ -126,7 +125,18 @@ public class JsonUtilsTest {
     /**
      * The Enum BaseType.
      */
-    public enum BaseType { A, B, C }
+    public enum BaseType {
+      /**
+       * A base type.
+       */
+      A, /**
+          * B base type.
+          */
+      B, /**
+          * C base type.
+          */
+      C
+    }
   }
 
   /**
@@ -144,10 +154,20 @@ public class JsonUtilsTest {
       setBaseType(BaseType.A);
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
       this.name = name;
     }
@@ -167,10 +187,20 @@ public class JsonUtilsTest {
       setBaseType(BaseType.B);
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
       this.name = name;
     }
@@ -190,10 +220,20 @@ public class JsonUtilsTest {
       setBaseType(BaseType.C);
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
       return name;
     }
 
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
     public void setName(String name) {
       this.name = name;
     }

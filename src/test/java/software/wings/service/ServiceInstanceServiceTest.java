@@ -41,7 +41,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 5/26/16.
  */
-
 public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
 

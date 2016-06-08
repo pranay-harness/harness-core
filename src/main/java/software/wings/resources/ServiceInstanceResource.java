@@ -34,6 +34,9 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 public class ServiceInstanceResource {
+  /**
+   * The Instance service.
+   */
   @Inject ServiceInstanceService instanceService;
 
   /**

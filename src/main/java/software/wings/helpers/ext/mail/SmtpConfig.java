@@ -25,50 +25,110 @@ public class SmtpConfig extends SettingValue {
     super(SettingVariableTypes.SMTP);
   }
 
+  /**
+   * Gets host.
+   *
+   * @return the host
+   */
   public String getHost() {
     return host;
   }
 
+  /**
+   * Sets host.
+   *
+   * @param host the host
+   */
   public void setHost(String host) {
     this.host = host;
   }
 
+  /**
+   * Gets port.
+   *
+   * @return the port
+   */
   public int getPort() {
     return port;
   }
 
+  /**
+   * Sets port.
+   *
+   * @param port the port
+   */
   public void setPort(int port) {
     this.port = port;
   }
 
+  /**
+   * Is use ssl boolean.
+   *
+   * @return the boolean
+   */
   public boolean isUseSSL() {
     return useSSL;
   }
 
+  /**
+   * Sets use ssl.
+   *
+   * @param useSSL the use ssl
+   */
   public void setUseSSL(boolean useSSL) {
     this.useSSL = useSSL;
   }
 
+  /**
+   * Gets username.
+   *
+   * @return the username
+   */
   public String getUsername() {
     return username;
   }
 
+  /**
+   * Sets username.
+   *
+   * @param username the username
+   */
   public void setUsername(String username) {
     this.username = username;
   }
 
+  /**
+   * Gets password.
+   *
+   * @return the password
+   */
   public String getPassword() {
     return password;
   }
 
+  /**
+   * Sets password.
+   *
+   * @param password the password
+   */
   public void setPassword(String password) {
     this.password = password;
   }
 
+  /**
+   * Gets from address.
+   *
+   * @return the from address
+   */
   public String getFromAddress() {
     return fromAddress;
   }
 
+  /**
+   * Sets from address.
+   *
+   * @param fromAddress the from address
+   */
   public void setFromAddress(String fromAddress) {
     this.fromAddress = fromAddress;
   }

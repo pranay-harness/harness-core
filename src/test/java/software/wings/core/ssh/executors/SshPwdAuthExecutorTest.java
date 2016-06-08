@@ -41,7 +41,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 2/10/16.
  */
-
 /*
 -1.  Successfully connect
 -2.  Fail for unknown hosts
@@ -71,6 +70,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private final String USER = "ssh_user";
   private final String PASSWORD = "Wings@123";
   private final String EXECUTION_ID = "EXECUTION_ID";
+  /**
+   * The Test folder.
+   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private SshSessionConfig config;
   private SshExecutor executor;

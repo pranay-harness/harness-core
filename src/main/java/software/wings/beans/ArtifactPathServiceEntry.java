@@ -20,18 +20,38 @@ public class ArtifactPathServiceEntry {
 
   @Reference(idOnly = true, ignoreMissing = true, lazy = true) private List<Service> services;
 
+  /**
+   * Gets artifact path regex.
+   *
+   * @return the artifact path regex
+   */
   public String getArtifactPathRegex() {
     return artifactPathRegex;
   }
 
+  /**
+   * Sets artifact path regex.
+   *
+   * @param artifactPathRegex the artifact path regex
+   */
   public void setArtifactPathRegex(String artifactPathRegex) {
     this.artifactPathRegex = artifactPathRegex;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(List<Service> services) {
     this.services = services;
   }

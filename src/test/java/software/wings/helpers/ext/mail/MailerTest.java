@@ -30,6 +30,9 @@ import javax.mail.MessagingException;
 public class MailerTest extends WingsBaseTest {
   private static final String EMAIL = "test@email.com";
   private static final String PASSWORD = "password";
+  /**
+   * The Green mail.
+   */
   @Rule public GreenMailRule greenMail = new GreenMailRule(ServerSetupTest.SMTP);
   @Inject private Mailer mailer;
 

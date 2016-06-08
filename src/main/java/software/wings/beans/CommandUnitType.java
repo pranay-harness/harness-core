@@ -23,8 +23,15 @@ import java.util.Map;
  * Created by peeyushaggarwal on 6/2/16.
  */
 public enum CommandUnitType {
-  EXEC(ExecCommandUnit.class, true),
-  COMMAND(Command.class, false),
+  /**
+   * Exec command unit type.
+   */
+  EXEC(ExecCommandUnit.class, true), /**
+                                      * Command command unit type.
+                                      */
+  COMMAND(Command.class, false), /**
+                                  * Copy artifact command unit type.
+                                  */
   COPY_ARTIFACT(CopyArtifactCommandUnit.class, true);
 
   private static final String stencilsPath = "/templates/commandstencils/";
@@ -61,6 +68,11 @@ public enum CommandUnitType {
     }
   }
 
+  /**
+   * Gets stencils.
+   *
+   * @return the stencils
+   */
   public static List<Map<String, Object>> getStencils() {
     return stencils;
   }

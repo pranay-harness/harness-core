@@ -13,10 +13,20 @@ import java.util.List;
 public class ArtifactFile extends BaseFile {
   private List<Service> services;
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(List<Service> services) {
     this.services = services;
   }

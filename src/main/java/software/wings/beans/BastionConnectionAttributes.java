@@ -21,10 +21,20 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     super(BASTION_HOST_CONNECTION_ATTRIBUTES);
   }
 
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }

@@ -19,22 +19,47 @@ public class Environment extends Base {
   private String description;
   @Transient private List<ConfigFile> configFiles;
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }

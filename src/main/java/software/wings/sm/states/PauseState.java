@@ -1,9 +1,15 @@
 package software.wings.sm.states;
 
+import static software.wings.api.PauseStateExecutionData.Builder.aPauseStateExecutionData;
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
+import software.wings.api.EmailStateExecutionData;
+import software.wings.api.PauseStateExecutionData;
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.utils.MapperUtils;
 
 // TODO: Auto-generated Javadoc
 
@@ -12,7 +18,7 @@ import software.wings.sm.StateType;
  *
  * @author Rishi
  */
-public class PauseState extends State {
+public class PauseState extends EmailState {
   private static final long serialVersionUID = 1L;
 
   /**
@@ -21,14 +27,29 @@ public class PauseState extends State {
    * @param name name of the state.
    */
   public PauseState(String name) {
-    super(name, StateType.PAUSE.name());
+    super(name);
+    setStateType(StateType.PAUSE.getType());
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
+  /**
+   * {@inheritDoc}
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return null;
+    ExecutionResponse emailExecutionResponse = super.execute(context);
+
+    EmailStateExecutionData emailStateExecutionData =
+        (EmailStateExecutionData) emailExecutionResponse.getStateExecutionData();
+
+    String correlationId = UUIDGenerator.getUuid();
+
+    PauseStateExecutionData pauseStateExecutionData = aPauseStateExecutionData().withResumeId(correlationId).build();
+    MapperUtils.mapObject(emailStateExecutionData, pauseStateExecutionData);
+
+    return anExecutionResponse()
+        .withAsynch(true)
+        .addCorrelationIds(correlationId)
+        .withStateExecutionData(pauseStateExecutionData)
+        .build();
   }
 }

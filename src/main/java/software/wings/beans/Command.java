@@ -31,26 +31,56 @@ public class Command extends CommandUnit {
     super(CommandUnitType.COMMAND);
   }
 
+  /**
+   * Gets reference id.
+   *
+   * @return the reference id
+   */
   public String getReferenceId() {
     return referenceId;
   }
 
+  /**
+   * Sets reference id.
+   *
+   * @param referenceId the reference id
+   */
   public void setReferenceId(String referenceId) {
     this.referenceId = referenceId;
   }
 
+  /**
+   * Gets graph.
+   *
+   * @return the graph
+   */
   public Graph getGraph() {
     return graph;
   }
 
+  /**
+   * Sets graph.
+   *
+   * @param graph the graph
+   */
   public void setGraph(Graph graph) {
     this.graph = graph;
   }
 
+  /**
+   * Gets command units.
+   *
+   * @return the command units
+   */
   public List<CommandUnit> getCommandUnits() {
     return commandUnits;
   }
 
+  /**
+   * Sets command units.
+   *
+   * @param commandUnits the command units
+   */
   public void setCommandUnits(List<CommandUnit> commandUnits) {
     this.commandUnits = commandUnits;
   }

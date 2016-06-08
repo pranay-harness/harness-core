@@ -13,7 +13,6 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 5/16/16.
  */
-
 @Entity(value = "settingAttributes")
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
@@ -21,18 +20,38 @@ public class SettingAttribute extends Base {
   private String name;
   private SettingValue value;
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets value.
+   *
+   * @return the value
+   */
   public SettingValue getValue() {
     return value;
   }
 
+  /**
+   * Sets value.
+   *
+   * @param value the value
+   */
   public void setValue(SettingValue value) {
     this.value = value;
   }

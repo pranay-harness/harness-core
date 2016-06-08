@@ -15,8 +15,8 @@ public class SshJumpboxExecutor extends AbstractSshExecutor {
   /**
    * Instantiates a new ssh jumpbox executor.
    *
-   * @param executionLogs the execution logs
-   * @param fileService   the file service
+   * @param fileService the file service
+   * @param logService  the log service
    */
   @Inject
   public SshJumpboxExecutor(FileService fileService, LogService logService) {

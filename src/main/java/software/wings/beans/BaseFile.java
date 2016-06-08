@@ -40,50 +40,110 @@ public class BaseFile extends Base {
     }
   }
 
+  /**
+   * Gets file uuid.
+   *
+   * @return the file uuid
+   */
   public String getFileUuid() {
     return fileUuid;
   }
 
+  /**
+   * Sets file uuid.
+   *
+   * @param fileUuid the file uuid
+   */
   public void setFileUuid(String fileUuid) {
     this.fileUuid = fileUuid;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets mime type.
+   *
+   * @return the mime type
+   */
   public String getMimeType() {
     return mimeType;
   }
 
+  /**
+   * Sets mime type.
+   *
+   * @param mimeType the mime type
+   */
   public void setMimeType(String mimeType) {
     this.mimeType = mimeType;
   }
 
+  /**
+   * Gets size.
+   *
+   * @return the size
+   */
   public long getSize() {
     return size;
   }
 
+  /**
+   * Sets size.
+   *
+   * @param size the size
+   */
   public void setSize(long size) {
     this.size = size;
   }
 
+  /**
+   * Gets checksum type.
+   *
+   * @return the checksum type
+   */
   public ChecksumType getChecksumType() {
     return checksumType;
   }
 
+  /**
+   * Sets checksum type.
+   *
+   * @param checksumType the checksum type
+   */
   public void setChecksumType(ChecksumType checksumType) {
     this.checksumType = checksumType;
   }
 
+  /**
+   * Gets checksum.
+   *
+   * @return the checksum
+   */
   public String getChecksum() {
     return checksum;
   }
 
+  /**
+   * Sets checksum.
+   *
+   * @param checksum the checksum
+   */
   public void setChecksum(String checksum) {
     this.checksum = checksum;
   }

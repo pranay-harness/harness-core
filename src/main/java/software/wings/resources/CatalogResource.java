@@ -58,8 +58,17 @@ import javax.ws.rs.core.UriInfo;
 @Path("/catalogs")
 @Produces("application/json")
 public class CatalogResource {
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "appId";
+  /**
+   * The constant SERVICE_ID.
+   */
   public static final String SERVICE_ID = "serviceId";
+  /**
+   * The constant JENKINS_SETTING_ID.
+   */
   public static final String JENKINS_SETTING_ID = "jenkinsSettingId";
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -79,6 +88,7 @@ public class CatalogResource {
    * @param jenkinsBuildService    JenkinsBuildService object.
    * @param settingsService        SettingService object
    * @param serviceResourceService the service resource service
+   * @param environmentService     the environment service
    */
   @Inject
   public CatalogResource(CatalogService catalogService, WorkflowService workflowService,

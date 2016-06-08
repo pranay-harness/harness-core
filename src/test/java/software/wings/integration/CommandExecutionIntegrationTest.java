@@ -52,7 +52,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 6/2/16.
  */
-
 @Integration
 @Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
@@ -72,6 +71,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
+  /**
+   * The constant SERVICE_INSTANCE.
+   */
   public static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
                                                              .withAppId(APP_ID)
                                                              .withEnvId(ENV_ID)
@@ -79,8 +81,17 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
   private static String fileId;
+  /**
+   * The Service command executor service.
+   */
   @Inject ServiceCommandExecutorService serviceCommandExecutorService;
+  /**
+   * The App container service.
+   */
   @Inject AppContainerService appContainerService;
+  /**
+   * The Wings persistence.
+   */
   @Inject WingsPersistence wingsPersistence;
 
   /**

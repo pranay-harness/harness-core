@@ -23,26 +23,56 @@ public class WaitInstanceError extends Base {
 
   private String errorStackTrace;
 
+  /**
+   * Gets wait instance id.
+   *
+   * @return the wait instance id
+   */
   public String getWaitInstanceId() {
     return waitInstanceId;
   }
 
+  /**
+   * Sets wait instance id.
+   *
+   * @param waitInstanceId the wait instance id
+   */
   public void setWaitInstanceId(String waitInstanceId) {
     this.waitInstanceId = waitInstanceId;
   }
 
+  /**
+   * Gets response map.
+   *
+   * @return the response map
+   */
   public Map<String, Serializable> getResponseMap() {
     return responseMap;
   }
 
+  /**
+   * Sets response map.
+   *
+   * @param responseMap the response map
+   */
   public void setResponseMap(Map<String, Serializable> responseMap) {
     this.responseMap = responseMap;
   }
 
+  /**
+   * Gets error stack trace.
+   *
+   * @return the error stack trace
+   */
   public String getErrorStackTrace() {
     return errorStackTrace;
   }
 
+  /**
+   * Sets error stack trace.
+   *
+   * @param errorStackTrace the error stack trace
+   */
   public void setErrorStackTrace(String errorStackTrace) {
     this.errorStackTrace = errorStackTrace;
   }

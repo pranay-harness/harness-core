@@ -50,74 +50,164 @@ public class Host extends Base {
 
   @Transient private HostConnectionCredential hostConnectionCredential;
 
+  /**
+   * Gets infra id.
+   *
+   * @return the infra id
+   */
   public String getInfraId() {
     return infraId;
   }
 
+  /**
+   * Sets infra id.
+   *
+   * @param infraId the infra id
+   */
   public void setInfraId(String infraId) {
     this.infraId = infraId;
   }
 
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }
 
+  /**
+   * Gets host conn attr.
+   *
+   * @return the host conn attr
+   */
   public SettingAttribute getHostConnAttr() {
     return hostConnAttr;
   }
 
+  /**
+   * Sets host conn attr.
+   *
+   * @param hostConnAttr the host conn attr
+   */
   public void setHostConnAttr(SettingAttribute hostConnAttr) {
     this.hostConnAttr = hostConnAttr;
   }
 
+  /**
+   * Gets bastion conn attr.
+   *
+   * @return the bastion conn attr
+   */
   public SettingAttribute getBastionConnAttr() {
     return bastionConnAttr;
   }
 
+  /**
+   * Sets bastion conn attr.
+   *
+   * @param bastionConnAttr the bastion conn attr
+   */
   public void setBastionConnAttr(SettingAttribute bastionConnAttr) {
     this.bastionConnAttr = bastionConnAttr;
   }
 
+  /**
+   * Gets tags.
+   *
+   * @return the tags
+   */
   public List<Tag> getTags() {
     return tags;
   }
 
+  /**
+   * Sets tags.
+   *
+   * @param tags the tags
+   */
   public void setTags(List<Tag> tags) {
     this.tags = tags;
   }
 
+  /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
   public List<ConfigFile> getConfigFiles() {
     return configFiles;
   }
 
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Gets host names.
+   *
+   * @return the host names
+   */
   public List<String> getHostNames() {
     return hostNames;
   }
 
+  /**
+   * Sets host names.
+   *
+   * @param hostNames the host names
+   */
   public void setHostNames(List<String> hostNames) {
     this.hostNames = hostNames;
   }
 
+  /**
+   * Gets host connection credential.
+   *
+   * @return the host connection credential
+   */
   public HostConnectionCredential getHostConnectionCredential() {
     return hostConnectionCredential;
   }
 
+  /**
+   * Sets host connection credential.
+   *
+   * @param hostConnectionCredential the host connection credential
+   */
   public void setHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
     this.hostConnectionCredential = hostConnectionCredential;
   }
 
+  /**
+   * Gets os type.
+   *
+   * @return the os type
+   */
   public String getOsType() {
     return osType;
   }
 
+  /**
+   * Sets os type.
+   *
+   * @param osType the os type
+   */
   public void setOsType(String osType) {
     this.osType = osType;
   }

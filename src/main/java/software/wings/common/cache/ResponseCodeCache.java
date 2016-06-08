@@ -37,6 +37,8 @@ public class ResponseCodeCache {
   }
 
   /**
+   * Gets instance.
+   *
    * @return singleton instance for the cache.
    */
   public static ResponseCodeCache getInstance() {

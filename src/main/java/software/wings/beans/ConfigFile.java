@@ -15,38 +15,70 @@ import javax.ws.rs.DefaultValue;
 /**
  * Created by anubhaw on 4/12/16.
  */
-
 @Entity(value = "configFiles", noClassnameStored = true)
 @Indexes(@Index(
     fields = { @Field("entityId")
                , @Field("templateId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ConfigFile extends BaseFile {
+  /**
+   * The constant DEFAULT_TEMPLATE_ID.
+   */
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
   @FormDataParam("entityId") private String entityId;
   @FormDataParam("relativePath") private String relativePath;
 
+  /**
+   * Gets entity id.
+   *
+   * @return the entity id
+   */
   public String getEntityId() {
     return entityId;
   }
 
+  /**
+   * Sets entity id.
+   *
+   * @param entityId the entity id
+   */
   public void setEntityId(String entityId) {
     this.entityId = entityId;
   }
 
+  /**
+   * Gets relative path.
+   *
+   * @return the relative path
+   */
   public String getRelativePath() {
     return relativePath;
   }
 
+  /**
+   * Sets relative path.
+   *
+   * @param relativePath the relative path
+   */
   public void setRelativePath(String relativePath) {
     this.relativePath = relativePath;
   }
 
+  /**
+   * Gets template id.
+   *
+   * @return the template id
+   */
   public String getTemplateId() {
     return templateId;
   }
 
+  /**
+   * Sets template id.
+   *
+   * @param templateId the template id
+   */
   public void setTemplateId(String templateId) {
     this.templateId = templateId;
   }

@@ -15,42 +15,92 @@ public class FileMetadata {
   private String checksum;
   private String relativePath;
 
+  /**
+   * Gets file name.
+   *
+   * @return the file name
+   */
   public String getFileName() {
     return fileName;
   }
 
+  /**
+   * Sets file name.
+   *
+   * @param fileName the file name
+   */
   public void setFileName(String fileName) {
     this.fileName = fileName;
   }
 
+  /**
+   * Gets mime type.
+   *
+   * @return the mime type
+   */
   public String getMimeType() {
     return mimeType;
   }
 
+  /**
+   * Sets mime type.
+   *
+   * @param mimeType the mime type
+   */
   public void setMimeType(String mimeType) {
     this.mimeType = mimeType;
   }
 
+  /**
+   * Gets checksum type.
+   *
+   * @return the checksum type
+   */
   public ChecksumType getChecksumType() {
     return checksumType;
   }
 
+  /**
+   * Sets checksum type.
+   *
+   * @param checksumType the checksum type
+   */
   public void setChecksumType(ChecksumType checksumType) {
     this.checksumType = checksumType;
   }
 
+  /**
+   * Gets checksum.
+   *
+   * @return the checksum
+   */
   public String getChecksum() {
     return checksum;
   }
 
+  /**
+   * Sets checksum.
+   *
+   * @param checksum the checksum
+   */
   public void setChecksum(String checksum) {
     this.checksum = checksum;
   }
 
+  /**
+   * Gets relative path.
+   *
+   * @return the relative path
+   */
   public String getRelativePath() {
     return relativePath;
   }
 
+  /**
+   * Sets relative path.
+   *
+   * @param relativePath the relative path
+   */
   public void setRelativePath(String relativePath) {
     this.relativePath = relativePath;
   }

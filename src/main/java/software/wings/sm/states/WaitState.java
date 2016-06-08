@@ -34,10 +34,20 @@ public class WaitState extends State {
     return new ExecutionResponse();
   }
 
+  /**
+   * Gets duration.
+   *
+   * @return the duration
+   */
   public long getDuration() {
     return duration;
   }
 
+  /**
+   * Sets duration.
+   *
+   * @param duration the duration
+   */
   public void setDuration(long duration) {
     this.duration = duration;
   }

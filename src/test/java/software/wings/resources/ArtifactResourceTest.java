@@ -43,20 +43,38 @@ import javax.ws.rs.core.Response;
  * Created by peeyushaggarwal on 4/1/16.
  */
 public class ArtifactResourceTest {
+  /**
+   * The constant ARTIFACT_SERVICE.
+   */
   public static final ArtifactService ARTIFACT_SERVICE = mock(ArtifactService.class);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ArtifactResource(ARTIFACT_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
 
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "APP_ID";
+  /**
+   * The constant ARTIFACT_ID.
+   */
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
 
+  /**
+   * The constant ACTUAL.
+   */
   public static final Artifact ACTUAL = anArtifact().withAppId(APP_ID).build();
   private static final String SERVICE_ID = "SERVICE_ID";
 
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override
@@ -65,6 +83,9 @@ public class ArtifactResourceTest {
     }
   };
 
+  /**
+   * The Temp folder.
+   */
   @Rule public TemporaryFolder tempFolder = new TemporaryFolder(new File("/tmp"));
 
   private File tempFile;

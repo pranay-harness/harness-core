@@ -24,50 +24,110 @@ public class EmailData extends Queuable {
   private String templateName;
   private Object templateModel;
 
+  /**
+   * Gets to.
+   *
+   * @return the to
+   */
   public List<String> getTo() {
     return to;
   }
 
+  /**
+   * Sets to.
+   *
+   * @param to the to
+   */
   public void setTo(List<String> to) {
     this.to = to;
   }
 
+  /**
+   * Gets cc.
+   *
+   * @return the cc
+   */
   public List<String> getCc() {
     return cc;
   }
 
+  /**
+   * Sets cc.
+   *
+   * @param cc the cc
+   */
   public void setCc(List<String> cc) {
     this.cc = cc;
   }
 
+  /**
+   * Gets subject.
+   *
+   * @return the subject
+   */
   public String getSubject() {
     return subject;
   }
 
+  /**
+   * Sets subject.
+   *
+   * @param subject the subject
+   */
   public void setSubject(String subject) {
     this.subject = subject;
   }
 
+  /**
+   * Gets body.
+   *
+   * @return the body
+   */
   public String getBody() {
     return body;
   }
 
+  /**
+   * Sets body.
+   *
+   * @param body the body
+   */
   public void setBody(String body) {
     this.body = body;
   }
 
+  /**
+   * Gets template name.
+   *
+   * @return the template name
+   */
   public String getTemplateName() {
     return templateName;
   }
 
+  /**
+   * Sets template name.
+   *
+   * @param templateName the template name
+   */
   public void setTemplateName(String templateName) {
     this.templateName = templateName;
   }
 
+  /**
+   * Gets template model.
+   *
+   * @return the template model
+   */
   public Object getTemplateModel() {
     return templateModel;
   }
 
+  /**
+   * Sets template model.
+   *
+   * @param templateModel the template model
+   */
   public void setTemplateModel(Object templateModel) {
     this.templateModel = templateModel;
   }

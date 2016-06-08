@@ -35,18 +35,38 @@ public class AuthToken extends Base {
     expireAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000; // 24 hrs expiry
   }
 
+  /**
+   * Gets user.
+   *
+   * @return the user
+   */
   public User getUser() {
     return user;
   }
 
+  /**
+   * Sets user.
+   *
+   * @param user the user
+   */
   public void setUser(User user) {
     this.user = user;
   }
 
+  /**
+   * Gets expire at.
+   *
+   * @return the expire at
+   */
   public long getExpireAt() {
     return expireAt;
   }
 
+  /**
+   * Sets expire at.
+   *
+   * @param expireAt the expire at
+   */
   public void setExpireAt(long expireAt) {
     this.expireAt = expireAt;
   }

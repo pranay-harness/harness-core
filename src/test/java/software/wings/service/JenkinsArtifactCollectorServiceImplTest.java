@@ -51,7 +51,13 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/12/16.
  */
 public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
+  /**
+   * The constant SERVICE.
+   */
   public static final Service SERVICE = aService().withUuid("SERVICE_ID").build();
+  /**
+   * The constant JENKINS_ARTIFACT_SOURCE.
+   */
   public static final software.wings.beans.JenkinsArtifactSource JENKINS_ARTIFACT_SOURCE =
       aJenkinsArtifactSource()
           .withSourceName("job1")
@@ -62,12 +68,24 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
                                                            .withServices(Lists.newArrayList(SERVICE))
                                                            .build()))
           .build();
+  /**
+   * The constant FILE_ID.
+   */
   public static final String FILE_ID = "FILE_ID";
+  /**
+   * The File metadata argument captor.
+   */
   @Captor ArgumentCaptor<FileMetadata> fileMetadataArgumentCaptor;
+  /**
+   * The File bucket argument captor.
+   */
   @Captor ArgumentCaptor<FileBucket> fileBucketArgumentCaptor;
   @Mock private JenkinsFactory jenkinsFactory;
   @Mock private Jenkins jenkins;
   @Mock private FileService fileService;
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override

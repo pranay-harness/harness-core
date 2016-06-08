@@ -18,8 +18,8 @@ public class SshPwdAuthExecutor extends AbstractSshExecutor {
   /**
    * Instantiates a new ssh pwd auth executor.
    *
-   * @param executionLogs the execution logs
-   * @param fileService   the file service
+   * @param fileService the file service
+   * @param logService  the log service
    */
   @Inject
   public SshPwdAuthExecutor(FileService fileService, LogService logService) {

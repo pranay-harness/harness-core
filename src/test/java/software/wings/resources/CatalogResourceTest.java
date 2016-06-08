@@ -69,6 +69,9 @@ public class CatalogResourceTest extends WingsBaseTest {
   private static final ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
   private static final EnvironmentService environmentService = mock(EnvironmentService.class);
 
+  /**
+   * The constant resources.
+   */
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder()
@@ -76,6 +79,9 @@ public class CatalogResourceTest extends WingsBaseTest {
               serviceResourceService, environmentService))
           .build();
 
+  /**
+   * The Verifier.
+   */
   @Rule
   public Verifier verifier = new Verifier() {
     @Override
@@ -184,6 +190,9 @@ public class CatalogResourceTest extends WingsBaseTest {
     verify(serviceResourceService).getCommandStencils(APP_ID, SERVICE_ID);
   }
 
+  /**
+   * Should list stencils with post processing.
+   */
   @Test
   public void shouldListStencilsWithPostProcessing() {
     when(workflowService.stencils(StateTypeScope.PIPELINE_STENCILS))

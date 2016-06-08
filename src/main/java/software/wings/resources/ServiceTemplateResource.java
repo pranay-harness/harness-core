@@ -43,6 +43,9 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Consumes("application/json")
 public class ServiceTemplateResource {
+  /**
+   * The Service template service.
+   */
   @Inject ServiceTemplateService serviceTemplateService;
   @Inject private HostService hostService;
 

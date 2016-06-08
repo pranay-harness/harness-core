@@ -6,6 +6,8 @@ package software.wings.sm.states;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ExecutionStrategy;
+import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -37,7 +39,8 @@ public class RepeatState extends State {
 
   private ContextElementType repeatElementType;
   private String repeatElementExpression;
-  private RepeatStrategy repeatStrategy;
+  private ExecutionStrategy executionStrategy;
+  private String executionStrategyExpression;
 
   private String repeatTransitionStateName;
 
@@ -50,11 +53,6 @@ public class RepeatState extends State {
     super(name, StateType.REPEAT.name());
   }
 
-  /*
-   * (non-Javadoc)
-   *
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
@@ -82,6 +80,7 @@ public class RepeatState extends State {
       }
     } catch (Exception ex) {
       logger.error("Error in getting repeat elements", ex);
+      throw new WingsException(ex);
     }
 
     if (repeatElements == null || repeatElements.size() == 0) {
@@ -91,13 +90,28 @@ public class RepeatState extends State {
           "No repeat elements found for the expression - repeatElementExpression:" + repeatElementExpression);
       return executionResponse;
     }
+    if (repeatTransitionStateName == null) {
+      ExecutionResponse executionResponse = new ExecutionResponse();
+      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+      executionResponse.setErrorMessage("No repeatTransitionStateName defined");
+      return executionResponse;
+    }
+
+    if (executionStrategyExpression != null) {
+      try {
+        executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
+      } catch (Exception ex) {
+        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
+        executionStrategy = ExecutionStrategy.SERIAL;
+      }
+    }
 
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
 
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
 
-    if (repeatStrategy == RepeatStrategy.PARALLEL) {
+    if (executionStrategy == ExecutionStrategy.PARALLEL) {
       for (ContextElement repeatElement : repeatElements) {
         processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
       }
@@ -119,7 +133,6 @@ public class RepeatState extends State {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
     StateExecutionInstance childStateExecutionInstance =
         JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
 
@@ -145,7 +158,7 @@ public class RepeatState extends State {
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
 
-    if (repeatStrategy == RepeatStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
+    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
         || repeatStateExecutionData.indexReachedMax()) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
@@ -169,42 +182,95 @@ public class RepeatState extends State {
     }
   }
 
+  /**
+   * Gets repeat element type.
+   *
+   * @return the repeat element type
+   */
   public ContextElementType getRepeatElementType() {
     return repeatElementType;
   }
 
+  /**
+   * Sets repeat element type.
+   *
+   * @param repeatElementType the repeat element type
+   */
   public void setRepeatElementType(ContextElementType repeatElementType) {
     this.repeatElementType = repeatElementType;
   }
 
+  /**
+   * Gets repeat element expression.
+   *
+   * @return the repeat element expression
+   */
   public String getRepeatElementExpression() {
     return repeatElementExpression;
   }
 
+  /**
+   * Sets repeat element expression.
+   *
+   * @param repeatElementExpression the repeat element expression
+   */
   public void setRepeatElementExpression(String repeatElementExpression) {
     this.repeatElementExpression = repeatElementExpression;
   }
 
-  public RepeatStrategy getRepeatStrategy() {
-    return repeatStrategy;
+  /**
+   * Gets execution strategy.
+   *
+   * @return the execution strategy
+   */
+  public ExecutionStrategy getExecutionStrategy() {
+    return executionStrategy;
   }
 
-  public void setRepeatStrategy(RepeatStrategy repeatStrategy) {
-    this.repeatStrategy = repeatStrategy;
+  /**
+   * Sets execution strategy.
+   *
+   * @param executionStrategy the execution strategy
+   */
+  public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
+    this.executionStrategy = executionStrategy;
   }
 
+  /**
+   * Gets execution strategy expression.
+   *
+   * @return the execution strategy expression
+   */
+  public String getExecutionStrategyExpression() {
+    return executionStrategyExpression;
+  }
+
+  /**
+   * Sets execution strategy expression.
+   *
+   * @param executionStrategyExpression the execution strategy expression
+   */
+  public void setExecutionStrategyExpression(String executionStrategyExpression) {
+    this.executionStrategyExpression = executionStrategyExpression;
+  }
+
+  /**
+   * Gets repeat transition state name.
+   *
+   * @return the repeat transition state name
+   */
   public String getRepeatTransitionStateName() {
     return repeatTransitionStateName;
   }
 
+  /**
+   * Sets repeat transition state name.
+   *
+   * @param repeatTransitionStateName the repeat transition state name
+   */
   public void setRepeatTransitionStateName(String repeatTransitionStateName) {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }
-
-  /**
-   * The Enum RepeatStrategy.
-   */
-  public enum RepeatStrategy { SERIAL, PARALLEL }
 
   /**
    * The Class RepeatStateExecutionData.
@@ -214,18 +280,38 @@ public class RepeatState extends State {
     private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
 
+    /**
+     * Gets repeat elements.
+     *
+     * @return the repeat elements
+     */
     public List<ContextElement> getRepeatElements() {
       return repeatElements;
     }
 
+    /**
+     * Sets repeat elements.
+     *
+     * @param repeatElements the repeat elements
+     */
     public void setRepeatElements(List<ContextElement> repeatElements) {
       this.repeatElements = repeatElements;
     }
 
+    /**
+     * Gets repeat element index.
+     *
+     * @return the repeat element index
+     */
     public Integer getRepeatElementIndex() {
       return repeatElementIndex;
     }
 
+    /**
+     * Sets repeat element index.
+     *
+     * @param repeatElementIndex the repeat element index
+     */
     public void setRepeatElementIndex(Integer repeatElementIndex) {
       this.repeatElementIndex = repeatElementIndex;
     }

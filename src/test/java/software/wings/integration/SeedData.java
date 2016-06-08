@@ -8,6 +8,9 @@ import java.util.List;
  * Created by anubhaw on 6/3/16.
  */
 public class SeedData {
+  /**
+   * The constant randomSeedString.
+   */
   public static String randomSeedString = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. "
       + "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, "
       + "when an unknown printer took a galley of type and scrambled it to make a type specimen book. "
@@ -15,8 +18,14 @@ public class SeedData {
       + "remaining essentially unchanged. It was popularised in the 1960s with the release of "
       + "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software "
       + "like Aldus PageMaker including versions of Lorem Ipsum";
+  /**
+   * The Env names.
+   */
   public static List<String> envNames =
       asList("DEV", "QA", "UAT", "PROD", "STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
+  /**
+   * The constant containerNames.
+   */
   public static List<String> containerNames =
       asList("AOLserver", "Apache HTTP Server", "Apache Tomcat", "Barracuda Web Server", "Boa", "Caddy", "Caudium",
           "Cherokee HTTP Server", "GlassFish", "Hiawatha", "HFS", "IBM HTTP Server", "Internet Information Services",
@@ -24,6 +33,9 @@ public class SeedData {
           "NCSA HTTPd", "Nginx", "OpenLink Virtuoso", "OpenLiteSpeed", "Oracle HTTP Server",
           "Oracle iPlanet Web Server", "Oracle WebLogic Server", "Resin Open Source", "Resin Professional", "thttpd",
           "TUX web server", "Wakanda Server", "WEBrick", "Xitami", "Yaws", "Zeus Web Server", "Zope");
+  /**
+   * The constant seedNames.
+   */
   public static List<String> seedNames = asList("Abaris", "Abundantia", "Acca Larentia", "Achelois", "Achelous",
       "Acheron", "Achilles", "Acidalia", "Acis", "Acmon", "Acoetes", "Actaeon", "Adamanthea", "Adephagia", "Adonis",
       "Adrastea", "Adrasteia", "Aeacos", "Aeacus", "Aegaeon", "Aegeus", "Aegina", "Aegle", "Aello", "Aellopos",

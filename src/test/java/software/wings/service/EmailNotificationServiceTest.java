@@ -51,6 +51,9 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
   @Mock private Queue<EmailData> queue;
+  /**
+   * The Verify.
+   */
   @Rule
   public Verifier verify = new Verifier() {
     @Override

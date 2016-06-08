@@ -192,6 +192,11 @@ public class QueueListenerTest extends WingsBaseTest {
   private static class QueuableObjectListener extends AbstractQueueListener<QueuableObject> {
     private boolean throwException;
 
+    /**
+     * Sets throw exception.
+     *
+     * @param throwException the throw exception
+     */
     public void setThrowException(boolean throwException) {
       this.throwException = throwException;
     }

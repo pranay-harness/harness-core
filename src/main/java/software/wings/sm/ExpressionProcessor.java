@@ -12,8 +12,16 @@ package software.wings.sm;
  * @author Rishi
  */
 public interface ExpressionProcessor {
+  /**
+   * The constant EXPRESSION_NAME_DELIMITER.
+   */
   public static final String EXPRESSION_NAME_DELIMITER = ",";
 
+  /**
+   * Gets prefix object name.
+   *
+   * @return the prefix object name
+   */
   String getPrefixObjectName();
 
   /**

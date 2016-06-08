@@ -22,7 +22,13 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/2/16.
  */
 public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutorService {
+  /**
+   * The Activity service.
+   */
   @Inject ActivityService activityService;
+  /**
+   * The Command unit executor service.
+   */
   @Inject CommandUnitExecutorService commandUnitExecutorService;
 
   /* (non-Javadoc)

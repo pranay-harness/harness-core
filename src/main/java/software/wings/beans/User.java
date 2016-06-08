@@ -57,6 +57,11 @@ public class User extends Base implements Principal {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
@@ -69,42 +74,92 @@ public class User extends Base implements Principal {
     return false;
   }
 
+  /**
+   * Gets email.
+   *
+   * @return the email
+   */
   public String getEmail() {
     return email;
   }
 
+  /**
+   * Sets email.
+   *
+   * @param email the email
+   */
   public void setEmail(String email) {
     this.email = email;
   }
 
+  /**
+   * Gets password hash.
+   *
+   * @return the password hash
+   */
   public String getPasswordHash() {
     return passwordHash;
   }
 
+  /**
+   * Sets password hash.
+   *
+   * @param passwordHash the password hash
+   */
   public void setPasswordHash(String passwordHash) {
     this.passwordHash = passwordHash;
   }
 
+  /**
+   * Gets last login.
+   *
+   * @return the last login
+   */
   public long getLastLogin() {
     return lastLogin;
   }
 
+  /**
+   * Sets last login.
+   *
+   * @param lastLogin the last login
+   */
   public void setLastLogin(long lastLogin) {
     this.lastLogin = lastLogin;
   }
 
+  /**
+   * Gets token.
+   *
+   * @return the token
+   */
   public String getToken() {
     return token;
   }
 
+  /**
+   * Sets token.
+   *
+   * @param token the token
+   */
   public void setToken(String token) {
     this.token = token;
   }
 
+  /**
+   * Gets roles.
+   *
+   * @return the roles
+   */
   public List<Role> getRoles() {
     return roles;
   }
 
+  /**
+   * Sets roles.
+   *
+   * @param roles the roles
+   */
   public void setRoles(List<Role> roles) {
     this.roles = roles;
   }
@@ -121,10 +176,20 @@ public class User extends Base implements Principal {
     roles.add(role);
   }
 
+  /**
+   * Gets password.
+   *
+   * @return the password
+   */
   public String getPassword() {
     return password;
   }
 
+  /**
+   * Sets password.
+   *
+   * @param password the password
+   */
   public void setPassword(String password) {
     this.password = password;
   }
@@ -132,7 +197,6 @@ public class User extends Base implements Principal {
   /**
    * The Class Builder.
    */
-
   public static final class Builder {
     private String name;
     private String email;
@@ -151,80 +215,174 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
+    /**
+     * An user builder.
+     *
+     * @return the builder
+     */
     public static Builder anUser() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With email builder.
+     *
+     * @param email the email
+     * @return the builder
+     */
     public Builder withEmail(String email) {
       this.email = email;
       return this;
     }
 
+    /**
+     * With password hash builder.
+     *
+     * @param passwordHash the password hash
+     * @return the builder
+     */
     public Builder withPasswordHash(String passwordHash) {
       this.passwordHash = passwordHash;
       return this;
     }
 
+    /**
+     * With roles builder.
+     *
+     * @param roles the roles
+     * @return the builder
+     */
     public Builder withRoles(List<Role> roles) {
       this.roles = roles;
       return this;
     }
 
+    /**
+     * With last login builder.
+     *
+     * @param lastLogin the last login
+     * @return the builder
+     */
     public Builder withLastLogin(long lastLogin) {
       this.lastLogin = lastLogin;
       return this;
     }
 
+    /**
+     * With password builder.
+     *
+     * @param password the password
+     * @return the builder
+     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * With token builder.
+     *
+     * @param token the token
+     * @return the builder
+     */
     public Builder withToken(String token) {
       this.token = token;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anUser()
           .withName(name)
@@ -243,6 +401,11 @@ public class User extends Base implements Principal {
           .withActive(active);
     }
 
+    /**
+     * Build user.
+     *
+     * @return the user
+     */
     public User build() {
       User user = new User();
       user.setName(name);

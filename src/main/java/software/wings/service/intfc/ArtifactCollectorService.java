@@ -11,7 +11,6 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 5/11/16.
  */
-
 public interface ArtifactCollectorService {
   /**
    * Collect.

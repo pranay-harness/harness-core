@@ -35,6 +35,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class ServiceExpressionProcessor implements ExpressionProcessor {
+  /**
+   * The Expression start pattern.
+   */
   static final String EXPRESSION_START_PATTERN = "services()";
   private static final String SERVICE_EXPR_PROCESSOR = "serviceExpressionProcessor";
 
@@ -174,6 +177,11 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     return elements;
   }
 
+  /**
+   * Sets service resource service.
+   *
+   * @param serviceResourceService the service resource service
+   */
   void setServiceResourceService(ServiceResourceService serviceResourceService) {
     this.serviceResourceService = serviceResourceService;
   }

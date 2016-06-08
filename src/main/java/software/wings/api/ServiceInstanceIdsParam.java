@@ -8,14 +8,15 @@ import software.wings.common.Constants;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * The type Service instance ids param.
+ *
  * @author Rishi
  */
-public class SimpleOrchestrationParams implements ContextElement {
+public class ServiceInstanceIdsParam implements ContextElement {
   private String serviceId;
   private List<String> instanceIds;
 
@@ -26,29 +27,46 @@ public class SimpleOrchestrationParams implements ContextElement {
 
   @Override
   public String getName() {
-    return Constants.SIMPLE_ORCHESTRATION_PARAMS;
+    return Constants.SERVICE_INSTANCE_IDS_PARAMS;
   }
 
   @Override
   public Map<String, Object> paramMap() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(Constants.SIMPLE_ORCHESTRATION_PARAMS + ".serviceId", serviceId);
-    map.put(Constants.SIMPLE_ORCHESTRATION_PARAMS + ".instanceIds", instanceIds);
-    return map;
+    return null;
   }
 
+  /**
+   * Gets service id.
+   *
+   * @return the service id
+   */
   public String getServiceId() {
     return serviceId;
   }
 
+  /**
+   * Sets service id.
+   *
+   * @param serviceId the service id
+   */
   public void setServiceId(String serviceId) {
     this.serviceId = serviceId;
   }
 
+  /**
+   * Gets instance ids.
+   *
+   * @return the instance ids
+   */
   public List<String> getInstanceIds() {
     return instanceIds;
   }
 
+  /**
+   * Sets instance ids.
+   *
+   * @param instanceIds the instance ids
+   */
   public void setInstanceIds(List<String> instanceIds) {
     this.instanceIds = instanceIds;
   }

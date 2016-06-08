@@ -10,7 +10,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 /**
  * Created by anubhaw on 5/16/16.
  */
-
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
   @Type(value = HostConnectionAttributes.class, name = "HOST_CONNECTION_ATTRIBUTES")
@@ -29,10 +28,20 @@ public abstract class SettingValue {
     this.type = type;
   }
 
+  /**
+   * Gets type.
+   *
+   * @return the type
+   */
   public SettingVariableTypes getType() {
     return type;
   }
 
+  /**
+   * Sets type.
+   *
+   * @param type the type
+   */
   public void setType(SettingVariableTypes type) {
     this.type = type;
   }
@@ -40,5 +49,19 @@ public abstract class SettingValue {
   /**
    * The Enum SettingVariableTypes.
    */
-  public enum SettingVariableTypes { HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, SMTP, JENKINS }
+  public enum SettingVariableTypes {
+    /**
+     * Host connection attributes setting variable types.
+     */
+    HOST_CONNECTION_ATTRIBUTES, /**
+                                 * Bastion host connection attributes setting variable types.
+                                 */
+    BASTION_HOST_CONNECTION_ATTRIBUTES, /**
+                                         * Smtp setting variable types.
+                                         */
+    SMTP, /**
+           * Jenkins setting variable types.
+           */
+    JENKINS
+  }
 }

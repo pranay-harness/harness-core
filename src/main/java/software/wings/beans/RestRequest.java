@@ -34,18 +34,38 @@ public class RestRequest<T> {
     metaData = new HashMap<String, Object>();
   }
 
+  /**
+   * Gets meta data.
+   *
+   * @return the meta data
+   */
   public Map<String, Object> getMetaData() {
     return metaData;
   }
 
+  /**
+   * Sets meta data.
+   *
+   * @param metaData the meta data
+   */
   public void setMetaData(Map<String, Object> metaData) {
     this.metaData = metaData;
   }
 
+  /**
+   * Gets resource.
+   *
+   * @return the resource
+   */
   public T getResource() {
     return resource;
   }
 
+  /**
+   * Sets resource.
+   *
+   * @param resource the resource
+   */
   public void setResource(T resource) {
     this.resource = resource;
   }

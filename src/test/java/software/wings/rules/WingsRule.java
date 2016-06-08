@@ -85,6 +85,11 @@ public class WingsRule implements MethodRule {
     };
   }
 
+  /**
+   * Gets datastore.
+   *
+   * @return the datastore
+   */
   public Datastore getDatastore() {
     return datastore;
   }

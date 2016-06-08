@@ -14,7 +14,13 @@ import software.wings.sm.StateType;
  */
 public class ExecState extends State {
   private static final long serialVersionUID = 1L;
+  /**
+   * The Path.
+   */
   String path;
+  /**
+   * The Embeded.
+   */
   boolean embeded;
 
   /**

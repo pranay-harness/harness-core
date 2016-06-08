@@ -24,10 +24,18 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public class ExpressionEvaluator {
+  /**
+   * The constant wingsVariablePattern.
+   */
   public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*\\}");
   private static ExpressionEvaluator instance = new ExpressionEvaluator();
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
+  /**
+   * Gets instance.
+   *
+   * @return the instance
+   */
   public static ExpressionEvaluator getInstance() {
     return instance;
   }
@@ -41,6 +49,10 @@ public class ExpressionEvaluator {
    * @return the object
    */
   public Object evaluate(String expression, String name, Object value) {
+    if (expression == null) {
+      return expression;
+    }
+
     logger.debug("evaluate request - expression: {}, name: {}, value: {}", expression, name, value);
     JexlEngine jexl = new JexlBuilder().create();
     JexlExpression e = jexl.createExpression(expression);
@@ -61,6 +73,10 @@ public class ExpressionEvaluator {
    */
   public Object evaluate(String expression, Map<String, Object> context) {
     logger.debug("evaluate request - expression: {}, context: {}", expression, context);
+    if (expression == null) {
+      return expression;
+    }
+
     JexlEngine jexl = new JexlBuilder().create();
     JexlExpression jexp = jexl.createExpression(expression);
     JexlContext jc = new MapContext();
@@ -88,6 +104,10 @@ public class ExpressionEvaluator {
   }
 
   private String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    if (expression == null) {
+      return expression;
+    }
+
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
@@ -134,6 +154,9 @@ public class ExpressionEvaluator {
    * @return the string
    */
   public String merge(String expression, Map<String, Object> context, String defaultObjectPrefix) {
+    if (expression == null) {
+      return expression;
+    }
     Matcher matcher = wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();

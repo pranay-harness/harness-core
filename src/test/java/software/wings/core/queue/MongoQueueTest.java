@@ -466,24 +466,52 @@ public class MongoQueueTest extends WingsBaseTest {
     @Id private String id;
     private int data;
 
+    /**
+     * Instantiates a new Test entity.
+     */
     public TestEntity() {}
 
+    /**
+     * Instantiates a new Test entity.
+     *
+     * @param data the data
+     */
     public TestEntity(int data) {
       this.data = data;
     }
 
+    /**
+     * Gets id.
+     *
+     * @return the id
+     */
     public String getId() {
       return id;
     }
 
+    /**
+     * Sets id.
+     *
+     * @param id the id
+     */
     public void setId(String id) {
       this.id = id;
     }
 
+    /**
+     * Gets data.
+     *
+     * @return the data
+     */
     public int getData() {
       return data;
     }
 
+    /**
+     * Sets data.
+     *
+     * @param data the data
+     */
     public void setData(int data) {
       this.data = data;
     }
@@ -493,6 +521,9 @@ public class MongoQueueTest extends WingsBaseTest {
       return Objects.hash(id, data);
     }
 
+    /**
+     * On update.
+     */
     @PrePersist
     public void onUpdate() {
       if (id == null) {
@@ -549,10 +580,20 @@ public class MongoQueueTest extends WingsBaseTest {
       this.entity = entity;
     }
 
+    /**
+     * Gets entity.
+     *
+     * @return the entity
+     */
     public TestEntity getEntity() {
       return entity;
     }
 
+    /**
+     * Sets entity.
+     *
+     * @param entity the entity
+     */
     public void setEntity(TestEntity entity) {
       this.entity = entity;
     }

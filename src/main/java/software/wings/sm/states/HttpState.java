@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 
+import com.github.reinert.jjschema.Attributes;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -31,6 +32,7 @@ import java.util.List;
  *
  * @author Rishi
  */
+@Attributes(title = "HttpState")
 public class HttpState extends State {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
@@ -38,12 +40,12 @@ public class HttpState extends State {
   private static final long serialVersionUID = 1L;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private String url;
-  private String method;
-  private String header;
-  private String body;
-  private String assertion;
-  private int socketTimeoutMillis = 10000;
+  @Attributes(required = true) private String url;
+  @Attributes(required = true) private String method;
+  @Attributes private String header;
+  @Attributes private String body;
+  @Attributes(required = true) private String assertion;
+  @Attributes private int socketTimeoutMillis = 10000;
 
   /**
    * Create a new Http State with given name.

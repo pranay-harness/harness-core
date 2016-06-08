@@ -20,7 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
-import software.wings.api.SimpleOrchestrationParams;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.ErrorConstants;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgs.OrchestrationType;
@@ -304,7 +304,16 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
-    return wingsPersistence.query(Orchestration.class, pageRequest);
+    PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
+    if (res != null && res.size() > 0) {
+      for (Orchestration orchestration : res.getResponse()) {
+        StateMachine stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid(), null);
+        if (stateMachine != null) {
+          orchestration.setGraph(stateMachine.getGraph());
+        }
+      }
+    }
+    return res;
   }
 
   /**
@@ -338,8 +347,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       return orchestration;
     }
     StateMachine stateMachine = readLatest(appId, orchestrationId, null);
-
-    orchestration.setGraph(stateMachine.getGraph());
+    if (stateMachine != null) {
+      orchestration.setGraph(stateMachine.getGraph());
+    }
     return orchestration;
   }
 
@@ -562,7 +572,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   }
 
-  private WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
+  /**
+   * Trigger simple execution workflow execution.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the workflow execution
+   */
+  WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
 
@@ -581,14 +599,21 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    SimpleOrchestrationParams simpleOrchestrationParams = new SimpleOrchestrationParams();
+    SimpleWorkflowParam simpleOrchestrationParams = new SimpleWorkflowParam();
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
-
+    simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
   }
 
-  private Workflow readLatestSimpleWorkflow(String appId, String envId) {
+  /**
+   * Read latest simple workflow orchestration.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the orchestration
+   */
+  Orchestration readLatestSimpleWorkflow(String appId, String envId) {
     PageRequest<Orchestration> req = new PageRequest<>();
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
@@ -623,6 +648,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private Orchestration createDefaultSimpleWorkflow(String appId, String envId) {
     Orchestration orchestration = new Orchestration();
+    orchestration.setName(Constants.SIMPLE_ORCHESTRATION_NAME);
+    orchestration.setDescription(Constants.SIMPLE_ORCHESTRATION_DESC);
     orchestration.setWorkflowType(WorkflowType.SIMPLE);
     orchestration.setAppId(appId);
     orchestration.setEnvironment(environmentService.get(appId, envId));

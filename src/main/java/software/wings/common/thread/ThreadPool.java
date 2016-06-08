@@ -82,6 +82,11 @@ public class ThreadPool {
     commonPool.shutdownNow();
   }
 
+  /**
+   * Is idle boolean.
+   *
+   * @return the boolean
+   */
   public static boolean isIdle() {
     return (commonPool.getActiveCount() == 0);
   }
@@ -90,6 +95,12 @@ public class ThreadPool {
     private Runnable runnable;
     private int delay;
 
+    /**
+     * Instantiates a new Delayed.
+     *
+     * @param runnable the runnable
+     * @param delay    the delay
+     */
     public Delayed(Runnable runnable, int delay) {
       this.runnable = runnable;
       this.delay = delay;

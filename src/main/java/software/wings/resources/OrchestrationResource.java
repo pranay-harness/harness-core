@@ -138,9 +138,9 @@ public class OrchestrationResource {
   /**
    * Delete.
    *
-   * @param appId      the app id
-   * @param pipelineId the pipeline id
-   * @param pipeline   the pipeline
+   * @param appId           the app id
+   * @param orchestrationId the orchestration id
+   * @param pipeline        the pipeline
    * @return the rest response
    */
   @DELETE

@@ -11,7 +11,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Service.Builder.aService;
 
-import jersey.repackaged.com.google.common.collect.Lists;
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Service;
@@ -23,8 +24,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
-
-// TODO: Auto-generated Javadoc
 
 /**
  * The Class ServiceExpressionProcessorTest.

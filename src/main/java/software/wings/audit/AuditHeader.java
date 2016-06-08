@@ -17,9 +17,21 @@ import software.wings.beans.User;
  */
 @Entity(value = "audits", noClassnameStored = true)
 public class AuditHeader extends Base {
+  /**
+   * The Remote user.
+   */
   protected User remoteUser;
+  /**
+   * The Application.
+   */
   protected Application application;
+  /**
+   * The Component.
+   */
   protected Service component;
+  /**
+   * The Environment.
+   */
   protected Environment environment;
   private String url;
   private String resourcePath;
@@ -39,170 +51,380 @@ public class AuditHeader extends Base {
   private Long requestTime;
   private Long responseTime;
 
+  /**
+   * Gets query params.
+   *
+   * @return the query params
+   */
   public String getQueryParams() {
     return queryParams;
   }
 
+  /**
+   * Sets query params.
+   *
+   * @param queryParams the query params
+   */
   public void setQueryParams(String queryParams) {
     this.queryParams = queryParams;
   }
 
+  /**
+   * Gets request method.
+   *
+   * @return the request method
+   */
   public HttpMethod getRequestMethod() {
     return requestMethod;
   }
 
+  /**
+   * Sets request method.
+   *
+   * @param requestMethod the request method
+   */
   public void setRequestMethod(HttpMethod requestMethod) {
     this.requestMethod = requestMethod;
   }
 
+  /**
+   * Gets resource path.
+   *
+   * @return the resource path
+   */
   public String getResourcePath() {
     return resourcePath;
   }
 
+  /**
+   * Sets resource path.
+   *
+   * @param resourcePath the resource path
+   */
   public void setResourcePath(String resourcePath) {
     this.resourcePath = resourcePath;
   }
 
+  /**
+   * Gets response status code.
+   *
+   * @return the response status code
+   */
   public Integer getResponseStatusCode() {
     return responseStatusCode;
   }
 
+  /**
+   * Sets response status code.
+   *
+   * @param responseStatusCode the response status code
+   */
   public void setResponseStatusCode(Integer responseStatusCode) {
     this.responseStatusCode = responseStatusCode;
   }
 
+  /**
+   * Gets response type.
+   *
+   * @return the response type
+   */
   public ResponseType getResponseType() {
     return responseType;
   }
 
+  /**
+   * Sets response type.
+   *
+   * @param responseType the response type
+   */
   public void setResponseType(ResponseType responseType) {
     this.responseType = responseType;
   }
 
+  /**
+   * Gets error code.
+   *
+   * @return the error code
+   */
   public String getErrorCode() {
     return errorCode;
   }
 
+  /**
+   * Sets error code.
+   *
+   * @param errorCode the error code
+   */
   public void setErrorCode(String errorCode) {
     this.errorCode = errorCode;
   }
 
+  /**
+   * Gets remote user.
+   *
+   * @return the remote user
+   */
   public User getRemoteUser() {
     return remoteUser;
   }
 
+  /**
+   * Sets remote user.
+   *
+   * @param remoteUser the remote user
+   */
   public void setRemoteUser(User remoteUser) {
     this.remoteUser = remoteUser;
   }
 
+  /**
+   * Gets remote ip address.
+   *
+   * @return the remote ip address
+   */
   public String getRemoteIpAddress() {
     return remoteIpAddress;
   }
 
+  /**
+   * Sets remote ip address.
+   *
+   * @param remoteIpAddress the remote ip address
+   */
   public void setRemoteIpAddress(String remoteIpAddress) {
     this.remoteIpAddress = remoteIpAddress;
   }
 
+  /**
+   * Gets remote host name.
+   *
+   * @return the remote host name
+   */
   public String getRemoteHostName() {
     return remoteHostName;
   }
 
+  /**
+   * Sets remote host name.
+   *
+   * @param remoteHostName the remote host name
+   */
   public void setRemoteHostName(String remoteHostName) {
     this.remoteHostName = remoteHostName;
   }
 
+  /**
+   * Gets remote host port.
+   *
+   * @return the remote host port
+   */
   public Integer getRemoteHostPort() {
     return remoteHostPort;
   }
 
+  /**
+   * Sets remote host port.
+   *
+   * @param remoteHostPort the remote host port
+   */
   public void setRemoteHostPort(Integer remoteHostPort) {
     this.remoteHostPort = remoteHostPort;
   }
 
+  /**
+   * Gets local ip address.
+   *
+   * @return the local ip address
+   */
   public String getLocalIpAddress() {
     return localIpAddress;
   }
 
+  /**
+   * Sets local ip address.
+   *
+   * @param localIpAddress the local ip address
+   */
   public void setLocalIpAddress(String localIpAddress) {
     this.localIpAddress = localIpAddress;
   }
 
+  /**
+   * Gets local host name.
+   *
+   * @return the local host name
+   */
   public String getLocalHostName() {
     return localHostName;
   }
 
+  /**
+   * Sets local host name.
+   *
+   * @param localHostName the local host name
+   */
   public void setLocalHostName(String localHostName) {
     this.localHostName = localHostName;
   }
 
+  /**
+   * Gets application.
+   *
+   * @return the application
+   */
   public Application getApplication() {
     return application;
   }
 
+  /**
+   * Sets application.
+   *
+   * @param application the application
+   */
   public void setApplication(Application application) {
     this.application = application;
   }
 
+  /**
+   * Gets component.
+   *
+   * @return the component
+   */
   public Service getComponent() {
     return component;
   }
 
+  /**
+   * Sets component.
+   *
+   * @param component the component
+   */
   public void setComponent(Service component) {
     this.component = component;
   }
 
+  /**
+   * Gets environment.
+   *
+   * @return the environment
+   */
   public Environment getEnvironment() {
     return environment;
   }
 
+  /**
+   * Sets environment.
+   *
+   * @param environment the environment
+   */
   public void setEnvironment(Environment environment) {
     this.environment = environment;
   }
 
+  /**
+   * Gets request time.
+   *
+   * @return the request time
+   */
   public Long getRequestTime() {
     return requestTime;
   }
 
+  /**
+   * Sets request time.
+   *
+   * @param requestTime the request time
+   */
   public void setRequestTime(Long requestTime) {
     this.requestTime = requestTime;
   }
 
+  /**
+   * Gets response time.
+   *
+   * @return the response time
+   */
   public Long getResponseTime() {
     return responseTime;
   }
 
+  /**
+   * Sets response time.
+   *
+   * @param responseTime the response time
+   */
   public void setResponseTime(Long responseTime) {
     this.responseTime = responseTime;
   }
 
+  /**
+   * Gets url.
+   *
+   * @return the url
+   */
   public String getUrl() {
     return url;
   }
 
+  /**
+   * Sets url.
+   *
+   * @param url the url
+   */
   public void setUrl(String url) {
     this.url = url;
   }
 
+  /**
+   * Gets header string.
+   *
+   * @return the header string
+   */
   public String getHeaderString() {
     return headerString;
   }
 
+  /**
+   * Sets header string.
+   *
+   * @param headerString the header string
+   */
   public void setHeaderString(String headerString) {
     this.headerString = headerString;
   }
 
+  /**
+   * Gets request payload uuid.
+   *
+   * @return the request payload uuid
+   */
   public String getRequestPayloadUuid() {
     return requestPayloadUuid;
   }
 
+  /**
+   * Sets request payload uuid.
+   *
+   * @param requestPayloadUuid the request payload uuid
+   */
   public void setRequestPayloadUuid(String requestPayloadUuid) {
     this.requestPayloadUuid = requestPayloadUuid;
   }
 
+  /**
+   * Gets response payload uuid.
+   *
+   * @return the response payload uuid
+   */
   public String getResponsePayloadUuid() {
     return responsePayloadUuid;
   }
 
+  /**
+   * Sets response payload uuid.
+   *
+   * @param responsePayloadUuid the response payload uuid
+   */
   public void setResponsePayloadUuid(String responsePayloadUuid) {
     this.responsePayloadUuid = responsePayloadUuid;
   }
@@ -210,20 +432,48 @@ public class AuditHeader extends Base {
   /**
    * The Enum RequestType.
    */
-  public enum RequestType { REQUEST, RESPONSE }
+  public enum RequestType {
+    /**
+     * Request request type.
+     */
+    REQUEST, /**
+              * Response request type.
+              */
+    RESPONSE
+  }
 
   /**
    * The Enum ResponseType.
    */
-  public enum ResponseType { SUCCESS, FAILED }
+  public enum ResponseType {
+    /**
+     * Success response type.
+     */
+    SUCCESS, /**
+              * Failed response type.
+              */
+    FAILED
+  }
 
   /**
    * The Class Builder.
    */
   public static final class Builder {
+    /**
+     * The Remote user.
+     */
     protected User remoteUser;
+    /**
+     * The Application.
+     */
     protected Application application;
+    /**
+     * The Component.
+     */
     protected Service component;
+    /**
+     * The Environment.
+     */
     protected Environment environment;
     private String url;
     private String resourcePath;

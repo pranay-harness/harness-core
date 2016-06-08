@@ -33,6 +33,9 @@ import javax.ws.rs.core.GenericType;
 public class HostResourceTest extends WingsBaseTest {
   private static final HostService RESOURCE_SERVICE = mock(HostService.class);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new HostResource(RESOURCE_SERVICE))
@@ -41,6 +44,9 @@ public class HostResourceTest extends WingsBaseTest {
   private static final Host aHost =
       Host.HostBuilder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).build();
 
+  /**
+   * Should list hosts.
+   */
   @Test
   @Ignore
   public void shouldListHosts() {

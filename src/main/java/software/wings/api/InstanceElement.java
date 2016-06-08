@@ -7,6 +7,7 @@ package software.wings.api;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 
+import java.util.HashMap;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -23,7 +24,8 @@ public class InstanceElement implements ContextElement {
 
   @Override
   public String getName() {
-    return hostName + ":" + serviceTemplateName;
+    return uuid;
+    //    return hostName + ":" + serviceTemplateName;
   }
 
   @Override
@@ -31,34 +33,63 @@ public class InstanceElement implements ContextElement {
     return ContextElementType.INSTANCE;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ContextElement#paramMap()
-   */
   @Override
   public Map<String, Object> paramMap() {
-    return null;
+    Map<String, Object> map = new HashMap<>();
+    map.put(INSTANCE_OBJECT_NAME, this);
+    return map;
   }
 
+  /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
   public String getUuid() {
     return uuid;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
 
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }
 
+  /**
+   * Gets service template name.
+   *
+   * @return the service template name
+   */
   public String getServiceTemplateName() {
     return serviceTemplateName;
   }
 
+  /**
+   * Sets service template name.
+   *
+   * @param serviceTemplateName the service template name
+   */
   public void setServiceTemplateName(String serviceTemplateName) {
     this.serviceTemplateName = serviceTemplateName;
   }

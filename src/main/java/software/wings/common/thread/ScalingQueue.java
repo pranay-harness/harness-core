@@ -39,6 +39,8 @@ public class ScalingQueue<E> extends LinkedBlockingQueue<E> {
 
   /**
    * Sets the executor this queue belongs to.
+   *
+   * @param executor the executor
    */
   public void setThreadPoolExecutor(ThreadPoolExecutor executor) {
     this.executor = executor;

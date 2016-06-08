@@ -5,6 +5,22 @@
 package software.wings.beans;
 
 /**
+ * The enum Workflow type.
+ *
  * @author Rishi
  */
-public enum WorkflowType { PIPELINE, ORCHESTRATION, SIMPLE, SUB_WORKFLOW }
+public enum WorkflowType {
+  /**
+   * Pipeline workflow type.
+   */
+  PIPELINE, /**
+             * Orchestration workflow type.
+             */
+  ORCHESTRATION, /**
+                  * Simple workflow type.
+                  */
+  SIMPLE, /**
+           * Sub workflow workflow type.
+           */
+  SUB_WORKFLOW
+}

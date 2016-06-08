@@ -53,67 +53,147 @@ public class Artifact extends Base {
 
   @Indexed private Status status;
 
+  /**
+   * Gets release.
+   *
+   * @return the release
+   */
   public Release getRelease() {
     return release;
   }
 
+  /**
+   * Sets release.
+   *
+   * @param release the release
+   */
   public void setRelease(Release release) {
     this.release = release;
   }
 
+  /**
+   * Gets artifact source name.
+   *
+   * @return the artifact source name
+   */
   public String getArtifactSourceName() {
     return artifactSourceName;
   }
 
+  /**
+   * Sets artifact source name.
+   *
+   * @param artifactSourceName the artifact source name
+   */
   public void setArtifactSourceName(String artifactSourceName) {
     this.artifactSourceName = artifactSourceName;
   }
 
+  /**
+   * Gets metadata.
+   *
+   * @return the metadata
+   */
   public Map<String, String> getMetadata() {
     return metadata;
   }
 
+  /**
+   * Sets metadata.
+   *
+   * @param metadata the metadata
+   */
   public void setMetadata(Map<String, String> metadata) {
     this.metadata = metadata;
   }
 
+  /**
+   * Gets display name.
+   *
+   * @return the display name
+   */
   public String getDisplayName() {
     return displayName;
   }
 
+  /**
+   * Sets display name.
+   *
+   * @param displayName the display name
+   */
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
   }
 
+  /**
+   * Gets revision.
+   *
+   * @return the revision
+   */
   public String getRevision() {
     return revision;
   }
 
+  /**
+   * Sets revision.
+   *
+   * @param revision the revision
+   */
   public void setRevision(String revision) {
     this.revision = revision;
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public Status getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(Status status) {
     this.status = status;
   }
 
+  /**
+   * Gets artifact files.
+   *
+   * @return the artifact files
+   */
   public List<ArtifactFile> getArtifactFiles() {
     return artifactFiles;
   }
 
+  /**
+   * Sets artifact files.
+   *
+   * @param artifactFiles the artifact files
+   */
   public void setArtifactFiles(List<ArtifactFile> artifactFiles) {
     this.artifactFiles = artifactFiles;
   }
 
+  /**
+   * Gets sevices.
+   *
+   * @return the sevices
+   */
   @JsonProperty("services")
   public Set<Service> getSevices() {
     return artifactFiles.stream().flatMap(artifactFile -> artifactFile.getServices().stream()).collect(toSet());
   }
 
+  /**
+   * Gets source type.
+   *
+   * @return the source type
+   */
   @JsonProperty("sourceType")
   public SourceType getSourceType() {
     if (release != null) {
@@ -176,7 +256,33 @@ public class Artifact extends Base {
   /**
    * The Enum Status.
    */
-  public enum Status { NEW, RUNNING, QUEUED, WAITING, READY, ABORTED, FAILED, ERROR }
+  public enum Status {
+    /**
+     * New status.
+     */
+    NEW, /**
+          * Running status.
+          */
+    RUNNING, /**
+              * Queued status.
+              */
+    QUEUED, /**
+             * Waiting status.
+             */
+    WAITING, /**
+              * Ready status.
+              */
+    READY, /**
+            * Aborted status.
+            */
+    ABORTED, /**
+              * Failed status.
+              */
+    FAILED, /**
+             * Error status.
+             */
+    ERROR
+  }
 
   /**
    * Created by peeyushaggarwal on 4/4/16.

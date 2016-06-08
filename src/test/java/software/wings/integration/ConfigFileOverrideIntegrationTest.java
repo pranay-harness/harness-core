@@ -75,28 +75,84 @@ import javax.inject.Inject;
  * |...Host9
  * |
  */
-
 @Integration
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
+  /**
+   * The Test folder.
+   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+  /**
+   * The Wings persistence.
+   */
   @Inject WingsPersistence wingsPersistence;
+  /**
+   * The App service.
+   */
   @Inject AppService appService;
+  /**
+   * The Srs.
+   */
   @Inject ServiceResourceService srs;
+  /**
+   * The Infra service.
+   */
   @Inject InfraService infraService;
+  /**
+   * The Template service.
+   */
   @Inject ServiceTemplateService templateService;
+  /**
+   * The Tag service.
+   */
   @Inject TagService tagService;
+  /**
+   * The Config service.
+   */
   @Inject ConfigService configService;
+  /**
+   * The Environment service.
+   */
   @Inject EnvironmentService environmentService;
+  /**
+   * The Host service.
+   */
   @Inject HostService hostService;
+  /**
+   * The Template.
+   */
   ServiceTemplate template;
+  /**
+   * The Hosts.
+   */
   List<Host> hosts;
 
+  /**
+   * The Nc.
+   */
   Tag nc;
+  /**
+   * The Nc oz 1.
+   */
   Tag ncOz1;
+  /**
+   * The Nc oz 2.
+   */
   Tag ncOz2;
+  /**
+   * The Nc oz 3.
+   */
   Tag ncOz3;
+  /**
+   * The Or.
+   */
   Tag or;
+  /**
+   * The Or oz 1.
+   */
   Tag orOz1;
+  /**
+   * The Or oz 2.
+   */
   Tag orOz2;
 
   /**

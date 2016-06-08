@@ -35,26 +35,56 @@ public class Role extends Base {
     this.permissions = permissions;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name.toUpperCase();
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets permissions.
+   *
+   * @return the permissions
+   */
   public List<Permission> getPermissions() {
     return permissions;
   }
 
+  /**
+   * Sets permissions.
+   *
+   * @param permissions the permissions
+   */
   public void setPermissions(List<Permission> permissions) {
     this.permissions = permissions;
   }

@@ -21,7 +21,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 5/26/16.
  */
-
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Inject private WingsPersistence wingsPersistence;
 

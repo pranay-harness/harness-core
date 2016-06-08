@@ -80,6 +80,9 @@ public class SshSessionFactory {
    * The Class MyLogger.
    */
   public static class MyLogger implements com.jcraft.jsch.Logger {
+    /**
+     * The Name.
+     */
     static java.util.Hashtable name = new java.util.Hashtable();
 
     static {

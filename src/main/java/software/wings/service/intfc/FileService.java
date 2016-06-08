@@ -97,11 +97,24 @@ public interface FileService {
    * The Enum FileBucket.
    */
   enum FileBucket {
-    LOB("lob"),
-    ARTIFACTS("artifacts"),
-    AUDITS("audits"),
-    CONFIGS("configs"),
-    LOGS("logs"),
+    /**
+     * Lob file bucket.
+     */
+    LOB("lob"), /**
+                 * Artifacts file bucket.
+                 */
+    ARTIFACTS("artifacts"), /**
+                             * Audits file bucket.
+                             */
+    AUDITS("audits"), /**
+                       * Configs file bucket.
+                       */
+    CONFIGS("configs"), /**
+                         * Logs file bucket.
+                         */
+    LOGS("logs"), /**
+                   * Platforms file bucket.
+                   */
     PLATFORMS("platforms");
 
     private String bucketName;
@@ -127,10 +140,20 @@ public interface FileService {
       this(bucketName, 16 * 1000 * 1000);
     }
 
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
     public String getName() {
       return bucketName;
     }
 
+    /**
+     * Gets chunk size.
+     *
+     * @return the chunk size
+     */
     public int getChunkSize() {
       return chunkSize;
     }

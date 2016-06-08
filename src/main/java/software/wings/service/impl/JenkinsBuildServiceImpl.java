@@ -26,8 +26,17 @@ import javax.ws.rs.core.MultivaluedMap;
  * Created by peeyushaggarwal on 5/13/16.
  */
 public class JenkinsBuildServiceImpl implements JenkinsBuildService {
+  /**
+   * The constant RELEASE_ID.
+   */
   public static final String RELEASE_ID = "releaseId";
+  /**
+   * The constant APP_ID.
+   */
   public static final String APP_ID = "appId";
+  /**
+   * The constant ARTIFACT_SOURCE_NAME.
+   */
   public static final String ARTIFACT_SOURCE_NAME = "artifactSourceName";
   @Inject private JenkinsFactory jenkinsFactory;
 

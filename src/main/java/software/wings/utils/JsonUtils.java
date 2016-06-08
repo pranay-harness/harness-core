@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.github.reinert.jjschema.JsonSchemaGenerator;
 import com.github.reinert.jjschema.SchemaGeneratorBuilder;
@@ -281,6 +282,11 @@ public class JsonUtils {
     try {
       JsonSchemaGenerator v4generator = SchemaGeneratorBuilder.draftV4Schema().build();
       JsonNode schemaNode = v4generator.generateSchema(clazz);
+      schemaNode.get("properties").forEach(jsonNode -> {
+        if (jsonNode.has("enum")) {
+          ((ObjectNode) jsonNode).put("type", "string");
+        }
+      });
       return schemaNode;
     } catch (Exception e) {
       logger.error("", e);

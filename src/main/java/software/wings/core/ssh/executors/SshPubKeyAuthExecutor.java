@@ -16,8 +16,8 @@ public class SshPubKeyAuthExecutor extends AbstractSshExecutor {
   /**
    * Instantiates a new ssh pub key auth executor.
    *
-   * @param executionLogs the execution logs
-   * @param fileService   the file service
+   * @param fileService the file service
+   * @param logService  the log service
    */
   @Inject
   public SshPubKeyAuthExecutor(FileService fileService, LogService logService) {

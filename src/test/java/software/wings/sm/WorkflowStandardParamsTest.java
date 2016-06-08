@@ -26,8 +26,17 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class WorkflowStandardParamsTest extends WingsBaseTest {
+  /**
+   * The App service.
+   */
   @Inject AppService appService;
+  /**
+   * The Environment service.
+   */
   @Inject EnvironmentService environmentService;
+  /**
+   * The Injector.
+   */
   @Inject MembersInjector<WorkflowStandardParams> injector;
 
   /**

@@ -26,6 +26,11 @@ public class FileUploadSource extends ArtifactSource {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(Set<Service> services) {
     this.services = services;
   }

@@ -11,6 +11,11 @@ import java.util.UUID;
  * @author Rishi
  */
 public class UUIDGenerator {
+  /**
+   * Gets uuid.
+   *
+   * @return the uuid
+   */
   public static String getUuid() {
     UUID uuid = UUID.randomUUID();
     byte[] bytes = new byte[16];

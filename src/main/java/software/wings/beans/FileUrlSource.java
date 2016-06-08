@@ -21,10 +21,20 @@ public class FileUrlSource extends ArtifactSource {
     super(SourceType.HTTP);
   }
 
+  /**
+   * Gets url.
+   *
+   * @return the url
+   */
   public String getUrl() {
     return url;
   }
 
+  /**
+   * Sets url.
+   *
+   * @param url the url
+   */
   public void setUrl(String url) {
     this.url = url;
   }
@@ -34,6 +44,11 @@ public class FileUrlSource extends ArtifactSource {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(Set<Service> services) {
     this.services = services;
   }
