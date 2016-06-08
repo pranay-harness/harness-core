@@ -304,7 +304,16 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
-    return wingsPersistence.query(Orchestration.class, pageRequest);
+    PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
+    if (res != null && res.size() > 0) {
+      for (Orchestration orchestration : res.getResponse()) {
+        StateMachine stateMachine = readLatest(orchestration.getAppId(), orchestration.getUuid(), null);
+        if (stateMachine != null) {
+          orchestration.setGraph(stateMachine.getGraph());
+        }
+      }
+    }
+    return res;
   }
 
   /**
