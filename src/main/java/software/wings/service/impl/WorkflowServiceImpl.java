@@ -379,7 +379,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
-    populateGraph(workflowExecution);
+    if (workflowExecution != null) {
+      populateGraph(workflowExecution);
+    }
     return workflowExecution;
   }
 

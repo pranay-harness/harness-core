@@ -318,7 +318,7 @@ public class StateMachineExecutor {
             stateExecutionInstance.getExecutionUuid());
         if (stateExecutionInstance.getCallback() != null) {
           injector.injectMembers(stateExecutionInstance.getCallback());
-          stateExecutionInstance.getCallback().callback(context, ExecutionStatus.SUCCESS, exception);
+          stateExecutionInstance.getCallback().callback(context, ExecutionStatus.FAILED, exception);
         } else {
           logger.info("No callback for the stateMachine: {}, executionUuid: {}", sm.getName(),
               stateExecutionInstance.getExecutionUuid());
