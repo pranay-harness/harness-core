@@ -105,10 +105,26 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         hosts.add(wingsPersistence.get(Host.class, hostId));
       }
     }
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
-    serviceInstanceService.updateHostMappings(serviceTemplate, hosts, new ArrayList<>());
-    return serviceTemplate;
+    List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
+    List<Host> newHosts = new ArrayList<>();
+    List<Host> deletedHosts = new ArrayList<>();
+
+    hosts.forEach(host -> {
+      if (!alreadyMappedHosts.contains(host)) {
+        newHosts.add(host);
+      }
+    });
+
+    alreadyMappedHosts.forEach(host -> {
+      if (!hosts.contains(host)) {
+        deletedHosts.add(host);
+      }
+    });
+
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
+    serviceInstanceService.updateHostMappings(serviceTemplate, newHosts, deletedHosts);
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
   /* (non-Javadoc)
@@ -236,12 +252,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (rootTag == null) {
       return leafTagNodes;
     }
-    List<Tag> tags = wingsPersistence.createQuery(Tag.class)
-                         .field("rootTagId")
-                         .equal(rootTag.getUuid())
-                         .field("children")
-                         .sizeEq(0)
-                         .asList();
+    List<Tag> tags = tagService.getLeafTags(rootTag);
     return tags;
   }
 

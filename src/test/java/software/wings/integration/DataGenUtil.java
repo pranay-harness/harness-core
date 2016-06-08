@@ -207,8 +207,13 @@ public class DataGenUtil extends WingsBaseTest {
                                .field("infraId")
                                .equal(infraId)
                                .asList();
-        ServiceTemplate template = wingsPersistence.saveAndGet(
-            ServiceTemplate.class, aServiceTemplate().withService(service).withName("catalog:8080").build());
+        ServiceTemplate template = wingsPersistence.saveAndGet(ServiceTemplate.class,
+            aServiceTemplate()
+                .withAppId(service.getAppId())
+                .withEnvId(environment.getUuid())
+                .withService(service)
+                .withName("catalog:8080")
+                .build());
         Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
         Artifact artifact =
             wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());

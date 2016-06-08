@@ -13,6 +13,7 @@ import java.util.Objects;
  * Created by anubhaw on 4/4/16.
  */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
+//@Indexes(@Index(fields = {@Field("envId"), @Field("name")}, options = @IndexOptions(unique = true)))
 public class ServiceTemplate extends Base {
   private String envId;
   private String name;

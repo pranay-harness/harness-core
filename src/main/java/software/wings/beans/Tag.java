@@ -27,8 +27,7 @@ public class Tag extends Base {
   private boolean rootTag = false;
   private String rootTagId;
   private String envId;
-  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children;
-
+  @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   /**

@@ -81,4 +81,12 @@ public interface TagService {
    * @return the tags by name
    */
   List<Tag> getTagsByName(String appId, String envId, List<String> tagNames);
+
+  /**
+   * Gets leaf tags.
+   *
+   * @param root the root
+   * @return the leaf tags
+   */
+  List<Tag> getLeafTags(Tag root);
 }
