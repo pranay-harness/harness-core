@@ -524,7 +524,7 @@
                             <goal>test</goal>
                         </goals>
                         <configuration>
-                            <skip>true</skip>
+                            <skip>false</skip>
                             <excludes>
                                 <exclude>**/*IntegrationTest.java</exclude>
                                 <exclude>**/IntegrationTest*.java</exclude>
