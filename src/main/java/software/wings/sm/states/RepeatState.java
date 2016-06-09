@@ -4,6 +4,7 @@
 
 package software.wings.sm.states;
 
+import com.github.reinert.jjschema.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionStrategy;
@@ -33,13 +34,14 @@ import java.util.Map;
  *
  * @author Rishi
  */
+@Attributes(title = "Repeat")
 public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private ContextElementType repeatElementType;
-  private String repeatElementExpression;
-  private ExecutionStrategy executionStrategy;
+  @Attributes(required = true, title = "Repeat Element Expression") private String repeatElementExpression;
+  @Attributes(required = true, title = "Execution Strategy") private ExecutionStrategy executionStrategy;
   private String executionStrategyExpression;
 
   private String repeatTransitionStateName;

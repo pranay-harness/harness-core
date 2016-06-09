@@ -5,6 +5,7 @@
 package software.wings.resources;
 
 import io.swagger.annotations.Api;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
@@ -165,7 +166,7 @@ public class PipelineResource {
   @Path("{pipelineId}/executions")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(
-      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
+      @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowService.triggerPipelineExecution(appId, pipelineId));
   }
 }
