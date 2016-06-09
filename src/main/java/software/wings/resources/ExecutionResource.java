@@ -3,7 +3,6 @@ package software.wings.resources;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionArgs.OrchestrationType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -123,7 +122,7 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerOrchestratedExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    executionArgs.setOrchestrationType(OrchestrationType.ORCHESTRATED);
+    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     return triggerExecution(appId, envId, executionArgs);
   }
 
@@ -140,7 +139,7 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerSimpleExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    executionArgs.setOrchestrationType(OrchestrationType.SIMPLE);
+    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
     return triggerExecution(appId, envId, executionArgs);
   }
 
