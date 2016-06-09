@@ -14,10 +14,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CatalogNames.ORCHESTRATION_STENCILS;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+
+import com.google.common.collect.Lists;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import junitparams.JUnitParamsRunner;
@@ -104,6 +107,8 @@ public class CatalogResourceTest extends WingsBaseTest {
         .thenReturn(newArrayList());
     when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(newArrayList());
     when(environmentService.listForEnum(APP_ID)).thenReturn(of(ENV_ID, "ENV"));
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(aService().withCommands(Lists.newArrayList()).build());
   }
 
   /**
@@ -142,7 +147,8 @@ public class CatalogResourceTest extends WingsBaseTest {
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.COMMAND_STENCILS)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENTS)}
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENTS)},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.COMMANDS)}
 
     };
   }
@@ -157,10 +163,11 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Parameters(method = "catalogNames")
   public void shouldListCatalogsFor(String catalogNameForDisplay) {
     String catalogName = UPPER_CAMEL.to(UPPER_UNDERSCORE, catalogNameForDisplay);
-    RestResponse<Map<String, Object>> actual = resources.client()
-                                                   .target("/catalogs?catalogType=" + catalogName + "&appId=" + APP_ID)
-                                                   .request()
-                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+    RestResponse<Map<String, Object>> actual =
+        resources.client()
+            .target("/catalogs?catalogType=" + catalogName + "&appId=" + APP_ID + "&serviceId=" + SERVICE_ID)
+            .request()
+            .get(new GenericType<RestResponse<Map<String, Object>>>() {});
 
     assertThat(actual)
         .isNotNull()

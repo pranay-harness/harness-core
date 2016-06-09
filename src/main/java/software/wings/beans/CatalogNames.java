@@ -38,4 +38,8 @@ public interface CatalogNames {
    * The constant ENVIRONMENTS.
    */
   String ENVIRONMENTS = "ENVIRONMENTS";
+  /**
+   * The constant COMMANDS.
+   */
+  String COMMANDS = "COMMANDS";
 }
