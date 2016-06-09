@@ -14,8 +14,13 @@ import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
@@ -52,8 +57,11 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.Environment;
+import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
+import software.wings.beans.Orchestration;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -65,6 +73,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 
 import java.io.BufferedWriter;
@@ -80,6 +90,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -114,6 +126,8 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
+
+  @Inject private WorkflowService workflowService;
 
   /**
    * Generated Data for across the API use.
@@ -169,7 +183,93 @@ public class DataGenUtil extends WingsBaseTest {
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      Map<String, String> envWorkflowMap =
+          addOrchestration(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      addPipeline(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
     }
+  }
+
+  private void addPipeline(Application application, List<Service> services, List<Environment> environments,
+      Map<String, String> envWorkflowMap) {
+    int x = 80;
+    software.wings.beans.Graph.Builder graphBuilder =
+        aGraph().addNodes(aNode().withId("n0").withName("ORIGIN").withX(x).withY(80).withType("ORIGIN").build());
+
+    x += 200;
+    graphBuilder
+        .addNodes(aNode().withId("n1").withName("build").withX(x).withY(80).withType(StateType.BUILD.name()).build())
+        .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build());
+
+    String fromNode = "n1";
+    for (Environment env : environments) {
+      String toNode = "n-" + env.getName();
+      x += 200;
+      graphBuilder
+          .addNodes(aNode()
+                        .withId(toNode)
+                        .withName(env.getName())
+                        .withX(x)
+                        .withY(80)
+                        .withType(StateType.ENV_STATE.name())
+                        .addProperty("envId", env.getUuid())
+                        .addProperty("workflowId", envWorkflowMap.get(env.getUuid()))
+                        .build())
+          .addLinks(aLink().withId("l-" + env.getName()).withFrom(fromNode).withTo(toNode).withType("success").build());
+      fromNode = toNode;
+    }
+
+    Graph graph = graphBuilder.build();
+    Pipeline pipeline =
+        aPipeline()
+            .withAppId(application.getUuid())
+            .withName("pipeline1")
+            .withDescription("Sample Pipeline")
+            .addServices(services.stream().map(Service::getUuid).collect(Collectors.toList()).toArray(new String[0]))
+            .withGraph(graph)
+            .build();
+
+    pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
+    assertThat(pipeline).isNotNull();
+    assertThat(pipeline.getUuid()).isNotNull();
+  }
+
+  private Map<String, String> addOrchestration(
+      Application application, List<Service> services, List<Environment> environments) {
+    Graph graph =
+        aGraph()
+            .addNodes(aNode().withId("n0").withName("ORIGIN").withX(50).withY(80).withType("ORIGIN").build())
+            .addNodes(
+                aNode().withId("n1").withName("stop").withX(200).withY(80).withType(StateType.STOP.name()).build())
+            .addNodes(aNode()
+                          .withId("n2")
+                          .withName("wait")
+                          .withX(360)
+                          .withY(80)
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 5000l)
+                          .build())
+            .addNodes(
+                aNode().withId("n3").withName("start").withX(530).withY(80).withType(StateType.START.name()).build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+            .build();
+
+    Map<String, String> envWorkflowMap = new HashMap<>();
+    environments.forEach(env -> {
+      Orchestration orchestration = anOrchestration()
+                                        .withAppId(application.getUuid())
+                                        .withName("workflow-" + env.getName())
+                                        .withDescription("Sample Workflow for " + env.getName() + " environment")
+                                        .withEnvironment(env)
+                                        .withGraph(graph)
+                                        .build();
+      orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+      assertThat(orchestration).isNotNull();
+      assertThat(orchestration.getUuid()).isNotNull();
+      envWorkflowMap.put(env.getUuid(), orchestration.getUuid());
+    });
+    return envWorkflowMap;
   }
 
   private void addAdminUser() {
