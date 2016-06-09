@@ -196,6 +196,10 @@ public class DataGenUtil extends WingsBaseTest {
       Pipeline pipeline = addPipeline(
           application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
       addPipelineExecution(application, pipeline);
+      addPipelineExecution(application, pipeline);
+      addPipelineExecution(application, pipeline);
+      addPipelineExecution(application, pipeline);
+      addPipelineExecution(application, pipeline);
     }
   }
 
