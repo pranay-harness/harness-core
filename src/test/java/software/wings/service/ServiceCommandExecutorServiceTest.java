@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.CommandUnitType.EXEC;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.HostBuilder.aHost;
@@ -80,7 +81,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                         .withCommandUnitType(EXEC)
                                         .withCommandString("rm -f $HOME/jetty")
                                         .build();
-  private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
+  private Command command =
+      aCommand().withName(COMMAND_NAME).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
   private Builder activityBuilder = anActivity()
                                         .withAppId(APP_ID)
                                         .withEnvironmentId(ENV_ID)

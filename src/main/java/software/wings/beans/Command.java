@@ -102,6 +102,7 @@ public class Command extends CommandUnit {
 
       CommandUnit commandUnit = type.newInstance();
       MapperUtils.mapObject(node.getProperties(), commandUnit);
+      commandUnit.setName(node.getName());
       commandUnits.add(commandUnit);
     }
   }

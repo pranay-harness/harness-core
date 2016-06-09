@@ -105,6 +105,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
     when(wingsPersistence.createUpdateOperations(Service.class))
         .thenReturn(datastore.createUpdateOperations(Service.class));
+    when(wingsPersistence.addToList(
+             eq(Service.class), anyString(), anyString(), any(Query.class), anyString(), any(Command.class)))
+        .thenReturn(true);
   }
 
   /**
@@ -132,6 +135,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(service.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).addToList(Application.class, service.getAppId(), "services", service);
     verify(wingsPersistence).saveAndGet(Service.class, service);
+    verify(wingsPersistence, times(6)).get(Service.class, APP_ID, SERVICE_ID);
+    verify(wingsPersistence, times(3))
+        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), anyString(), anyString());
+    verify(wingsPersistence, times(3)).createQuery(Service.class);
+    verify(configService, times(3)).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**

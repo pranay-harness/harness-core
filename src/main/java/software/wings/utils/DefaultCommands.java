@@ -19,6 +19,7 @@ public class DefaultCommands {
               aNode()
                   .withId("n0")
                   .withType("EXEC")
+                  .withName("Start Service")
                   .addProperty("commandPath", "/bin/")
                   .addProperty("commandString", "sh startup.sh")
                   .build())
@@ -32,6 +33,7 @@ public class DefaultCommands {
               aNode()
                   .withId("n0")
                   .withType("EXEC")
+                  .withName("Stop Service")
                   .addProperty("commandPath", "/bin/")
                   .addProperty("commandString", "sh stop.sh")
                   .build())
@@ -42,9 +44,9 @@ public class DefaultCommands {
       aGraph()
           .withGraphName("INSTALL")
           .addNodes(aNode().withId(ORIGIN_STATE).withType(ORIGIN_STATE).build(),
-              aNode().withId("n0").withType("COMMAND").addProperty("referenceId", "START").build(),
-              aNode().withId("n1").withType("COPY_ARTIFACT").build(),
-              aNode().withId("n2").withType("COMMAND").addProperty("referenceId", "STOP").build())
+              aNode().withId("n0").withName("START").withType("COMMAND").addProperty("referenceId", "START").build(),
+              aNode().withId("n1").withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
+              aNode().withId("n2").withName("STOP").withType("COMMAND").addProperty("referenceId", "STOP").build())
           .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("n0").withType(SUCCESS.name()).withId("l0").build(),
               aLink().withFrom("n0").withTo("n1").withType(SUCCESS.name()).withId("l1").build(),
               aLink().withFrom("n1").withTo("n2").withType(SUCCESS.name()).withId("l2").build())
