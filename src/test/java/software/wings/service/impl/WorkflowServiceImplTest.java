@@ -25,6 +25,7 @@ import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Release.ReleaseBuilder;
 import software.wings.beans.ServiceInstance.ServiceInstanceBuilder;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
@@ -33,6 +34,7 @@ import software.wings.service.intfc.WorkflowService;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -105,6 +107,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     serviceInstanceIds.add(uuid2);
     executionArgs.setServiceInstanceIds(serviceInstanceIds);
     executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
-    impl.triggerSimpleExecution(appId, env.getUuid(), executionArgs);
+    WorkflowExecution workflowExecution = impl.triggerSimpleExecution(appId, env.getUuid(), executionArgs);
+    assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution.getUuid()).isNotNull();
   }
 }

@@ -23,7 +23,6 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionArgs.OrchestrationType;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -63,6 +62,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -551,7 +551,7 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs) {
-    if (executionArgs.getOrchestrationType() == OrchestrationType.ORCHESTRATED) {
+    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       logger.info("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
@@ -559,7 +559,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
       return triggerOrchestrationExecution(appId, executionArgs.getOrchestrationId(), executionArgs);
-    } else {
+    } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.info("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
@@ -572,6 +572,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
 
       return triggerSimpleExecution(appId, envId, executionArgs);
+
+    } else {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "workflowType");
     }
   }
 

@@ -12,7 +12,7 @@ import java.util.List;
  * @author Rishi
  */
 public class ExecutionArgs {
-  private OrchestrationType orchestrationType;
+  private WorkflowType workflowType;
   private String serviceId;
   private String commandName;
   private ExecutionStrategy executionStrategy;
@@ -94,22 +94,12 @@ public class ExecutionArgs {
     this.artifactIds = artifactIds;
   }
 
-  /**
-   * Gets orchestration type.
-   *
-   * @return the orchestration type
-   */
-  public OrchestrationType getOrchestrationType() {
-    return orchestrationType;
+  public WorkflowType getWorkflowType() {
+    return workflowType;
   }
 
-  /**
-   * Sets orchestration type.
-   *
-   * @param orchestrationType the orchestration type
-   */
-  public void setOrchestrationType(OrchestrationType orchestrationType) {
-    this.orchestrationType = orchestrationType;
+  public void setWorkflowType(WorkflowType workflowType) {
+    this.workflowType = workflowType;
   }
 
   /**
@@ -182,18 +172,5 @@ public class ExecutionArgs {
    */
   public void setServiceInstanceIds(List<String> serviceInstanceIds) {
     this.serviceInstanceIds = serviceInstanceIds;
-  }
-
-  /**
-   * The enum Orchestration type.
-   */
-  public enum OrchestrationType {
-    /**
-     * Orchestrated orchestration type.
-     */
-    ORCHESTRATED, /**
-                   * Simple orchestration type.
-                   */
-    SIMPLE
   }
 }
