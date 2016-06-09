@@ -174,6 +174,14 @@ public class CatalogResource {
             catalogs.put(catalogType, environmentService.listForEnum(uriInfo.getQueryParameters().getFirst(APP_ID)));
             break;
           }
+          case CatalogNames.COMMANDS: {
+            catalogs.put(catalogType,
+                serviceResourceService
+                    .get(uriInfo.getQueryParameters().getFirst(APP_ID),
+                        uriInfo.getQueryParameters().getFirst(SERVICE_ID))
+                    .getCommands());
+            break;
+          }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
       }
