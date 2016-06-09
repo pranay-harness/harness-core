@@ -14,6 +14,11 @@ public class CommandUnit {
   private ExecutionResult executionResult;
 
   /**
+   * Instantiates a new Command unit.
+   */
+  public CommandUnit() {}
+
+  /**
    * Instantiates a new command unit.
    *
    * @param commandUnitType the command unit type

@@ -6,8 +6,12 @@ import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
+import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
+import static software.wings.utils.DefaultCommands.INSTALL_COMMAND_GRAPH;
+import static software.wings.utils.DefaultCommands.START_COMMAND_GRAPH;
+import static software.wings.utils.DefaultCommands.STOP_COMMAND_GRAPH;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -16,7 +20,6 @@ import com.mongodb.BasicDBObject;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
-import software.wings.beans.CommandUnitType;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -67,9 +70,47 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
-    wingsPersistence.addToList(Application.class, service.getAppId(), "services", savedService); // TODO: remove it
+    addDefaultCommands(savedService);
+    wingsPersistence.addToList(Application.class, service.getAppId(), "services", savedService);
     return savedService;
   }
+
+  private void addDefaultCommands(Service service) {
+    addCommand(service.getAppId(), service.getUuid(), START_COMMAND_GRAPH);
+    addCommand(service.getAppId(), service.getUuid(), STOP_COMMAND_GRAPH);
+    addCommand(service.getAppId(), service.getUuid(), INSTALL_COMMAND_GRAPH);
+  }
+
+  //  private Command getStartCommand(Service service) {
+  //    ExecCommandUnit commandUnit =
+  //        anExecCommandUnit().withName("Execute start
+  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
+  //            .build();
+  //    return
+  //    aCommand().withName("START").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
+  //  }
+  //
+  //
+  //  private Command getStopCommand(Service service) {
+  //    ExecCommandUnit commandUnit =
+  //        anExecCommandUnit().withName("Execute stop
+  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build();
+  //    return
+  //    aCommand().withName("STOP").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
+  //  }
+  //
+  //
+  //  private Command getInstallCommand(Service service) {
+  //    List<CommandUnit> commandUnits = Arrays.asList(
+  //        anExecCommandUnit().withName("Execute stop
+  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build(),
+  //        CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit().build(),
+  //        anExecCommandUnit().withName("Execute start
+  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
+  //            .build());
+  //    return
+  //    aCommand().withName("INSTALL").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).withCommandUnits(commandUnits).build();
+  //  }
 
   /**
    * {@inheritDoc}
@@ -167,7 +208,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     } else {
       return service.getCommands()
           .stream()
-          .map(command -> Maps.newHashMap(ImmutableMap.of("name", command.getName(), "type", CommandUnitType.COMMAND)))
+          .map(command -> Maps.newHashMap(ImmutableMap.of("name", command.getName(), "type", COMMAND)))
           .collect(toList());
     }
   }

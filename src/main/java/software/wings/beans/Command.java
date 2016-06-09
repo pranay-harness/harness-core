@@ -142,7 +142,7 @@ public class Command extends CommandUnit {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String referenceId;
@@ -150,12 +150,13 @@ public class Command extends CommandUnit {
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
     private String serviceId;
+    private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
 
     private Builder() {}
 
     /**
-     * A command.
+     * A command builder.
      *
      * @return the builder
      */
@@ -164,7 +165,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With reference id.
+     * With reference id builder.
      *
      * @param referenceId the reference id
      * @return the builder
@@ -175,7 +176,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With graph.
+     * With graph builder.
      *
      * @param graph the graph
      * @return the builder
@@ -197,7 +198,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With command units.
+     * With command units builder.
      *
      * @param commandUnits the command units
      * @return the builder
@@ -208,7 +209,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
      * @return the builder
@@ -219,7 +220,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With service id.
+     * With service id builder.
      *
      * @param serviceId the service id
      * @return the builder
@@ -230,7 +231,18 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With execution result.
+     * With command unit type builder.
+     *
+     * @param commandUnitType the command unit type
+     * @return the builder
+     */
+    public Builder withCommandUnitType(CommandUnitType commandUnitType) {
+      this.commandUnitType = commandUnitType;
+      return this;
+    }
+
+    /**
+     * With execution result builder.
      *
      * @param executionResult the execution result
      * @return the builder
@@ -241,7 +253,7 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
@@ -252,11 +264,12 @@ public class Command extends CommandUnit {
           .withCommandUnits(commandUnits)
           .withName(name)
           .withServiceId(serviceId)
+          .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult);
     }
 
     /**
-     * Builds the.
+     * Build command.
      *
      * @return the command
      */
@@ -267,6 +280,7 @@ public class Command extends CommandUnit {
       command.setCommandUnits(commandUnits);
       command.setName(name);
       command.setServiceId(serviceId);
+      command.setCommandUnitType(commandUnitType);
       command.setExecutionResult(executionResult);
       return command;
     }
