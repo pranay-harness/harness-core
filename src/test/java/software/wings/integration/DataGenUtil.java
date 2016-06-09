@@ -48,6 +48,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.utils.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
@@ -69,13 +71,16 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -188,11 +193,27 @@ public class DataGenUtil extends WingsBaseTest {
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       Map<String, String> envWorkflowMap =
           addOrchestration(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      addPipeline(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
+      Pipeline pipeline = addPipeline(
+          application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
+      addPipelineExecution(application, pipeline);
     }
   }
 
-  private void addPipeline(Application application, List<Service> services, List<Environment> environments,
+  private void addPipelineExecution(Application application, Pipeline pipeline) {
+    WorkflowExecution execution = workflowService.triggerPipelineExecution(application.getUuid(), pipeline.getUuid());
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Pipeline executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+    Misc.quietSleep(2000);
+    execution = workflowService.getExecutionDetails(application.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+  }
+
+  private Pipeline addPipeline(Application application, List<Service> services, List<Environment> environments,
       Map<String, String> envWorkflowMap) {
     int x = 80;
     software.wings.beans.Graph.Builder graphBuilder =
@@ -234,6 +255,8 @@ public class DataGenUtil extends WingsBaseTest {
     pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
     assertThat(pipeline).isNotNull();
     assertThat(pipeline.getUuid()).isNotNull();
+
+    return pipeline;
   }
 
   private Map<String, String> addOrchestration(
@@ -652,4 +675,6 @@ public class DataGenUtil extends WingsBaseTest {
     int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
     return randomSeedString.substring(low, high);
   }
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 }
