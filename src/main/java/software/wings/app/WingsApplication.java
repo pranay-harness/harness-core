@@ -13,6 +13,7 @@ import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
+import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -20,6 +21,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +31,12 @@ import software.wings.beans.User;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.ConstraintViolationExceptionMapper;
+import software.wings.exception.GenericExceptionMapper;
+import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.filter.AuditRequestFilter;
 import software.wings.filter.AuditResponseFilter;
-import software.wings.filter.ResponseMessageResolver;
 import software.wings.health.WingsHealthCheck;
 import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
@@ -46,6 +50,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
 
 /**
@@ -77,7 +83,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    bootstrap.addBundle(new ConfiguredAssetsBundle("/static", "/static", "index.html"));
+    bootstrap.addBundle(new ConfiguredAssetsBundle("/static", "/", "index.html"));
     bootstrap.addBundle(new SwaggerBundle<MainConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MainConfiguration mainConfiguration) {
@@ -93,8 +99,12 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Starting app ...");
     DatabaseModule databaseModule = new DatabaseModule(configuration);
 
-    Injector injector = Guice.createInjector(new ValidationModule(), databaseModule, new WingsModule(configuration),
-        new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
+    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
+                                            .configure()
+                                            .parameterNameProvider(new ReflectionParameterNameProvider())
+                                            .buildValidatorFactory();
+    Injector injector = Guice.createInjector(new ValidationModule(validatorFactory), databaseModule,
+        new WingsModule(configuration), new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
 
     registerResources(environment, injector);
 
@@ -161,9 +171,12 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   private void registerJerseyProviders(Environment environment) {
-    environment.jersey().register(ResponseMessageResolver.class);
-    environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(EarlyEofExceptionMapper.class);
+    environment.jersey().register(JsonProcessingExceptionMapper.class);
+    environment.jersey().register(ConstraintViolationExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapper.class);
+    environment.jersey().register(GenericExceptionMapper.class);
+    environment.jersey().register(MultiPartFeature.class);
   }
 
   private void registerAuthFilters(MainConfiguration configuration, Environment environment, Injector injector) {

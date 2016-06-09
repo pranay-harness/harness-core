@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Singleton;
 
@@ -85,10 +86,11 @@ public class ReleaseServiceImpl implements ReleaseService {
                                .field("appId")
                                .equal(release.getAppId());
 
-    UpdateOperations<Release> updateOperations = wingsPersistence.createUpdateOperations(Release.class)
-                                                     .set("releaseName", release.getReleaseName())
-                                                     .set("description", release.getDescription())
-                                                     .set("targetDate", release.getTargetDate());
+    UpdateOperations<Release> updateOperations = wingsPersistence.createUpdateOperations(Release.class);
+
+    setUnset(updateOperations, "releaseName", release.getReleaseName());
+    setUnset(updateOperations, "description", release.getDescription());
+    setUnset(updateOperations, "targetDate", release.getTargetDate());
 
     wingsPersistence.update(query, updateOperations);
     return get(release.getUuid(), release.getAppId());

@@ -8,7 +8,7 @@ import com.google.common.base.MoreObjects;
  * The Class ResponseMessage.
  */
 public class ResponseMessage {
-  private String code;
+  private ErrorCodes code;
   private ResponseTypeEnum errorType;
   private String message;
 
@@ -17,7 +17,7 @@ public class ResponseMessage {
    *
    * @return the code
    */
-  public String getCode() {
+  public ErrorCodes getCode() {
     return code;
   }
 
@@ -26,7 +26,7 @@ public class ResponseMessage {
    *
    * @param code the code
    */
-  public void setCode(String code) {
+  public void setCode(ErrorCodes code) {
     this.code = code;
   }
 
@@ -66,7 +66,9 @@ public class ResponseMessage {
     this.message = message;
   }
 
-  /* (non-Javadoc)
+  /**
+   * {@inheritDoc}
+   */ /* (non-Javadoc)
    * @see java.lang.Object#toString()
    */
   @Override
@@ -92,5 +94,50 @@ public class ResponseMessage {
            * Error response type enum.
            */
     ERROR
+  }
+
+  /**
+   * The type Builder.
+   */
+  public static final class Builder {
+    private ErrorCodes code;
+    private ResponseTypeEnum errorType;
+    private String message;
+
+    /**
+     * Do not instantiate Builder.
+     */
+    private Builder() {}
+
+    public static Builder aResponseMessage() {
+      return new Builder();
+    }
+
+    public Builder withCode(ErrorCodes code) {
+      this.code = code;
+      return this;
+    }
+
+    public Builder withErrorType(ResponseTypeEnum errorType) {
+      this.errorType = errorType;
+      return this;
+    }
+
+    public Builder withMessage(String message) {
+      this.message = message;
+      return this;
+    }
+
+    public Builder but() {
+      return aResponseMessage().withCode(code).withErrorType(errorType).withMessage(message);
+    }
+
+    public ResponseMessage build() {
+      ResponseMessage responseMessage = new ResponseMessage();
+      responseMessage.setCode(code);
+      responseMessage.setErrorType(errorType);
+      responseMessage.setMessage(message);
+      return responseMessage;
+    }
   }
 }

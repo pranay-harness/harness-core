@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.beans.ErrorConstants.UNKNOWN_EXECUTOR_TYPE_ERROR;
+import static software.wings.beans.ErrorCodes.UNKNOWN_EXECUTOR_TYPE_ERROR;
 
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;

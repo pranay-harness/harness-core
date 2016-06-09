@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorConstants.FILE_INTEGRITY_CHECK_FAILED;
+import static software.wings.beans.ErrorCodes.FILE_INTEGRITY_CHECK_FAILED;
 
 import com.google.inject.Singleton;
 

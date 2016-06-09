@@ -7,7 +7,7 @@ import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ErrorConstants.DUPLICATE_COMMAND_NAMES;
+import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

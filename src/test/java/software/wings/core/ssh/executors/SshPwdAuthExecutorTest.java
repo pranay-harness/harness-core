@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorConstants.INVALID_PORT;
-import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
-import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
+import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCodes.INVALID_PORT;
+import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
+import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
+import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -113,7 +113,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
     config.setHost("INVALID_HOST");
-    assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(UNKNOWN_HOST);
+    assertThatThrownBy(() -> executor.init(config))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(UNKNOWN_HOST.getCode());
   }
 
   /**
@@ -122,7 +124,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
     config.setPort(3333);
-    assertThatThrownBy(() -> executor.init(config)).isInstanceOf(WingsException.class).hasMessage(INVALID_PORT);
+    assertThatThrownBy(() -> executor.init(config))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_PORT.getCode());
   }
 
   /**
@@ -133,7 +137,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     config.setPassword("INVALID_PASSWORD");
     Assertions.assertThatThrownBy(() -> executor.init(config))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining(INVALID_CREDENTIAL);
+        .hasMessageContaining(INVALID_CREDENTIAL.getCode());
   }
 
   /**
@@ -165,7 +169,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     config.setSshConnectionTimeout(1); // 1ms
     assertThatThrownBy(() -> executor.init(config))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT);
+        .hasMessage(SOCKET_CONNECTION_TIMEOUT.getCode());
   }
 
   /**
@@ -178,7 +182,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(config);
     assertThatThrownBy(() -> executor.execute("ls -lh"))
         .isInstanceOf(WingsException.class)
-        .hasMessage(SSH_SESSION_TIMEOUT);
+        .hasMessage(SSH_SESSION_TIMEOUT.getCode());
   }
 
   /**

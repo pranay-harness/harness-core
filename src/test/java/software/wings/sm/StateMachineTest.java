@@ -8,7 +8,7 @@ import com.google.inject.Injector;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
@@ -64,7 +64,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorConstants.DUPLICATE_STATE_NAMES);
+      assertThat(exception).hasMessage(ErrorCodes.DUPLICATE_STATE_NAMES.getCode());
     }
   }
 
@@ -85,7 +85,7 @@ public class StateMachineTest extends WingsBaseTest {
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
-      assertThat(exception).hasMessage(ErrorConstants.TRANSITION_TYPE_NULL);
+      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_TYPE_NULL.getCode());
     }
   }
 

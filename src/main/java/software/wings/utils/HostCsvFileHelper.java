@@ -3,8 +3,8 @@ package software.wings.utils;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
-import static software.wings.beans.ErrorConstants.INVALID_CSV_FILE;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCodes.INVALID_CSV_FILE;
+import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.Host.HostBuilder.aHost;
 
 import org.apache.commons.csv.CSVParser;

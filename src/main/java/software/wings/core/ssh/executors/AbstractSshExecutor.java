@@ -4,16 +4,16 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.ErrorConstants.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorConstants.INVALID_KEY;
-import static software.wings.beans.ErrorConstants.INVALID_KEYPATH;
-import static software.wings.beans.ErrorConstants.INVALID_PORT;
-import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_ERROR;
-import static software.wings.beans.ErrorConstants.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorConstants.SSH_SESSION_TIMEOUT;
-import static software.wings.beans.ErrorConstants.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorConstants.UNKNOWN_HOST;
-import static software.wings.beans.ErrorConstants.UNREACHABLE_HOST;
+import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCodes.INVALID_KEY;
+import static software.wings.beans.ErrorCodes.INVALID_KEYPATH;
+import static software.wings.beans.ErrorCodes.INVALID_PORT;
+import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_ERROR;
+import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
+import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
+import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
+import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
+import static software.wings.beans.ErrorCodes.UNREACHABLE_HOST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.Misc.quietSleep;
@@ -26,6 +26,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -285,11 +286,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @param jschexception the jschexception
    * @return the string
    */
-  protected String normalizeError(JSchException jschexception) {
+  protected ErrorCodes normalizeError(JSchException jschexception) {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
 
-    String errorConst = null;
+    ErrorCodes errorConst = null;
 
     if (cause != null) { // TODO: Refactor use enums, maybe ?
       if (cause instanceof NoRouteToHostException) {

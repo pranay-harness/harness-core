@@ -21,6 +21,7 @@ import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version.Main;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
+import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -48,6 +49,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.validation.Validation;
+import javax.validation.ValidatorFactory;
 
 // TODO: Auto-generated Javadoc
 
@@ -131,10 +134,14 @@ public class WingsRule implements MethodRule {
     }
 
     MainConfiguration configuration = new MainConfiguration();
+    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
+                                            .configure()
+                                            .parameterNameProvider(new ReflectionParameterNameProvider())
+                                            .buildValidatorFactory();
 
-    injector =
-        Guice.createInjector(new ValidationModule(), new DatabaseModule(datastore, datastore, distributedLockSvc),
-            new WingsModule(configuration), new ExecutorModule(executorService), new QueueModule(datastore));
+    injector = Guice.createInjector(new ValidationModule(validatorFactory),
+        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
+        new ExecutorModule(executorService), new QueueModule(datastore));
 
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);

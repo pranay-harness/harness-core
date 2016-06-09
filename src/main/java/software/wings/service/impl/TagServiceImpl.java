@@ -180,4 +180,12 @@ public class TagServiceImpl implements TagService {
     }
     return tags;
   }
+
+  @Override
+  public List<Tag> getLeafTags(Tag root) {
+    Query<Tag> q = wingsPersistence.createQuery(Tag.class).field("rootTagId").equal(root.getUuid());
+    q.or(wingsPersistence.createQuery(Tag.class).criteria("children").doesNotExist(),
+        wingsPersistence.createQuery(Tag.class).criteria("children").sizeEq(0));
+    return q.asList();
+  }
 }

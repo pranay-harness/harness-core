@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorConstants.PLATFORM_SOFTWARE_DELETE_ERROR;
+import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import software.wings.beans.AppContainer;

@@ -6,7 +6,7 @@ package software.wings.resources;
 
 import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorConstants;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
@@ -68,7 +68,7 @@ public class OrchestrationResource {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
     Environment env = environmentService.get(appId, envId);
     if (env == null) {
-      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown environment");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
     pageRequest.addFilter("environment", env, SearchFilter.Operator.EQ);
     return new RestResponse<>(workflowService.listOrchestration(pageRequest));
@@ -105,7 +105,7 @@ public class OrchestrationResource {
     orchestration.setAppId(appId);
     Environment env = environmentService.get(appId, envId);
     if (env == null) {
-      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown environment");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
     orchestration.setEnvironment(env);
     return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
@@ -129,7 +129,7 @@ public class OrchestrationResource {
     orchestration.setUuid(orchestrationId);
     Environment env = environmentService.get(appId, envId);
     if (env == null) {
-      throw new WingsException(ErrorConstants.INVALID_REQUEST, "message", "Unknown environment");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
     orchestration.setEnvironment(env);
     return new RestResponse<>(workflowService.updateOrchestration(orchestration));

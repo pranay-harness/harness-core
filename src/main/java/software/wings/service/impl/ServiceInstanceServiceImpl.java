@@ -2,7 +2,10 @@ package software.wings.service.impl;
 
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 
+import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -11,9 +14,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -22,6 +23,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 5/26/16.
  */
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
@@ -71,27 +73,28 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public void updateHostMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
-    List<String> deletedHostIds = deletedHosts.stream().map(Host::getUuid).collect(Collectors.toList());
-
     Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
                                              .field("appId")
                                              .equal(template.getAppId())
                                              .field("serviceTemplate")
                                              .equal(template.getUuid())
                                              .field("host")
-                                             .hasAnyOf(deletedHostIds);
+                                             .hasAnyOf(deletedHosts);
     wingsPersistence.delete(deleteQuery);
 
-    List<ServiceInstance> serviceInstances = new ArrayList<>();
     addedHosts.forEach(host -> {
-      serviceInstances.add(
+      ServiceInstance serviceInstance =
           aServiceInstance()
               .withAppId(template.getAppId())
               .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
               .withServiceTemplate(template)
               .withHost(host)
-              .build());
+              .build();
+      try {
+        wingsPersistence.save(serviceInstance);
+      } catch (DuplicateKeyException ex) {
+        logger.warn("Reinserting an existing service instance ignore");
+      }
     });
-    wingsPersistence.save(serviceInstances);
   }
 }
