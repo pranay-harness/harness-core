@@ -2,7 +2,10 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.FileService.FileBucket;
+
+import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -10,6 +13,7 @@ import software.wings.service.intfc.FileService.FileBucket;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CopyArtifactCommandUnit extends CopyCommandUnit {
+  @Inject ArtifactService artifactService;
   private String artifactId;
 
   /**

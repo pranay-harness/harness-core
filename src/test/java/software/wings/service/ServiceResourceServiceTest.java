@@ -61,15 +61,14 @@ import java.util.List;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
-  private static final Command command = aCommand()
-                                             .withName("START")
-                                             .withServiceId(SERVICE_ID)
-                                             .addCommandUnits(anExecCommandUnit()
-                                                                  .withServiceId(SERVICE_ID)
-                                                                  .withCommandPath("/home/xxx/tomcat")
-                                                                  .withCommandString("bin/startup.sh")
-                                                                  .build())
-                                             .build();
+  private static final Command.Builder commandBuilder = aCommand()
+                                                            .withName("START")
+                                                            .withServiceId(SERVICE_ID)
+                                                            .addCommandUnits(anExecCommandUnit()
+                                                                                 .withServiceId(SERVICE_ID)
+                                                                                 .withCommandPath("/home/xxx/tomcat")
+                                                                                 .withCommandString("bin/startup.sh")
+                                                                                 .build());
   private static final Builder builder = aService()
                                              .withUuid(SERVICE_ID)
                                              .withAppId(APP_ID)
@@ -208,7 +207,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
-        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), eq(command));
+        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
+            eq(commandBuilder.withGraph(commandGraph).build()));
     verify(wingsPersistence).createQuery(Service.class);
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
@@ -239,7 +239,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
-        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), eq(command));
+        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
+            eq(commandBuilder.withGraph(commandGraph).build()));
     verify(wingsPersistence).createQuery(Service.class);
   }
 
@@ -263,7 +264,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandStencils() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(builder.but().addCommands(command).build());
+        .thenReturn(builder.but().addCommands(commandBuilder.build()).build());
 
     List<Object> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID);
 
@@ -282,7 +283,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetCommandByName() {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
-        .thenReturn(builder.but().addCommands(command).build());
+        .thenReturn(builder.but().addCommands(commandBuilder.build()).build());
 
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
 

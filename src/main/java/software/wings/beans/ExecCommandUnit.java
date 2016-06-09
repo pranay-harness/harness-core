@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 public class ExecCommandUnit extends CommandUnit {
   @NotEmpty private String commandPath;
-
   @NotEmpty private String commandString;
 
   /**
@@ -93,124 +92,86 @@ public class ExecCommandUnit extends CommandUnit {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String commandPath;
     private String commandString;
     private String name;
     private String serviceId;
+    private String appId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
+    private boolean artifactNeeded;
 
-    /**
-     * Do not instantiate Builder.
-     */
     private Builder() {}
 
-    /**
-     * An exec command unit.
-     *
-     * @return the builder
-     */
     public static Builder anExecCommandUnit() {
       return new Builder();
     }
 
-    /**
-     * With command path.
-     *
-     * @param commandPath the command path
-     * @return the builder
-     */
     public Builder withCommandPath(String commandPath) {
       this.commandPath = commandPath;
       return this;
     }
 
-    /**
-     * With command string.
-     *
-     * @param commandString the command string
-     * @return the builder
-     */
     public Builder withCommandString(String commandString) {
       this.commandString = commandString;
       return this;
     }
 
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With service id.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
-    /**
-     * With command unit type.
-     *
-     * @param commandUnitType the command unit type
-     * @return the builder
-     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public Builder withCommandUnitType(CommandUnitType commandUnitType) {
       this.commandUnitType = commandUnitType;
       return this;
     }
 
-    /**
-     * With execution result.
-     *
-     * @param executionResult the execution result
-     * @return the builder
-     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the builder
-     */
+    public Builder withArtifactNeeded(boolean artifactNeeded) {
+      this.artifactNeeded = artifactNeeded;
+      return this;
+    }
+
     public Builder but() {
       return anExecCommandUnit()
           .withCommandPath(commandPath)
           .withCommandString(commandString)
           .withName(name)
           .withServiceId(serviceId)
+          .withAppId(appId)
           .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult);
+          .withExecutionResult(executionResult)
+          .withArtifactNeeded(artifactNeeded);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the exec command unit
-     */
     public ExecCommandUnit build() {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandPath(commandPath);
       execCommandUnit.setCommandString(commandString);
       execCommandUnit.setName(name);
       execCommandUnit.setServiceId(serviceId);
+      execCommandUnit.setAppId(appId);
       execCommandUnit.setCommandUnitType(commandUnitType);
       execCommandUnit.setExecutionResult(executionResult);
+      execCommandUnit.setArtifactNeeded(artifactNeeded);
       return execCommandUnit;
     }
   }

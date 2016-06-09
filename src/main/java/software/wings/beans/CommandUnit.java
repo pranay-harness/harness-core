@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 public class CommandUnit {
   private String name;
   @NotNull private String serviceId;
+  @NotNull private String appId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
@@ -26,6 +27,24 @@ public class CommandUnit {
    */
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
+  }
+
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
+  public String getAppId() {
+    return appId;
+  }
+
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
+  public void setAppId(String appId) {
+    this.appId = appId;
   }
 
   /**

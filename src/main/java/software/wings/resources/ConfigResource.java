@@ -113,6 +113,7 @@ public class ConfigResource {
   public RestResponse update(@PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+    configFile.setUuid(configId);
     configService.update(configFile, uploadedInputStream);
     return new RestResponse();
   }

@@ -1,7 +1,6 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -11,6 +10,7 @@ import software.wings.utils.MapperUtils;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
@@ -107,7 +107,19 @@ public class Command extends CommandUnit {
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isArtifactNeeded() {
+    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(referenceId, graph, commandUnits);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -116,17 +128,11 @@ public class Command extends CommandUnit {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    Command command = (Command) obj;
-    return Objects.equal(referenceId, command.referenceId) && Objects.equal(commandUnits, command.commandUnits);
+    final Command other = (Command) obj;
+    return Objects.equals(this.referenceId, other.referenceId) && Objects.equals(this.graph, other.graph)
+        && Objects.equals(this.commandUnits, other.commandUnits);
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(referenceId, commandUnits);
-  }
-
-  /** {@inheritDoc} */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -134,12 +140,6 @@ public class Command extends CommandUnit {
         .add("graph", graph)
         .add("commandUnits", commandUnits)
         .toString();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean isArtifactNeeded() {
-    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
   }
 
   /**
@@ -151,10 +151,11 @@ public class Command extends CommandUnit {
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
     private String serviceId;
+    private String appId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
+    private boolean artifactNeeded;
 
-    /** Do not instantiate Builder. */
     private Builder() {}
 
     /**
@@ -233,6 +234,17 @@ public class Command extends CommandUnit {
     }
 
     /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
      * With command unit type builder.
      *
      * @param commandUnitType the command unit type
@@ -255,6 +267,17 @@ public class Command extends CommandUnit {
     }
 
     /**
+     * With artifact needed builder.
+     *
+     * @param artifactNeeded the artifact needed
+     * @return the builder
+     */
+    public Builder withArtifactNeeded(boolean artifactNeeded) {
+      this.artifactNeeded = artifactNeeded;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -266,8 +289,10 @@ public class Command extends CommandUnit {
           .withCommandUnits(commandUnits)
           .withName(name)
           .withServiceId(serviceId)
+          .withAppId(appId)
           .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult);
+          .withExecutionResult(executionResult)
+          .withArtifactNeeded(artifactNeeded);
     }
 
     /**
@@ -282,8 +307,10 @@ public class Command extends CommandUnit {
       command.setCommandUnits(commandUnits);
       command.setName(name);
       command.setServiceId(serviceId);
+      command.setAppId(appId);
       command.setCommandUnitType(commandUnitType);
       command.setExecutionResult(executionResult);
+      command.setArtifactNeeded(artifactNeeded);
       return command;
     }
   }
