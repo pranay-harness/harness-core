@@ -106,7 +106,12 @@ public class WingsRule implements MethodRule {
   protected void before(List<Annotation> annotations) throws Throwable {
     MongoClient mongoClient;
     if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
-      mongoClient = new MongoClient("localhost", 27017);
+      try {
+        port = Integer.parseInt(System.getProperty("mongoPort", "27017"));
+      } catch (NumberFormatException ex) {
+        port = 27017;
+      }
+      mongoClient = new MongoClient("localhost", port);
     } else {
       if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
         MongodStarter starter = MongodStarter.getDefaultInstance();

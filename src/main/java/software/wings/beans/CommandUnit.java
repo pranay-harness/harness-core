@@ -12,6 +12,7 @@ public class CommandUnit {
   @NotNull private String serviceId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
+  private boolean artifactNeeded;
 
   /**
    * Instantiates a new command unit.
@@ -92,6 +93,24 @@ public class CommandUnit {
    */
   public void setName(String name) {
     this.name = name;
+  }
+
+  /**
+   * Is artifact needed boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isArtifactNeeded() {
+    return artifactNeeded;
+  }
+
+  /**
+   * Sets artifact needed.
+   *
+   * @param artifactNeeded the artifact needed
+   */
+  public void setArtifactNeeded(boolean artifactNeeded) {
+    this.artifactNeeded = artifactNeeded;
   }
 
   /**

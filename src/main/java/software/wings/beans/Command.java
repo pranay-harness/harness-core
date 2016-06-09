@@ -106,9 +106,7 @@ public class Command extends CommandUnit {
     }
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
-   */
+  /** {@inheritDoc} */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -121,17 +119,13 @@ public class Command extends CommandUnit {
     return Objects.equal(referenceId, command.referenceId) && Objects.equal(commandUnits, command.commandUnits);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
-   */
+  /** {@inheritDoc} */
   @Override
   public int hashCode() {
     return Objects.hashCode(referenceId, commandUnits);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
+  /** {@inheritDoc} */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -139,6 +133,12 @@ public class Command extends CommandUnit {
         .add("graph", graph)
         .add("commandUnits", commandUnits)
         .toString();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean isArtifactNeeded() {
+    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
   }
 
   /**
@@ -152,6 +152,7 @@ public class Command extends CommandUnit {
     private String serviceId;
     private ExecutionResult executionResult;
 
+    /** Do not instantiate Builder. */
     private Builder() {}
 
     /**

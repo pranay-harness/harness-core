@@ -17,6 +17,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
    */
   public CopyArtifactCommandUnit() {
     super(CommandUnitType.COPY_ARTIFACT);
+    setArtifactNeeded(true);
   }
 
   /**

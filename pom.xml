@@ -524,12 +524,39 @@
                             <goal>test</goal>
                         </goals>
                         <configuration>
-                            <skip>false</skip>
+                            <skip>true</skip>
                             <excludes>
                                 <exclude>**/*IntegrationTest.java</exclude>
                                 <exclude>**/IntegrationTest*.java</exclude>
                             </excludes>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.syncleus.maven.plugins</groupId>
+                <artifactId>maven-mongodb-plugin</artifactId>
+                <version>1.1.1</version>
+                <configuration>
+                    <randomPort>true</randomPort>
+                    <version>3.2.0</version>
+                    <logging>file</logging>
+                    <logFile>${project.build.directory}/mongo.log</logFile>
+                    <bindIp>127.0.0.1</bindIp>
+                    <syncDelay>0</syncDelay>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <goals>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop</id>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
@@ -555,6 +582,7 @@
                         <include>**/IntegrationTest*.java</include>
                         <include>**/*IntegrationTest.java</include>
                     </includes>
+                    <argLine>-DmongoPort=${mongodb.port}</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -751,32 +779,7 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>3.6</version>
             </plugin>
-            <plugin>
-                <groupId>com.syncleus.maven.plugins</groupId>
-                <artifactId>maven-mongodb-plugin</artifactId>
-                <version>1.1.1</version>
-                <configuration>
-                    <version>3.2.0</version>
-                    <logging>file</logging>
-                    <logFile>${project.build.directory}/mongo.log</logFile>
-                    <bindIp>127.0.0.1</bindIp>
-                    <syncDelay>0</syncDelay>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start</id>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>stop</id>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+
         </plugins>
     </build>
     <reporting>
