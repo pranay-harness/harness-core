@@ -103,7 +103,10 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
+  private static final String API_BASE = "http://localhost:9090/api";
+
   private static String userToken = "INVALID_TOKEN";
+
   /**
    * The Test folder.
    */
@@ -176,13 +179,13 @@ public class DataGenUtil extends WingsBaseTest {
     String userName = "admin@wings.software";
     String password = "admin";
     String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
-    WebTarget target = client.target("http://localhost:9090/api/users/");
+    WebTarget target = client.target(API_BASE + "/users/");
     RestResponse<User> response = target.request().post(
         Entity.entity(anUser().withName("Admin").withEmail("admin@wings.software").withPassword("admin").build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
-    response = client.target("http://localhost:9090/api/users/login")
+    response = client.target(API_BASE + "/users/login")
                    .request()
                    .header("Authorization", basicAuthValue)
                    .get(new GenericType<RestResponse<User>>() {});
@@ -346,7 +349,7 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void createGlobalSettings() {
-    WebTarget target = client.target("http://localhost:9090/api/settings/?appId=" + Base.GLOBAL_APP_ID);
+    WebTarget target = client.target(API_BASE + "/settings/?appId=" + Base.GLOBAL_APP_ID);
     System.out.println(JsonUtils.asJson(aSettingAttribute()
                                             .withName("Wings Jenkins")
                                             .withValue(aJenkinsConfig()
@@ -383,7 +386,7 @@ public class DataGenUtil extends WingsBaseTest {
   private List<Application> createApplications() {
     List<Application> apps = new ArrayList<>();
 
-    WebTarget target = client.target("http://localhost:9090/api/apps/");
+    WebTarget target = client.target(API_BASE + "/apps/");
 
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
@@ -398,7 +401,7 @@ public class DataGenUtil extends WingsBaseTest {
 
   private List<Service> addServices(String appId, List<AppContainer> appContainers) throws IOException {
     serviceNames = new ArrayList<>(seedNames);
-    WebTarget target = client.target("http://localhost:9090/api/services/?appId=" + appId);
+    WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
     List<Service> services = new ArrayList<>();
 
     for (int i = 0; i < NUM_SERVICES_PER_APP; i++) {
@@ -428,8 +431,7 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private boolean addOneConfigFileToEntity(String templateId, String entityId) throws IOException {
-    WebTarget target =
-        client.target(format("http://localhost:9090/api/configs/?entityId=%s&templateId=%s", entityId, templateId));
+    WebTarget target = client.target(format(API_BASE + "/configs/?entityId=%s&templateId=%s", entityId, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
     FormDataMultiPart multiPart =
@@ -451,13 +453,13 @@ public class DataGenUtil extends WingsBaseTest {
 
   private List<AppContainer> getAppContainers(String appId) {
     RestResponse<PageResponse<AppContainer>> response =
-        getRequestWithAuthHeader(client.target("http://localhost:9090/api/app-containers/?appId=" + appId))
+        getRequestWithAuthHeader(client.target(API_BASE + "/app-containers/?appId=" + appId))
             .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
     return response.getResource().getResponse();
   }
 
   private boolean addOneAppContainer(String appId) {
-    WebTarget target = client.target("http://localhost:9090/api/app-containers/?appId=" + appId);
+    WebTarget target = client.target(API_BASE + "/app-containers/?appId=" + appId);
     String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
     String name = containerNames.get(randomInt() % containerNames.size());
 
@@ -481,7 +483,7 @@ public class DataGenUtil extends WingsBaseTest {
 
   private List<Environment> addEnvs(String appId) throws IOException {
     List<Environment> environments = new ArrayList<>();
-    WebTarget target = client.target("http://localhost:9090/api/environments?appId=" + appId);
+    WebTarget target = client.target(API_BASE + "/environments?appId=" + appId);
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
       RestResponse<Environment> response = getRequestWithAuthHeader(target).post(
           Entity.entity(
@@ -497,10 +499,9 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void createAndTagHosts(Environment environment) {
-    RestResponse<PageResponse<Tag>> response =
-        getRequestWithAuthHeader(client.target(format("http://localhost:9090/api/tag-types?appId=%s&envId=%s",
-                                     environment.getAppId(), environment.getUuid())))
-            .get(new GenericType<RestResponse<PageResponse<Tag>>>() {});
+    RestResponse<PageResponse<Tag>> response = getRequestWithAuthHeader(
+        client.target(format(API_BASE + "/tag-types?appId=%s&envId=%s", environment.getAppId(), environment.getUuid())))
+                                                   .get(new GenericType<RestResponse<PageResponse<Tag>>>() {});
     log().info(response.getResource().getResponse().toString());
   }
 
@@ -510,8 +511,7 @@ public class DataGenUtil extends WingsBaseTest {
           aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
     }
 
-    WebTarget target =
-        client.target(format("http://localhost:9090/api/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
+    WebTarget target = client.target(format(API_BASE + "/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
 
     List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
                                                       .field("appId")
