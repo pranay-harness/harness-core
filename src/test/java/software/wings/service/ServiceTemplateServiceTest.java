@@ -102,7 +102,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldUpdateHostAndTags() {
     when(tagService.saveTag(eq("PARENT_TAG"), any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
     when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
-    when(wingsPersistence.get(Tag.class, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
+    when(tagService.getTag("APP_ID", "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
     when(wingsPersistence.get(Host.class, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
     when(wingsPersistence.get(ServiceTemplate.class, "TEMPLATE_ID"))
         .thenReturn(aServiceTemplate().withUuid("SERVICE_TEMPLATE").build());
@@ -111,9 +111,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());
     Host host = hostService.save(any(Host.class));
     templateService.updateHosts("APP_ID", template.getUuid(), asList(host.getUuid()));
-    templateService.updateTags("APP_ID", template.getUuid(), asList(tag.getUuid()));
     verify(wingsPersistence)
-        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
+        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("hosts", asList(host)));
+    templateService.updateTags("APP_ID", template.getUuid(), asList(tag.getUuid()));
     verify(wingsPersistence)
         .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
   }

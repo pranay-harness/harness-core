@@ -137,7 +137,7 @@ public class TagServiceImpl implements TagService {
     // Tag hosts
     hostIds.forEach(hostId -> {
       Host host = wingsPersistence.get(Host.class, hostId);
-      List<Tag> tags = getUpdateHostTagsList(tag, host);
+      List<Tag> tags = getUpdatedHostTagsList(tag, host);
       UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
       wingsPersistence.update(host, updateOp);
       hosts.remove(host); // remove updated tags from all tagged hosts
@@ -150,7 +150,7 @@ public class TagServiceImpl implements TagService {
     });
   }
 
-  private List<Tag> getUpdateHostTagsList(Tag tag, Host host) {
+  private List<Tag> getUpdatedHostTagsList(Tag tag, Host host) {
     List<Tag> tags = host.getTags();
     if (tags != null && tags.size() != 0) {
       for (int i = 0; i < tags.size(); i++) {

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.IN;
 
@@ -24,11 +25,12 @@ import software.wings.service.intfc.TagService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -107,24 +109,29 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
     List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
-    List<Host> newHosts = new ArrayList<>();
-    List<Host> deletedHosts = new ArrayList<>();
 
-    hosts.forEach(host -> {
-      if (!alreadyMappedHosts.contains(host)) {
-        newHosts.add(host);
-      }
-    });
-
-    alreadyMappedHosts.forEach(host -> {
-      if (!hosts.contains(host)) {
-        deletedHosts.add(host);
-      }
-    });
+    updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
 
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
-    serviceInstanceService.updateHostMappings(serviceTemplate, newHosts, deletedHosts);
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  private void updateServiceInstances(ServiceTemplate serviceTemplate, List<Host> newHosts, List<Host> existingHosts) {
+    List<Host> addHostsList = new ArrayList<>();
+    List<Host> deleteHostList = new ArrayList<>();
+
+    newHosts.forEach(host -> {
+      if (!existingHosts.contains(host)) {
+        addHostsList.add(host);
+      }
+    });
+
+    existingHosts.forEach(host -> {
+      if (!newHosts.contains(host)) {
+        deleteHostList.add(host);
+      }
+    });
+    serviceInstanceService.updateHostMappings(serviceTemplate, addHostsList, deleteHostList);
   }
 
   /* (non-Javadoc)
@@ -136,14 +143,22 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<Tag> tags = new ArrayList<>();
     if (tagIds != null) {
       for (String tagId : tagIds) {
-        tags.add(wingsPersistence.get(Tag.class, tagId));
+        tags.add(tagService.getTag(appId, tagId));
       }
     }
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
+
+    Set<Tag> newLeafTags = new HashSet<>();
+    tags.forEach(tag -> { newLeafTags.addAll(tagService.getLeafTags(tag)); });
+    List<Host> newHosts = hostService.getHostsByTags(appId, newLeafTags.stream().collect(toList()));
+
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
-    List<Tag> leafTags = getLeafTags(serviceTemplate);
-    List<Host> hosts = hostService.getHostsByTags(serviceTemplate.getAppId(), leafTags);
-    serviceInstanceService.updateHostMappings(serviceTemplate, hosts, new ArrayList<>());
+    List<Tag> existingMappedTags = serviceTemplate.getTags();
+    Set<Tag> existingLeafTags = new HashSet<>();
+    existingMappedTags.forEach(tag -> { existingLeafTags.addAll(tagService.getLeafTags(tag)); });
+    List<Host> existingHosts = hostService.getHostsByTags(appId, existingLeafTags.stream().collect(toList()));
+    updateServiceInstances(serviceTemplate, newHosts, existingHosts);
+
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
@@ -240,20 +255,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (newFiles != null && !newFiles.isEmpty()) {
       existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
                           .filter(new TreeSet<>(Comparator.comparing(ConfigFile::getName))::add)
-                          .collect(Collectors.toList());
+                          .collect(toList());
     }
     logger.info("Config files after overrides [{}]", existingFiles.toString());
     return existingFiles;
-  }
-
-  private List<Tag> getLeafTags(ServiceTemplate serviceTemplate) {
-    List<Tag> leafTagNodes = new ArrayList<>();
-    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
-    if (rootTag == null) {
-      return leafTagNodes;
-    }
-    List<Tag> tags = tagService.getLeafTags(rootTag);
-    return tags;
   }
 
   private List<Tag> applyOverrideAndGetLeafTags(ServiceTemplate serviceTemplate) {
