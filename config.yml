@@ -1,6 +1,7 @@
 xxxxxxxx
   registerDefaultExceptionMappers: false
-  applicationContextPath: /wings
+  rootPath: /wings
+  applicationContextPath: /
   applicationConnectors:
     - type: http
       port: 9090
