@@ -1,6 +1,6 @@
 xxxxxxxx
   registerDefaultExceptionMappers: false
-  rootPath: /wings
+  rootPath: /api
   applicationContextPath: /
   applicationConnectors:
     - type: http
