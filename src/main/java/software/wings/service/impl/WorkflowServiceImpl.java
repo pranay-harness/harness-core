@@ -574,7 +574,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return triggerSimpleExecution(appId, envId, executionArgs);
 
     } else {
-      throw new WingsException(ErrorConstants.INVALID_ARGUMENT, "args", "workflowType");
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "workflowType");
     }
   }
 
