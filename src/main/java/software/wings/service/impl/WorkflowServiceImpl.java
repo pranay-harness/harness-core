@@ -52,6 +52,7 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.sm.TransitionType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.JsonUtils;
 
@@ -385,6 +386,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void populateGraph(WorkflowExecution workflowExecution) {
+    StateMachine sm =
+        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> pageRequest = new PageRequest<>();
 
     SearchFilter filter = new SearchFilter();
@@ -406,11 +409,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, pageRequest);
     if (res != null && res.size() > 0) {
-      workflowExecution.setGraph(generateGraph(res.getResponse()));
+      workflowExecution.setGraph(generateGraph(res.getResponse(), sm.getInitialStateName()));
     }
   }
 
-  private Graph generateGraph(List<StateExecutionInstance> response) {
+  private Graph generateGraph(List<StateExecutionInstance> response, String originState) {
+    String originNodeId = null;
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
     List<Link> links = new ArrayList<>();
@@ -419,26 +423,41 @@ public class WorkflowServiceImpl implements WorkflowService {
       node.setId(instance.getUuid());
       node.setName(instance.getStateName());
       node.setType(instance.getStateType());
+      node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
       nodes.add(node);
+      if (node.getName().equals(originState)) {
+        originNodeId = node.getId();
+      }
+
+      Link link = new Link();
+      link.setTo(instance.getUuid());
 
       String fromInstanceId = null;
-      if (instance.getPrevInstanceId() != null) {
-        fromInstanceId = instance.getPrevInstanceId();
-      } else if (instance.getParentInstanceId() != null) {
+      if (instance.getParentInstanceId() != null) {
         // TODO: needs work for repeat element instance.
-        // This is scenario like fork, repeat or sub waitnotify
+        // This is scenario like fork, repeat or sub workflow
         fromInstanceId = instance.getParentInstanceId();
+        link.setType(TransitionType.REPEAT.name().toLowerCase());
+      } else if (instance.getPrevInstanceId() != null) {
+        fromInstanceId = instance.getPrevInstanceId();
       }
+      // TODO : additional link needed for serial repeat
+
       if (fromInstanceId != null) {
-        Link link = new Link();
         link.setId(fromInstanceId + "-" + instance.getUuid());
         link.setFrom(fromInstanceId);
-        link.setTo(instance.getUuid());
         links.add(link);
       }
     }
     graph.setNodes(nodes);
     graph.setLinks(links);
+    Map<String, Node> nodesMap = graph.getNodesMap();
+    links.forEach(link -> {
+      if (link.getType() == null) {
+        link.setType(nodesMap.get(link.getFrom()).getStatus());
+      }
+    });
+    graph.repaint(originNodeId);
     return graph;
   }
 

@@ -12,6 +12,7 @@ import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.common.Constants;
+import software.wings.sm.TransitionType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,6 +35,14 @@ public class Graph {
    * The constant ORIGIN_STATE.
    */
   public static final String ORIGIN_STATE = "ORIGIN";
+
+  static final int DEFAULT_INITIAL_X = 50;
+
+  static final int DEFAULT_INITIAL_Y = 80;
+
+  static final int DEFAULT_NODE_WIDTH = 200;
+
+  static final int DEFAULT_NODE_HEIGHT = 100;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -107,6 +116,44 @@ public class Graph {
   }
 
   /**
+   * Gets repeat links map.
+   *
+   * @return the repeat links map
+   */
+  @JsonIgnore
+  public Map<String, List<Link>> getRepeatLinkMap() {
+    Map<String, List<Link>> map = new HashMap<>();
+    getLinks().forEach(link -> {
+      if (TransitionType.REPEAT.name().toLowerCase().equals(link.getType())) {
+        List<Link> toList = map.get(link.getFrom());
+        if (toList == null) {
+          toList = new ArrayList<>();
+          map.put(link.getFrom(), toList);
+        }
+        toList.add(link);
+      }
+    });
+    return map;
+  }
+
+  /**
+   * Gets next links map.
+   *
+   * @return the repeat links map
+   */
+  @JsonIgnore
+  public Map<String, Link> getNextLinkMap() {
+    Map<String, Link> map = new HashMap<>();
+    getLinks().forEach(link -> {
+      if (TransitionType.SUCCESS.name().toLowerCase().equals(link.getType())
+          || TransitionType.FAILURE.name().toLowerCase().equals(link.getType())) {
+        map.put(link.getFrom(), link);
+      }
+    });
+    return map;
+  }
+
+  /**
    * Is linear boolean.
    *
    * @return the boolean
@@ -162,7 +209,9 @@ public class Graph {
     };
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see java.lang.Object#hashCode()
    */
   @Override
@@ -175,7 +224,9 @@ public class Graph {
     return result;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see java.lang.Object#equals(java.lang.Object)
    */
   @Override
@@ -212,6 +263,12 @@ public class Graph {
     return originState;
   }
 
+  @Override
+  public String toString() {
+    return "Graph [graphName=" + graphName + ", nodes=" + nodes + ", links=" + links + ", originState=" + originState
+        + "]";
+  }
+
   /**
    * The Class Node.
    */
@@ -221,6 +278,7 @@ public class Graph {
     private String id;
     private String name;
     private String type;
+    private String status;
     private int x;
     private int y;
     private Map<String, Object> properties = new HashMap<>();
@@ -333,6 +391,14 @@ public class Graph {
       this.properties = properties;
     }
 
+    public String getStatus() {
+      return status;
+    }
+
+    public void setStatus(String status) {
+      this.status = status;
+    }
+
     /**
      * Is origin boolean.
      *
@@ -343,7 +409,9 @@ public class Graph {
       return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -359,7 +427,9 @@ public class Graph {
       return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -398,6 +468,12 @@ public class Graph {
       return true;
     }
 
+    @Override
+    public String toString() {
+      return "Node [id=" + id + ", name=" + name + ", type=" + type + ", status=" + status + ", x=" + x + ", y=" + y
+          + ", properties=" + properties + "]";
+    }
+
     /**
      * The Class Builder.
      */
@@ -405,6 +481,7 @@ public class Graph {
       private String id;
       private String name;
       private String type;
+      private String status;
       private int x;
       private int y;
       private Map<String, Object> properties = new HashMap<>();
@@ -454,6 +531,17 @@ public class Graph {
       }
 
       /**
+       * With status.
+       *
+       * @param type the status
+       * @return the builder
+       */
+      public Builder withStatus(String status) {
+        this.status = status;
+        return this;
+      }
+
+      /**
        * With x.
        *
        * @param x the x
@@ -478,7 +566,7 @@ public class Graph {
       /**
        * Adds the property.
        *
-       * @param name  the name
+       * @param name the name
        * @param value the value
        * @return the builder
        */
@@ -517,6 +605,7 @@ public class Graph {
         node.setId(id);
         node.setName(name);
         node.setType(type);
+        node.setStatus(status);
         node.setX(x);
         node.setY(y);
         node.setProperties(properties);
@@ -608,7 +697,9 @@ public class Graph {
       this.type = type;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see java.lang.Object#hashCode()
      */
     @Override
@@ -622,7 +713,9 @@ public class Graph {
       return result;
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     *
      * @see java.lang.Object#equals(java.lang.Object)
      */
     @Override
@@ -655,6 +748,11 @@ public class Graph {
       } else if (!type.equals(other.type))
         return false;
       return true;
+    }
+
+    @Override
+    public String toString() {
+      return "Link [id=" + id + ", from=" + from + ", to=" + to + ", type=" + type + "]";
     }
 
     /**
@@ -840,6 +938,100 @@ public class Graph {
       graph.setNodes(nodes);
       graph.setLinks(links);
       return graph;
+    }
+  }
+
+  public void repaint(String originNodeId) {
+    Map<String, Node> nodesMap = getNodesMap();
+    Map<String, List<Link>> repeatLinkMap = getRepeatLinkMap();
+    Map<String, Link> nextLinkMap = getNextLinkMap();
+
+    repaint(nodesMap.get(originNodeId), new Area(DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y), nodesMap, nextLinkMap,
+        repeatLinkMap);
+  }
+
+  private Area repaint(Node node, Area area, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap,
+      Map<String, List<Link>> repeatLinkMap) {
+    node.setX(area.getX());
+    node.setY(area.getY());
+    area.setWidth(DEFAULT_NODE_WIDTH);
+    area.setHeight(DEFAULT_NODE_HEIGHT);
+
+    // paint the repeat node
+    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
+    if (repeatLinks != null) {
+      Area nodeArea = area;
+      for (Link link : repeatLinks) {
+        nodeArea = repaint(nodesMap.get(link.getTo()),
+            new Area(nodeArea.getX(), nodeArea.getY() + nodeArea.getHeight()), nodesMap, nextLinkMap, repeatLinkMap);
+        if (area.getWidth() < nodeArea.getWidth()) {
+          area.setWidth(nodeArea.getWidth());
+        }
+        area.setHeight(nodeArea.getHeight() + DEFAULT_NODE_HEIGHT);
+      }
+    }
+
+    if (nextLinkMap.get(node.getId()) != null) {
+      Area nodeArea = repaint(nodesMap.get(nextLinkMap.get(node.getId()).getTo()),
+          new Area(area.getX() + area.getWidth(), area.getY()), nodesMap, nextLinkMap, repeatLinkMap);
+      if (area.getHeight() < nodeArea.getHeight()) {
+        area.setHeight(nodeArea.getHeight());
+      }
+      area.setWidth(nodeArea.getWidth() + DEFAULT_NODE_WIDTH);
+    }
+    return area;
+  }
+
+  static class Area {
+    int x;
+    int y;
+    int width;
+    int height;
+
+    public Area(int x, int y) {
+      super();
+      this.x = x;
+      this.y = y;
+    }
+
+    public Area(int x, int y, int width, int height) {
+      super();
+      this.x = x;
+      this.y = y;
+      this.width = width;
+      this.height = height;
+    }
+
+    public int getX() {
+      return x;
+    }
+
+    public void setX(int x) {
+      this.x = x;
+    }
+
+    public int getY() {
+      return y;
+    }
+
+    public void setY(int y) {
+      this.y = y;
+    }
+
+    public int getWidth() {
+      return width;
+    }
+
+    public void setWidth(int width) {
+      this.width = width;
+    }
+
+    public int getHeight() {
+      return height;
+    }
+
+    public void setHeight(int height) {
+      this.height = height;
     }
   }
 }
