@@ -78,7 +78,7 @@ public class CommandState extends State {
 
     CommandExecutionContext.Builder commandExecutionContextBuilder =
         aCommandExecutionContext().withBackupPath("").withRuntimePath("").withStagingPath("").withExecutionCredential(
-            workflowStandardParams.getExecutionCredential() x);
+            workflowStandardParams.getExecutionCredential());
 
     if (command.isArtifactNeeded()) {
       Artifact artifact =
