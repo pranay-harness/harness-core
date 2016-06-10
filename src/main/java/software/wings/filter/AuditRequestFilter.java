@@ -10,12 +10,12 @@ import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
@@ -90,7 +90,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     } catch (Exception exception) {
       throw new WingsException(exception);
     } finally {
-      Misc.quietClose(entityStream, byteArrayInputStream);
+      IOUtils.closeQuietly(entityStream);
+      IOUtils.closeQuietly(byteArrayInputStream);
     }
   }
 

@@ -10,6 +10,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.IOUtils;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.SettingAttribute;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -79,7 +81,7 @@ public class HostCsvFileHelper {
     } catch (IOException ex) {
       throw new WingsException(INVALID_CSV_FILE);
     } finally {
-      Misc.quietClose(csvParser);
+      IOUtils.closeQuietly(csvParser);
     }
     return hosts;
   }
@@ -112,7 +114,7 @@ public class HostCsvFileHelper {
         } catch (IOException e) {
           throw new WingsException(UNKNOWN_ERROR);
         } finally {
-          Misc.quietClose(csvPrinter);
+          IOUtils.closeQuietly(csvPrinter);
         }
       });
       fileWriter.flush();

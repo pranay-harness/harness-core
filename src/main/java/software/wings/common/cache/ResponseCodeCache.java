@@ -1,11 +1,11 @@
 package software.wings.common.cache;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ResponseMessage.ResponseTypeEnum;
 import software.wings.exception.WingsException;
-import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +33,7 @@ public class ResponseCodeCache {
     } catch (IOException exception) {
       throw new WingsException(exception);
     } finally {
-      Misc.quietClose(in);
+      IOUtils.closeQuietly(in);
     }
   }
 

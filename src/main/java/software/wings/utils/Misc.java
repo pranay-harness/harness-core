@@ -3,8 +3,6 @@ package software.wings.utils;
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.common.Constants;
 
-import java.io.Closeable;
-
 // TODO: Auto-generated Javadoc
 
 /**
@@ -23,23 +21,6 @@ public class Misc {
       Thread.sleep(delay);
     } catch (InterruptedException exception) {
       // Ignore
-    }
-  }
-
-  /**
-   * Closes list of Closeables and swallows exception.
-   *
-   * @param closeables Closeable objects to close.
-   */
-  public static void quietClose(Closeable... closeables) {
-    for (Closeable closeable : closeables) {
-      try {
-        if (closeable != null) {
-          closeable.close();
-        }
-      } catch (Exception exception) {
-        // Ignore
-      }
     }
   }
 

@@ -16,6 +16,7 @@ import software.wings.beans.SortOrder.OrderType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -115,6 +116,31 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertPaginationResult(res);
   }
 
+  /**
+   * Should update map
+   */
+  @Test
+  public void shouldUpdateMap() {
+    TestEntity entity = new TestEntity();
+    entity.setFieldA("fieldA11");
+    Map<String, String> map = new HashMap<>();
+    map.put("abc", "123");
+    entity.setMapField(map);
+    wingsPersistence.save(entity);
+
+    TestEntity entity1 = wingsPersistence.get(TestEntity.class, entity.getUuid());
+
+    Map<String, String> map2 = new HashMap<>();
+    map2.put("abcd", "1234");
+
+    Map fieldMap = new HashMap<>();
+    fieldMap.put("mapField", map2);
+    wingsPersistence.updateFields(TestEntity.class, entity.getUuid(), fieldMap);
+
+    TestEntity entity2 = wingsPersistence.get(TestEntity.class, entity.getUuid());
+    assertThat(entity2).isNotNull();
+    assertThat(entity2.getMapField()).isEqualTo(map2);
+  }
   private void assertPaginationResult(PageResponse<TestEntity> res) {
     assertThat(res).isNotNull();
     assertThat(res.size()).isEqualTo(2);
@@ -157,6 +183,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
    */
   public static class TestEntity extends Base {
     private String fieldA;
+    private Map<String, String> mapField;
 
     /**
      * Gets field a.
@@ -174,6 +201,14 @@ public class WingsPersistenceTest extends WingsBaseTest {
      */
     public void setFieldA(String fieldA) {
       this.fieldA = fieldA;
+    }
+
+    public Map<String, String> getMapField() {
+      return mapField;
+    }
+
+    public void setMapField(Map<String, String> mapField) {
+      this.mapField = mapField;
     }
   }
 }
