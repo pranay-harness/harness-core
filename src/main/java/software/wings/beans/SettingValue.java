@@ -1,15 +1,24 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import software.wings.helpers.ext.mail.SmtpConfig;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/16/16.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+  @Type(JenkinsConfig.class)
+  , @Type(SmtpConfig.class), @Type(HostConnectionAttributes.class), @Type(BastionConnectionAttributes.class),
+      @Type(StringSettingValue.class)
+})
 public abstract class SettingValue {
-  private SettingVariableTypes type;
+  @JsonTypeId private SettingVariableTypes type;
 
   /**
    * Instantiates a new setting value.
@@ -55,10 +64,9 @@ public abstract class SettingValue {
     /**
      * Smtp setting variable types.
      */
-    SMTP,
-    /**
-     * Jenkins setting variable types.
-     */
+    SMTP, /**
+           * Jenkins setting variable types.
+           */
     JENKINS,
 
     /**
