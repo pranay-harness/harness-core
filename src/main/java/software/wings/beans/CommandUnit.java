@@ -7,13 +7,18 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class CommandUnit {
+public abstract class CommandUnit {
   private String name;
   @NotNull private String serviceId;
   @NotNull private String appId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
+
+  /**
+   * Sets .
+   */
+  public void setup(CommandExecutionContext context){};
 
   /**
    * Instantiates a new Command unit.

@@ -81,37 +81,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     addCommand(service.getAppId(), service.getUuid(), INSTALL_COMMAND_GRAPH);
   }
 
-  //  private Command getStartCommand(Service service) {
-  //    ExecCommandUnit commandUnit =
-  //        anExecCommandUnit().withName("Execute start
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
-  //            .build();
-  //    return
-  //    aCommand().withName("START").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
-  //  }
-  //
-  //
-  //  private Command getStopCommand(Service service) {
-  //    ExecCommandUnit commandUnit =
-  //        anExecCommandUnit().withName("Execute stop
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build();
-  //    return
-  //    aCommand().withName("STOP").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
-  //  }
-  //
-  //
-  //  private Command getInstallCommand(Service service) {
-  //    List<CommandUnit> commandUnits = Arrays.asList(
-  //        anExecCommandUnit().withName("Execute stop
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build(),
-  //        CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit().build(),
-  //        anExecCommandUnit().withName("Execute start
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
-  //            .build());
-  //    return
-  //    aCommand().withName("INSTALL").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).withCommandUnits(commandUnits).build();
-  //  }
-
   /**
    * {@inheritDoc}
    */

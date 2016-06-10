@@ -73,12 +73,13 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   }
 
   private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
-    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId);
+    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId, commandUnit);
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
     ExecutionResult executionResult;
     logService.save(aLog()
                         .withAppId(host.getAppId())
+                        .withHostName(host.getHostName())
                         .withActivityId(activityId)
                         .withLogLevel(INFO)
                         .withCommandUnitName(commandUnit.getName())
@@ -89,6 +90,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     logService.save(aLog()
                         .withAppId(host.getAppId())
                         .withActivityId(activityId)
+                        .withHostName(host.getHostName())
                         .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                         .withLogLine("Command execution finished with status " + executionResult)
                         .withCommandUnitName(commandUnit.getName())
@@ -111,13 +113,14 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     return executionResult;
   }
 
-  private SshSessionConfig getSshSessionConfig(Host host, String executionId) {
+  private SshSessionConfig getSshSessionConfig(Host host, String executionId, CommandUnit commandUnit) {
     ExecutorType executorType = getExecutorType(host);
     Builder builder = aSshSessionConfig()
                           .withAppId(host.getAppId())
                           .withExecutionId(executionId)
                           .withExecutorType(executorType)
-                          .withHost(host.getHostName());
+                          .withHost(host.getHostName())
+                          .withCommandUnitName(commandUnit.getName());
 
     if (host.getHostConnectionCredential() != null) {
       HostConnectionCredential credential = host.getHostConnectionCredential();
