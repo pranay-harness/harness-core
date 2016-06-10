@@ -4,11 +4,15 @@ import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
 
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.Host;
+import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ServiceInstance;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -74,6 +78,19 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private ExecutionResult executeCommandUnit(
       ServiceInstance serviceInstance, CommandExecutionContext context, CommandUnit commandUnit) {
     commandUnit.setup(context);
-    return commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context.getActivityId());
+    Host host = serviceInstance.getHost();
+    host.setHostConnectionCredential(getHostConnectionCredentialFromExecutionCredential(
+        (SSHExecutionCredential) context.getExecutionCredential())); // TODO: transform not needed. merge
+    return commandUnitExecutorService.execute(host, commandUnit, context.getActivityId());
+  }
+
+  private HostConnectionCredential getHostConnectionCredentialFromExecutionCredential(
+      SSHExecutionCredential execCredential) {
+    return aHostConnectionCredential()
+        .withSshUser(execCredential.getSshUser())
+        .withSshPassword(execCredential.getSshPassword())
+        .withAppUser(execCredential.getAppAccount())
+        .withAppUserPassword(execCredential.getAppAccountPassword())
+        .build();
   }
 }

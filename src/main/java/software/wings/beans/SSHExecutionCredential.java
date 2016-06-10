@@ -93,4 +93,62 @@ public class SSHExecutionCredential extends ExecutionCredential {
   public void setAppAccountPassword(String appAccountPassword) {
     this.appAccountPassword = appAccountPassword;
   }
+
+  public static final class Builder {
+    private String sshUser;
+    private String sshPassword;
+    private String appAccount;
+    private String appAccountPassword;
+    private ExecutionType executionType;
+
+    private Builder() {}
+
+    public static Builder aSSHExecutionCredential() {
+      return new Builder();
+    }
+
+    public Builder withSshUser(String sshUser) {
+      this.sshUser = sshUser;
+      return this;
+    }
+
+    public Builder withSshPassword(String sshPassword) {
+      this.sshPassword = sshPassword;
+      return this;
+    }
+
+    public Builder withAppAccount(String appAccount) {
+      this.appAccount = appAccount;
+      return this;
+    }
+
+    public Builder withAppAccountPassword(String appAccountPassword) {
+      this.appAccountPassword = appAccountPassword;
+      return this;
+    }
+
+    public Builder withExecutionType(ExecutionType executionType) {
+      this.executionType = executionType;
+      return this;
+    }
+
+    public Builder but() {
+      return aSSHExecutionCredential()
+          .withSshUser(sshUser)
+          .withSshPassword(sshPassword)
+          .withAppAccount(appAccount)
+          .withAppAccountPassword(appAccountPassword)
+          .withExecutionType(executionType);
+    }
+
+    public SSHExecutionCredential build() {
+      SSHExecutionCredential sSHExecutionCredential = new SSHExecutionCredential();
+      sSHExecutionCredential.setSshUser(sshUser);
+      sSHExecutionCredential.setSshPassword(sshPassword);
+      sSHExecutionCredential.setAppAccount(appAccount);
+      sSHExecutionCredential.setAppAccountPassword(appAccountPassword);
+      sSHExecutionCredential.setExecutionType(executionType);
+      return sSHExecutionCredential;
+    }
+  }
 }

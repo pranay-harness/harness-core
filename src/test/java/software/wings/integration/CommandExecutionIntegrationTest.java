@@ -14,7 +14,7 @@ import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
-import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
+import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
@@ -40,7 +40,6 @@ import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
-import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -71,14 +70,8 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final String PASSWORD = "Wings@123";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
-  private static final HostConnectionCredential CREDENTIAL =
-      aHostConnectionCredential().withSshUser(USER).withSshPassword(PASSWORD).build();
-  private static final Host HOST = aHost()
-                                       .withAppId(APP_ID)
-                                       .withHostName(HOST_NAME)
-                                       .withHostConnAttr(HOST_CONN_ATTR_PWD)
-                                       .withHostConnectionCredential(CREDENTIAL)
-                                       .build();
+  private static final Host HOST =
+      aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(HOST_CONN_ATTR_PWD).build();
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
@@ -88,12 +81,13 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                                              .withHost(HOST)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
-
-  private CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
-                                                .withActivityId(ACTIVITY_ID)
-                                                .withArtifact(anArtifact().withUuid(ARTIFACT_ID).build())
-                                                .withRuntimePath("$HOME/apps")
-                                                .build();
+  private CommandExecutionContext context =
+      CommandExecutionContext.Builder.aCommandExecutionContext()
+          .withActivityId(ACTIVITY_ID)
+          .withArtifact(anArtifact().withUuid(ARTIFACT_ID).build())
+          .withRuntimePath("$HOME/apps")
+          .withExecutionCredential(aSSHExecutionCredential().withSshUser(USER).withSshPassword(PASSWORD).build())
+          .build();
 
   private Command command =
       aCommand()
