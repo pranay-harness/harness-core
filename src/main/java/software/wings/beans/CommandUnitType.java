@@ -32,7 +32,12 @@ public enum CommandUnitType {
   COMMAND(Command.class, false), /**
                                   * Copy artifact command unit type.
                                   */
-  COPY_ARTIFACT(CopyArtifactCommandUnit.class, true);
+  COPY_ARTIFACT(CopyArtifactCommandUnit.class, true),
+
+  /**
+   * Copy platform command unit type.
+   */
+  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class, true);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

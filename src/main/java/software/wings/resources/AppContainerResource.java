@@ -71,8 +71,9 @@ public class AppContainerResource {
    */
   @GET
   @Path("{appContainerId}")
-  public RestResponse<AppContainer> get(@PathParam("appContainerId") String appContainerId) {
-    return new RestResponse<>(appContainerService.get(appContainerId));
+  public RestResponse<AppContainer> get(
+      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+    return new RestResponse<>(appContainerService.get(appId, appContainerId));
   }
 
   /**
@@ -144,8 +145,8 @@ public class AppContainerResource {
    */
   @DELETE
   @Path("{appContainerId}")
-  public void deletePlatform(@PathParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
-    appContainerService.delete(appContainerId);
+  public void deletePlatform(@QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+    appContainerService.delete(appId, appContainerId);
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {

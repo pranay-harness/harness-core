@@ -38,8 +38,8 @@ public class AppContainerServiceImpl implements AppContainerService {
    * {@inheritDoc}
    */
   @Override
-  public AppContainer get(String platformId) {
-    return wingsPersistence.get(AppContainer.class, platformId);
+  public AppContainer get(String appId, String platformId) {
+    return wingsPersistence.get(AppContainer.class, appId, platformId);
   }
 
   /**
@@ -71,7 +71,7 @@ public class AppContainerServiceImpl implements AppContainerService {
    * {@inheritDoc}
    */
   @Override
-  public void delete(String appContainerId) {
+  public void delete(String appId, String appContainerId) {
     Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
     for (Service service : application.getServices()) {
       if (service.getAppContainer().getUuid().equals(appContainerId)) {

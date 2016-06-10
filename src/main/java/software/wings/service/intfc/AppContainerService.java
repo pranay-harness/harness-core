@@ -45,15 +45,17 @@ public interface AppContainerService {
   /**
    * Gets the.
    *
+   * @param appId          the app id
    * @param appContainerId the app container id
    * @return the app container
    */
-  AppContainer get(String appContainerId);
+  AppContainer get(String appId, String appContainerId);
 
   /**
    * Delete.
    *
+   * @param appId          the app id
    * @param appContainerId the app container id
    */
-  void delete(String appContainerId);
+  void delete(String appId, String appContainerId);
 }
