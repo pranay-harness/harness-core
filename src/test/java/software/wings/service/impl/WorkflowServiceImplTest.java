@@ -29,8 +29,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.WingsPersistence;
+import software.wings.rules.Listeners;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +45,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
+@Listeners(NotifyEventListener.class)
 public class WorkflowServiceImplTest extends WingsBaseTest {
   private static String appId = UUIDGenerator.getUuid();
   @Inject private WorkflowService workflowService;
@@ -82,9 +86,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
   /**
    * Should trigger simple workflow.
+   * @throws InterruptedException
    */
   @Test
-  public void shouldTriggerSimpleWorkflow() {
+  public void shouldTriggerSimpleWorkflow() throws InterruptedException {
     env = getEnvironment();
 
     ServiceInstanceBuilder builder =
@@ -106,9 +111,22 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     serviceInstanceIds.add(uuid1);
     serviceInstanceIds.add(uuid2);
     executionArgs.setServiceInstanceIds(serviceInstanceIds);
-    executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
+    executionArgs.setExecutionStrategy(ExecutionStrategy.SERIAL);
     WorkflowExecution workflowExecution = impl.triggerSimpleExecution(appId, env.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
+    WorkflowExecution workflowExecution2 = workflowService.getExecutionDetails(appId, workflowExecution.getUuid());
+    if (workflowExecution2.getStatus() == ExecutionStatus.NEW
+        || workflowExecution2.getStatus() == ExecutionStatus.RUNNING) {
+      Thread.sleep(3000);
+    }
+    workflowExecution2 = workflowService.getExecutionDetails(appId, workflowExecution.getUuid());
+    assertThat(workflowExecution2)
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
+            WorkflowExecution::getWorkflowId)
+        .containsExactly(workflowExecution.getUuid(), appId, workflowExecution.getStateMachineId(),
+            workflowExecution.getWorkflowId());
+    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(workflowExecution2.getGraph()).isNotNull();
   }
 }

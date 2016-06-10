@@ -324,7 +324,7 @@ public class RepeatState extends State {
      * @return true, if successful
      */
     boolean indexReachedMax() {
-      if (repeatElements != null && repeatElementIndex != null && repeatElementIndex == repeatElements.size()) {
+      if (repeatElements != null && repeatElementIndex != null && repeatElementIndex == (repeatElements.size() - 1)) {
         return true;
       } else {
         return false;
