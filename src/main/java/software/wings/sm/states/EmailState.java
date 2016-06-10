@@ -37,9 +37,9 @@ public class EmailState extends State {
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
   private static final long serialVersionUID = 1L;
   @Attributes(required = true) private String toAddress;
-  @Attributes(required = true) private String ccAddress;
+  @Attributes private String ccAddress;
   @Attributes(required = true) private String subject;
-  @Attributes(required = true) private String body;
+  @Attributes private String body;
   private boolean ignoreDeliveryFailure = true;
 
   @Inject private transient NotificationService<EmailData> emailNotificationService;

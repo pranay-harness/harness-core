@@ -15,9 +15,11 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -144,11 +146,14 @@ public class StateMachineExecutor {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, ErrorCodes.ARGS_NAME, "stateName");
     }
 
+    stateExecutionInstance.setStateMachineId(stateMachine.getUuid());
     stateExecutionInstance.setStateType(stateMachine.getState(stateExecutionInstance.getStateName()).getStateType());
 
-    if (stateExecutionInstance.getUuid() == null) {
-      stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
+    if (stateExecutionInstance.getUuid() != null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateExecutionInstance was already created");
     }
+
+    stateExecutionInstance = wingsPersistence.saveAndGet(StateExecutionInstance.class, stateExecutionInstance);
 
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);
     injector.injectMembers(context);
@@ -346,16 +351,21 @@ public class StateMachineExecutor {
   private void updateStateExecutionData(
       StateExecutionInstance stateExecutionInstance, StateExecutionData stateExecutionData, ExecutionStatus status) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+    if (stateExecutionMap == null) {
+      stateExecutionMap = new HashMap<>();
+    }
+
     if (stateExecutionData == null) {
       stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
       if (stateExecutionData == null) {
         stateExecutionData = new StateExecutionData();
-        stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
       }
     }
     stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
     stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());
     stateExecutionInstance.setStatus(stateExecutionInstance.getStatus());
+    stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
+
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("stateExecutionMap", stateExecutionMap);

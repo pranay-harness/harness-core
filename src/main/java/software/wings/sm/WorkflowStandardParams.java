@@ -8,9 +8,11 @@ import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.Service;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.SettingsService;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +35,8 @@ public class WorkflowStandardParams implements ContextElement {
 
   @Inject private EnvironmentService environmentService;
 
+  @Inject private SettingsService settingsService;
+
   private String appId;
   private String envId;
   private List<String> artifactIds;
@@ -46,6 +50,28 @@ public class WorkflowStandardParams implements ContextElement {
 
   private Long startTs;
   private Long endTs;
+
+  /** {@inheritDoc} */
+  @Override
+  public Map<String, Object> paramMap() {
+    Map<String, Object> map = new HashMap<>();
+    map.put(APP_OBJECT_NAME, getApp());
+    map.put(ENV_OBJECT_NAME, getEnv());
+
+    return map;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public ContextElementType getElementType() {
+    return ContextElementType.STANDARD;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String getName() {
+    return STANDARD_PARAMS;
+  }
 
   /**
    * Gets app id.
@@ -155,40 +181,36 @@ public class WorkflowStandardParams implements ContextElement {
     this.executionCredential = executionCredential;
   }
 
-  @Override
-  public Map<String, Object> paramMap() {
-    Map<String, Object> map = new HashMap<>();
-    map.put(APP_OBJECT_NAME, getApp());
-    map.put(ENV_OBJECT_NAME, getEnv());
-
-    return map;
-  }
-
-  @Override
-  public ContextElementType getElementType() {
-    return ContextElementType.STANDARD;
-  }
-
-  @Override
-  public String getName() {
-    return STANDARD_PARAMS;
-  }
-
-  private Application getApp() {
+  /**
+   * Gets app.
+   *
+   * @return the app
+   */
+  public Application getApp() {
     if (app == null && appId != null) {
       app = appService.findByUuid(appId);
     }
     return app;
   }
 
-  private Environment getEnv() {
+  /**
+   * Gets env.
+   *
+   * @return the env
+   */
+  public Environment getEnv() {
     if (env == null && envId != null) {
       env = environmentService.get(appId, envId);
     }
     return env;
   }
 
-  private List<Artifact> getArtifacts() {
+  /**
+   * Gets artifacts.
+   *
+   * @return the artifacts
+   */
+  public List<Artifact> getArtifacts() {
     if (artifacts == null && artifactIds != null && artifactIds.size() > 0) {
       List<Artifact> list = new ArrayList<>();
       for (String artifactId : artifactIds) {
@@ -197,5 +219,9 @@ public class WorkflowStandardParams implements ContextElement {
       artifacts = list;
     }
     return artifacts;
+  }
+
+  public Artifact getArtifactForService(Service service) {
+    return artifacts.stream().filter(artifact -> artifact.getSevices().contains(service)).findFirst().orElse(null);
   }
 }

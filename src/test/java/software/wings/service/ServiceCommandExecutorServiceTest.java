@@ -16,7 +16,7 @@ import static software.wings.beans.HostConnectionCredential.HostConnectionCreden
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
@@ -109,7 +109,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command);
+    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, null);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
@@ -125,7 +125,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand);
+    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, null);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
@@ -142,6 +142,6 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand));
+        .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, null));
   }
 }

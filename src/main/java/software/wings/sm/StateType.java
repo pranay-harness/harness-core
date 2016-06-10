@@ -43,9 +43,11 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS), /**
-                                                      * Fork state type.
-                                                      */
+  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS),
+
+  /**
+   * Fork state type.
+   */
   FORK(ForkState.class, ORCHESTRATION_STENCILS),
 
   // STATE_MACHINE(ORCHESTRATION_STENCILS),
@@ -53,18 +55,22 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, ORCHESTRATION_STENCILS), /**
-                                                  * Pause state type.
-                                                  */
+  WAIT(WaitState.class, ORCHESTRATION_STENCILS),
+
+  /**
+   * Pause state type.
+   */
   PAUSE(PauseState.class, ORCHESTRATION_STENCILS),
 
   /**
    * Start state type.
    */
   // DEPLOY(ORCHESTRATION_STENCILS),
-  START(StartState.class, ORCHESTRATION_STENCILS), /**
-                                                    * Stop state type.
-                                                    */
+  START(StartState.class, ORCHESTRATION_STENCILS),
+
+  /**
+   * Stop state type.
+   */
   STOP(StopState.class, ORCHESTRATION_STENCILS),
   // RESTART(ORCHESTRATION_STENCILS),
 
@@ -73,6 +79,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   HTTP(HttpState.class, ORCHESTRATION_STENCILS), // SPLUNK(ORCHESTRATION_STENCILS),
                                                  // APP_DYNAMICS(ORCHESTRATION_STENCILS),
+
   /**
    * Email state type.
    */
@@ -81,12 +88,16 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Build state type.
    */
-  BUILD(BuildState.class, PIPELINE_STENCILS), /**
-                                               * Env state state type.
-                                               */
-  ENV_STATE(EnvState.class, PIPELINE_STENCILS), /**
-                                                 * Approval state type.
-                                                 */
+  BUILD(BuildState.class, PIPELINE_STENCILS),
+
+  /**
+   * Env state state type.
+   */
+  ENV_STATE(EnvState.class, PIPELINE_STENCILS),
+
+  /**
+   * Approval state type.
+   */
   APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

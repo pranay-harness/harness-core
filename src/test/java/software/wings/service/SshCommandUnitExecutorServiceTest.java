@@ -10,7 +10,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;

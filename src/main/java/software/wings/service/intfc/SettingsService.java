@@ -39,6 +39,16 @@ public interface SettingsService {
   SettingAttribute get(String appId, String varId);
 
   /**
+   * Get setting attribute.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param varId the var id
+   * @return the setting attribute
+   */
+  SettingAttribute get(String appId, String envId, String varId);
+
+  /**
    * Gets the.
    *
    * @param varId the var id
@@ -63,6 +73,15 @@ public interface SettingsService {
   void delete(String appId, String varId);
 
   /**
+   * Delete.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param varId the var id
+   */
+  void delete(String appId, String envId, String varId);
+
+  /**
    * Gets the by name.
    *
    * @param appId         the app id
@@ -70,6 +89,16 @@ public interface SettingsService {
    * @return the by name
    */
   SettingAttribute getByName(String appId, String attributeName);
+
+  /**
+   * Gets by name.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param attributeName the attribute name
+   * @return the by name
+   */
+  SettingAttribute getByName(String appId, String envId, String attributeName);
 
   /**
    * Creates the default settings.
@@ -86,6 +115,16 @@ public interface SettingsService {
    * @return the setting attributes by type
    */
   List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type);
+
+  /**
+   * Gets setting attributes by type.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param type  the type
+   * @return the setting attributes by type
+   */
+  List<SettingAttribute> getSettingAttributesByType(String appId, String envId, SettingVariableTypes type);
 
   /**
    * Gets the global setting attributes by type.
