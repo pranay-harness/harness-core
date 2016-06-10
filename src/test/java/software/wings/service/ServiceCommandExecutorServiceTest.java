@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.CommandUnitType.COMMAND;
@@ -19,10 +20,12 @@ import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServi
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.RUNTIME_PATH;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -35,6 +38,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity.Builder;
 import software.wings.beans.Command;
+import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Host;
@@ -105,11 +109,17 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                         .withCommandType(EXEC.name())
                                         .withHostName(HOST_NAME);
 
+  private CommandExecutionContext context = CommandExecutionContext.Builder.aCommandExecutionContext()
+                                                .withActivityId(ACTIVITY_ID)
+                                                .withArtifact(anArtifact().withUuid(ARTIFACT_ID).build())
+                                                .withRuntimePath(RUNTIME_PATH)
+                                                .build();
+
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, null);
+    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
@@ -125,7 +135,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
-    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, null);
+    ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
@@ -142,6 +152,6 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, null));
+        .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, context));
   }
 }

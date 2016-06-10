@@ -125,4 +125,6 @@ public class WingsTestConstants {
    * The constant SETTING_ID.
    */
   public static final String SETTING_ID = "SETTING_ID";
+
+  public static final String RUNTIME_PATH = "RUNTIME_PATH";
 }

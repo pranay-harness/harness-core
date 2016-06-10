@@ -9,9 +9,9 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
-import static software.wings.utils.DefaultCommands.INSTALL_COMMAND_GRAPH;
-import static software.wings.utils.DefaultCommands.START_COMMAND_GRAPH;
-import static software.wings.utils.DefaultCommands.STOP_COMMAND_GRAPH;
+import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
+import static software.wings.utils.DefaultCommands.getStartCommandGraph;
+import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -76,41 +76,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   private void addDefaultCommands(Service service) {
-    addCommand(service.getAppId(), service.getUuid(), START_COMMAND_GRAPH);
-    addCommand(service.getAppId(), service.getUuid(), STOP_COMMAND_GRAPH);
-    addCommand(service.getAppId(), service.getUuid(), INSTALL_COMMAND_GRAPH);
+    addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getInstallCommandGraph());
   }
-
-  //  private Command getStartCommand(Service service) {
-  //    ExecCommandUnit commandUnit =
-  //        anExecCommandUnit().withName("Execute start
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
-  //            .build();
-  //    return
-  //    aCommand().withName("START").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
-  //  }
-  //
-  //
-  //  private Command getStopCommand(Service service) {
-  //    ExecCommandUnit commandUnit =
-  //        anExecCommandUnit().withName("Execute stop
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build();
-  //    return
-  //    aCommand().withName("STOP").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
-  //  }
-  //
-  //
-  //  private Command getInstallCommand(Service service) {
-  //    List<CommandUnit> commandUnits = Arrays.asList(
-  //        anExecCommandUnit().withName("Execute stop
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/stop.sh").build(),
-  //        CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit().build(),
-  //        anExecCommandUnit().withName("Execute start
-  //        script").withCommandUnitType(EXEC).withServiceId(service.getUuid()).withCommandPath("/bin/start.sh")
-  //            .build());
-  //    return
-  //    aCommand().withName("INSTALL").withServiceId(service.getUuid()).withCommandUnitType(COMMAND).withCommandUnits(commandUnits).build();
-  //  }
 
   /**
    * {@inheritDoc}

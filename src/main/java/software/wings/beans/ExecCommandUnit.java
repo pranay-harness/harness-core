@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.CommandUnitType.EXEC;
 
 import com.google.common.base.MoreObjects;
@@ -15,6 +17,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ExecCommandUnit extends CommandUnit {
   @NotEmpty private String commandPath;
   @NotEmpty private String commandString;
+
+  @Override
+  public void setup(CommandExecutionContext context) {
+    commandPath = isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath;
+    commandString = format("cd %s && %s", commandPath, commandString);
+  }
 
   /**
    * Instantiates a new exec command unit.

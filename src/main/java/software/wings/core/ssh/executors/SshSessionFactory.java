@@ -52,7 +52,7 @@ public class SshSessionFactory {
    */
   public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
-    JSch.setLogger(new MyLogger());
+    //    JSch.setLogger(new MyLogger());
 
     Session session = null;
     if ("KEY_AUTH".equals(getSessionType(config))) {

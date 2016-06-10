@@ -231,9 +231,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   private void saveExecutionLog(String line) {
+    logger.info(line);
     logService.save(aLog()
                         .withAppId(config.getAppId())
                         .withActivityId(config.getExecutionId())
+                        .withHostName(config.getHost())
                         .withLogLevel(INFO)
                         .withCommandUnitName(config.getCommandUnitName())
                         .withLogLine(line)

@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
+
 import com.google.common.base.MoreObjects;
 
 import software.wings.service.intfc.ArtifactService;
@@ -15,6 +17,16 @@ import javax.inject.Inject;
 public class CopyArtifactCommandUnit extends CopyCommandUnit {
   @Inject ArtifactService artifactService;
   private String artifactId;
+
+  @Override
+  public void setup(CommandExecutionContext context) {
+    Artifact artifact = context.getArtifact();
+    setArtifactId(artifact.getUuid());
+    setFileBucket(ARTIFACTS);
+    ArtifactFile artifactFile = artifact.getArtifactFiles().get(0); // TODO: support list of artifact files
+    setFileId(artifactFile.getFileUuid());
+    setDestinationFilePath(context.getRuntimePath() + "/" + artifactFile.getName());
+  }
 
   /**
    * Instantiates a new copy artifact command unit.

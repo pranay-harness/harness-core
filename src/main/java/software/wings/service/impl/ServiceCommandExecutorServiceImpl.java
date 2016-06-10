@@ -1,12 +1,10 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 
-import software.wings.beans.Activity;
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit;
@@ -44,11 +42,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
-    Activity activity = getPersistedActivity(serviceInstance, command);
-    return executeCommand(serviceInstance, command, activity);
+    return executeCommand(serviceInstance, command, context);
   }
 
-  private ExecutionResult executeCommand(ServiceInstance serviceInstance, Command command, Activity activity) {
+  private ExecutionResult executeCommand(
+      ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     Command executableCommand = command;
     if (command.getReferenceId() != null) {
       executableCommand =
@@ -62,8 +60,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
     for (CommandUnit commandUnit : commandUnits) {
       ExecutionResult executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
-          ? executeCommand(serviceInstance, (Command) commandUnit, activity)
-          : executeCommandUnit(serviceInstance, activity, commandUnit);
+          ? executeCommand(serviceInstance, (Command) commandUnit, context)
+          : executeCommandUnit(serviceInstance, context, commandUnit);
       commandUnit.setExecutionResult(executionResult);
       if (executionResult.equals(FAILURE)) {
         executableCommand.setExecutionResult(FAILURE);
@@ -74,31 +72,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   }
 
   private ExecutionResult executeCommandUnit(
-      ServiceInstance serviceInstance, Activity activity, CommandUnit commandUnit) {
-    return commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, activity.getUuid());
-  }
-
-  private Activity getPersistedActivity(ServiceInstance serviceInstance, Command command) {
-    Activity activity = anActivity()
-                            .withAppId(serviceInstance.getAppId())
-                            .withEnvironmentId(serviceInstance.getEnvId())
-                            .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
-                            .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
-                            .withServiceId(serviceInstance.getServiceTemplate().getService().getUuid())
-                            .withServiceName(serviceInstance.getServiceTemplate().getService().getName())
-                            .withCommandName(command.getName())
-                            .withCommandType(command.getCommandUnitType().name())
-                            .withHostName(serviceInstance.getHost().getHostName())
-                            .build();
-
-    if (serviceInstance.getRelease() != null) {
-      activity.setReleaseId(serviceInstance.getRelease().getUuid());
-      activity.setReleaseName(serviceInstance.getRelease().getReleaseName());
-    }
-    if (serviceInstance.getArtifact() != null) {
-      activity.setArtifactName(serviceInstance.getArtifact().getDisplayName());
-    }
-    activity = activityService.save(activity);
-    return activity;
+      ServiceInstance serviceInstance, CommandExecutionContext context, CommandUnit commandUnit) {
+    commandUnit.setup(context);
+    return commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context.getActivityId());
   }
 }
