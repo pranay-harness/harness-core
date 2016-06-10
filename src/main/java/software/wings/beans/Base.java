@@ -30,6 +30,11 @@ public class Base {
    */
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
 
+  /**
+   * The constant GLOBAL_ENV_ID.
+   */
+  public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
+
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @Indexed @NotNull private String appId;

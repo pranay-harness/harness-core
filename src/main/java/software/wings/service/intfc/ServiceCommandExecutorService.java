@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.Command;
+import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ServiceInstance;
 
@@ -17,5 +18,5 @@ public interface ServiceCommandExecutorService {
    * @param command         the command
    * @return the execution result
    */
-  ExecutionResult execute(ServiceInstance serviceInstance, Command command);
+  ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context);
 }

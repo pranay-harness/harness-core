@@ -12,7 +12,7 @@ import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPa
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.collect.ImmutableMap;

@@ -16,7 +16,7 @@ import static software.wings.beans.HostConnectionCredential.HostConnectionCreden
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -133,7 +133,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                   .build())
                           .build();
 
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);
+    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command, null);
     assertThat(command.getCommandUnits().get(0).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(1).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(2).getExecutionResult()).isEqualTo(SUCCESS);
@@ -166,7 +166,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                   .build())
                           .build();
 
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command);
+    ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command, null);
 
     assertThat(command.getCommandUnits().get(0).getExecutionResult()).isEqualTo(SUCCESS);
     assertThat(command.getCommandUnits().get(1).getExecutionResult()).isEqualTo(SUCCESS);

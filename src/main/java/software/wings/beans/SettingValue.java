@@ -1,9 +1,6 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import software.wings.helpers.ext.mail.SmtpConfig;
 
 // TODO: Auto-generated Javadoc
 
@@ -11,11 +8,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
  * Created by anubhaw on 5/16/16.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-  @Type(value = HostConnectionAttributes.class, name = "HOST_CONNECTION_ATTRIBUTES")
-  , @Type(value = BastionConnectionAttributes.class, name = "BASTION_HOST_CONNECTION_ATTRIBUTES"),
-      @Type(value = SmtpConfig.class, name = "SMTP"), @Type(value = JenkinsConfig.class, name = "JENKINS")
-})
 public abstract class SettingValue {
   private SettingVariableTypes type;
 
@@ -53,15 +45,25 @@ public abstract class SettingValue {
     /**
      * Host connection attributes setting variable types.
      */
-    HOST_CONNECTION_ATTRIBUTES, /**
-                                 * Bastion host connection attributes setting variable types.
-                                 */
-    BASTION_HOST_CONNECTION_ATTRIBUTES, /**
-                                         * Smtp setting variable types.
-                                         */
-    SMTP, /**
-           * Jenkins setting variable types.
-           */
-    JENKINS
+    HOST_CONNECTION_ATTRIBUTES,
+
+    /**
+     * Bastion host connection attributes setting variable types.
+     */
+    BASTION_HOST_CONNECTION_ATTRIBUTES,
+
+    /**
+     * Smtp setting variable types.
+     */
+    SMTP,
+    /**
+     * Jenkins setting variable types.
+     */
+    JENKINS,
+
+    /**
+     * String setting variable types.
+     */
+    STRING
   }
 }
