@@ -6,6 +6,8 @@ package software.wings.sm;
 
 // TODO: Auto-generated Javadoc
 
+import java.util.List;
+
 /**
  * The Interface ExecutionContext.
  *
@@ -52,4 +54,22 @@ public interface ExecutionContext {
    * @return the string
    */
   public String renderExpression(String expression, StateExecutionData stateExecutionData);
+
+  /**
+   * Gets context element.
+   *
+   * @param <T>                the type parameter
+   * @param contextElementType the context element type
+   * @return the context element
+   */
+  <T extends ContextElement> T getContextElement(ContextElementType contextElementType);
+
+  /**
+   * Gets context element list.
+   *
+   * @param <T>                the type parameter
+   * @param contextElementType the context element type
+   * @return the context element list
+   */
+  <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType);
 }

@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
@@ -31,7 +32,7 @@ import java.util.stream.Stream;
 @JsonFormat(shape = Shape.OBJECT)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PageResponse<T> extends PageRequest<T> implements List<T> {
-  private List<T> response;
+  private List<T> response = Lists.newArrayList();
   private long total;
 
   /**

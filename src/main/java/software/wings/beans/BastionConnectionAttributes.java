@@ -4,6 +4,8 @@ import static software.wings.beans.SettingValue.SettingVariableTypes.BASTION_HOS
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import java.util.Objects;
 
 // TODO: Auto-generated Javadoc
@@ -11,6 +13,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 5/17/16.
  */
+@JsonTypeName("BASTION_HOST_CONNECTION_ATTRIBUTES")
 public class BastionConnectionAttributes extends HostConnectionAttributes {
   private String hostName;
 

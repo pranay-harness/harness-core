@@ -1,12 +1,13 @@
 package software.wings.beans;
 
+import com.google.common.base.Objects;
+
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-
-import java.util.Objects;
 
 // TODO: Auto-generated Javadoc
 
@@ -15,10 +16,29 @@ import java.util.Objects;
  */
 @Entity(value = "settingAttributes")
 @Indexes(@Index(fields = { @Field("appId")
-                           , @Field("name") }, options = @IndexOptions(unique = true)))
+                           , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class SettingAttribute extends Base {
+  @NotEmpty private String envId;
   private String name;
   private SettingValue value;
+
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
+  public String getEnvId() {
+    return envId;
+  }
+
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
+  public void setEnvId(String envId) {
+    this.envId = envId;
+  }
 
   /**
    * Gets name.
@@ -56,17 +76,11 @@ public class SettingAttribute extends Base {
     this.value = value;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, value);
+    return 31 * super.hashCode() + Objects.hashCode(envId, name, value);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -79,13 +93,15 @@ public class SettingAttribute extends Base {
       return false;
     }
     final SettingAttribute other = (SettingAttribute) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value);
+    return Objects.equal(this.envId, other.envId) && Objects.equal(this.name, other.name)
+        && Objects.equal(this.value, other.value);
   }
 
   /**
-   * The Class SettingAttributeBuilder.
+   * The type Builder.
    */
-  public static final class SettingAttributeBuilder {
+  public static final class Builder {
+    private String envId;
     private String name;
     private SettingValue value;
     private String uuid;
@@ -96,123 +112,135 @@ public class SettingAttribute extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private SettingAttributeBuilder() {}
+    private Builder() {}
 
     /**
-     * A setting attribute.
+     * A setting attribute builder.
      *
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public static SettingAttributeBuilder aSettingAttribute() {
-      return new SettingAttributeBuilder();
+    public static Builder aSettingAttribute() {
+      return new Builder();
     }
 
     /**
-     * With name.
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With name builder.
      *
      * @param name the name
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
     /**
-     * With value.
+     * With value builder.
      *
      * @param value the value
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withValue(SettingValue value) {
+    public Builder withValue(SettingValue value) {
       this.value = value;
       return this;
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
     /**
-     * But.
+     * But builder.
      *
-     * @return the setting attribute builder
+     * @return the builder
      */
-    public SettingAttributeBuilder but() {
+    public Builder but() {
       return aSettingAttribute()
+          .withEnvId(envId)
           .withName(name)
           .withValue(value)
           .withUuid(uuid)
@@ -225,12 +253,13 @@ public class SettingAttribute extends Base {
     }
 
     /**
-     * Builds the.
+     * Build setting attribute.
      *
      * @return the setting attribute
      */
     public SettingAttribute build() {
       SettingAttribute settingAttribute = new SettingAttribute();
+      settingAttribute.setEnvId(envId);
       settingAttribute.setName(name);
       settingAttribute.setValue(value);
       settingAttribute.setUuid(uuid);

@@ -43,8 +43,9 @@ public class PauseState extends EmailState {
 
     String correlationId = UUIDGenerator.getUuid();
 
-    PauseStateExecutionData pauseStateExecutionData = aPauseStateExecutionData().withResumeId(correlationId).build();
+    PauseStateExecutionData pauseStateExecutionData = aPauseStateExecutionData().build();
     MapperUtils.mapObject(emailStateExecutionData, pauseStateExecutionData);
+    pauseStateExecutionData.setResumeId(correlationId);
 
     return anExecutionResponse()
         .withAsynch(true)

@@ -1,16 +1,19 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.google.common.collect.ImmutableMap;
 
-import software.wings.beans.Base;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
@@ -18,7 +21,6 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
-import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -51,7 +53,19 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute get(String appId, String varId) {
-    return wingsPersistence.get(SettingAttribute.class, appId, varId);
+    return get(appId, GLOBAL_ENV_ID, varId);
+  }
+
+  @Override
+  public SettingAttribute get(String appId, String envId, String varId) {
+    return wingsPersistence.createQuery(SettingAttribute.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field(ID_KEY)
+        .equal(varId)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -77,7 +91,18 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId) {
-    wingsPersistence.delete(SettingAttribute.class, varId);
+    delete(appId, GLOBAL_ENV_ID, varId);
+  }
+
+  @Override
+  public void delete(String appId, String envId, String varId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(SettingAttribute.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("envId")
+                                .equal(envId)
+                                .field(ID_KEY)
+                                .equal(varId));
   }
 
   /* (non-Javadoc)
@@ -85,9 +110,16 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public SettingAttribute getByName(String appId, String attributeName) {
+    return getByName(appId, GLOBAL_ENV_ID, attributeName);
+  }
+
+  @Override
+  public SettingAttribute getByName(String appId, String envId, String attributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
         .equal(appId)
+        .field("envId")
+        .equal(envId)
         .field("name")
         .equal(attributeName)
         .get();
@@ -100,6 +132,7 @@ public class SettingsServiceImpl implements SettingsService {
   public void createDefaultSettings(String appId) {
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withEnvId(GLOBAL_ENV_ID)
                               .withName("USER_PASSWORD")
                               .withValue(aHostConnectionAttributes()
                                              .withConnectionType(SSH)
@@ -109,6 +142,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withEnvId(GLOBAL_ENV_ID)
                               .withName("USER_PASSWORD_SU_APP_USER")
                               .withValue(aHostConnectionAttributes()
                                              .withConnectionType(SSH)
@@ -118,6 +152,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
+                              .withEnvId(GLOBAL_ENV_ID)
                               .withName("USER_PASSWORD_SUDO_APP_USER")
                               .withValue(aHostConnectionAttributes()
                                              .withConnectionType(SSH)
@@ -133,9 +168,16 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public List<SettingAttribute> getSettingAttributesByType(String appId, SettingVariableTypes type) {
+    return getSettingAttributesByType(appId, GLOBAL_ENV_ID, type);
+  }
+
+  @Override
+  public List<SettingAttribute> getSettingAttributesByType(String appId, String envId, SettingVariableTypes type) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
-        .in(Arrays.asList(appId, Base.GLOBAL_APP_ID))
+        .in(asList(appId, GLOBAL_APP_ID))
+        .field("envId")
+        .in(asList(envId, GLOBAL_ENV_ID))
         .field("value.type")
         .equal(type)
         .asList();
@@ -147,6 +189,6 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public List<SettingAttribute> getGlobalSettingAttributesByType(SettingVariableTypes type) {
-    return getSettingAttributesByType(Base.GLOBAL_APP_ID, type);
+    return getSettingAttributesByType(GLOBAL_APP_ID, type);
   }
 }

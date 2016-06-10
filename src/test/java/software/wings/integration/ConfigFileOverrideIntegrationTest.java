@@ -10,7 +10,7 @@ import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.TagBuilder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 

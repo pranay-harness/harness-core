@@ -6,6 +6,7 @@ import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Command;
+import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ServiceInstance;
@@ -36,7 +37,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    * software.wings.beans.Command)
    */
   @Override
-  public ExecutionResult execute(ServiceInstance serviceInstance, Command command) {
+  public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     Activity activity = getPersistedActivity(serviceInstance, command);
     List<CommandUnit> commandUnits = command.getCommandUnits();
     command.setExecutionResult(SUCCESS);

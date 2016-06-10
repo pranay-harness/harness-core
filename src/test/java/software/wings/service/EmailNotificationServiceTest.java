@@ -4,7 +4,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SettingAttribute.SettingAttributeBuilder.aSettingAttribute;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.helpers.ext.mail.EmailData.Builder.anEmailData;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 

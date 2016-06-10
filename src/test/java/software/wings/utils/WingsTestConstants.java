@@ -108,7 +108,21 @@ public class WingsTestConstants {
    * The constant USER_PASSWORD.
    */
   public static final String USER_PASSWORD = "USER_PASSWORD";
+  /**
+   * The constant COMMAND_NAME.
+   */
   public static final String COMMAND_NAME = "COMMAND_NAME";
+  /**
+   * The constant COMMAND_UNIT_NAME.
+   */
   public static final String COMMAND_UNIT_NAME = "COMMAND_UNIT_NAME";
+  /**
+   * The constant COMMAND_UNIT_TYPE.
+   */
   public static final String COMMAND_UNIT_TYPE = "COMMAND_UNIT_TYPE";
+
+  /**
+   * The constant SETTING_ID.
+   */
+  public static final String SETTING_ID = "SETTING_ID";
 }
