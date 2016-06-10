@@ -36,7 +36,7 @@ public class InstanceElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(INSTANCE_OBJECT_NAME, this);
+    map.put(INSTANCE, this);
     return map;
   }
 

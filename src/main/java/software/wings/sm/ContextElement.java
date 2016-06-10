@@ -11,21 +11,33 @@ import java.util.Map;
  */
 public interface ContextElement {
   /**
-   * The constant APP_OBJECT_NAME.
+   * The constant APP
    */
-  static final String APP_OBJECT_NAME = "app";
+  static final String APP = "app";
   /**
-   * The constant ENV_OBJECT_NAME.
+   * The constant SERVICE
    */
-  static final String ENV_OBJECT_NAME = "env";
+  static final String SERVICE = "service";
+
   /**
-   * The constant HOST_OBJECT_NAME.
+   * The constant APP.
    */
-  static final String HOST_OBJECT_NAME = "host";
+  static final String SERVICE_TEMPLATE = "serviceTemplate";
+
   /**
-   * The constant INSTANCE_OBJECT_NAME.
+   * The constant ENV.
    */
-  static final String INSTANCE_OBJECT_NAME = "instance";
+  static final String ENV = "env";
+  /**
+   * The constant HOST.
+   */
+  static final String HOST = "host";
+  /**
+   * The constant INSTANCE.
+   */
+  static final String INSTANCE = "instance";
+
+  static final String TIMESTAMP_ID = "timestampId";
 
   /**
    * Gets element type.

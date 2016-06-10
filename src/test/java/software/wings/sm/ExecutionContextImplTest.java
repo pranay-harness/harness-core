@@ -6,9 +6,20 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Injector;
+
 import org.junit.Test;
+import software.wings.WingsBaseTest;
+import software.wings.api.HostElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.common.UUIDGenerator;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+
+import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -17,7 +28,17 @@ import software.wings.common.UUIDGenerator;
  *
  * @author Rishi
  */
-public class ExecutionContextImplTest {
+public class ExecutionContextImplTest extends WingsBaseTest {
+  @Inject Injector injector;
+  /**
+   * The App service.
+   */
+  @Inject AppService appService;
+  /**
+   * The Environment service.
+   */
+  @Inject EnvironmentService environmentService;
+
   /**
    * Should fetch context element.
    */
@@ -44,5 +65,51 @@ public class ExecutionContextImplTest {
 
     ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
     assertThat(element).isNotNull().isEqualToComparingFieldByField(element3);
+  }
+
+  /**
+   * Should fetch context element.
+   */
+  @Test
+  public void shouldRenderExpression() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setStateName("abc");
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    injector.injectMembers(context);
+
+    ServiceElement svc = new ServiceElement();
+    svc.setUuid(UUIDGenerator.getUuid());
+    svc.setName("svc1");
+    context.pushContextElement(svc);
+
+    ServiceTemplateElement st = new ServiceTemplateElement();
+    st.setUuid(UUIDGenerator.getUuid());
+    st.setName("st1");
+    context.pushContextElement(st);
+
+    HostElement host = new HostElement();
+    host.setUuid(UUIDGenerator.getUuid());
+    host.setHostName("host1");
+    context.pushContextElement(host);
+
+    Application app = Application.Builder.anApplication().withName("AppA").build();
+    app = appService.save(app);
+
+    Environment env = Environment.EnvironmentBuilder.anEnvironment().withName("DEV").build();
+    env = environmentService.save(env);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+
+    String timeStampId = std.getTimestampId();
+
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    String expr =
+        "$HOME/${env.name}/${app.name}/${service.name}/${serviceTemplate.name}/${host.name}/${timestampId}/runtime";
+    String path = context.renderExpression(expr);
+    assertThat(path).isEqualTo("$HOME/DEV/AppA/svc1/st1/host1/" + timeStampId + "/runtime");
   }
 }

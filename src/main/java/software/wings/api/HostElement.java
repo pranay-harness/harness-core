@@ -20,6 +20,7 @@ import java.util.Map;
  * @author Rishi
  */
 public class HostElement implements ContextElement {
+  private String uuid;
   private String hostName;
 
   @Override
@@ -45,6 +46,14 @@ public class HostElement implements ContextElement {
     this.hostName = hostName;
   }
 
+  public String getUuid() {
+    return uuid;
+  }
+
+  public void setUuid(String uuid) {
+    this.uuid = uuid;
+  }
+
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.HOST;
@@ -53,7 +62,7 @@ public class HostElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(HOST_OBJECT_NAME, this);
+    map.put(HOST, this);
     return map;
   }
 

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 // TODO: Auto-generated Javadoc
 
@@ -51,12 +52,15 @@ public class WorkflowStandardParams implements ContextElement {
   private Long startTs;
   private Long endTs;
 
+  private String timestampId = System.currentTimeMillis() + "-" + new Random().nextInt(1000);
+
   /** {@inheritDoc} */
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(APP_OBJECT_NAME, getApp());
-    map.put(ENV_OBJECT_NAME, getEnv());
+    map.put(APP, getApp());
+    map.put(ENV, getEnv());
+    map.put(TIMESTAMP_ID, timestampId);
 
     return map;
   }
@@ -161,6 +165,14 @@ public class WorkflowStandardParams implements ContextElement {
    */
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
+  }
+
+  public String getTimestampId() {
+    return timestampId;
+  }
+
+  public void setTimestampId(String timestampId) {
+    this.timestampId = timestampId;
   }
 
   /**

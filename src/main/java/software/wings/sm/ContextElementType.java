@@ -9,23 +9,40 @@ public enum ContextElementType {
   /**
    * Service context element type.
    */
-  SERVICE, /**
-            * Tag context element type.
-            */
-  TAG, /**
-        * Host context element type.
-        */
-  HOST, /**
-         * Instance context element type.
-         */
-  INSTANCE, /**
-             * Standard context element type.
-             */
-  STANDARD, /**
-             * Param context element type.
-             */
-  PARAM, /**
-          * Other context element type.
-          */
+  SERVICE,
+
+  /**
+   * Service context element type.
+   */
+  SERVICE_TEMPLATE,
+
+  /**
+   * Tag context element type.
+   */
+  TAG,
+
+  /**
+   * Host context element type.
+   */
+  HOST,
+
+  /**
+   * Instance context element type.
+   */
+  INSTANCE,
+
+  /**
+   * Standard context element type.
+   */
+  STANDARD,
+
+  /**
+   * Param context element type.
+   */
+  PARAM,
+
+  /**
+   * Other context element type.
+   */
   OTHER;
 }

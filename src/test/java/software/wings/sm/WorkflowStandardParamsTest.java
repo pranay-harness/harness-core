@@ -16,6 +16,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
 import java.util.Map;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -56,9 +57,6 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     std.setEnvId(env.getUuid());
 
     Map<String, Object> map = std.paramMap();
-    assertThat(map)
-        .isNotNull()
-        .containsEntry(ContextElement.APP_OBJECT_NAME, app)
-        .containsEntry(ContextElement.ENV_OBJECT_NAME, env);
+    assertThat(map).isNotNull().containsEntry(ContextElement.APP, app).containsEntry(ContextElement.ENV, env);
   }
 }

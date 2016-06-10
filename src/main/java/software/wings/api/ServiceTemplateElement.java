@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class ServiceElement implements ContextElement {
+public class ServiceTemplateElement implements ContextElement {
   private String uuid;
   private String name;
 
@@ -37,7 +37,7 @@ public class ServiceElement implements ContextElement {
 
   @Override
   public ContextElementType getElementType() {
-    return ContextElementType.SERVICE;
+    return ContextElementType.SERVICE_TEMPLATE;
   }
 
   /**
@@ -64,7 +64,7 @@ public class ServiceElement implements ContextElement {
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
-    map.put(SERVICE, this);
+    map.put(SERVICE_TEMPLATE, this);
     return map;
   }
 }
