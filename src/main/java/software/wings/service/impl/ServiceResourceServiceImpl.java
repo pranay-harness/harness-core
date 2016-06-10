@@ -9,9 +9,9 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
-import static software.wings.utils.DefaultCommands.INSTALL_COMMAND_GRAPH;
-import static software.wings.utils.DefaultCommands.START_COMMAND_GRAPH;
-import static software.wings.utils.DefaultCommands.STOP_COMMAND_GRAPH;
+import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
+import static software.wings.utils.DefaultCommands.getStartCommandGraph;
+import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -76,9 +76,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   private void addDefaultCommands(Service service) {
-    addCommand(service.getAppId(), service.getUuid(), START_COMMAND_GRAPH);
-    addCommand(service.getAppId(), service.getUuid(), STOP_COMMAND_GRAPH);
-    addCommand(service.getAppId(), service.getUuid(), INSTALL_COMMAND_GRAPH);
+    addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getInstallCommandGraph());
   }
 
   /**
