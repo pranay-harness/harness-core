@@ -77,7 +77,8 @@ public class CommandState extends State {
                                            .withHostName(serviceInstance.getHost().getHostName());
 
     CommandExecutionContext.Builder commandExecutionContextBuilder =
-        aCommandExecutionContext().withBackupPath("").withRuntimePath("").withStagingPath("");
+        aCommandExecutionContext().withBackupPath("").withRuntimePath("").withStagingPath("").withExecutionCredential(
+            workflowStandardParams.getExecutionCredential() x);
 
     if (command.isArtifactNeeded()) {
       Artifact artifact =
