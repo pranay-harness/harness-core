@@ -10,10 +10,9 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.github.reinert.jjschema.JsonSchemaGenerator;
-import com.github.reinert.jjschema.SchemaGeneratorBuilder;
+import com.github.reinert.jjschema.v1.JsonSchemaFactory;
+import com.github.reinert.jjschema.v1.JsonSchemaV4Factory;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -280,13 +279,9 @@ public class JsonUtils {
    */
   public static JsonNode jsonSchema(ObjectMapper objectMapper, Class<?> clazz) {
     try {
-      JsonSchemaGenerator v4generator = SchemaGeneratorBuilder.draftV4Schema().build();
-      JsonNode schemaNode = v4generator.generateSchema(clazz);
-      schemaNode.get("properties").forEach(jsonNode -> {
-        if (jsonNode.has("enum")) {
-          ((ObjectNode) jsonNode).put("type", "string");
-        }
-      });
+      JsonSchemaFactory schemaFactory = new JsonSchemaV4Factory();
+      JsonNode schemaNode = schemaFactory.createSchema(clazz);
+
       return schemaNode;
     } catch (Exception e) {
       logger.error("", e);

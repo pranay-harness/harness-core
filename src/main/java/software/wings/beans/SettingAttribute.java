@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.Indexes;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class SettingAttribute extends Base {
-  @NotEmpty private String envId;
+  @NotEmpty private String envId = GLOBAL_ENV_ID;
   private String name;
   private SettingValue value;
 
@@ -101,7 +101,7 @@ public class SettingAttribute extends Base {
    * The type Builder.
    */
   public static final class Builder {
-    private String envId;
+    private String envId = GLOBAL_ENV_ID;
     private String name;
     private SettingValue value;
     private String uuid;

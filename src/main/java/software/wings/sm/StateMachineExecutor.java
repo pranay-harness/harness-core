@@ -267,7 +267,6 @@ public class StateMachineExecutor {
           childStateExecutionInstance.setUuid(null);
           childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getUuid());
           childStateExecutionInstance.setAppId(stateExecutionInstance.getAppId());
-          childStateExecutionInstance.setParentInstanceId(stateExecutionInstance.getExecutionUuid());
           triggerExecution(sm, childStateExecutionInstance);
         }
       }
@@ -301,6 +300,8 @@ public class StateMachineExecutor {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
+      cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
+      cloned.setParentInstanceId(null);
       return triggerExecution(sm, cloned);
     }
 
@@ -334,6 +335,8 @@ public class StateMachineExecutor {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
       cloned.setUuid(null);
       cloned.setStateName(nextState.getName());
+      cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
+      cloned.setParentInstanceId(null);
       return triggerExecution(sm, cloned);
     }
     return null;
