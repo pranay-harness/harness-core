@@ -5,6 +5,7 @@
 package software.wings.sm.states;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionStrategy;
@@ -39,10 +40,10 @@ public class RepeatState extends State {
   private static final long serialVersionUID = 1L;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
-  private ContextElementType repeatElementType;
+  @SchemaIgnore private ContextElementType repeatElementType;
   @Attributes(required = true, title = "Repeat Element Expression") private String repeatElementExpression;
   @Attributes(required = true, title = "Execution Strategy") private ExecutionStrategy executionStrategy;
-  private String executionStrategyExpression;
+  @SchemaIgnore private String executionStrategyExpression;
 
   private String repeatTransitionStateName;
 
@@ -189,6 +190,7 @@ public class RepeatState extends State {
    *
    * @return the repeat element type
    */
+  @SchemaIgnore
   public ContextElementType getRepeatElementType() {
     return repeatElementType;
   }
@@ -198,6 +200,7 @@ public class RepeatState extends State {
    *
    * @param repeatElementType the repeat element type
    */
+  @SchemaIgnore
   public void setRepeatElementType(ContextElementType repeatElementType) {
     this.repeatElementType = repeatElementType;
   }

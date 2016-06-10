@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -90,7 +91,7 @@ public class JsonUtilsTest {
     assertThatJson(JsonUtils.jsonSchema(BaseA.class))
         .isEqualTo(
             "{\"type\":\"object\",\"properties\":{\"baseType\":{\"enum\":[\"A\",\"B\",\"C\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"}},"
-            + "\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"title\":\"BaseA\",\"required\":[\"name\"]}");
+            + "\"title\":\"BaseA\",\"required\":[\"name\"]}");
   }
 
   /**
@@ -103,6 +104,8 @@ public class JsonUtilsTest {
   })
   public static class Base {
     private BaseType baseType;
+
+    @SchemaIgnore private String x;
 
     /**
      * Gets base type.
@@ -120,6 +123,16 @@ public class JsonUtilsTest {
      */
     public void setBaseType(BaseType baseType) {
       this.baseType = baseType;
+    }
+
+    @SchemaIgnore
+    public String getX() {
+      return x;
+    }
+
+    @SchemaIgnore
+    public void setX(String x) {
+      this.x = x;
     }
 
     /**
