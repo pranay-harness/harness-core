@@ -61,14 +61,8 @@ import java.util.List;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
-  private static final Command.Builder commandBuilder = aCommand()
-                                                            .withName("START")
-                                                            .withServiceId(SERVICE_ID)
-                                                            .addCommandUnits(anExecCommandUnit()
-                                                                                 .withServiceId(SERVICE_ID)
-                                                                                 .withCommandPath("/home/xxx/tomcat")
-                                                                                 .withCommandString("bin/startup.sh")
-                                                                                 .build());
+  private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
+      anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build());
   private static final Builder builder = aService()
                                              .withUuid(SERVICE_ID)
                                              .withAppId(APP_ID)

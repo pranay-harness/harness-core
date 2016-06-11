@@ -126,7 +126,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
 
     Command command = aCommand().withGraph(commandGraph).build();
     command.transformGraph();
-    command.setServiceId(serviceId);
 
     if (!wingsPersistence.addToList(Service.class, appId, serviceId,
             wingsPersistence.createQuery(Service.class).field("commands.name").notEqual(command.getName()), "commands",

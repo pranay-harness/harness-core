@@ -7,6 +7,7 @@ import com.google.common.base.MoreObjects;
  */
 public class CommandExecutionContext {
   private Artifact artifact;
+  private String appId;
   private String activityId;
   private String runtimePath;
   private String stagingPath;
@@ -121,11 +122,11 @@ public class CommandExecutionContext {
     this.executionCredential = executionCredential;
   }
 
-  /** {@inheritDoc} */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("artifact", artifact)
+        .add("appId", appId)
         .add("activityId", activityId)
         .add("runtimePath", runtimePath)
         .add("stagingPath", stagingPath)
@@ -135,17 +136,35 @@ public class CommandExecutionContext {
   }
 
   /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
+  public String getAppId() {
+    return appId;
+  }
+
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private Artifact artifact;
+    private String appId;
     private String activityId;
     private String runtimePath;
     private String stagingPath;
     private String backupPath;
     private ExecutionCredential executionCredential;
 
-    /** Do not instantiate Builder. */
     private Builder() {}
 
     /**
@@ -165,6 +184,17 @@ public class CommandExecutionContext {
      */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
+      return this;
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
@@ -231,6 +261,7 @@ public class CommandExecutionContext {
     public Builder but() {
       return aCommandExecutionContext()
           .withArtifact(artifact)
+          .withAppId(appId)
           .withActivityId(activityId)
           .withRuntimePath(runtimePath)
           .withStagingPath(stagingPath)
@@ -246,6 +277,7 @@ public class CommandExecutionContext {
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setArtifact(artifact);
+      commandExecutionContext.setAppId(appId);
       commandExecutionContext.setActivityId(activityId);
       commandExecutionContext.setRuntimePath(runtimePath);
       commandExecutionContext.setStagingPath(stagingPath);

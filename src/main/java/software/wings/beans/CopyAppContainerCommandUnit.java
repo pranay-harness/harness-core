@@ -25,7 +25,7 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    AppContainer appContainer = appContainerService.get(getAppId(), appContainerId);
+    AppContainer appContainer = appContainerService.get(context.getAppId(), appContainerId);
     setFileBucket(PLATFORMS);
     setFileId(appContainer.getFileUuid());
     setDestinationFilePath(context.getRuntimePath() + "/" + appContainer.getName());
@@ -63,8 +63,6 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
     private FileBucket fileBucket;
     private String destinationFilePath;
     private String name;
-    private String serviceId;
-    private String appId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded;
@@ -136,28 +134,6 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
      * With command unit type builder.
      *
      * @param commandUnitType the command unit type
@@ -202,8 +178,6 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
           .withFileBucket(fileBucket)
           .withDestinationFilePath(destinationFilePath)
           .withName(name)
-          .withServiceId(serviceId)
-          .withAppId(appId)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
           .withArtifactNeeded(artifactNeeded);
@@ -221,8 +195,6 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
       copyAppContainerCommandUnit.setFileBucket(fileBucket);
       copyAppContainerCommandUnit.setDestinationFilePath(destinationFilePath);
       copyAppContainerCommandUnit.setName(name);
-      copyAppContainerCommandUnit.setServiceId(serviceId);
-      copyAppContainerCommandUnit.setAppId(appId);
       copyAppContainerCommandUnit.setCommandUnitType(commandUnitType);
       copyAppContainerCommandUnit.setExecutionResult(executionResult);
       copyAppContainerCommandUnit.setArtifactNeeded(artifactNeeded);

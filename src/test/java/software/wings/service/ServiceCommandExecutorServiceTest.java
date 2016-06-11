@@ -80,19 +80,12 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                                 .withServiceTemplate(serviceTemplate)
                                                 .build();
   private CommandUnit commandUnit = anExecCommandUnit()
-                                        .withAppId(APP_ID)
-                                        .withServiceId(SERVICE_ID)
                                         .withName(COMMAND_UNIT_NAME)
                                         .withCommandUnitType(EXEC)
                                         .withCommandString("rm -f $HOME/jetty")
                                         .build();
-  private Command command = aCommand()
-                                .withAppId(APP_ID)
-                                .withServiceId(SERVICE_ID)
-                                .withName(COMMAND_NAME)
-                                .withCommandUnitType(COMMAND)
-                                .addCommandUnits(commandUnit)
-                                .build();
+  private Command command =
+      aCommand().withName(COMMAND_NAME).withCommandUnitType(COMMAND).addCommandUnits(commandUnit).build();
   private Builder activityBuilder = anActivity()
                                         .withAppId(APP_ID)
                                         .withEnvironmentId(ENV_ID)
@@ -121,13 +114,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldExecuteNestedCommandForServiceInstance() {
-    Command nestedCommand = aCommand()
-                                .withAppId(APP_ID)
-                                .withServiceId(SERVICE_ID)
-                                .withName("NESTED_CMD")
-                                .withCommandUnitType(COMMAND)
-                                .withReferenceId(COMMAND_NAME)
-                                .build();
+    Command nestedCommand =
+        aCommand().withName("NESTED_CMD").withCommandUnitType(COMMAND).withReferenceId(COMMAND_NAME).build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
@@ -137,13 +125,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldThrowExceptionForUnknownCommand() {
-    Command nestedCommand = aCommand()
-                                .withAppId(APP_ID)
-                                .withServiceId(SERVICE_ID)
-                                .withName("NESTED_CMD")
-                                .withCommandUnitType(COMMAND)
-                                .withReferenceId("NON_EXISTENT_COMMAND")
-                                .build();
+    Command nestedCommand =
+        aCommand().withName("NESTED_CMD").withCommandUnitType(COMMAND).withReferenceId("NON_EXISTENT_COMMAND").build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
     when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);

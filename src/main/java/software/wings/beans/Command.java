@@ -150,8 +150,6 @@ public class Command extends CommandUnit {
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
-    private String serviceId;
-    private String appId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded;
@@ -223,28 +221,6 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
-    public Builder withAppId(String appId) {
-      this.appId = appId;
-      return this;
-    }
-
-    /**
      * With command unit type builder.
      *
      * @param commandUnitType the command unit type
@@ -288,8 +264,6 @@ public class Command extends CommandUnit {
           .withGraph(graph)
           .withCommandUnits(commandUnits)
           .withName(name)
-          .withServiceId(serviceId)
-          .withAppId(appId)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
           .withArtifactNeeded(artifactNeeded);
@@ -306,8 +280,6 @@ public class Command extends CommandUnit {
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
-      command.setServiceId(serviceId);
-      command.setAppId(appId);
       command.setCommandUnitType(commandUnitType);
       command.setExecutionResult(executionResult);
       command.setArtifactNeeded(artifactNeeded);

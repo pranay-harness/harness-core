@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import javax.validation.constraints.NotNull;
-
 // TODO: Auto-generated Javadoc
 
 /**
@@ -9,8 +7,6 @@ import javax.validation.constraints.NotNull;
  */
 public abstract class CommandUnit {
   private String name;
-  @NotNull private String serviceId;
-  @NotNull private String appId;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
@@ -32,42 +28,6 @@ public abstract class CommandUnit {
    */
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
-  }
-
-  /**
-   * Gets app id.
-   *
-   * @return the app id
-   */
-  public String getAppId() {
-    return appId;
-  }
-
-  /**
-   * Sets app id.
-   *
-   * @param appId the app id
-   */
-  public void setAppId(String appId) {
-    this.appId = appId;
-  }
-
-  /**
-   * Gets service id.
-   *
-   * @return the service id
-   */
-  public String getServiceId() {
-    return serviceId;
-  }
-
-  /**
-   * Sets service id.
-   *
-   * @param serviceId the service id
-   */
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
   }
 
   /**

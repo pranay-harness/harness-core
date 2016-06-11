@@ -53,8 +53,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     Command executableCommand = command;
     if (command.getReferenceId() != null) {
-      executableCommand =
-          serviceResourceService.getCommandByName(command.getAppId(), command.getServiceId(), command.getReferenceId());
+      executableCommand = serviceResourceService.getCommandByName(serviceInstance.getAppId(),
+          serviceInstance.getServiceTemplate().getService().getUuid(), command.getReferenceId());
       if (executableCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }

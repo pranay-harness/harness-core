@@ -15,6 +15,9 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CopyArtifactCommandUnit extends CopyCommandUnit {
+  /**
+   * The Artifact service.
+   */
   @Inject ArtifactService artifactService;
   private String artifactId;
 
@@ -63,7 +66,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String artifactId;
@@ -71,14 +74,14 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     private FileBucket fileBucket;
     private String destinationFilePath;
     private String name;
-    private String serviceId;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
+    private boolean artifactNeeded;
 
     private Builder() {}
 
     /**
-     * A copy artifact command unit.
+     * A copy artifact command unit builder.
      *
      * @return the builder
      */
@@ -87,7 +90,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With artifact id.
+     * With artifact id builder.
      *
      * @param artifactId the artifact id
      * @return the builder
@@ -98,7 +101,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With file id.
+     * With file id builder.
      *
      * @param fileId the file id
      * @return the builder
@@ -109,7 +112,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With file bucket.
+     * With file bucket builder.
      *
      * @param fileBucket the file bucket
      * @return the builder
@@ -120,7 +123,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With destination file path.
+     * With destination file path builder.
      *
      * @param destinationFilePath the destination file path
      * @return the builder
@@ -131,7 +134,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
      * @return the builder
@@ -142,18 +145,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With service id.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
-      return this;
-    }
-
-    /**
-     * With command unit type.
+     * With command unit type builder.
      *
      * @param commandUnitType the command unit type
      * @return the builder
@@ -164,7 +156,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With execution result.
+     * With execution result builder.
      *
      * @param executionResult the execution result
      * @return the builder
@@ -175,7 +167,18 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * But.
+     * With artifact needed builder.
+     *
+     * @param artifactNeeded the artifact needed
+     * @return the builder
+     */
+    public Builder withArtifactNeeded(boolean artifactNeeded) {
+      this.artifactNeeded = artifactNeeded;
+      return this;
+    }
+
+    /**
+     * But builder.
      *
      * @return the builder
      */
@@ -186,13 +189,13 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
           .withFileBucket(fileBucket)
           .withDestinationFilePath(destinationFilePath)
           .withName(name)
-          .withServiceId(serviceId)
           .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult);
+          .withExecutionResult(executionResult)
+          .withArtifactNeeded(artifactNeeded);
     }
 
     /**
-     * Builds the.
+     * Build copy artifact command unit.
      *
      * @return the copy artifact command unit
      */
@@ -203,9 +206,9 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
       copyArtifactCommandUnit.setFileBucket(fileBucket);
       copyArtifactCommandUnit.setDestinationFilePath(destinationFilePath);
       copyArtifactCommandUnit.setName(name);
-      copyArtifactCommandUnit.setServiceId(serviceId);
       copyArtifactCommandUnit.setCommandUnitType(commandUnitType);
       copyArtifactCommandUnit.setExecutionResult(executionResult);
+      copyArtifactCommandUnit.setArtifactNeeded(artifactNeeded);
       return copyArtifactCommandUnit;
     }
   }
