@@ -5,6 +5,7 @@ import static org.joor.Reflect.on;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import org.slf4j.Logger;
@@ -29,9 +30,9 @@ public enum CommandUnitType {
   EXEC(ExecCommandUnit.class, true), /**
                                       * Command command unit type.
                                       */
-  COMMAND(Command.class, false), /**
-                                  * Copy artifact command unit type.
-                                  */
+  COMMAND(Command.class, true), /**
+                                 * Copy artifact command unit type.
+                                 */
   COPY_ARTIFACT(CopyArtifactCommandUnit.class, true),
 
   /**
@@ -47,6 +48,7 @@ public enum CommandUnitType {
     ImmutableList.Builder stencilsBuilder = new ImmutableList.Builder();
     for (CommandUnitType value : values()) {
       if (value.isStencil) {
+        System.out.println(value);
         stencilsBuilder.add(ImmutableMap.of("name", value.name(), "type", value.name(), "uiSchema", value.uiSchema,
             "jsonSchema", JsonUtils.jsonSchema(value.commandUnitClass)));
       }
@@ -79,7 +81,7 @@ public enum CommandUnitType {
    * @return the stencils
    */
   public static List<Map<String, Object>> getStencils() {
-    return stencils;
+    return Lists.newArrayList(stencils);
   }
 
   private Object readResource(String file) {
@@ -92,6 +94,10 @@ public enum CommandUnitType {
       logger.error(ex.getMessage(), ex);
       throw ex;
     }
+  }
+
+  public Class<? extends CommandUnit> getCommandUnitClass() {
+    return commandUnitClass;
   }
 
   /**

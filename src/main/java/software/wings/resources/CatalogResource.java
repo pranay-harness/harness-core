@@ -10,8 +10,6 @@ import static java.util.stream.Collectors.toList;
 import static software.wings.beans.CatalogNames.BASTION_HOST_ATTRIBUTES;
 import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 
-import com.google.common.collect.Lists;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.Api;
@@ -44,7 +42,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 // TODO: Auto-generated Javadoc
@@ -126,7 +123,7 @@ public class CatalogResource {
       for (StateTypeScope stencil : stencils.keySet()) {
         catalogs.put(stencil.name(), postProcess(stencils.get(stencil), uriInfo));
       }
-      catalogs.put(CatalogNames.COMMAND_STENCILS, getCommandStencils(uriInfo.getQueryParameters()));
+      catalogs.put(CatalogNames.COMMAND_STENCILS, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
@@ -142,7 +139,7 @@ public class CatalogResource {
             break;
           }
           case CatalogNames.COMMAND_STENCILS: {
-            catalogs.put(catalogType, getCommandStencils(uriInfo.getQueryParameters()));
+            catalogs.put(catalogType, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
             break;
           }
           case CatalogNames.JENKINS_CONFIG: {
@@ -180,6 +177,12 @@ public class CatalogResource {
                     .get(uriInfo.getQueryParameters().getFirst(APP_ID),
                         uriInfo.getQueryParameters().getFirst(SERVICE_ID))
                     .getCommands());
+            break;
+          }
+          case CatalogNames.SERVICE_COMMAND: {
+            catalogs.put(catalogType,
+                serviceResourceService.getCommandStencils(
+                    uriInfo.getQueryParameters().getFirst(APP_ID), uriInfo.getQueryParameters().getFirst(SERVICE_ID)));
             break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
@@ -221,12 +224,30 @@ public class CatalogResource {
     return result;
   }
 
-  private List<Object> getCommandStencils(MultivaluedMap<String, String> queryParameters) {
-    List<Object> stencils = Lists.newArrayList(CommandUnitType.getStencils());
-    if (queryParameters.containsKey(SERVICE_ID) && queryParameters.containsKey(APP_ID)) {
-      stencils.addAll(serviceResourceService.getCommandStencils(
-          queryParameters.getFirst(APP_ID), queryParameters.getFirst(SERVICE_ID)));
-    }
+  private List<Map<String, Object>> postProcessCommandStencil(List<Map<String, Object>> stencils, UriInfo uriInfo) {
+    stencils.forEach(stencil -> processCommandStencil(stencil, uriInfo));
     return stencils;
+  }
+
+  private void processCommandStencil(Map<String, Object> stencil, UriInfo uriInfo) {
+    CommandUnitType commandUnitType = CommandUnitType.valueOf((String) stencil.get("type"));
+    JsonNode jsonSchema = (JsonNode) stencil.get("jsonSchema");
+    stream(commandUnitType.getCommandUnitClass().getDeclaredFields())
+        .filter(field -> field.getAnnotation(EnumData.class) != null)
+        .forEach(field -> {
+          String catalogName = field.getAnnotation(EnumData.class).catalog();
+          try {
+            Map<String, Object> catalogs = getCatalogs(singletonList(catalogName), uriInfo);
+            Map<String, Object> catalogData = (Map<String, Object>) catalogs.get(catalogName);
+            if (catalogData != null) {
+              ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(field.getName()));
+              jsonSchemaField.set("enum", JsonUtils.asTree(catalogData.keySet()));
+              jsonSchemaField.set("enumNames", JsonUtils.asTree(catalogData.values()));
+            }
+          } catch (Exception e) {
+            logger.warn("Unable to fill in values for stateType {}:field {} with catalog {}", stencil, field.getName(),
+                catalogName);
+          }
+        });
   }
 }

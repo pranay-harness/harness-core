@@ -105,7 +105,7 @@ public class CatalogResourceTest extends WingsBaseTest {
     when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class), any(JenkinsConfig.class))).thenReturn(newArrayList());
     when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
         .thenReturn(newArrayList());
-    when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(newArrayList());
+    when(serviceResourceService.getCommandStencils(APP_ID, SERVICE_ID)).thenReturn(newHashMap());
     when(environmentService.listForEnum(APP_ID)).thenReturn(of(ENV_ID, "ENV"));
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(aService().withCommands(Lists.newArrayList()).build());

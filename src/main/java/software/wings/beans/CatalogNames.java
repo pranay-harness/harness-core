@@ -42,4 +42,6 @@ public interface CatalogNames {
    * The constant COMMANDS.
    */
   String COMMANDS = "COMMANDS";
+
+  String SERVICE_COMMAND = "SERVICE_COMMAND";
 }

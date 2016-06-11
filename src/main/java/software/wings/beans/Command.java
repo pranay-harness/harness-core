@@ -1,10 +1,15 @@
 package software.wings.beans;
 
+import static software.wings.beans.CatalogNames.SERVICE_COMMAND;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
+import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Graph.Node;
+import software.wings.sm.EnumData;
 import software.wings.utils.MapperUtils;
 
 import java.util.Arrays;
@@ -18,11 +23,12 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
+@Attributes(title = "COMMAND")
 public class Command extends CommandUnit {
-  private String referenceId;
-  @NotNull private Graph graph;
+  @EnumData(catalog = SERVICE_COMMAND) @Attributes(title = "Name") private String referenceId;
+  @SchemaIgnore @NotNull private Graph graph;
 
-  @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
+  @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
   /**
    * Instantiates a new command.
@@ -54,6 +60,7 @@ public class Command extends CommandUnit {
    *
    * @return the graph
    */
+  @SchemaIgnore
   public Graph getGraph() {
     return graph;
   }
@@ -63,6 +70,7 @@ public class Command extends CommandUnit {
    *
    * @param graph the graph
    */
+  @SchemaIgnore
   public void setGraph(Graph graph) {
     this.graph = graph;
   }
@@ -72,6 +80,7 @@ public class Command extends CommandUnit {
    *
    * @return the command units
    */
+  @SchemaIgnore
   public List<CommandUnit> getCommandUnits() {
     return commandUnits;
   }
@@ -81,6 +90,7 @@ public class Command extends CommandUnit {
    *
    * @param commandUnits the command units
    */
+  @SchemaIgnore
   public void setCommandUnits(List<CommandUnit> commandUnits) {
     this.commandUnits = commandUnits;
   }

@@ -21,7 +21,7 @@ import software.wings.utils.Misc;
 public class EnvState extends State {
   private static final long serialVersionUID = 1L;
 
-  @EnumData(catalog = ENVIRONMENTS) @Attributes(required = true) private String envId;
+  @EnumData(catalog = ENVIRONMENTS) @Attributes(required = true, title = "Environment") private String envId;
 
   @Attributes(required = true) private String workflowId;
 

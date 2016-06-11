@@ -1,12 +1,11 @@
 package software.wings.service.impl;
 
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
-import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
 import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
@@ -14,7 +13,6 @@ import static software.wings.utils.DefaultCommands.getStartCommandGraph;
 import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import com.mongodb.BasicDBObject;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -30,7 +28,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.Validator;
 
-import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -169,15 +167,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
    * {@inheritDoc}
    */
   @Override
-  public List<Object> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
+  public Map<String, String> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
     Service service = get(appId, serviceId);
     if (isEmpty(service.getCommands())) {
-      return emptyList();
+      return emptyMap();
     } else {
-      return service.getCommands()
-          .stream()
-          .map(command -> Maps.newHashMap(ImmutableMap.of("name", command.getName(), "type", COMMAND)))
-          .collect(toList());
+      return service.getCommands().stream().collect(toMap(Command::getName, Command::getName));
     }
   }
 }

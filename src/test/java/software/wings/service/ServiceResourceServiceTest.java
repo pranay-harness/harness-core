@@ -40,7 +40,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
-import software.wings.beans.CommandUnitType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
 import software.wings.beans.SearchFilter;
@@ -53,7 +52,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
 // TODO: Auto-generated Javadoc
 
@@ -260,12 +259,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(eq(Service.class), anyString(), anyString()))
         .thenReturn(builder.but().addCommands(commandBuilder.build()).build());
 
-    List<Object> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID);
+    Map<String, String> commandStencils = srs.getCommandStencils(APP_ID, SERVICE_ID);
 
-    assertThat(commandStencils)
-        .isNotNull()
-        .hasSize(1)
-        .contains(ImmutableMap.of("name", "START", "type", CommandUnitType.COMMAND));
+    assertThat(commandStencils).isNotNull().hasSize(1).containsEntry("START", "START");
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
