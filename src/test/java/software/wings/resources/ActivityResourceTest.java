@@ -10,6 +10,9 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.common.collect.Lists;
 
@@ -55,19 +58,6 @@ public class ActivityResourceTest {
                                                        .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
-
-  /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
-  /**
-   * The constant ACTIVITY_ID.
-   */
-  public static final String ACTIVITY_ID = "ACTIVITY_ID";
-  /**
-   * The constant ENV_ID.
-   */
-  public static final String ENV_ID = "ENV_ID";
 
   /**
    * The constant ACTUAL_ACTIVITY.

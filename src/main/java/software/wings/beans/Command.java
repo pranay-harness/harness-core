@@ -150,7 +150,6 @@ public class Command extends CommandUnit {
     private Graph graph;
     private List<CommandUnit> commandUnits = Lists.newArrayList();
     private String name;
-    private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded;
 
@@ -221,17 +220,6 @@ public class Command extends CommandUnit {
     }
 
     /**
-     * With command unit type builder.
-     *
-     * @param commandUnitType the command unit type
-     * @return the builder
-     */
-    public Builder withCommandUnitType(CommandUnitType commandUnitType) {
-      this.commandUnitType = commandUnitType;
-      return this;
-    }
-
-    /**
      * With execution result builder.
      *
      * @param executionResult the execution result
@@ -264,7 +252,6 @@ public class Command extends CommandUnit {
           .withGraph(graph)
           .withCommandUnits(commandUnits)
           .withName(name)
-          .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
           .withArtifactNeeded(artifactNeeded);
     }
@@ -280,7 +267,6 @@ public class Command extends CommandUnit {
       command.setGraph(graph);
       command.setCommandUnits(commandUnits);
       command.setName(name);
-      command.setCommandUnitType(commandUnitType);
       command.setExecutionResult(executionResult);
       command.setArtifactNeeded(artifactNeeded);
       return command;

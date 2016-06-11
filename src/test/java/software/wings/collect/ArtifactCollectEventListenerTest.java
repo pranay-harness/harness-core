@@ -9,6 +9,9 @@ import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -36,22 +39,11 @@ import javax.inject.Inject;
  */
 public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   /**
-   * The constant ARTIFACT_ID.
-   */
-  public static final String ARTIFACT_ID = "ARTIFACT_ID";
-  /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
-  /**
    * The constant ARTIFACT_FILE.
    */
   public static final ArtifactFile ARTIFACT_FILE =
       anArtifactFile().withAppId(APP_ID).withUuid("ARTIFACT_FILE_ID").build();
-  /**
-   * The constant RELEASE_ID.
-   */
-  public static final String RELEASE_ID = "RELEASE_ID";
+
   /**
    * The constant ARTIFACT_SOURCE_NAME.
    */

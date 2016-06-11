@@ -8,16 +8,16 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 6/9/16.
  */
 @JsonTypeName("STRING")
-public class StringSettingValue extends SettingValue {
+public class StringValue extends SettingValue {
   /**
    * The String value.
    */
-  String value;
+  private String value;
 
   /**
    * Instantiates a new String setting value.
    */
-  public StringSettingValue() {
+  public StringValue() {
     super(SettingVariableTypes.STRING);
   }
 
@@ -52,7 +52,7 @@ public class StringSettingValue extends SettingValue {
     if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
-    final StringSettingValue other = (StringSettingValue) obj;
+    final StringValue other = (StringValue) obj;
     return Objects.equals(this.value, other.value);
   }
 
@@ -63,7 +63,7 @@ public class StringSettingValue extends SettingValue {
     /**
      * The Value.
      */
-    String value;
+    private String value;
     private SettingVariableTypes type;
 
     private Builder() {}
@@ -73,7 +73,7 @@ public class StringSettingValue extends SettingValue {
      *
      * @return the builder
      */
-    public static Builder aStringSettingValue() {
+    public static Builder aStringValue() {
       return new Builder();
     }
 
@@ -105,7 +105,7 @@ public class StringSettingValue extends SettingValue {
      * @return the builder
      */
     public Builder but() {
-      return aStringSettingValue().withValue(value).withType(type);
+      return aStringValue().withValue(value).withType(type);
     }
 
     /**
@@ -113,11 +113,11 @@ public class StringSettingValue extends SettingValue {
      *
      * @return the string setting value
      */
-    public StringSettingValue build() {
-      StringSettingValue stringSettingValue = new StringSettingValue();
-      stringSettingValue.setValue(value);
-      stringSettingValue.setType(type);
-      return stringSettingValue;
+    public StringValue build() {
+      StringValue stringValue = new StringValue();
+      stringValue.setValue(value);
+      stringValue.setType(type);
+      return stringValue;
     }
   }
 }

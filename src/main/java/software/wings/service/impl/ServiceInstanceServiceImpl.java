@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.Query;

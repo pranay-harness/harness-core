@@ -8,6 +8,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -60,19 +63,9 @@ public class ArtifactResourceTest {
                                                        .build();
 
   /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
-  /**
-   * The constant ARTIFACT_ID.
-   */
-  public static final String ARTIFACT_ID = "ARTIFACT_ID";
-
-  /**
    * The constant ACTUAL.
    */
   public static final Artifact ACTUAL = anArtifact().withAppId(APP_ID).build();
-  private static final String SERVICE_ID = "SERVICE_ID";
 
   /**
    * The Verifier.
