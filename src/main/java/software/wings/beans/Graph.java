@@ -262,7 +262,7 @@ public class Graph {
     if (nextLinkMap.get(node.getId()) != null) {
       Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
       if (repeatLinks == null) {
-        repaint(nextNode, nodeX + DEFAULT_NODE_HEIGHT, nodeY, nodesMap, nextLinkMap, repeatLinkMap);
+        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap);
       } else {
         repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap);
       }
