@@ -145,7 +145,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
     Validator.notNullCheck("service", service);
 
     wingsPersistence.update(
-        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(appId).field("appId").equal(appId),
+        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
         wingsPersistence.createUpdateOperations(Service.class)
             .removeAll("commands", new BasicDBObject("name", commandName)));
 
