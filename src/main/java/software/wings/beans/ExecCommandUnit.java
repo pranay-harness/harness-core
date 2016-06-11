@@ -9,6 +9,8 @@ import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.nio.file.Paths;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -20,7 +22,9 @@ public class ExecCommandUnit extends CommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    commandPath = isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath;
+    commandPath =
+        Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
+            .toString();
     commandString = format("cd %s && %s", commandPath, commandString);
   }
 

@@ -23,13 +23,10 @@
     {
       "id": "n2",
       "name": "Command",
-      "type": "EMAIL",
+      "type": "START",
       "x": 200,
       "y": 150,
       "properties": {
-        "toAddress": "to@abc.com",
-        "ccAddress": "cc@abc.com",
-        "subject": "${instance.name}"
       }
     }
   ],

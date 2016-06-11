@@ -4,9 +4,6 @@
 
 package software.wings.sm.states;
 
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.StateType;
 
 // TODO: Auto-generated Javadoc
@@ -16,9 +13,8 @@ import software.wings.sm.StateType;
  *
  * @author Rishi
  */
-public class StartState extends State {
+public class StartState extends CommandState {
   private static final long serialVersionUID = 1L;
-  private String serviceId;
 
   /**
    * Instantiates a new start state.
@@ -27,31 +23,5 @@ public class StartState extends State {
    */
   public StartState(String name) {
     super(name, StateType.START.name());
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-   */
-  @Override
-  public ExecutionResponse execute(ExecutionContext context) {
-    return new ExecutionResponse();
-  }
-
-  /**
-   * Gets service id.
-   *
-   * @return the service id
-   */
-  public String getServiceId() {
-    return serviceId;
-  }
-
-  /**
-   * Sets service id.
-   *
-   * @param serviceId the service id
-   */
-  public void setServiceId(String serviceId) {
-    this.serviceId = serviceId;
   }
 }
