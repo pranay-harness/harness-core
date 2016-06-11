@@ -23,10 +23,12 @@
     {
       "id": "n2",
       "name": "Command",
-      "type": "START",
+      "type": "COMMAND",
       "x": 200,
       "y": 150,
       "properties": {
+        "commandName": "${SIMPLE_WORKFLOW_COMMAND_NAME}",
+        "name" : "Command"
       }
     }
   ],

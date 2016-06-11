@@ -643,6 +643,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
+    simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
     return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
   }
 

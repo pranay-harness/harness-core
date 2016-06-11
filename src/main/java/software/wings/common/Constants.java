@@ -52,4 +52,9 @@ public interface Constants {
    * The constant SIMPLE_WORKFLOW_REPEAT_STRATEGY.
    */
   static final String SIMPLE_WORKFLOW_REPEAT_STRATEGY = "SIMPLE_WORKFLOW_REPEAT_STRATEGY";
+
+  /**
+   * The constant SIMPLE_WORKFLOW_COMMAND_NAME.
+   */
+  static final String SIMPLE_WORKFLOW_COMMAND_NAME = "SIMPLE_WORKFLOW_COMMAND_NAME";
 }

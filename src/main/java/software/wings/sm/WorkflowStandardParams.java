@@ -3,6 +3,7 @@ package software.wings.sm;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -54,7 +55,9 @@ public class WorkflowStandardParams implements ContextElement {
 
   private String timestampId = System.currentTimeMillis() + "-" + new Random().nextInt(1000);
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
@@ -65,13 +68,17 @@ public class WorkflowStandardParams implements ContextElement {
     return map;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ContextElementType getElementType() {
     return ContextElementType.STANDARD;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getName() {
     return STANDARD_PARAMS;
@@ -234,7 +241,16 @@ public class WorkflowStandardParams implements ContextElement {
   }
 
   public Artifact getArtifactForService(Service service) {
-    return artifacts.stream().filter(artifact -> artifact.getSevices().contains(service)).findFirst().orElse(null);
+    return getArtifacts()
+        .stream()
+        .filter(artifact
+            -> artifact.getSevices()
+                   .stream()
+                   .filter(service1 -> StringUtils.equals(service1.getUuid(), service.getUuid()))
+                   .findFirst()
+                   .isPresent())
+        .findFirst()
+        .orElse(null);
   }
 
   public static final class Builder {

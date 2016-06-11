@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BuildState;
+import software.wings.sm.states.CommandState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -96,6 +97,11 @@ public enum StateType implements StateTypeDescriptor {
   ENV_STATE(EnvState.class, PIPELINE_STENCILS),
 
   /**
+   * Command state type.
+   */
+  COMMAND(CommandState.class, ORCHESTRATION_STENCILS),
+
+  /**
    * Approval state type.
    */
   APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
@@ -118,7 +124,7 @@ public enum StateType implements StateTypeDescriptor {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
     this.jsonSchema = loadJsonSchema();
-    this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+    // this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
   }
 
   private Object readResource(String file) {

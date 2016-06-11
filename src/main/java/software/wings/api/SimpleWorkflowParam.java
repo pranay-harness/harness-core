@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
   private ExecutionStrategy executionStrategy;
+  private String commandName;
 
   /**
    * Gets execution strategy.
@@ -36,12 +37,21 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
     this.executionStrategy = executionStrategy;
   }
 
+  public String getCommandName() {
+    return commandName;
+  }
+
+  public void setCommandName(String commandName) {
+    this.commandName = commandName;
+  }
+
   @Override
   public Map<String, Object> paramMap() {
     Map<String, Object> map = super.paramMap();
     if (map == null) {
       map = new HashMap<>();
     }
+    map.put(Constants.SIMPLE_WORKFLOW_COMMAND_NAME, commandName);
     map.put(Constants.SIMPLE_WORKFLOW_REPEAT_STRATEGY, executionStrategy);
     return map;
   }

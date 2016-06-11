@@ -5,6 +5,7 @@ import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecu
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.StateType.COMMAND;
 
 import com.google.inject.Inject;
 
@@ -34,8 +35,17 @@ import software.wings.sm.WorkflowStandardParams;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CommandState extends State {
+  /**
+   * The constant RUNTIME_PATH.
+   */
   public static final String RUNTIME_PATH = "RUNTIME_PATH";
+  /**
+   * The constant BACKUP_PATH.
+   */
   public static final String BACKUP_PATH = "BACKUP_PATH";
+  /**
+   * The constant STAGING_PATH.
+   */
   public static final String STAGING_PATH = "STAGING_PATH";
 
   private static final long serialVersionUID = -6767922416807341483L;
@@ -52,8 +62,41 @@ public class CommandState extends State {
 
   private String commandName;
 
+  /**
+   * Instantiates a new Command state.
+   *
+   * @param name        the name
+   * @param commandName the command name
+   */
   public CommandState(String name, String commandName) {
-    super(name, "COMMAND");
+    super(name, COMMAND.name());
+    this.commandName = commandName;
+  }
+
+  /**
+   * Instantiates a new Command state.
+   *
+   * @param name the name
+   */
+  public CommandState(String name) {
+    super(name, COMMAND.name());
+  }
+
+  /**
+   * Gets command name.
+   *
+   * @return the command name
+   */
+  public String getCommandName() {
+    return commandName;
+  }
+
+  /**
+   * Sets command name.
+   *
+   * @param commandName the command name
+   */
+  public void setCommandName(String commandName) {
     this.commandName = commandName;
   }
 
@@ -68,7 +111,13 @@ public class CommandState extends State {
 
     Service service = serviceInstance.getServiceTemplate().getService();
 
-    Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), commandName);
+    String actualCommand = commandName;
+    try {
+      actualCommand = context.renderExpression(commandName);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), actualCommand);
 
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(serviceInstance.getAppId())
