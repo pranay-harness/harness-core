@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;
@@ -36,10 +37,6 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 5/23/16.
  */
 public class ServiceResourceTest {
-  /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
   private static final ServiceResourceService RESOURCE_SERVICE = mock(ServiceResourceService.class);
 
   /**

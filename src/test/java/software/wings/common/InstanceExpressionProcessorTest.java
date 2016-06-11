@@ -17,6 +17,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceInstance.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -48,12 +49,9 @@ public class InstanceExpressionProcessorTest {
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
-    ServiceInstance instance1 =
-        ServiceInstance.ServiceInstanceBuilder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
-    ServiceInstance instance2 =
-        ServiceInstance.ServiceInstanceBuilder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
-    ServiceInstance instance3 =
-        ServiceInstance.ServiceInstanceBuilder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
+    ServiceInstance instance1 = Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
+    ServiceInstance instance2 = Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
+    ServiceInstance instance3 = Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
     List<ServiceInstance> instances = Lists.newArrayList(instance1, instance2, instance3);
     res.setResponse(instances);
 

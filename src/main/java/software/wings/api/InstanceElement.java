@@ -93,4 +93,43 @@ public class InstanceElement implements ContextElement {
   public void setServiceTemplateName(String serviceTemplateName) {
     this.serviceTemplateName = serviceTemplateName;
   }
+
+  public static final class Builder {
+    private String uuid;
+    private String hostName;
+    private String serviceTemplateName;
+
+    private Builder() {}
+
+    public static Builder anInstanceElement() {
+      return new Builder();
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withServiceTemplateName(String serviceTemplateName) {
+      this.serviceTemplateName = serviceTemplateName;
+      return this;
+    }
+
+    public Builder but() {
+      return anInstanceElement().withUuid(uuid).withHostName(hostName).withServiceTemplateName(serviceTemplateName);
+    }
+
+    public InstanceElement build() {
+      InstanceElement instanceElement = new InstanceElement();
+      instanceElement.setUuid(uuid);
+      instanceElement.setHostName(hostName);
+      instanceElement.setServiceTemplateName(serviceTemplateName);
+      return instanceElement;
+    }
+  }
 }

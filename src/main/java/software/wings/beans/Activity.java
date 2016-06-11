@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -241,9 +242,35 @@ public class Activity extends Base {
     this.status = status;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hashCode(environmentId, commandName, commandType, serviceId, serviceName, serviceTemplateId,
+              serviceTemplateName, hostName, releaseId, releaseName, artifactName, status);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Activity other = (Activity) obj;
+    return Objects.equal(this.environmentId, other.environmentId) && Objects.equal(this.commandName, other.commandName)
+        && Objects.equal(this.commandType, other.commandType) && Objects.equal(this.serviceId, other.serviceId)
+        && Objects.equal(this.serviceName, other.serviceName)
+        && Objects.equal(this.serviceTemplateId, other.serviceTemplateId)
+        && Objects.equal(this.serviceTemplateName, other.serviceTemplateName)
+        && Objects.equal(this.hostName, other.hostName) && Objects.equal(this.releaseId, other.releaseId)
+        && Objects.equal(this.releaseName, other.releaseName) && Objects.equal(this.artifactName, other.artifactName)
+        && Objects.equal(this.status, other.status);
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)

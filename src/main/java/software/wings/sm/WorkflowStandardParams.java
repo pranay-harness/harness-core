@@ -236,4 +236,79 @@ public class WorkflowStandardParams implements ContextElement {
   public Artifact getArtifactForService(Service service) {
     return artifacts.stream().filter(artifact -> artifact.getSevices().contains(service)).findFirst().orElse(null);
   }
+
+  public static final class Builder {
+    private String appId;
+    private String envId;
+    private List<String> artifactIds;
+    // TODO: centralized in-memory executionCredential and special encrypted mapping
+    private ExecutionCredential executionCredential;
+    private Long startTs;
+    private Long endTs;
+    private String timestampId = System.currentTimeMillis() + "-" + new Random().nextInt(1000);
+
+    private Builder() {}
+
+    public static Builder aWorkflowStandardParams() {
+      return new Builder();
+    }
+
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    public Builder withArtifactIds(List<String> artifactIds) {
+      this.artifactIds = artifactIds;
+      return this;
+    }
+
+    public Builder withExecutionCredential(ExecutionCredential executionCredential) {
+      this.executionCredential = executionCredential;
+      return this;
+    }
+
+    public Builder withStartTs(Long startTs) {
+      this.startTs = startTs;
+      return this;
+    }
+
+    public Builder withEndTs(Long endTs) {
+      this.endTs = endTs;
+      return this;
+    }
+
+    public Builder withTimestampId(String timestampId) {
+      this.timestampId = timestampId;
+      return this;
+    }
+
+    public Builder but() {
+      return aWorkflowStandardParams()
+          .withAppId(appId)
+          .withEnvId(envId)
+          .withArtifactIds(artifactIds)
+          .withExecutionCredential(executionCredential)
+          .withStartTs(startTs)
+          .withEndTs(endTs)
+          .withTimestampId(timestampId);
+    }
+
+    public WorkflowStandardParams build() {
+      WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
+      workflowStandardParams.setAppId(appId);
+      workflowStandardParams.setEnvId(envId);
+      workflowStandardParams.setArtifactIds(artifactIds);
+      workflowStandardParams.setExecutionCredential(executionCredential);
+      workflowStandardParams.setStartTs(startTs);
+      workflowStandardParams.setEndTs(endTs);
+      workflowStandardParams.setTimestampId(timestampId);
+      return workflowStandardParams;
+    }
+  }
 }

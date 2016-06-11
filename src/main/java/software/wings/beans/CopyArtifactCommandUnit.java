@@ -76,7 +76,6 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     private String name;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
-    private boolean artifactNeeded;
 
     private Builder() {}
 
@@ -167,17 +166,6 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With artifact needed builder.
-     *
-     * @param artifactNeeded the artifact needed
-     * @return the builder
-     */
-    public Builder withArtifactNeeded(boolean artifactNeeded) {
-      this.artifactNeeded = artifactNeeded;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -190,8 +178,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
           .withDestinationFilePath(destinationFilePath)
           .withName(name)
           .withCommandUnitType(commandUnitType)
-          .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded);
+          .withExecutionResult(executionResult);
     }
 
     /**
@@ -208,7 +195,6 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
       copyArtifactCommandUnit.setName(name);
       copyArtifactCommandUnit.setCommandUnitType(commandUnitType);
       copyArtifactCommandUnit.setExecutionResult(executionResult);
-      copyArtifactCommandUnit.setArtifactNeeded(artifactNeeded);
       return copyArtifactCommandUnit;
     }
   }

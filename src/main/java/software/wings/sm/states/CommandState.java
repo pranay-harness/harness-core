@@ -14,6 +14,8 @@ import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.StringValue;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -30,6 +32,10 @@ import software.wings.sm.WorkflowStandardParams;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CommandState extends State {
+  public static final String RUNTIME_PATH = "RUNTIME_PATH";
+  public static final String BACKUP_PATH = "BACKUP_PATH";
+  public static final String STAGING_PATH = "STAGING_PATH";
+
   private static final long serialVersionUID = -6767922416807341483L;
 
   @Inject private transient ServiceResourceService serviceResourceService;
@@ -44,8 +50,9 @@ public class CommandState extends State {
 
   private String commandName;
 
-  public CommandState(String name) {
+  public CommandState(String name, String commandName) {
     super(name, "COMMAND");
+    this.commandName = commandName;
   }
 
   @Override
@@ -63,8 +70,6 @@ public class CommandState extends State {
 
     ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
 
-    workflowStandardParams.getArtifacts();
-
     Activity.Builder activityBuilder = anActivity()
                                            .withAppId(serviceInstance.getAppId())
                                            .withEnvironmentId(serviceInstance.getEnvId())
@@ -77,8 +82,12 @@ public class CommandState extends State {
                                            .withHostName(serviceInstance.getHost().getHostName());
 
     CommandExecutionContext.Builder commandExecutionContextBuilder =
-        aCommandExecutionContext().withBackupPath("").withRuntimePath("").withStagingPath("").withExecutionCredential(
-            workflowStandardParams.getExecutionCredential());
+        aCommandExecutionContext()
+            .withAppId(appId)
+            .withBackupPath(getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH))
+            .withRuntimePath(getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH))
+            .withStagingPath(getEvaluatedSettingValue(context, appId, envId, STAGING_PATH))
+            .withExecutionCredential(workflowStandardParams.getExecutionCredential());
 
     if (command.isArtifactNeeded()) {
       Artifact artifact =
@@ -95,5 +104,12 @@ public class CommandState extends State {
         serviceInstance, command, commandExecutionContextBuilder.withActivityId(activity.getUuid()).build());
 
     return anExecutionResponse().withExecutionStatus(ExecutionStatus.valueOf(executionResult.name())).build();
+  }
+
+  private String getEvaluatedSettingValue(ExecutionContext context, String appId, String envId, String variable) {
+    SettingAttribute settingAttribute = settingsService.getByName(appId, envId, variable);
+    StringValue stringValue = (StringValue) settingAttribute.getValue();
+    String settingValue = stringValue.getValue();
+    return context.renderExpression(settingValue);
   }
 }

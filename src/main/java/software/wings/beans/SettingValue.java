@@ -15,7 +15,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 @JsonSubTypes({
   @Type(JenkinsConfig.class)
   , @Type(SmtpConfig.class), @Type(HostConnectionAttributes.class), @Type(BastionConnectionAttributes.class),
-      @Type(StringSettingValue.class)
+      @Type(StringValue.class)
 })
 public abstract class SettingValue {
   @JsonTypeId private SettingVariableTypes type;
