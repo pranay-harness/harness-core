@@ -37,6 +37,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -436,8 +437,22 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (instance.getParentInstanceId() != null) {
         // TODO: needs work for repeat element instance.
         // This is scenario like fork, repeat or sub workflow
-        fromInstanceId = instance.getParentInstanceId();
-        link.setType(TransitionType.REPEAT.name().toLowerCase());
+        node = new Node();
+        node.setId(UUIDGenerator.getUuid());
+        node.setName(instance.getContextElementName());
+        node.setType("element");
+        node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
+        nodes.add(node);
+
+        links.add(Link.Builder.aLink()
+                      .withId(instance.getParentInstanceId() + "-" + node.getId())
+                      .withFrom(instance.getParentInstanceId())
+                      .withTo(node.getId())
+                      .withType(TransitionType.REPEAT.name().toLowerCase())
+                      .build());
+
+        fromInstanceId = node.getId();
+
       } else if (instance.getPrevInstanceId() != null) {
         fromInstanceId = instance.getPrevInstanceId();
       }

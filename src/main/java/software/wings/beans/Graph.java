@@ -12,6 +12,7 @@ import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
 
 import java.io.Serializable;
@@ -40,9 +41,11 @@ public class Graph {
 
   static final int DEFAULT_INITIAL_Y = 80;
 
-  static final int DEFAULT_NODE_WIDTH = 300;
+  static final int DEFAULT_NODE_WIDTH = 200;
 
-  static final int DEFAULT_NODE_HEIGHT = 200;
+  static final int DEFAULT_NODE_HEIGHT = 150;
+
+  private static final int DEFAULT_GROUP_PADDING = 20;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -215,7 +218,10 @@ public class Graph {
     Map<String, Link> nextLinkMap = getNextLinkMap();
 
     extrapolateDimensions(nodesMap.get(originNodeId), nodesMap, nextLinkMap, repeatLinkMap);
-    repaint(nodesMap.get(originNodeId), DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, nodesMap, nextLinkMap, repeatLinkMap);
+    List<Link> updatedLinks = new ArrayList<>();
+    repaint(nodesMap.get(originNodeId), DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, nodesMap, nextLinkMap, repeatLinkMap,
+        updatedLinks);
+    setLinks(updatedLinks);
   }
 
   private void extrapolateDimensions(
@@ -244,7 +250,7 @@ public class Graph {
   }
 
   private void repaint(Node node, int nodeX, int nodeY, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap,
-      Map<String, List<Link>> repeatLinkMap) {
+      Map<String, List<Link>> repeatLinkMap, List<Link> updatedLinks) {
     node.setX(nodeX);
     node.setY(nodeY);
 
@@ -252,9 +258,28 @@ public class Graph {
     List<Link> repeatLinks = repeatLinkMap.get(node.getId());
     if (repeatLinks != null) {
       int y = nodeY + DEFAULT_NODE_HEIGHT;
+
+      Node groupNode = Node.Builder.aNode()
+                           .withId(UUIDGenerator.getUuid())
+                           .withType("group")
+                           .withX(nodeX - DEFAULT_GROUP_PADDING)
+                           .withY(y - DEFAULT_GROUP_PADDING)
+                           .withWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING)
+                           .withHeight(node.getHeight() + 2 * DEFAULT_GROUP_PADDING - DEFAULT_NODE_HEIGHT)
+                           .build();
+
+      getNodes().add(0, groupNode);
+
+      updatedLinks.add(Link.Builder.aLink()
+                           .withId(repeatLinks.get(0).getId())
+                           .withFrom(repeatLinks.get(0).getFrom())
+                           .withTo(groupNode.getId())
+                           .withType(repeatLinks.get(0).getType())
+                           .build());
+
       for (Link link : repeatLinks) {
         Node repeatNode = nodesMap.get(link.getTo());
-        repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap);
+        repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
         y += repeatNode.getHeight();
       }
     }
@@ -262,10 +287,11 @@ public class Graph {
     if (nextLinkMap.get(node.getId()) != null) {
       Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
       if (repeatLinks == null) {
-        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap);
+        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
       } else {
-        repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap);
+        repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
       }
+      updatedLinks.add(nextLinkMap.get(node.getId()));
     }
   }
 
@@ -341,8 +367,8 @@ public class Graph {
     private String status;
     private int x;
     private int y;
-    int width;
-    int height;
+    private int width;
+    private int height;
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -563,6 +589,8 @@ public class Graph {
       private String status;
       private int x;
       private int y;
+      private int width;
+      private int height;
       private Map<String, Object> properties = new HashMap<>();
 
       private Builder() {}
@@ -643,6 +671,28 @@ public class Graph {
       }
 
       /**
+       * With width.
+       *
+       * @param width the width
+       * @return the builder
+       */
+      public Builder withWidth(int width) {
+        this.width = width;
+        return this;
+      }
+
+      /**
+       * With height.
+       *
+       * @param height the height
+       * @return the builder
+       */
+      public Builder withHeight(int height) {
+        this.height = height;
+        return this;
+      }
+
+      /**
        * Adds the property.
        *
        * @param name the name
@@ -687,6 +737,8 @@ public class Graph {
         node.setStatus(status);
         node.setX(x);
         node.setY(y);
+        node.setWidth(width);
+        node.setHeight(height);
         node.setProperties(properties);
         return node;
       }
