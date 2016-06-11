@@ -84,7 +84,6 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                         .withCommandString("rm -f $HOME/jetty")
                                         .build();
   private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
-
   private Builder activityBuilder = anActivity()
                                         .withAppId(APP_ID)
                                         .withEnvironmentId(ENV_ID)
