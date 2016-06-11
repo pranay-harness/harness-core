@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.assertj.core.util.Lists;
 import org.junit.Test;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
@@ -34,9 +33,6 @@ public class GraphTest {
     assertThat(graph.getNodes().get(1).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
     assertThat(graph.getNodes().get(2).getX()).isEqualTo(graph.getNodes().get(1).getX() + Graph.DEFAULT_NODE_WIDTH);
     assertThat(graph.getNodes().get(2).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
-
-    assertThat(graph.getLinks()).isEqualTo(Lists.newArrayList(link1, link2));
-    System.out.println(graph);
   }
 
   @Test
