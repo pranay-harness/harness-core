@@ -19,13 +19,11 @@ import java.util.Map;
  */
 public class InstanceElement implements ContextElement {
   private String uuid;
-  private String hostName;
-  private String serviceTemplateName;
+  private String displayName;
 
   @Override
   public String getName() {
-    return uuid;
-    //    return hostName + ":" + serviceTemplateName;
+    return displayName;
   }
 
   @Override
@@ -58,46 +56,17 @@ public class InstanceElement implements ContextElement {
     this.uuid = uuid;
   }
 
-  /**
-   * Gets host name.
-   *
-   * @return the host name
-   */
-  public String getHostName() {
-    return hostName;
+  public String getDisplayName() {
+    return displayName;
   }
 
-  /**
-   * Sets host name.
-   *
-   * @param hostName the host name
-   */
-  public void setHostName(String hostName) {
-    this.hostName = hostName;
-  }
-
-  /**
-   * Gets service template name.
-   *
-   * @return the service template name
-   */
-  public String getServiceTemplateName() {
-    return serviceTemplateName;
-  }
-
-  /**
-   * Sets service template name.
-   *
-   * @param serviceTemplateName the service template name
-   */
-  public void setServiceTemplateName(String serviceTemplateName) {
-    this.serviceTemplateName = serviceTemplateName;
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   public static final class Builder {
     private String uuid;
-    private String hostName;
-    private String serviceTemplateName;
+    private String displayName;
 
     private Builder() {}
 
@@ -110,25 +79,15 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
-    public Builder withHostName(String hostName) {
-      this.hostName = hostName;
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
       return this;
-    }
-
-    public Builder withServiceTemplateName(String serviceTemplateName) {
-      this.serviceTemplateName = serviceTemplateName;
-      return this;
-    }
-
-    public Builder but() {
-      return anInstanceElement().withUuid(uuid).withHostName(hostName).withServiceTemplateName(serviceTemplateName);
     }
 
     public InstanceElement build() {
       InstanceElement instanceElement = new InstanceElement();
       instanceElement.setUuid(uuid);
-      instanceElement.setHostName(hostName);
-      instanceElement.setServiceTemplateName(serviceTemplateName);
+      instanceElement.setDisplayName(displayName);
       return instanceElement;
     }
   }
