@@ -2,6 +2,8 @@ package software.wings.beans;
 
 // TODO: Auto-generated Javadoc
 
+import com.github.reinert.jjschema.SchemaIgnore;
+
 /**
  * Created by anubhaw on 5/25/16.
  */
@@ -35,6 +37,7 @@ public abstract class CommandUnit {
    *
    * @return the command unit type
    */
+  @SchemaIgnore
   public CommandUnitType getCommandUnitType() {
     return commandUnitType;
   }
@@ -53,6 +56,7 @@ public abstract class CommandUnit {
    *
    * @return the execution result
    */
+  @SchemaIgnore
   public ExecutionResult getExecutionResult() {
     return executionResult;
   }
@@ -89,6 +93,7 @@ public abstract class CommandUnit {
    *
    * @return the boolean
    */
+  @SchemaIgnore
   public boolean isArtifactNeeded() {
     return artifactNeeded;
   }

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;
 
 // TODO: Auto-generated Javadoc
@@ -26,6 +27,7 @@ public abstract class CopyCommandUnit extends CommandUnit {
    *
    * @return the file id
    */
+  @SchemaIgnore
   public String getFileId() {
     return fileId;
   }
@@ -44,6 +46,7 @@ public abstract class CopyCommandUnit extends CommandUnit {
    *
    * @return the file bucket
    */
+  @SchemaIgnore
   public FileBucket getFileBucket() {
     return fileBucket;
   }
@@ -62,6 +65,7 @@ public abstract class CopyCommandUnit extends CommandUnit {
    *
    * @return the destination file path
    */
+  @SchemaIgnore
   public String getDestinationFilePath() {
     return destinationFilePath;
   }
