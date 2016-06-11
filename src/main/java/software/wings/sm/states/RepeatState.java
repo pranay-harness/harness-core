@@ -145,6 +145,8 @@ public class RepeatState extends State {
     childStateExecutionInstance.setPrevInstanceId(prevInstanceId);
 
     childStateExecutionInstance.getContextElements().push(repeatElement);
+    childStateExecutionInstance.setContextElementName(repeatElement.getName());
+    childStateExecutionInstance.setContextElementType(repeatElement.getElementType().name());
     executionResponse.add(childStateExecutionInstance);
     correlationIds.add(notifyId);
   }

@@ -24,8 +24,8 @@
       "id": "n2",
       "name": "Command",
       "type": "EMAIL",
-      "x": 250,
-      "y": 50,
+      "x": 200,
+      "y": 150,
       "properties": {
         "toAddress": "to@abc.com",
         "ccAddress": "cc@abc.com",

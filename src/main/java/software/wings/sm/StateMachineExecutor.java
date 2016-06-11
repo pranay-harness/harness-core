@@ -302,6 +302,8 @@ public class StateMachineExecutor {
       cloned.setStateName(nextState.getName());
       cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
       cloned.setParentInstanceId(null);
+      cloned.setContextElementName(null);
+      cloned.setContextElementType(null);
       return triggerExecution(sm, cloned);
     }
 
@@ -337,6 +339,8 @@ public class StateMachineExecutor {
       cloned.setStateName(nextState.getName());
       cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
       cloned.setParentInstanceId(null);
+      cloned.setContextElementName(null);
+      cloned.setContextElementType(null);
       return triggerExecution(sm, cloned);
     }
     return null;

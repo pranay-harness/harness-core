@@ -40,9 +40,9 @@ public class Graph {
 
   static final int DEFAULT_INITIAL_Y = 80;
 
-  static final int DEFAULT_NODE_WIDTH = 200;
+  static final int DEFAULT_NODE_WIDTH = 300;
 
-  static final int DEFAULT_NODE_HEIGHT = 100;
+  static final int DEFAULT_NODE_HEIGHT = 200;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -209,6 +209,66 @@ public class Graph {
     };
   }
 
+  public void repaint(String originNodeId) {
+    Map<String, Node> nodesMap = getNodesMap();
+    Map<String, List<Link>> repeatLinkMap = getRepeatLinkMap();
+    Map<String, Link> nextLinkMap = getNextLinkMap();
+
+    extrapolateDimensions(nodesMap.get(originNodeId), nodesMap, nextLinkMap, repeatLinkMap);
+    repaint(nodesMap.get(originNodeId), DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, nodesMap, nextLinkMap, repeatLinkMap);
+  }
+
+  private void extrapolateDimensions(
+      Node node, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap, Map<String, List<Link>> repeatLinkMap) {
+    node.setWidth(DEFAULT_NODE_WIDTH);
+    node.setHeight(DEFAULT_NODE_HEIGHT);
+    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
+    if (repeatLinks != null) {
+      for (Link link : repeatLinks) {
+        Node repeatNode = nodesMap.get(link.getTo());
+        extrapolateDimensions(repeatNode, nodesMap, nextLinkMap, repeatLinkMap);
+        if (node.getWidth() < repeatNode.getWidth()) {
+          node.setWidth(repeatNode.getWidth());
+        }
+        node.setHeight(node.getHeight() + repeatNode.getHeight());
+      }
+    }
+    if (nextLinkMap.get(node.getId()) != null) {
+      Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
+      extrapolateDimensions(nextNode, nodesMap, nextLinkMap, repeatLinkMap);
+      if (node.getHeight() < nextNode.getHeight()) {
+        node.setHeight(nextNode.getHeight());
+      }
+      node.setWidth(node.getWidth() + nextNode.getWidth());
+    }
+  }
+
+  private void repaint(Node node, int nodeX, int nodeY, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap,
+      Map<String, List<Link>> repeatLinkMap) {
+    node.setX(nodeX);
+    node.setY(nodeY);
+
+    // repaint the repeat node
+    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
+    if (repeatLinks != null) {
+      int y = nodeY + DEFAULT_NODE_HEIGHT;
+      for (Link link : repeatLinks) {
+        Node repeatNode = nodesMap.get(link.getTo());
+        repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap);
+        y += repeatNode.getHeight();
+      }
+    }
+
+    if (nextLinkMap.get(node.getId()) != null) {
+      Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
+      if (repeatLinks == null) {
+        repaint(nextNode, nodeX + DEFAULT_NODE_HEIGHT, nodeY, nodesMap, nextLinkMap, repeatLinkMap);
+      } else {
+        repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap);
+      }
+    }
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -281,6 +341,9 @@ public class Graph {
     private String status;
     private int x;
     private int y;
+    int width;
+    int height;
+
     private Map<String, Object> properties = new HashMap<>();
 
     /**
@@ -371,6 +434,22 @@ public class Graph {
      */
     public void setY(int y) {
       this.y = y;
+    }
+
+    public int getWidth() {
+      return width;
+    }
+
+    public void setWidth(int width) {
+      this.width = width;
+    }
+
+    public int getHeight() {
+      return height;
+    }
+
+    public void setHeight(int height) {
+      this.height = height;
     }
 
     /**
@@ -471,7 +550,7 @@ public class Graph {
     @Override
     public String toString() {
       return "Node [id=" + id + ", name=" + name + ", type=" + type + ", status=" + status + ", x=" + x + ", y=" + y
-          + ", properties=" + properties + "]";
+          + ", width=" + width + ", height=" + height + ", properties=" + properties + "]";
     }
 
     /**
@@ -938,100 +1017,6 @@ public class Graph {
       graph.setNodes(nodes);
       graph.setLinks(links);
       return graph;
-    }
-  }
-
-  public void repaint(String originNodeId) {
-    Map<String, Node> nodesMap = getNodesMap();
-    Map<String, List<Link>> repeatLinkMap = getRepeatLinkMap();
-    Map<String, Link> nextLinkMap = getNextLinkMap();
-
-    repaint(nodesMap.get(originNodeId), new Area(DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y), nodesMap, nextLinkMap,
-        repeatLinkMap);
-  }
-
-  private Area repaint(Node node, Area area, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap,
-      Map<String, List<Link>> repeatLinkMap) {
-    node.setX(area.getX());
-    node.setY(area.getY());
-    area.setWidth(DEFAULT_NODE_WIDTH);
-    area.setHeight(DEFAULT_NODE_HEIGHT);
-
-    // paint the repeat node
-    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
-    if (repeatLinks != null) {
-      Area nodeArea = area;
-      for (Link link : repeatLinks) {
-        nodeArea = repaint(nodesMap.get(link.getTo()),
-            new Area(nodeArea.getX(), nodeArea.getY() + nodeArea.getHeight()), nodesMap, nextLinkMap, repeatLinkMap);
-        if (area.getWidth() < nodeArea.getWidth()) {
-          area.setWidth(nodeArea.getWidth());
-        }
-        area.setHeight(nodeArea.getHeight() + DEFAULT_NODE_HEIGHT);
-      }
-    }
-
-    if (nextLinkMap.get(node.getId()) != null) {
-      Area nodeArea = repaint(nodesMap.get(nextLinkMap.get(node.getId()).getTo()),
-          new Area(area.getX() + area.getWidth(), area.getY()), nodesMap, nextLinkMap, repeatLinkMap);
-      if (area.getHeight() < nodeArea.getHeight()) {
-        area.setHeight(nodeArea.getHeight());
-      }
-      area.setWidth(nodeArea.getWidth() + DEFAULT_NODE_WIDTH);
-    }
-    return area;
-  }
-
-  static class Area {
-    int x;
-    int y;
-    int width;
-    int height;
-
-    public Area(int x, int y) {
-      super();
-      this.x = x;
-      this.y = y;
-    }
-
-    public Area(int x, int y, int width, int height) {
-      super();
-      this.x = x;
-      this.y = y;
-      this.width = width;
-      this.height = height;
-    }
-
-    public int getX() {
-      return x;
-    }
-
-    public void setX(int x) {
-      this.x = x;
-    }
-
-    public int getY() {
-      return y;
-    }
-
-    public void setY(int y) {
-      this.y = y;
-    }
-
-    public int getWidth() {
-      return width;
-    }
-
-    public void setWidth(int width) {
-      this.width = width;
-    }
-
-    public int getHeight() {
-      return height;
-    }
-
-    public void setHeight(int height) {
-      this.height = height;
     }
   }
 }

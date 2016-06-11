@@ -36,6 +36,7 @@ public class GraphTest {
     assertThat(graph.getNodes().get(2).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
 
     assertThat(graph.getLinks()).isEqualTo(Lists.newArrayList(link1, link2));
+    System.out.println(graph);
   }
 
   @Test
@@ -145,5 +146,6 @@ public class GraphTest {
     graph.repaint("node1");
     assertThat(graph).isNotNull();
     assertThat(graph.getNodes()).isNotNull();
+    System.out.println(graph);
   }
 }
