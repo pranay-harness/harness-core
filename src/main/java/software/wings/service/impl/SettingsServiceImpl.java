@@ -11,6 +11,7 @@ import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.beans.StringValue.Builder.aStringValue;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -117,9 +118,9 @@ public class SettingsServiceImpl implements SettingsService {
   public SettingAttribute getByName(String appId, String envId, String attributeName) {
     return wingsPersistence.createQuery(SettingAttribute.class)
         .field("appId")
-        .equal(appId)
+        .in(asList(appId, GLOBAL_APP_ID))
         .field("envId")
-        .equal(envId)
+        .in(asList(envId, GLOBAL_ENV_ID))
         .field("name")
         .equal(attributeName)
         .get();
@@ -160,6 +161,33 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withAccessType(USER_PASSWORD_SUDO_APP_USER)
                                              .build())
                               .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("RUNTIME_PATH")
+            .withValue(
+                aStringValue().withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime").build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("BACKUP_PATH")
+            .withValue(aStringValue()
+                           .withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
+                           .build())
+            .build());
+    wingsPersistence.save(
+        aSettingAttribute()
+            .withAppId(appId)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName("STAGING_PATH")
+            .withValue(
+                aStringValue()
+                    .withValue("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
+                    .build())
+            .build());
   }
 
   /* (non-Javadoc)

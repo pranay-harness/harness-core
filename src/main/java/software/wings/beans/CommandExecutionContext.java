@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import java.util.Objects;
+
 /**
  * Created by peeyushaggarwal on 6/9/16.
  */
@@ -120,6 +122,26 @@ public class CommandExecutionContext {
    */
   public void setExecutionCredential(ExecutionCredential executionCredential) {
     this.executionCredential = executionCredential;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(artifact, appId, activityId, runtimePath, stagingPath, backupPath, executionCredential);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CommandExecutionContext other = (CommandExecutionContext) obj;
+    return Objects.equals(this.artifact, other.artifact) && Objects.equals(this.appId, other.appId)
+        && Objects.equals(this.activityId, other.activityId) && Objects.equals(this.runtimePath, other.runtimePath)
+        && Objects.equals(this.stagingPath, other.stagingPath) && Objects.equals(this.backupPath, other.backupPath)
+        && Objects.equals(this.executionCredential, other.executionCredential);
   }
 
   @Override

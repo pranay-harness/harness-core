@@ -151,9 +151,9 @@ public class ServiceInstance extends Base {
   }
 
   /**
-   * The Class ServiceInstanceBuilder.
+   * The Class Builder.
    */
-  public static final class ServiceInstanceBuilder {
+  public static final class Builder {
     private String envId;
     private Host host;
     private ServiceTemplate serviceTemplate;
@@ -167,15 +167,15 @@ public class ServiceInstance extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ServiceInstanceBuilder() {}
+    private Builder() {}
 
     /**
      * A service instance service instance builder.
      *
      * @return the service instance builder
      */
-    public static ServiceInstanceBuilder aServiceInstance() {
-      return new ServiceInstanceBuilder();
+    public static Builder aServiceInstance() {
+      return new Builder();
     }
 
     /**
@@ -184,7 +184,7 @@ public class ServiceInstance extends Base {
      * @param envId the env id
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withEnvId(String envId) {
+    public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
@@ -195,7 +195,7 @@ public class ServiceInstance extends Base {
      * @param host the host
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withHost(Host host) {
+    public Builder withHost(Host host) {
       this.host = host;
       return this;
     }
@@ -206,7 +206,7 @@ public class ServiceInstance extends Base {
      * @param serviceTemplate the service template
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withServiceTemplate(ServiceTemplate serviceTemplate) {
+    public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceTemplate = serviceTemplate;
       return this;
     }
@@ -217,7 +217,7 @@ public class ServiceInstance extends Base {
      * @param release the release
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withRelease(Release release) {
+    public Builder withRelease(Release release) {
       this.release = release;
       return this;
     }
@@ -228,7 +228,7 @@ public class ServiceInstance extends Base {
      * @param artifact the artifact
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withArtifact(Artifact artifact) {
+    public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
       return this;
     }
@@ -239,7 +239,7 @@ public class ServiceInstance extends Base {
      * @param uuid the uuid
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
@@ -250,7 +250,7 @@ public class ServiceInstance extends Base {
      * @param appId the app id
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -261,7 +261,7 @@ public class ServiceInstance extends Base {
      * @param createdBy the created by
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -272,7 +272,7 @@ public class ServiceInstance extends Base {
      * @param createdAt the created at
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -283,7 +283,7 @@ public class ServiceInstance extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -294,7 +294,7 @@ public class ServiceInstance extends Base {
      * @param lastUpdatedAt the last updated at
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -305,7 +305,7 @@ public class ServiceInstance extends Base {
      * @param active the active
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
@@ -315,7 +315,7 @@ public class ServiceInstance extends Base {
      *
      * @return the service instance builder
      */
-    public ServiceInstanceBuilder but() {
+    public Builder but() {
       return aServiceInstance()
           .withEnvId(envId)
           .withHost(host)

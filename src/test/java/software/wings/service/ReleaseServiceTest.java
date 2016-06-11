@@ -11,6 +11,7 @@ import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.Lists;
 
@@ -34,10 +35,6 @@ import javax.ws.rs.BadRequestException;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class ReleaseServiceTest extends WingsBaseTest {
-  /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
   private static final ReleaseBuilder releaseBuilder =
       aRelease().withAppId(APP_ID).withReleaseName("REL1").withDescription("RELEASE 1");
 

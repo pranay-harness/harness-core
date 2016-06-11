@@ -22,6 +22,8 @@ public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String stateName;
   private String stateType;
+  private String contextElementType;
+  private String contextElementName;
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -312,6 +314,22 @@ public class StateExecutionInstance extends Base {
    */
   public void setCallback(StateMachineExecutionCallback callback) {
     this.callback = callback;
+  }
+
+  public String getContextElementType() {
+    return contextElementType;
+  }
+
+  public void setContextElementType(String contextElementType) {
+    this.contextElementType = contextElementType;
+  }
+
+  public String getContextElementName() {
+    return contextElementName;
+  }
+
+  public void setContextElementName(String contextElementName) {
+    this.contextElementName = contextElementName;
   }
 
   /**

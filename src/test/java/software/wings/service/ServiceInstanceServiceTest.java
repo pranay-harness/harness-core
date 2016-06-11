@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.ServiceInstance.ServiceInstanceBuilder.aServiceInstance;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -23,12 +23,11 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Artifact.Builder;
 import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Release.ReleaseBuilder;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.ServiceInstance.ServiceInstanceBuilder;
+import software.wings.beans.ServiceInstance.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -46,13 +45,13 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
 
-  private ServiceInstanceBuilder builder =
+  private Builder builder =
       aServiceInstance()
           .withHost(HostBuilder.aHost().withUuid(HOST_ID).build())
           .withServiceTemplate(
               aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build())
           .withRelease(ReleaseBuilder.aRelease().withUuid(RELEASE_ID).build())
-          .withArtifact(Builder.anArtifact().withUuid(ARTIFACT_ID).build())
+          .withArtifact(software.wings.beans.Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build())
           .withAppId(APP_ID)
           .withEnvId(ENV_ID);
 

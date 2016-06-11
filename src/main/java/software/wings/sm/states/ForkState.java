@@ -51,11 +51,16 @@ public class ForkState extends State {
     List<String> correlationIds = new ArrayList<>();
 
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
+    int index = 0;
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
       StateExecutionInstance childStateExecutionInstance =
           JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
+      index++;
+      childStateExecutionInstance.setContextElementName("Fork" + index);
+      childStateExecutionInstance.setContextElementType(StateType.FORK.name());
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(notifyId);
       executionResponse.add(childStateExecutionInstance);
