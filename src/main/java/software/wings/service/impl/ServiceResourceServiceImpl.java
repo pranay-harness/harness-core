@@ -74,9 +74,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   }
 
   private void addDefaultCommands(Service service) {
-    addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
-    addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
     addCommand(service.getAppId(), service.getUuid(), getInstallCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
+    addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
   }
 
   /**
