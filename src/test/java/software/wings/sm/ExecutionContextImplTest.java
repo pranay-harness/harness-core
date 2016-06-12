@@ -85,6 +85,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ServiceTemplateElement st = new ServiceTemplateElement();
     st.setUuid(UUIDGenerator.getUuid());
     st.setName("st1");
+    st.setServiceElement(
+        ServiceElement.Builder.aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("svc2").build());
     context.pushContextElement(st);
 
     HostElement host = new HostElement();
@@ -110,6 +112,6 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     String expr =
         "$HOME/${env.name}/${app.name}/${service.name}/${serviceTemplate.name}/${host.name}/${timestampId}/runtime";
     String path = context.renderExpression(expr);
-    assertThat(path).isEqualTo("$HOME/DEV/AppA/svc1/st1/host1/" + timeStampId + "/runtime");
+    assertThat(path).isEqualTo("$HOME/DEV/AppA/svc2/st1/host1/" + timeStampId + "/runtime");
   }
 }
