@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -165,16 +166,20 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     if (services == null) {
       return null;
     }
-    ModelMapper mm = new ModelMapper();
 
     List<ServiceElement> elements = new ArrayList<>();
     for (Service service : services) {
-      ServiceElement element = new ServiceElement();
-      mm.map(service, element);
-      elements.add(element);
+      elements.add(convertToServiceElement(service));
     }
 
     return elements;
+  }
+
+  static ServiceElement convertToServiceElement(Service service) {
+    ModelMapper mm = new ModelMapper();
+    ServiceElement element = new ServiceElement();
+    mm.map(service, element);
+    return element;
   }
 
   /**

@@ -8,8 +8,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -21,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
+import software.wings.app.StaticConfiguration;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
@@ -55,10 +54,7 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.TransitionType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.JsonUtils;
 
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -84,6 +80,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
   @Inject private EnvironmentService environmentService;
+  @Inject private StaticConfiguration staticConfiguration;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -695,14 +692,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     orchestration.setAppId(appId);
     orchestration.setEnvironment(environmentService.get(appId, envId));
 
-    URL url = this.getClass().getResource(Constants.SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL);
-    String json;
-    try {
-      json = Resources.toString(url, Charsets.UTF_8);
-    } catch (IOException e) {
-      throw new WingsException("Error in loading simple workflow default graph");
-    }
-    Graph graph = JsonUtils.asObject(json, Graph.class);
+    Graph graph = staticConfiguration.defaultSimpleWorkflow();
     orchestration.setGraph(graph);
 
     return createWorkflow(Orchestration.class, orchestration);
@@ -755,5 +745,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     ops.set("active", false);
     wingsPersistence.update(
         wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
+  }
+
+  public void setStaticConfiguration(StaticConfiguration staticConfiguration) {
+    this.staticConfiguration = staticConfiguration;
   }
 }

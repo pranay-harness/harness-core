@@ -4,6 +4,8 @@
 
 package software.wings.common;
 
+import org.modelmapper.ModelMapper;
+import software.wings.api.HostElement;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -12,7 +14,9 @@ import software.wings.service.intfc.HostService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 
+import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -88,7 +92,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    *
    * @return the list
    */
-  public List<Host> list() {
+  public List<HostElement> list() {
     List<Host> hosts = null;
     PageRequest<Host> pageRequest =
         PageRequest.Builder.aPageRequest()
@@ -101,6 +105,24 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       // TODO :
     }
 
-    return hosts;
+    return convertToHostElements(hosts);
+  }
+
+  private List<HostElement> convertToHostElements(List<Host> hosts) {
+    if (hosts == null) {
+      return null;
+    }
+    List<HostElement> hostElements = new ArrayList<>();
+    for (Host host : hosts) {
+      hostElements.add(convertToHostElement(host));
+    }
+    return hostElements;
+  }
+
+  static HostElement convertToHostElement(Host host) {
+    ModelMapper mm = new ModelMapper();
+    HostElement element = new HostElement();
+    mm.map(host, element);
+    return element;
   }
 }

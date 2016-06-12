@@ -20,6 +20,8 @@ import java.util.Map;
 public class InstanceElement implements ContextElement {
   private String uuid;
   private String displayName;
+  private HostElement hostElement;
+  private ServiceTemplateElement serviceTemplateElement;
 
   @Override
   public String getName() {
@@ -35,23 +37,15 @@ public class InstanceElement implements ContextElement {
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
     map.put(INSTANCE, this);
+    map.putAll(hostElement.paramMap());
+    map.putAll(serviceTemplateElement.paramMap());
     return map;
   }
 
-  /**
-   * Gets uuid.
-   *
-   * @return the uuid
-   */
   public String getUuid() {
     return uuid;
   }
 
-  /**
-   * Sets uuid.
-   *
-   * @param uuid the uuid
-   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }
@@ -64,9 +58,27 @@ public class InstanceElement implements ContextElement {
     this.displayName = displayName;
   }
 
+  public HostElement getHostElement() {
+    return hostElement;
+  }
+
+  public void setHostElement(HostElement hostElement) {
+    this.hostElement = hostElement;
+  }
+
+  public ServiceTemplateElement getServiceTemplateElement() {
+    return serviceTemplateElement;
+  }
+
+  public void setServiceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
+    this.serviceTemplateElement = serviceTemplateElement;
+  }
+
   public static final class Builder {
     private String uuid;
     private String displayName;
+    private HostElement hostElement;
+    private ServiceTemplateElement serviceTemplateElement;
 
     private Builder() {}
 
@@ -84,10 +96,22 @@ public class InstanceElement implements ContextElement {
       return this;
     }
 
+    public Builder withHostElement(HostElement hostElement) {
+      this.hostElement = hostElement;
+      return this;
+    }
+
+    public Builder withServiceTemplateElement(ServiceTemplateElement serviceTemplateElement) {
+      this.serviceTemplateElement = serviceTemplateElement;
+      return this;
+    }
+
     public InstanceElement build() {
       InstanceElement instanceElement = new InstanceElement();
       instanceElement.setUuid(uuid);
       instanceElement.setDisplayName(displayName);
+      instanceElement.setHostElement(hostElement);
+      instanceElement.setServiceTemplateElement(serviceTemplateElement);
       return instanceElement;
     }
   }

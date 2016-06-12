@@ -36,7 +36,7 @@ public class ExecutionContextImpl implements ExecutionContext {
    *
    * @param stateExecutionInstance the state execution instance
    */
-  ExecutionContextImpl(StateExecutionInstance stateExecutionInstance) {
+  public ExecutionContextImpl(StateExecutionInstance stateExecutionInstance) {
     this.stateExecutionInstance = stateExecutionInstance;
   }
 

@@ -21,6 +21,8 @@ public class ServiceTemplateElement implements ContextElement {
   private String uuid;
   private String name;
 
+  private ServiceElement serviceElement;
+
   @Override
   public String getName() {
     return name;
@@ -58,6 +60,14 @@ public class ServiceTemplateElement implements ContextElement {
     this.uuid = uuid;
   }
 
+  public ServiceElement getServiceElement() {
+    return serviceElement;
+  }
+
+  public void setServiceElement(ServiceElement serviceElement) {
+    this.serviceElement = serviceElement;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.sm.ContextElement#paramMap()
    */
@@ -65,6 +75,42 @@ public class ServiceTemplateElement implements ContextElement {
   public Map<String, Object> paramMap() {
     Map<String, Object> map = new HashMap<>();
     map.put(SERVICE_TEMPLATE, this);
+    map.putAll(serviceElement.paramMap());
     return map;
+  }
+
+  public static final class Builder {
+    private String uuid;
+    private String name;
+    private ServiceElement serviceElement;
+
+    private Builder() {}
+
+    public static Builder aServiceTemplateElement() {
+      return new Builder();
+    }
+
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withServiceElement(ServiceElement serviceElement) {
+      this.serviceElement = serviceElement;
+      return this;
+    }
+
+    public ServiceTemplateElement build() {
+      ServiceTemplateElement serviceTemplateElement = new ServiceTemplateElement();
+      serviceTemplateElement.setUuid(uuid);
+      serviceTemplateElement.setName(name);
+      serviceTemplateElement.setServiceElement(serviceElement);
+      return serviceTemplateElement;
+    }
   }
 }

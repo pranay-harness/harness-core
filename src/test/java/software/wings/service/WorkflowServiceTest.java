@@ -840,7 +840,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerOrchestration() {
-    Orchestration orchestration = createOrchestration();
+    Orchestration orchestration = createExecutableOrchestration();
     ExecutionArgs executionArgs = new ExecutionArgs();
     WorkflowExecution execution =
         workflowService.triggerOrchestrationExecution(appId, orchestration.getUuid(), executionArgs);
@@ -854,6 +854,48 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
+  }
+
+  /**
+   * @return
+   */
+  private Orchestration createExecutableOrchestration() {
+    Graph graph =
+        aGraph()
+            .addNodes(
+                aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+            .addNodes(aNode()
+                          .withId("n1")
+                          .withName("wait")
+                          .withX(200)
+                          .withY(50)
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 5000l)
+                          .build())
+            .addNodes(aNode()
+                          .withId("n2")
+                          .withName("email")
+                          .withX(250)
+                          .withY(50)
+                          .withType(StateType.EMAIL.name())
+                          .addProperty("toAddress", "a@b.com")
+                          .addProperty("subject", "testing")
+                          .build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+            .build();
+
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(appId)
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withEnvironment(getEnvironment())
+                                      .withGraph(graph)
+                                      .build();
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+    return orchestration;
   }
 
   /**
