@@ -138,11 +138,7 @@ public enum StateType implements StateTypeDescriptor {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      WingsException ex = new WingsException("Error in initializing StateType-" + file, exception);
-      logger.error(ex.getMessage(), ex);
-      return null;
-      // throw ex;
-      // TODO - uncomment exception later on
+      throw new WingsException("Error in initializing StateType-" + file, exception);
     }
   }
 
