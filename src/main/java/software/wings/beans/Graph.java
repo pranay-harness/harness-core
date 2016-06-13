@@ -39,7 +39,7 @@ public class Graph {
 
   static final int DEFAULT_INITIAL_X = 50;
 
-  static final int DEFAULT_INITIAL_Y = 80;
+  static final int DEFAULT_INITIAL_Y = 50;
 
   static final int DEFAULT_NODE_WIDTH = 100;
 

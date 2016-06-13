@@ -55,8 +55,10 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.TransitionType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -175,6 +177,13 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
+    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName("createdAt");
+      sortOrder.setOrderType(OrderType.DESC);
+      pageRequest.addOrder(sortOrder);
+    }
+
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Pipeline pipeline : res.getResponse()) {
@@ -303,6 +312,13 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName("createdAt");
+      sortOrder.setOrderType(OrderType.DESC);
+      pageRequest.addOrder(sortOrder);
+    }
+
     PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
@@ -358,6 +374,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
+    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName("createdAt");
+      sortOrder.setOrderType(OrderType.DESC);
+      pageRequest.addOrder(sortOrder);
+    }
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (res == null || res.size() == 0) {
       return res;
@@ -531,9 +553,21 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new WingsException("No stateMachine associated with " + orchestrationId);
     }
 
+    Orchestration orchestration = wingsPersistence.get(Orchestration.class, appId, orchestrationId);
+
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(orchestrationId);
+    String name = "";
+    if (orchestration.getName() != null) {
+      name = orchestration.getName() + " ";
+    }
+    try {
+      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
+    } catch (Exception e) {
+      throw new WingsException("Error in date formatting");
+    }
+    workflowExecution.setName(name);
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
