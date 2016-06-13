@@ -40,7 +40,7 @@ public class EmailState extends State {
   @Attributes private String ccAddress;
   @Attributes(required = true) private String subject;
   @Attributes private String body;
-  private boolean ignoreDeliveryFailure = true;
+  private Boolean ignoreDeliveryFailure = true;
 
   @Inject private transient NotificationService<EmailData> emailNotificationService;
 
