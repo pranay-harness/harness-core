@@ -45,11 +45,11 @@ public class Graph {
 
   static final int DEFAULT_NODE_HEIGHT = 75;
 
-  private static final int DEFAULT_ARROW_WIDTH = 100;
+  static final int DEFAULT_ARROW_WIDTH = 100;
 
-  private static final int DEFAULT_ARROW_HEIGHT = 75;
+  static final int DEFAULT_ARROW_HEIGHT = 75;
 
-  private static final int DEFAULT_GROUP_PADDING = 10;
+  static final int DEFAULT_GROUP_PADDING = 10;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -291,8 +291,8 @@ public class Graph {
     if (nextLinkMap.get(node.getId()) != null) {
       Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
       if (repeatLinks == null) {
-        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_HEIGHT, nodeY, nodesMap, nextLinkMap,
-            repeatLinkMap, updatedLinks);
+        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap,
+            updatedLinks);
       } else {
         repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
       }

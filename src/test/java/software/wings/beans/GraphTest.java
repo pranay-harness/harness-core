@@ -29,9 +29,11 @@ public class GraphTest {
     assertThat(graph.getNodes()).isNotNull();
     assertThat(graph.getNodes().get(0).getX()).isEqualTo(Graph.DEFAULT_INITIAL_X);
     assertThat(graph.getNodes().get(0).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
-    assertThat(graph.getNodes().get(1).getX()).isEqualTo(graph.getNodes().get(0).getX() + Graph.DEFAULT_NODE_WIDTH);
+    assertThat(graph.getNodes().get(1).getX())
+        .isEqualTo(graph.getNodes().get(0).getX() + Graph.DEFAULT_NODE_WIDTH + Graph.DEFAULT_ARROW_WIDTH);
     assertThat(graph.getNodes().get(1).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
-    assertThat(graph.getNodes().get(2).getX()).isEqualTo(graph.getNodes().get(1).getX() + Graph.DEFAULT_NODE_WIDTH);
+    assertThat(graph.getNodes().get(2).getX())
+        .isEqualTo(graph.getNodes().get(1).getX() + Graph.DEFAULT_NODE_WIDTH + Graph.DEFAULT_ARROW_WIDTH);
     assertThat(graph.getNodes().get(2).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
   }
 
