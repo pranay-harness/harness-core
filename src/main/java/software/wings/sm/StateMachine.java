@@ -67,7 +67,7 @@ public class StateMachine extends Base {
    * @param stencilMap the stencil map
    */
   public StateMachine(Workflow workflow, Graph graph, Map<String, StateTypeDescriptor> stencilMap) {
-    logger.debug("graph received for transform: {}", graph);
+    logger.info("graph received for transform: {}", graph);
     setAppId(workflow.getAppId());
     this.originId = workflow.getUuid();
     this.graph = graph;
@@ -75,6 +75,7 @@ public class StateMachine extends Base {
     try {
       transform(stencilMap);
     } catch (WingsException e) {
+      logger.error(e.getLocalizedMessage(), e);
       throw e;
     } catch (Exception e) {
       logger.error(e.getLocalizedMessage(), e);
