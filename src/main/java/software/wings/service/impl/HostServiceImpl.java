@@ -138,20 +138,22 @@ public class HostServiceImpl implements HostService {
   @Override
   public void bulkSave(Host baseHost, List<String> hostNames) {
     hostNames.forEach(hostName -> {
-      HostBuilder builder = aHost()
-                                .withHostName(hostName)
-                                .withAppId(baseHost.getAppId())
-                                .withInfraId(baseHost.getInfraId())
-                                .withHostConnAttr(baseHost.getHostConnAttr());
-      if (isValidBastionHostConnectionReference(baseHost)) {
-        builder.withBastionConnAttr(baseHost.getBastionConnAttr()).withTags(baseHost.getTags());
+      if (hostName != null && hostName.length() > 0) {
+        HostBuilder builder = aHost()
+                                  .withHostName(hostName)
+                                  .withAppId(baseHost.getAppId())
+                                  .withInfraId(baseHost.getInfraId())
+                                  .withHostConnAttr(baseHost.getHostConnAttr());
+        if (isValidBastionHostConnectionReference(baseHost)) {
+          builder.withBastionConnAttr(baseHost.getBastionConnAttr()).withTags(baseHost.getTags());
+        }
+        save(builder.build());
       }
-      save(builder.build());
     });
   }
 
   private boolean isValidBastionHostConnectionReference(Host baseHost) {
-    return baseHost.getBastionConnAttr() != null & baseHost.getBastionConnAttr().getUuid() != null
+    return baseHost.getBastionConnAttr() != null && baseHost.getBastionConnAttr().getUuid() != null
         && baseHost.getBastionConnAttr().getUuid().length() > 0;
   }
 }

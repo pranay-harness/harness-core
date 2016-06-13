@@ -134,9 +134,9 @@ public class CommandState extends State {
     CommandExecutionContext.Builder commandExecutionContextBuilder =
         aCommandExecutionContext()
             .withAppId(appId)
-            .withBackupPath("$HOME/wings/")
-            .withRuntimePath("$HOME/wings/")
-            .withStagingPath("$HOME/wings/")
+            .withBackupPath(getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH))
+            .withRuntimePath(getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH))
+            .withStagingPath(getEvaluatedSettingValue(context, appId, envId, STAGING_PATH))
             .withExecutionCredential(workflowStandardParams.getExecutionCredential());
 
     if (command.isArtifactNeeded()) {
