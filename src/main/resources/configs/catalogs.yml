@@ -51,3 +51,7 @@ ACCESS_TYPE:
       value: SSH_SU_APP_ACCOUNT
     - name: SSH_SUDO_APP_ACCOUNT
       value: SSH_SUDO_APP_ACCOUNT
+
+EXECUTION_TYPE:
+    - name: SSH
+      value: SSH
