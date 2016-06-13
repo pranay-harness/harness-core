@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.internal.debugging.MockitoDebuggerImpl;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
 import software.wings.beans.Command;
 import software.wings.beans.CommandUnit.ExecutionResult;
@@ -115,6 +116,7 @@ public class CommandStateTest extends WingsBaseTest {
   public void after() {
     new MockitoDebuggerImpl().printInvocations(serviceCommandExecutorService);
   }
+
   @Before
   public void setUpMocks() throws Exception {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START")).thenReturn(COMMAND);
@@ -124,9 +126,9 @@ public class CommandStateTest extends WingsBaseTest {
     when(serviceCommandExecutorService.execute(SERVICE_INSTANCE, COMMAND,
              aCommandExecutionContext()
                  .withAppId(APP_ID)
-                 .withBackupPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
-                 .withRuntimePath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime")
-                 .withStagingPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
+                 .withBackupPath("$HOME/wings/")
+                 .withRuntimePath("$HOME/wings/")
+                 .withStagingPath("$HOME/wings/")
                  .withExecutionCredential(null)
                  .withActivityId(ACTIVITY_ID)
                  .build()))
@@ -175,20 +177,17 @@ public class CommandStateTest extends WingsBaseTest {
         .execute(SERVICE_INSTANCE, COMMAND,
             aCommandExecutionContext()
                 .withAppId(APP_ID)
-                .withBackupPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
-                .withRuntimePath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime")
-                .withStagingPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
+                .withBackupPath("$HOME/wings/")
+                .withRuntimePath("$HOME/wings/")
+                .withStagingPath("$HOME/wings/")
                 .withExecutionCredential(null)
                 .withActivityId(ACTIVITY_ID)
                 .build());
-    verify(settingsService).getByName(APP_ID, ENV_ID, RUNTIME_PATH);
-    verify(settingsService).getByName(APP_ID, ENV_ID, BACKUP_PATH);
-    verify(settingsService).getByName(APP_ID, ENV_ID, STAGING_PATH);
 
     verify(context).getContextElement(ContextElementType.STANDARD);
-    verify(context).getContextElement(ContextElementType.SERVICE);
     verify(context).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(3)).renderExpression(anyString());
+    verify(context, times(1)).renderExpression(anyString());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService);
   }
@@ -213,9 +212,9 @@ public class CommandStateTest extends WingsBaseTest {
     when(serviceCommandExecutorService.execute(SERVICE_INSTANCE, command,
              aCommandExecutionContext()
                  .withAppId(APP_ID)
-                 .withBackupPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
-                 .withRuntimePath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime")
-                 .withStagingPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
+                 .withBackupPath("$HOME/wings/")
+                 .withRuntimePath("$HOME/wings/")
+                 .withStagingPath("$HOME/wings/")
                  .withExecutionCredential(null)
                  .withActivityId(ACTIVITY_ID)
                  .withArtifact(artifact)
@@ -232,21 +231,18 @@ public class CommandStateTest extends WingsBaseTest {
         .execute(SERVICE_INSTANCE, command,
             aCommandExecutionContext()
                 .withAppId(APP_ID)
-                .withBackupPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}")
-                .withRuntimePath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime")
-                .withStagingPath("$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}")
+                .withBackupPath("$HOME/wings/")
+                .withRuntimePath("$HOME/wings/")
+                .withStagingPath("$HOME/wings/")
                 .withExecutionCredential(null)
                 .withActivityId(ACTIVITY_ID)
                 .withArtifact(artifact)
                 .build());
-    verify(settingsService).getByName(APP_ID, ENV_ID, RUNTIME_PATH);
-    verify(settingsService).getByName(APP_ID, ENV_ID, BACKUP_PATH);
-    verify(settingsService).getByName(APP_ID, ENV_ID, STAGING_PATH);
 
     verify(context).getContextElement(ContextElementType.STANDARD);
-    verify(context).getContextElement(ContextElementType.SERVICE);
     verify(context).getContextElement(ContextElementType.INSTANCE);
-    verify(context, times(3)).renderExpression(anyString());
+    verify(context, times(1)).renderExpression(anyString());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService);
   }

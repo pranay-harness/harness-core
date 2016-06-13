@@ -41,4 +41,13 @@ public interface ActivityService {
    * @return the activity
    */
   @ValidationGroups(Create.class) Activity save(@Valid Activity activity);
+
+  /**
+   * Update status.
+   *
+   * @param activityId     the activity id
+   * @param appId          the app id
+   * @param activityStatus the activity status
+   */
+  void updateStatus(String activityId, String appId, Activity.Status activityStatus);
 }

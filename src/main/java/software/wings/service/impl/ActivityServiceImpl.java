@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
@@ -22,10 +24,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class ActivityServiceImpl implements ActivityService {
   @Inject private WingsPersistence wingsPersistence;
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ActivityService#list(java.lang.String, java.lang.String,
-   * software.wings.dl.PageRequest)
-   */
   @Override
   public PageResponse<Activity> list(String appId, String envId, PageRequest<Activity> pageRequest) {
     pageRequest.addFilter("appId", appId, Operator.EQ);
@@ -34,20 +32,21 @@ public class ActivityServiceImpl implements ActivityService {
     return wingsPersistence.query(Activity.class, pageRequest);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ActivityService#get(java.lang.String, java.lang.String)
-   */
   @Override
   public Activity get(String id, String appId) {
     return wingsPersistence.get(Activity.class, appId, id);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ActivityService#save(software.wings.beans.Activity)
-   */
   @Override
   public Activity save(Activity activity) {
     wingsPersistence.save(activity);
     return activity;
+  }
+
+  @Override
+  public void updateStatus(String activityId, String appId, Activity.Status activityStatus) {
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Activity.class).field(ID_KEY).equal(activityId).field("appId").equal(appId),
+        wingsPersistence.createUpdateOperations(Activity.class).set("status", activityStatus));
   }
 }
