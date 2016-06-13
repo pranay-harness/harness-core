@@ -666,6 +666,18 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
+    String name = "";
+    if (workflow.getName() != null) {
+      name = workflow.getName() + " ";
+    }
+    try {
+      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
+    } catch (Exception e) {
+      throw new WingsException("Error in date formatting");
+    }
+    workflowExecution.setName(name);
+    workflowExecution.setWorkflowId(workflow.getUuid());
+
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
