@@ -5,6 +5,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
 import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Graph;
@@ -33,6 +35,7 @@ import java.util.Set;
  */
 @Entity(value = "stateMachines", noClassnameStored = true)
 public class StateMachine extends Base {
+  private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
   @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
 
   @Indexed private String originId;
@@ -73,6 +76,7 @@ public class StateMachine extends Base {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
+      logger.error(e.getLocalizedMessage(), e);
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateMachine transformation error");
     }
   }
