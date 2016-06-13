@@ -30,7 +30,7 @@ public class DefaultCommands {
                 .withId(nodes.get(1))
                 .withType("EXEC")
                 .withName("Start Service")
-                .addProperty("commandPath", "./bin/")
+                .addProperty("commandPath", "")
                 .addProperty("commandString", "sh start.sh")
                 .build())
         .addLinks(aLink()
@@ -52,7 +52,7 @@ public class DefaultCommands {
                 .withId(nodes.get(1))
                 .withType("EXEC")
                 .withName("Stop Service")
-                .addProperty("commandPath", "./bin/")
+                .addProperty("commandPath", "")
                 .addProperty("commandString", "sh stop.sh")
                 .build())
         .addLinks(aLink()
@@ -65,22 +65,30 @@ public class DefaultCommands {
   }
 
   public static Graph getInstallCommandGraph() {
-    List<String> nodes =
-        asList(graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"));
-    List<String> linkes = asList(graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"));
+    List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"),
+        graphIdGenerator("node"), graphIdGenerator("node"));
+    List<String> linkes =
+        asList(graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"));
 
     return aGraph()
         .withGraphName("INSTALL")
         .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withId(nodes.get(1))
+                .withName("Expand App Server")
+                .withType("EXEC")
+                .addProperty("commandPath", "")
+                .addProperty("commandString", "sh install.sh")
+                .build(),
+            aNode()
+                .withId(nodes.get(2))
                 .withName("STOP")
                 .withType("COMMAND")
                 .addProperty("referenceId", "STOP")
                 .build(),
-            aNode().withId(nodes.get(2)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
+            aNode().withId(nodes.get(3)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
             aNode()
-                .withId(nodes.get(3))
+                .withId(nodes.get(4))
                 .withName("START")
                 .withType("COMMAND")
                 .addProperty("referenceId", "START")
@@ -88,7 +96,8 @@ public class DefaultCommands {
         .addLinks(
             aLink().withFrom(nodes.get(0)).withTo(nodes.get(1)).withType(SUCCESS.name()).withId(linkes.get(0)).build(),
             aLink().withFrom(nodes.get(1)).withTo(nodes.get(2)).withType(SUCCESS.name()).withId(linkes.get(1)).build(),
-            aLink().withFrom(nodes.get(2)).withTo(nodes.get(3)).withType(SUCCESS.name()).withId(linkes.get(2)).build())
+            aLink().withFrom(nodes.get(2)).withTo(nodes.get(3)).withType(SUCCESS.name()).withId(linkes.get(2)).build(),
+            aLink().withFrom(nodes.get(3)).withTo(nodes.get(4)).withType(SUCCESS.name()).withId(linkes.get(3)).build())
         .build();
   }
 }
