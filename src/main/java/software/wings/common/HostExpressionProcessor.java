@@ -4,7 +4,6 @@
 
 package software.wings.common;
 
-import org.modelmapper.ModelMapper;
 import software.wings.api.HostElement;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
@@ -13,6 +12,7 @@ import software.wings.dl.PageRequest;
 import software.wings.service.intfc.HostService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,9 +120,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   }
 
   static HostElement convertToHostElement(Host host) {
-    ModelMapper mm = new ModelMapper();
     HostElement element = new HostElement();
-    mm.map(host, element);
+    MapperUtils.mapObject(host, element);
     return element;
   }
 }

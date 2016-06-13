@@ -155,12 +155,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionArgs.setServiceInstanceIds(serviceInstanceIds);
     executionArgs.setExecutionStrategy(ExecutionStrategy.SERIAL);
     executionArgs.setCommandName("START");
+    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
+    executionArgs.setServiceId("123");
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
 
     impl.setStaticConfiguration(staticConfiguration);
 
-    WorkflowExecution workflowExecution = impl.triggerSimpleExecution(appId, env.getUuid(), executionArgs);
+    WorkflowExecution workflowExecution = impl.triggerEnvExecution(appId, env.getUuid(), executionArgs);
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
 

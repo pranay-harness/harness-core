@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.modelmapper.ModelMapper;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
@@ -29,6 +28,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -189,9 +189,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   static InstanceElement convertToInstanceElement(ServiceInstance instance) {
-    ModelMapper mm = new ModelMapper();
     InstanceElement element = new InstanceElement();
-    mm.map(instance, element);
+    MapperUtils.mapObject(instance, element);
     element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
     element.setServiceTemplateElement(
         ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));

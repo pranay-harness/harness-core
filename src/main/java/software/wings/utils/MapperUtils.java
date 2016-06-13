@@ -1,6 +1,7 @@
 package software.wings.utils;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 
 // TODO: Auto-generated Javadoc
 
@@ -9,6 +10,9 @@ import org.modelmapper.ModelMapper;
  */
 public class MapperUtils {
   private static final ModelMapper modelMapper = new ModelMapper();
+  static {
+    modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
+  }
 
   /**
    * Map object.

@@ -7,7 +7,6 @@ package software.wings.common;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.modelmapper.ModelMapper;
 import software.wings.api.ServiceElement;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -19,6 +18,7 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
+import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
@@ -176,9 +176,8 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   static ServiceElement convertToServiceElement(Service service) {
-    ModelMapper mm = new ModelMapper();
     ServiceElement element = new ServiceElement();
-    mm.map(service, element);
+    MapperUtils.mapObject(service, element);
     return element;
   }
 
