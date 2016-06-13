@@ -163,7 +163,7 @@ public class EmailState extends State {
    *
    * @return the boolean
    */
-  public boolean isIgnoreDeliveryFailure() {
+  public Boolean isIgnoreDeliveryFailure() {
     return ignoreDeliveryFailure;
   }
 
@@ -172,7 +172,9 @@ public class EmailState extends State {
    *
    * @param ignoreDeliveryFailure the ignore delivery failure
    */
-  public void setIgnoreDeliveryFailure(boolean ignoreDeliveryFailure) {
-    this.ignoreDeliveryFailure = ignoreDeliveryFailure;
+  public void setIgnoreDeliveryFailure(Boolean ignoreDeliveryFailure) {
+    if (ignoreDeliveryFailure != null) {
+      this.ignoreDeliveryFailure = ignoreDeliveryFailure;
+    }
   }
 }
