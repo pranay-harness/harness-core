@@ -121,11 +121,15 @@ public class CatalogResource {
     Map<String, Object> catalogs = new HashMap<>();
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
-      Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
-      for (StateTypeScope stencil : stencils.keySet()) {
-        catalogs.put(stencil.name(), postProcess(stencils.get(stencil), uriInfo));
+      if (uriInfo.getQueryParameters().getFirst(APP_ID) != null) {
+        Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
+        for (StateTypeScope stencil : stencils.keySet()) {
+          catalogs.put(stencil.name(), postProcess(stencils.get(stencil), uriInfo));
+        }
+        catalogs.put(CatalogNames.COMMAND_STENCILS, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
       }
-      catalogs.put(CatalogNames.COMMAND_STENCILS, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
+      catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
+      ;
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
