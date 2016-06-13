@@ -44,4 +44,6 @@ public interface CatalogNames {
   String COMMANDS = "COMMANDS";
 
   String SERVICE_COMMAND = "SERVICE_COMMAND";
+
+  String EXECUTION_TYPE = "EXECUTION_TYPE";
 }

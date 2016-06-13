@@ -96,6 +96,36 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
+    Graph graph =
+        aGraph()
+            .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).build())
+            .addNodes(aNode()
+                          .withId("n1")
+                          .withName("RepeatByInstances")
+                          .withX(200)
+                          .withY(50)
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${instances()}")
+                          .addProperty("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
+                          .build())
+            .addNodes(
+                aNode()
+                    .withId("n2")
+                    .withName("email")
+                    .withX(250)
+                    .withY(50)
+                    .withType(StateType.EMAIL.name())
+                    .addProperty("toAddress", "a@b.com")
+                    .addProperty("subject", "commandName : ${SIMPLE_WORKFLOW_COMMAND_NAME}")
+                    .addProperty("body",
+                        "service:${service.name}, serviceTemplate:${serviceTemplate.name}, host:${host.name}, instance:${instance.name}")
+                    .build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
+            .build();
+
+    when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
+
     env = getEnvironment();
 
     Host host1 = wingsPersistence.saveAndGet(
@@ -128,31 +158,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
 
-    Graph graph = aGraph()
-                      .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).build())
-                      .addNodes(aNode()
-                                    .withId("n1")
-                                    .withName("RepeatByInstances")
-                                    .withX(200)
-                                    .withY(50)
-                                    .withType(StateType.REPEAT.name())
-                                    .addProperty("repeatElementExpression", "${instances()}")
-                                    .addProperty("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n2")
-                                    .withName("email")
-                                    .withX(250)
-                                    .withY(50)
-                                    .withType(StateType.EMAIL.name())
-                                    .addProperty("toAddress", "a@b.com")
-                                    .addProperty("subject", "commandName : ${SIMPLE_WORKFLOW_COMMAND_NAME}")
-                                    .build())
-                      .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
-                      .build();
-
-    when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
     impl.setStaticConfiguration(staticConfiguration);
 
     WorkflowExecution workflowExecution = impl.triggerSimpleExecution(appId, env.getUuid(), executionArgs);
@@ -172,6 +177,5 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             workflowExecution.getWorkflowId());
     assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(workflowExecution2.getGraph()).isNotNull();
-    System.out.println(graph);
   }
 }

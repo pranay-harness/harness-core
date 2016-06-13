@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.CommandUnitType;
+import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -183,6 +185,11 @@ public class CatalogResource {
             catalogs.put(catalogType,
                 serviceResourceService.getCommandStencils(
                     uriInfo.getQueryParameters().getFirst(APP_ID), uriInfo.getQueryParameters().getFirst(SERVICE_ID)));
+            break;
+          }
+          case CatalogNames.EXECUTION_TYPE: {
+            catalogs.put(catalogType, ExecutionType.values());
+            ;
             break;
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
