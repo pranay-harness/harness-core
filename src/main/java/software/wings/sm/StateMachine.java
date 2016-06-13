@@ -68,7 +68,13 @@ public class StateMachine extends Base {
     this.originId = workflow.getUuid();
     this.graph = graph;
     this.name = graph.getGraphName();
-    transform(stencilMap);
+    try {
+      transform(stencilMap);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "StateMachine transformation error");
+    }
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
