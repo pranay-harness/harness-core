@@ -200,7 +200,7 @@ public class JenkinsImpl implements Jenkins {
                                      .findFirst();
     if (gitRevOpt.isPresent()) {
       return gitRevOpt.get();
-    } else if (buildWithDetails.getChangeSet().getKind().equals("svn")) {
+    } else if ("svn".equals(buildWithDetails.getChangeSet().getKind())) {
       try {
         SvnBuildDetails svnBuildDetails =
             buildWithDetails.getClient().get(buildWithDetails.getUrl(), SvnBuildDetails.class);
