@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
@@ -152,6 +153,8 @@ public class CommandState extends State {
     ExecutionResult executionResult = serviceCommandExecutorService.execute(
         serviceInstance, command, commandExecutionContextBuilder.withActivityId(activity.getUuid()).build());
 
+    activityService.updateStatus(
+        activity.getUuid(), appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
     return anExecutionResponse()
         .withExecutionStatus(executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : FAILED)
         .build();

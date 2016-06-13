@@ -45,6 +45,7 @@ import org.mockito.Mock;
 import org.mockito.internal.debugging.MockitoDebuggerImpl;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
 import software.wings.beans.Command;
 import software.wings.beans.CommandUnit.ExecutionResult;
@@ -186,6 +187,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context).getContextElement(ContextElementType.STANDARD);
     verify(context).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).renderExpression(anyString());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService);
   }
@@ -240,6 +242,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context).getContextElement(ContextElementType.STANDARD);
     verify(context).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).renderExpression(anyString());
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService);
   }

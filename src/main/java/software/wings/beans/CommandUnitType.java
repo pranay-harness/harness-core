@@ -48,7 +48,6 @@ public enum CommandUnitType {
     ImmutableList.Builder stencilsBuilder = new ImmutableList.Builder();
     for (CommandUnitType value : values()) {
       if (value.isStencil) {
-        System.out.println(value);
         stencilsBuilder.add(ImmutableMap.of("name", value.name(), "type", value.name(), "uiSchema", value.uiSchema,
             "jsonSchema", JsonUtils.jsonSchema(value.commandUnitClass)));
       }
