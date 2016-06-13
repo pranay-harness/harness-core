@@ -137,7 +137,7 @@ public class RepeatState extends State {
   }
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
       SpawningExecutionResponse executionResponse, ContextElement repeatElement, String prevInstanceId) {
-    String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getName();
+    String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();
     StateExecutionInstance childStateExecutionInstance =
         JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);

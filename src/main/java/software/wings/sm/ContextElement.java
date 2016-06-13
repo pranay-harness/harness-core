@@ -47,6 +47,11 @@ public interface ContextElement {
   public ContextElementType getElementType();
 
   /**
+   * @return
+   */
+  public String getUuid();
+
+  /**
    * Gets name.
    *
    * @return the name

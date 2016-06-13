@@ -327,4 +327,11 @@ public class WorkflowStandardParams implements ContextElement {
       return workflowStandardParams;
     }
   }
+
+  @Override
+  public String getUuid() {
+    return null;
+  }
+
+  public void setUuid(String uuid) {}
 }
