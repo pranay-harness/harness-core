@@ -7,6 +7,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import software.wings.beans.Host;
+import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Infra;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
@@ -137,14 +138,22 @@ public class HostServiceImpl implements HostService {
   @Override
   public void bulkSave(Host baseHost, List<String> hostNames) {
     hostNames.forEach(hostName -> {
-      save(aHost()
-               .withHostName(hostName)
-               .withAppId(baseHost.getAppId())
-               .withInfraId(baseHost.getInfraId())
-               .withHostConnAttr(baseHost.getHostConnAttr())
-               .withBastionConnAttr(baseHost.getBastionConnAttr())
-               .withTags(baseHost.getTags())
-               .build());
+      if (hostName != null && hostName.length() > 0) {
+        HostBuilder builder = aHost()
+                                  .withHostName(hostName)
+                                  .withAppId(baseHost.getAppId())
+                                  .withInfraId(baseHost.getInfraId())
+                                  .withHostConnAttr(baseHost.getHostConnAttr());
+        if (isValidBastionHostConnectionReference(baseHost)) {
+          builder.withBastionConnAttr(baseHost.getBastionConnAttr()).withTags(baseHost.getTags());
+        }
+        save(builder.build());
+      }
     });
+  }
+
+  private boolean isValidBastionHostConnectionReference(Host baseHost) {
+    return baseHost.getBastionConnAttr() != null && baseHost.getBastionConnAttr().getUuid() != null
+        && baseHost.getBastionConnAttr().getUuid().length() > 0;
   }
 }

@@ -139,14 +139,15 @@ public class AppContainerResource {
 
   /**
    * Delete platform.
-   *
-   * @param appId          the app id
+   *  @param appId          the app id
    * @param appContainerId the app container id
    */
   @DELETE
   @Path("{appContainerId}")
-  public void deletePlatform(@QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
+  public RestResponse deletePlatform(
+      @QueryParam("appId") String appId, @PathParam("appContainerId") String appContainerId) {
     appContainerService.delete(appId, appContainerId);
+    return new RestResponse();
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {

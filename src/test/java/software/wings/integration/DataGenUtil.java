@@ -113,7 +113,7 @@ import javax.ws.rs.core.Response;
 @Integration
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
-  private static final int NUM_APP_CONTAINER_PER_APP = 1; /* Max 1000 */
+  private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 2; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 2; /* Max 10   */
@@ -180,6 +180,7 @@ public class DataGenUtil extends WingsBaseTest {
   public void populateData() throws IOException {
     createGlobalSettings();
     addAdminUser();
+
     List<Application> apps = createApplications();
     Map<String, List<AppContainer>> containers = new HashMap<>();
     Map<String, List<Service>> services = new HashMap<>();
@@ -187,19 +188,19 @@ public class DataGenUtil extends WingsBaseTest {
 
     for (Application application : apps) {
       containers.put(application.getUuid(), addAppContainers(application.getUuid()));
-      services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
-      appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      Map<String, String> envWorkflowMap =
-          addOrchestration(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      Pipeline pipeline = addPipeline(
-          application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
+      //      services.put(application.getUuid(), addServices(application.getUuid(),
+      //      containers.get(application.getUuid()))); appEnvs.put(application.getUuid(),
+      //      addEnvs(application.getUuid())); addServiceInstances(services.get(application.getUuid()),
+      //      appEnvs.get(application.getUuid())); addActivitiesAndLogs(application,
+      //      services.get(application.getUuid()), appEnvs.get(application.getUuid())); Map<String, String>
+      //      envWorkflowMap = addOrchestration(application, services.get(application.getUuid()),
+      //      appEnvs.get(application.getUuid())); Pipeline pipeline = addPipeline(application,
+      //      services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
+      //      addPipelineExecution(application, pipeline);
+      //      addPipelineExecution(application, pipeline);
+      //      addPipelineExecution(application, pipeline);
+      //      addPipelineExecution(application, pipeline);
+      //      addPipelineExecution(application, pipeline);
     }
   }
 

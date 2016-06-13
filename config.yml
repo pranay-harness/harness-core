@@ -27,7 +27,7 @@ portal:
 
 jenkinsBuildQuerySize: 50
 
-enableAuth: false
+enableAuth: true
 
 assets:
   mimeTypes:
