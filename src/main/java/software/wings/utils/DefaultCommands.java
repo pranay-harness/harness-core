@@ -74,16 +74,16 @@ public class DefaultCommands {
         .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withId(nodes.get(1))
-                .withName("START")
+                .withName("STOP")
                 .withType("COMMAND")
-                .addProperty("referenceId", "START")
+                .addProperty("referenceId", "STOP")
                 .build(),
             aNode().withId(nodes.get(2)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
             aNode()
                 .withId(nodes.get(3))
-                .withName("STOP")
+                .withName("START")
                 .withType("COMMAND")
-                .addProperty("referenceId", "STOP")
+                .addProperty("referenceId", "START")
                 .build())
         .addLinks(
             aLink().withFrom(nodes.get(0)).withTo(nodes.get(1)).withType(SUCCESS.name()).withId(linkes.get(0)).build(),
