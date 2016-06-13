@@ -70,4 +70,11 @@ public class ServiceInstanceIdsParam implements ContextElement {
   public void setInstanceIds(List<String> instanceIds) {
     this.instanceIds = instanceIds;
   }
+
+  @Override
+  public String getUuid() {
+    return null;
+  }
+
+  public void setUuid(String uuid) {}
 }
