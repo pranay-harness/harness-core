@@ -25,6 +25,16 @@ public class WorkflowExecution extends Base {
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
 
+  private String name;
+
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
   /**
    * Gets workflow id.
    *
