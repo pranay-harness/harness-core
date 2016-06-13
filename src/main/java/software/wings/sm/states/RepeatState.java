@@ -45,7 +45,7 @@ public class RepeatState extends State {
   @Attributes(required = true, title = "Execution Strategy") private ExecutionStrategy executionStrategy;
   @SchemaIgnore private String executionStrategyExpression;
 
-  private String repeatTransitionStateName;
+  @SchemaIgnore private String repeatTransitionStateName;
 
   /**
    * Instantiates a new repeat state.
@@ -271,6 +271,7 @@ public class RepeatState extends State {
    *
    * @return the repeat transition state name
    */
+  @SchemaIgnore
   public String getRepeatTransitionStateName() {
     return repeatTransitionStateName;
   }
@@ -280,6 +281,7 @@ public class RepeatState extends State {
    *
    * @param repeatTransitionStateName the repeat transition state name
    */
+  @SchemaIgnore
   public void setRepeatTransitionStateName(String repeatTransitionStateName) {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }

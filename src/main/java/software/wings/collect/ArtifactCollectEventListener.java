@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 /**
  * Created by peeyushaggarwal on 5/11/16.
  *
- * @see ArtifactCollectEventEvent
+ * @see CollectEvent
  */
 @Singleton
 public class ArtifactCollectEventListener extends AbstractQueueListener<CollectEvent> {

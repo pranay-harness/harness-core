@@ -67,6 +67,7 @@ public enum StateType implements StateTypeDescriptor {
    * Start state type.
    */
   // DEPLOY(ORCHESTRATION_STENCILS),
+  // DEPLOY(ORCHESTRATION_STENCILS),
   START(StartState.class, ORCHESTRATION_STENCILS),
 
   /**
@@ -124,7 +125,11 @@ public enum StateType implements StateTypeDescriptor {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
     this.jsonSchema = loadJsonSchema();
-    // this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+    try {
+      this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+    } catch (Exception e) {
+      this.uiSchema = new Object();
+    }
   }
 
   private Object readResource(String file) {
