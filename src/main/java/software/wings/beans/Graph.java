@@ -41,11 +41,15 @@ public class Graph {
 
   static final int DEFAULT_INITIAL_Y = 80;
 
-  static final int DEFAULT_NODE_WIDTH = 200;
+  static final int DEFAULT_NODE_WIDTH = 100;
 
-  static final int DEFAULT_NODE_HEIGHT = 150;
+  static final int DEFAULT_NODE_HEIGHT = 75;
 
-  private static final int DEFAULT_GROUP_PADDING = 20;
+  private static final int DEFAULT_ARROW_WIDTH = 100;
+
+  private static final int DEFAULT_ARROW_HEIGHT = 75;
+
+  private static final int DEFAULT_GROUP_PADDING = 10;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -148,8 +152,7 @@ public class Graph {
   public Map<String, Link> getNextLinkMap() {
     Map<String, Link> map = new HashMap<>();
     getLinks().forEach(link -> {
-      if (TransitionType.SUCCESS.name().toLowerCase().equals(link.getType())
-          || TransitionType.FAILURE.name().toLowerCase().equals(link.getType())) {
+      if (!"repeat".equals(link.getType())) {
         map.put(link.getFrom(), link);
       }
     });
@@ -236,7 +239,7 @@ public class Graph {
         if (node.getWidth() < repeatNode.getWidth()) {
           node.setWidth(repeatNode.getWidth());
         }
-        node.setHeight(node.getHeight() + repeatNode.getHeight());
+        node.setHeight(node.getHeight() + repeatNode.getHeight() + DEFAULT_ARROW_HEIGHT);
       }
     }
     if (nextLinkMap.get(node.getId()) != null) {
@@ -245,7 +248,7 @@ public class Graph {
       if (node.getHeight() < nextNode.getHeight()) {
         node.setHeight(nextNode.getHeight());
       }
-      node.setWidth(node.getWidth() + nextNode.getWidth());
+      node.setWidth(node.getWidth() + nextNode.getWidth() + DEFAULT_ARROW_WIDTH);
     }
   }
 
@@ -257,16 +260,17 @@ public class Graph {
     // repaint the repeat node
     List<Link> repeatLinks = repeatLinkMap.get(node.getId());
     if (repeatLinks != null) {
-      int y = nodeY + DEFAULT_NODE_HEIGHT;
+      int y = nodeY + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT;
 
-      Node groupNode = Node.Builder.aNode()
-                           .withId(UUIDGenerator.getUuid())
-                           .withType("group")
-                           .withX(nodeX - DEFAULT_GROUP_PADDING)
-                           .withY(y - DEFAULT_GROUP_PADDING)
-                           .withWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING)
-                           .withHeight(node.getHeight() + 2 * DEFAULT_GROUP_PADDING - DEFAULT_NODE_HEIGHT)
-                           .build();
+      Node groupNode =
+          Node.Builder.aNode()
+              .withId(UUIDGenerator.getUuid())
+              .withType("group")
+              .withX(nodeX - DEFAULT_GROUP_PADDING)
+              .withY(y - DEFAULT_GROUP_PADDING)
+              .withWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING)
+              .withHeight(node.getHeight() + 2 * DEFAULT_GROUP_PADDING - DEFAULT_NODE_HEIGHT - DEFAULT_ARROW_HEIGHT)
+              .build();
 
       getNodes().add(0, groupNode);
 
@@ -280,14 +284,15 @@ public class Graph {
       for (Link link : repeatLinks) {
         Node repeatNode = nodesMap.get(link.getTo());
         repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
-        y += repeatNode.getHeight();
+        y += repeatNode.getHeight() + DEFAULT_ARROW_HEIGHT;
       }
     }
 
     if (nextLinkMap.get(node.getId()) != null) {
       Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
       if (repeatLinks == null) {
-        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
+        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_HEIGHT, nodeY, nodesMap, nextLinkMap,
+            repeatLinkMap, updatedLinks);
       } else {
         repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
       }

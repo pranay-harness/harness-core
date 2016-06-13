@@ -458,6 +458,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (fromInstanceId != null) {
         link.setId(fromInstanceId + "-" + instance.getUuid());
         link.setFrom(fromInstanceId);
+        link.setType(node.getStatus());
         links.add(link);
       }
     }
