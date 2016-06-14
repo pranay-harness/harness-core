@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import com.github.reinert.jjschema.SchemaIgnore;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -16,7 +18,7 @@ public abstract class State implements Serializable {
    */
   protected static final long serialVersionUID = 1L;
 
-  private String name;
+  @SchemaIgnore private String name;
 
   private String stateType;
 
@@ -36,6 +38,7 @@ public abstract class State implements Serializable {
    *
    * @return the name
    */
+  @SchemaIgnore
   public String getName() {
     return name;
   }
@@ -45,6 +48,7 @@ public abstract class State implements Serializable {
    *
    * @param name the name
    */
+  @SchemaIgnore
   public void setName(String name) {
     this.name = name;
   }

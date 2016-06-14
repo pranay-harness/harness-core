@@ -31,7 +31,7 @@ public class DefaultCommands {
                 .withType("EXEC")
                 .withName("Start Service")
                 .addProperty("commandPath", "")
-                .addProperty("commandString", "sh start.sh")
+                .addProperty("commandString", "bash start.sh")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -53,7 +53,7 @@ public class DefaultCommands {
                 .withType("EXEC")
                 .withName("Stop Service")
                 .addProperty("commandPath", "")
-                .addProperty("commandString", "sh stop.sh")
+                .addProperty("commandString", "bash stop.sh")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -75,18 +75,18 @@ public class DefaultCommands {
         .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withId(nodes.get(1))
-                .withName("Expand App Server")
-                .withType("EXEC")
-                .addProperty("commandPath", "")
-                .addProperty("commandString", "sh install.sh")
-                .build(),
-            aNode()
-                .withId(nodes.get(2))
                 .withName("STOP")
                 .withType("COMMAND")
                 .addProperty("referenceId", "STOP")
                 .build(),
-            aNode().withId(nodes.get(3)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
+            aNode().withId(nodes.get(2)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
+            aNode()
+                .withId(nodes.get(3))
+                .withName("Expand App Server")
+                .withType("EXEC")
+                .addProperty("commandPath", "")
+                .addProperty("commandString", "bash install.sh")
+                .build(),
             aNode()
                 .withId(nodes.get(4))
                 .withName("START")
