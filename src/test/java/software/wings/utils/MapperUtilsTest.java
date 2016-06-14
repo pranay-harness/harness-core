@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.common.collect.Maps;
 
 import org.junit.Test;
@@ -19,7 +21,9 @@ public class MapperUtilsTest {
     map.put("body", "test");
 
     EmailState emailState = new EmailState("id");
-    System.out.println(emailState.isIgnoreDeliveryFailure());
     MapperUtils.mapObject(map, emailState);
+    assertThat(emailState)
+        .extracting(EmailState::getToAddress, EmailState::getSubject, EmailState::getBody, EmailState::getName)
+        .containsExactly("a@b.com", "test", "test", "id");
   }
 }

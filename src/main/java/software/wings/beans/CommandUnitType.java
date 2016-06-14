@@ -70,7 +70,11 @@ public enum CommandUnitType {
     this.commandUnitClass = commandUnitClass;
     this.isStencil = isStencil;
     if (isStencil) {
-      uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      try {
+        uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
+      } catch (Exception e) {
+        uiSchema = new HashMap<String, String>();
+      }
     }
   }
 
@@ -89,9 +93,7 @@ public enum CommandUnitType {
       String json = Resources.toString(url, Charsets.UTF_8);
       return JsonUtils.asObject(json, HashMap.class);
     } catch (Exception exception) {
-      WingsException ex = new WingsException("Error in initializing CommandUnitType-" + file, exception);
-      logger.error(ex.getMessage(), ex);
-      throw ex;
+      throw new WingsException("Error in initializing CommandUnitType-" + file, exception);
     }
   }
 

@@ -35,12 +35,10 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.debugging.MockitoDebuggerImpl;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
@@ -115,11 +113,6 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
-
-  @After
-  public void after() {
-    new MockitoDebuggerImpl().printInvocations(serviceCommandExecutorService);
-  }
 
   @Before
   public void setUpMocks() throws Exception {
