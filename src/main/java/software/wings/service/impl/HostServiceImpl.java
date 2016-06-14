@@ -53,6 +53,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host save(Host host) {
+    host.setHostName(host.getHostName().trim());
     return wingsPersistence.saveAndGet(Host.class, host);
   }
 
