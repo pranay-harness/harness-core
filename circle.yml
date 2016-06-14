@@ -4,12 +4,13 @@ machine:
   java:
     version: oraclejdk8
   post:
-   - sudo service mongodb stop    
+   - ls $HOME/.ssh
 dependencies:
   cache_directories:
     - "~/.embedmongo"
 test:
   override:
+    - ls $HOME/.ssh
     - mvn verify site
   post:
     - cp -r target/site $CIRCLE_ARTIFACTS
