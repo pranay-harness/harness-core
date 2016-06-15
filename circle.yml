@@ -19,3 +19,8 @@ test:
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
     - find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \;
     - python sendmail.py
+deployment:
+  integration:
+    branch: master
+    commands:
+      - mvn deploy -DbuildUI=true -Denv=int
