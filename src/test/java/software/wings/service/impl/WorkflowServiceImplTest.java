@@ -42,7 +42,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 
 /**
@@ -92,6 +91,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
   /**
    * Should trigger simple workflow.
+   *
    * @throws InterruptedException
    */
   @Test

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -55,6 +54,12 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   public ServiceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
+  }
+
+  static ServiceElement convertToServiceElement(Service service) {
+    ServiceElement element = new ServiceElement();
+    MapperUtils.mapObject(service, element);
+    return element;
   }
 
   @Override
@@ -173,12 +178,6 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
-  }
-
-  static ServiceElement convertToServiceElement(Service service) {
-    ServiceElement element = new ServiceElement();
-    MapperUtils.mapObject(service, element);
-    return element;
   }
 
   /**

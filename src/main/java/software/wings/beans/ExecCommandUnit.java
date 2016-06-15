@@ -20,19 +20,19 @@ public class ExecCommandUnit extends CommandUnit {
   @NotEmpty private String commandPath;
   @NotEmpty private String commandString;
 
+  /**
+   * Instantiates a new exec command unit.
+   */
+  public ExecCommandUnit() {
+    super(EXEC);
+  }
+
   @Override
   public void setup(CommandExecutionContext context) {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
             .toString();
     commandString = format("cd %s && %s", commandPath, commandString);
-  }
-
-  /**
-   * Instantiates a new exec command unit.
-   */
-  public ExecCommandUnit() {
-    super(EXEC);
   }
 
   /**

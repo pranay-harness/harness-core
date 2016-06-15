@@ -16,7 +16,6 @@ import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -43,6 +42,12 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    */
   public HostExpressionProcessor(ExecutionContext context) {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
+  }
+
+  static HostElement convertToHostElement(Host host) {
+    HostElement element = new HostElement();
+    MapperUtils.mapObject(host, element);
+    return element;
   }
 
   @Override
@@ -117,11 +122,5 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       hostElements.add(convertToHostElement(host));
     }
     return hostElements;
-  }
-
-  static HostElement convertToHostElement(Host host) {
-    HostElement element = new HostElement();
-    MapperUtils.mapObject(host, element);
-    return element;
   }
 }

@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.app;
 
 import com.google.common.io.Resources;
@@ -17,7 +18,6 @@ import java.net.URL;
 
 /**
  * @author Rishi
- *
  */
 @Singleton
 public class StaticConfiguration {

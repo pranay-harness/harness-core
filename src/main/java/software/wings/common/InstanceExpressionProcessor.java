@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -69,6 +68,16 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   public InstanceExpressionProcessor(ExecutionContext context) {
     ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
     this.context = contextImpl;
+  }
+
+  static InstanceElement convertToInstanceElement(ServiceInstance instance) {
+    InstanceElement element = new InstanceElement();
+    MapperUtils.mapObject(instance, element);
+    element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
+    element.setServiceTemplateElement(
+        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));
+
+    return element;
   }
 
   @Override
@@ -186,16 +195,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
-  }
-
-  static InstanceElement convertToInstanceElement(ServiceInstance instance) {
-    InstanceElement element = new InstanceElement();
-    MapperUtils.mapObject(instance, element);
-    element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
-    element.setServiceTemplateElement(
-        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));
-
-    return element;
   }
 
   private void applyServiceInstanceIdsFilter(String appId, Builder pageRequest) {

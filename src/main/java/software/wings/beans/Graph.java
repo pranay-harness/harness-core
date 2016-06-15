@@ -700,7 +700,7 @@ public class Graph {
       /**
        * Adds the property.
        *
-       * @param name the name
+       * @param name  the name
        * @param value the value
        * @return the builder
        */

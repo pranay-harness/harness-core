@@ -21,6 +21,14 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
   @Inject ArtifactService artifactService;
   private String artifactId;
 
+  /**
+   * Instantiates a new copy artifact command unit.
+   */
+  public CopyArtifactCommandUnit() {
+    super(CommandUnitType.COPY_ARTIFACT);
+    setArtifactNeeded(true);
+  }
+
   @Override
   public void setup(CommandExecutionContext context) {
     Artifact artifact = context.getArtifact();
@@ -29,14 +37,6 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
     ArtifactFile artifactFile = artifact.getArtifactFiles().get(0); // TODO: support list of artifact files
     setFileId(artifactFile.getFileUuid());
     setDestinationFilePath(context.getRuntimePath() + "/" + artifactFile.getName());
-  }
-
-  /**
-   * Instantiates a new copy artifact command unit.
-   */
-  public CopyArtifactCommandUnit() {
-    super(CommandUnitType.COPY_ARTIFACT);
-    setArtifactNeeded(true);
   }
 
   /**
