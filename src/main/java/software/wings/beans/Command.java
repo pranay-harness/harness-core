@@ -117,14 +117,6 @@ public class Command extends CommandUnit {
     }
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean isArtifactNeeded() {
-    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(referenceId, graph, commandUnits);
@@ -141,6 +133,15 @@ public class Command extends CommandUnit {
     final Command other = (Command) obj;
     return Objects.equals(this.referenceId, other.referenceId) && Objects.equals(this.graph, other.graph)
         && Objects.equals(this.commandUnits, other.commandUnits);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+
+  @Override
+  public boolean isArtifactNeeded() {
+    return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
   }
 
   @Override

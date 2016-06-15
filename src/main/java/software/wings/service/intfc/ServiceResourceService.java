@@ -71,6 +71,16 @@ public interface ServiceResourceService {
   Service addCommand(@NotEmpty String appId, @NotEmpty String serviceId, Graph commandGraph);
 
   /**
+   * Update command service.
+   *
+   * @param appId        the app id
+   * @param serviceId    the service id
+   * @param commandGraph the command graph
+   * @return the service
+   */
+  Service updateCommand(String appId, String serviceId, Graph commandGraph);
+
+  /**
    * Delete command.
    *
    * @param appId       the app id
