@@ -1066,7 +1066,7 @@
                 </property>
             </activation>
             <properties>
-                <deployHost>ec2-54-152-154-80.compute-1.amazonaws.com</deployHost>
+                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
                 <deployUsername>ubuntu</deployUsername>
                 <buildUI>true</buildUI>
                 <checkstyle.skip>true</checkstyle.skip>
