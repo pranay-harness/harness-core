@@ -31,6 +31,8 @@ public abstract class CommandUnit {
 
   /**
    * Sets .
+   *
+   * @param context the context
    */
   public void setup(CommandExecutionContext context) {}
 
@@ -119,6 +121,10 @@ public abstract class CommandUnit {
     SUCCESS, /**
               * Failure execution result.
               */
-    FAILURE
+    FAILURE,
+    /**
+     * Running execution result.
+     */
+    RUNNING
   }
 }

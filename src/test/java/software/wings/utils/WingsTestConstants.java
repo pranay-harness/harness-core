@@ -28,10 +28,14 @@ public class WingsTestConstants {
    * The constant ARTIFACT_ID.
    */
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
+
+  public static final String ARTIFACT_NAME = "ARTIFACT_NAME";
   /**
    * The constant RELEASE_ID.
    */
   public static final String RELEASE_ID = "RELEASE_ID";
+  public static final String RELEASE_NAME = "RELEASE_NAME";
+
   /**
    * The constant SERVICE_INSTANCE_ID.
    */
@@ -127,4 +131,6 @@ public class WingsTestConstants {
   public static final String SETTING_ID = "SETTING_ID";
 
   public static final String RUNTIME_PATH = "RUNTIME_PATH";
+
+  public static final String LOG_ID = "LOG_ID";
 }

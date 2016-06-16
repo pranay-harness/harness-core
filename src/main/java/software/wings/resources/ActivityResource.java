@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
+import software.wings.beans.CommandUnit;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -16,6 +17,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -82,15 +84,32 @@ public class ActivityResource {
    *
    * @param appId      the app id
    * @param activityId the activity id
+   * @param unitName   the unit name
    * @param request    the request
    * @return the rest response
    */
   @GET
   @Path("{activityId}/logs")
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,
-      @PathParam("activityId") String activityId, @BeanParam PageRequest<Log> request) {
+      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName,
+      @BeanParam PageRequest<Log> request) {
     request.addFilter("appId", appId, EQ);
     request.addFilter("activityId", activityId, EQ);
+    request.addFilter("commandUnitName", unitName, EQ);
     return new RestResponse<>(logService.list(request));
+  }
+
+  /**
+   * List logs rest response.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the rest response
+   */
+  @GET
+  @Path("{activityId}/units")
+  public RestResponse<List<CommandUnit>> listLogs(
+      @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
+    return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
   }
 }

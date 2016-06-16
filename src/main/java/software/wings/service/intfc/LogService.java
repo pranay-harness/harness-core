@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Log;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -29,4 +30,14 @@ public interface LogService {
    * @return the log
    */
   @ValidationGroups(Create.class) Log save(@Valid Log log);
+
+  /**
+   * Gets unit execution result.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @param name       the name
+   * @return the unit execution result
+   */
+  ExecutionResult getUnitExecutionResult(String appId, String activityId, String name);
 }

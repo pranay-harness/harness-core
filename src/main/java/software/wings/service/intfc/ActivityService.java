@@ -3,10 +3,12 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
+import software.wings.beans.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
+import java.util.List;
 import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
@@ -50,4 +52,13 @@ public interface ActivityService {
    * @param activityStatus the activity status
    */
   void updateStatus(String activityId, String appId, Activity.Status activityStatus);
+
+  /**
+   * Gets command units.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the command units
+   */
+  List<CommandUnit> getCommandUnits(String appId, String activityId);
 }

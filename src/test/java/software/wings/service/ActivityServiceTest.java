@@ -1,17 +1,39 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.Activity.Status.RUNNING;
+import static software.wings.beans.Command.Builder.aCommand;
+import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HOST_NAME;
+import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.inject.Inject;
 
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
+import software.wings.beans.Command;
+import software.wings.beans.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ServiceResourceService;
+
+import java.util.List;
 
 // TODO: Auto-generated Javadoc
 
@@ -20,23 +42,25 @@ import software.wings.service.intfc.ActivityService;
  */
 public class ActivityServiceTest extends WingsBaseTest {
   private static final Activity activity = anActivity()
-                                               .withEnvironmentId("ENV_ID")
-                                               .withAppId("APP_ID")
-                                               .withArtifactName("ARTIFACT")
-                                               .withCommandName("COMMAND")
-                                               .withCommandType("EXEC")
-                                               .withHostName("host1")
-                                               .withReleaseName("REL1")
-                                               .withServiceName("SERVICE")
-                                               .withServiceId("SERVICE_ID")
-                                               .withServiceTemplateName("SERVICE_TEMPLATE")
-                                               .withServiceTemplateId("SERVICE_TEMPLATE_ID")
-                                               .withStatus(Status.RUNNING)
+                                               .withEnvironmentId(ENV_ID)
+                                               .withAppId(APP_ID)
+                                               .withArtifactName(ARTIFACT_NAME)
+                                               .withCommandName(COMMAND_NAME)
+                                               .withCommandType(EXEC.name())
+                                               .withHostName(HOST_NAME)
+                                               .withReleaseName(RELEASE_NAME)
+                                               .withServiceName(SERVICE_NAME)
+                                               .withServiceId(SERVICE_ID)
+                                               .withServiceTemplateName(TEMPLATE_NAME)
+                                               .withServiceTemplateId(TEMPLATE_ID)
+                                               .withStatus(RUNNING)
                                                .build();
 
-  @Inject private ActivityService activityService;
-
   @Inject private WingsPersistence wingsPersistence;
+
+  @Mock private ServiceResourceService serviceResourceService;
+
+  @Inject @InjectMocks private ActivityService activityService;
 
   /**
    * Should list activities.
@@ -44,7 +68,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Test
   public void shouldListActivities() {
     wingsPersistence.save(activity);
-    assertThat(activityService.list("APP_ID", "ENV_ID", new PageRequest<>())).hasSize(1).containsExactly(activity);
+    assertThat(activityService.list(APP_ID, ENV_ID, new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
 
   /**
@@ -63,5 +87,23 @@ public class ActivityServiceTest extends WingsBaseTest {
   public void shouldSaveActivity() {
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+  }
+
+  @Test
+  public void shouldGetActivityCommandUnits() {
+    String activityId = wingsPersistence.save(activity);
+    Command command = aCommand()
+                          .withName(COMMAND_NAME)
+                          .addCommandUnits(anExecCommandUnit()
+                                               .withName(COMMAND_UNIT_NAME)
+                                               .withCommandUnitType(EXEC)
+                                               .withCommandString("./bin/start.sh")
+                                               .build())
+                          .build();
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
+    List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
+    assertThat(commandUnits.size()).isEqualTo(1);
+    assertThat(commandUnits.get(0).getCommandUnitType()).isEqualTo(EXEC);
+    assertThat(commandUnits.get(0).getName()).isEqualTo(COMMAND_UNIT_NAME);
   }
 }
