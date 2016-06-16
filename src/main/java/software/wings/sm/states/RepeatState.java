@@ -135,6 +135,7 @@ public class RepeatState extends State {
       SpawningExecutionResponse executionResponse, ContextElement repeatElement) {
     processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement, null);
   }
+
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
       SpawningExecutionResponse executionResponse, ContextElement repeatElement, String prevInstanceId) {
     String notifyId = stateExecutionInstance.getUuid() + "-repeat-" + repeatElement.getUuid();

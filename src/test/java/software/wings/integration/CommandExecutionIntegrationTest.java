@@ -61,10 +61,6 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
-  @Inject ServiceCommandExecutorService serviceCommandExecutorService;
-  @Inject FileService fileService;
-  @Inject WingsPersistence wingsPersistence;
-
   private static final String HOST_NAME = "192.168.1.106";
   private static final String USER = "ssh_user";
   private static final String PASSWORD = "Wings@123";
@@ -81,6 +77,9 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                                                              .withHost(HOST)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
+  @Inject ServiceCommandExecutorService serviceCommandExecutorService;
+  @Inject FileService fileService;
+  @Inject WingsPersistence wingsPersistence;
   private CommandExecutionContext context =
       CommandExecutionContext.Builder.aCommandExecutionContext()
           .withActivityId(ACTIVITY_ID)

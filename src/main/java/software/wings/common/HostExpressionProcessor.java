@@ -30,7 +30,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  static final String EXPRESSION_START_PATTERN = "hosts()";
+  private static final String EXPRESSION_START_PATTERN = "hosts()";
+  private static final String EXPRESSION_EQUAL_PATTERN = "hosts";
   private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";
   @Inject private HostService hostService;
   private String[] hostNames;
@@ -45,17 +46,29 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 
+  static HostElement convertToHostElement(Host host) {
+    HostElement element = new HostElement();
+    MapperUtils.mapObject(host, element);
+    return element;
+  }
+
   @Override
   public String getPrefixObjectName() {
     return HOST_EXPR_PROCESSOR;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
-   */
+  @Override
+  public boolean matches(String expression) {
+    if (expression != null
+        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public String normalizeExpression(String expression) {
-    if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
+    if (!matches(expression)) {
       return null;
     }
     expression = HOST_EXPR_PROCESSOR + "." + expression;
@@ -63,6 +76,10 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       expression = expression + ".list()";
     }
     return expression;
+  }
+
+  public HostExpressionProcessor getHosts() {
+    return this;
   }
 
   /**
@@ -117,11 +134,5 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       hostElements.add(convertToHostElement(host));
     }
     return hostElements;
-  }
-
-  static HostElement convertToHostElement(Host host) {
-    HostElement element = new HostElement();
-    MapperUtils.mapObject(host, element);
-    return element;
   }
 }

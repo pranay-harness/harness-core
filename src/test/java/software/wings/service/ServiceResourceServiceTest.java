@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
@@ -21,6 +22,8 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.MorphiaMatcher.sameQueryAs;
+import static software.wings.utils.MorphiaMatcher.sameUpdateOperationsAs;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -28,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.mongodb.BasicDBObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -178,7 +182,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should add command state.
    */
   @Test
-  public void shouldAddCommandState() {
+  public void shouldAddCommand() {
     when(wingsPersistence.addToList(
              eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
         .thenReturn(true);
@@ -206,11 +210,54 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  @Test
+  public void shouldUpdateCommand() {
+    when(wingsPersistence.addToList(
+             eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
+        .thenReturn(true);
+
+    Graph commandGraph =
+        aGraph()
+            .withGraphName("START")
+            .addNodes(aNode().withId(ORIGIN_STATE).withType(ORIGIN_STATE).build(),
+                aNode()
+                    .withId("1")
+                    .withType("EXEC")
+                    .addProperty("commandPath", "/home/xxx/tomcat")
+                    .addProperty("commandString", "bin/startup.sh")
+                    .build())
+            .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
+            .build();
+
+    Command expectedCommand = aCommand().withGraph(commandGraph).build();
+    expectedCommand.transformGraph();
+
+    srs.updateCommand(APP_ID, SERVICE_ID, commandGraph);
+
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
+
+    verify(wingsPersistence)
+        .update(sameQueryAs(datastore.createQuery(Service.class)
+                                .field(ID_KEY)
+                                .equal(SERVICE_ID)
+                                .field("appId")
+                                .equal(APP_ID)
+                                .field("commands.name")
+                                .equal(commandGraph.getGraphName())),
+            sameUpdateOperationsAs(datastore.createUpdateOperations(Service.class)
+                                       .removeAll("commands", new BasicDBObject("name", expectedCommand.getName()))
+                                       .add("commands", expectedCommand)));
+
+    verify(wingsPersistence).createUpdateOperations(Service.class);
+    verify(wingsPersistence).createQuery(Service.class);
+    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+  }
+
   /**
    * Should fail when command state is duplicate.
    */
   @Test
-  public void shouldFailWhenCommandStateIsDuplicate() {
+  public void shouldFailWhenCommandIsDuplicate() {
     when(wingsPersistence.addToList(
              eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
         .thenReturn(false);

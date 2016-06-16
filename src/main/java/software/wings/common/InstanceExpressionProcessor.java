@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.beans.Application;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -26,7 +27,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.utils.MapperUtils;
 
@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -49,12 +48,15 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  static final String EXPRESSION_START_PATTERN = "instances()";
+  private static final String EXPRESSION_START_PATTERN = "instances()";
+  private static final Object EXPRESSION_EQUAL_PATTERN = "instances";
+
   private static final String INSTANCE_EXPR_PROCESSOR = "instanceExpressionProcessor";
+
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
 
-  private ExecutionContextImpl context;
+  private ExecutionContext context;
 
   private String serviceName;
   private String[] serviceTemplateNames;
@@ -67,8 +69,17 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @param context the context
    */
   public InstanceExpressionProcessor(ExecutionContext context) {
-    ExecutionContextImpl contextImpl = (ExecutionContextImpl) context;
-    this.context = contextImpl;
+    this.context = context;
+  }
+
+  static InstanceElement convertToInstanceElement(ServiceInstance instance) {
+    InstanceElement element = new InstanceElement();
+    MapperUtils.mapObject(instance, element);
+    element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
+    element.setServiceTemplateElement(
+        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));
+
+    return element;
   }
 
   @Override
@@ -76,12 +87,18 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     return INSTANCE_EXPR_PROCESSOR;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
-   */
+  @Override
+  public boolean matches(String expression) {
+    if (expression != null
+        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public String normalizeExpression(String expression) {
-    if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
+    if (!matches(expression)) {
       return null;
     }
     expression = INSTANCE_EXPR_PROCESSOR + "." + expression;
@@ -99,6 +116,15 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    */
   public InstanceExpressionProcessor instances(String... serviceInstanceIds) {
     this.instanceIds = serviceInstanceIds;
+    return this;
+  }
+
+  /**
+   * Instances.
+   *
+   * @return the instance expression processor
+   */
+  public InstanceExpressionProcessor getInstances() {
     return this;
   }
 
@@ -164,14 +190,14 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the page request
    */
   PageRequest<ServiceInstance> buildPageRequest() {
-    String appId = context.getStateExecutionInstance().getAppId();
+    Application app = context.getApp();
     Builder pageRequest = PageRequest.Builder.aPageRequest();
 
-    pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
-    applyServiceFilter(appId, pageRequest);
-    applyServiceTemplatesFilter(appId, pageRequest);
-    applyHostNamesFilter(appId, pageRequest);
-    applyServiceInstanceIdsFilter(appId, pageRequest);
+    pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, app.getUuid()).build());
+    applyServiceFilter(app.getUuid(), pageRequest);
+    applyServiceTemplatesFilter(app.getUuid(), pageRequest);
+    applyHostNamesFilter(app.getUuid(), pageRequest);
+    applyServiceInstanceIdsFilter(app.getUuid(), pageRequest);
     return pageRequest.build();
   }
 
@@ -186,16 +212,6 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
-  }
-
-  static InstanceElement convertToInstanceElement(ServiceInstance instance) {
-    InstanceElement element = new InstanceElement();
-    MapperUtils.mapObject(instance, element);
-    element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
-    element.setServiceTemplateElement(
-        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));
-
-    return element;
   }
 
   private void applyServiceInstanceIdsFilter(String appId, Builder pageRequest) {

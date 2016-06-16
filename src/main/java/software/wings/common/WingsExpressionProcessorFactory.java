@@ -13,6 +13,7 @@ import software.wings.sm.ExpressionProcessorFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -25,29 +26,33 @@ import javax.inject.Singleton;
 public class WingsExpressionProcessorFactory implements ExpressionProcessorFactory {
   @Inject private Injector injector;
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ExpressionProcessorFactory#getExpressionProcessor(java.lang.String,
-   * software.wings.sm.ExecutionContext)
-   */
   @Override
   public ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context) {
-    ExpressionProcessor processor = null;
-    if (expression.startsWith(ServiceExpressionProcessor.EXPRESSION_START_PATTERN)) {
-      processor = new ServiceExpressionProcessor(context);
-    } else if (expression.startsWith(HostExpressionProcessor.EXPRESSION_START_PATTERN)) {
-      processor = new HostExpressionProcessor(context);
-    } else if (expression.startsWith(InstanceExpressionProcessor.EXPRESSION_START_PATTERN)) {
-      processor = new InstanceExpressionProcessor(context);
-    }
+    ExpressionProcessor processor = getMatchingExpressionProcessor(expression, context);
     if (processor != null) {
       injector.injectMembers(processor);
     }
     return processor;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ExpressionProcessorFactory#getExpressionProcessors(software.wings.sm.ExecutionContext)
-   */
+  private ExpressionProcessor getMatchingExpressionProcessor(String expression, ExecutionContext context) {
+    ExpressionProcessor processor = new ServiceExpressionProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
+
+    processor = new HostExpressionProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
+    processor = new InstanceExpressionProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
+
+    return null;
+  }
+
   @Override
   public List<ExpressionProcessor> getExpressionProcessors(ExecutionContext context) {
     ArrayList<ExpressionProcessor> processorList =

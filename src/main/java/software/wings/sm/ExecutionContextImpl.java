@@ -7,6 +7,8 @@ import com.google.inject.Injector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayDeque;
@@ -57,41 +59,53 @@ public class ExecutionContextImpl implements ExecutionContext {
     }
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String renderExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return renderExpression(expression, context);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String renderExpression(String expression, StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
     return renderExpression(expression, context);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object evaluateExpression(String expression) {
     Map<String, Object> context = prepareContext();
     return evaluateExpression(expression, context);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Object evaluateExpression(String expression, StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext(stateExecutionData);
     return evaluateExpression(expression, context);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public StateExecutionData getStateExecutionData() {
     return stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName());
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
     ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
@@ -103,7 +117,9 @@ public class ExecutionContextImpl implements ExecutionContext {
     return null;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType) {
     ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
@@ -114,6 +130,24 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
     return selected;
+  }
+
+  @Override
+  public Application getApp() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.getApp();
+    }
+    return null;
+  }
+
+  @Override
+  public Environment getEnv() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.getEnv();
+    }
+    return null;
   }
 
   /**

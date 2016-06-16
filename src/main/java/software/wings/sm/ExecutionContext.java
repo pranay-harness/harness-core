@@ -4,6 +4,9 @@
 
 package software.wings.sm;
 
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+
 // TODO: Auto-generated Javadoc
 
 import java.util.List;
@@ -72,4 +75,14 @@ public interface ExecutionContext {
    * @return the context element list
    */
   <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType);
+
+  /**
+   * @return
+   */
+  Application getApp();
+
+  /**
+   * @return
+   */
+  Environment getEnv();
 }

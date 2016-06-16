@@ -39,7 +39,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  static final String EXPRESSION_START_PATTERN = "services()";
+  private static final String EXPRESSION_START_PATTERN = "services()";
+  private static final String EXPRESSION_EQUAL_PATTERN = "services";
+
   private static final String SERVICE_EXPR_PROCESSOR = "serviceExpressionProcessor";
 
   @Inject private ServiceResourceService serviceResourceService;
@@ -57,17 +59,29 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     this.context = contextImpl;
   }
 
+  static ServiceElement convertToServiceElement(Service service) {
+    ServiceElement element = new ServiceElement();
+    MapperUtils.mapObject(service, element);
+    return element;
+  }
+
   @Override
   public String getPrefixObjectName() {
     return SERVICE_EXPR_PROCESSOR;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.sm.ExpressionProcessor#normalizeExpression(java.lang.String)
-   */
+  @Override
+  public boolean matches(String expression) {
+    if (expression != null
+        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
+      return true;
+    }
+    return false;
+  }
+
   @Override
   public String normalizeExpression(String expression) {
-    if (expression == null || !expression.startsWith(EXPRESSION_START_PATTERN)) {
+    if (!matches(expression)) {
       return null;
     }
     expression = SERVICE_EXPR_PROCESSOR + "." + expression;
@@ -75,6 +89,10 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
       expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
     }
     return expression;
+  }
+
+  public ServiceExpressionProcessor getServices() {
+    return this;
   }
 
   /**
@@ -173,12 +191,6 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
-  }
-
-  static ServiceElement convertToServiceElement(Service service) {
-    ServiceElement element = new ServiceElement();
-    MapperUtils.mapObject(service, element);
-    return element;
   }
 
   /**

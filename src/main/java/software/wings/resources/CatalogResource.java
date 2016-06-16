@@ -129,7 +129,6 @@ public class CatalogResource {
         catalogs.put(CatalogNames.COMMAND_STENCILS, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
       }
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
-      ;
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {

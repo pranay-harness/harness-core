@@ -120,4 +120,46 @@ public class CatalogItem {
     return "CatalogItem [name=" + name + ", value=" + value + ", displayText=" + displayText
         + ", displayOrder=" + displayOrder + "]";
   }
+
+  public static final class Builder {
+    private String name;
+    private String value;
+    private String displayText;
+    private Integer displayOrder;
+
+    private Builder() {}
+
+    public static Builder aCatalogItem() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withValue(String value) {
+      this.value = value;
+      return this;
+    }
+
+    public Builder withDisplayText(String displayText) {
+      this.displayText = displayText;
+      return this;
+    }
+
+    public Builder withDisplayOrder(Integer displayOrder) {
+      this.displayOrder = displayOrder;
+      return this;
+    }
+
+    public CatalogItem build() {
+      CatalogItem catalogItem = new CatalogItem();
+      catalogItem.setName(name);
+      catalogItem.setValue(value);
+      catalogItem.setDisplayText(displayText);
+      catalogItem.setDisplayOrder(displayOrder);
+      return catalogItem;
+    }
+  }
 }

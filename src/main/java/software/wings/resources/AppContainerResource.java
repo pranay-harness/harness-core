@@ -139,7 +139,8 @@ public class AppContainerResource {
 
   /**
    * Delete platform.
-   *  @param appId          the app id
+   *
+   * @param appId          the app id
    * @param appContainerId the app container id
    */
   @DELETE

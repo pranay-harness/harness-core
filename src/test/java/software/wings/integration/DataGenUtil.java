@@ -96,7 +96,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -123,7 +122,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final String API_BASE = "http://localhost:9090/api";
 
   private static String userToken = "INVALID_TOKEN";
-
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Test folder.
    */
@@ -134,7 +133,6 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
-
   @Inject private WorkflowService workflowService;
 
   /**
@@ -680,6 +678,4 @@ public class DataGenUtil extends WingsBaseTest {
     int high = length + low > randomSeedString.length() ? randomSeedString.length() - low : length + low;
     return randomSeedString.substring(low, high);
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }

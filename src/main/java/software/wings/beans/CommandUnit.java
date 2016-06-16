@@ -14,14 +14,11 @@ public abstract class CommandUnit {
   private boolean artifactNeeded;
 
   /**
-   * Sets .
-   */
-  public void setup(CommandExecutionContext context){};
-
-  /**
    * Instantiates a new Command unit.
    */
-  public CommandUnit() {}
+  public CommandUnit(){}
+
+  ;
 
   /**
    * Instantiates a new command unit.
@@ -31,6 +28,11 @@ public abstract class CommandUnit {
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
   }
+
+  /**
+   * Sets .
+   */
+  public void setup(CommandExecutionContext context) {}
 
   /**
    * Gets command unit type.

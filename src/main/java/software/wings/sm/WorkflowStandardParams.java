@@ -253,6 +253,13 @@ public class WorkflowStandardParams implements ContextElement {
         .orElse(null);
   }
 
+  @Override
+  public String getUuid() {
+    return null;
+  }
+
+  public void setUuid(String uuid) {}
+
   public static final class Builder {
     private String appId;
     private String envId;
@@ -327,11 +334,4 @@ public class WorkflowStandardParams implements ContextElement {
       return workflowStandardParams;
     }
   }
-
-  @Override
-  public String getUuid() {
-    return null;
-  }
-
-  public void setUuid(String uuid) {}
 }

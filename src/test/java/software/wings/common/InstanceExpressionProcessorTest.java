@@ -9,6 +9,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
+import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -28,6 +33,7 @@ import software.wings.beans.ServiceInstance.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -59,19 +65,25 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Inject EnvironmentService environmentService;
 
-  @Mock @Inject ServiceInstanceService serviceInstanceService;
+  @Inject ServiceInstanceService serviceInstanceService;
 
-  private String appId = UUIDGenerator.getUuid();
+  @Mock ServiceInstanceService serviceInstanceServiceMock;
+  @Inject private WingsPersistence wingsPersistence;
 
   /**
    * Should return instances.
    */
   @Test
   public void shouldReturnInstances() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 =
@@ -104,10 +116,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     List<ServiceInstance> instances = Lists.newArrayList(instance1, instance2, instance3);
     res.setResponse(instances);
 
-    when(serviceInstanceService.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    processor.setServiceInstanceService(serviceInstanceService);
+    processor.setServiceInstanceService(serviceInstanceServiceMock);
 
     List<InstanceElement> elements = processor.list();
 
@@ -132,10 +144,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnInstancesFromParam() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -176,10 +193,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnCommonInstancesFromParam() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -222,10 +244,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnCommonInstancesFromParam2() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -299,10 +326,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     List<ServiceInstance> instances = Lists.newArrayList(instance1);
     res.setResponse(instances);
 
-    when(serviceInstanceService.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    processor.setServiceInstanceService(serviceInstanceService);
+    processor.setServiceInstanceService(serviceInstanceServiceMock);
 
     List<InstanceElement> elements = processor.list();
     assertThat(elements).isNotNull();
@@ -314,5 +341,59 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
         "$HOME/${env.name}/${app.name}/${service.name}/${serviceTemplate.name}/${host.name}/${timestampId}/runtime";
     String path = context.renderExpression(expr);
     assertThat(path).isEqualTo("$HOME/DEV/AppA/svc1/template/host1/" + timeStampId + "/runtime");
+  }
+
+  /**
+   * Should fetch context element.
+   */
+  @Test
+  public void shouldFetchInstanceElements() {
+    Application app = Application.Builder.anApplication().withName("AppA").build();
+    app = appService.save(app);
+
+    Environment env = Environment.EnvironmentBuilder.anEnvironment().withName("DEV").build();
+    env = environmentService.save(env);
+
+    Host host1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
+    Host host2 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withService(service)
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+
+    Builder builder =
+        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
+
+    ServiceInstance instance1 = serviceInstanceService.save(builder.withHost(host1).build());
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setStateName("abc");
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
+    injector.injectMembers(context);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+
+    injector.injectMembers(std);
+    context.pushContextElement(std);
+
+    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    processor.setServiceInstanceService(serviceInstanceServiceMock);
+
+    String expr = "${instances}";
+    List<InstanceElement> elements = (List<InstanceElement>) context.evaluateExpression(expr);
+    assertThat(elements).isNotNull();
+    assertThat(elements.size()).isEqualTo(1);
+    assertThat(elements.get(0)).isNotNull();
+    assertThat(elements.get(0).getUuid()).isEqualTo(instance1.getUuid());
+    assertThat(elements.get(0).getDisplayName()).isEqualTo(instance1.getDisplayName());
   }
 }

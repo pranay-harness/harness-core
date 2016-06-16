@@ -15,7 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
