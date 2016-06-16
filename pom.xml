@@ -532,6 +532,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
+                    <forkCount>3</forkCount>
+                    <reuseForks>true</reuseForks>
                 </configuration>
                 <executions>
                     <execution>
