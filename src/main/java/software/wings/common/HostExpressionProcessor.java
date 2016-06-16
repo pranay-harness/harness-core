@@ -78,6 +78,10 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return expression;
   }
 
+  public HostExpressionProcessor getHosts() {
+    return this;
+  }
+
   /**
    * Hosts.
    *

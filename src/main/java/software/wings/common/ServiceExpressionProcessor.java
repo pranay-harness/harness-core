@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -88,6 +89,10 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
       expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
     }
     return expression;
+  }
+
+  public ServiceExpressionProcessor getServices() {
+    return this;
   }
 
   /**
