@@ -307,7 +307,7 @@ public class DataGenUtil extends WingsBaseTest {
     String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
     WebTarget target = client.target(API_BASE + "/users/");
     RestResponse<User> response = target.request().post(
-        Entity.entity(anUser().withName("Admin").withEmail("admin@wings.software").withPassword("admin").build(),
+        Entity.entity(anUser().withName("Admin").withEmail("admin@wings.software").withPassword("YAg@bp2wWB").build(),
             APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
