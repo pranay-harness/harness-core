@@ -59,4 +59,28 @@ public class SortOrder {
           */
     DESC
   }
+
+  public static final class Builder {
+    private String fieldName;
+    private OrderType orderType;
+
+    private Builder() {}
+
+    public static Builder aSortOrder() {
+      return new Builder();
+    }
+
+    public Builder withField(String fieldName, OrderType orderType) {
+      this.fieldName = fieldName;
+      this.orderType = orderType;
+      return this;
+    }
+
+    public SortOrder build() {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName(fieldName);
+      sortOrder.setOrderType(orderType);
+      return sortOrder;
+    }
+  }
 }

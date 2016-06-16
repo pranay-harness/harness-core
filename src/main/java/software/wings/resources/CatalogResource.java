@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -128,7 +129,6 @@ public class CatalogResource {
         catalogs.put(CatalogNames.COMMAND_STENCILS, postProcessCommandStencil(CommandUnitType.getStencils(), uriInfo));
       }
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
-      ;
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
