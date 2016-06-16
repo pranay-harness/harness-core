@@ -14,6 +14,8 @@ import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
+import software.wings.sm.states.ForkState;
+import software.wings.sm.states.RepeatState;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -86,6 +88,217 @@ public class StateMachineTest extends WingsBaseTest {
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCodes.TRANSITION_TYPE_NULL.getCode());
+    }
+  }
+
+  /**
+   * Should throw transition not linked.
+   */
+  @Test
+  public void shouldThrowTransitionNotLinked() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      sm.setInitialStateName("StateA");
+
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateA)
+                           .withFromState(stateB)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateB)
+                           .withFromState(null)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_NOT_LINKED.getCode());
+    }
+  }
+
+  /**
+   * Should throw transition to incorrect state.
+   */
+  @Test
+  public void shouldThrowTransitionToIncorrectState() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      sm.setInitialStateName("StateA");
+
+      StateSynch stateC = new StateSynch("StateC");
+      StateSynch stateD = new StateSynch("StateD");
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateA)
+                           .withFromState(stateB)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateD)
+                           .withFromState(stateC)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.TRANSITION_TO_INCORRECT_STATE.getCode());
+      assertThat(exception.getParams()).hasSize(1);
+      assertThat(exception.getParams()).containsKey("invalidStateNames");
+      assertThat(exception.getParams().get("invalidStateNames")).asString().contains("StateC").contains("StateD");
+    }
+  }
+
+  /**
+   * Should throw states with Dup transitions.
+   */
+  @Test
+  public void shouldThrowStatesWithDupTransitions() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      StateSynch stateC = new StateSynch("StateC");
+      sm.addState(stateC);
+      sm.setInitialStateName("StateA");
+
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateB)
+                           .withFromState(stateA)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateC)
+                           .withFromState(stateA)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateB)
+                           .withFromState(stateC)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withToState(stateA)
+                           .withFromState(stateC)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.STATES_WITH_DUP_TRANSITIONS.getCode());
+      assertThat(exception.getParams()).hasSize(1);
+      assertThat(exception.getParams()).containsKey("statesWithDupTransitions");
+      assertThat(exception.getParams().get("statesWithDupTransitions"))
+          .asString()
+          .contains("StateA")
+          .contains("StateC");
+    }
+  }
+
+  /**
+   * Should throw non-fork state transition.
+   */
+  @Test
+  public void shouldThrowNonForkStateTransitions() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      StateSynch stateC = new StateSynch("StateC");
+      sm.addState(stateC);
+      StateSynch stateD = new StateSynch("StateD");
+      sm.addState(stateD);
+      ForkState fork1 = new ForkState("fork1");
+      sm.addState(fork1);
+      sm.setInitialStateName("StateA");
+
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateA)
+                           .withToState(stateB)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateB)
+                           .withToState(fork1)
+                           .withTransitionType(TransitionType.FORK)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(fork1)
+                           .withToState(stateC)
+                           .withTransitionType(TransitionType.FORK)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateC)
+                           .withToState(stateD)
+                           .withTransitionType(TransitionType.FORK)
+                           .build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.NON_FORK_STATES.getCode());
+      assertThat(exception.getParams()).hasSize(1);
+      assertThat(exception.getParams()).containsKey("nonForkStates");
+      assertThat(exception.getParams().get("nonForkStates")).asString().contains("StateB").contains("StateC");
+    }
+  }
+
+  /**
+   * Should throw non-repeat state transition.
+   */
+  @Test
+  public void shouldThrowNonRepeatStateTransitions() {
+    try {
+      StateMachine sm = new StateMachine();
+      State stateA = new StateSynch("StateA");
+      sm.addState(stateA);
+      StateSynch stateB = new StateSynch("StateB");
+      sm.addState(stateB);
+      StateSynch stateC = new StateSynch("StateC");
+      sm.addState(stateC);
+      StateSynch stateD = new StateSynch("StateD");
+      sm.addState(stateD);
+      RepeatState repeat1 = new RepeatState("repeat1");
+      sm.addState(repeat1);
+      sm.setInitialStateName("StateA");
+
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateA)
+                           .withToState(stateB)
+                           .withTransitionType(TransitionType.SUCCESS)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateB)
+                           .withToState(repeat1)
+                           .withTransitionType(TransitionType.REPEAT)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(repeat1)
+                           .withToState(stateC)
+                           .withTransitionType(TransitionType.REPEAT)
+                           .build());
+      sm.addTransition(Transition.Builder.aTransition()
+                           .withFromState(stateC)
+                           .withToState(stateD)
+                           .withTransitionType(TransitionType.REPEAT)
+                           .build());
+      sm.validate();
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception).hasMessage(ErrorCodes.NON_REPEAT_STATES.getCode());
+      assertThat(exception.getParams()).hasSize(1);
+      assertThat(exception.getParams()).containsKey("nonRepeatStates");
+      assertThat(exception.getParams().get("nonRepeatStates")).asString().contains("StateB").contains("StateC");
     }
   }
 
