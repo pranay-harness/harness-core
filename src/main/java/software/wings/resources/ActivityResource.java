@@ -91,7 +91,7 @@ public class ActivityResource {
   @GET
   @Path("{activityId}/logs")
   public RestResponse<PageResponse<Log>> listLogs(@QueryParam("appId") String appId,
-      @PathParam("activityId") String activityId, @PathParam("unitName") String unitName,
+      @PathParam("activityId") String activityId, @QueryParam("unitName") String unitName,
       @BeanParam PageRequest<Log> request) {
     request.addFilter("appId", appId, EQ);
     request.addFilter("activityId", activityId, EQ);
