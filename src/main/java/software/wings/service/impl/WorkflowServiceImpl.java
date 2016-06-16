@@ -48,6 +48,7 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
+import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -62,6 +63,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -108,7 +110,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public void trigger(String appId, String stateMachineId, String executionUuid) {
-    stateMachineExecutor.execute(appId, stateMachineId, executionUuid);
+    trigger(appId, stateMachineId, executionUuid, null);
+  }
+
+  void trigger(String appId, String stateMachineId, String executionUuid, StateMachineExecutionCallback callback) {
+    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, null, callback);
   }
 
   /**
@@ -500,6 +506,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId) {
+    return triggerPipelineExecution(appId, pipelineId, null);
+  }
+
+  public WorkflowExecution triggerPipelineExecution(
+      String appId, String pipelineId, WorkflowExecutionUpdate workflowExecutionUpdate) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
       throw new WingsException(ErrorCodes.NON_EXISTING_PIPELINE);
@@ -531,7 +542,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
 
-    return triggerExecution(workflowExecution, stateMachine, stdParams);
+    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
   /**
@@ -540,6 +551,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
       String appId, String orchestrationId, ExecutionArgs executionArgs) {
+    return triggerOrchestrationExecution(appId, orchestrationId, executionArgs, null);
+  }
+  public WorkflowExecution triggerOrchestrationExecution(String appId, String orchestrationId,
+      ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, orchestrationId);
     if (runningWorkflowExecutions != null && runningWorkflowExecutions.size() > 0) {
@@ -575,16 +590,21 @@ public class WorkflowServiceImpl implements WorkflowService {
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
-    return triggerExecution(workflowExecution, stateMachine, stdParams);
+    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
-  private WorkflowExecution triggerExecution(
-      WorkflowExecution workflowExecution, StateMachine stateMachine, ContextElement... contextElements) {
+  private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
+      WorkflowExecutionUpdate workflowExecutionUpdate, ContextElement... contextElements) {
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
-    stateExecutionInstance.setCallback(new WorkflowExecutionUpdate(workflowExecution.getAppId(), workflowExecutionId));
+    if (workflowExecutionUpdate == null) {
+      workflowExecutionUpdate = new WorkflowExecutionUpdate();
+    }
+    workflowExecutionUpdate.setAppId(workflowExecution.getAppId());
+    workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
+    stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     if (contextElements != null) {
@@ -616,6 +636,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs) {
+    return triggerEnvExecution(appId, envId, executionArgs, null);
+  }
+
+  WorkflowExecution triggerEnvExecution(
+      String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       logger.info("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
@@ -636,7 +661,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             ErrorCodes.INVALID_REQUEST, "message", "serviceInstanceIds is empty for a simple execution");
       }
 
-      return triggerSimpleExecution(appId, envId, executionArgs);
+      return triggerSimpleExecution(appId, envId, executionArgs, workflowExecutionUpdate);
 
     } else {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "workflowType");
@@ -651,7 +676,8 @@ public class WorkflowServiceImpl implements WorkflowService {
    * @param executionArgs the execution args
    * @return the workflow execution
    */
-  private WorkflowExecution triggerSimpleExecution(String appId, String envId, ExecutionArgs executionArgs) {
+  private WorkflowExecution triggerSimpleExecution(
+      String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     Workflow workflow = readLatestSimpleWorkflow(appId, envId);
     String orchestrationId = workflow.getUuid();
 
@@ -687,7 +713,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
-    return triggerExecution(workflowExecution, stateMachine, stdParams, simpleOrchestrationParams);
+    return triggerExecution(
+        workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, simpleOrchestrationParams);
   }
 
   /**
