@@ -419,6 +419,7 @@ public class StateMachineTest extends WingsBaseTest {
     private int duration;
 
     @Inject private Injector injector;
+    private RuntimeException exception;
 
     /**
      * Instantiates a new state asynch.
@@ -443,6 +444,17 @@ public class StateMachineTest extends WingsBaseTest {
       this.shouldFail = shouldFail;
     }
 
+    /**
+     * @param string
+     * @param i
+     * @param exception
+     */
+    public StateAsynch(String name, int duration, RuntimeException exception) {
+      super(name, StateType.HTTP.name());
+      this.duration = duration;
+      this.exception = exception;
+    }
+
     /*
      * (non-Javadoc)
      *
@@ -458,6 +470,9 @@ public class StateMachineTest extends WingsBaseTest {
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
       response.setCorrelationIds(correlationIds);
+      if (exception != null) {
+        throw exception;
+      }
       Notifier notifier = new Notifier(getName(), uuid, duration, shouldFail);
       injector.injectMembers(notifier);
       ThreadPool.execute(notifier);
