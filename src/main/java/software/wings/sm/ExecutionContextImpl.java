@@ -7,6 +7,8 @@ import com.google.inject.Injector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayDeque;
@@ -114,6 +116,24 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
     return selected;
+  }
+
+  @Override
+  public Application getApp() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.getApp();
+    }
+    return null;
+  }
+
+  @Override
+  public Environment getEnv() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.getEnv();
+    }
+    return null;
   }
 
   /**

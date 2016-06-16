@@ -31,4 +31,6 @@ public interface ExpressionProcessor {
    * @return the string
    */
   String normalizeExpression(String expression);
+
+  boolean matches(String expression);
 }

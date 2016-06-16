@@ -15,10 +15,12 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentBuilder;
 import software.wings.beans.ExecutionArgs;
@@ -52,25 +54,21 @@ import javax.inject.Inject;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceImplTest extends WingsBaseTest {
-  private static String appId = UUIDGenerator.getUuid();
   @Inject private WorkflowService workflowService;
   @Inject private WingsPersistence wingsPersistence;
   @Mock @Inject private StaticConfiguration staticConfiguration;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 
+  private Application app;
+  private String appId;
   private Environment env;
 
-  /**
-   * Gets environment.
-   *
-   * @return the environment
-   */
-  public Environment getEnvironment() {
-    if (env == null) {
-      env = wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
-    }
-    return env;
+  @Before
+  public void init() {
+    app = wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    appId = app.getUuid();
+    env = wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
   }
 
   /**
@@ -79,7 +77,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldReadSimpleWorkflow() {
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
-    env = getEnvironment();
     Orchestration workflow = impl.readLatestSimpleWorkflow(appId, env.getUuid());
     assertThat(workflow).isNotNull();
     assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
@@ -125,8 +122,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .build();
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
-
-    env = getEnvironment();
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(appId).withInfraId(INFRA_ID).withHostName("host1").build());
