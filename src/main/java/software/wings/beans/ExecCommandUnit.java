@@ -20,19 +20,19 @@ public class ExecCommandUnit extends CommandUnit {
   @NotEmpty private String commandPath;
   @NotEmpty private String commandString;
 
+  /**
+   * Instantiates a new exec command unit.
+   */
+  public ExecCommandUnit() {
+    super(EXEC);
+  }
+
   @Override
   public void setup(CommandExecutionContext context) {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
             .toString();
     commandString = format("cd %s && %s", commandPath, commandString);
-  }
-
-  /**
-   * Instantiates a new exec command unit.
-   */
-  public ExecCommandUnit() {
-    super(EXEC);
   }
 
   /**
@@ -71,25 +71,21 @@ public class ExecCommandUnit extends CommandUnit {
     this.commandString = commandString;
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    ExecCommandUnit that = (ExecCommandUnit) o;
-    return Objects.equal(commandPath, that.commandPath) && Objects.equal(commandString, that.commandString);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public int hashCode() {
     return Objects.hashCode(commandPath, commandString);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ExecCommandUnit other = (ExecCommandUnit) obj;
+    return Objects.equal(this.commandPath, other.commandPath) && Objects.equal(this.commandString, other.commandString);
   }
 
   /**

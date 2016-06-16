@@ -46,6 +46,12 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 
+  static HostElement convertToHostElement(Host host) {
+    HostElement element = new HostElement();
+    MapperUtils.mapObject(host, element);
+    return element;
+  }
+
   @Override
   public String getPrefixObjectName() {
     return HOST_EXPR_PROCESSOR;
@@ -124,11 +130,5 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       hostElements.add(convertToHostElement(host));
     }
     return hostElements;
-  }
-
-  static HostElement convertToHostElement(Host host) {
-    HostElement element = new HostElement();
-    MapperUtils.mapObject(host, element);
-    return element;
   }
 }

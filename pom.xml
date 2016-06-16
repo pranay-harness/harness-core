@@ -16,6 +16,9 @@
         <maven.deploy.skip>true</maven.deploy.skip>
         <maven.site.deploy.skip>true</maven.site.deploy.skip>
         <dropwizard.version>0.9.2</dropwizard.version>
+        <deployHost>{env.HOSTNAME}</deployHost>
+        <deployUsername>${user.name}</deployUsername>
+        <mongodb.port>27017</mongodb.port>
     </properties>
 
     <repositories>
@@ -436,6 +439,20 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <version>1.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.shazam</groupId>
+            <artifactId>shazamcrest</artifactId>
+            <version>0.11</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -779,7 +796,96 @@
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>3.6</version>
             </plugin>
-
+            <plugin>
+                <inherited>false</inherited>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.8</version>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target name="deploy" description="deploy to a server via ssh">
+                                <echo message="Kill running java process..." />
+                                <sshexec trust="true" failonerror="false"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="killall -9 java"
+                                         timeout="120000" />
+                                <echo message="backup jar file" />
+                                <sshexec trust="true" failonerror="false"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="mkdir -p $HOME/backup; cp $HOME/portal-0.0.1-SNAPSHOT.jar $HOME/backup/portal-0.0.1-SNAPSHOT-$(date +%F-%H:%M).jar"
+                                         timeout="120000" />
+                                <echo message="backup config file" />
+                                <sshexec trust="true" failonerror="false"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="mkdir -p $HOME/backup; cp $HOME/config.yml $HOME/backup/config-$(date +%F-%H:%M).yml"
+                                         timeout="120000" />
+                                <echo message="backup logs" />
+                                <sshexec trust="true" failonerror="false"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="mkdir -p $HOME/backup; cp $HOME/portal.log $HOME/backup/portal-$(date +%F-%H:%M).log"
+                                         timeout="120000" />
+                                <echo message="copy jar" />
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="target/portal-0.0.1-SNAPSHOT.jar"
+                                     todir="${deployUsername}@${deployHost}:" />
+                                <echo message="copy config.yml" />
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="config.yml"
+                                     todir="${deployUsername}@${deployHost}:" />
+                                <echo message="configure port" />
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="sed -i 's/port: 9090/port: 3456/' config.yml"
+                                         timeout="120000" />
+                                <echo message="start server" />
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="nohup java -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         timeout="120000" />
+                                <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
+                                    <classpath refid="maven.plugin.classpath" />
+                                </taskdef>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-commons-net</artifactId>
+                        <version>1.6.5</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.ant</groupId>
+                        <artifactId>ant-jsch</artifactId>
+                        <version>1.9.1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
         </plugins>
     </build>
     <reporting>
@@ -853,7 +959,7 @@
                 <version>3.6</version>
 
                 <configuration>
-                    <linkXref>true</linkXref>
+                    <sourceEncoding>utf-8</sourceEncoding>
                     <sourceEncoding>utf-8</sourceEncoding>
                     <minimumTokens>100</minimumTokens>
                     <targetJdk>1.8</targetJdk>
@@ -951,15 +1057,6 @@
                                 </configuration>
                             </execution>
                             <execution>
-                                <id>npm build</id>
-                                <goals>
-                                    <goal>npm</goal>
-                                </goals>
-                                <configuration>
-                                    <arguments>run build</arguments>
-                                </configuration>
-                            </execution>
-                            <execution>
                                 <id>npm clean</id>
                                 <goals>
                                     <goal>npm</goal>
@@ -973,6 +1070,25 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>deploy-int</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>int</value>
+                </property>
+            </activation>
+            <properties>
+                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <buildUI>true</buildUI>
+                <checkstyle.skip>true</checkstyle.skip>
+                <skipTests>true</skipTests>
+                <jacoco.skip>true</jacoco.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <embedmongo.skip>true</embedmongo.skip>
+            </properties>
         </profile>
     </profiles>
 </project>

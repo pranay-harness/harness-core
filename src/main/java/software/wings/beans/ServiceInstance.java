@@ -108,11 +108,6 @@ public class ServiceInstance extends Base {
     return artifact;
   }
 
-  public String getDisplayName() {
-    return host.getHostName() + ":" + serviceTemplate.getName();
-  }
-
-  public void setDisplayName() {}
   /**
    * Sets artifact.
    *
@@ -121,6 +116,12 @@ public class ServiceInstance extends Base {
   public void setArtifact(Artifact artifact) {
     this.artifact = artifact;
   }
+
+  public String getDisplayName() {
+    return host.getHostName() + ":" + serviceTemplate.getName();
+  }
+
+  public void setDisplayName() {}
 
   @Override
   public int hashCode() {

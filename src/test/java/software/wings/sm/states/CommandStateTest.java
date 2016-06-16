@@ -60,8 +60,12 @@ import software.wings.sm.WorkflowStandardParams;
  * Created by peeyushaggarwal on 6/10/16.
  */
 public class CommandStateTest extends WingsBaseTest {
+  public static final String RUNTIME_PATH = "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime";
+  public static final String BACKUP_PATH =
+      "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}";
+  public static final String STAGING_PATH =
+      "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}";
   private static final Command COMMAND = aCommand().build();
-
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).build();
   private static final ServiceInstance SERVICE_INSTANCE =
       aServiceInstance()
@@ -69,7 +73,6 @@ public class CommandStateTest extends WingsBaseTest {
           .withServiceTemplate(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build())
           .withHost(aHost().withHostName(HOST_NAME).build())
           .build();
-
   private static final Activity ACTIVITY =
       anActivity()
           .withAppId(SERVICE_INSTANCE.getAppId())
@@ -82,7 +85,6 @@ public class CommandStateTest extends WingsBaseTest {
           .withCommandType(COMMAND.getCommandUnitType().name())
           .withHostName(SERVICE_INSTANCE.getHost().getHostName())
           .build();
-
   private static final Activity ACTIVITY_WITH_ID =
       anActivity()
           .withUuid(ACTIVITY_ID)
@@ -96,16 +98,8 @@ public class CommandStateTest extends WingsBaseTest {
           .withCommandType(COMMAND.getCommandUnitType().name())
           .withHostName(SERVICE_INSTANCE.getHost().getHostName())
           .build();
-
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
-
-  public static final String RUNTIME_PATH = "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime";
-  public static final String BACKUP_PATH =
-      "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}";
-  public static final String STAGING_PATH =
-      "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}";
-
   @Mock private ExecutionContextImpl context;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceInstanceService serviceInstanceService;

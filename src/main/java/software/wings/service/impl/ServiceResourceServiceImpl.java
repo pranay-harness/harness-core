@@ -154,6 +154,35 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
    * {@inheritDoc}
    */
   @Override
+  public Service updateCommand(String appId, String serviceId, Graph commandGraph) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Validator.notNullCheck("service", service);
+
+    if (!commandGraph.isLinear()) {
+      throw new IllegalArgumentException("Graph is not a pipeline");
+    }
+
+    Command command = aCommand().withGraph(commandGraph).build();
+    command.transformGraph();
+
+    wingsPersistence.update(wingsPersistence.createQuery(Service.class)
+                                .field(ID_KEY)
+                                .equal(serviceId)
+                                .field("appId")
+                                .equal(appId)
+                                .field("commands.name")
+                                .equal(command.getName()),
+        wingsPersistence.createUpdateOperations(Service.class)
+            .removeAll("commands", new BasicDBObject("name", command.getName()))
+            .add("commands", command));
+
+    return get(appId, serviceId);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
     Service service = get(appId, serviceId);
     return service.getCommands()

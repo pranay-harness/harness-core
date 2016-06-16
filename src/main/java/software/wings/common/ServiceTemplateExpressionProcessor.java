@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.common;
 
 import software.wings.api.ServiceTemplateElement;
@@ -9,7 +10,6 @@ import software.wings.utils.MapperUtils;
 
 /**
  * @author Rishi
- *
  */
 public class ServiceTemplateExpressionProcessor {
   static ServiceTemplateElement convertToServiceTemplateElement(ServiceTemplate serviceTemplate) {
