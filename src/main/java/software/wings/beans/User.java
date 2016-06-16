@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
@@ -25,7 +26,7 @@ import javax.security.auth.Subject;
 @JsonInclude(NON_EMPTY)
 @Entity(value = "users", noClassnameStored = true)
 public class User extends Base implements Principal {
-  private String name;
+  @NotEmpty private String name;
 
   @Indexed(unique = true) @Email private String email;
 

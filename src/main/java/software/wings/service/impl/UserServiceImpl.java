@@ -1,6 +1,10 @@
 package software.wings.service.impl;
 
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
@@ -29,7 +33,7 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
    */
   public User register(User user) {
-    String hashed = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt());
+    String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
     return wingsPersistence.saveAndGet(User.class, user);
   }
@@ -61,7 +65,13 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#update(software.wings.beans.User)
    */
   public User update(User user) {
-    return register(user);
+    Builder<String, Object> builder =
+        ImmutableMap.<String, Object>builder().put("name", user.getName()).put("email", user.getEmail());
+    if (user.getPassword() != null && user.getPassword().length() > 0) {
+      builder.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
+    }
+    wingsPersistence.updateFields(User.class, user.getUuid(), builder.build());
+    return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
   }
 
   /* (non-Javadoc)
