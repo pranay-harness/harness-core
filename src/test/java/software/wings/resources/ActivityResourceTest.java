@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
@@ -23,9 +26,12 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
 import software.wings.beans.Activity;
+import software.wings.beans.CommandUnit;
+import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
@@ -39,6 +45,7 @@ import software.wings.service.intfc.LogService;
 import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 
 // TODO: Auto-generated Javadoc
 
@@ -72,6 +79,8 @@ public class ActivityResourceTest {
    * The constant ACTUAL_LOG.
    */
   public static final Log ACTUAL_LOG = aLog().build();
+
+  @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   /**
    * The Verifier.
@@ -154,12 +163,45 @@ public class ActivityResourceTest {
     verify(LOG_SERVICE).list(argument.capture());
 
     List<SearchFilter> filters = argument.getValue().getFilters();
-    matchSearchFilter(filters.get(0), "appId", APP_ID, EQ);
-    matchSearchFilter(filters.get(1), "activityId", ACTIVITY_ID, EQ);
-    matchSearchFilter(filters.get(2), "commandUnitName", COMMAND_UNIT_NAME, EQ);
+    assertThatFilterMatches(filters.get(0), "appId", APP_ID, EQ);
+    assertThatFilterMatches(filters.get(1), "activityId", ACTIVITY_ID, EQ);
+    assertThatFilterMatches(filters.get(2), "commandUnitName", COMMAND_UNIT_NAME, EQ);
   }
 
-  private void matchSearchFilter(SearchFilter filter, String name, String value, Operator op) {
+  @Test
+  public void shouldListCommandUnits() {
+    when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
+        .thenReturn(asList(anExecCommandUnit()
+                               .withName(COMMAND_UNIT_NAME)
+                               .withCommandUnitType(EXEC)
+                               .withCommandString("./bin/start.sh")
+                               .build()));
+
+    RestResponse<List<ExecCommandUnit>> restResponse =
+        RESOURCES.client()
+            .target(String.format("/activities/%s/units?appId=%s", ACTIVITY_ID, APP_ID))
+            .request()
+            .get(new GenericType<RestResponse<List<ExecCommandUnit>>>() {});
+    assertThat(restResponse.getResource()).isInstanceOf(List.class);
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource().get(0)).isInstanceOf(CommandUnit.class);
+    verify(ACTIVITY_SERVICE).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  public void shouldDownloadActivityLogFile() throws IOException {
+    when(LOG_SERVICE.exportLogs(APP_ID, ACTIVITY_ID)).thenReturn(testFolder.newFile("FILE_NAME"));
+    Response response = RESOURCES.client()
+                            .target(String.format("/activities/%s/all-logs?appId=%s", ACTIVITY_ID, APP_ID))
+                            .request()
+                            .get();
+    assertThat(response.getStatus()).isEqualTo(200);
+    assertThat(response.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=FILE_NAME");
+    assertThat(response.getHeaderString("Content-type")).isEqualTo("text/plain");
+    verify(LOG_SERVICE).exportLogs(APP_ID, ACTIVITY_ID);
+  }
+
+  private void assertThatFilterMatches(SearchFilter filter, String name, String value, Operator op) {
     assertThat(filter.getFieldName()).isEqualTo(name);
     assertThat(filter.getFieldValues()[0]).isEqualTo(value);
     assertThat(filter.getOp()).isEqualTo(op);

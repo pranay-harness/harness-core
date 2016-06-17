@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Log;
@@ -7,6 +8,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 
+import java.io.File;
 import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
@@ -39,5 +41,14 @@ public interface LogService {
    * @param name       the name
    * @return the unit execution result
    */
-  ExecutionResult getUnitExecutionResult(String appId, String activityId, String name);
+  ExecutionResult getUnitExecutionResult(@NotEmpty String appId, @NotEmpty String activityId, @NotEmpty String name);
+
+  /**
+   * Export logs file.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the file
+   */
+  File exportLogs(@NotEmpty String appId, @NotEmpty String activityId);
 }

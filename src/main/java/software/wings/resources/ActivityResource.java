@@ -17,13 +17,17 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
+import java.io.File;
 import java.util.List;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 // TODO: Auto-generated Javadoc
 
@@ -111,5 +115,15 @@ public class ActivityResource {
   public RestResponse<List<CommandUnit>> listLogs(
       @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
+  }
+
+  @GET
+  @Path("{activityId}/all-logs")
+  @Encoded
+  public Response exportLogs(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
+    File logFile = logService.exportLogs(appId, activityId);
+    Response.ResponseBuilder response = Response.ok(logFile, MediaType.TEXT_PLAIN);
+    response.header("Content-Disposition", "attachment; filename=" + logFile.getName());
+    return response.build();
   }
 }
