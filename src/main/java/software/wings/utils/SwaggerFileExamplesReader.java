@@ -14,6 +14,7 @@ import io.swagger.jaxrs.config.ReaderListener;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
 import io.swagger.models.Swagger;
+import io.swagger.models.auth.OAuth2Definition;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.Parameter;
 import org.slf4j.Logger;
@@ -38,7 +39,9 @@ public class SwaggerFileExamplesReader implements ReaderListener {
   }
 
   @Override
-  public void beforeScan(Reader reader, Swagger swagger) {}
+  public void beforeScan(Reader reader, Swagger swagger) {
+    swagger.securityDefinition("oauth", new OAuth2Definition().password("/users/login"));
+  }
 
   @Override
   public void afterScan(Reader reader, Swagger swagger) {
