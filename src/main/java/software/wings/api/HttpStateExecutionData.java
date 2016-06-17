@@ -8,11 +8,15 @@ import com.google.common.base.MoreObjects;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 // TODO: Auto-generated Javadoc
@@ -31,7 +35,7 @@ public class HttpStateExecutionData extends StateExecutionData {
   private String assertionStatement;
   private String assertionStatus;
 
-  private transient Document document;
+  private Document document;
 
   /**
    * Gets http url.
@@ -187,6 +191,34 @@ public class HttpStateExecutionData extends StateExecutionData {
       document = XmlUtils.parse(httpResponseBody);
     }
     return document;
+  }
+
+  @Override
+  public Object getExecutionSummary() {
+    LinkedHashMap<String, Object> execData = fillExecutionData();
+    if (httpResponseBody != null && httpResponseBody.length() > Constants.SUMMARY_PAYLOAD_LIMIT) {
+      execData.put("httpResponseBody", httpResponseBody.substring(0, Constants.SUMMARY_PAYLOAD_LIMIT));
+    }
+    execData.putAll((Map<String, Object>) super.getExecutionSummary());
+    return execData;
+  }
+
+  @Override
+  public Object getExecutionDetails() {
+    LinkedHashMap<String, Object> execData = fillExecutionData();
+    execData.putAll((Map<String, Object>) super.getExecutionSummary());
+    return execData;
+  }
+
+  private LinkedHashMap<String, Object> fillExecutionData() {
+    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
+    putNotNull(orderedMap, "httpUrl", httpUrl);
+    putNotNull(orderedMap, "httpMethod", httpMethod);
+    putNotNull(orderedMap, "httpResponseCode", httpResponseCode);
+    putNotNull(orderedMap, "httpResponseBody", httpResponseBody);
+    putNotNull(orderedMap, "assertionStatement", assertionStatement);
+    putNotNull(orderedMap, "assertionStatus", assertionStatus);
+    return orderedMap;
   }
 
   /**
