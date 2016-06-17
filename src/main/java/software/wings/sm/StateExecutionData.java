@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import java.io.Serializable;
+import java.util.LinkedHashMap;
 
 /**
  * Represents state machine execution data.
@@ -85,5 +86,27 @@ public class StateExecutionData implements Serializable {
    */
   public void setStatus(ExecutionStatus status) {
     this.status = status;
+  }
+
+  public Object getExecutionSummary() {
+    return fillExecutionData();
+  }
+
+  public Object getExecutionDetails() {
+    return fillExecutionData();
+  }
+
+  private LinkedHashMap<String, Object> fillExecutionData() {
+    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
+    orderedMap.put("status", status);
+    putNotNull(orderedMap, "startTs", startTs);
+    putNotNull(orderedMap, "endTs", endTs);
+    return orderedMap;
+  }
+
+  protected void putNotNull(LinkedHashMap<String, Object> orderedMap, String name, Object value) {
+    if (value != null) {
+      orderedMap.put(name, value);
+    }
   }
 }

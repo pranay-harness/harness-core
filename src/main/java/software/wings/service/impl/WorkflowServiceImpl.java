@@ -63,7 +63,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -449,6 +448,10 @@ public class WorkflowServiceImpl implements WorkflowService {
       node.setName(instance.getStateName());
       node.setType(instance.getStateType());
       node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
+      if (instance.getStateExecutionData() != null) {
+        node.setExecutionSummary(instance.getStateExecutionData().getExecutionSummary());
+        node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
+      }
       nodes.add(node);
       if (node.getName().equals(originState)) {
         originNodeId = node.getId();
@@ -553,6 +556,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       String appId, String orchestrationId, ExecutionArgs executionArgs) {
     return triggerOrchestrationExecution(appId, orchestrationId, executionArgs, null);
   }
+
   public WorkflowExecution triggerOrchestrationExecution(String appId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =

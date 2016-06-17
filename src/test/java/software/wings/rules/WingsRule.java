@@ -1,5 +1,7 @@
 package software.wings.rules;
 
+import static software.wings.app.LoggingInitializer.initializeLogging;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -13,12 +15,15 @@ import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
+import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version.Main;
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -40,6 +45,7 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
@@ -77,7 +83,7 @@ public class WingsRule implements MethodRule {
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(Arrays.asList(frameworkMethod.getAnnotations()));
         annotations.addAll(Arrays.asList(target.getClass().getAnnotations()));
-        WingsRule.this.before(annotations);
+        WingsRule.this.before(annotations, target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
         try {
           statement.evaluate();
@@ -103,7 +109,9 @@ public class WingsRule implements MethodRule {
    * @param annotations the annotations
    * @throws Throwable the throwable
    */
-  protected void before(List<Annotation> annotations) throws Throwable {
+  protected void before(List<Annotation> annotations, String testName) throws Throwable {
+    initializeLogging();
+
     MongoClient mongoClient;
     if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
       try {
@@ -114,7 +122,10 @@ public class WingsRule implements MethodRule {
       mongoClient = new MongoClient("localhost", port);
     } else {
       if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
-        MongodStarter starter = MongodStarter.getDefaultInstance();
+        IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
+                                           .defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class))
+                                           .build();
+        MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 
         int port = Network.getFreeServerPort();
         IMongodConfig mongodConfig =
@@ -148,6 +159,7 @@ public class WingsRule implements MethodRule {
         new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
         new ExecutorModule(executorService), new QueueModule(datastore));
 
+    ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
   }

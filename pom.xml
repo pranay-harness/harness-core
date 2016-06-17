@@ -94,6 +94,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
+        <dependency>
+            <groupId>org.mongodb.morphia</groupId>
+            <artifactId>morphia-logging-slf4j</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+
         <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>

@@ -1,5 +1,7 @@
 package software.wings.app;
 
+import static software.wings.app.LoggingInitializer.initializeLogging;
+
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -79,6 +81,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   @Override
   public void initialize(Bootstrap<MainConfiguration> bootstrap) {
+    initializeLogging();
     logger.info("bootstrapping ...");
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(

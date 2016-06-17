@@ -375,6 +375,10 @@ public class Graph {
     private int width;
     private int height;
 
+    private Object executionSummary;
+    private Object executionDetails;
+    private String detailsReference;
+
     private Map<String, Object> properties = new HashMap<>();
 
     /**
@@ -507,6 +511,30 @@ public class Graph {
 
     public void setStatus(String status) {
       this.status = status;
+    }
+
+    public Object getExecutionSummary() {
+      return executionSummary;
+    }
+
+    public void setExecutionSummary(Object executionSummary) {
+      this.executionSummary = executionSummary;
+    }
+
+    public Object getExecutionDetails() {
+      return executionDetails;
+    }
+
+    public void setExecutionDetails(Object executionDetails) {
+      this.executionDetails = executionDetails;
+    }
+
+    public String getDetailsReference() {
+      return detailsReference;
+    }
+
+    public void setDetailsReference(String detailsReference) {
+      this.detailsReference = detailsReference;
     }
 
     /**

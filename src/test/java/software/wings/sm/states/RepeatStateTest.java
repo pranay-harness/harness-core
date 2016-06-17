@@ -96,7 +96,7 @@ public class RepeatStateTest {
 
   private void assertResponse(List<ContextElement> repeatElements, ExecutionResponse response, int corrIdsExpected) {
     assertThat(response).isNotNull();
-    assertThat(response.isAsynch()).as("Asynch Execution").isEqualTo(true);
+    assertThat(response.isAsync()).as("Async Execution").isEqualTo(true);
     assertThat(response.getStateExecutionData()).isNotNull();
     assertThat(response.getStateExecutionData()).isInstanceOf(RepeatState.RepeatStateExecutionData.class);
     RepeatState.RepeatStateExecutionData stateExecutionData =

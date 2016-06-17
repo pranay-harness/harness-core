@@ -7,13 +7,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.service.intfc.AppService;
+import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 

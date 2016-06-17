@@ -13,7 +13,6 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -24,6 +23,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.HostService;
+import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 

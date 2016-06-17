@@ -3,6 +3,7 @@ package software.wings.core.queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.UUIDGenerator;
+import software.wings.utils.ThreadContext;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -17,7 +18,7 @@ import javax.inject.Named;
  * Created by peeyushaggarwal on 4/13/16.
  *
  * @param <T> the generic type
- * @see AbstractQueueEvent
+ * @see Queuable
  */
 public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
@@ -35,7 +36,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    */
   @Override
   public void run() {
-    String threadName = queue.name() + "-handler-" + UUIDGenerator.getUuid();
+    String threadName = ThreadContext.getContext() + queue.name() + "-handler-" + UUIDGenerator.getUuid();
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
@@ -47,8 +48,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         message = queue.get();
         logger.trace("got message {}", message);
       } catch (Exception exception) {
-        if (exception.getCause() != null
-            && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
+        if (exception instanceof InterruptedException
+            || exception.getCause() != null
+                && exception.getCause().getClass().isAssignableFrom(InterruptedException.class)) {
           logger.info("Thread interrupted, shutting down for queue {}, Exception: " + exception, queue.name());
           run = false;
         } else {

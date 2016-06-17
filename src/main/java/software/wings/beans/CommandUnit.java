@@ -121,10 +121,9 @@ public abstract class CommandUnit {
     SUCCESS, /**
               * Failure execution result.
               */
-    FAILURE,
-    /**
-     * Running execution result.
-     */
+    FAILURE, /**
+              * Running execution result.
+              */
     RUNNING
   }
 }
