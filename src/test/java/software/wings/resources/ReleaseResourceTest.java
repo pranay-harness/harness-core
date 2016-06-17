@@ -15,7 +15,6 @@ import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 
 import com.google.common.collect.Lists;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -32,6 +31,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
+import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
 import javax.ws.rs.NotFoundException;

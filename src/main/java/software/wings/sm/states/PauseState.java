@@ -48,7 +48,7 @@ public class PauseState extends EmailState {
     pauseStateExecutionData.setResumeId(correlationId);
 
     return anExecutionResponse()
-        .withAsynch(true)
+        .withAsync(true)
         .addCorrelationIds(correlationId)
         .withStateExecutionData(pauseStateExecutionData)
         .build();

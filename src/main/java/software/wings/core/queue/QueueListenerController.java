@@ -1,12 +1,13 @@
 package software.wings.core.queue;
 
+import com.google.common.collect.Lists;
+
 import io.dropwizard.lifecycle.Managed;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 import javax.inject.Singleton;
 
@@ -18,6 +19,7 @@ import javax.inject.Singleton;
 @Singleton
 public class QueueListenerController implements Managed {
   private ExecutorService executorService = Executors.newCachedThreadPool();
+  private List<AbstractQueueListener<?>> abstractQueueListeners = Lists.newArrayList();
 
   /**
    * Register.
@@ -26,7 +28,10 @@ public class QueueListenerController implements Managed {
    * @param threads  the threads
    */
   public void register(AbstractQueueListener<?> listener, int threads) {
-    IntStream.rangeClosed(1, threads).forEach(value -> executorService.submit(listener));
+    IntStream.rangeClosed(1, threads).forEach(value -> {
+      abstractQueueListeners.add(listener);
+      executorService.submit(listener);
+    });
   }
 
   /* (non-Javadoc)
@@ -42,19 +47,9 @@ public class QueueListenerController implements Managed {
    */
   @Override
   public void stop() throws Exception {
-    for (Runnable runnable : executorService.shutdownNow()) {
-      FutureTask<?> futureTask = (FutureTask<?>) runnable;
-      boolean keepTrying = true;
-      while (keepTrying) {
-        try {
-          futureTask.cancel(true);
-          futureTask.get(1, TimeUnit.NANOSECONDS);
-        } catch (TimeoutException e) {
-          // need to retry
-        } catch (Exception e) {
-          keepTrying = false;
-        }
-      }
-    }
+    abstractQueueListeners.forEach(abstractQueueListener -> abstractQueueListener.shutDown());
+    executorService.shutdownNow();
+    while (!executorService.awaitTermination(1, TimeUnit.SECONDS))
+      ;
   }
 }

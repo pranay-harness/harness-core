@@ -1,5 +1,7 @@
 package software.wings.rules;
 
+import static software.wings.app.LoggingInitializer.initializeLogging;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -40,6 +42,7 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
@@ -77,7 +80,7 @@ public class WingsRule implements MethodRule {
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(Arrays.asList(frameworkMethod.getAnnotations()));
         annotations.addAll(Arrays.asList(target.getClass().getAnnotations()));
-        WingsRule.this.before(annotations);
+        WingsRule.this.before(annotations, target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
         try {
           statement.evaluate();
@@ -103,7 +106,9 @@ public class WingsRule implements MethodRule {
    * @param annotations the annotations
    * @throws Throwable the throwable
    */
-  protected void before(List<Annotation> annotations) throws Throwable {
+  protected void before(List<Annotation> annotations, String testName) throws Throwable {
+    initializeLogging();
+
     MongoClient mongoClient;
     if (annotations.stream().filter(annotation -> Integration.class.isInstance(annotation)).findFirst().isPresent()) {
       try {
@@ -148,6 +153,7 @@ public class WingsRule implements MethodRule {
         new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
         new ExecutorModule(executorService), new QueueModule(datastore));
 
+    ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
   }

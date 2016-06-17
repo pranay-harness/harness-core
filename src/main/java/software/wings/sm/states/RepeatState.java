@@ -125,7 +125,7 @@ public class RepeatState extends State {
       processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
     }
 
-    executionResponse.setAsynch(true);
+    executionResponse.setAsync(true);
     executionResponse.setCorrelationIds(correlationIds);
     executionResponse.setStateExecutionData(repeatStateExecutionData);
     return executionResponse;
@@ -153,10 +153,10 @@ public class RepeatState extends State {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+   * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsynchResponse(
+  public ExecutionResponse handleAsyncResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Serializable status : response.values()) {
@@ -186,7 +186,7 @@ public class RepeatState extends State {
       List<String> correlationIds = new ArrayList<>();
       processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
 
-      executionResponse.setAsynch(true);
+      executionResponse.setAsync(true);
       executionResponse.setCorrelationIds(correlationIds);
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;

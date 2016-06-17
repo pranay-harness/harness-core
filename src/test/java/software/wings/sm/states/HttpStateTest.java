@@ -76,7 +76,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response = httpStateBuilder.but().build().execute(context);
 
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -104,7 +104,7 @@ public class HttpStateTest extends WingsBaseTest {
                                              .withFixedDelay(2000)));
 
     ExecutionResponse response = httpStateBuilder.but().withSocketTimeoutMillis(1000).build().execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -128,7 +128,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
 
     ExecutionResponse response = httpStateBuilder.but().build().execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -153,7 +153,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
 
     ExecutionResponse response = httpStateBuilder.but().build().execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -177,7 +177,7 @@ public class HttpStateTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
 
     ExecutionResponse response = httpStateBuilder.but().build().execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
@@ -199,7 +199,7 @@ public class HttpStateTest extends WingsBaseTest {
 
     ExecutionResponse response =
         httpStateBuilder.but().withUrl("http://${host.hostName}:81/health/status").build().execute(context);
-    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsynch).containsExactly(false);
+    assertThat(response).isNotNull().extracting(ExecutionResponse::isAsync).containsExactly(false);
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)

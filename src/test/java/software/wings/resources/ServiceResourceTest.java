@@ -14,7 +14,6 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.AppContainer;
@@ -26,6 +25,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;

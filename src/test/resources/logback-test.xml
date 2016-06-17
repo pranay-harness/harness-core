@@ -1,24 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Send debug messages to System.out -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <!-- By default, encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <withJansi>true</withJansi>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n
-            </pattern>
+            <pattern>%d{HH:mm:ss.SSS} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %n</pattern>
         </encoder>
     </appender>
 
-    <logger name="org.apache.http.wire" level="WARN" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
+    <logger name="org.apache.http.wire" level="WARN"/>
     <logger name="de.bwaldvogel" level="ERROR"/>
     <logger name="org.mongodb.driver" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
+    <logger name="org.mongodb.morphia" level="ERROR"/>
+    <logger name="software.wings.core.queue.AbstractQueueListener" level="TRACE"/>
 
-    <!-- By default, the level of the root level is set to DEBUG -->
     <root level="DEBUG">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="stdout"/>
     </root>
 </configuration>

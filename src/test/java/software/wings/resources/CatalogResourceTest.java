@@ -22,7 +22,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
@@ -47,6 +46,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
 import java.util.ArrayList;

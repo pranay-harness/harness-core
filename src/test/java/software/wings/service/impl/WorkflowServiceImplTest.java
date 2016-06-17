@@ -52,6 +52,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest;
+import software.wings.sm.StateMachineTest.StateAsync;
+import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
@@ -64,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-
 import javax.inject.Inject;
 
 /**
@@ -93,11 +94,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTrigger() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 
@@ -147,13 +148,13 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerFailedTransition() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000), true);
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000), true);
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
-    StateMachineTest.StateSynch stateD = new StateMachineTest.StateSynch("stateD" + new Random().nextInt(10000));
+    StateSync stateD = new StateSync("stateD" + new Random().nextInt(10000));
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -210,13 +211,13 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerAndFail() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000), true);
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000), true);
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
-    StateMachineTest.StateSynch stateD = new StateMachineTest.StateSynch("stateD" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + new Random().nextInt(10000));
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -268,19 +269,19 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldTriggerAsynch() throws InterruptedException {
+  public void shouldTriggerAsync() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000);
+    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 2000);
     sm.addState(stateAB);
-    State stateBC = new StateMachineTest.StateAsynch("StateBC" + new Random().nextInt(10000), 1000);
+    State stateBC = new StateAsync("StateBC" + new Random().nextInt(10000), 1000);
     sm.addState(stateBC);
 
     sm.setInitialStateName(stateA.getName());
@@ -338,17 +339,17 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldTriggerFailedAsynch() throws InterruptedException {
+  public void shouldTriggerFailedAsync() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000, true);
+    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 2000, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -400,17 +401,17 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldTriggerAndFailAsynch() throws InterruptedException {
+  public void shouldTriggerAndFailAsync() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000, true);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -462,15 +463,15 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldFailAfterException() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateMachineTest.StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
     RuntimeException exception = new RuntimeException("Exception for testing");
-    State stateAB = new StateMachineTest.StateAsynch("StateAB" + new Random().nextInt(10000), 2000, exception);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, exception);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -513,19 +514,19 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .isEqualTo(true);
   }
 
-  private StateMachine createAsynchSM(WorkflowService svc) {
+  private StateMachine createAsyncSM(WorkflowService svc) {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB", 5000);
+    State stateAB = new StateAsync("StateAB", 5000);
     sm.addState(stateAB);
-    State stateBC = new StateMachineTest.StateAsynch("StateBC", 2000);
+    State stateBC = new StateAsync("StateBC", 2000);
     sm.addState(stateBC);
 
     sm.setInitialStateName(stateA.getName());
@@ -565,11 +566,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerSimpleFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
     ForkState fork1 = new ForkState("fork1");
@@ -609,16 +610,16 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerMixedFork() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsynch("StateAB", 3000);
+    State stateAB = new StateAsync("StateAB", 3000);
     sm.addState(stateAB);
-    State stateBC = new StateMachineTest.StateAsynch("StateBC", 1000);
+    State stateBC = new StateAsync("StateBC", 1000);
     sm.addState(stateBC);
 
     ForkState fork1 = new ForkState("fork1");

@@ -77,7 +77,7 @@ public class PauseStateTest extends WingsBaseTest {
         .isInstanceOf(PauseStateExecutionData.class)
         .isEqualTo(expected.but().build());
     assertThat(executionResponse.getErrorMessage()).isNull();
-    assertThat(executionResponse.isAsynch()).isTrue();
+    assertThat(executionResponse.isAsync()).isTrue();
     assertThat(executionResponse.getCorrelationIds()).hasSize(1);
 
     verify(emailNotificationService)

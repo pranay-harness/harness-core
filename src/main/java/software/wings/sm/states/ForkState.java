@@ -67,16 +67,16 @@ public class ForkState extends State {
       correlationIds.add(notifyId);
     }
 
-    executionResponse.setAsynch(true);
+    executionResponse.setAsync(true);
     executionResponse.setCorrelationIds(correlationIds);
     return executionResponse;
   }
 
   /* (non-Javadoc)
-   * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+   * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsynchResponse(
+  public ExecutionResponse handleAsyncResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     for (Serializable status : response.values()) {
