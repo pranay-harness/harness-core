@@ -107,7 +107,7 @@ public abstract class State implements Serializable {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsynchResponse(
+  public ExecutionResponse handleAsyncResponse(
       ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;

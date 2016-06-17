@@ -18,7 +18,6 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.common.collect.Lists;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -35,6 +34,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
+import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
 import java.util.List;

@@ -37,11 +37,11 @@ public class StateMachineTest extends WingsBaseTest {
   @Test
   public void shouldValidate() {
     StateMachine sm = new StateMachine();
-    State state = new StateSynch("StateA");
+    State state = new StateSync("StateA");
     sm.addState(state);
-    state = new StateSynch("StateB");
+    state = new StateSync("StateB");
     sm.addState(state);
-    state = new StateSynch("StateC");
+    state = new StateSync("StateC");
     sm.addState(state);
     sm.setInitialStateName("StateA");
     assertThat(sm.validate()).as("Validate result").isTrue();
@@ -54,14 +54,14 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowDupErrorCode() {
     try {
       StateMachine sm = new StateMachine();
-      State state = new StateSynch("StateA");
+      State state = new StateSync("StateA");
       sm.addState(state);
-      state = new StateSynch("StateB");
+      state = new StateSync("StateB");
       sm.addState(state);
-      state = new StateSynch("StateC");
+      state = new StateSync("StateC");
       sm.addState(state);
       sm.setInitialStateName("StateA");
-      state = new StateSynch("StateB");
+      state = new StateSync("StateB");
       sm.addState(state);
       sm.validate();
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -77,9 +77,9 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowNullTransition() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
       sm.setInitialStateName("StateA");
 
@@ -98,9 +98,9 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowTransitionNotLinked() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
       sm.setInitialStateName("StateA");
 
@@ -128,14 +128,14 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowTransitionToIncorrectState() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
       sm.setInitialStateName("StateA");
 
-      StateSynch stateC = new StateSynch("StateC");
-      StateSynch stateD = new StateSynch("StateD");
+      StateSync stateC = new StateSync("StateC");
+      StateSync stateD = new StateSync("StateD");
       sm.addTransition(Transition.Builder.aTransition()
                            .withToState(stateA)
                            .withFromState(stateB)
@@ -163,11 +163,11 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowStatesWithDupTransitions() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
-      StateSynch stateC = new StateSynch("StateC");
+      StateSync stateC = new StateSync("StateC");
       sm.addState(stateC);
       sm.setInitialStateName("StateA");
 
@@ -211,13 +211,13 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowNonForkStateTransitions() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
-      StateSynch stateC = new StateSynch("StateC");
+      StateSync stateC = new StateSync("StateC");
       sm.addState(stateC);
-      StateSynch stateD = new StateSynch("StateD");
+      StateSync stateD = new StateSync("StateD");
       sm.addState(stateD);
       ForkState fork1 = new ForkState("fork1");
       sm.addState(fork1);
@@ -260,13 +260,13 @@ public class StateMachineTest extends WingsBaseTest {
   public void shouldThrowNonRepeatStateTransitions() {
     try {
       StateMachine sm = new StateMachine();
-      State stateA = new StateSynch("StateA");
+      State stateA = new StateSync("StateA");
       sm.addState(stateA);
-      StateSynch stateB = new StateSynch("StateB");
+      StateSync stateB = new StateSync("StateB");
       sm.addState(stateB);
-      StateSynch stateC = new StateSynch("StateC");
+      StateSync stateC = new StateSync("StateC");
       sm.addState(stateC);
-      StateSynch stateD = new StateSynch("StateD");
+      StateSync stateD = new StateSync("StateD");
       sm.addState(stateD);
       RepeatState repeat1 = new RepeatState("repeat1");
       sm.addState(repeat1);
@@ -362,11 +362,11 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   /**
-   * The Class StateSynch.
+   * The Class StateSync.
    *
    * @author Rishi
    */
-  public static class StateSynch extends State {
+  public static class StateSync extends State {
     private boolean shouldFail;
 
     /**
@@ -374,7 +374,7 @@ public class StateMachineTest extends WingsBaseTest {
      *
      * @param name the name
      */
-    public StateSynch(String name) {
+    public StateSync(String name) {
       this(name, false);
     }
 
@@ -384,7 +384,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param name       the name
      * @param shouldFail the should fail
      */
-    public StateSynch(String name, boolean shouldFail) {
+    public StateSync(String name, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.shouldFail = shouldFail;
     }
@@ -410,11 +410,11 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   /**
-   * The Class StateAsynch.
+   * The Class StateAsync.
    *
    * @author Rishi
    */
-  public static class StateAsynch extends State {
+  public static class StateAsync extends State {
     private boolean shouldFail;
     private int duration;
 
@@ -427,7 +427,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param name     the name
      * @param duration the duration
      */
-    public StateAsynch(String name, int duration) {
+    public StateAsync(String name, int duration) {
       this(name, duration, false);
     }
 
@@ -438,7 +438,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param duration   the duration
      * @param shouldFail the should fail
      */
-    public StateAsynch(String name, int duration, boolean shouldFail) {
+    public StateAsync(String name, int duration, boolean shouldFail) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
       this.shouldFail = shouldFail;
@@ -449,7 +449,7 @@ public class StateMachineTest extends WingsBaseTest {
      * @param i
      * @param exception
      */
-    public StateAsynch(String name, int duration, RuntimeException exception) {
+    public StateAsync(String name, int duration, RuntimeException exception) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
       this.exception = exception;
@@ -464,9 +464,9 @@ public class StateMachineTest extends WingsBaseTest {
     public ExecutionResponse execute(ExecutionContext context) {
       String uuid = UUIDGenerator.getUuid();
 
-      System.out.println("Executing ..." + StateAsynch.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
+      System.out.println("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
       ExecutionResponse response = new ExecutionResponse();
-      response.setAsynch(true);
+      response.setAsync(true);
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
       response.setCorrelationIds(correlationIds);
@@ -480,10 +480,10 @@ public class StateMachineTest extends WingsBaseTest {
     }
 
     /* (non-Javadoc)
-     * @see software.wings.sm.State#handleAsynchResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
+     * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
      */
     @Override
-    public ExecutionResponse handleAsynchResponse(
+    public ExecutionResponse handleAsyncResponse(
         ExecutionContextImpl context, Map<String, ? extends Serializable> responseMap) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       for (Serializable response : responseMap.values()) {

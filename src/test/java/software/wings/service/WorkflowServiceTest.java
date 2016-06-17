@@ -27,7 +27,7 @@ import software.wings.rules.Listeners;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineTest;
+import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
@@ -41,7 +41,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -81,11 +80,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void shouldSaveAndRead() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSynch("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
     sm.addState(stateA);
-    StateMachineTest.StateSynch stateB = new StateMachineTest.StateSynch("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
     sm.addState(stateB);
-    StateMachineTest.StateSynch stateC = new StateMachineTest.StateSynch("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
     sm.setInitialStateName(stateA.getName());
 

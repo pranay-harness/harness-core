@@ -195,7 +195,7 @@ public class StateMachineExecutor {
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     try {
-      ExecutionResponse executionResponse = currentState.handleAsynchResponse(context, response);
+      ExecutionResponse executionResponse = currentState.handleAsyncResponse(context, response);
       handleExecuteResponse(context, executionResponse);
     } catch (Exception ex) {
       handleExecuteResponseException(context, ex);
@@ -210,7 +210,7 @@ public class StateMachineExecutor {
 
     ExecutionStatus status = executionResponse.getExecutionStatus();
 
-    if (executionResponse.isAsynch()) {
+    if (executionResponse.isAsync()) {
       if (executionResponse.getCorrelationIds() == null || executionResponse.getCorrelationIds().size() == 0) {
         logger.error("executionResponse is null, but no correlationId - currentState : " + currentState.getName()
             + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());

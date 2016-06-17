@@ -16,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
-import io.dropwizard.testing.junit.ResourceTestRule;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -31,6 +30,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.utils.ResourceTestRule;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

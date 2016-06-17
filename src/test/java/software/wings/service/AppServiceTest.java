@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +21,6 @@ import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class AppServiceTest extends WingsBaseTest {
   @Inject AppService appService;

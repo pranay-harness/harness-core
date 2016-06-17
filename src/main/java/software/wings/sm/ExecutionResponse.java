@@ -23,7 +23,7 @@ public class ExecutionResponse {
    *
    * @return the boolean
    */
-  public boolean isAsynch() {
+  public boolean isAsync() {
     return asynch;
   }
 
@@ -32,7 +32,7 @@ public class ExecutionResponse {
    *
    * @param asynch the asynch
    */
-  public void setAsynch(boolean asynch) {
+  public void setAsync(boolean asynch) {
     this.asynch = asynch;
   }
 
@@ -135,7 +135,7 @@ public class ExecutionResponse {
      * @param asynch the asynch
      * @return the builder
      */
-    public Builder withAsynch(boolean asynch) {
+    public Builder withAsync(boolean asynch) {
       this.asynch = asynch;
       return this;
     }
@@ -202,7 +202,7 @@ public class ExecutionResponse {
      */
     public Builder but() {
       return anExecutionResponse()
-          .withAsynch(asynch)
+          .withAsync(asynch)
           .withCorrelationIds(correlationIds)
           .withExecutionStatus(executionStatus)
           .withErrorMessage(errorMessage)
@@ -216,7 +216,7 @@ public class ExecutionResponse {
      */
     public ExecutionResponse build() {
       ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setAsynch(asynch);
+      executionResponse.setAsync(asynch);
       executionResponse.setCorrelationIds(correlationIds);
       executionResponse.setExecutionStatus(executionStatus);
       executionResponse.setErrorMessage(errorMessage);
