@@ -35,6 +35,85 @@ import javax.ws.rs.core.Context;
  * Created by peeyushaggarwal on 6/16/16.
  */
 public class ResourceTestRule implements TestRule {
+  private final Set<Object> singletons;
+  private final Set<Class<?>> providers;
+  private final Map<String, Object> properties;
+  private final ObjectMapper mapper;
+  private final Validator validator;
+  private final TestContainerFactory testContainerFactory;
+  private JerseyTest test;
+  private ResourceTestRule(Set<Object> singletons, Set<Class<?>> providers, Map<String, Object> properties,
+      ObjectMapper mapper, Validator validator, TestContainerFactory testContainerFactory) {
+    this.singletons = singletons;
+    this.providers = providers;
+    this.properties = properties;
+    this.mapper = mapper;
+    this.validator = validator;
+    this.testContainerFactory = testContainerFactory;
+  }
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public Validator getValidator() {
+    return validator;
+  }
+
+  public ObjectMapper getObjectMapper() {
+    return mapper;
+  }
+
+  public Client client() {
+    return test.client();
+  }
+
+  public JerseyTest getJerseyTest() {
+    return test;
+  }
+
+  @Override
+  public Statement apply(final Statement base, Description description) {
+    final ResourceTestRule rule = this;
+    final String ruleId = String.valueOf(rule.hashCode());
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        try {
+          test = new JerseyTest() {
+            @Override
+            protected TestContainerFactory getTestContainerFactory() {
+              return testContainerFactory;
+            }
+
+            @Override
+            protected DeploymentContext configureDeployment() {
+              final ResourceTestResourceConfig resourceConfig = new ResourceTestResourceConfig(ruleId, rule);
+              return ServletDeploymentContext.builder(resourceConfig)
+                  .initParam(ServletProperties.JAXRS_APPLICATION_CLASS, ResourceTestResourceConfig.class.getName())
+                  .initParam(ResourceTestResourceConfig.RULE_ID, ruleId)
+                  .build();
+            }
+
+            @Override
+            protected void configureClient(final ClientConfig config) {
+              JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
+              jsonProvider.setMapper(mapper);
+              config.register(jsonProvider);
+            }
+          };
+          test.setUp();
+          base.evaluate();
+        } finally {
+          ResourceTestResourceConfig.RULE_ID_TO_RULE.remove(ruleId);
+          if (test != null) {
+            test.tearDown();
+          }
+        }
+      }
+    };
+  }
+
   public static class Builder {
     private final Set<Object> singletons = Sets.newHashSet();
     private final Set<Class<?>> providers = Sets.newHashSet();
@@ -83,45 +162,6 @@ public class ResourceTestRule implements TestRule {
     }
   }
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
-  private final Set<Object> singletons;
-  private final Set<Class<?>> providers;
-  private final Map<String, Object> properties;
-  private final ObjectMapper mapper;
-  private final Validator validator;
-  private final TestContainerFactory testContainerFactory;
-
-  private JerseyTest test;
-
-  private ResourceTestRule(Set<Object> singletons, Set<Class<?>> providers, Map<String, Object> properties,
-      ObjectMapper mapper, Validator validator, TestContainerFactory testContainerFactory) {
-    this.singletons = singletons;
-    this.providers = providers;
-    this.properties = properties;
-    this.mapper = mapper;
-    this.validator = validator;
-    this.testContainerFactory = testContainerFactory;
-  }
-
-  public Validator getValidator() {
-    return validator;
-  }
-
-  public ObjectMapper getObjectMapper() {
-    return mapper;
-  }
-
-  public Client client() {
-    return test.client();
-  }
-
-  public JerseyTest getJerseyTest() {
-    return test;
-  }
-
   public static class ResourceTestResourceConfig extends DropwizardResourceConfig {
     private static final String RULE_ID = "io.dropwizard.testing.junit.resourceTestRuleId";
     private static final Map<String, ResourceTestRule> RULE_ID_TO_RULE = Maps.newHashMap();
@@ -156,47 +196,5 @@ public class ResourceTestRule implements TestRule {
         register(singleton);
       }
     }
-  }
-
-  @Override
-  public Statement apply(final Statement base, Description description) {
-    final ResourceTestRule rule = this;
-    final String ruleId = String.valueOf(rule.hashCode());
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        try {
-          test = new JerseyTest() {
-            @Override
-            protected TestContainerFactory getTestContainerFactory() {
-              return testContainerFactory;
-            }
-
-            @Override
-            protected DeploymentContext configureDeployment() {
-              final ResourceTestResourceConfig resourceConfig = new ResourceTestResourceConfig(ruleId, rule);
-              return ServletDeploymentContext.builder(resourceConfig)
-                  .initParam(ServletProperties.JAXRS_APPLICATION_CLASS, ResourceTestResourceConfig.class.getName())
-                  .initParam(ResourceTestResourceConfig.RULE_ID, ruleId)
-                  .build();
-            }
-
-            @Override
-            protected void configureClient(final ClientConfig config) {
-              JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
-              jsonProvider.setMapper(mapper);
-              config.register(jsonProvider);
-            }
-          };
-          test.setUp();
-          base.evaluate();
-        } finally {
-          ResourceTestResourceConfig.RULE_ID_TO_RULE.remove(ruleId);
-          if (test != null) {
-            test.tearDown();
-          }
-        }
-      }
-    };
   }
 }

@@ -63,7 +63,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -553,6 +552,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       String appId, String orchestrationId, ExecutionArgs executionArgs) {
     return triggerOrchestrationExecution(appId, orchestrationId, executionArgs, null);
   }
+
   public WorkflowExecution triggerOrchestrationExecution(String appId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =

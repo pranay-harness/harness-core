@@ -8,15 +8,15 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ThreadContext {
   private static final AtomicReference<String> context = new AtomicReference<>("");
 
-  public static void setContext(String value) {
-    context.set(value);
-  }
-
   public static void clearContext() {
     context.set("");
   }
 
   public static String getContext() {
     return context.get();
+  }
+
+  public static void setContext(String value) {
+    context.set(value);
   }
 }

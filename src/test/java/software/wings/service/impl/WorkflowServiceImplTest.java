@@ -75,15 +75,13 @@ import javax.inject.Inject;
  */
 @Listeners(NotifyEventListener.class)
 public class WorkflowServiceImplTest extends WingsBaseTest {
+  private static String appId = UUIDGenerator.getUuid();
+  private static Map<String, CountDownLatch> workflowExecutionSignals = new HashMap<>();
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
   @Inject private WingsPersistence wingsPersistence;
   @Mock @Inject private StaticConfiguration staticConfiguration;
-
   @Inject private ServiceInstanceService serviceInstanceService;
-
-  private static String appId = UUIDGenerator.getUuid();
-
-  private static Map<String, CountDownLatch> workflowExecutionSignals = new HashMap<>();
 
   /**
    * Should trigger.
@@ -783,6 +781,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
   /**
    * Trigger pipeline.
+   *
    * @throws InterruptedException
    */
   @Test
@@ -988,6 +987,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
   /**
    * Should list orchestration.
+   *
    * @throws InterruptedException
    */
   @Test
@@ -1026,6 +1026,4 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
       this.signalId = signalId;
     }
   }
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 }
