@@ -1045,8 +1045,8 @@
                         <version>0.0.29</version>
                         <configuration>
                             <workingDirectory>wingsui</workingDirectory>
-                            <nodeVersion>v5.10.1</nodeVersion>
-                            <npmVersion>3.8.3</npmVersion>
+                            <nodeVersion>v6.2.2</nodeVersion>
+                            <npmVersion>3.9.5</npmVersion>
                         </configuration>
                         <executions>
                             <execution>
