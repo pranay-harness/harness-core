@@ -31,7 +31,7 @@ public interface UserService {
    * @param hash     the hash
    * @return true, if successful
    */
-  public boolean matchPassword(String password, String hash);
+  public boolean matchPassword(@NotEmpty String password, @NotEmpty String hash);
 
   /**
    * Adds the role.
@@ -40,7 +40,7 @@ public interface UserService {
    * @param roleId the role id
    * @return the user
    */
-  public User addRole(String userId, String roleId);
+  public User addRole(@NotEmpty String userId, @NotEmpty String roleId);
 
   /**
    * Update.
@@ -80,5 +80,5 @@ public interface UserService {
    * @param roleId the role id
    * @return the user
    */
-  public User revokeRole(String userId, String roleId);
+  public User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -33,9 +34,22 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
    */
   public User register(User user) {
+    if (userAlreadyRegistered(user)) {
+      throw new WingsException(USER_ALREADY_REGISTERED);
+    }
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
     return wingsPersistence.saveAndGet(User.class, user);
+  }
+
+  private boolean userAlreadyRegistered(User user) {
+    return wingsPersistence.createQuery(User.class)
+               .field("appId")
+               .equal(user.getAppId())
+               .field("email")
+               .equal(user.getEmail())
+               .get()
+        != null;
   }
 
   /* (non-Javadoc)
