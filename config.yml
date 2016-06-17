@@ -34,4 +34,4 @@ assets:
     js: application/json; charset=UTF-8
 
 swagger:
-  resourcePackage: software.wings.resources
+  resourcePackage: software.wings.resources,software.wings.utils

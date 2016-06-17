@@ -1,6 +1,8 @@
 package software.wings.utils;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
+import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -23,10 +25,13 @@ import com.jayway.jsonpath.spi.mapper.JacksonMappingProvider;
 import com.jayway.jsonpath.spi.mapper.MappingProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.exception.WingsException;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Set;
 
 // TODO: Auto-generated Javadoc
@@ -326,13 +331,24 @@ public class JsonUtils {
    * @return Deserialized Collection object.
    */
   @JsonDeserialize
-  public <T extends Collection<U>, U> T asObject(String jsonString, Class<T> collectionType, Class<U> classToConvert) {
+  public static <T extends Collection<U>, U> T asObject(
+      String jsonString, Class<T> collectionType, Class<U> classToConvert) {
     try {
       return mapper.readValue(
           jsonString, mapper.getTypeFactory().constructCollectionType(collectionType, classToConvert));
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);
+    }
+  }
+
+  public static Object readResource(String file) {
+    try {
+      URL url = JsonUtils.class.getResource(file);
+      String json = Resources.toString(url, Charsets.UTF_8);
+      return JsonUtils.asObject(json, HashMap.class);
+    } catch (Exception exception) {
+      throw new WingsException("Error in initializing CommandUnitType-" + file, exception);
     }
   }
 }

@@ -1,0 +1,25 @@
+{
+  "graphName": "START",
+  "nodes": [{
+    "id": "ORIGIN",
+    "type": "ORIGIN",
+    "x": 0,
+    "y": 0,
+    "properties": {}
+  }, {
+    "id": "1",
+    "type": "EXEC",
+    "x": 0,
+    "y": 0,
+    "properties": {
+      "commandPath": "/home/xxx/tomcat",
+      "commandString": "bin/startup.sh"
+    }
+  }],
+  "links": [{
+    "id": "linkid",
+    "from": "ORIGIN",
+    "to": "1",
+    "type": "ANY"
+  }]
+}

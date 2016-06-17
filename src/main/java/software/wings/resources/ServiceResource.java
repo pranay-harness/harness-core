@@ -7,8 +7,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Example;
-import io.swagger.annotations.ExampleProperty;
 import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
@@ -135,18 +133,7 @@ public class ServiceResource {
   @Path("{serviceId}/commands")
   public RestResponse<Service> saveCommand(@ApiParam(name = "appId", required = true) @QueryParam("appId") String appId,
       @ApiParam(name = "serviceId", required = true) @PathParam("serviceId") String serviceId,
-      @ApiParam(name = "command", required = true,
-          examples = @Example(@ExampleProperty("{\"graphName\":\"START\","
-              + "\"nodes\":[{\"id\":\"ORIGIN\","
-              + "\"type\":\"ORIGIN\",\"x\":0,\"y\":0,"
-              + "\"properties\":{}},{\"id\":\"1\","
-              + "\"type\":\"EXEC\",\"x\":0,\"y\":0,"
-              + "\"properties\":{\"commandPath\""
-              + ":\"/home/xxx/tomcat\","
-              + "\"commandString\":\"bin/startup.sh\"}}],"
-              + "\"links\":[{\"id\":\"linkid\","
-              + "\"from\":\"ORIGIN\",\"to\":\"1\","
-              + "\"type\":\"ANY\"}]}"))) Graph command) {
+      @ApiParam(name = "command", required = true) Graph command) {
     return new RestResponse<>(serviceResourceService.addCommand(appId, serviceId, command));
   }
 

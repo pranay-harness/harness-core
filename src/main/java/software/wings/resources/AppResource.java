@@ -3,9 +3,6 @@ package software.wings.resources;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.Example;
-import io.swagger.annotations.ExampleProperty;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
@@ -67,8 +64,7 @@ public class AppResource {
    * @return the rest response
    */
   @POST
-  public RestResponse<Application> save(
-      @ApiParam(examples = @Example(@ExampleProperty("{ \"name\": \"app1\"}"))) Application app) {
+  public RestResponse<Application> save(Application app) {
     return new RestResponse<>(appService.save(app));
   }
 
