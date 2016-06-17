@@ -332,6 +332,10 @@ public class StateExecutionInstance extends Base {
     this.contextElementName = contextElementName;
   }
 
+  public StateExecutionData getStateExecutionData() {
+    return stateExecutionMap.get(stateName);
+  }
+
   /**
    * The Class Builder.
    */
