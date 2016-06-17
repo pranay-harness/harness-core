@@ -15,12 +15,15 @@ import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
+import de.flapdoodle.embed.mongo.config.RuntimeConfigBuilder;
 import de.flapdoodle.embed.mongo.distribution.Version.Main;
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -119,7 +122,10 @@ public class WingsRule implements MethodRule {
       mongoClient = new MongoClient("localhost", port);
     } else {
       if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
-        MongodStarter starter = MongodStarter.getDefaultInstance();
+        IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
+                                           .defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class))
+                                           .build();
+        MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 
         int port = Network.getFreeServerPort();
         IMongodConfig mongodConfig =

@@ -12,7 +12,7 @@
     <logger name="org.mongodb.driver" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.mongodb.morphia" level="ERROR"/>
-    <logger name="software.wings.core.queue.AbstractQueueListener" level="TRACE"/>
+
 
     <root level="DEBUG">
         <appender-ref ref="stdout"/>
