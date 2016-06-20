@@ -1,14 +1,15 @@
 package software.wings.sm.states;
 
+import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.StateType.COMMAND;
 
 import com.google.inject.Inject;
 
+import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
@@ -30,6 +31,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 
 /**
@@ -103,60 +105,108 @@ public class CommandState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String envId = workflowStandardParams.getEnvId();
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
-    ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
 
-    Service service = serviceInstance.getServiceTemplate().getService();
-
-    String actualCommand = commandName;
     try {
-      actualCommand = context.renderExpression(commandName);
+      if (instanceElement == null) {
+        throw new StateExecutionException("No InstanceElement present in context");
+      }
+
+      ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
+
+      if (serviceInstance == null) {
+        throw new StateExecutionException("Unable to find service instance");
+      }
+
+      Service service = serviceInstance.getServiceTemplate().getService();
+
+      executionDataBuilder.withServiceId(service.getUuid())
+          .withServiceName(service.getName())
+          .withTemplateId(serviceInstance.getServiceTemplate().getUuid())
+          .withTemplateName(serviceInstance.getServiceTemplate().getName())
+          .withHostId(serviceInstance.getHost().getInfraId())
+          .withHostName(serviceInstance.getHost().getHostName());
+
+      String actualCommand = commandName;
+      try {
+        actualCommand = context.renderExpression(commandName);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+
+      Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), actualCommand);
+
+      if (command == null) {
+        throw new StateExecutionException(
+            String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
+      }
+
+      executionDataBuilder.withCommandName(command.getName());
+
+      Activity.Builder activityBuilder = anActivity()
+                                             .withAppId(serviceInstance.getAppId())
+                                             .withEnvironmentId(serviceInstance.getEnvId())
+                                             .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
+                                             .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
+                                             .withServiceId(service.getUuid())
+                                             .withServiceName(service.getName())
+                                             .withCommandName(command.getName())
+                                             .withCommandType(command.getCommandUnitType().name())
+                                             .withHostName(serviceInstance.getHost().getHostName());
+
+      String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH);
+      String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH);
+      String stagingPath = getEvaluatedSettingValue(context, appId, envId, STAGING_PATH);
+
+      CommandExecutionContext.Builder commandExecutionContextBuilder =
+          aCommandExecutionContext()
+              .withAppId(appId)
+              .withBackupPath(backupPath)
+              .withRuntimePath(runtimePath)
+              .withStagingPath(stagingPath)
+              .withExecutionCredential(workflowStandardParams.getExecutionCredential());
+
+      if (command.isArtifactNeeded()) {
+        Artifact artifact =
+            workflowStandardParams.getArtifactForService(serviceInstance.getServiceTemplate().getService());
+        if (artifact == null) {
+          throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
+        }
+        activityBuilder.withReleaseId(artifact.getRelease().getUuid())
+            .withReleaseName(artifact.getRelease().getReleaseName())
+            .withArtifactName(artifact.getDisplayName());
+        commandExecutionContextBuilder.withArtifact(artifact);
+        executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
+      }
+
+      Activity activity = activityService.save(activityBuilder.build());
+
+      executionDataBuilder.withActivityId(activity.getUuid());
+
+      ExecutionResult executionResult = serviceCommandExecutorService.execute(
+          serviceInstance, command, commandExecutionContextBuilder.withActivityId(activity.getUuid()).build());
+
+      activityService.updateStatus(
+          activity.getUuid(), appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+
+      executionStatus = executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
-      e.printStackTrace();
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withStateExecutionData(executionDataBuilder.build())
+          .withErrorMessage(e.getMessage())
+          .build();
     }
-    Command command = serviceResourceService.getCommandByName(appId, service.getUuid(), actualCommand);
-
-    Activity.Builder activityBuilder = anActivity()
-                                           .withAppId(serviceInstance.getAppId())
-                                           .withEnvironmentId(serviceInstance.getEnvId())
-                                           .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
-                                           .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
-                                           .withServiceId(service.getUuid())
-                                           .withServiceName(service.getName())
-                                           .withCommandName(command.getName())
-                                           .withCommandType(command.getCommandUnitType().name())
-                                           .withHostName(serviceInstance.getHost().getHostName());
-
-    CommandExecutionContext.Builder commandExecutionContextBuilder =
-        aCommandExecutionContext()
-            .withAppId(appId)
-            .withBackupPath(getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH))
-            .withRuntimePath(getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH))
-            .withStagingPath(getEvaluatedSettingValue(context, appId, envId, STAGING_PATH))
-            .withExecutionCredential(workflowStandardParams.getExecutionCredential());
-
-    if (command.isArtifactNeeded()) {
-      Artifact artifact =
-          workflowStandardParams.getArtifactForService(serviceInstance.getServiceTemplate().getService());
-      activityBuilder.withReleaseId(artifact.getRelease().getUuid())
-          .withReleaseName(artifact.getRelease().getReleaseName())
-          .withArtifactName(artifact.getDisplayName());
-      commandExecutionContextBuilder.withArtifact(artifact);
-    }
-
-    Activity activity = activityService.save(activityBuilder.build());
-
-    ExecutionResult executionResult = serviceCommandExecutorService.execute(
-        serviceInstance, command, commandExecutionContextBuilder.withActivityId(activity.getUuid()).build());
-
-    activityService.updateStatus(
-        activity.getUuid(), appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
     return anExecutionResponse()
-        .withExecutionStatus(executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : FAILED)
+        .withExecutionStatus(executionStatus)
+        .withStateExecutionData(executionDataBuilder.build())
         .build();
   }
 
@@ -164,6 +214,11 @@ public class CommandState extends State {
     SettingAttribute settingAttribute = settingsService.getByName(appId, envId, variable);
     StringValue stringValue = (StringValue) settingAttribute.getValue();
     String settingValue = stringValue.getValue();
-    return context.renderExpression(settingValue);
+    try {
+      settingValue = context.renderExpression(settingValue);
+    } catch (Exception e) {
+      // ignore
+    }
+    return settingValue;
   }
 }

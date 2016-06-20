@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.DUPLICATE_ARTIFACTSOURCE_NAMES;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Singleton;
@@ -18,6 +19,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.validation.Create;
@@ -26,7 +28,6 @@ import software.wings.utils.validation.Update;
 import java.util.List;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
-import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 // TODO: Auto-generated Javadoc
@@ -106,24 +107,13 @@ public class ReleaseServiceImpl implements ReleaseService {
     if (release == null) {
       throw new NotFoundException("Release with id " + id + " not found");
     }
-    if (isEmpty(release.getArtifactSources())) {
-      wingsPersistence.getDatastore().findAndModify(wingsPersistence.createQuery(Release.class)
-                                                        .field(ID_KEY)
-                                                        .equal(id)
-                                                        .field("appId")
-                                                        .equal(appId)
-                                                        .field("artifactSources")
-                                                        .doesNotExist(),
-          wingsPersistence.createUpdateOperations(Release.class).add("artifactSources", artifactSource));
-    } else {
-      if (release.getArtifactSources().get(0).getClass() != artifactSource.getClass()) {
-        throw new BadRequestException("Release with id " + id + " doesn't allow buildSource of this type ");
-      }
-      release.getArtifactSources().add(artifactSource);
 
-      wingsPersistence.update(
-          wingsPersistence.createQuery(Release.class).field(ID_KEY).equal(id).field("appId").equal(appId),
-          wingsPersistence.createUpdateOperations(Release.class).add("artifactSources", artifactSource));
+    if (!wingsPersistence.addToList(Release.class, appId, id,
+            wingsPersistence.createQuery(Release.class)
+                .field("artifactSources.sourceName")
+                .notEqual(artifactSource.getSourceName()),
+            "artifactSources", artifactSource)) {
+      throw new WingsException(DUPLICATE_ARTIFACTSOURCE_NAMES, "artifactSourceName", artifactSource.getSourceName());
     }
     return get(id, appId);
   }
