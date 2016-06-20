@@ -567,7 +567,7 @@
                     <randomPort>true</randomPort>
                     <version>3.2.0</version>
                     <logging>file</logging>
-                    <logFile>${project.build.directory}/mongo.log</logFile>
+                    <logFile>/tmp/mongo.log</logFile>
                     <bindIp>127.0.0.1</bindIp>
                     <syncDelay>0</syncDelay>
                 </configuration>
