@@ -41,6 +41,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -376,7 +377,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                           .withX(250)
                           .withY(50)
                           .withType(StateType.WAIT.name())
-                          .addProperty("duration", 5000l)
+                          .addProperty("duration", 1l)
                           .build())
             .addNodes(
                 aNode().withId("n3").withName("start").withX(300).withY(50).withType(StateType.START.name()).build())

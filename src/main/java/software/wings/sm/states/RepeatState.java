@@ -90,7 +90,7 @@ public class RepeatState extends State {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       executionResponse.setErrorMessage(
-          "No repeat elements found for the expression - repeatElementExpression:" + repeatElementExpression);
+          "No repeat elements found for the repeatElementExpression:" + repeatElementExpression);
       return executionResponse;
     }
     if (repeatTransitionStateName == null) {

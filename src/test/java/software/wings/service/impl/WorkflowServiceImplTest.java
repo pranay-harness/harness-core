@@ -66,6 +66,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+
 import javax.inject.Inject;
 
 /**
@@ -957,7 +958,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                           .withX(200)
                           .withY(50)
                           .withType(StateType.WAIT.name())
-                          .addProperty("duration", 5000l)
+                          .addProperty("duration", 1l)
                           .build())
             .addNodes(aNode()
                           .withId("n2")
