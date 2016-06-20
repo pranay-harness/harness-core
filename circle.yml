@@ -5,7 +5,7 @@ machine:
     version: oraclejdk8
 dependencies:
   override:
-    - mvn dependencies:go-offline
+    - mvn dependency:go-offline
     - mvn mongodb:start mongodb:stop
     - mvn -DbuildUI=true frontend:install-node-and-npm
   cache_directories:
