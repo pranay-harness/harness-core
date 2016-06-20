@@ -41,7 +41,7 @@ public class Mailer {
    * @throws TemplateException the template exception
    */
   public void send(SmtpConfig smtpConfig, EmailData emailData) throws EmailException, IOException, TemplateException {
-    Email email = emailData.isHtmlEmail() ? new HtmlEmail() : new SimpleEmail();
+    Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
     email.setHostName(smtpConfig.getHost());
     email.setSmtpPort(smtpConfig.getPort());
     email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), smtpConfig.getPassword()));

@@ -23,7 +23,7 @@ public class EmailData extends Queuable {
   private String body;
   private String templateName;
   private Object templateModel;
-  private boolean htmlEmail = true;
+  private boolean hasHtml = true;
 
   /**
    * Gets to.
@@ -138,22 +138,22 @@ public class EmailData extends Queuable {
    *
    * @return the boolean
    */
-  public boolean isHtmlEmail() {
-    return htmlEmail;
+  public boolean isHasHtml() {
+    return hasHtml;
   }
 
   /**
    * Sets html email.
    *
-   * @param htmlEmail the html email
+   * @param hasHtml the html email
    */
-  public void setHtmlEmail(boolean htmlEmail) {
-    this.htmlEmail = htmlEmail;
+  public void setHasHtml(boolean hasHtml) {
+    this.hasHtml = hasHtml;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(to, cc, subject, body, templateName, templateModel, htmlEmail);
+    return Objects.hash(to, cc, subject, body, templateName, templateModel, hasHtml);
   }
 
   @Override
@@ -168,7 +168,7 @@ public class EmailData extends Queuable {
     return Objects.equals(this.to, other.to) && Objects.equals(this.cc, other.cc)
         && Objects.equals(this.subject, other.subject) && Objects.equals(this.body, other.body)
         && Objects.equals(this.templateName, other.templateName)
-        && Objects.equals(this.templateModel, other.templateModel) && Objects.equals(this.htmlEmail, other.htmlEmail);
+        && Objects.equals(this.templateModel, other.templateModel) && Objects.equals(this.hasHtml, other.hasHtml);
   }
 
   @Override
@@ -180,7 +180,7 @@ public class EmailData extends Queuable {
         .add("body", body)
         .add("templateName", templateName)
         .add("templateModel", templateModel)
-        .add("htmlEmail", htmlEmail)
+        .add("hasHtml", hasHtml)
         .toString();
   }
 
@@ -194,7 +194,7 @@ public class EmailData extends Queuable {
     private String body;
     private String templateName;
     private Object templateModel;
-    private boolean htmlEmail = true;
+    private boolean hasHtml = true;
     private String id;
     private boolean running = false;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
@@ -281,13 +281,13 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With html email builder.
+     * With has html builder.
      *
-     * @param htmlEmail the html email
+     * @param hasHtml the has html
      * @return the builder
      */
-    public Builder withHtmlEmail(boolean htmlEmail) {
-      this.htmlEmail = htmlEmail;
+    public Builder withHasHtml(boolean hasHtml) {
+      this.hasHtml = hasHtml;
       return this;
     }
 
@@ -381,7 +381,7 @@ public class EmailData extends Queuable {
           .withBody(body)
           .withTemplateName(templateName)
           .withTemplateModel(templateModel)
-          .withHtmlEmail(htmlEmail)
+          .withHasHtml(hasHtml)
           .withId(id)
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
@@ -404,7 +404,7 @@ public class EmailData extends Queuable {
       emailData.setBody(body);
       emailData.setTemplateName(templateName);
       emailData.setTemplateModel(templateModel);
-      emailData.setHtmlEmail(htmlEmail);
+      emailData.setHasHtml(hasHtml);
       emailData.setId(id);
       emailData.setRunning(running);
       emailData.setResetTimestamp(resetTimestamp);

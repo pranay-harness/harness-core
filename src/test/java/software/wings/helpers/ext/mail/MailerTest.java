@@ -61,9 +61,38 @@ public class MailerTest extends WingsBaseTest {
                     .withUsername(EMAIL)
                     .withPassword(PASSWORD)
                     .build(),
-        anEmailData().withBody("test").withSubject("test").withTo(Lists.newArrayList("recieve@email.com")).build());
+        anEmailData()
+            .withHasHtml(false)
+            .withBody("test")
+            .withSubject("test")
+            .withTo(Lists.newArrayList("recieve@email.com"))
+            .build());
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("test");
+    assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
+    assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
+    assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
+        .extracting(Address::toString)
+        .containsExactly("recieve@email.com");
+  }
+
+  @Test
+  public void shouldSendHtmlEmail() throws MessagingException, EmailException, TemplateException, IOException {
+    mailer.send(aSmtpConfig()
+                    .withFromAddress(EMAIL)
+                    .withHost("localhost")
+                    .withPort(greenMail.getSmtp().getPort())
+                    .withUsername(EMAIL)
+                    .withPassword(PASSWORD)
+                    .build(),
+        anEmailData()
+            .withHasHtml(true)
+            .withBody("test")
+            .withSubject("test")
+            .withTo(Lists.newArrayList("recieve@email.com"))
+            .build());
+
+    assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).contains("Content-Type: text/html;");
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
@@ -89,6 +118,7 @@ public class MailerTest extends WingsBaseTest {
                     .withPassword(PASSWORD)
                     .build(),
         anEmailData()
+            .withHasHtml(false)
             .withTemplateName("testmail")
             .withTemplateModel(ImmutableMap.of("name", "test"))
             .withTo(Lists.newArrayList("recieve@email.com"))
