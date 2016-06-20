@@ -24,6 +24,4 @@ deployment:
   integration:
     branch: master
     commands:
-      - curl -v https://circleci.com/api/v1/project/wings-software/wingsui/latest/artifacts/0/$CIRCLE_ARTIFACTS/wingsui.tgz?branch=master\&filter=successful\&circle-token=$FRONTEND_TOKEN
-      - rm -rf target/static && cd target && tar xzvf ../wingsui.tgz && cd -
-      - mvn deploy -Denv=int
+      - mvn deploy -DbuildUI=true -Denv=int
