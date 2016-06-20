@@ -4,8 +4,13 @@ machine:
   java:
     version: oraclejdk8
 dependencies:
+  override:
+    - mvn dependency:go-offline
+    - mvn mongodb:start mongodb:stop
+    - mvn -DbuildUI=true frontend:install-node-and-npm
   cache_directories:
     - "~/.embedmongo"
+    - "~/.node"
 test:
   override:
     - mvn verify site

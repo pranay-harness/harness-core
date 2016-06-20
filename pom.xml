@@ -1042,11 +1042,12 @@
                     <plugin>
                         <groupId>com.github.eirslett</groupId>
                         <artifactId>frontend-maven-plugin</artifactId>
-                        <version>0.0.29</version>
+                        <version>1.0</version>
                         <configuration>
                             <workingDirectory>wingsui</workingDirectory>
                             <nodeVersion>v6.2.2</nodeVersion>
                             <npmVersion>3.9.5</npmVersion>
+                            <installDirectory>${user.home}/.node</installDirectory>
                         </configuration>
                         <executions>
                             <execution>
@@ -1091,7 +1092,6 @@
             <properties>
                 <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
                 <deployUsername>ubuntu</deployUsername>
-                <buildUI>true</buildUI>
                 <checkstyle.skip>true</checkstyle.skip>
                 <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
