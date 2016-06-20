@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.mail;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -9,6 +8,7 @@ import software.wings.core.queue.Queuable;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 // TODO: Auto-generated Javadoc
 
@@ -23,6 +23,7 @@ public class EmailData extends Queuable {
   private String body;
   private String templateName;
   private Object templateModel;
+  private boolean htmlEmail = true;
 
   /**
    * Gets to.
@@ -132,32 +133,44 @@ public class EmailData extends Queuable {
     this.templateModel = templateModel;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#equals(java.lang.Object)
+  /**
+   * Is html email boolean.
+   *
+   * @return the boolean
    */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    EmailData emailData = (EmailData) o;
-    return Objects.equal(to, emailData.to) && Objects.equal(cc, emailData.cc)
-        && Objects.equal(subject, emailData.subject) && Objects.equal(body, emailData.body)
-        && Objects.equal(templateName, emailData.templateName) && Objects.equal(templateModel, emailData.templateModel);
+  public boolean isHtmlEmail() {
+    return htmlEmail;
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#hashCode()
+  /**
+   * Sets html email.
+   *
+   * @param htmlEmail the html email
    */
+  public void setHtmlEmail(boolean htmlEmail) {
+    this.htmlEmail = htmlEmail;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hashCode(to, cc, subject, body, templateName, templateModel);
+    return Objects.hash(to, cc, subject, body, templateName, templateModel, htmlEmail);
   }
 
-  /* (non-Javadoc)
-   * @see java.lang.Object#toString()
-   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final EmailData other = (EmailData) obj;
+    return Objects.equals(this.to, other.to) && Objects.equals(this.cc, other.cc)
+        && Objects.equals(this.subject, other.subject) && Objects.equals(this.body, other.body)
+        && Objects.equals(this.templateName, other.templateName)
+        && Objects.equals(this.templateModel, other.templateModel) && Objects.equals(this.htmlEmail, other.htmlEmail);
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -167,11 +180,12 @@ public class EmailData extends Queuable {
         .add("body", body)
         .add("templateName", templateName)
         .add("templateModel", templateModel)
+        .add("htmlEmail", htmlEmail)
         .toString();
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private List<String> to = Lists.newArrayList();
@@ -180,6 +194,7 @@ public class EmailData extends Queuable {
     private String body;
     private String templateName;
     private Object templateModel;
+    private boolean htmlEmail = true;
     private String id;
     private boolean running = false;
     private Date resetTimestamp = new Date(Long.MAX_VALUE);
@@ -191,7 +206,7 @@ public class EmailData extends Queuable {
     private Builder() {}
 
     /**
-     * An email data.
+     * An email data builder.
      *
      * @return the builder
      */
@@ -200,7 +215,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With to.
+     * With to builder.
      *
      * @param to the to
      * @return the builder
@@ -211,7 +226,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With cc.
+     * With cc builder.
      *
      * @param cc the cc
      * @return the builder
@@ -222,7 +237,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With subject.
+     * With subject builder.
      *
      * @param subject the subject
      * @return the builder
@@ -233,7 +248,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With body.
+     * With body builder.
      *
      * @param body the body
      * @return the builder
@@ -244,7 +259,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With template name.
+     * With template name builder.
      *
      * @param templateName the template name
      * @return the builder
@@ -255,7 +270,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With template model.
+     * With template model builder.
      *
      * @param templateModel the template model
      * @return the builder
@@ -266,7 +281,18 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With id.
+     * With html email builder.
+     *
+     * @param htmlEmail the html email
+     * @return the builder
+     */
+    public Builder withHtmlEmail(boolean htmlEmail) {
+      this.htmlEmail = htmlEmail;
+      return this;
+    }
+
+    /**
+     * With id builder.
      *
      * @param id the id
      * @return the builder
@@ -277,7 +303,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With running.
+     * With running builder.
      *
      * @param running the running
      * @return the builder
@@ -288,7 +314,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With reset timestamp.
+     * With reset timestamp builder.
      *
      * @param resetTimestamp the reset timestamp
      * @return the builder
@@ -299,7 +325,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With earliest get.
+     * With earliest get builder.
      *
      * @param earliestGet the earliest get
      * @return the builder
@@ -310,7 +336,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With priority.
+     * With priority builder.
      *
      * @param priority the priority
      * @return the builder
@@ -321,7 +347,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With created.
+     * With created builder.
      *
      * @param created the created
      * @return the builder
@@ -332,7 +358,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * With retries.
+     * With retries builder.
      *
      * @param retries the retries
      * @return the builder
@@ -343,7 +369,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
@@ -355,6 +381,7 @@ public class EmailData extends Queuable {
           .withBody(body)
           .withTemplateName(templateName)
           .withTemplateModel(templateModel)
+          .withHtmlEmail(htmlEmail)
           .withId(id)
           .withRunning(running)
           .withResetTimestamp(resetTimestamp)
@@ -365,7 +392,7 @@ public class EmailData extends Queuable {
     }
 
     /**
-     * Builds the.
+     * Build email data.
      *
      * @return the email data
      */
@@ -377,6 +404,7 @@ public class EmailData extends Queuable {
       emailData.setBody(body);
       emailData.setTemplateName(templateName);
       emailData.setTemplateModel(templateModel);
+      emailData.setHtmlEmail(htmlEmail);
       emailData.setId(id);
       emailData.setRunning(running);
       emailData.setResetTimestamp(resetTimestamp);
