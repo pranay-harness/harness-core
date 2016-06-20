@@ -1,12 +1,9 @@
 {
-  "ui:order": ["toAddress", "ccAddress", "subject", "body", "ignoreDeliveryFailure", "name", "stateType"],
+  "ui:order": ["toAddress", "ccAddress", "subject", "body", "ignoreDeliveryFailure", "stateType"],
   "body": {
     "ui:widget": "textarea"
   },
   "stateType": {
-    "ui:widget": "hidden"
-  },
-  "name": {
     "ui:widget": "hidden"
   }
 }
