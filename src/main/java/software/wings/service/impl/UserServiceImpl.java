@@ -57,6 +57,7 @@ public class UserServiceImpl implements UserService {
     if (userAlreadyRegistered(user)) {
       throw new WingsException(USER_ALREADY_REGISTERED);
     }
+    user.setCompanyName(configuration.getPortal().getCompanyName());
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
