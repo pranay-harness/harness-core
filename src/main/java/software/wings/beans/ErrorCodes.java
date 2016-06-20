@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
@@ -22,7 +23,21 @@ public enum ErrorCodes {
   /**
    * User already registered error codes.
    */
-  USER_ALREADY_REGISTERED("USER_ALREADY_REGISTERED"),
+  USER_ALREADY_REGISTERED("USER_ALREADY_REGISTERED", CONFLICT),
+
+  /**
+   * User does not exist error codes.
+   */
+  USER_DOES_NOT_EXIST("USER_DOES_NOT_EXIST", UNAUTHORIZED),
+  /**
+   * Email not verified error codes.
+   */
+  EMAIL_NOT_VERIFIED("EMAIL_NOT_VERIFIED", UNAUTHORIZED),
+
+  /**
+   * Email verification token not found error codes.
+   */
+  EMAIL_VERIFICATION_TOKEN_NOT_FOUND("EMAIL_VERIFICATION_TOKEN_NOT_FOUND"),
   /**
    * Invalid token error codes.
    */

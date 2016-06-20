@@ -78,7 +78,7 @@ public class ResponseCodeCache {
   public ResponseMessage getResponseMessage(ErrorCodes errorCode, Map<String, Object> params) {
     String message = messages.getProperty(errorCode.getCode());
     if (message == null) {
-      return null;
+      message = errorCode.name();
     }
     message = StrSubstitutor.replace(message, params);
     return getResponseMessage(errorCode, message);

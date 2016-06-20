@@ -1,6 +1,9 @@
 package software.wings.security;
 
+import static org.mindrot.jbcrypt.BCrypt.checkpw;
+import static software.wings.beans.ErrorCodes.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
@@ -8,7 +11,6 @@ import com.google.inject.Inject;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
-import org.mindrot.jbcrypt.BCrypt;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -31,7 +33,13 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
   @Override
   public Optional<User> authenticate(BasicCredentials basicCredentials) throws AuthenticationException {
     User user = wingsPersistence.createQuery(User.class).field("email").equal(basicCredentials.getUsername()).get();
-    if (null != user && BCrypt.checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    if (!user.isEmailVerified()) {
+      throw new WingsException(EMAIL_NOT_VERIFIED);
+    }
+    if (checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
       AuthToken authToken = new AuthToken(user);
       wingsPersistence.save(authToken);
       user.setToken(authToken.getUuid());

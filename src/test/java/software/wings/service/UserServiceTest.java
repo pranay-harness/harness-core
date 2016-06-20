@@ -1,21 +1,39 @@
 package software.wings.service;
 
+import static com.google.common.collect.Lists.newArrayList;
+import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 
+import freemarker.template.TemplateException;
+import org.apache.commons.mail.EmailException;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.EmailData;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collections;
 import javax.inject.Inject;
 
@@ -29,6 +47,26 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private RoleService roleService;
+
+  @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
+
+  @Mock private SettingsService settingsService;
+
+  @Before
+  public void setupMocks() {
+    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP))
+        .thenReturn(newArrayList(aSettingAttribute()
+                                     .withName("SMTP")
+                                     .withValue(aSmtpConfig()
+                                                    .withFromAddress("wings_test@wings.software")
+                                                    .withUsername("wings_test@wings.software")
+                                                    .withHost("smtp.gmail.com")
+                                                    .withPassword("@wes0me@pp")
+                                                    .withPort(465)
+                                                    .withUseSSL(true)
+                                                    .build())
+                                     .build()));
+  }
 
   /**
    * Test register.
@@ -119,8 +157,17 @@ public class UserServiceTest extends WingsBaseTest {
    * Test helper.
    */
   @Test
-  public void testHelper() {
-    User user = wingsPersistence.get(User.class, "D3BB4DEA57D043BCA73597CCDE01E637");
-    System.out.println(user);
+  public void testHelper() throws MalformedURLException, URISyntaxException {
+    String baseUrlStr = "http://hostname:9090/wings";
+    String relativeUrlStr = "//api/users/token/";
+
+    URI baseURI = new URI(baseUrlStr);
+    String resolvedURl = baseURI.resolve(baseURI.getPath() + relativeUrlStr).toString();
+    System.out.println(resolvedURl);
+  }
+
+  @Test
+  public void shouldSendEmail() throws EmailException, TemplateException, IOException {
+    emailDataNotificationService.send(Arrays.asList("anubhaw@gmail.com"), Arrays.asList(), "wings-test", "hi");
   }
 }

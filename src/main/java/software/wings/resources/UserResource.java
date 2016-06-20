@@ -117,6 +117,12 @@ public class UserResource {
     return new RestResponse<>(user);
   }
 
+  @GET
+  @Path("verify/{token}")
+  public RestResponse<User> verifyEmail(@PathParam("token") String token) {
+    return new RestResponse<>(userService.verifyEmail(token));
+  }
+
   /**
    * Assign role.
    *

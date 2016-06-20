@@ -34,6 +34,14 @@ public interface UserService {
   public boolean matchPassword(@NotEmpty String password, @NotEmpty String hash);
 
   /**
+   * Verify email boolean.
+   *
+   * @param emailToken the email token
+   * @return the boolean
+   */
+  public User verifyEmail(String emailToken);
+
+  /**
    * Adds the role.
    *
    * @param userId the user id

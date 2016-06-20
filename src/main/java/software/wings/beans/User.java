@@ -39,6 +39,8 @@ public class User extends Base implements Principal {
   @Transient private String password;
   @Transient private String token;
 
+  private boolean emailVerified = false;
+
   /**
    * Return partial user object without sensitive information.
    *
@@ -196,7 +198,25 @@ public class User extends Base implements Principal {
   }
 
   /**
-   * The Class Builder.
+   * Is email verified boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isEmailVerified() {
+    return emailVerified;
+  }
+
+  /**
+   * Sets email verified.
+   *
+   * @param emailVerified the email verified
+   */
+  public void setEmailVerified(boolean emailVerified) {
+    this.emailVerified = emailVerified;
+  }
+
+  /**
+   * The type Builder.
    */
   public static final class Builder {
     private String name;
@@ -206,6 +226,7 @@ public class User extends Base implements Principal {
     private long lastLogin;
     private String password;
     private String token;
+    private boolean emailVerified = false;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -303,6 +324,17 @@ public class User extends Base implements Principal {
     }
 
     /**
+     * With email verified builder.
+     *
+     * @param emailVerified the email verified
+     * @return the builder
+     */
+    public Builder withEmailVerified(boolean emailVerified) {
+      this.emailVerified = emailVerified;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -393,6 +425,7 @@ public class User extends Base implements Principal {
           .withLastLogin(lastLogin)
           .withPassword(password)
           .withToken(token)
+          .withEmailVerified(emailVerified)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -416,6 +449,7 @@ public class User extends Base implements Principal {
       user.setLastLogin(lastLogin);
       user.setPassword(password);
       user.setToken(token);
+      user.setEmailVerified(emailVerified);
       user.setUuid(uuid);
       user.setAppId(appId);
       user.setCreatedBy(createdBy);
