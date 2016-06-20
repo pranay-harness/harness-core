@@ -3,11 +3,9 @@ package software.wings.service;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
-import static software.wings.beans.FileUrlSource.Builder.aFileUrlSource;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
@@ -23,11 +21,11 @@ import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.ReleaseBuilder;
 import software.wings.dl.PageRequest;
+import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ReleaseService;
 
 import java.util.List;
 import javax.inject.Inject;
-import javax.ws.rs.BadRequestException;
 
 // TODO: Auto-generated Javadoc
 
@@ -150,6 +148,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
   /**
    * Should add artifact source.
    */
+  @RealMongo
   @Test
   public void shouldAddArtifactSource() {
     Release release =
@@ -162,28 +161,9 @@ public class ReleaseServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Should not add artifact source of different type.
-   */
-  @Test
-  public void shouldNotAddArtifactSourceOfDifferentType() {
-    Release release =
-        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
-
-    releaseService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
-
-    release = releaseService.list(new PageRequest<>()).get(0);
-    assertThat(release.getArtifactSources()).hasSize(1).containsExactly(artifactSource);
-
-    Release finalRelease = release;
-    assertThatExceptionOfType(BadRequestException.class)
-        .isThrownBy(()
-                        -> releaseService.addArtifactSource(finalRelease.getUuid(), APP_ID,
-                            aFileUrlSource().withArtifactType(ArtifactType.WAR).withSourceName("filesource").build()));
-  }
-
-  /**
    * Should delete artifact source.
    */
+  @RealMongo
   @Test
   public void shouldDeleteArtifactSource() {
     Release release =
