@@ -24,6 +24,7 @@ mongo:
 
 portal:
   url: http://ec2-50-16-106-255.compute-1.amazonaws.com:3456
+  allowedDomains: wings.software
 
 jenkinsBuildQuerySize: 50
 

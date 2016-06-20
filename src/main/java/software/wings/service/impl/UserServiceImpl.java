@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCodes.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
 
@@ -49,6 +50,10 @@ public class UserServiceImpl implements UserService {
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
    */
   public User register(User user) {
+    if (!domainAllowedToRegister(user.getEmail())) {
+      throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
+    }
+
     if (userAlreadyRegistered(user)) {
       throw new WingsException(USER_ALREADY_REGISTERED);
     }
@@ -58,6 +63,11 @@ public class UserServiceImpl implements UserService {
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
     sendVerificationEmail(savedUser);
     return savedUser;
+  }
+
+  private boolean domainAllowedToRegister(String email) {
+    return configuration.getPortal().getAllowedDomains().size() == 0
+        || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
   }
 
   private void sendVerificationEmail(User user) {

@@ -20,6 +20,10 @@ public enum ErrorCodes {
   INVALID_ARGUMENT("INVALID_ARGUMENT"),
 
   /**
+   * Domain not allowed to register error codes.
+   */
+  DOMAIN_NOT_ALLOWED_TO_REGISTER("DOMAIN_NOT_ALLOWED_TO_REGISTER"),
+  /**
    * User already registered error codes.
    */
   USER_ALREADY_REGISTERED("USER_ALREADY_REGISTERED", CONFLICT),
