@@ -44,6 +44,9 @@ public class ExecutorModule extends AbstractModule {
   protected void configure() {
     bind(ExecutorService.class).toInstance(new ManagedExecutorService(executorService));
     bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("waitStateResumer"))
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
+    bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("timer"))
         .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
     bind(ScheduledExecutorService.class)

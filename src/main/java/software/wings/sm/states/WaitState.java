@@ -1,9 +1,22 @@
 package software.wings.sm.states;
 
+import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+
+import com.google.inject.name.Named;
+
+import software.wings.api.WaitStateExecutionData;
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.waitnotify.WaitNotifyEngine;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -14,6 +27,9 @@ import software.wings.sm.StateType;
  */
 public class WaitState extends State {
   private static final long serialVersionUID = 1L;
+
+  @Inject @Named("waitStateResumer") private ScheduledExecutorService executorService;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   private long duration;
 
@@ -31,7 +47,20 @@ public class WaitState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    return new ExecutionResponse();
+    WaitStateExecutionData waitStateExecutionData = new WaitStateExecutionData();
+    waitStateExecutionData.setDuration(duration);
+    long wakeupTs = System.currentTimeMillis() + (duration * 1000);
+    waitStateExecutionData.setWakeupTs(wakeupTs);
+    waitStateExecutionData.setResumeId(UUIDGenerator.getUuid());
+
+    executorService.schedule(
+        new SimpleNotifier(waitNotifyEngine, waitStateExecutionData.getResumeId(), ExecutionStatus.SUCCESS), duration,
+        TimeUnit.SECONDS);
+    return anExecutionResponse()
+        .withAsync(true)
+        .addCorrelationIds(waitStateExecutionData.getResumeId())
+        .withStateExecutionData(waitStateExecutionData)
+        .build();
   }
 
   /**

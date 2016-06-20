@@ -15,6 +15,7 @@ public class StateExecutionData implements Serializable {
   private Long startTs;
   private Long endTs;
   private ExecutionStatus status;
+  private String errorMsg;
 
   /**
    * Gets state name.
@@ -88,6 +89,14 @@ public class StateExecutionData implements Serializable {
     this.status = status;
   }
 
+  public String getErrorMsg() {
+    return errorMsg;
+  }
+
+  public void setErrorMsg(String errorMsg) {
+    this.errorMsg = errorMsg;
+  }
+
   public Object getExecutionSummary() {
     return fillExecutionData();
   }
@@ -99,6 +108,7 @@ public class StateExecutionData implements Serializable {
   private LinkedHashMap<String, Object> fillExecutionData() {
     LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
     orderedMap.put("status", status);
+    putNotNull(orderedMap, "errorMsg", errorMsg);
     putNotNull(orderedMap, "startTs", startTs);
     putNotNull(orderedMap, "endTs", endTs);
     return orderedMap;
