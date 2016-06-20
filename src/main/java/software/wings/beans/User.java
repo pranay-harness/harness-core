@@ -35,7 +35,7 @@ public class User extends Base implements Principal {
 
   @JsonIgnore private String passwordHash;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
 
   private long lastLogin;
 
@@ -275,7 +275,7 @@ public class User extends Base implements Principal {
     private String name;
     private String email;
     private String passwordHash;
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
     private long lastLogin;
     private String password;
     private String token;
