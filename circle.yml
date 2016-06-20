@@ -20,9 +20,10 @@ test:
     - mkdir -p $CIRCLE_TEST_REPORTS/integration/ 
     - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
     - find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \;
-    - python sendmail.py
 deployment:
   integration:
     branch: master
     commands:
-      - mvn deploy -DbuildUI=true -Denv=int
+      - curl -v https://circleci.com/api/v1/project/wings-software/wings-ui/latest/artifacts/0/$CIRCLE_ARTIFACTS/wingsui.tgz?branch=master\&filter=successful\&circle-token=$FRONTEND_TOKEN
+      - rm -rf target/static && cd target && tar xzvf ../wingsui.tgz && cd -
+      - mvn deploy -Denv=int
