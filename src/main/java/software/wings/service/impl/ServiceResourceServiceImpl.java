@@ -172,9 +172,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
                                 .equal(appId)
                                 .field("commands.name")
                                 .equal(command.getName()),
-        wingsPersistence.createUpdateOperations(Service.class)
-            .removeAll("commands", new BasicDBObject("name", command.getName()))
-            .add("commands", command));
+        wingsPersistence.createUpdateOperations(Service.class).set("commands.$", command));
 
     return get(appId, serviceId);
   }

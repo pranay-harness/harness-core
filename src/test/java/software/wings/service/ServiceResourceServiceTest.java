@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
-import com.mongodb.BasicDBObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -244,9 +243,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                 .equal(APP_ID)
                                 .field("commands.name")
                                 .equal(commandGraph.getGraphName())),
-            sameUpdateOperationsAs(datastore.createUpdateOperations(Service.class)
-                                       .removeAll("commands", new BasicDBObject("name", expectedCommand.getName()))
-                                       .add("commands", expectedCommand)));
+            sameUpdateOperationsAs(datastore.createUpdateOperations(Service.class).set("commands.$", expectedCommand)));
 
     verify(wingsPersistence).createUpdateOperations(Service.class);
     verify(wingsPersistence).createQuery(Service.class);
