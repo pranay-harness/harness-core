@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -64,15 +66,6 @@ public class ReleaseResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder().addResource(releaseResource).addProvider(WingsExceptionMapper.class).build();
-
-  /**
-   * The constant APP_ID.
-   */
-  public static final String APP_ID = "APP_ID";
-  /**
-   * The constant RELEASE_ID.
-   */
-  public static final String RELEASE_ID = "RELEASE_ID";
 
   /**
    * The constant releaseBuilder.

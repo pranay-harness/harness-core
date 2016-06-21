@@ -82,8 +82,13 @@ public class UserServiceImpl implements UserService {
       String relativeApiPath = "api/users/verify/" + emailVerificationToken.getToken();
       String apiUrl = baseURl + relativeApiPath;
 
-      emailNotificationService.send(
-          asList(user.getEmail()), asList(), "Please verify your Wings Platform email address", apiUrl);
+      EmailData emailData = EmailData.Builder.anEmailData()
+                                .withTo(asList(user.getEmail()))
+                                .withRetries(2)
+                                .withTemplateName("signup")
+                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", apiUrl))
+                                .build();
+      emailNotificationService.send(emailData);
     } catch (EmailException | TemplateException | IOException e) {
       logger.error("Verification email couldn't be sent " + e);
     }

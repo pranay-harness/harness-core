@@ -10,6 +10,7 @@ import freemarker.template.TemplateException;
 import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
+import org.apache.commons.mail.HtmlEmail;
 import org.apache.commons.mail.SimpleEmail;
 
 import java.io.IOException;
@@ -40,7 +41,7 @@ public class Mailer {
    * @throws TemplateException the template exception
    */
   public void send(SmtpConfig smtpConfig, EmailData emailData) throws EmailException, IOException, TemplateException {
-    Email email = new SimpleEmail();
+    Email email = emailData.isHasHtml() ? new HtmlEmail() : new SimpleEmail();
     email.setHostName(smtpConfig.getHost());
     email.setSmtpPort(smtpConfig.getPort());
     email.setAuthenticator(new DefaultAuthenticator(smtpConfig.getUsername(), smtpConfig.getPassword()));
