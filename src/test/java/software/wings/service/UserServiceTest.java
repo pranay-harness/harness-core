@@ -1,24 +1,46 @@
 package software.wings.service;
 
-import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mindrot.jbcrypt.BCrypt.hashpw;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.User.Builder.anUser;
+import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
+import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import static software.wings.utils.WingsTestConstants.USER_EMAIL;
+import static software.wings.utils.WingsTestConstants.USER_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.name.Named;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mindrot.jbcrypt.BCrypt;
+import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
+import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
-import software.wings.beans.SettingValue.SettingVariableTypes;
+import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -26,15 +48,11 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.RoleService;
-import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -42,30 +60,27 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 3/9/16.
  */
-@Ignore
 public class UserServiceTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
-  @Inject private UserService userService;
-  @Inject private RoleService roleService;
+  @Mock private NotificationService<EmailData> emailDataNotificationService;
+  @Mock private RoleService roleService;
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
 
-  @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
+  @Inject @InjectMocks private UserService userService;
 
-  @Mock private SettingsService settingsService;
+  @Inject @Named("primaryDatastore") private Datastore datastore;
 
+  private final User.Builder userBuilder =
+      anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
+
+  /**
+   * Sets mocks.
+   */
   @Before
   public void setupMocks() {
-    when(settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.SMTP))
-        .thenReturn(newArrayList(aSettingAttribute()
-                                     .withName("SMTP")
-                                     .withValue(aSmtpConfig()
-                                                    .withFromAddress("wings_test@wings.software")
-                                                    .withUsername("wings_test@wings.software")
-                                                    .withHost("smtp.gmail.com")
-                                                    .withPassword("@wes0me@pp")
-                                                    .withPort(465)
-                                                    .withUseSSL(true)
-                                                    .build())
-                                     .build()));
+    when(wingsPersistence.createQuery(User.class)).thenReturn(datastore.createQuery(User.class));
+    when(wingsPersistence.createQuery(EmailVerificationToken.class))
+        .thenReturn(datastore.createQuery(EmailVerificationToken.class));
   }
 
   /**
@@ -74,26 +89,130 @@ public class UserServiceTest extends WingsBaseTest {
    * @throws Exception the exception
    */
   @Test
-  public void testRegister() throws Exception {
-    User user = new User();
-    user.setEmail("user1@wings.software");
-    user.setName("John Doe");
-    user.setPasswordHash("password");
-    userService.register(user);
+  public void shouldRegisterUser() throws Exception {
+    User savedUser = userBuilder.withUuid(USER_ID)
+                         .withEmailVerified(false)
+                         .withCompanyName(COMPANY_NAME)
+                         .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
+                         .build();
+    when(configuration.getPortal().getAllowedDomains()).thenReturn(asList("wings.software"));
+    when(configuration.getPortal().getCompanyName()).thenReturn("COMPANY_NAME");
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
+    when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
+        .thenReturn(new EmailVerificationToken(USER_ID));
 
-    user.setEmail("user2@wings.software");
-    user.setUuid(null);
-    userService.register(user);
-    user.setEmail("user3@wings.software");
-    user.setUuid(null);
-    userService.register(user);
+    userService.register(userBuilder.build());
+
+    ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
+    verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
+    assertThat(BCrypt.checkpw(PASSWORD, userArgumentCaptor.getValue().getPasswordHash())).isTrue();
+    assertThat(userArgumentCaptor.getValue().isEmailVerified()).isFalse();
+    assertThat(userArgumentCaptor.getValue().getCompanyName()).isEqualTo(COMPANY_NAME);
+
+    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
+    assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
+    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel())
+                   .get("url")
+                   .startsWith(PORTAL_URL + "/api/users/verify"))
+        .isTrue();
+  }
+
+  /**
+   * Should match password.
+   */
+  @Test
+  public void shouldMatchPassword() {
+    String hashpw = hashpw(PASSWORD, BCrypt.gensalt());
+    assertThat(userService.matchPassword(PASSWORD, hashpw)).isTrue();
+  }
+
+  /**
+   * Should update user.
+   */
+  @Test
+  public void shouldUpdateUser() {
+    userService.update(anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).build());
+    verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME));
+    verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
+  }
+
+  /**
+   * Should list users.
+   */
+  @Test
+  public void shouldListUsers() {
+    PageRequest<User> request = new PageRequest<>();
+    request.addFilter("appId", GLOBAL_APP_ID, EQ);
+    userService.list(request);
+    ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
+    verify(wingsPersistence).query(eq(User.class), argument.capture());
+    SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);
+    assertThat(filter.getFieldName()).isEqualTo("appId");
+    assertThat(filter.getFieldValues()).containsExactly(GLOBAL_APP_ID);
+    assertThat(filter.getOp()).isEqualTo(EQ);
+  }
+
+  /**
+   * Should delete user.
+   */
+  @Test
+  public void shouldDeleteUser() {
+    userService.delete(USER_ID);
+    verify(wingsPersistence).delete(User.class, USER_ID);
+  }
+
+  /**
+   * Should fetch user.
+   */
+  @Test
+  public void shouldFetchUser() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    User user = userService.get(USER_ID);
+    verify(wingsPersistence).get(User.class, USER_ID);
+    assertThat(user).isEqualTo(userBuilder.withUuid(USER_ID).build());
+  }
+
+  /**
+   * Should verify email.
+   */
+  @Test
+  public void shouldVerifyEmail() {
+    ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
+    when(wingsPersistence.executeGetOneQuery(argumentCaptor.capture()))
+        .thenReturn(EmailVerificationToken.Builder.anEmailVerificationToken()
+                        .withUuid("TOKEN_ID")
+                        .withUserId(USER_ID)
+                        .withToken("TOKEN")
+                        .build());
+    userService.verifyEmail("TOKEN");
+    assertThat(argumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
+    assertThat(argumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");
+    verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("emailVerified", true));
+    verify(wingsPersistence).delete(EmailVerificationToken.class, "TOKEN_ID");
+  }
+
+  /**
+   * Should send email.
+   *
+   * @throws EmailException    the email exception
+   * @throws TemplateException the template exception
+   * @throws IOException       the io exception
+   */
+  @Test
+  public void shouldSendEmail() throws EmailException, TemplateException, IOException {
+    emailDataNotificationService.send(asList("anubhaw@gmail.com"), asList(), "wings-test", "hi");
   }
 
   /**
    * Test create role.
    */
   @Test
-  public void testCreateRole() {
+  @Ignore
+  public void shouldCreateRole() {
     Permission permission = new Permission("ALL", "ALL", "ALL", "ALL");
     Role role = new Role("ADMIN", "Administrator role. It can access resource and perform any action",
         Collections.singletonList(permission));
@@ -109,7 +228,8 @@ public class UserServiceTest extends WingsBaseTest {
    * Test assign role to user.
    */
   @Test
-  public void testAssignRoleToUser() {
+  @Ignore
+  public void shouldAssignRoleToUser() {
     Role role = new Role();
     role.setUuid("35D7D2C04A164655AB732B963A5DD308");
     Query<User> updateQuery =
@@ -128,6 +248,7 @@ public class UserServiceTest extends WingsBaseTest {
    * Test revoke role to user.
    */
   @Test
+  @Ignore
   public void testRevokeRoleToUser() {
     userService.revokeRole("51968DC229D7479EAA1D8B56D6C8EB6D", "AFBC5F9953BB4F20A56B84CE845EF7A3");
   }
@@ -136,38 +257,8 @@ public class UserServiceTest extends WingsBaseTest {
    * Delete role.
    */
   @Test
+  @Ignore
   public void deleteRole() {
     roleService.delete("2C496ED72DDC48FEA51E5C3736DD33B9");
-  }
-
-  /**
-   * Test match password.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void testMatchPassword() throws Exception {
-    long startTime = System.currentTimeMillis();
-    System.out.println(
-        userService.matchPassword("password", "$2a$10$ygoANZ1GfZf09oUDCcDLuO1cWt7x2XDl/Dq3J.sYgkC51KDEMK64C"));
-    System.out.println(System.currentTimeMillis() - startTime);
-  }
-
-  /**
-   * Test helper.
-   */
-  @Test
-  public void testHelper() throws MalformedURLException, URISyntaxException {
-    String baseUrlStr = "http://hostname:9090/wings";
-    String relativeUrlStr = "//api/users/token/";
-
-    URI baseURI = new URI(baseUrlStr);
-    String resolvedURl = baseURI.resolve(baseURI.getPath() + relativeUrlStr).toString();
-    System.out.println(resolvedURl);
-  }
-
-  @Test
-  public void shouldSendEmail() throws EmailException, TemplateException, IOException {
-    emailDataNotificationService.send(Arrays.asList("anubhaw@gmail.com"), Arrays.asList(), "wings-test", "hi");
   }
 }

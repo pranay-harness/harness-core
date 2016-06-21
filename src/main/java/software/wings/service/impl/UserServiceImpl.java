@@ -5,7 +5,9 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCodes.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCodes.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
+import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -28,6 +30,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
@@ -44,6 +47,7 @@ public class UserServiceImpl implements UserService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private NotificationService<EmailData> emailNotificationService;
   @Inject private MainConfiguration configuration;
+  @Inject private RoleService roleService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
@@ -95,12 +99,13 @@ public class UserServiceImpl implements UserService {
   }
 
   public User verifyEmail(String emailToken) {
-    EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
-                                                   .field("appId")
-                                                   .equal(Base.GLOBAL_APP_ID)
-                                                   .field("token")
-                                                   .equal(emailToken)
-                                                   .get();
+    EmailVerificationToken verificationToken =
+        wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(EmailVerificationToken.class)
+                                                .field("appId")
+                                                .equal(Base.GLOBAL_APP_ID)
+                                                .field("token")
+                                                .equal(emailToken));
+
     if (verificationToken == null) {
       throw new WingsException(EMAIL_VERIFICATION_TOKEN_NOT_FOUND);
     }
@@ -127,27 +132,10 @@ public class UserServiceImpl implements UserService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.UserService#addRole(java.lang.String, java.lang.String)
-   */
-  public User addRole(String userId, String roleId) {
-    User user = wingsPersistence.get(User.class, userId);
-    Role role = wingsPersistence.get(Role.class, roleId);
-    if (user != null && role != null) {
-      UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
-      Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
-      wingsPersistence.update(updateQuery, updateOp);
-      return wingsPersistence.get(User.class, userId);
-    }
-    throw new WingsException(
-        "Invalid operation. Either User or Role doesn't exist user = [" + user + "] role = [" + role + "]");
-  }
-
-  /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#update(software.wings.beans.User)
    */
   public User update(User user) {
-    Builder<String, Object> builder =
-        ImmutableMap.<String, Object>builder().put("name", user.getName()).put("email", user.getEmail());
+    Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
     if (user.getPassword() != null && user.getPassword().length() > 0) {
       builder.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));
     }
@@ -177,14 +165,43 @@ public class UserServiceImpl implements UserService {
   }
 
   /* (non-Javadoc)
+   * @see software.wings.service.intfc.UserService#addRole(java.lang.String, java.lang.String)
+   */
+  public User addRole(String userId, String roleId) {
+    ensureUserExists(userId);
+    Role role = ensureRolePresent(roleId);
+
+    UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
+    Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
+    wingsPersistence.update(updateQuery, updateOp);
+    return wingsPersistence.get(User.class, userId);
+  }
+
+  /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#revokeRole(java.lang.String, java.lang.String)
    */
   public User revokeRole(String userId, String roleId) {
-    Role role = new Role();
-    role.setUuid(roleId);
+    ensureUserExists(userId);
+    Role role = ensureRolePresent(roleId);
+
     UpdateOperations<User> updateOp = wingsPersistence.createUpdateOperations(User.class).removeAll("roles", role);
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).field(ID_KEY).equal(userId);
     wingsPersistence.update(updateQuery, updateOp);
     return wingsPersistence.get(User.class, userId);
+  }
+
+  private Role ensureRolePresent(String roleId) {
+    Role role = roleService.get(roleId);
+    if (role == null) {
+      throw new WingsException(ROLE_DOES_NOT_EXIST);
+    }
+    return role;
+  }
+
+  private void ensureUserExists(String userId) {
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
   }
 }

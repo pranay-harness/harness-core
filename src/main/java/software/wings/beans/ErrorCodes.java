@@ -32,6 +32,12 @@ public enum ErrorCodes {
    * User does not exist error codes.
    */
   USER_DOES_NOT_EXIST("USER_DOES_NOT_EXIST", UNAUTHORIZED),
+
+  /**
+   * Role does not exist error codes.
+   */
+  ROLE_DOES_NOT_EXIST("ROLE_DOES_NOT_EXIST", UNAUTHORIZED),
+
   /**
    * Email not verified error codes.
    */

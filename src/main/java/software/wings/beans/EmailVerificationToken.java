@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 /**
@@ -9,8 +10,8 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "emailVerificationTokens")
 public class EmailVerificationToken extends Base {
-  private String token;
-  private String userId;
+  @NotEmpty private String token;
+  @NotEmpty private String userId;
 
   public EmailVerificationToken() {}
 
