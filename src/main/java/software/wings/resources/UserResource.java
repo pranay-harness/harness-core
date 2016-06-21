@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
@@ -50,6 +51,7 @@ public class UserResource {
    */
   @GET
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
+    pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
     return new RestResponse<>(userService.list(pageRequest));
   }
 

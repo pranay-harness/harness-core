@@ -39,10 +39,10 @@ public class RoleServiceImpl implements RoleService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.RoleService#findByUuid(java.lang.String)
+   * @see software.wings.service.intfc.RoleService#get(java.lang.String)
    */
   @Override
-  public Role findByUuid(String uuid) {
+  public Role get(String uuid) {
     return wingsPersistence.get(Role.class, uuid);
   }
 

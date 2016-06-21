@@ -32,7 +32,7 @@ public interface RoleService {
    * @param uuid the uuid
    * @return the role
    */
-  public Role findByUuid(String uuid);
+  public Role get(String uuid);
 
   /**
    * Update.

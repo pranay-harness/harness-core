@@ -29,11 +29,17 @@ public class WingsTestConstants {
    */
   public static final String ARTIFACT_ID = "ARTIFACT_ID";
 
+  /**
+   * The constant ARTIFACT_NAME.
+   */
   public static final String ARTIFACT_NAME = "ARTIFACT_NAME";
   /**
    * The constant RELEASE_ID.
    */
   public static final String RELEASE_ID = "RELEASE_ID";
+  /**
+   * The constant RELEASE_NAME.
+   */
   public static final String RELEASE_NAME = "RELEASE_NAME";
 
   /**
@@ -108,6 +114,22 @@ public class WingsTestConstants {
    * The constant USER_NAME.
    */
   public static final String USER_NAME = "USER_NAME";
+
+  /**
+   * The constant USER_EMAIL.
+   */
+  public static final String USER_EMAIL = "user@wings.software";
+
+  /**
+   * The constant COMPANY_NAME.
+   */
+  public static final String COMPANY_NAME = "COMPANY_NAME";
+
+  /**
+   * The constant PASSWORD.
+   */
+  public static final String PASSWORD = "PASSWORD";
+
   /**
    * The constant USER_PASSWORD.
    */
@@ -130,7 +152,23 @@ public class WingsTestConstants {
    */
   public static final String SETTING_ID = "SETTING_ID";
 
+  /**
+   * The constant RUNTIME_PATH.
+   */
   public static final String RUNTIME_PATH = "RUNTIME_PATH";
 
+  /**
+   * The constant LOG_ID.
+   */
   public static final String LOG_ID = "LOG_ID";
+
+  /**
+   * The constant USER_ID.
+   */
+  public static final String USER_ID = "USER_ID";
+
+  /**
+   * The constant PORTAL_URL.
+   */
+  public static final String PORTAL_URL = "PORTAL_URL";
 }

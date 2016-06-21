@@ -100,6 +100,16 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return datastoreMap.get(readPref).get(cls, id);
   }
 
+  @Override
+  public <T extends Base> T executeGetOneQuery(Query<T> query) {
+    return query.get();
+  }
+
+  @Override
+  public <T extends Base> List<T> executeGetListQuery(Query<T> query) {
+    return query.asList();
+  }
+
   /**
    * {@inheritDoc}
    */
