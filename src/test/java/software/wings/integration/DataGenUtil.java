@@ -303,14 +303,14 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void addAdminUser() {
     String userName = "admin@wings.software";
-    String password = "admin";
+    String password = "YAg@bp2wWB";
     String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
     WebTarget target = client.target(API_BASE + "/users/");
     RestResponse<User> response = target.request().post(
-        Entity.entity(anUser().withName("Admin").withEmail("admin@wings.software").withPassword("YAg@bp2wWB").build(),
-            APPLICATION_JSON),
+        Entity.entity(anUser().withName("Admin").withEmail(userName).withPassword(password).build(), APPLICATION_JSON),
         new GenericType<RestResponse<User>>() {});
     assertThat(response.getResource()).isInstanceOf(User.class);
+    wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
     response = client.target(API_BASE + "/users/login")
                    .request()
                    .header("Authorization", basicAuthValue)
