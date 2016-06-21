@@ -25,8 +25,10 @@ import software.wings.utils.JsonUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 // TODO: Auto-generated Javadoc
 
@@ -105,9 +107,15 @@ public class RepeatState extends State {
         executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
       } catch (Exception ex) {
         logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
-        executionStrategy = ExecutionStrategy.SERIAL;
       }
     }
+
+    if (executionStrategy == null) {
+      logger.info("RepeatState: {} falling to default  executionStrategy : SERIAL", getName());
+      executionStrategy = ExecutionStrategy.SERIAL;
+    }
+
+    repeatStateExecutionData.setExecutionStrategy(executionStrategy);
 
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     List<String> correlationIds = new ArrayList<>();
@@ -294,6 +302,7 @@ public class RepeatState extends State {
     private static final long serialVersionUID = 5043797016447183954L;
     private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
+    private ExecutionStrategy executionStrategy;
 
     /**
      * Gets repeat elements.
@@ -342,6 +351,36 @@ public class RepeatState extends State {
       } else {
         return false;
       }
+    }
+
+    @Override
+    public Object getExecutionSummary() {
+      LinkedHashMap<String, Object> execData = fillExecutionData();
+      execData.putAll((Map<String, Object>) super.getExecutionSummary());
+      return execData;
+    }
+
+    @Override
+    public Object getExecutionDetails() {
+      LinkedHashMap<String, Object> execData = fillExecutionData();
+      execData.putAll((Map<String, Object>) super.getExecutionSummary());
+      return execData;
+    }
+
+    private LinkedHashMap<String, Object> fillExecutionData() {
+      LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
+      putNotNull(orderedMap, "repeatElements",
+          repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList()).toString());
+      putNotNull(orderedMap, "executionStrategy", executionStrategy);
+      return orderedMap;
+    }
+
+    public ExecutionStrategy getExecutionStrategy() {
+      return executionStrategy;
+    }
+
+    public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
+      this.executionStrategy = executionStrategy;
     }
   }
 }
