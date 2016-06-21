@@ -63,6 +63,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -553,11 +554,11 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
-      String appId, String orchestrationId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationExecution(appId, orchestrationId, executionArgs, null);
+      String appId, String envId, String orchestrationId, ExecutionArgs executionArgs) {
+    return triggerOrchestrationExecution(appId, envId, orchestrationId, executionArgs, null);
   }
 
-  public WorkflowExecution triggerOrchestrationExecution(String appId, String orchestrationId,
+  public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.ORCHESTRATION, appId, orchestrationId);
@@ -591,6 +592,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
@@ -652,7 +654,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         throw new WingsException(
             ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
       }
-      return triggerOrchestrationExecution(appId, executionArgs.getOrchestrationId(), executionArgs);
+      return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.info("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
@@ -692,6 +694,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
+    workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
@@ -709,6 +712,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
     stdParams.setArtifactIds(executionArgs.getArtifactIds());
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 

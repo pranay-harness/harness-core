@@ -25,6 +25,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentBuilder;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -37,6 +38,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -44,6 +46,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.List;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -67,6 +70,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   @Inject ServiceInstanceService serviceInstanceService;
 
   @Mock ServiceInstanceService serviceInstanceServiceMock;
+  @Mock ServiceTemplateService serviceTemplateServiceMock;
   @Inject private WingsPersistence wingsPersistence;
 
   /**
@@ -77,12 +81,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 =
@@ -116,9 +123,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     List<InstanceElement> elements = processor.list();
 
@@ -146,12 +155,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -163,7 +175,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
     assertThat(pageRequest).isNotNull();
@@ -195,12 +208,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -213,6 +229,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1, instance2, instance3);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
@@ -246,12 +264,15 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
 
     String instance1 = UUIDGenerator.getUuid();
     String instance2 = UUIDGenerator.getUuid();
@@ -263,6 +284,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
@@ -299,9 +322,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
-
-    Environment env = Environment.EnvironmentBuilder.anEnvironment().withName("DEV").build();
-    env = environmentService.save(env);
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
@@ -328,6 +350,9 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
+
     processor.setServiceInstanceService(serviceInstanceServiceMock);
 
     List<InstanceElement> elements = processor.list();
@@ -349,9 +374,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldFetchInstanceElements() {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
-
-    Environment env = Environment.EnvironmentBuilder.anEnvironment().withName("DEV").build();
-    env = environmentService.save(env);
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
@@ -385,6 +409,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     context.pushContextElement(std);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
 
     String expr = "${instances}";

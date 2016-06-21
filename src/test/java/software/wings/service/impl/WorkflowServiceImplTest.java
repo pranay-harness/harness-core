@@ -917,7 +917,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerOrchestration() throws InterruptedException {
-    Orchestration orchestration = createExecutableOrchestration();
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+    triggerOrchestration(env);
+  }
+  public void triggerOrchestration(Environment env) throws InterruptedException {
+    Orchestration orchestration = createExecutableOrchestration(env);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
     String signalId = UUIDGenerator.getUuid();
@@ -925,7 +930,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     WorkflowExecution execution =
         ((WorkflowServiceImpl) workflowService)
-            .triggerOrchestrationExecution(appId, orchestration.getUuid(), executionArgs, callback);
+            .triggerOrchestrationExecution(appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(execution).isNotNull();
@@ -939,15 +944,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
   }
 
-  /**
-   * @return
-   */
-  private Orchestration createExecutableOrchestration() {
-    Application app =
-        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
-
+  private Orchestration createExecutableOrchestration(Environment env) {
     Graph graph =
         aGraph()
             .addNodes(
@@ -993,10 +990,13 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListOrchestration() throws InterruptedException {
-    shouldTriggerOrchestration();
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+
+    triggerOrchestration(env);
 
     // 2nd orchestration
-    Orchestration orchestration = createExecutableOrchestration();
+    Orchestration orchestration = createExecutableOrchestration(env);
     PageRequest<Orchestration> pageRequest = new PageRequest<>();
     PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
 

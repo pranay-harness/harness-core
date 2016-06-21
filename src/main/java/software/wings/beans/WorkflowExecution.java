@@ -21,6 +21,7 @@ public class WorkflowExecution extends Base {
   @Indexed private String workflowId;
 
   private String stateMachineId;
+  @Indexed private String envId;
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
@@ -123,5 +124,13 @@ public class WorkflowExecution extends Base {
    */
   public void setStatus(ExecutionStatus status) {
     this.status = status;
+  }
+
+  public String getEnvId() {
+    return envId;
+  }
+
+  public void setEnvId(String envId) {
+    this.envId = envId;
   }
 }
