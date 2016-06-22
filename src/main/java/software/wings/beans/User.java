@@ -60,6 +60,7 @@ public class User extends Base implements Principal {
     publicUser.setUuid(fullUser.getUuid());
     publicUser.setName(fullUser.getName());
     publicUser.setEmail(fullUser.getEmail());
+    publicUser.setCompanyName(fullUser.getCompanyName());
     return publicUser;
   }
 
