@@ -32,7 +32,7 @@ public class ExecCommandUnit extends CommandUnit {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
             .toString();
-    commandString = format("cd %s && %s", commandPath, commandString);
+    commandString = format("cd %s && set -m; %s", commandPath, commandString);
   }
 
   /**

@@ -67,8 +67,9 @@ public class SshSessionFactory {
       session.setPassword(config.getPassword());
     }
     session.setConfig("StrictHostKeyChecking", "no");
-    session.connect(config.getSshConnectionTimeout());
+    session.setUserInfo(new SshUserInfo(config.getPassword()));
     session.setTimeout(config.getSshSessionTimeout());
+    session.connect(config.getSshConnectionTimeout());
     return session;
   }
 
