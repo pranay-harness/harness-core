@@ -110,11 +110,13 @@ public class HttpState extends State {
       }
     }
 
-    for (String header : HEADERS_SPLITTER.split(evaluatedHeader)) {
-      List<String> headerPair = HEADER_SPLITTER.splitToList(header);
+    if (evaluatedHeader != null) {
+      for (String header : HEADERS_SPLITTER.split(evaluatedHeader)) {
+        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
 
-      if (headerPair.size() == 2) {
-        request.addHeader(headerPair.get(0), headerPair.get(1));
+        if (headerPair.size() == 2) {
+          request.addHeader(headerPair.get(0), headerPair.get(1));
+        }
       }
     }
 

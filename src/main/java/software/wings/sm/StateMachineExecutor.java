@@ -181,6 +181,8 @@ public class StateMachineExecutor {
       ExecutionResponse executionResponse = currentState.execute(context);
       handleExecuteResponse(context, executionResponse);
     } catch (Exception exeception) {
+      stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
+      stateExecutionInstance.setEndTs(System.currentTimeMillis());
       handleExecuteResponseException(context, exeception);
     }
   }
