@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.api;
 
 import software.wings.sm.StateExecutionData;
@@ -10,7 +11,6 @@ import java.util.Map;
 
 /**
  * @author Rishi
- *
  */
 public class WaitStateExecutionData extends StateExecutionData {
   private static final long serialVersionUID = 1L;

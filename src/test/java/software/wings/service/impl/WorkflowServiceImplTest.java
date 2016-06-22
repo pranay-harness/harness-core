@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
-
 import javax.inject.Inject;
 
 /**
@@ -921,6 +920,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
     triggerOrchestration(env);
   }
+
   public void triggerOrchestration(Environment env) throws InterruptedException {
     Orchestration orchestration = createExecutableOrchestration(env);
     ExecutionArgs executionArgs = new ExecutionArgs();

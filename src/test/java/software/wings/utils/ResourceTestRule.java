@@ -42,6 +42,7 @@ public class ResourceTestRule implements TestRule {
   private final Validator validator;
   private final TestContainerFactory testContainerFactory;
   private JerseyTest test;
+
   private ResourceTestRule(Set<Object> singletons, Set<Class<?>> providers, Map<String, Object> properties,
       ObjectMapper mapper, Validator validator, TestContainerFactory testContainerFactory) {
     this.singletons = singletons;

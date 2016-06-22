@@ -29,14 +29,15 @@ import java.util.Optional;
  */
 @SwaggerDefinition
 public class SwaggerFileExamplesReader implements ReaderListener {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
-
   private static final ObjectMapper mapper = new ObjectMapper();
+
   static {
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(Include.NON_NULL);
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
   }
+
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public void beforeScan(Reader reader, Swagger swagger) {

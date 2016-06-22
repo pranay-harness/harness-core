@@ -42,7 +42,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -274,11 +273,12 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
               .build());
     }
   }
+
   /**
    * Matching ServiceTemplates.
    *
    * @param serviceTemplates the serviceTemplates
-   * @param names    the names
+   * @param names            the names
    * @return the list
    */
   List<ServiceTemplate> matchingServiceTemplates(List<ServiceTemplate> serviceTemplates, String... names) {

@@ -44,11 +44,11 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public class UserServiceImpl implements UserService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private NotificationService<EmailData> emailNotificationService;
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
