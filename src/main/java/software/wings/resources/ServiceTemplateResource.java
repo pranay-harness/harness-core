@@ -144,7 +144,7 @@ public class ServiceTemplateResource {
   @Path("{templateId}/map-hosts")
   public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHosts(appId, serviceTemplateId, hostIds));
+    return new RestResponse<>(serviceTemplateService.updateHosts(appId, envId, serviceTemplateId, hostIds));
   }
 
   /**
@@ -160,7 +160,7 @@ public class ServiceTemplateResource {
   @Path("{templateId}/map-tags")
   public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
-    return new RestResponse<>(serviceTemplateService.updateTags(appId, serviceTemplateId, tagIds));
+    return new RestResponse<>(serviceTemplateService.updateTags(appId, envId, serviceTemplateId, tagIds));
   }
 
   /**

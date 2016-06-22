@@ -14,6 +14,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
@@ -31,6 +33,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private TagService tagService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -45,7 +49,14 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host get(String appId, String infraId, String hostId) {
-    return wingsPersistence.get(Host.class, hostId);
+    return wingsPersistence.createQuery(Host.class)
+        .field(ID_KEY)
+        .equal(hostId)
+        .field("infraId")
+        .equal(infraId)
+        .field("appId")
+        .equal(appId)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -130,7 +141,12 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public void delete(String appId, String infraId, String hostId) {
-    wingsPersistence.delete(Host.class, hostId);
+    Host host = get(appId, infraId, hostId);
+    if (host != null) {
+      wingsPersistence.delete(host);
+      serviceTemplateService.deleteHostFromTemplates(host);
+      tagService.deleteHostFromTags(host);
+    }
   }
 
   /* (non-Javadoc)

@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.Host;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -89,4 +90,6 @@ public interface TagService {
    * @return the leaf tags
    */
   List<Tag> getLeafTags(Tag root);
+
+  void deleteHostFromTags(Host host);
 }

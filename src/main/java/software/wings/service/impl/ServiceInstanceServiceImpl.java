@@ -68,11 +68,12 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceInstanceService#updateHostMappings(software.wings.beans.ServiceTemplate,
+   * @see
+   * software.wings.service.intfc.ServiceInstanceService#updateInstanceMappings(software.wings.beans.ServiceTemplate,
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateHostMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
+  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
     Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
                                              .field("appId")
                                              .equal(template.getAppId())

@@ -15,6 +15,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.TagService#listRootTags(software.wings.dl.PageRequest)
@@ -103,13 +105,25 @@ public class TagServiceImpl implements TagService {
     }
   }
 
+  @Override
+  public void deleteHostFromTags(Host host) {
+    List<Tag> tags = host.getTags();
+
+    if (tags != null) {
+      tags.forEach(tag
+          -> {
+
+          });
+    }
+  }
+
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
     List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), asList(tag));
-    Query<ServiceTemplate> serviceTemplates =
-        wingsPersistence.createQuery(ServiceTemplate.class).field("tags").hasThisElement(tag);
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByTag(tag);
     if (serviceTemplates != null) {
-      serviceTemplates.forEach(
-          serviceTemplate -> { serviceInstanceService.updateHostMappings(serviceTemplate, new ArrayList<>(), hosts); });
+      serviceTemplates.forEach(serviceTemplate -> {
+        serviceInstanceService.updateInstanceMappings(serviceTemplate, new ArrayList<>(), hosts);
+      });
     }
   }
 

@@ -9,7 +9,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.TagBuilder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -204,8 +204,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
-    templateService.updateHosts(app.getUuid(), template.getUuid(), selectedHosts);
-    templateService.updateTags(app.getUuid(), template.getUuid(), selectedTags);
+    templateService.updateHosts(app.getUuid(), template.getEnvId(), template.getUuid(), selectedHosts);
+    templateService.updateTags(app.getUuid(), template.getEnvId(), template.getUuid(), selectedTags);
   }
 
   /**

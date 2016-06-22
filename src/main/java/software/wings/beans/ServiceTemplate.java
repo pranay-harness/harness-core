@@ -1,9 +1,12 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -21,6 +24,7 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true) private HashSet<Tag> leafTags = new HashSet<Tag>();
 
   /**
    * Gets name.
@@ -130,17 +134,29 @@ public class ServiceTemplate extends Base {
     this.service = service;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
+  /**
+   * Gets leaf tags.
+   *
+   * @return the leaf tags
    */
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts);
+  public HashSet<Tag> getLeafTags() {
+    return leafTags;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
+  /**
+   * Sets leaf tags.
+   *
+   * @param leafTags the leaf tags
    */
+  public void setLeafTags(HashSet<Tag> leafTags) {
+    this.leafTags = leafTags;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts, leafTags);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -155,19 +171,34 @@ public class ServiceTemplate extends Base {
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
         && Objects.equals(this.description, other.description) && Objects.equals(this.service, other.service)
-        && Objects.equals(this.tags, other.tags) && Objects.equals(this.hosts, other.hosts);
+        && Objects.equals(this.tags, other.tags) && Objects.equals(this.hosts, other.hosts)
+        && Objects.equals(this.leafTags, other.leafTags);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("envId", envId)
+        .add("name", name)
+        .add("description", description)
+        .add("service", service)
+        .add("tags", tags)
+        .add("hosts", hosts)
+        .add("leafTags", leafTags)
+        .toString();
   }
 
   /**
-   * The Class ServiceTemplateBuilder.
+   * The type Builder.
    */
-  public static final class ServiceTemplateBuilder {
+  public static final class Builder {
     private String envId;
     private String name;
     private String description;
     private Service service;
     private List<Tag> tags = new ArrayList<>();
     private List<Host> hosts = new ArrayList<>();
+    private HashSet<Tag> leafTags = new HashSet<Tag>();
     private String uuid;
     private String appId;
     private User createdBy;
@@ -176,166 +207,177 @@ public class ServiceTemplate extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ServiceTemplateBuilder() {}
+    private Builder() {}
 
     /**
-     * A service template.
+     * A service template builder.
      *
-     * @return the service template builder
+     * @return the builder
      */
-    public static ServiceTemplateBuilder aServiceTemplate() {
-      return new ServiceTemplateBuilder();
+    public static Builder aServiceTemplate() {
+      return new Builder();
     }
 
     /**
-     * With env id.
+     * With env id builder.
      *
      * @param envId the env id
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withEnvId(String envId) {
+    public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
     /**
-     * With description.
+     * With description builder.
      *
      * @param description the description
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
     /**
-     * With service.
+     * With service builder.
      *
      * @param service the service
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withService(Service service) {
+    public Builder withService(Service service) {
       this.service = service;
       return this;
     }
 
     /**
-     * With tags.
+     * With tags builder.
      *
      * @param tags the tags
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withTags(List<Tag> tags) {
+    public Builder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
     /**
-     * With hosts.
+     * With hosts builder.
      *
      * @param hosts the hosts
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withHosts(List<Host> hosts) {
+    public Builder withHosts(List<Host> hosts) {
       this.hosts = hosts;
       return this;
     }
 
     /**
-     * With uuid.
+     * With leaf tags builder.
+     *
+     * @param leafTags the leaf tags
+     * @return the builder
+     */
+    public Builder withLeafTags(HashSet<Tag> leafTags) {
+      this.leafTags = leafTags;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
     /**
-     * But.
+     * But builder.
      *
-     * @return the service template builder
+     * @return the builder
      */
-    public ServiceTemplateBuilder but() {
+    public Builder but() {
       return aServiceTemplate()
           .withEnvId(envId)
           .withName(name)
@@ -343,6 +385,7 @@ public class ServiceTemplate extends Base {
           .withService(service)
           .withTags(tags)
           .withHosts(hosts)
+          .withLeafTags(leafTags)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -353,7 +396,7 @@ public class ServiceTemplate extends Base {
     }
 
     /**
-     * Builds the.
+     * Build service template.
      *
      * @return the service template
      */
@@ -365,6 +408,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setService(service);
       serviceTemplate.setTags(tags);
       serviceTemplate.setHosts(hosts);
+      serviceTemplate.setLeafTags(leafTags);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setAppId(appId);
       serviceTemplate.setCreatedBy(createdBy);

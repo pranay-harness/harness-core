@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.IN;
 
@@ -25,7 +27,6 @@ import software.wings.service.intfc.TagService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -33,40 +34,21 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 4/4/16.
  */
-@Singleton
+@ValidateOnExecution
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private TagService tagService;
+  @Inject private ConfigService configService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private HostService hostService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  private WingsPersistence wingsPersistence;
-  private TagService tagService;
-  private ConfigService configService;
-  private ServiceInstanceService serviceInstanceService;
-  private HostService hostService;
-
-  /**
-   * Instantiates a new service template service impl.
-   *
-   * @param wingsPersistence       the wings persistence
-   * @param tagService             the tag service
-   * @param configService          the config service
-   * @param serviceInstanceService the service instance service
-   * @param hostService            the host service
-   */
-  @Inject
-  public ServiceTemplateServiceImpl(WingsPersistence wingsPersistence, TagService tagService,
-      ConfigService configService, ServiceInstanceService serviceInstanceService, HostService hostService) {
-    this.wingsPersistence = wingsPersistence;
-    this.tagService = tagService;
-    this.configService = configService;
-    this.serviceInstanceService = serviceInstanceService;
-    this.hostService = hostService;
-  }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
@@ -100,20 +82,15 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.util.List)
    */
   @Override
-  public ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds) {
-    List<Host> hosts = new ArrayList<>();
-    if (hostIds != null) {
-      for (String hostId : hostIds) {
-        hosts.add(wingsPersistence.get(Host.class, hostId));
-      }
-    }
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
+    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
+    String infraId = hostService.getInfraId(envId, appId);
+    List<Host> hosts = hostIds.stream().map(hostId -> hostService.get(appId, infraId, hostId)).collect(toList());
+
     List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
-
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
-
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+    return get(appId, envId, serviceTemplateId);
   }
 
   private void updateServiceInstances(ServiceTemplate serviceTemplate, List<Host> newHosts, List<Host> existingHosts) {
@@ -131,7 +108,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         deleteHostList.add(host);
       }
     });
-    serviceInstanceService.updateHostMappings(serviceTemplate, addHostsList, deleteHostList);
+    serviceInstanceService.updateInstanceMappings(serviceTemplate, addHostsList, deleteHostList);
   }
 
   /* (non-Javadoc)
@@ -139,22 +116,19 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.util.List)
    */
   @Override
-  public ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds) {
-    List<Tag> tags = new ArrayList<>();
-    if (tagIds != null) {
-      for (String tagId : tagIds) {
-        tags.add(tagService.getTag(appId, tagId));
-      }
-    }
+  public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
+    List<Tag> tags = tagIds.stream().map(tagId -> tagService.getTag(appId, tagId)).collect(toList());
 
-    Set<Tag> newLeafTags = new HashSet<>();
-    tags.forEach(tag -> { newLeafTags.addAll(tagService.getLeafTags(tag)); });
+    Set<Tag> newLeafTags = tags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
+
     List<Host> newHosts = hostService.getHostsByTags(appId, newLeafTags.stream().collect(toList()));
 
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
     List<Tag> existingMappedTags = serviceTemplate.getTags();
-    Set<Tag> existingLeafTags = new HashSet<>();
-    existingMappedTags.forEach(tag -> { existingLeafTags.addAll(tagService.getLeafTags(tag)); });
+
+    Set<Tag> existingLeafTags =
+        existingMappedTags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
+
     List<Host> existingHosts = hostService.getHostsByTags(appId, existingLeafTags.stream().collect(toList()));
     updateServiceInstances(serviceTemplate, newHosts, existingHosts);
 
@@ -172,6 +146,36 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<Tag> tags = serviceTemplate.getTags();
     pageRequest.addFilter("tags", tags, IN);
     return wingsPersistence.query(Host.class, pageRequest);
+  }
+
+  @Override
+  public void deleteHostFromTemplates(Host host) {
+    List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
+                                                 .field("appId")
+                                                 .equal(host.getAppId())
+                                                 .field("hosts")
+                                                 .equal(host.getUuid())
+                                                 .asList();
+    deleteHostFromATemplate(host, serviceTemplates);
+  }
+
+  @Override
+  public List<ServiceTemplate> getTemplatesByTag(Tag tag) {
+    return wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(tag.getAppId())
+        .field("tags")
+        .hasThisElement(tag)
+        .asList();
+  }
+
+  private void deleteHostFromATemplate(Host host, List<ServiceTemplate> serviceTemplates) {
+    if (serviceTemplates != null) {
+      serviceTemplates.forEach(serviceTemplate -> {
+        wingsPersistence.deleteFromList(ServiceTemplate.class, serviceTemplate.getUuid(), "hosts", host.getUuid());
+        serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host));
+      });
+    }
   }
 
   /* (non-Javadoc)
@@ -242,7 +246,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId) {
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+    return wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
   }
 
   /* (non-Javadoc)

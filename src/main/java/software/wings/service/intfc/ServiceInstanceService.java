@@ -64,5 +64,5 @@ public interface ServiceInstanceService {
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateHostMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
+  void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
 }

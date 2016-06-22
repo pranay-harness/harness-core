@@ -3,11 +3,13 @@ package software.wings.service.intfc;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -85,7 +87,8 @@ public interface ServiceTemplateService {
    * @param hostIds           the host ids
    * @return the service template
    */
-  ServiceTemplate updateHosts(String appId, String serviceTemplateId, List<String> hostIds);
+  ServiceTemplate updateHosts(
+      @NotNull String appId, @NotNull String envId, @NotNull String serviceTemplateId, @NotNull List<String> hostIds);
 
   /**
    * Update tags.
@@ -95,7 +98,8 @@ public interface ServiceTemplateService {
    * @param tagIds            the tag ids
    * @return the service template
    */
-  ServiceTemplate updateTags(String appId, String serviceTemplateId, List<String> tagIds);
+  ServiceTemplate updateTags(
+      @NotNull String appId, @NotNull String envId, @NotNull String serviceTemplateId, @NotNull List<String> tagIds);
 
   /**
    * Gets the tagged hosts.
@@ -105,4 +109,8 @@ public interface ServiceTemplateService {
    * @return the tagged hosts
    */
   PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest);
+
+  void deleteHostFromTemplates(Host host);
+
+  List<ServiceTemplate> getTemplatesByTag(Tag tag);
 }
