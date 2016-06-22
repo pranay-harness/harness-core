@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.mapping.MappedClass;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -39,19 +40,15 @@ public class PageRequest<T> {
    * The constant DEFAULT_PAGE_SIZE.
    */
   public static final int DEFAULT_PAGE_SIZE = 50;
-
+  @JsonIgnore Class<T> persistentClass;
   @DefaultValue("0") @QueryParam("offset") private String offset;
-
   private int start;
-
   @DefaultValue("50") @QueryParam("limit") private String limit;
-
   private int pageSize = DEFAULT_PAGE_SIZE;
   private List<SearchFilter> filters = new ArrayList<>();
   private List<SortOrder> orders = new ArrayList<>();
   private List<String> fieldsIncluded = new ArrayList<>();
   private List<String> fieldsExcluded = new ArrayList<>();
-
   @JsonIgnore @Context private UriInfo uriInfo;
 
   @JsonIgnore private boolean isOr = false;
@@ -224,8 +221,9 @@ public class PageRequest<T> {
 
   /**
    * Converts the filter to morphia form.
+   * @param mappedClass
    */
-  public void populateFilters() {
+  public void populateFilters(MappedClass mappedClass) {
     if (uriInfo == null) {
       return;
     }
@@ -243,13 +241,15 @@ public class PageRequest<T> {
         if (searchLogic.equals("OR")) {
           isOr = true;
         }
-      } else if (!(key.startsWith("sort") || key.startsWith("search"))) {
-        Operator op = map.get(key).size() > 1 ? Operator.IN : Operator.EQ;
-        SearchFilter searchFilter = new SearchFilter();
-        searchFilter.setFieldName(key);
-        searchFilter.setOp(op);
-        searchFilter.setFieldValues(map.get(key).toArray());
-        filters.add(searchFilter);
+      } else if (!(key.startsWith("search") || key.startsWith("sort"))) {
+        if (mappedClass.getMappedField(key) != null) {
+          Operator op = map.get(key).size() > 1 ? Operator.IN : Operator.EQ;
+          SearchFilter searchFilter = new SearchFilter();
+          searchFilter.setFieldName(key);
+          searchFilter.setOp(op);
+          searchFilter.setFieldValues(map.get(key).toArray());
+          filters.add(searchFilter);
+        }
       }
     }
     for (int index = 0; index < fieldCount; index++) {
