@@ -34,8 +34,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class LogServiceImpl implements LogService {
-  @Inject private WingsPersistence wingsPersistence;
   private final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+  @Inject private WingsPersistence wingsPersistence;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.LogService#list(software.wings.dl.PageRequest)

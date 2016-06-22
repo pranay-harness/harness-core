@@ -33,4 +33,6 @@ public interface ExpressionProcessor {
   String normalizeExpression(String expression);
 
   boolean matches(String expression);
+
+  ContextElementType getContextElementType();
 }

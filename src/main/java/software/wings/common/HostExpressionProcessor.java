@@ -10,6 +10,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.HostService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.utils.MapperUtils;
@@ -63,6 +64,11 @@ public class HostExpressionProcessor implements ExpressionProcessor {
       return true;
     }
     return false;
+  }
+
+  @Override
+  public ContextElementType getContextElementType() {
+    return ContextElementType.HOST;
   }
 
   @Override

@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.sm.states;
 
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -9,7 +10,6 @@ import java.io.Serializable;
 
 /**
  * @author Rishi
- *
  */
 public class SimpleNotifier implements Runnable {
   private WaitNotifyEngine waitNotifyEngine;

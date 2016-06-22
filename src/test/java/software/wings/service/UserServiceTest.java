@@ -61,17 +61,14 @@ import javax.inject.Inject;
  * Created by anubhaw on 3/9/16.
  */
 public class UserServiceTest extends WingsBaseTest {
+  private final User.Builder userBuilder =
+      anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
   @Mock private NotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
-
   @Inject @InjectMocks private UserService userService;
-
   @Inject @Named("primaryDatastore") private Datastore datastore;
-
-  private final User.Builder userBuilder =
-      anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
 
   /**
    * Sets mocks.

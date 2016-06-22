@@ -9,5 +9,6 @@ import software.wings.dl.PageResponse;
  */
 public interface HistoryService {
   void create(History history);
+
   PageResponse<History> list(PageRequest<History> request);
 }

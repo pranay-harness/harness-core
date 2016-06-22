@@ -1,5 +1,7 @@
 package software.wings.dl;
 
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
@@ -221,6 +223,7 @@ public class PageRequest<T> {
 
   /**
    * Converts the filter to morphia form.
+   *
    * @param mappedClass
    */
   public void populateFilters(MappedClass mappedClass) {
@@ -241,15 +244,8 @@ public class PageRequest<T> {
         if (searchLogic.equals("OR")) {
           isOr = true;
         }
-      } else if (!(key.startsWith("search") || key.startsWith("sort"))) {
-        if (mappedClass.getMappedField(key) != null) {
-          Operator op = map.get(key).size() > 1 ? Operator.IN : Operator.EQ;
-          SearchFilter searchFilter = new SearchFilter();
-          searchFilter.setFieldName(key);
-          searchFilter.setOp(op);
-          searchFilter.setFieldValues(map.get(key).toArray());
-          filters.add(searchFilter);
-        }
+      } else if (!(key.startsWith("search") || key.startsWith("sort") || mappedClass.getMappedField(key) == null)) {
+        filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
       }
     }
     for (int index = 0; index < fieldCount; index++) {

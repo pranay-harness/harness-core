@@ -79,6 +79,11 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
+  public ContextElementType getContextElementType() {
+    return ContextElementType.SERVICE;
+  }
+
+  @Override
   public String normalizeExpression(String expression) {
     if (!matches(expression)) {
       return null;

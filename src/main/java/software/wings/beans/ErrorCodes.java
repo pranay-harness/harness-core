@@ -22,10 +22,9 @@ public enum ErrorCodes {
   /**
    * Domain not allowed to register error codes.
    */
-  DOMAIN_NOT_ALLOWED_TO_REGISTER("DOMAIN_NOT_ALLOWED_TO_REGISTER"),
-  /**
-   * User already registered error codes.
-   */
+  DOMAIN_NOT_ALLOWED_TO_REGISTER("DOMAIN_NOT_ALLOWED_TO_REGISTER"), /**
+                                                                     * User already registered error codes.
+                                                                     */
   USER_ALREADY_REGISTERED("USER_ALREADY_REGISTERED", CONFLICT),
 
   /**
@@ -46,10 +45,9 @@ public enum ErrorCodes {
   /**
    * Email verification token not found error codes.
    */
-  EMAIL_VERIFICATION_TOKEN_NOT_FOUND("EMAIL_VERIFICATION_TOKEN_NOT_FOUND"),
-  /**
-   * Invalid token error codes.
-   */
+  EMAIL_VERIFICATION_TOKEN_NOT_FOUND("EMAIL_VERIFICATION_TOKEN_NOT_FOUND"), /**
+                                                                             * Invalid token error codes.
+                                                                             */
   INVALID_TOKEN("INVALID_TOKEN", UNAUTHORIZED), /**
                                                  * Expired token error codes.
                                                  */

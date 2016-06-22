@@ -47,9 +47,11 @@ public class RepeatStateTest {
     ExecutionContextImpl context = prepareExecutionContext(stateName, repeatElements);
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setRepeatElementExpression("services()");
-    repeatState.setRepeatElementType(ContextElementType.SERVICE);
     repeatState.setExecutionStrategy(ExecutionStrategy.SERIAL);
     repeatState.setRepeatTransitionStateName("abc");
+    repeatState.resolveProperties();
+
+    assertThat(repeatState.getRepeatElementType()).isEqualTo(ContextElementType.SERVICE);
 
     ExecutionResponse response = repeatState.execute(context, null);
 
@@ -77,9 +79,11 @@ public class RepeatStateTest {
 
     RepeatState repeatState = new RepeatState(stateName);
     repeatState.setRepeatElementExpression("services()");
-    repeatState.setRepeatElementType(ContextElementType.SERVICE);
     repeatState.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     repeatState.setRepeatTransitionStateName("abc");
+    repeatState.resolveProperties();
+
+    assertThat(repeatState.getRepeatElementType()).isEqualTo(ContextElementType.SERVICE);
 
     ExecutionResponse response = repeatState.execute(context, null);
 
