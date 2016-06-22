@@ -105,6 +105,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
+  public ContextElementType getContextElementType() {
+    return ContextElementType.INSTANCE;
+  }
+
+  @Override
   public String normalizeExpression(String expression) {
     if (!matches(expression)) {
       return null;

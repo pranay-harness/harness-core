@@ -25,16 +25,7 @@ import javax.inject.Singleton;
 public class WingsExpressionProcessorFactory implements ExpressionProcessorFactory {
   @Inject private Injector injector;
 
-  @Override
-  public ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context) {
-    ExpressionProcessor processor = getMatchingExpressionProcessor(expression, context);
-    if (processor != null) {
-      injector.injectMembers(processor);
-    }
-    return processor;
-  }
-
-  private ExpressionProcessor getMatchingExpressionProcessor(String expression, ExecutionContext context) {
+  public static ExpressionProcessor getMatchingExpressionProcessor(String expression, ExecutionContext context) {
     ExpressionProcessor processor = new ServiceExpressionProcessor(context);
     if (processor.matches(expression)) {
       return processor;
@@ -50,6 +41,15 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
     }
 
     return null;
+  }
+
+  @Override
+  public ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context) {
+    ExpressionProcessor processor = getMatchingExpressionProcessor(expression, context);
+    if (processor != null) {
+      injector.injectMembers(processor);
+    }
+    return processor;
   }
 
   @Override

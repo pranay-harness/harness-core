@@ -103,6 +103,8 @@ public class StateMachine extends Base {
       // populate properties
       MapperUtils.mapObject(properties, state);
 
+      state.resolveProperties();
+
       addState(state);
     }
 

@@ -9,6 +9,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -16,6 +17,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
@@ -58,10 +60,65 @@ public class RepeatState extends State {
     super(name, StateType.REPEAT.name());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
     return execute((ExecutionContextImpl) context, repeatStateExecutionData);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ExecutionResponse handleAsyncResponse(
+      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
+    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    for (Serializable status : response.values()) {
+      executionStatus = (ExecutionStatus) status;
+      if (executionStatus != ExecutionStatus.SUCCESS) {
+        break;
+      }
+    }
+
+    RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
+    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
+
+    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
+        || repeatStateExecutionData.indexReachedMax()) {
+      ExecutionResponse executionResponse = new ExecutionResponse();
+      executionResponse.setExecutionStatus(executionStatus);
+      return executionResponse;
+    } else {
+      SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
+      Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
+      repeatElementIndex++;
+      repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
+      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
+
+      StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+      List<String> correlationIds = new ArrayList<>();
+      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
+
+      executionResponse.setAsync(true);
+      executionResponse.setCorrelationIds(correlationIds);
+      executionResponse.setStateExecutionData(repeatStateExecutionData);
+      return executionResponse;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void resolveProperties() {
+    ExpressionProcessor expressionProcessor =
+        WingsExpressionProcessorFactory.getMatchingExpressionProcessor(repeatElementExpression, null);
+    repeatElementType =
+        expressionProcessor == null ? ContextElementType.OTHER : expressionProcessor.getContextElementType();
   }
 
   /**
@@ -158,47 +215,6 @@ public class RepeatState extends State {
     childStateExecutionInstance.setContextElementType(repeatElement.getElementType().name());
     executionResponse.add(childStateExecutionInstance);
     correlationIds.add(notifyId);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
-   */
-  @Override
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    for (Serializable status : response.values()) {
-      executionStatus = (ExecutionStatus) status;
-      if (executionStatus != ExecutionStatus.SUCCESS) {
-        break;
-      }
-    }
-
-    RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
-    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
-
-    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
-        || repeatStateExecutionData.indexReachedMax()) {
-      ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setExecutionStatus(executionStatus);
-      return executionResponse;
-    } else {
-      SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
-
-      Integer repeatElementIndex = repeatStateExecutionData.getRepeatElementIndex();
-      repeatElementIndex++;
-      repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
-      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
-
-      StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-      List<String> correlationIds = new ArrayList<>();
-      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
-
-      executionResponse.setAsync(true);
-      executionResponse.setCorrelationIds(correlationIds);
-      executionResponse.setStateExecutionData(repeatStateExecutionData);
-      return executionResponse;
-    }
   }
 
   /**
@@ -353,6 +369,9 @@ public class RepeatState extends State {
       }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getExecutionSummary() {
       LinkedHashMap<String, Object> execData = fillExecutionData();
@@ -360,6 +379,9 @@ public class RepeatState extends State {
       return execData;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getExecutionDetails() {
       LinkedHashMap<String, Object> execData = fillExecutionData();
@@ -375,10 +397,20 @@ public class RepeatState extends State {
       return orderedMap;
     }
 
+    /**
+     * Getter for property 'executionStrategy'.
+     *
+     * @return Value for property 'executionStrategy'.
+     */
     public ExecutionStrategy getExecutionStrategy() {
       return executionStrategy;
     }
 
+    /**
+     * Setter for property 'executionStrategy'.
+     *
+     * @param executionStrategy Value to set for property 'executionStrategy'.
+     */
     public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
       this.executionStrategy = executionStrategy;
     }

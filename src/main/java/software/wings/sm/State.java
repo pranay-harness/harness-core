@@ -20,6 +20,8 @@ public abstract class State implements Serializable {
 
   @SchemaIgnore private String name;
 
+  @SchemaIgnore private ContextElementType requiredContextElementType;
+
   private String stateType;
 
   /**
@@ -51,6 +53,16 @@ public abstract class State implements Serializable {
   @SchemaIgnore
   public void setName(String name) {
     this.name = name;
+  }
+
+  @SchemaIgnore
+  public ContextElementType getRequiredContextElementType() {
+    return requiredContextElementType;
+  }
+
+  @SchemaIgnore
+  public void setRequiredContextElementType(ContextElementType requiredContextElementType) {
+    this.requiredContextElementType = requiredContextElementType;
   }
 
   /**
@@ -112,4 +124,6 @@ public abstract class State implements Serializable {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;
   }
+
+  public void resolveProperties() {}
 }

@@ -74,6 +74,7 @@ public class CommandState extends State {
   public CommandState(String name, String commandName) {
     super(name, COMMAND.name());
     this.commandName = commandName;
+    this.setRequiredContextElementType(ContextElementType.INSTANCE);
   }
 
   /**
