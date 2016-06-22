@@ -13,6 +13,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserService;
 
 import javax.ws.rs.BeanParam;
@@ -50,6 +52,7 @@ public class UserResource {
    * @return the rest response
    */
   @GET
+  @AuthRule
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
     pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
     return new RestResponse<>(userService.list(pageRequest));
@@ -75,6 +78,7 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
+  @AuthRule
   @Path("{userId}")
   public RestResponse<User> update(@QueryParam("appId") String appId, @PathParam("userId") String userId, User user) {
     user.setUuid(userId);
@@ -89,22 +93,18 @@ public class UserResource {
    * @return the rest response
    */
   @DELETE
+  @AuthRule
   @Path("{userId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
   }
 
-  /**
-   * Gets the.
-   *
-   * @param userId the user id
-   * @return the rest response
-   */
   @GET
-  @Path("{userId}")
-  public RestResponse<User> get(@QueryParam("appId") String appId, @PathParam("userId") String userId) {
-    return new RestResponse<>(userService.get(userId));
+  @AuthRule
+  @Path("user")
+  public RestResponse<User> get() {
+    return new RestResponse<>(User.getPublicUser(UserThreadLocal.get()));
   }
 
   /**
@@ -133,6 +133,7 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
+  @AuthRule
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.addRole(userId, roleId));
@@ -146,6 +147,7 @@ public class UserResource {
    * @return the rest response
    */
   @DELETE
+  @AuthRule
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.revokeRole(userId, roleId));

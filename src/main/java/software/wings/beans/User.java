@@ -53,6 +53,9 @@ public class User extends Base implements Principal {
    * @return Partial User object without sensitive information.
    */
   public static User getPublicUser(User fullUser) {
+    if (fullUser == null) {
+      return null;
+    }
     User publicUser = new User();
     publicUser.setUuid(fullUser.getUuid());
     publicUser.setName(fullUser.getName());
