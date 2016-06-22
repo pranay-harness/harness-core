@@ -235,16 +235,21 @@ public class PageRequest<T> {
     for (String key : map.keySet()) {
       if (key.startsWith("search") && key.endsWith("[field]")) {
         fieldCount++;
-      }
-      if (key.startsWith("sort") && key.endsWith("[field]")) {
+      } else if (key.startsWith("sort") && key.endsWith("[field]")) {
         orderCount++;
-      }
-      if (key.equals("searchLogic")) {
+      } else if (key.equals("searchLogic")) {
         String searchLogic = map.getFirst("searchLogic");
         searchLogic = searchLogic == null ? "" : searchLogic.trim();
         if (searchLogic.equals("OR")) {
           isOr = true;
         }
+      } else if (!(key.startsWith("sort") || key.startsWith("search"))) {
+        Operator op = map.get(key).size() > 1 ? Operator.IN : Operator.EQ;
+        SearchFilter searchFilter = new SearchFilter();
+        searchFilter.setFieldName(key);
+        searchFilter.setOp(op);
+        searchFilter.setFieldValues(map.get(key).toArray());
+        filters.add(searchFilter);
       }
     }
     for (int index = 0; index < fieldCount; index++) {
