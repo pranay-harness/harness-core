@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.base.MoreObjects;
+
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -19,6 +21,8 @@ import java.util.Map;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 // TODO: Auto-generated Javadoc
@@ -132,6 +136,26 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertPaginationResult(res);
   }
 
+  @Test
+  public void shouldTakeQueryParamsInSimplifiedForm() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
+    queryParams.addAll("fieldA", Lists.newArrayList("fieldA13", "fieldA14"));
+
+    queryParams.addAll("sort[0][field]", Lists.newArrayList("fieldA"));
+    queryParams.addAll("sort[0][direction]", Lists.newArrayList("DESC"));
+
+    when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    req.setUriInfo(uriInfo);
+
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+
+    assertThat(res).isNotNull().hasSize(2);
+  }
+
   /**
    * Should update map
    */
@@ -159,7 +183,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   private void assertPaginationResult(PageResponse<TestEntity> res) {
-    assertThat(res).isNotNull();
+    assertThat(res).isNotNull().hasSize(2);
     assertThat(res.size()).isEqualTo(2);
     assertThat(res.getTotal()).isEqualTo(5);
     assertThat(res.getStart()).isEqualTo(1);
@@ -226,6 +250,11 @@ public class WingsPersistenceTest extends WingsBaseTest {
 
     public void setMapField(Map<String, String> mapField) {
       this.mapField = mapField;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("fieldA", fieldA).add("mapField", mapField).toString();
     }
   }
 }
