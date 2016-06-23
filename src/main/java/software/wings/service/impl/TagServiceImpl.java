@@ -118,7 +118,7 @@ public class TagServiceImpl implements TagService {
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
-    List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), asList(tag));
+    List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByTag(tag);
     if (serviceTemplates != null) {
       serviceTemplates.forEach(serviceTemplate -> {
@@ -146,12 +146,12 @@ public class TagServiceImpl implements TagService {
       return;
     }
 
-    List<Host> hosts = wingsPersistence.createQuery(Host.class).field("tags").equal(tag.getUuid()).asList();
+    List<Host> hosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
 
     // Tag hosts
     hostIds.forEach(hostId -> {
       Host host = wingsPersistence.get(Host.class, hostId);
-      List<Tag> tags = getUpdatedHostTagsList(tag, host);
+      List<Tag> tags = removeAnyTagFromSameTagTree(tag, host);
       UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
       wingsPersistence.update(host, updateOp);
       hosts.remove(host); // remove updated tags from all tagged hosts
@@ -164,7 +164,7 @@ public class TagServiceImpl implements TagService {
     });
   }
 
-  private List<Tag> getUpdatedHostTagsList(Tag tag, Host host) {
+  private List<Tag> removeAnyTagFromSameTagTree(Tag tag, Host host) {
     List<Tag> tags = host.getTags();
     if (tags != null && tags.size() != 0) {
       for (int i = 0; i < tags.size(); i++) {

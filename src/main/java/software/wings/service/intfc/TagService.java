@@ -91,5 +91,10 @@ public interface TagService {
    */
   List<Tag> getLeafTags(Tag root);
 
+  /**
+   * Delete host from tags.
+   *
+   * @param host the host
+   */
   void deleteHostFromTags(Host host);
 }

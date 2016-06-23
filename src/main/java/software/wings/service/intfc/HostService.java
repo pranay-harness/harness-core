@@ -115,5 +115,5 @@ public interface HostService {
    * @param tags  the tags
    * @return the hosts by tags
    */
-  List<Host> getHostsByTags(@NotEmpty String appId, @NotNull List<Tag> tags);
+  List<Host> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
 }

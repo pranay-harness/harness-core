@@ -100,23 +100,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
     List<Tag> newTags = tagIds.stream().map(tagId -> tagService.getTag(appId, tagId)).collect(toList());
-    List<Host> newHostsToBeMapped = getHostsInTagsTree(appId, newTags);
+    Set<Tag> newLeafTags =
+        newTags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
+
+    List<Host> newHostsToBeMapped = hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
 
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
-    List<Host> existingMappedHosts = getHostsInTagsTree(appId, serviceTemplate.getTags());
+    List<Host> existingMappedHosts =
+        hostService.getHostsByTags(appId, envId, serviceTemplate.getLeafTags().stream().collect(toList()));
 
     updateServiceInstances(serviceTemplate, newHostsToBeMapped, existingMappedHosts);
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", newTags));
+    wingsPersistence.updateFields(
+        ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", newTags, "leafTags", newLeafTags));
 
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
-  }
-
-  private List<Host> getHostsInTagsTree(String appId, List<Tag> tags) {
-    System.out.println("debug--");
-    tags.forEach(tag -> System.out.println(tag.toString()));
-    System.out.println("--debug");
-    Set<Tag> leafTags = tags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
-    return hostService.getHostsByTags(appId, leafTags.stream().collect(toList()));
   }
 
   private void updateServiceInstances(ServiceTemplate serviceTemplate, List<Host> newHosts, List<Host> existingHosts) {

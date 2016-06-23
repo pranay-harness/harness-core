@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 // TODO: Auto-generated Javadoc
 
@@ -29,7 +30,7 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private HashSet<Tag> leafTags = new HashSet<Tag>();
+  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<Tag>();
 
   /**
    * Gets name.
@@ -144,7 +145,7 @@ public class ServiceTemplate extends Base {
    *
    * @return the leaf tags
    */
-  public HashSet<Tag> getLeafTags() {
+  public Set<Tag> getLeafTags() {
     return leafTags;
   }
 
@@ -153,7 +154,7 @@ public class ServiceTemplate extends Base {
    *
    * @param leafTags the leaf tags
    */
-  public void setLeafTags(HashSet<Tag> leafTags) {
+  public void setLeafTags(Set<Tag> leafTags) {
     this.leafTags = leafTags;
   }
 
@@ -203,7 +204,7 @@ public class ServiceTemplate extends Base {
     private Service service;
     private List<Tag> tags = new ArrayList<>();
     private List<Host> hosts = new ArrayList<>();
-    private HashSet<Tag> leafTags = new HashSet<Tag>();
+    private Set<Tag> leafTags = new HashSet<Tag>();
     private String uuid;
     private String appId;
     private User createdBy;
@@ -214,174 +215,80 @@ public class ServiceTemplate extends Base {
 
     private Builder() {}
 
-    /**
-     * A service template builder.
-     *
-     * @return the builder
-     */
     public static Builder aServiceTemplate() {
       return new Builder();
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With description builder.
-     *
-     * @param description the description
-     * @return the builder
-     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With service builder.
-     *
-     * @param service the service
-     * @return the builder
-     */
     public Builder withService(Service service) {
       this.service = service;
       return this;
     }
 
-    /**
-     * With tags builder.
-     *
-     * @param tags the tags
-     * @return the builder
-     */
     public Builder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
-    /**
-     * With hosts builder.
-     *
-     * @param hosts the hosts
-     * @return the builder
-     */
     public Builder withHosts(List<Host> hosts) {
       this.hosts = hosts;
       return this;
     }
 
-    /**
-     * With leaf tags builder.
-     *
-     * @param leafTags the leaf tags
-     * @return the builder
-     */
-    public Builder withLeafTags(HashSet<Tag> leafTags) {
+    public Builder withLeafTags(Set<Tag> leafTags) {
       this.leafTags = leafTags;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aServiceTemplate()
           .withEnvId(envId)
@@ -400,11 +307,6 @@ public class ServiceTemplate extends Base {
           .withActive(active);
     }
 
-    /**
-     * Build service template.
-     *
-     * @return the service template
-     */
     public ServiceTemplate build() {
       ServiceTemplate serviceTemplate = new ServiceTemplate();
       serviceTemplate.setEnvId(envId);

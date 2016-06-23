@@ -115,8 +115,16 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getHostsByTags(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsByTags(String appId, List<Tag> tags) {
-    return wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("tags").hasAnyOf(tags).asList();
+  public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
+    String infraId = getInfraId(envId, appId);
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .field("tags")
+        .hasAnyOf(tags)
+        .asList();
   }
 
   /* (non-Javadoc)
