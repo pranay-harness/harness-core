@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -9,6 +10,8 @@ import com.google.inject.Injector;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ExecutionStrategy;
+import software.wings.common.InstanceExpressionProcessor;
 import software.wings.common.UUIDGenerator;
 import software.wings.common.thread.ThreadPool;
 import software.wings.exception.WingsException;
@@ -23,6 +26,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 // TODO: Auto-generated Javadoc
 
@@ -303,6 +307,220 @@ public class StateMachineTest extends WingsBaseTest {
   }
 
   /**
+   * Should throw non-repeat state transition.
+   */
+  @Test
+  public void shouldExpandRepeatState() {
+    StateMachine sm = new StateMachine();
+    State starting = new StateSync("starting");
+    sm.addState(starting);
+    RepeatState repeatByService1 = aRepeatState()
+                                       .withRepeatElementExpression("services()")
+                                       .withName("RepeatByServices")
+                                       .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                                       .withRepeatElementType(ContextElementType.SERVICE)
+                                       .build();
+    sm.addState(repeatByService1);
+    StateSync runCommand = new StateSync("command");
+    runCommand.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand);
+    StateSync finished = new StateSync("finished");
+    sm.addState(finished);
+    sm.setInitialStateName("starting");
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(starting)
+                         .withToState(repeatByService1)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByService1)
+                         .withToState(runCommand)
+                         .withTransitionType(TransitionType.REPEAT)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByService1)
+                         .withToState(finished)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.validate();
+
+    sm.addRepeatersBasedOnStateRequiredContextElement();
+
+    sm.clearCache();
+
+    sm.validate();
+
+    RepeatState expectedNewState = aRepeatState()
+                                       .withName("RepeatBy" + ContextElementType.INSTANCE)
+                                       .withRepeatElementType(ContextElementType.INSTANCE)
+                                       .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                       .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                       .build();
+
+    assertThat(sm.getStates()).hasSize(5).contains(expectedNewState);
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.REPEAT)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
+  }
+
+  @Test
+  public void shouldExpandRepeatStateInAComplexScenario() {
+    StateMachine sm = new StateMachine();
+    State starting = new StateSync("starting");
+    sm.addState(starting);
+    RepeatState repeatByService1 = aRepeatState()
+                                       .withRepeatElementExpression("services()")
+                                       .withName("RepeatByServices")
+                                       .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                                       .withRepeatElementType(ContextElementType.SERVICE)
+                                       .build();
+    sm.addState(repeatByService1);
+    RepeatState repeatByHosts1 = aRepeatState()
+                                     .withRepeatElementExpression("host()")
+                                     .withName("RepeatByHosts")
+                                     .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                                     .withRepeatElementType(ContextElementType.HOST)
+                                     .build();
+    sm.addState(repeatByHosts1);
+    StateSync runCommand = new StateSync("command");
+    runCommand.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand);
+    StateSync finished = new StateSync("finished");
+    sm.addState(finished);
+    sm.setInitialStateName("starting");
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(starting)
+                         .withToState(repeatByService1)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(starting)
+                         .withToState(repeatByHosts1)
+                         .withTransitionType(TransitionType.FAILURE)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByService1)
+                         .withToState(runCommand)
+                         .withTransitionType(TransitionType.REPEAT)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByService1)
+                         .withToState(finished)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByHosts1)
+                         .withToState(runCommand)
+                         .withTransitionType(TransitionType.REPEAT)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByHosts1)
+                         .withToState(finished)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.validate();
+
+    sm.addRepeatersBasedOnStateRequiredContextElement();
+
+    sm.clearCache();
+
+    sm.validate();
+
+    RepeatState expectedNewState = aRepeatState()
+                                       .withName("RepeatBy" + ContextElementType.INSTANCE)
+                                       .withRepeatElementType(ContextElementType.INSTANCE)
+                                       .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                       .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                       .build();
+
+    assertThat(sm.getStates()).hasSize(7).contains(expectedNewState);
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.REPEAT)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
+    assertThat(sm.getNextStates("RepeatByHosts", TransitionType.REPEAT)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("RepeatByHosts", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.REPEAT).get(0))
+        .isSameAs(sm.getNextStates("RepeatByHosts", TransitionType.REPEAT).get(0));
+  }
+
+  @Test
+  public void shouldExpandRepeatStateForEachNodeThatNeedsIt() {
+    StateMachine sm = new StateMachine();
+    State starting = new StateSync("starting");
+    sm.addState(starting);
+    RepeatState repeatByService1 = aRepeatState()
+                                       .withRepeatElementExpression("services()")
+                                       .withName("RepeatByServices")
+                                       .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                                       .withRepeatElementType(ContextElementType.SERVICE)
+                                       .build();
+    sm.addState(repeatByService1);
+    StateSync runCommand1 = new StateSync("command1");
+    runCommand1.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand1);
+    StateSync runCommand2 = new StateSync("command2");
+    runCommand2.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand2);
+    StateSync runCommand3 = new StateSync("command3");
+    runCommand3.setRequiredContextElementType(ContextElementType.INSTANCE);
+    sm.addState(runCommand3);
+    StateSync finished = new StateSync("finished");
+    sm.addState(finished);
+    sm.setInitialStateName("RepeatByServices");
+
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(repeatByService1)
+                         .withToState(starting)
+                         .withTransitionType(TransitionType.REPEAT)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(starting)
+                         .withToState(runCommand1)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand1)
+                         .withToState(runCommand2)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand2)
+                         .withToState(runCommand3)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.addTransition(Transition.Builder.aTransition()
+                         .withFromState(runCommand3)
+                         .withToState(finished)
+                         .withTransitionType(TransitionType.SUCCESS)
+                         .build());
+    sm.validate();
+
+    sm.addRepeatersBasedOnStateRequiredContextElement();
+
+    sm.clearCache();
+
+    sm.validate();
+
+    RepeatState expectedNewState = aRepeatState()
+                                       .withName("RepeatBy" + ContextElementType.INSTANCE)
+                                       .withRepeatElementType(ContextElementType.INSTANCE)
+                                       .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                       .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                       .build();
+
+    assertThat(sm.getStates()).hasSize(9).contains(expectedNewState);
+    System.out.println(sm.getTransitions());
+    assertThat(sm.getNextStates("RepeatByServices", TransitionType.REPEAT)).hasSize(1).containsOnly(starting);
+    assertThat(sm.getNextStates("starting", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("command1", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand1);
+    assertThat(sm.getNextStates("command1", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("command2", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand2);
+    assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("command3", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand3);
+    assertThat(sm.getNextStates("command3", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
+  }
+
+  /**
    * The Class Notifier.
    */
   static class Notifier implements Runnable {
@@ -407,6 +625,23 @@ public class StateMachineTest extends WingsBaseTest {
       }
       return response;
     }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(shouldFail);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      final StateSync other = (StateSync) obj;
+      return Objects.equals(this.shouldFail, other.shouldFail);
+    }
   }
 
   /**
@@ -492,6 +727,24 @@ public class StateMachineTest extends WingsBaseTest {
         }
       }
       return executionResponse;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(shouldFail, duration, injector, exception);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) {
+        return true;
+      }
+      if (obj == null || getClass() != obj.getClass()) {
+        return false;
+      }
+      final StateAsync other = (StateAsync) obj;
+      return Objects.equals(this.shouldFail, other.shouldFail) && Objects.equals(this.duration, other.duration)
+          && Objects.equals(this.injector, other.injector) && Objects.equals(this.exception, other.exception);
     }
   }
 

@@ -143,6 +143,5 @@ public class GraphTest {
     graph.repaint("node1");
     assertThat(graph).isNotNull();
     assertThat(graph.getNodes()).isNotNull();
-    System.out.println(graph);
   }
 }

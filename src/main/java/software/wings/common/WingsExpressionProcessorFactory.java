@@ -7,6 +7,7 @@ package software.wings.common;
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.ExpressionProcessorFactory;
@@ -41,6 +42,19 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
     }
 
     return null;
+  }
+
+  public static String getDefaultExpression(ContextElementType contextElementType) {
+    switch (contextElementType) {
+      case SERVICE:
+        return ServiceExpressionProcessor.DEFAULT_EXPRESSION;
+      case HOST:
+        return HostExpressionProcessor.DEFAULT_EXPRESSION;
+      case INSTANCE:
+        return InstanceExpressionProcessor.DEFAULT_EXPRESSION;
+      default:
+        return "";
+    }
   }
 
   @Override

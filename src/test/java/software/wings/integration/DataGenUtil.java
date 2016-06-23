@@ -79,7 +79,6 @@ import software.wings.rules.Integration;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
@@ -476,14 +475,6 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void createGlobalSettings() {
     WebTarget target = client.target(API_BASE + "/settings/?appId=" + Base.GLOBAL_APP_ID);
-    System.out.println(JsonUtils.asJson(aSettingAttribute()
-                                            .withName("Wings Jenkins")
-                                            .withValue(aJenkinsConfig()
-                                                           .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
-                                                           .withUsername("admin")
-                                                           .withPassword("W!ngs")
-                                                           .build())
-                                            .build()));
     getRequestWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withName("Wings Jenkins")

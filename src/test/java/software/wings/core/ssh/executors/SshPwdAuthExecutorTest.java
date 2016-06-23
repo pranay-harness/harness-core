@@ -208,6 +208,5 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(config);
     String fileName = "mvim";
     ExecutionResult result = executor.transferFile(fileId, "./" + fileName, CONFIGS);
-    System.out.println(result);
   }
 }

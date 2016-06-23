@@ -38,6 +38,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
+  public static final String DEFAULT_EXPRESSION = "services()";
   private static final String EXPRESSION_START_PATTERN = "services()";
   private static final String EXPRESSION_EQUAL_PATTERN = "services";
 

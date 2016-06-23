@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 // TODO: Auto-generated Javadoc
@@ -413,6 +414,93 @@ public class RepeatState extends State {
      */
     public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
       this.executionStrategy = executionStrategy;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(logger, repeatElementType, repeatElementExpression, executionStrategy,
+        executionStrategyExpression, repeatTransitionStateName);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final RepeatState other = (RepeatState) obj;
+    return Objects.equals(this.logger, other.logger) && Objects.equals(this.repeatElementType, other.repeatElementType)
+        && Objects.equals(this.repeatElementExpression, other.repeatElementExpression)
+        && Objects.equals(this.executionStrategy, other.executionStrategy)
+        && Objects.equals(this.executionStrategyExpression, other.executionStrategyExpression)
+        && Objects.equals(this.repeatTransitionStateName, other.repeatTransitionStateName);
+  }
+
+  public static final class Builder {
+    private String name;
+    private ContextElementType repeatElementType;
+    private String repeatElementExpression;
+    private ExecutionStrategy executionStrategy;
+    private String executionStrategyExpression;
+    private String repeatTransitionStateName;
+
+    private Builder() {}
+
+    public static Builder aRepeatState() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder withRepeatElementType(ContextElementType repeatElementType) {
+      this.repeatElementType = repeatElementType;
+      return this;
+    }
+
+    public Builder withRepeatElementExpression(String repeatElementExpression) {
+      this.repeatElementExpression = repeatElementExpression;
+      return this;
+    }
+
+    public Builder withExecutionStrategy(ExecutionStrategy executionStrategy) {
+      this.executionStrategy = executionStrategy;
+      return this;
+    }
+
+    public Builder withExecutionStrategyExpression(String executionStrategyExpression) {
+      this.executionStrategyExpression = executionStrategyExpression;
+      return this;
+    }
+
+    public Builder withRepeatTransitionStateName(String repeatTransitionStateName) {
+      this.repeatTransitionStateName = repeatTransitionStateName;
+      return this;
+    }
+
+    public Builder but() {
+      return aRepeatState()
+          .withName(name)
+          .withRepeatElementType(repeatElementType)
+          .withRepeatElementExpression(repeatElementExpression)
+          .withExecutionStrategy(executionStrategy)
+          .withExecutionStrategyExpression(executionStrategyExpression)
+          .withRepeatTransitionStateName(repeatTransitionStateName);
+    }
+
+    public RepeatState build() {
+      RepeatState repeatState = new RepeatState(name);
+      repeatState.setRepeatElementType(repeatElementType);
+      repeatState.setRepeatElementExpression(repeatElementExpression);
+      repeatState.setExecutionStrategy(executionStrategy);
+      repeatState.setExecutionStrategyExpression(executionStrategyExpression);
+      repeatState.setRepeatTransitionStateName(repeatTransitionStateName);
+      return repeatState;
     }
   }
 }
