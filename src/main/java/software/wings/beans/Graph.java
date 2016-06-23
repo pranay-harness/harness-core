@@ -37,9 +37,9 @@ public class Graph {
    */
   public static final String ORIGIN_STATE = "ORIGIN";
 
-  static final int DEFAULT_INITIAL_X = 50;
+  static final int DEFAULT_INITIAL_X = 0;
 
-  static final int DEFAULT_INITIAL_Y = 50;
+  static final int DEFAULT_INITIAL_Y = 0;
 
   static final int DEFAULT_NODE_WIDTH = 100;
 
