@@ -93,6 +93,32 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return get(appId, envId, serviceTemplateId);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#updateTags(java.lang.String, java.lang.String,
+   * java.util.List)
+   */
+  @Override
+  public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
+    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.getTag(appId, tagId)).collect(toList());
+    List<Host> newHostsToBeMapped = getHostsInTagsTree(appId, newTags);
+
+    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
+    List<Host> existingMappedHosts = getHostsInTagsTree(appId, serviceTemplate.getTags());
+
+    updateServiceInstances(serviceTemplate, newHostsToBeMapped, existingMappedHosts);
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", newTags));
+
+    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
+  }
+
+  private List<Host> getHostsInTagsTree(String appId, List<Tag> tags) {
+    System.out.println("debug--");
+    tags.forEach(tag -> System.out.println(tag.toString()));
+    System.out.println("--debug");
+    Set<Tag> leafTags = tags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
+    return hostService.getHostsByTags(appId, leafTags.stream().collect(toList()));
+  }
+
   private void updateServiceInstances(ServiceTemplate serviceTemplate, List<Host> newHosts, List<Host> existingHosts) {
     List<Host> addHostsList = new ArrayList<>();
     List<Host> deleteHostList = new ArrayList<>();
@@ -109,31 +135,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     });
     serviceInstanceService.updateInstanceMappings(serviceTemplate, addHostsList, deleteHostList);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#updateTags(java.lang.String, java.lang.String,
-   * java.util.List)
-   */
-  @Override
-  public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
-    List<Tag> tags = tagIds.stream().map(tagId -> tagService.getTag(appId, tagId)).collect(toList());
-
-    Set<Tag> newLeafTags = tags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
-
-    List<Host> newHosts = hostService.getHostsByTags(appId, newLeafTags.stream().collect(toList()));
-
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
-    List<Tag> existingMappedTags = serviceTemplate.getTags();
-
-    Set<Tag> existingLeafTags =
-        existingMappedTags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
-
-    List<Host> existingHosts = hostService.getHostsByTags(appId, existingLeafTags.stream().collect(toList()));
-    updateServiceInstances(serviceTemplate, newHosts, existingHosts);
-
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("tags", tags));
-    return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
   /* (non-Javadoc)

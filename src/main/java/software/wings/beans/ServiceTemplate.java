@@ -3,6 +3,10 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
@@ -16,7 +20,8 @@ import java.util.Objects;
  * Created by anubhaw on 4/4/16.
  */
 @Entity(value = "serviceTemplates", noClassnameStored = true)
-//@Indexes(@Index(fields = {@Field("envId"), @Field("name")}, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("envId"), @Field("name") }, options = @IndexOptions(unique = true)))
 public class ServiceTemplate extends Base {
   private String envId;
   private String name;

@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
@@ -149,36 +150,56 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldAddTags() {}
+  public void shouldAddTags() {
+    Tag tag = aTag().withUuid(TAG_ID).build();
+    Host host = aHost().withUuid(HOST_ID).build();
+    ServiceTemplate template = builder.withUuid(TEMPLATE_ID).build();
+    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
+    when(tagService.getTag(APP_ID, "TAG_ID")).thenReturn(tag);
+    when(tagService.getLeafTags(tag)).thenReturn(asList(tag));
+    when(hostService.getHostsByTags(APP_ID, asList(tag))).thenReturn(asList(host));
+
+    templateService.updateTags(APP_ID, ENV_ID, TEMPLATE_ID, asList(TAG_ID));
+
+    verify(wingsPersistence).updateFields(ServiceTemplate.class, TEMPLATE_ID, ImmutableMap.of("tags", asList(tag)));
+    verify(serviceInstanceService).updateInstanceMappings(template, asList(host), asList());
+  }
 
   @Test
-  public void shouldDeleteTags() {}
+  public void shouldDeleteTags() {
+    Tag tag = aTag().withUuid(TAG_ID).build();
+    Host host = aHost().withUuid(HOST_ID).build();
+    ServiceTemplate template = builder.withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
+
+    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
+    when(tagService.getLeafTags(tag)).thenReturn(asList(tag));
+    when(hostService.getHostsByTags(APP_ID, asList(tag))).thenReturn(asList(host));
+
+    templateService.updateTags(APP_ID, ENV_ID, TEMPLATE_ID, asList());
+
+    verify(wingsPersistence).updateFields(ServiceTemplate.class, TEMPLATE_ID, ImmutableMap.of("tags", asList()));
+    verify(serviceInstanceService).updateInstanceMappings(template, asList(), asList(host));
+  }
 
   @Test
-  public void shouldAddAndDeleteTags() {}
+  public void shouldAddAndDeleteTags() {
+    Tag existingTag = aTag().withUuid("EXISTING_TAG_ID").build();
+    Host existingTagHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
+    Tag newTag = aTag().withUuid("NEW_TAG_ID").build();
+    Host newTagHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
+    ServiceTemplate template = builder.withUuid(TEMPLATE_ID).withTags(asList(existingTag)).build();
 
-  /**
-   * Should update host and tags.
-   */
-  @Test
-  @Ignore
-  public void shouldUpdateHostAndTags() {
-    when(tagService.saveTag(eq("PARENT_TAG"), any(Tag.class))).thenReturn(aTag().withUuid("TAG_ID").build());
-    when(hostService.save(any(Host.class))).thenReturn(aHost().withUuid("HOST_ID").build());
-    when(tagService.getTag(APP_ID, "TAG_ID")).thenReturn(aTag().withUuid("TAG_ID").build());
-    when(hostService.get(APP_ID, INFRA_ID, "HOST_ID")).thenReturn(aHost().withUuid("HOST_ID").build());
-    when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID))
-        .thenReturn(aServiceTemplate().withUuid("SERVICE_TEMPLATE").build());
+    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
+    when(tagService.getTag(APP_ID, "NEW_TAG_ID")).thenReturn(newTag);
+    when(tagService.getLeafTags(existingTag)).thenReturn(asList(existingTag));
+    when(tagService.getLeafTags(newTag)).thenReturn(asList(newTag));
+    when(hostService.getHostsByTags(APP_ID, asList(existingTag))).thenReturn(asList(existingTagHost));
+    when(hostService.getHostsByTags(APP_ID, asList(newTag))).thenReturn(asList(newTagHost));
 
-    ServiceTemplate template = builder.build();
-    Tag tag = tagService.saveTag("PARENT_TAG", aTag().build());
-    Host host = hostService.save(any(Host.class));
-    templateService.updateHosts(APP_ID, ENV_ID, template.getUuid(), asList(host.getUuid()));
-    verify(wingsPersistence)
-        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("hosts", asList(host)));
-    templateService.updateTags(APP_ID, ENV_ID, template.getUuid(), asList(tag.getUuid()));
-    verify(wingsPersistence)
-        .updateFields(ServiceTemplate.class, template.getUuid(), ImmutableMap.of("tags", asList(tag)));
+    templateService.updateTags(APP_ID, ENV_ID, TEMPLATE_ID, asList("NEW_TAG_ID"));
+
+    verify(wingsPersistence).updateFields(ServiceTemplate.class, TEMPLATE_ID, ImmutableMap.of("tags", asList(newTag)));
+    verify(serviceInstanceService).updateInstanceMappings(template, asList(newTagHost), asList(existingTagHost));
   }
 
   /**
