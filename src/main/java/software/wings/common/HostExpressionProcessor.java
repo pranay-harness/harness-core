@@ -30,6 +30,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
+  public static final String DEFAULT_EXPRESSION = "hosts()";
+
   private static final String EXPRESSION_START_PATTERN = "hosts()";
   private static final String EXPRESSION_EQUAL_PATTERN = "hosts";
   private static final String HOST_EXPR_PROCESSOR = "hostExpressionProcessor";

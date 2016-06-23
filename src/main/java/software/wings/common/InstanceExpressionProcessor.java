@@ -55,6 +55,8 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
+  public static final String DEFAULT_EXPRESSION = "instances()";
+
   private static final String EXPRESSION_START_PATTERN = "instances()";
   private static final Object EXPRESSION_EQUAL_PATTERN = "instances";
 
