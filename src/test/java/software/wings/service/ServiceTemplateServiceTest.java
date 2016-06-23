@@ -25,9 +25,12 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Host;
@@ -60,6 +63,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ServiceTemplateService templateService;
 
+  @Mock private Query<ServiceTemplate> query;
+  @Mock private FieldEnd end;
+
   private ServiceTemplate.Builder builder = aServiceTemplate()
                                                 .withUuid(TEMPLATE_ID)
                                                 .withAppId(APP_ID)
@@ -67,6 +73,14 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                                 .withService(aService().withUuid(SERVICE_ID).build())
                                                 .withName(TEMPLATE_NAME)
                                                 .withDescription(TEMPLATE_DESCRIPTION);
+
+  @Before
+  public void setUp() throws Exception {
+    when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+    when(end.hasThisElement(any())).thenReturn(query);
+  }
 
   /**
    * Should list saved service templates.
@@ -110,7 +124,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
-    when(hostService.getInfraId(ENV_ID, APP_ID)).thenReturn(INFRA_ID);
+    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
     ServiceTemplate template = builder.build();
@@ -136,7 +150,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
     when(hostService.get(APP_ID, INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
-    when(hostService.getInfraId(ENV_ID, APP_ID)).thenReturn(INFRA_ID);
+    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(existingHost)).build());
 
@@ -201,6 +215,18 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(wingsPersistence)
         .updateFields(ServiceTemplate.class, TEMPLATE_ID, of("tags", asList(newTag), "leafTags", singleton(newTag)));
     verify(serviceInstanceService).updateInstanceMappings(template, asList(newTagHost), asList(existingTagHost));
+  }
+
+  @Test
+  public void shouldFetchTemplatesByTag() {
+    Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
+    templateService.getTemplatesByLeafTag(tag);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field("leafTags");
+    verify(end).hasThisElement(tag);
   }
 
   /**

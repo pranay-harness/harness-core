@@ -94,7 +94,8 @@ public interface TagService {
   /**
    * Delete host from tags.
    *
+   * @param tags
    * @param host the host
    */
-  void deleteHostFromTags(Host host);
+  void deleteHostFromTags(List<Tag> tags, Host host);
 }

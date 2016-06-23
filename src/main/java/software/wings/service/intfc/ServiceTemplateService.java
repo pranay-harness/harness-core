@@ -112,5 +112,5 @@ public interface ServiceTemplateService {
 
   void deleteHostFromTemplates(Host host);
 
-  List<ServiceTemplate> getTemplatesByTag(Tag tag);
+  List<ServiceTemplate> getTemplatesByLeafTag(Tag tag);
 }

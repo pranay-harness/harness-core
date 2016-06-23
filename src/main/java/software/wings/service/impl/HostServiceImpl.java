@@ -99,13 +99,15 @@ public class HostServiceImpl implements HostService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#getHostsById(java.lang.String, java.util.List)
+   * @see software.wings.service.intfc.HostService#getHostsByHostIds(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsById(String appId, List<String> hostUuids) {
+  public List<Host> getHostsByHostIds(String appId, String infraId, List<String> hostUuids) {
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
+        .field("infraId")
+        .equal(infraId)
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
@@ -116,7 +118,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
-    String infraId = getInfraId(envId, appId);
+    String infraId = getInfraId(appId, envId);
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
@@ -140,8 +142,14 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getInfraId(java.lang.String, java.lang.String)
    */
   @Override
-  public String getInfraId(String envId, String appId) {
-    return wingsPersistence.createQuery(Infra.class).field("envId").equal(envId).get().getUuid();
+  public String getInfraId(String appId, String envId) {
+    return wingsPersistence.createQuery(Infra.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .get()
+        .getUuid();
   }
 
   /* (non-Javadoc)
@@ -153,7 +161,7 @@ public class HostServiceImpl implements HostService {
     if (host != null) {
       wingsPersistence.delete(host);
       serviceTemplateService.deleteHostFromTemplates(host);
-      tagService.deleteHostFromTags(host);
+      tagService.deleteHostFromTags(host.getTags(), host);
     }
   }
 

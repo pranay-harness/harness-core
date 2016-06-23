@@ -84,7 +84,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
-    String infraId = hostService.getInfraId(envId, appId);
+    String infraId = hostService.getInfraId(appId, envId);
     List<Host> hosts = hostIds.stream().map(hostId -> hostService.get(appId, infraId, hostId)).collect(toList());
 
     List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
@@ -158,12 +158,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public List<ServiceTemplate> getTemplatesByTag(Tag tag) {
+  public List<ServiceTemplate> getTemplatesByLeafTag(Tag tag) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
         .equal(tag.getAppId())
-        .field("tags")
-        .hasThisElement(tag)
+        .field("envId")
+        .equal(tag.getEnvId())
+        .field("leafTags")
+        .equal(tag.getUuid())
         .asList();
   }
 

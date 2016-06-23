@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -63,7 +64,7 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public Tag getTag(String appId, String tagId) {
-    return wingsPersistence.get(Tag.class, tagId);
+    return wingsPersistence.get(Tag.class, appId, tagId);
   }
 
   /* (non-Javadoc)
@@ -106,20 +107,17 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public void deleteHostFromTags(Host host) {
-    List<Tag> tags = host.getTags();
-
-    if (tags != null) {
-      tags.forEach(tag
-          -> {
-
-          });
-    }
+  public void deleteHostFromTags(List<Tag> tags, Host host) {
+    tags.stream()
+        .map(serviceTemplateService::getTemplatesByLeafTag)
+        .flatMap(List::stream)
+        .forEach(
+            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
     List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByTag(tag);
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
     if (serviceTemplates != null) {
       serviceTemplates.forEach(serviceTemplate -> {
         serviceInstanceService.updateInstanceMappings(serviceTemplate, new ArrayList<>(), hosts);
@@ -140,25 +138,29 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public void tagHosts(String appId, String tagId, List<String> hostIds) {
-    Tag tag = wingsPersistence.get(Tag.class, tagId);
+    Tag tag = wingsPersistence.get(Tag.class, appId, tagId);
 
     if (hostIds == null || tag == null) {
       return;
     }
 
-    List<Host> hosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
+    List<Host> inputHosts =
+        hostService.getHostsByHostIds(appId, hostService.getInfraId(appId, tag.getEnvId()), hostIds);
+    List<Host> existingMappedHosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
+    List<Host> hostToBeUntagged =
+        existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());
+    List<Host> hostTobeTagged =
+        inputHosts.stream().filter(host -> !existingMappedHosts.contains(host)).collect(toList());
 
-    // Tag hosts
-    hostIds.forEach(hostId -> {
-      Host host = wingsPersistence.get(Host.class, hostId);
+    // Tag
+    hostTobeTagged.forEach(host -> {
       List<Tag> tags = removeAnyTagFromSameTagTree(tag, host);
       UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
       wingsPersistence.update(host, updateOp);
-      hosts.remove(host); // remove updated tags from all tagged hosts
     });
 
-    // Un-tag hosts
-    hosts.forEach(host -> {
+    // Un-tag
+    hostToBeUntagged.forEach(host -> {
       UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
       wingsPersistence.update(host, updateOp);
     });

@@ -106,7 +106,7 @@ public interface HostService {
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
-  List<Host> getHostsById(@NotEmpty String appId, @NotNull List<String> hostUuids);
+  List<Host> getHostsByHostIds(@NotEmpty String appId, @NotEmpty String infraId, @NotNull List<String> hostUuids);
 
   /**
    * Gets the hosts by tags.
