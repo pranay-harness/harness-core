@@ -12,6 +12,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -90,8 +92,9 @@ public class ExecutionResource {
   @Path("{workflowExecutionId}")
   @Produces("application/json")
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId));
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
+      @QueryParam("expandedGroupId") List<String> expandedGroupIds) {
+    return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds));
   }
 
   /**

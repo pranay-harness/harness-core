@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -281,16 +282,40 @@ public class Graph {
                            .withType(repeatLinks.get(0).getType())
                            .build());
 
+      boolean serialRepeat = false;
+      if (node.getExecutionSummary() != null && node.getExecutionSummary() instanceof LinkedHashMap
+          && ((LinkedHashMap) node.getExecutionSummary()).get("executionStrategy") != null
+          && ((LinkedHashMap) node.getExecutionSummary())
+                 .get("executionStrategy")
+                 .equals(ExecutionStrategy.SERIAL.name())) {
+        serialRepeat = false;
+      }
+
+      Node priorElement = null;
+
       for (Link link : repeatLinks) {
         Node repeatNode = nodesMap.get(link.getTo());
         repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
         y += repeatNode.getHeight() + DEFAULT_ARROW_HEIGHT;
+
+        // Take care os serial element links
+        if (serialRepeat && priorElement != null) {
+          updatedLinks.add(Link.Builder.aLink()
+                               .withId(UUIDGenerator.getUuid())
+                               .withFrom(priorElement.getId())
+                               .withTo(repeatNode.getId())
+                               .withType(repeatLinks.get(0).getType())
+                               .build());
+        }
+        priorElement = repeatNode;
       }
     }
 
     if (nextLinkMap.get(node.getId()) != null) {
       Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
-      if (repeatLinks == null) {
+      if (repeatLinks == null
+          || !(TransitionType.REPEAT.name().toLowerCase().equals(nextNode.getType())
+                 || TransitionType.FORK.name().toLowerCase().equals(nextNode.getType()))) {
         repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap,
             updatedLinks);
       } else {
@@ -360,6 +385,12 @@ public class Graph {
         + "]";
   }
 
+  public enum CollapseStatus {
+    COLLAPSED,
+    EXPANDED,
+    EXPANDED_FULLY;
+  }
+
   /**
    * The Class Node.
    */
@@ -374,6 +405,7 @@ public class Graph {
     private int y;
     private int width;
     private int height;
+    private CollapseStatus collapseStatus;
 
     private Object executionSummary;
     private Object executionDetails;
@@ -535,6 +567,14 @@ public class Graph {
 
     public void setDetailsReference(String detailsReference) {
       this.detailsReference = detailsReference;
+    }
+
+    public CollapseStatus getCollapseStatus() {
+      return collapseStatus;
+    }
+
+    public void setCollapseStatus(CollapseStatus collapseStatus) {
+      this.collapseStatus = collapseStatus;
     }
 
     /**
