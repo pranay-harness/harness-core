@@ -3,6 +3,7 @@ package software.wings.sm;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
+import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -20,6 +21,8 @@ import software.wings.service.StaticMap;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.waitnotify.NotifyEventListener;
+import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.StringNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
@@ -593,9 +596,9 @@ public class StateMachineTest extends WingsBaseTest {
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {
-        waitNotifyEngine.notify(uuid, "FAILURE");
+        waitNotifyEngine.notify(uuid, aStringNotifyResponseData().withData("FAILURE").build());
       } else {
-        waitNotifyEngine.notify(uuid, "SUCCESS");
+        waitNotifyEngine.notify(uuid, aStringNotifyResponseData().withData("SUCCESS").build());
       }
     }
   }
@@ -741,10 +744,11 @@ public class StateMachineTest extends WingsBaseTest {
      * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
      */
     @Override
-    public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> responseMap) {
+    public ExecutionResponse handleAsyncResponse(
+        ExecutionContextImpl context, Map<String, NotifyResponseData> responseMap) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       for (Object response : responseMap.values()) {
-        if (!"SUCCESS".equals(response)) {
+        if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
           executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
         }
       }

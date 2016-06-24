@@ -17,6 +17,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
@@ -24,8 +25,8 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,10 +74,10 @@ public class RepeatState extends State {
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Object status : response.values()) {
-      executionStatus = (ExecutionStatus) status;
+      executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         break;
       }

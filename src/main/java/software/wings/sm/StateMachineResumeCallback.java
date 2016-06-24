@@ -3,8 +3,8 @@ package software.wings.sm;
 import com.google.inject.Inject;
 
 import software.wings.waitnotify.NotifyCallback;
+import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.Serializable;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -78,7 +78,7 @@ public class StateMachineResumeCallback implements NotifyCallback {
    * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
    */
   @Override
-  public void notify(Map<String, ? extends Serializable> response) {
+  public void notify(Map<String, NotifyResponseData> response) {
     stateMachineExecutor.resume(appId, stateExecutionInstanceId, response);
   }
 }

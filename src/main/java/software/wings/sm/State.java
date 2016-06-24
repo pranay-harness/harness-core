@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -113,7 +114,7 @@ public abstract class State {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;
   }

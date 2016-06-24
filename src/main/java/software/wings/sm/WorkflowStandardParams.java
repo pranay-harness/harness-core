@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static org.apache.commons.lang3.RandomUtils.nextInt;
+
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -53,7 +55,7 @@ public class WorkflowStandardParams implements ContextElement {
   private Long startTs;
   private Long endTs;
 
-  private String timestampId = System.currentTimeMillis() + "-" + new Random().nextInt(1000);
+  private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
 
   /**
    * {@inheritDoc}

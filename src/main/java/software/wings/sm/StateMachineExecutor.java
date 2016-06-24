@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
+
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -12,9 +14,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyCallback;
+import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,7 +195,7 @@ public class StateMachineExecutor {
    * @param stateExecutionInstanceId stateMachineInstance to resume.
    * @param response                 map of responses from state machine instances this state was waiting on.
    */
-  public void resume(String appId, String stateExecutionInstanceId, Map<String, ? extends Serializable> response) {
+  public void resume(String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
@@ -303,7 +305,8 @@ public class StateMachineExecutor {
               stateExecutionInstance.getExecutionUuid());
         }
       } else {
-        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.SUCCESS);
+        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
+            anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
       }
     } else {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
@@ -340,7 +343,8 @@ public class StateMachineExecutor {
               stateExecutionInstance.getExecutionUuid());
         }
       } else {
-        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(), ExecutionStatus.FAILED);
+        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
+            anExecutionStatusData().withExecutionStatus(ExecutionStatus.FAILED).build());
       }
     } else {
       StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
