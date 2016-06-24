@@ -53,22 +53,47 @@ public class ResourceTestRule implements TestRule {
     this.testContainerFactory = testContainerFactory;
   }
 
+  /**
+   * Builder builder.
+   *
+   * @return the builder
+   */
   public static Builder builder() {
     return new Builder();
   }
 
+  /**
+   * Gets validator.
+   *
+   * @return the validator
+   */
   public Validator getValidator() {
     return validator;
   }
 
+  /**
+   * Gets object mapper.
+   *
+   * @return the object mapper
+   */
   public ObjectMapper getObjectMapper() {
     return mapper;
   }
 
+  /**
+   * Client client.
+   *
+   * @return the client
+   */
   public Client client() {
     return test.client();
   }
 
+  /**
+   * Gets jersey test.
+   *
+   * @return the jersey test
+   */
   public JerseyTest getJerseyTest() {
     return test;
   }
@@ -115,6 +140,9 @@ public class ResourceTestRule implements TestRule {
     };
   }
 
+  /**
+   * The type Builder.
+   */
   public static class Builder {
     private final Set<Object> singletons = Sets.newHashSet();
     private final Set<Class<?>> providers = Sets.newHashSet();
@@ -123,56 +151,118 @@ public class ResourceTestRule implements TestRule {
     private Validator validator = Validators.newValidator();
     private TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
 
+    /**
+     * Sets mapper.
+     *
+     * @param mapper the mapper
+     * @return the mapper
+     */
     public Builder setMapper(ObjectMapper mapper) {
       this.mapper = mapper;
       return this;
     }
 
+    /**
+     * Sets validator.
+     *
+     * @param validator the validator
+     * @return the validator
+     */
     public Builder setValidator(Validator validator) {
       this.validator = validator;
       return this;
     }
 
+    /**
+     * Add resource builder.
+     *
+     * @param resource the resource
+     * @return the builder
+     */
     public Builder addResource(Object resource) {
       singletons.add(resource);
       return this;
     }
 
+    /**
+     * Add provider builder.
+     *
+     * @param klass the klass
+     * @return the builder
+     */
     public Builder addProvider(Class<?> klass) {
       providers.add(klass);
       return this;
     }
 
+    /**
+     * Add provider builder.
+     *
+     * @param provider the provider
+     * @return the builder
+     */
     public Builder addProvider(Object provider) {
       singletons.add(provider);
       return this;
     }
 
+    /**
+     * Add property builder.
+     *
+     * @param property the property
+     * @param value    the value
+     * @return the builder
+     */
     public Builder addProperty(String property, Object value) {
       properties.put(property, value);
       return this;
     }
 
+    /**
+     * Sets test container factory.
+     *
+     * @param factory the factory
+     * @return the test container factory
+     */
     public Builder setTestContainerFactory(TestContainerFactory factory) {
       this.testContainerFactory = factory;
       return this;
     }
 
+    /**
+     * Build resource test rule.
+     *
+     * @return the resource test rule
+     */
     public ResourceTestRule build() {
       return new ResourceTestRule(singletons, providers, properties, mapper, validator, testContainerFactory);
     }
   }
 
+  /**
+   * The type Resource test resource config.
+   */
   public static class ResourceTestResourceConfig extends DropwizardResourceConfig {
     private static final String RULE_ID = "io.dropwizard.testing.junit.resourceTestRuleId";
     private static final Map<String, ResourceTestRule> RULE_ID_TO_RULE = Maps.newHashMap();
 
+    /**
+     * Instantiates a new Resource test resource config.
+     *
+     * @param ruleId           the rule id
+     * @param resourceTestRule the resource test rule
+     */
     public ResourceTestResourceConfig(final String ruleId, final ResourceTestRule resourceTestRule) {
       super(true, new MetricRegistry());
       RULE_ID_TO_RULE.put(ruleId, resourceTestRule);
       configure(resourceTestRule);
     }
 
+    /**
+     * Instantiates a new Resource test resource config.
+     *
+     * @param servletConfig the servlet config
+     */
     public ResourceTestResourceConfig(@Context ServletConfig servletConfig) {
       super(true, new MetricRegistry());
       String ruleId = servletConfig.getInitParameter(RULE_ID);

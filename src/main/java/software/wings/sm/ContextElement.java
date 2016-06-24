@@ -37,6 +37,9 @@ public interface ContextElement {
    */
   static final String INSTANCE = "instance";
 
+  /**
+   * The constant TIMESTAMP_ID.
+   */
   static final String TIMESTAMP_ID = "timestampId";
 
   /**
@@ -47,7 +50,9 @@ public interface ContextElement {
   public ContextElementType getElementType();
 
   /**
-   * @return
+   * Gets uuid.
+   *
+   * @return uuid
    */
   public String getUuid();
 

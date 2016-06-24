@@ -224,10 +224,20 @@ public class User extends Base implements Principal {
     this.emailVerified = emailVerified;
   }
 
+  /**
+   * Gets company name.
+   *
+   * @return the company name
+   */
   public String getCompanyName() {
     return companyName;
   }
 
+  /**
+   * Sets company name.
+   *
+   * @param companyName the company name
+   */
   public void setCompanyName(String companyName) {
     this.companyName = companyName;
   }
@@ -295,90 +305,196 @@ public class User extends Base implements Principal {
 
     private Builder() {}
 
+    /**
+     * An user builder.
+     *
+     * @return the builder
+     */
     public static Builder anUser() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With email builder.
+     *
+     * @param email the email
+     * @return the builder
+     */
     public Builder withEmail(String email) {
       this.email = email;
       return this;
     }
 
+    /**
+     * With password hash builder.
+     *
+     * @param passwordHash the password hash
+     * @return the builder
+     */
     public Builder withPasswordHash(String passwordHash) {
       this.passwordHash = passwordHash;
       return this;
     }
 
+    /**
+     * With roles builder.
+     *
+     * @param roles the roles
+     * @return the builder
+     */
     public Builder withRoles(List<Role> roles) {
       this.roles = roles;
       return this;
     }
 
+    /**
+     * With last login builder.
+     *
+     * @param lastLogin the last login
+     * @return the builder
+     */
     public Builder withLastLogin(long lastLogin) {
       this.lastLogin = lastLogin;
       return this;
     }
 
+    /**
+     * With password builder.
+     *
+     * @param password the password
+     * @return the builder
+     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
+    /**
+     * With token builder.
+     *
+     * @param token the token
+     * @return the builder
+     */
     public Builder withToken(String token) {
       this.token = token;
       return this;
     }
 
+    /**
+     * With email verified builder.
+     *
+     * @param emailVerified the email verified
+     * @return the builder
+     */
     public Builder withEmailVerified(boolean emailVerified) {
       this.emailVerified = emailVerified;
       return this;
     }
 
+    /**
+     * With company name builder.
+     *
+     * @param companyName the company name
+     * @return the builder
+     */
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anUser()
           .withName(name)
@@ -399,6 +515,11 @@ public class User extends Base implements Principal {
           .withActive(active);
     }
 
+    /**
+     * Build user.
+     *
+     * @return the user
+     */
     public User build() {
       User user = new User();
       user.setName(name);

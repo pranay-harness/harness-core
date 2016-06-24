@@ -108,6 +108,7 @@ public class WingsRule implements MethodRule {
    * Before.
    *
    * @param annotations the annotations
+   * @param testName    the test name
    * @throws Throwable the throwable
    */
   protected void before(List<Annotation> annotations, String testName) throws Throwable {

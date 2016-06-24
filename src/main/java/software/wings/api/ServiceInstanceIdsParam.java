@@ -76,5 +76,10 @@ public class ServiceInstanceIdsParam implements ContextElement {
     return null;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {}
 }

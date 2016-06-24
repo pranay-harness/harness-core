@@ -94,10 +94,20 @@ public class ExecutionArgs {
     this.artifactIds = artifactIds;
   }
 
+  /**
+   * Gets workflow type.
+   *
+   * @return the workflow type
+   */
   public WorkflowType getWorkflowType() {
     return workflowType;
   }
 
+  /**
+   * Sets workflow type.
+   *
+   * @param workflowType the workflow type
+   */
   public void setWorkflowType(WorkflowType workflowType) {
     this.workflowType = workflowType;
   }

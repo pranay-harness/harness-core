@@ -16,50 +16,110 @@ public class History extends Base {
   private Base entityOldValue;
   private Base entityNewValue;
 
+  /**
+   * Gets activity type.
+   *
+   * @return the activity type
+   */
   public ActivityType getActivityType() {
     return activityType;
   }
 
+  /**
+   * Sets activity type.
+   *
+   * @param activityType the activity type
+   */
   public void setActivityType(ActivityType activityType) {
     this.activityType = activityType;
   }
 
+  /**
+   * Gets entity type.
+   *
+   * @return the entity type
+   */
   public String getEntityType() {
     return entityType;
   }
 
+  /**
+   * Sets entity type.
+   *
+   * @param entityType the entity type
+   */
   public void setEntityType(String entityType) {
     this.entityType = entityType;
   }
 
+  /**
+   * Gets entity id.
+   *
+   * @return the entity id
+   */
   public String getEntityId() {
     return entityId;
   }
 
+  /**
+   * Sets entity id.
+   *
+   * @param entityId the entity id
+   */
   public void setEntityId(String entityId) {
     this.entityId = entityId;
   }
 
+  /**
+   * Gets entity name.
+   *
+   * @return the entity name
+   */
   public String getEntityName() {
     return entityName;
   }
 
+  /**
+   * Sets entity name.
+   *
+   * @param entityName the entity name
+   */
   public void setEntityName(String entityName) {
     this.entityName = entityName;
   }
 
+  /**
+   * Gets entity old value.
+   *
+   * @return the entity old value
+   */
   public Base getEntityOldValue() {
     return entityOldValue;
   }
 
+  /**
+   * Sets entity old value.
+   *
+   * @param entityOldValue the entity old value
+   */
   public void setEntityOldValue(Base entityOldValue) {
     this.entityOldValue = entityOldValue;
   }
 
+  /**
+   * Gets entity new value.
+   *
+   * @return the entity new value
+   */
   public Base getEntityNewValue() {
     return entityNewValue;
   }
 
+  /**
+   * Sets entity new value.
+   *
+   * @param entityNewValue the entity new value
+   */
   public void setEntityNewValue(Base entityNewValue) {
     this.entityNewValue = entityNewValue;
   }
@@ -76,8 +136,37 @@ public class History extends Base {
         .toString();
   }
 
-  public enum ActivityType { STARTED, COMPLETED, FAILED, EDITED, CREATED, CLONED, DELETED }
+  /**
+   * The enum Activity type.
+   */
+  public enum ActivityType {
+    /**
+     * Started activity type.
+     */
+    STARTED, /**
+              * Completed activity type.
+              */
+    COMPLETED, /**
+                * Failed activity type.
+                */
+    FAILED, /**
+             * Edited activity type.
+             */
+    EDITED, /**
+             * Created activity type.
+             */
+    CREATED, /**
+              * Cloned activity type.
+              */
+    CLONED, /**
+             * Deleted activity type.
+             */
+    DELETED
+  }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private ActivityType activityType;
     private String entityType;
@@ -95,75 +184,163 @@ public class History extends Base {
 
     private Builder() {}
 
+    /**
+     * A history builder.
+     *
+     * @return the builder
+     */
     public static Builder aHistory() {
       return new Builder();
     }
 
+    /**
+     * With activity type builder.
+     *
+     * @param activityType the activity type
+     * @return the builder
+     */
     public Builder withActivityType(ActivityType activityType) {
       this.activityType = activityType;
       return this;
     }
 
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
     public Builder withEntityType(String entityType) {
       this.entityType = entityType;
       return this;
     }
 
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
+    /**
+     * With entity name builder.
+     *
+     * @param entityName the entity name
+     * @return the builder
+     */
     public Builder withEntityName(String entityName) {
       this.entityName = entityName;
       return this;
     }
 
+    /**
+     * With entity old value builder.
+     *
+     * @param entityOldValue the entity old value
+     * @return the builder
+     */
     public Builder withEntityOldValue(Base entityOldValue) {
       this.entityOldValue = entityOldValue;
       return this;
     }
 
+    /**
+     * With entity new value builder.
+     *
+     * @param entityNewValue the entity new value
+     * @return the builder
+     */
     public Builder withEntityNewValue(Base entityNewValue) {
       this.entityNewValue = entityNewValue;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aHistory()
           .withActivityType(activityType)
@@ -181,6 +358,11 @@ public class History extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build history.
+     *
+     * @return the history
+     */
     public History build() {
       History history = new History();
       history.setActivityType(activityType);

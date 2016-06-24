@@ -60,22 +60,42 @@ public class SortOrder {
     DESC
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String fieldName;
     private OrderType orderType;
 
     private Builder() {}
 
+    /**
+     * A sort order builder.
+     *
+     * @return the builder
+     */
     public static Builder aSortOrder() {
       return new Builder();
     }
 
+    /**
+     * With field builder.
+     *
+     * @param fieldName the field name
+     * @param orderType the order type
+     * @return the builder
+     */
     public Builder withField(String fieldName, OrderType orderType) {
       this.fieldName = fieldName;
       this.orderType = orderType;
       return this;
     }
 
+    /**
+     * Build sort order.
+     *
+     * @return the sort order
+     */
     public SortOrder build() {
       SortOrder sortOrder = new SortOrder();
       sortOrder.setFieldName(fieldName);

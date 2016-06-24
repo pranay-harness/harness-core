@@ -66,6 +66,7 @@ public class AppContainerResource {
   /**
    * Gets the.
    *
+   * @param appId          the app id
    * @param appContainerId the app container id
    * @return the rest response
    */
@@ -142,6 +143,7 @@ public class AppContainerResource {
    *
    * @param appId          the app id
    * @param appContainerId the app container id
+   * @return the rest response
    */
   @DELETE
   @Path("{appContainerId}")

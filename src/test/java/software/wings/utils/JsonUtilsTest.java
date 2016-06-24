@@ -125,11 +125,21 @@ public class JsonUtilsTest {
       this.baseType = baseType;
     }
 
+    /**
+     * Gets x.
+     *
+     * @return the x
+     */
     @SchemaIgnore
     public String getX() {
       return x;
     }
 
+    /**
+     * Sets x.
+     *
+     * @param x the x
+     */
     @SchemaIgnore
     public void setX(String x) {
       this.x = x;

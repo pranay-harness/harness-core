@@ -38,18 +38,39 @@ public class Graph {
    */
   public static final String ORIGIN_STATE = "ORIGIN";
 
+  /**
+   * The Default initial x.
+   */
   static final int DEFAULT_INITIAL_X = 0;
 
+  /**
+   * The Default initial y.
+   */
   static final int DEFAULT_INITIAL_Y = 0;
 
+  /**
+   * The Default node width.
+   */
   static final int DEFAULT_NODE_WIDTH = 75;
 
+  /**
+   * The Default node height.
+   */
   static final int DEFAULT_NODE_HEIGHT = 50;
 
+  /**
+   * The Default arrow width.
+   */
   static final int DEFAULT_ARROW_WIDTH = 100;
 
+  /**
+   * The Default arrow height.
+   */
   static final int DEFAULT_ARROW_HEIGHT = 75;
 
+  /**
+   * The Default group padding.
+   */
   static final int DEFAULT_GROUP_PADDING = 10;
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
@@ -216,6 +237,11 @@ public class Graph {
     };
   }
 
+  /**
+   * Repaint.
+   *
+   * @param originNodeId the origin node id
+   */
   public void repaint(String originNodeId) {
     Map<String, Node> nodesMap = getNodesMap();
     Map<String, List<Link>> repeatLinkMap = getRepeatLinkMap();
@@ -385,9 +411,19 @@ public class Graph {
         + "]";
   }
 
+  /**
+   * The enum Collapse status.
+   */
   public enum CollapseStatus {
-    COLLAPSED,
-    EXPANDED,
+    /**
+     * Collapsed collapse status.
+     */
+    COLLAPSED, /**
+                * Expanded collapse status.
+                */
+    EXPANDED, /**
+               * Expanded fully collapse status.
+               */
     EXPANDED_FULLY;
   }
 
@@ -503,18 +539,38 @@ public class Graph {
       this.y = y;
     }
 
+    /**
+     * Gets width.
+     *
+     * @return the width
+     */
     public int getWidth() {
       return width;
     }
 
+    /**
+     * Sets width.
+     *
+     * @param width the width
+     */
     public void setWidth(int width) {
       this.width = width;
     }
 
+    /**
+     * Gets height.
+     *
+     * @return the height
+     */
     public int getHeight() {
       return height;
     }
 
+    /**
+     * Sets height.
+     *
+     * @param height the height
+     */
     public void setHeight(int height) {
       this.height = height;
     }
@@ -537,42 +593,92 @@ public class Graph {
       this.properties = properties;
     }
 
+    /**
+     * Gets status.
+     *
+     * @return the status
+     */
     public String getStatus() {
       return status;
     }
 
+    /**
+     * Sets status.
+     *
+     * @param status the status
+     */
     public void setStatus(String status) {
       this.status = status;
     }
 
+    /**
+     * Gets execution summary.
+     *
+     * @return the execution summary
+     */
     public Object getExecutionSummary() {
       return executionSummary;
     }
 
+    /**
+     * Sets execution summary.
+     *
+     * @param executionSummary the execution summary
+     */
     public void setExecutionSummary(Object executionSummary) {
       this.executionSummary = executionSummary;
     }
 
+    /**
+     * Gets execution details.
+     *
+     * @return the execution details
+     */
     public Object getExecutionDetails() {
       return executionDetails;
     }
 
+    /**
+     * Sets execution details.
+     *
+     * @param executionDetails the execution details
+     */
     public void setExecutionDetails(Object executionDetails) {
       this.executionDetails = executionDetails;
     }
 
+    /**
+     * Gets details reference.
+     *
+     * @return the details reference
+     */
     public String getDetailsReference() {
       return detailsReference;
     }
 
+    /**
+     * Sets details reference.
+     *
+     * @param detailsReference the details reference
+     */
     public void setDetailsReference(String detailsReference) {
       this.detailsReference = detailsReference;
     }
 
+    /**
+     * Gets collapse status.
+     *
+     * @return the collapse status
+     */
     public CollapseStatus getCollapseStatus() {
       return collapseStatus;
     }
 
+    /**
+     * Sets collapse status.
+     *
+     * @param collapseStatus the collapse status
+     */
     public void setCollapseStatus(CollapseStatus collapseStatus) {
       this.collapseStatus = collapseStatus;
     }
@@ -713,7 +819,7 @@ public class Graph {
       /**
        * With status.
        *
-       * @param type the status
+       * @param status the status
        * @return the builder
        */
       public Builder withStatus(String status) {

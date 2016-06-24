@@ -49,24 +49,36 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   private Query<SettingAttribute> spyQuery;
 
+  /**
+   * Sets mocks.
+   */
   @Before
   public void setupMocks() {
     spyQuery = spy(datastore.createQuery(SettingAttribute.class));
     when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
   }
 
+  /**
+   * Should list settings.
+   */
   @Test
   public void shouldListSettings() {
     settingsService.list(aPageRequest().build());
     verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
+  /**
+   * Should save setting attribute.
+   */
   @Test
   public void shouldSaveSettingAttribute() {
     settingsService.save(aSettingAttribute().build());
     verify(wingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
   }
 
+  /**
+   * Should get by app id.
+   */
   @Test
   public void shouldGetByAppId() {
     settingsService.get(APP_ID, SETTING_ID);
@@ -77,6 +89,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(spyQuery).get();
   }
 
+  /**
+   * Should get by app id and env id.
+   */
   @Test
   public void shouldGetByAppIdAndEnvId() {
     settingsService.get(APP_ID, ENV_ID, SETTING_ID);
@@ -87,12 +102,18 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(spyQuery).get();
   }
 
+  /**
+   * Should get by id.
+   */
   @Test
   public void shouldGetById() {
     settingsService.get(SETTING_ID);
     verify(wingsPersistence).get(eq(SettingAttribute.class), eq(SETTING_ID));
   }
 
+  /**
+   * Should delete.
+   */
   @Test
   public void shouldDelete() {
     settingsService.delete(APP_ID, SETTING_ID);
@@ -103,6 +124,9 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     verify(wingsPersistence).delete(spyQuery);
   }
 
+  /**
+   * Should get by name.
+   */
   @Test
   public void shouldGetByName() {
     settingsService.getByName(APP_ID, "NAME");

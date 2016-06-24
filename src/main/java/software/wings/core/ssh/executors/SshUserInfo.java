@@ -10,6 +10,11 @@ public class SshUserInfo implements UserInfo, UIKeyboardInteractive {
   private String password = null;
   private String passphrase = null;
 
+  /**
+   * Instantiates a new Ssh user info.
+   *
+   * @param password the password
+   */
   public SshUserInfo(String password) {
     this.password = password;
   }
@@ -19,6 +24,11 @@ public class SshUserInfo implements UserInfo, UIKeyboardInteractive {
     return passphrase;
   }
 
+  /**
+   * Sets passphrase.
+   *
+   * @param passphrase the passphrase
+   */
   public void setPassphrase(String passphrase) {
     this.passphrase = passphrase;
   }
@@ -28,6 +38,11 @@ public class SshUserInfo implements UserInfo, UIKeyboardInteractive {
     return password;
   }
 
+  /**
+   * Sets password.
+   *
+   * @param password the password
+   */
   public void setPassword(String password) {
     this.password = password;
   }

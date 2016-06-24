@@ -58,9 +58,10 @@ public class MongoHelper {
   /**
    * Apply page request.
    *
-   * @param <T>   the generic type
-   * @param query the query
-   * @param req   the req
+   * @param <T>         the generic type
+   * @param query       the query
+   * @param req         the req
+   * @param mappedClass the mapped class
    * @return the query
    */
   public static <T> Query<T> applyPageRequest(Query<T> query, PageRequest<T> req, MappedClass mappedClass) {

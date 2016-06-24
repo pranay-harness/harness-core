@@ -48,6 +48,12 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 
+  /**
+   * Convert to host element host element.
+   *
+   * @param host the host
+   * @return the host element
+   */
   static HostElement convertToHostElement(Host host) {
     HostElement element = new HostElement();
     MapperUtils.mapObject(host, element);
@@ -74,6 +80,11 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return ContextElementType.HOST;
   }
 
+  /**
+   * Gets hosts.
+   *
+   * @return the hosts
+   */
   public HostExpressionProcessor getHosts() {
     return this;
   }

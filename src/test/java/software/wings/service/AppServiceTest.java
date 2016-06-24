@@ -20,11 +20,19 @@ import software.wings.service.intfc.AppService;
 import javax.inject.Inject;
 
 /**
+ * The type App service test.
+ *
  * @author Rishi
  */
 public class AppServiceTest extends WingsBaseTest {
+  /**
+   * The App service.
+   */
   @Inject AppService appService;
 
+  /**
+   * Should save and get.
+   */
   @Test
   public void shouldSaveAndGet() {
     Application app = Application.Builder.anApplication().withName("AppA").withDescription("Description1").build();
@@ -39,6 +47,9 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(app2).isEqualToComparingOnlyGivenFields(app, "uuid", "name", "description");
   }
 
+  /**
+   * Should list.
+   */
   @Test
   public void shouldList() {
     Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();
@@ -73,6 +84,9 @@ public class AppServiceTest extends WingsBaseTest {
         .containsExactly(app3.getUuid(), app2.getUuid());
   }
 
+  /**
+   * Should update.
+   */
   @Test
   public void shouldUpdate() {
     Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();
@@ -88,6 +102,9 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(app2).isEqualToComparingOnlyGivenFields(app1, "uuid", "name", "description");
   }
 
+  /**
+   * Should delete.
+   */
   @Test
   public void shouldDelete() {
     Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();

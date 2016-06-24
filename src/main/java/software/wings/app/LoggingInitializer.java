@@ -9,6 +9,9 @@ import org.mongodb.morphia.logging.slf4j.SLF4JLoggerImplFactory;
 public class LoggingInitializer {
   private static boolean initialized = false;
 
+  /**
+   * Initialize logging.
+   */
   public static void initializeLogging() {
     if (!initialized) {
       MorphiaLoggerFactory.registerLogger(SLF4JLoggerImplFactory.class);

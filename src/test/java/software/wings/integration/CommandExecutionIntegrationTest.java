@@ -71,14 +71,26 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
+  /**
+   * The constant SERVICE_INSTANCE.
+   */
   public static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
                                                              .withAppId(APP_ID)
                                                              .withEnvId(ENV_ID)
                                                              .withHost(HOST)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
+  /**
+   * The Service command executor service.
+   */
   @Inject ServiceCommandExecutorService serviceCommandExecutorService;
+  /**
+   * The File service.
+   */
   @Inject FileService fileService;
+  /**
+   * The Wings persistence.
+   */
   @Inject WingsPersistence wingsPersistence;
   private CommandExecutionContext context =
       CommandExecutionContext.Builder.aCommandExecutionContext()

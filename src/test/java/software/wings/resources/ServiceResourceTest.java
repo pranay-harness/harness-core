@@ -168,6 +168,9 @@ public class ServiceResourceTest {
     verify(RESOURCE_SERVICE).deleteCommand(APP_ID, SERVICE_ID, "START");
   }
 
+  /**
+   * Should update command.
+   */
   @Test
   public void shouldUpdateCommand() {
     when(RESOURCE_SERVICE.updateCommand(eq(APP_ID), eq(SERVICE_ID), any(Graph.class))).thenReturn(aSERVICE);

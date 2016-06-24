@@ -6,11 +6,13 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,10 +76,10 @@ public class ForkState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     for (Object status : response.values()) {
-      ExecutionStatus executionStatus = (ExecutionStatus) status;
+      ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       }

@@ -94,6 +94,9 @@ public class SSHExecutionCredential extends ExecutionCredential {
     this.appAccountPassword = appAccountPassword;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String sshUser;
     private String sshPassword;
@@ -103,35 +106,75 @@ public class SSHExecutionCredential extends ExecutionCredential {
 
     private Builder() {}
 
+    /**
+     * A ssh execution credential builder.
+     *
+     * @return the builder
+     */
     public static Builder aSSHExecutionCredential() {
       return new Builder();
     }
 
+    /**
+     * With ssh user builder.
+     *
+     * @param sshUser the ssh user
+     * @return the builder
+     */
     public Builder withSshUser(String sshUser) {
       this.sshUser = sshUser;
       return this;
     }
 
+    /**
+     * With ssh password builder.
+     *
+     * @param sshPassword the ssh password
+     * @return the builder
+     */
     public Builder withSshPassword(String sshPassword) {
       this.sshPassword = sshPassword;
       return this;
     }
 
+    /**
+     * With app account builder.
+     *
+     * @param appAccount the app account
+     * @return the builder
+     */
     public Builder withAppAccount(String appAccount) {
       this.appAccount = appAccount;
       return this;
     }
 
+    /**
+     * With app account password builder.
+     *
+     * @param appAccountPassword the app account password
+     * @return the builder
+     */
     public Builder withAppAccountPassword(String appAccountPassword) {
       this.appAccountPassword = appAccountPassword;
       return this;
     }
 
+    /**
+     * With execution type builder.
+     *
+     * @param executionType the execution type
+     * @return the builder
+     */
     public Builder withExecutionType(ExecutionType executionType) {
       this.executionType = executionType;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aSSHExecutionCredential()
           .withSshUser(sshUser)
@@ -141,6 +184,11 @@ public class SSHExecutionCredential extends ExecutionCredential {
           .withExecutionType(executionType);
     }
 
+    /**
+     * Build ssh execution credential.
+     *
+     * @return the ssh execution credential
+     */
     public SSHExecutionCredential build() {
       SSHExecutionCredential sSHExecutionCredential = new SSHExecutionCredential();
       sSHExecutionCredential.setSshUser(sshUser);
