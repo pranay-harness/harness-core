@@ -132,7 +132,7 @@ public class TagServiceImpl implements TagService {
   private void cascadingDelete(Tag tag) {
     if (tag != null) {
       wingsPersistence.delete(Tag.class, tag.getUuid());
-      if (tag.getChildren() != null) {
+      if (tag.getChildren() != null && tag.getChildren().size() > 0) {
         tag.getChildren().forEach(this ::cascadingDelete);
       } else { // leaf tag should update hostInstance mapping
         updateAllServiceTemplatesWithDeletedHosts(tag);
