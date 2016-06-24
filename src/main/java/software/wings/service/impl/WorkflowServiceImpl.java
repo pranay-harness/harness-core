@@ -751,7 +751,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     filter = new SearchFilter();
     filter.setFieldName("name");
-    filter.setFieldValues(Constants.DEFAULT_WORKFLOW_NAME);
+    filter.setFieldValues(Constants.SIMPLE_ORCHESTRATION_NAME);
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
 
