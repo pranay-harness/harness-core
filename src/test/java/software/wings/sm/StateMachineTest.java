@@ -355,6 +355,7 @@ public class StateMachineTest extends WingsBaseTest {
                                        .withRepeatElementType(ContextElementType.INSTANCE)
                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                       .withRepeatTransitionStateName("command--Instance")
                                        .build();
 
     assertThat(sm.getStates()).hasSize(5).contains(expectedNewState);
@@ -366,7 +367,7 @@ public class StateMachineTest extends WingsBaseTest {
    * Should expand repeat state in a complex scenario.
    */
   @Test
-  public void shouldExpandRepeatStateInAComplexScenario() {
+  public void shouldExpandRepeatStateInMultiplePaths() {
     StateMachine sm = new StateMachine();
     State starting = new StateSync("starting");
     sm.addState(starting);
@@ -434,6 +435,7 @@ public class StateMachineTest extends WingsBaseTest {
                                        .withRepeatElementType(ContextElementType.INSTANCE)
                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                       .withRepeatTransitionStateName("command--Instance")
                                        .build();
 
     assertThat(sm.getStates()).hasSize(7).contains(expectedNewState);
@@ -506,21 +508,35 @@ public class StateMachineTest extends WingsBaseTest {
 
     sm.validate();
 
-    RepeatState expectedNewState = aRepeatState()
-                                       .withName("RepeatBy" + ContextElementType.INSTANCE)
-                                       .withRepeatElementType(ContextElementType.INSTANCE)
-                                       .withExecutionStrategy(ExecutionStrategy.PARALLEL)
-                                       .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
-                                       .build();
+    RepeatState expectedNewState1 = aRepeatState()
+                                        .withName("command1")
+                                        .withRepeatElementType(ContextElementType.INSTANCE)
+                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                        .withRepeatTransitionStateName("command1--Instance")
+                                        .build();
+    RepeatState expectedNewState2 = aRepeatState()
+                                        .withName("command2")
+                                        .withRepeatElementType(ContextElementType.INSTANCE)
+                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                        .withRepeatTransitionStateName("command2--Instance")
+                                        .build();
+    RepeatState expectedNewState3 = aRepeatState()
+                                        .withName("command3")
+                                        .withRepeatElementType(ContextElementType.INSTANCE)
+                                        .withExecutionStrategy(ExecutionStrategy.PARALLEL)
+                                        .withRepeatElementExpression(InstanceExpressionProcessor.DEFAULT_EXPRESSION)
+                                        .withRepeatTransitionStateName("command3--Instance")
+                                        .build();
 
-    assertThat(sm.getStates()).hasSize(9).contains(expectedNewState);
-    System.out.println(sm.getTransitions());
+    assertThat(sm.getStates()).hasSize(9);
     assertThat(sm.getNextStates("RepeatByServices", TransitionType.REPEAT)).hasSize(1).containsOnly(starting);
-    assertThat(sm.getNextStates("starting", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("starting", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState1);
     assertThat(sm.getNextStates("command1", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand1);
-    assertThat(sm.getNextStates("command1", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("command1", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState2);
     assertThat(sm.getNextStates("command2", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand2);
-    assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState);
+    assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState3);
     assertThat(sm.getNextStates("command3", TransitionType.REPEAT)).hasSize(1).containsOnly(runCommand3);
     assertThat(sm.getNextStates("command3", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
   }

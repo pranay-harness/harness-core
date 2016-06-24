@@ -55,10 +55,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  public static final String DEFAULT_EXPRESSION = "instances()";
+  public static final String DEFAULT_EXPRESSION = "${instances}";
 
   private static final String EXPRESSION_START_PATTERN = "instances()";
-  private static final Object EXPRESSION_EQUAL_PATTERN = "instances";
+  private static final String EXPRESSION_EQUAL_PATTERN = "instances";
 
   private static final String INSTANCE_EXPR_PROCESSOR = "instanceExpressionProcessor";
 
@@ -98,29 +98,18 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public boolean matches(String expression) {
-    if (expression != null
-        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
-      return true;
-    }
-    return false;
+  public String getExpressionStartPattern() {
+    return EXPRESSION_START_PATTERN;
+  }
+
+  @Override
+  public String getExpressionEqualPattern() {
+    return EXPRESSION_EQUAL_PATTERN;
   }
 
   @Override
   public ContextElementType getContextElementType() {
     return ContextElementType.INSTANCE;
-  }
-
-  @Override
-  public String normalizeExpression(String expression) {
-    if (!matches(expression)) {
-      return null;
-    }
-    expression = INSTANCE_EXPR_PROCESSOR + "." + expression;
-    if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
-      expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
-    }
-    return expression;
   }
 
   /**
