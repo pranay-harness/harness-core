@@ -59,6 +59,12 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     this.context = contextImpl;
   }
 
+  /**
+   * Convert to service element service element.
+   *
+   * @param service the service
+   * @return the service element
+   */
   static ServiceElement convertToServiceElement(Service service) {
     ServiceElement element = new ServiceElement();
     MapperUtils.mapObject(service, element);
@@ -85,6 +91,11 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     return ContextElementType.SERVICE;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public ServiceExpressionProcessor getServices() {
     return this;
   }

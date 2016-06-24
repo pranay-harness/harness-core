@@ -50,6 +50,11 @@ public class HostElement implements ContextElement {
     return uuid;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {
     this.uuid = uuid;
   }

@@ -89,6 +89,9 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
   }
 
+  /**
+   * Should get activity command units.
+   */
   @Test
   public void shouldGetActivityCommandUnits() {
     String activityId = wingsPersistence.save(activity);

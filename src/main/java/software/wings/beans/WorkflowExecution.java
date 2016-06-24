@@ -28,10 +28,20 @@ public class WorkflowExecution extends Base {
 
   private String name;
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
@@ -126,10 +136,20 @@ public class WorkflowExecution extends Base {
     this.status = status;
   }
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }

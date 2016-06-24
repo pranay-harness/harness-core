@@ -63,7 +63,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -113,6 +112,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     trigger(appId, stateMachineId, executionUuid, null);
   }
 
+  /**
+   * Trigger.
+   *
+   * @param appId          the app id
+   * @param stateMachineId the state machine id
+   * @param executionUuid  the execution uuid
+   * @param callback       the callback
+   */
   void trigger(String appId, String stateMachineId, String executionUuid, StateMachineExecutionCallback callback) {
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid, null, callback);
   }
@@ -521,6 +528,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerPipelineExecution(appId, pipelineId, null);
   }
 
+  /**
+   * Trigger pipeline execution workflow execution.
+   *
+   * @param appId                   the app id
+   * @param pipelineId              the pipeline id
+   * @param workflowExecutionUpdate the workflow execution update
+   * @return the workflow execution
+   */
   public WorkflowExecution triggerPipelineExecution(
       String appId, String pipelineId, WorkflowExecutionUpdate workflowExecutionUpdate) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
@@ -566,6 +581,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerOrchestrationExecution(appId, envId, orchestrationId, executionArgs, null);
   }
 
+  /**
+   * Trigger orchestration execution workflow execution.
+   *
+   * @param appId                   the app id
+   * @param envId                   the env id
+   * @param orchestrationId         the orchestration id
+   * @param executionArgs           the execution args
+   * @param workflowExecutionUpdate the workflow execution update
+   * @return the workflow execution
+   */
   public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String orchestrationId,
       ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     List<WorkflowExecution> runningWorkflowExecutions =
@@ -654,6 +679,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     return triggerEnvExecution(appId, envId, executionArgs, null);
   }
 
+  /**
+   * Trigger env execution workflow execution.
+   *
+   * @param appId                   the app id
+   * @param envId                   the env id
+   * @param executionArgs           the execution args
+   * @param workflowExecutionUpdate the workflow execution update
+   * @return the workflow execution
+   */
   WorkflowExecution triggerEnvExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
@@ -837,6 +871,11 @@ public class WorkflowServiceImpl implements WorkflowService {
         wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
   }
 
+  /**
+   * Sets static configuration.
+   *
+   * @param staticConfiguration the static configuration
+   */
   public void setStaticConfiguration(StaticConfiguration staticConfiguration) {
     this.staticConfiguration = staticConfiguration;
   }

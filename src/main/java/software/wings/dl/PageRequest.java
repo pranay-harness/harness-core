@@ -42,6 +42,9 @@ public class PageRequest<T> {
    * The constant DEFAULT_PAGE_SIZE.
    */
   public static final int DEFAULT_PAGE_SIZE = 50;
+  /**
+   * The Persistent class.
+   */
   @JsonIgnore Class<T> persistentClass;
   @DefaultValue("0") @QueryParam("offset") private String offset;
   private int start;
@@ -224,7 +227,7 @@ public class PageRequest<T> {
   /**
    * Converts the filter to morphia form.
    *
-   * @param mappedClass
+   * @param mappedClass the mapped class
    */
   public void populateFilters(MappedClass mappedClass) {
     if (uriInfo == null) {

@@ -10,10 +10,20 @@ import java.util.Objects;
 public class StringNotifyResponseData implements NotifyResponseData {
   private String data;
 
+  /**
+   * Gets data.
+   *
+   * @return the data
+   */
   public String getData() {
     return data;
   }
 
+  /**
+   * Sets data.
+   *
+   * @param data the data
+   */
   public void setData(String data) {
     this.data = data;
   }
@@ -40,24 +50,48 @@ public class StringNotifyResponseData implements NotifyResponseData {
     return MoreObjects.toStringHelper(this).add("data", data).toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String data;
 
     private Builder() {}
 
+    /**
+     * A string notify response data builder.
+     *
+     * @return the builder
+     */
     public static Builder aStringNotifyResponseData() {
       return new Builder();
     }
 
+    /**
+     * With data builder.
+     *
+     * @param data the data
+     * @return the builder
+     */
     public Builder withData(String data) {
       this.data = data;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aStringNotifyResponseData().withData(data);
     }
 
+    /**
+     * Build string notify response data.
+     *
+     * @return the string notify response data
+     */
     public StringNotifyResponseData build() {
       StringNotifyResponseData stringNotifyResponseData = new StringNotifyResponseData();
       stringNotifyResponseData.setData(data);

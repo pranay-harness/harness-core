@@ -209,6 +209,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should update command.
+   */
   @Test
   public void shouldUpdateCommand() {
     when(wingsPersistence.addToList(

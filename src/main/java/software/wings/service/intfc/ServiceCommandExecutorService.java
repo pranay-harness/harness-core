@@ -16,6 +16,7 @@ public interface ServiceCommandExecutorService {
    *
    * @param serviceInstance the service instance
    * @param command         the command
+   * @param context         the context
    * @return the execution result
    */
   ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context);

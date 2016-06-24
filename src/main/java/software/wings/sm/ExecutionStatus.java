@@ -30,13 +30,26 @@ public enum ExecutionStatus {
            */
   ERROR;
 
+  /**
+   * The type Execution status data.
+   */
   public static class ExecutionStatusData implements NotifyResponseData {
     private ExecutionStatus executionStatus;
 
+    /**
+     * Gets execution status.
+     *
+     * @return the execution status
+     */
     public ExecutionStatus getExecutionStatus() {
       return executionStatus;
     }
 
+    /**
+     * Sets execution status.
+     *
+     * @param executionStatus the execution status
+     */
     public void setExecutionStatus(ExecutionStatus executionStatus) {
       this.executionStatus = executionStatus;
     }
@@ -58,24 +71,48 @@ public enum ExecutionStatus {
       return Objects.equals(this.executionStatus, other.executionStatus);
     }
 
+    /**
+     * The type Builder.
+     */
     public static final class Builder {
       private ExecutionStatus executionStatus;
 
       private Builder() {}
 
+      /**
+       * An execution status data builder.
+       *
+       * @return the builder
+       */
       public static Builder anExecutionStatusData() {
         return new Builder();
       }
 
+      /**
+       * With execution status builder.
+       *
+       * @param executionStatus the execution status
+       * @return the builder
+       */
       public Builder withExecutionStatus(ExecutionStatus executionStatus) {
         this.executionStatus = executionStatus;
         return this;
       }
 
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return anExecutionStatusData().withExecutionStatus(executionStatus);
       }
 
+      /**
+       * Build execution status data.
+       *
+       * @return the execution status data
+       */
       public ExecutionStatusData build() {
         ExecutionStatusData executionStatusData = new ExecutionStatusData();
         executionStatusData.setExecutionStatus(executionStatus);

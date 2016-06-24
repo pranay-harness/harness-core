@@ -32,10 +32,21 @@ public class WingsException extends WebApplicationException {
     super();
   }
 
+  /**
+   * Instantiates a new Wings exception.
+   *
+   * @param message the message
+   */
   public WingsException(String message) {
     super(message);
   }
 
+  /**
+   * Instantiates a new Wings exception.
+   *
+   * @param message the message
+   * @param cause   the cause
+   */
   public WingsException(String message, Throwable cause) {
     super(message, cause);
   }

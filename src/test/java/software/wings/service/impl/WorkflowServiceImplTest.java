@@ -684,7 +684,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should trigger simple workflow.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
@@ -782,7 +782,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Trigger pipeline.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void triggerPipeline() throws InterruptedException {
@@ -814,7 +814,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should update pipeline with graph.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldListPipelinExecutions() throws InterruptedException {
@@ -914,6 +914,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .build();
   }
 
+  /**
+   * Should trigger orchestration.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerOrchestration() throws InterruptedException {
     Environment env =
@@ -921,6 +926,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     triggerOrchestration(env);
   }
 
+  /**
+   * Trigger orchestration.
+   *
+   * @param env the env
+   * @throws InterruptedException the interrupted exception
+   */
   public void triggerOrchestration(Environment env) throws InterruptedException {
     Orchestration orchestration = createExecutableOrchestration(env);
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -986,7 +997,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should list orchestration.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldListOrchestration() throws InterruptedException {
@@ -1003,11 +1014,22 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  /**
+   * The type Workflow execution update mock.
+   */
   public static class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
     private String signalId;
 
+    /**
+     * Instantiates a new Workflow execution update mock.
+     */
     public WorkflowExecutionUpdateMock() {}
 
+    /**
+     * Instantiates a new Workflow execution update mock.
+     *
+     * @param signalId the signal id
+     */
     public WorkflowExecutionUpdateMock(String signalId) {
       super();
       this.signalId = signalId;
@@ -1020,10 +1042,20 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
       workflowExecutionSignals.get(signalId).countDown();
     }
 
+    /**
+     * Gets signal id.
+     *
+     * @return the signal id
+     */
     public String getSignalId() {
       return signalId;
     }
 
+    /**
+     * Sets signal id.
+     *
+     * @param signalId the signal id
+     */
     public void setSignalId(String signalId) {
       this.signalId = signalId;
     }

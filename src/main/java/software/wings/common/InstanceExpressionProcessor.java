@@ -82,6 +82,12 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     this.context = context;
   }
 
+  /**
+   * Convert to instance element instance element.
+   *
+   * @param instance the instance
+   * @return the instance element
+   */
   static InstanceElement convertToInstanceElement(ServiceInstance instance) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
@@ -370,6 +376,11 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     this.serviceResourceService = serviceResourceService;
   }
 
+  /**
+   * Sets service template service.
+   *
+   * @param serviceTemplateService the service template service
+   */
   public void setServiceTemplateService(ServiceTemplateService serviceTemplateService) {
     this.serviceTemplateService = serviceTemplateService;
   }

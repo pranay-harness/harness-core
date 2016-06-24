@@ -176,10 +176,20 @@ public class WorkflowStandardParams implements ContextElement {
     this.endTs = endTs;
   }
 
+  /**
+   * Gets timestamp id.
+   *
+   * @return the timestamp id
+   */
   public String getTimestampId() {
     return timestampId;
   }
 
+  /**
+   * Sets timestamp id.
+   *
+   * @param timestampId the timestamp id
+   */
   public void setTimestampId(String timestampId) {
     this.timestampId = timestampId;
   }
@@ -242,6 +252,12 @@ public class WorkflowStandardParams implements ContextElement {
     return artifacts;
   }
 
+  /**
+   * Gets artifact for service.
+   *
+   * @param service the service
+   * @return the artifact for service
+   */
   public Artifact getArtifactForService(Service service) {
     return getArtifacts()
         .stream()
@@ -260,8 +276,16 @@ public class WorkflowStandardParams implements ContextElement {
     return null;
   }
 
+  /**
+   * Sets uuid.
+   *
+   * @param uuid the uuid
+   */
   public void setUuid(String uuid) {}
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String appId;
     private String envId;
@@ -274,45 +298,97 @@ public class WorkflowStandardParams implements ContextElement {
 
     private Builder() {}
 
+    /**
+     * A workflow standard params builder.
+     *
+     * @return the builder
+     */
     public static Builder aWorkflowStandardParams() {
       return new Builder();
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With artifact ids builder.
+     *
+     * @param artifactIds the artifact ids
+     * @return the builder
+     */
     public Builder withArtifactIds(List<String> artifactIds) {
       this.artifactIds = artifactIds;
       return this;
     }
 
+    /**
+     * With execution credential builder.
+     *
+     * @param executionCredential the execution credential
+     * @return the builder
+     */
     public Builder withExecutionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
       return this;
     }
 
+    /**
+     * With start ts builder.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With end ts builder.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With timestamp id builder.
+     *
+     * @param timestampId the timestamp id
+     * @return the builder
+     */
     public Builder withTimestampId(String timestampId) {
       this.timestampId = timestampId;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aWorkflowStandardParams()
           .withAppId(appId)
@@ -324,6 +400,11 @@ public class WorkflowStandardParams implements ContextElement {
           .withTimestampId(timestampId);
     }
 
+    /**
+     * Build workflow standard params.
+     *
+     * @return the workflow standard params
+     */
     public WorkflowStandardParams build() {
       WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
       workflowStandardParams.setAppId(appId);

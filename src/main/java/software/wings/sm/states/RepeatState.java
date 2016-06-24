@@ -311,6 +311,28 @@ public class RepeatState extends State {
     this.repeatTransitionStateName = repeatTransitionStateName;
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(logger, repeatElementType, repeatElementExpression, executionStrategy,
+        executionStrategyExpression, repeatTransitionStateName);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final RepeatState other = (RepeatState) obj;
+    return Objects.equals(this.logger, other.logger) && Objects.equals(this.repeatElementType, other.repeatElementType)
+        && Objects.equals(this.repeatElementExpression, other.repeatElementExpression)
+        && Objects.equals(this.executionStrategy, other.executionStrategy)
+        && Objects.equals(this.executionStrategyExpression, other.executionStrategyExpression)
+        && Objects.equals(this.repeatTransitionStateName, other.repeatTransitionStateName);
+  }
+
   /**
    * The Class RepeatStateExecutionData.
    */
@@ -416,28 +438,9 @@ public class RepeatState extends State {
     }
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(logger, repeatElementType, repeatElementExpression, executionStrategy,
-        executionStrategyExpression, repeatTransitionStateName);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final RepeatState other = (RepeatState) obj;
-    return Objects.equals(this.logger, other.logger) && Objects.equals(this.repeatElementType, other.repeatElementType)
-        && Objects.equals(this.repeatElementExpression, other.repeatElementExpression)
-        && Objects.equals(this.executionStrategy, other.executionStrategy)
-        && Objects.equals(this.executionStrategyExpression, other.executionStrategyExpression)
-        && Objects.equals(this.repeatTransitionStateName, other.repeatTransitionStateName);
-  }
-
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private ContextElementType repeatElementType;
@@ -448,40 +451,86 @@ public class RepeatState extends State {
 
     private Builder() {}
 
+    /**
+     * A repeat state builder.
+     *
+     * @return the builder
+     */
     public static Builder aRepeatState() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With repeat element type builder.
+     *
+     * @param repeatElementType the repeat element type
+     * @return the builder
+     */
     public Builder withRepeatElementType(ContextElementType repeatElementType) {
       this.repeatElementType = repeatElementType;
       return this;
     }
 
+    /**
+     * With repeat element expression builder.
+     *
+     * @param repeatElementExpression the repeat element expression
+     * @return the builder
+     */
     public Builder withRepeatElementExpression(String repeatElementExpression) {
       this.repeatElementExpression = repeatElementExpression;
       return this;
     }
 
+    /**
+     * With execution strategy builder.
+     *
+     * @param executionStrategy the execution strategy
+     * @return the builder
+     */
     public Builder withExecutionStrategy(ExecutionStrategy executionStrategy) {
       this.executionStrategy = executionStrategy;
       return this;
     }
 
+    /**
+     * With execution strategy expression builder.
+     *
+     * @param executionStrategyExpression the execution strategy expression
+     * @return the builder
+     */
     public Builder withExecutionStrategyExpression(String executionStrategyExpression) {
       this.executionStrategyExpression = executionStrategyExpression;
       return this;
     }
 
+    /**
+     * With repeat transition state name builder.
+     *
+     * @param repeatTransitionStateName the repeat transition state name
+     * @return the builder
+     */
     public Builder withRepeatTransitionStateName(String repeatTransitionStateName) {
       this.repeatTransitionStateName = repeatTransitionStateName;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aRepeatState()
           .withName(name)
@@ -492,6 +541,11 @@ public class RepeatState extends State {
           .withRepeatTransitionStateName(repeatTransitionStateName);
     }
 
+    /**
+     * Build repeat state.
+     *
+     * @return the repeat state
+     */
     public RepeatState build() {
       RepeatState repeatState = new RepeatState(name);
       repeatState.setRepeatElementType(repeatElementType);

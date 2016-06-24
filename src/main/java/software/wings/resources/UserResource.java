@@ -73,6 +73,7 @@ public class UserResource {
   /**
    * Update.
    *
+   * @param appId  the app id
    * @param userId the user id
    * @param user   the user
    * @return the rest response
@@ -89,6 +90,7 @@ public class UserResource {
   /**
    * Delete.
    *
+   * @param appId  the app id
    * @param userId the user id
    * @return the rest response
    */
@@ -100,6 +102,11 @@ public class UserResource {
     return new RestResponse();
   }
 
+  /**
+   * Get rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @AuthRule
   @Path("user")
@@ -119,6 +126,12 @@ public class UserResource {
     return new RestResponse<>(user);
   }
 
+  /**
+   * Verify email rest response.
+   *
+   * @param token the token
+   * @return the rest response
+   */
   @GET
   @Path("verify/{token}")
   public RestResponse<User> verifyEmail(@PathParam("token") String token) {

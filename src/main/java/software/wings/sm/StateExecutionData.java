@@ -89,18 +89,38 @@ public class StateExecutionData implements Serializable {
     this.status = status;
   }
 
+  /**
+   * Gets error msg.
+   *
+   * @return the error msg
+   */
   public String getErrorMsg() {
     return errorMsg;
   }
 
+  /**
+   * Sets error msg.
+   *
+   * @param errorMsg the error msg
+   */
   public void setErrorMsg(String errorMsg) {
     this.errorMsg = errorMsg;
   }
 
+  /**
+   * Gets execution summary.
+   *
+   * @return the execution summary
+   */
   public Object getExecutionSummary() {
     return fillExecutionData();
   }
 
+  /**
+   * Gets execution details.
+   *
+   * @return the execution details
+   */
   public Object getExecutionDetails() {
     return fillExecutionData();
   }
@@ -114,6 +134,13 @@ public class StateExecutionData implements Serializable {
     return orderedMap;
   }
 
+  /**
+   * Put not null.
+   *
+   * @param orderedMap the ordered map
+   * @param name       the name
+   * @param value      the value
+   */
   protected void putNotNull(LinkedHashMap<String, Object> orderedMap, String name, Object value) {
     if (value != null) {
       orderedMap.put(name, value);

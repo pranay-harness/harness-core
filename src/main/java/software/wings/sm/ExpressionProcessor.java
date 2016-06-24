@@ -22,8 +22,14 @@ public interface ExpressionProcessor {
    */
   String EXPRESSION_NAME_DELIMITER = ",";
 
+  /**
+   * The constant EXPRESSION_PREFIX.
+   */
   String EXPRESSION_PREFIX = "${";
 
+  /**
+   * The constant EXPRESSION_SUFFIX.
+   */
   String EXPRESSION_SUFFIX = "}";
 
   /**

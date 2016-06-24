@@ -76,6 +76,14 @@ public class MailerTest extends WingsBaseTest {
         .containsExactly("recieve@email.com");
   }
 
+  /**
+   * Should send html email.
+   *
+   * @throws MessagingException the messaging exception
+   * @throws EmailException     the email exception
+   * @throws TemplateException  the template exception
+   * @throws IOException        the io exception
+   */
   @Test
   public void shouldSendHtmlEmail() throws MessagingException, EmailException, TemplateException, IOException {
     mailer.send(aSmtpConfig()

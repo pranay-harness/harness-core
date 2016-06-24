@@ -80,6 +80,9 @@ public class ActivityResourceTest {
    */
   public static final Log ACTUAL_LOG = aLog().build();
 
+  /**
+   * The Test folder.
+   */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
   /**
@@ -168,6 +171,9 @@ public class ActivityResourceTest {
     assertThatFilterMatches(filters.get(2), "commandUnitName", COMMAND_UNIT_NAME, EQ);
   }
 
+  /**
+   * Should list command units.
+   */
   @Test
   public void shouldListCommandUnits() {
     when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
@@ -188,6 +194,11 @@ public class ActivityResourceTest {
     verify(ACTIVITY_SERVICE).getCommandUnits(APP_ID, ACTIVITY_ID);
   }
 
+  /**
+   * Should download activity log file.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldDownloadActivityLogFile() throws IOException {
     when(LOG_SERVICE.exportLogs(APP_ID, ACTIVITY_ID)).thenReturn(testFolder.newFile("FILE_NAME"));

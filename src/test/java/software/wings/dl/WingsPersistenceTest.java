@@ -136,6 +136,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertPaginationResult(res);
   }
 
+  /**
+   * Should take query params in simplified form.
+   */
   @Test
   public void shouldTakeQueryParamsInSimplifiedForm() {
     UriInfo uriInfo = mock(UriInfo.class);
@@ -244,10 +247,20 @@ public class WingsPersistenceTest extends WingsBaseTest {
       this.fieldA = fieldA;
     }
 
+    /**
+     * Gets map field.
+     *
+     * @return the map field
+     */
     public Map<String, String> getMapField() {
       return mapField;
     }
 
+    /**
+     * Sets map field.
+     *
+     * @param mapField the map field
+     */
     public void setMapField(Map<String, String> mapField) {
       this.mapField = mapField;
     }

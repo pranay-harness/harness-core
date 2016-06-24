@@ -109,29 +109,62 @@ public class ResponseMessage {
      */
     private Builder() {}
 
+    /**
+     * A response message builder.
+     *
+     * @return the builder
+     */
     public static Builder aResponseMessage() {
       return new Builder();
     }
 
+    /**
+     * With code builder.
+     *
+     * @param code the code
+     * @return the builder
+     */
     public Builder withCode(ErrorCodes code) {
       this.code = code;
       return this;
     }
 
+    /**
+     * With error type builder.
+     *
+     * @param errorType the error type
+     * @return the builder
+     */
     public Builder withErrorType(ResponseTypeEnum errorType) {
       this.errorType = errorType;
       return this;
     }
 
+    /**
+     * With message builder.
+     *
+     * @param message the message
+     * @return the builder
+     */
     public Builder withMessage(String message) {
       this.message = message;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aResponseMessage().withCode(code).withErrorType(errorType).withMessage(message);
     }
 
+    /**
+     * Build response message.
+     *
+     * @return the response message
+     */
     public ResponseMessage build() {
       ResponseMessage responseMessage = new ResponseMessage();
       responseMessage.setCode(code);

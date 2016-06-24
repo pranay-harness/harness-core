@@ -16,10 +16,21 @@ import java.util.UUID;
  * Created by anubhaw on 6/9/16.
  */
 public class DefaultCommands {
+  /**
+   * Graph id generator string.
+   *
+   * @param prefix the prefix
+   * @return the string
+   */
   public static String graphIdGenerator(String prefix) {
     return prefix + "_" + UUID.randomUUID().toString();
   }
 
+  /**
+   * Gets start command graph.
+   *
+   * @return the start command graph
+   */
   public static Graph getStartCommandGraph() {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"));
 
@@ -42,6 +53,11 @@ public class DefaultCommands {
         .build();
   }
 
+  /**
+   * Gets stop command graph.
+   *
+   * @return the stop command graph
+   */
   public static Graph getStopCommandGraph() {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"));
 
@@ -64,6 +80,11 @@ public class DefaultCommands {
         .build();
   }
 
+  /**
+   * Gets install command graph.
+   *
+   * @return the install command graph
+   */
   public static Graph getInstallCommandGraph() {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"),
         graphIdGenerator("node"), graphIdGenerator("node"));

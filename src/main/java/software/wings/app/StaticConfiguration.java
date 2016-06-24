@@ -17,12 +17,16 @@ import java.io.IOException;
 import java.net.URL;
 
 /**
+ * The type Static configuration.
+ *
  * @author Rishi
  */
 @Singleton
 public class StaticConfiguration {
   /**
-   * @return
+   * Default simple workflow graph.
+   *
+   * @return graph
    */
   public Graph defaultSimpleWorkflow() {
     URL url = this.getClass().getResource(Constants.SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL);

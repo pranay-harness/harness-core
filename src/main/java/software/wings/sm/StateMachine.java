@@ -163,6 +163,9 @@ public class StateMachine extends Base {
     }
   }
 
+  /**
+   * Clear cache.
+   */
   void clearCache() {
     cachedStatesMap = null;
     cachedTransitionFlowMap = null;
@@ -329,6 +332,12 @@ public class StateMachine extends Base {
     return transitionFlowMap.get(fromStateName).get(transitionType);
   }
 
+  /**
+   * Gets next states.
+   *
+   * @param fromStateName the from state name
+   * @return the next states
+   */
   public List<State> getNextStates(String fromStateName) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
     if (transitionFlowMap == null || transitionFlowMap.get(fromStateName) == null) {
@@ -472,6 +481,12 @@ public class StateMachine extends Base {
     return statesMap.get(stateName);
   }
 
+  /**
+   * Gets transition from.
+   *
+   * @param stateFrom the state from
+   * @return the transition from
+   */
   public List<Transition> getTransitionFrom(State stateFrom) {
     return transitions.stream().filter(transition -> transition.getFromState() == stateFrom).collect(toList());
   }
@@ -498,6 +513,9 @@ public class StateMachine extends Base {
     return true;
   }
 
+  /**
+   * Add repeaters based on state required context element.
+   */
   void addRepeatersBasedOnStateRequiredContextElement() {
     for (List<State> path : getPaths()) {
       List<ContextElementType> contextElementsPresent = Lists.newArrayList(ContextElementType.OTHER);

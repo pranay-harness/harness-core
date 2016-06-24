@@ -26,6 +26,13 @@ import javax.inject.Singleton;
 public class WingsExpressionProcessorFactory implements ExpressionProcessorFactory {
   @Inject private Injector injector;
 
+  /**
+   * Gets matching expression processor.
+   *
+   * @param expression the expression
+   * @param context    the context
+   * @return the matching expression processor
+   */
   public static ExpressionProcessor getMatchingExpressionProcessor(String expression, ExecutionContext context) {
     ExpressionProcessor processor = new ServiceExpressionProcessor(context);
     if (processor.matches(expression)) {
@@ -44,6 +51,12 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
     return null;
   }
 
+  /**
+   * Gets default expression.
+   *
+   * @param contextElementType the context element type
+   * @return the default expression
+   */
   public static String getDefaultExpression(ContextElementType contextElementType) {
     switch (contextElementType) {
       case SERVICE:

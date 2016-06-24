@@ -13,7 +13,6 @@ import software.wings.sm.StateTypeScope;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -170,6 +169,7 @@ public interface WorkflowService {
    * Trigger orchestration execution.
    *
    * @param appId           the app id
+   * @param envId           the env id
    * @param orchestrationId the orchestration id
    * @param executionArgs   the execution args
    * @return the workflow execution
@@ -191,7 +191,7 @@ public interface WorkflowService {
    *
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
-   * @param expandedGroupIds
+   * @param expandedGroupIds    the expanded group ids
    * @return the execution details
    */
   WorkflowExecution getExecutionDetails(

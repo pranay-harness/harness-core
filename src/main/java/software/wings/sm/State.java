@@ -50,11 +50,21 @@ public abstract class State {
     this.name = name;
   }
 
+  /**
+   * Gets required context element type.
+   *
+   * @return the required context element type
+   */
   @SchemaIgnore
   public ContextElementType getRequiredContextElementType() {
     return requiredContextElementType;
   }
 
+  /**
+   * Sets required context element type.
+   *
+   * @param requiredContextElementType the required context element type
+   */
   @SchemaIgnore
   public void setRequiredContextElementType(ContextElementType requiredContextElementType) {
     this.requiredContextElementType = requiredContextElementType;
@@ -119,5 +129,8 @@ public abstract class State {
     return executionResponse;
   }
 
+  /**
+   * Resolve properties.
+   */
   public void resolveProperties() {}
 }
