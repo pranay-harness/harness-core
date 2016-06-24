@@ -103,6 +103,7 @@ public interface HostService {
    * Gets the hosts by id.
    *
    * @param appId     the app id
+   * @param infraId   the infra id
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
@@ -112,8 +113,25 @@ public interface HostService {
    * Gets the hosts by tags.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tags  the tags
    * @return the hosts by tags
    */
   List<Host> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
+
+  /**
+   * Sets tags.
+   *
+   * @param host the host
+   * @param tags the tags
+   */
+  void setTags(Host host, List<Tag> tags);
+
+  /**
+   * Remove tag from host.
+   *
+   * @param host the host
+   * @param tag  the tag
+   */
+  void removeTagFromHost(Host host, Tag tag);
 }

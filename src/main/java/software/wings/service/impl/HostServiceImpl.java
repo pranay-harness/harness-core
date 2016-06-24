@@ -6,6 +6,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
 import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Infra;
@@ -127,6 +128,18 @@ public class HostServiceImpl implements HostService {
         .field("tags")
         .hasAnyOf(tags)
         .asList();
+  }
+
+  @Override
+  public void setTags(Host host, List<Tag> tags) {
+    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
+    wingsPersistence.update(host, updateOp);
+  }
+
+  @Override
+  public void removeTagFromHost(Host host, Tag tag) {
+    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
+    wingsPersistence.update(host, updateOp);
   }
 
   /* (non-Javadoc)

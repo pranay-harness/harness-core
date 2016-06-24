@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -55,8 +54,42 @@ public class TagServiceImpl implements TagService {
       tag.setRootTagId(parentTag.isRootTag() ? parentTagId : parentTag.getRootTagId());
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
       wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
+      updateServiceTemplateWithCommandPredecessor(tag);
       return tag;
     }
+  }
+
+  private void updateServiceTemplateWithCommandPredecessor(Tag tag) {
+    List<Tag> predecessorTags = findPredecessorTags(tag);
+    List<ServiceTemplate> templateByMappedTags = serviceTemplateService.getTemplateByMappedTags(predecessorTags);
+    templateByMappedTags.forEach(template -> serviceTemplateService.addLeafTag(template, tag));
+  }
+
+  private List<Tag> findPredecessorTags(Tag tag) {
+    List<Tag> predecessor = new ArrayList<>();
+    Tag child = tag;
+    Tag parent = null;
+    int maxRep = 10; // don't repeat for more than 10 rep. paranoia
+    do {
+      parent = findParentTag(child);
+      if (parent != null) {
+        predecessor.add(parent);
+        child = parent;
+      }
+      maxRep--;
+    } while (parent != null && parent.getRootTagId() != null && maxRep > 0);
+    return predecessor;
+  }
+
+  private Tag findParentTag(Tag tag) {
+    return wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(tag.getAppId())
+        .field("envId")
+        .equal(tag.getEnvId())
+        .field("children")
+        .equal(tag.getUuid())
+        .get();
   }
 
   /* (non-Javadoc)
@@ -81,6 +114,7 @@ public class TagServiceImpl implements TagService {
       mapBuilder.put("children", tag.getChildren());
     }
     wingsPersistence.updateFields(Tag.class, tag.getUuid(), mapBuilder.build());
+
     return wingsPersistence.get(Tag.class, tag.getUuid());
   }
 
@@ -119,9 +153,8 @@ public class TagServiceImpl implements TagService {
     List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
     if (serviceTemplates != null) {
-      serviceTemplates.forEach(serviceTemplate -> {
-        serviceInstanceService.updateInstanceMappings(serviceTemplate, new ArrayList<>(), hosts);
-      });
+      serviceTemplates.forEach(
+          serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, new ArrayList<>(), hosts));
     }
   }
 
@@ -139,6 +172,7 @@ public class TagServiceImpl implements TagService {
   @Override
   public void tagHosts(String appId, String tagId, List<String> hostIds) {
     Tag tag = wingsPersistence.get(Tag.class, appId, tagId);
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     if (hostIds == null || tag == null) {
       return;
@@ -155,14 +189,20 @@ public class TagServiceImpl implements TagService {
     // Tag
     hostTobeTagged.forEach(host -> {
       List<Tag> tags = removeAnyTagFromSameTagTree(tag, host);
-      UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
-      wingsPersistence.update(host, updateOp);
+      hostService.setTags(host, tags);
+      if (serviceTemplates != null) {
+        serviceTemplates.forEach(
+            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(host), asList()));
+      }
     });
 
     // Un-tag
     hostToBeUntagged.forEach(host -> {
-      UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
-      wingsPersistence.update(host, updateOp);
+      hostService.removeTagFromHost(host, tag);
+      if (serviceTemplates != null) {
+        serviceTemplates.forEach(
+            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
+      }
     });
   }
 

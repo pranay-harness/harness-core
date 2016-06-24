@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -55,7 +56,7 @@ public interface ServiceInstanceService {
    * @param instanceId the instance id
    * @return the service instance
    */
-  ServiceInstance get(String appId, String envId, String instanceId);
+  ServiceInstance get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String instanceId);
 
   /**
    * Update host mappings.

@@ -226,7 +226,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(query).field("envId");
     verify(end).equal(ENV_ID);
     verify(query).field("leafTags");
-    verify(end).hasThisElement(tag);
+    verify(end).equal(TAG_ID);
   }
 
   /**

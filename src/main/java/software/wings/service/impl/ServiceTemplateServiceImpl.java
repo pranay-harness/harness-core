@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -139,11 +140,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Host> getTaggedHosts(String templateId, PageRequest<Host> pageRequest) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
+  public PageResponse<Host> getTaggedHosts(
+      String appId, String envId, String templateId, PageRequest<Host> pageRequest) {
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, templateId);
     List<Tag> tags = serviceTemplate.getTags();
     pageRequest.addFilter("tags", tags, IN);
-    return wingsPersistence.query(Host.class, pageRequest);
+    return wingsPersistence.query(Host.class, pageRequest); // FIXME
   }
 
   @Override
@@ -165,6 +167,36 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .field("envId")
         .equal(tag.getEnvId())
         .field("leafTags")
+        .equal(tag.getUuid())
+        .asList();
+  }
+
+  @Override
+  public List<ServiceTemplate> getTemplateByMappedTags(List<Tag> tags) {
+    if (tags.size() == 0) {
+      return new ArrayList<>();
+    }
+    return tags.stream()
+        .map(this ::getTemplatesByMappedTags)
+        .flatMap(List::stream)
+        .collect(Collectors.toSet())
+        .stream()
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public void addLeafTag(ServiceTemplate template, Tag tag) {
+    wingsPersistence.update(
+        template, wingsPersistence.createUpdateOperations(ServiceTemplate.class).add("leafTags", tag));
+  }
+
+  private List<ServiceTemplate> getTemplatesByMappedTags(Tag tag) {
+    return wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(tag.getAppId())
+        .field("envId")
+        .equal(tag.getEnvId())
+        .field("tags")
         .equal(tag.getUuid())
         .asList();
   }
