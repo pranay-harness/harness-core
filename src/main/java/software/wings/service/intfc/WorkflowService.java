@@ -13,6 +13,7 @@ import software.wings.sm.StateTypeScope;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -184,6 +185,17 @@ public interface WorkflowService {
    * @return the execution details
    */
   WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId);
+
+  /**
+   * Gets the execution details.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @param expandedGroupIds
+   * @return the execution details
+   */
+  WorkflowExecution getExecutionDetails(
+      @NotNull String appId, @NotNull String workflowExecutionId, List<String> expandedGroupIds);
 
   /**
    * Trigger env execution workflow execution.

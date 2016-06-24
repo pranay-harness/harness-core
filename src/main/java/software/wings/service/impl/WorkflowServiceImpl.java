@@ -403,6 +403,15 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
+    return getExecutionDetails(appId, workflowExecutionId, null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public WorkflowExecution getExecutionDetails(
+      String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null) {
       populateGraph(workflowExecution);
@@ -463,7 +472,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       String fromInstanceId = null;
       if (instance.getParentInstanceId() != null) {
-        // TODO: needs work for repeat element instance.
         // This is scenario like fork, repeat or sub workflow
         node = new Node();
         node.setId(UUIDGenerator.getUuid());
