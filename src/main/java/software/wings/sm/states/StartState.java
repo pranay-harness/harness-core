@@ -14,8 +14,6 @@ import software.wings.sm.StateType;
  * @author Rishi
  */
 public class StartState extends CommandState {
-  private static final long serialVersionUID = 1L;
-
   /**
    * Instantiates a new start state.
    *

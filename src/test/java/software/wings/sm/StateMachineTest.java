@@ -22,7 +22,6 @@ import software.wings.sm.states.RepeatState;
 import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -363,6 +362,9 @@ public class StateMachineTest extends WingsBaseTest {
     assertThat(sm.getNextStates("RepeatByServices", TransitionType.SUCCESS)).hasSize(1).containsOnly(finished);
   }
 
+  /**
+   * Should expand repeat state in a complex scenario.
+   */
   @Test
   public void shouldExpandRepeatStateInAComplexScenario() {
     StateMachine sm = new StateMachine();
@@ -443,6 +445,9 @@ public class StateMachineTest extends WingsBaseTest {
         .isSameAs(sm.getNextStates("RepeatByHosts", TransitionType.REPEAT).get(0));
   }
 
+  /**
+   * Should expand repeat state for each node that needs it.
+   */
   @Test
   public void shouldExpandRepeatStateForEachNodeThatNeedsIt() {
     StateMachine sm = new StateMachine();
@@ -651,10 +656,10 @@ public class StateMachineTest extends WingsBaseTest {
    */
   public static class StateAsync extends State {
     private boolean shouldFail;
+    private boolean shouldThrowException;
     private int duration;
 
     @Inject private Injector injector;
-    private RuntimeException exception;
 
     /**
      * Instantiates a new state asynch.
@@ -674,20 +679,22 @@ public class StateMachineTest extends WingsBaseTest {
      * @param shouldFail the should fail
      */
     public StateAsync(String name, int duration, boolean shouldFail) {
-      super(name, StateType.HTTP.name());
-      this.duration = duration;
-      this.shouldFail = shouldFail;
+      this(name, duration, shouldFail, false);
     }
 
     /**
-     * @param string
-     * @param i
-     * @param exception
+     * Instantiates a new State async.
+     *
+     * @param name                 the name
+     * @param duration             the duration
+     * @param shouldFail           the should fail
+     * @param shouldThrowException the should throw exception
      */
-    public StateAsync(String name, int duration, RuntimeException exception) {
+    public StateAsync(String name, int duration, boolean shouldFail, boolean shouldThrowException) {
       super(name, StateType.HTTP.name());
       this.duration = duration;
-      this.exception = exception;
+      this.shouldFail = shouldFail;
+      this.shouldThrowException = shouldThrowException;
     }
 
     /*
@@ -705,8 +712,8 @@ public class StateMachineTest extends WingsBaseTest {
       List<String> correlationIds = new ArrayList<>();
       correlationIds.add(uuid);
       response.setCorrelationIds(correlationIds);
-      if (exception != null) {
-        throw exception;
+      if (shouldThrowException) {
+        throw new RuntimeException("Exception for test");
       }
       Notifier notifier = new Notifier(getName(), uuid, duration, shouldFail);
       injector.injectMembers(notifier);
@@ -718,10 +725,9 @@ public class StateMachineTest extends WingsBaseTest {
      * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
      */
     @Override
-    public ExecutionResponse handleAsyncResponse(
-        ExecutionContextImpl context, Map<String, ? extends Serializable> responseMap) {
+    public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> responseMap) {
       ExecutionResponse executionResponse = new ExecutionResponse();
-      for (Serializable response : responseMap.values()) {
+      for (Object response : responseMap.values()) {
         if (!"SUCCESS".equals(response)) {
           executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
         }
@@ -731,7 +737,7 @@ public class StateMachineTest extends WingsBaseTest {
 
     @Override
     public int hashCode() {
-      return Objects.hash(shouldFail, duration, injector, exception);
+      return Objects.hash(shouldFail, shouldThrowException, duration, injector);
     }
 
     @Override
@@ -743,8 +749,9 @@ public class StateMachineTest extends WingsBaseTest {
         return false;
       }
       final StateAsync other = (StateAsync) obj;
-      return Objects.equals(this.shouldFail, other.shouldFail) && Objects.equals(this.duration, other.duration)
-          && Objects.equals(this.injector, other.injector) && Objects.equals(this.exception, other.exception);
+      return Objects.equals(this.shouldFail, other.shouldFail)
+          && Objects.equals(this.shouldThrowException, other.shouldThrowException)
+          && Objects.equals(this.duration, other.duration) && Objects.equals(this.injector, other.injector);
     }
   }
 

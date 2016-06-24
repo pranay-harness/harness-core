@@ -468,8 +468,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    RuntimeException exception = new RuntimeException("Exception for testing");
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, exception);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());

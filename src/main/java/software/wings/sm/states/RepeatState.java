@@ -42,8 +42,7 @@ import java.util.stream.Collectors;
  */
 @Attributes(title = "Repeat")
 public class RepeatState extends State {
-  private static final long serialVersionUID = 1L;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
 
   @SchemaIgnore private ContextElementType repeatElementType;
   @Attributes(required = true, title = "Repeat Element Expression") private String repeatElementExpression;
@@ -74,10 +73,9 @@ public class RepeatState extends State {
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    for (Serializable status : response.values()) {
+    for (Object status : response.values()) {
       executionStatus = (ExecutionStatus) status;
       if (executionStatus != ExecutionStatus.SUCCESS) {
         break;

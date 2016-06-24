@@ -17,6 +17,7 @@ import org.mongodb.morphia.Morphia;
 import software.wings.beans.ReadPref;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class DatabaseModule extends AbstractModule {
       serverAddresses.add(new ServerAddress(host, mongoConfig.getPort()));
     }
     Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     MongoClient mongoClient = new MongoClient(serverAddresses);
     this.primaryDatastore = morphia.createDatastore(mongoClient, mongoConfig.getDb());
     distributedLockSvc = new ManagedDistributedLockSvc(

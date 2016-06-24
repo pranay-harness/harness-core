@@ -19,8 +19,6 @@ import software.wings.utils.MapperUtils;
  * @author Rishi
  */
 public class PauseState extends EmailState {
-  private static final long serialVersionUID = 1L;
-
   /**
    * Creates pause state with given name.
    *

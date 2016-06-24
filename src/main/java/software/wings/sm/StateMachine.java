@@ -11,7 +11,6 @@ import com.google.common.collect.Lists;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +56,9 @@ public class StateMachine extends Base {
 
   private Graph graph;
 
-  @Serialized private List<State> states = new ArrayList<>();
+  private List<State> states = Lists.newArrayList();
 
-  @Serialized private List<Transition> transitions = new ArrayList<>();
+  private List<Transition> transitions = Lists.newArrayList();
 
   private String initialStateName;
 

@@ -37,8 +37,8 @@ public class HttpState extends State {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
-  private static final long serialVersionUID = 1L;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+
+  private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
 
   @Attributes(required = true) private String url;
   @Attributes(required = true) private String method;

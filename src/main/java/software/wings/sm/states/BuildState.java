@@ -14,8 +14,6 @@ import software.wings.utils.Misc;
  * @author Rishi
  */
 public class BuildState extends State {
-  private static final long serialVersionUID = 1L;
-
   /**
    * Creates pause state with given name.
    *

@@ -4,6 +4,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.name.Named;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
@@ -25,10 +26,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class WaitState extends State {
-  private static final long serialVersionUID = 1L;
+  @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
 
-  @Inject @Named("waitStateResumer") private ScheduledExecutorService executorService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
   private long duration;
 
