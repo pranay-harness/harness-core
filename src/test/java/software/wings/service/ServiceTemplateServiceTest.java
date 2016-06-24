@@ -14,7 +14,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.Tag.TagBuilder.aTag;
+import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -166,7 +166,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withUuid(TEMPLATE_ID).build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
-    when(tagService.getTag(APP_ID, "TAG_ID")).thenReturn(tag);
+    when(tagService.get(APP_ID, ENV_ID, TAG_ID)).thenReturn(tag);
     when(tagService.getLeafTags(tag)).thenReturn(asList(tag));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
@@ -204,7 +204,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
         builder.withUuid(TEMPLATE_ID).withTags(asList(existingTag)).withLeafTags(singleton(existingTag)).build();
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
-    when(tagService.getTag(APP_ID, "NEW_TAG_ID")).thenReturn(newTag);
+    when(tagService.get(APP_ID, ENV_ID, "NEW_TAG_ID")).thenReturn(newTag);
     when(tagService.getLeafTags(existingTag)).thenReturn(asList(existingTag));
     when(tagService.getLeafTags(newTag)).thenReturn(asList(newTag));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(existingTag))).thenReturn(asList(existingTagHost));

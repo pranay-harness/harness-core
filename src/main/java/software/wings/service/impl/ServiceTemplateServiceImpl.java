@@ -100,7 +100,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
-    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.getTag(appId, tagId)).collect(toList());
+    List<Tag> newTags = tagIds.stream().map(tagId -> tagService.get(appId, envId, tagId)).collect(toList());
     Set<Tag> newLeafTags =
         newTags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
 
@@ -150,6 +150,20 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public void deleteHostFromTemplates(Host host) {
+    deleteDirectlyMappedHosts(host);
+    deleteHostsMappedByTags(host);
+  }
+
+  private void deleteHostsMappedByTags(Host host) {
+    host.getTags()
+        .stream()
+        .map(this ::getTemplatesByLeafTag)
+        .flatMap(List::stream)
+        .forEach(
+            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
+  }
+
+  private void deleteDirectlyMappedHosts(Host host) {
     List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
                                                  .field("appId")
                                                  .equal(host.getAppId())

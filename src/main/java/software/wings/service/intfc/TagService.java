@@ -1,11 +1,16 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.Host;
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
 import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -19,7 +24,7 @@ public interface TagService {
    * @param request the request
    * @return the page response
    */
-  PageResponse<Tag> listRootTags(PageRequest<Tag> request);
+  PageResponse<Tag> list(PageRequest<Tag> request);
 
   /**
    * Save tag.
@@ -28,7 +33,7 @@ public interface TagService {
    * @param tag         the tag
    * @return the tag
    */
-  Tag saveTag(String parentTagId, Tag tag);
+  @ValidationGroups(Create.class) Tag save(String parentTagId, @Valid Tag tag);
 
   /**
    * Gets the tag.
@@ -37,7 +42,7 @@ public interface TagService {
    * @param tagId the tag id
    * @return the tag
    */
-  Tag getTag(String appId, String tagId);
+  Tag get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId);
 
   /**
    * Update tag.
@@ -45,7 +50,7 @@ public interface TagService {
    * @param tag the tag
    * @return the tag
    */
-  Tag updateTag(Tag tag);
+  @ValidationGroups(Update.class) Tag update(@Valid Tag tag);
 
   /**
    * Delete tag.
@@ -53,7 +58,7 @@ public interface TagService {
    * @param appId the app id
    * @param tagId the tag id
    */
-  void deleteTag(String appId, String tagId);
+  void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId);
 
   /**
    * Gets the root config tag.
@@ -62,7 +67,7 @@ public interface TagService {
    * @param envId the env id
    * @return the root config tag
    */
-  Tag getRootConfigTag(String appId, String envId);
+  Tag getRootConfigTag(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Tag hosts.
@@ -71,7 +76,7 @@ public interface TagService {
    * @param tagId   the tag id
    * @param hostIds the host ids
    */
-  void tagHosts(String appId, String tagId, List<String> hostIds);
+  void tagHosts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, @NotNull List<String> hostIds);
 
   /**
    * Gets the tags by name.
@@ -81,7 +86,7 @@ public interface TagService {
    * @param tagNames the tag names
    * @return the tags by name
    */
-  List<Tag> getTagsByName(String appId, String envId, List<String> tagNames);
+  List<Tag> getTagsByName(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> tagNames);
 
   /**
    * Gets leaf tags.
@@ -89,13 +94,5 @@ public interface TagService {
    * @param root the root
    * @return the leaf tags
    */
-  List<Tag> getLeafTags(Tag root);
-
-  /**
-   * Delete host from tags.
-   *
-   * @param tags
-   * @param host the host
-   */
-  void deleteHostFromTags(List<Tag> tags, Host host);
+  List<Tag> getLeafTags(@NotNull Tag root);
 }

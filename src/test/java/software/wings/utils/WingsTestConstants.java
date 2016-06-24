@@ -59,6 +59,10 @@ public class WingsTestConstants {
    */
   public static final String TAG_ID = "TAG_ID";
   /**
+   * The constant TAG_NAME.
+   */
+  public static final String TAG_NAME = "TAG_NAME";
+  /**
    * The constant PARENT_TAG.
    */
   public static final String PARENT_TAG = "PARENT_TAG";

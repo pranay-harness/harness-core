@@ -174,7 +174,6 @@ public class HostServiceImpl implements HostService {
     if (host != null) {
       wingsPersistence.delete(host);
       serviceTemplateService.deleteHostFromTemplates(host);
-      tagService.deleteHostFromTags(host.getTags(), host);
     }
   }
 

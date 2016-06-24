@@ -143,5 +143,11 @@ public interface ServiceTemplateService {
    */
   List<ServiceTemplate> getTemplateByMappedTags(@NotNull List<Tag> tags);
 
+  /**
+   * Add leaf tag.
+   *
+   * @param template the template
+   * @param tag      the tag
+   */
   void addLeafTag(ServiceTemplate template, Tag tag);
 }

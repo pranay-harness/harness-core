@@ -11,7 +11,7 @@ import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Tag.TagBuilder.aTag;
+import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import org.junit.Before;
@@ -178,19 +178,26 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // create Tag hierarchy
     Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
 
-    nc = tagService.saveTag(rootTag.getUuid(), aTag().withName("NC").build());
-    ncOz1 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ1").build());
-    ncOz2 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ2").build());
-    ncOz3 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ3").build());
+    nc = tagService.save(
+        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC").build());
+    ncOz1 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ1").build());
+    ncOz2 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ2").build());
+    ncOz3 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ3").build());
 
-    or = tagService.saveTag(rootTag.getUuid(), aTag().withName("OR").build());
-    orOz1 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ1").build());
-    orOz2 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ2").build());
+    or = tagService.save(
+        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR").build());
+    orOz1 = tagService.save(
+        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ1").build());
+    orOz2 = tagService.save(
+        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ2").build());
 
     // Tag hosts
-    tagService.tagHosts(app.getUuid(), ncOz1.getUuid(),
+    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz1.getUuid(),
         Arrays.asList(hosts.get(0).getUuid(), hosts.get(1).getUuid(), hosts.get(2).getUuid()));
-    tagService.tagHosts(app.getUuid(), ncOz3.getUuid(),
+    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz3.getUuid(),
         Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
 
     template = templateService.save(aServiceTemplate()

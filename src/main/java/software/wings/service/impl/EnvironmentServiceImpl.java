@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Infra.InfraBuilder.anInfra;
 import static software.wings.beans.Infra.InfraType.STATIC;
-import static software.wings.beans.Tag.TagBuilder.aTag;
+import static software.wings.beans.Tag.Builder.aTag;
 
 import com.google.common.collect.ImmutableMap;
 

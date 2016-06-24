@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -20,13 +21,16 @@ import software.wings.service.intfc.TagService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 4/25/16.
  */
+@ValidateOnExecution
 public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -34,18 +38,18 @@ public class TagServiceImpl implements TagService {
   @Inject private ServiceTemplateService serviceTemplateService;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#listRootTags(software.wings.dl.PageRequest)
+   * @see software.wings.service.intfc.TagService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Tag> listRootTags(PageRequest<Tag> request) {
+  public PageResponse<Tag> list(PageRequest<Tag> request) {
     return wingsPersistence.query(Tag.class, request);
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#saveTag(java.lang.String, software.wings.beans.Tag)
+   * @see software.wings.service.intfc.TagService#save(java.lang.String, software.wings.beans.Tag)
    */
   @Override
-  public Tag saveTag(String parentTagId, Tag tag) {
+  public Tag save(String parentTagId, Tag tag) {
     if (parentTagId == null || parentTagId.length() == 0) {
       tag.setRootTag(true);
       return wingsPersistence.saveAndGet(Tag.class, tag);
@@ -93,37 +97,40 @@ public class TagServiceImpl implements TagService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#getTag(java.lang.String, java.lang.String)
+   * @see software.wings.service.intfc.TagService#get(java.lang.String, java.lang.String)
    */
   @Override
-  public Tag getTag(String appId, String tagId) {
-    return wingsPersistence.get(Tag.class, appId, tagId);
+  public Tag get(String appId, String envId, String tagId) {
+    return wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field(ID_KEY)
+        .equal(tagId)
+        .get();
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#updateTag(software.wings.beans.Tag)
+   * @see software.wings.service.intfc.TagService#update(software.wings.beans.Tag)
    */
   @Override
-  public Tag updateTag(Tag tag) {
+  public Tag update(Tag tag) {
     Builder<String, Object> mapBuilder =
         ImmutableMap.<String, Object>builder().put("name", tag.getName()).put("description", tag.getDescription());
     if (tag.getAutoTaggingRule() != null) {
       mapBuilder.put("autoTaggingRule", tag.getAutoTaggingRule());
     }
-    if (tag.getChildren() != null) {
-      mapBuilder.put("children", tag.getChildren());
-    }
     wingsPersistence.updateFields(Tag.class, tag.getUuid(), mapBuilder.build());
-
     return wingsPersistence.get(Tag.class, tag.getUuid());
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#deleteTag(java.lang.String, java.lang.String)
+   * @see software.wings.service.intfc.TagService#delete(java.lang.String, java.lang.String)
    */
   @Override
-  public void deleteTag(String appId, String tagId) {
-    Tag tag = wingsPersistence.get(Tag.class, tagId);
+  public void delete(String appId, String envId, String tagId) {
+    Tag tag = get(appId, envId, tagId);
     if (tag != null && !tag.isRootTag()) {
       cascadingDelete(tag);
     }
@@ -131,22 +138,13 @@ public class TagServiceImpl implements TagService {
 
   private void cascadingDelete(Tag tag) {
     if (tag != null) {
-      wingsPersistence.delete(Tag.class, tag.getUuid());
+      wingsPersistence.delete(tag);
       if (tag.getChildren() != null && tag.getChildren().size() > 0) {
         tag.getChildren().forEach(this ::cascadingDelete);
       } else { // leaf tag should update hostInstance mapping
         updateAllServiceTemplatesWithDeletedHosts(tag);
       }
     }
-  }
-
-  @Override
-  public void deleteHostFromTags(List<Tag> tags, Host host) {
-    tags.stream()
-        .map(serviceTemplateService::getTemplatesByLeafTag)
-        .flatMap(List::stream)
-        .forEach(
-            serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
@@ -163,15 +161,22 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public Tag getRootConfigTag(String appId, String envId) {
-    return wingsPersistence.createQuery(Tag.class).field("envId").equal(envId).field("rootTag").equal(true).get();
+    return wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("rootTag")
+        .equal(true)
+        .get();
   }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.TagService#tagHosts(java.lang.String, java.lang.String, java.util.List)
    */
   @Override
-  public void tagHosts(String appId, String tagId, List<String> hostIds) {
-    Tag tag = wingsPersistence.get(Tag.class, appId, tagId);
+  public void tagHosts(String appId, String envId, String tagId, List<String> hostIds) {
+    Tag tag = get(appId, envId, tagId);
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     if (hostIds == null || tag == null) {
@@ -225,16 +230,18 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public List<Tag> getTagsByName(String appId, String envId, List<String> tagNames) {
-    List<Tag> tags = new ArrayList<>();
-    if (tagNames != null && tagNames.size() > 0) {
-      tagNames.forEach(name -> {
-        Tag tag = wingsPersistence.createQuery(Tag.class).field("envId").equal(envId).field("name").equal(name).get();
-        if (tag != null) {
-          tags.add(tag);
-        }
-      });
-    }
-    return tags;
+    return tagNames.stream()
+        .map(tagName
+            -> wingsPersistence.createQuery(Tag.class)
+                   .field("appId")
+                   .equal(appId)
+                   .field("envId")
+                   .equal(envId)
+                   .field("name")
+                   .equal(tagName)
+                   .get())
+        .filter(Objects::nonNull)
+        .collect(toList());
   }
 
   @Override
