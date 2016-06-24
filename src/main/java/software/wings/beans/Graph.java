@@ -42,9 +42,9 @@ public class Graph {
 
   static final int DEFAULT_INITIAL_Y = 0;
 
-  static final int DEFAULT_NODE_WIDTH = 100;
+  static final int DEFAULT_NODE_WIDTH = 75;
 
-  static final int DEFAULT_NODE_HEIGHT = 75;
+  static final int DEFAULT_NODE_HEIGHT = 50;
 
   static final int DEFAULT_ARROW_WIDTH = 100;
 
