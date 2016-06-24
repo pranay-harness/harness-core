@@ -102,7 +102,7 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(list.getResponse())
         .extracting(Application::getUuid)
         .doesNotContainNull()
-        .containsExactly(app1.getUuid(), app2.getUuid());
+        .containsExactly(app2.getUuid(), app1.getUuid());
 
     appService.deleteApp(app1.getUuid());
     list = appService.list(req);

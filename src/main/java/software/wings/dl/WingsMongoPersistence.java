@@ -22,6 +22,8 @@ import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
@@ -29,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -125,7 +128,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   public <T extends Base> T get(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
     req.setLimit("1");
-    PageResponse<T> res = MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
+    PageResponse<T> res = query(cls, req, readPref);
     if (isEmpty(res)) {
       return null;
     }
@@ -281,6 +284,13 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
   @Override
   public <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, ReadPref readPref) {
     req.addFilter(SearchFilter.Builder.aSearchFilter().withField("active", Operator.EQ, true).build());
+    if (req.getOrders() == null || req.getOrders().size() == 0) {
+      SortOrder sortOrder = new SortOrder();
+      sortOrder.setFieldName("createdAt");
+      sortOrder.setOrderType(OrderType.DESC);
+      req.addOrder(sortOrder);
+    }
+
     return MongoHelper.queryPageRequest(datastoreMap.get(readPref), cls, req);
   }
 
