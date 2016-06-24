@@ -37,10 +37,20 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
     this.executionStrategy = executionStrategy;
   }
 
+  /**
+   * Gets command name.
+   *
+   * @return the command name
+   */
   public String getCommandName() {
     return commandName;
   }
 
+  /**
+   * Sets command name.
+   *
+   * @param commandName the command name
+   */
   public void setCommandName(String commandName) {
     this.commandName = commandName;
   }

@@ -342,6 +342,12 @@ public class JsonUtils {
     }
   }
 
+  /**
+   * Read resource object.
+   *
+   * @param file the file
+   * @return the object
+   */
   public static Object readResource(String file) {
     try {
       URL url = JsonUtils.class.getResource(file);

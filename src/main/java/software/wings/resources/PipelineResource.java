@@ -158,8 +158,9 @@ public class PipelineResource {
   /**
    * Trigger execution.
    *
-   * @param appId      the app id
-   * @param pipelineId the pipeline id
+   * @param appId         the app id
+   * @param pipelineId    the pipeline id
+   * @param executionArgs the execution args
    * @return the rest response
    */
   @POST

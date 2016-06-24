@@ -16,5 +16,5 @@ public interface NotifyCallback extends Serializable {
    *
    * @param response the response
    */
-  void notify(Map<String, ? extends Serializable> response);
+  void notify(Map<String, NotifyResponseData> response);
 }

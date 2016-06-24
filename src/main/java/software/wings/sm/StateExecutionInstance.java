@@ -316,22 +316,47 @@ public class StateExecutionInstance extends Base {
     this.callback = callback;
   }
 
+  /**
+   * Gets context element type.
+   *
+   * @return the context element type
+   */
   public String getContextElementType() {
     return contextElementType;
   }
 
+  /**
+   * Sets context element type.
+   *
+   * @param contextElementType the context element type
+   */
   public void setContextElementType(String contextElementType) {
     this.contextElementType = contextElementType;
   }
 
+  /**
+   * Gets context element name.
+   *
+   * @return the context element name
+   */
   public String getContextElementName() {
     return contextElementName;
   }
 
+  /**
+   * Sets context element name.
+   *
+   * @param contextElementName the context element name
+   */
   public void setContextElementName(String contextElementName) {
     this.contextElementName = contextElementName;
   }
 
+  /**
+   * Gets state execution data.
+   *
+   * @return the state execution data
+   */
   public StateExecutionData getStateExecutionData() {
     return stateExecutionMap.get(stateName);
   }

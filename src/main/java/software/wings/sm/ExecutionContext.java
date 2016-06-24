@@ -77,12 +77,16 @@ public interface ExecutionContext {
   <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType);
 
   /**
-   * @return
+   * Gets app.
+   *
+   * @return app
    */
   Application getApp();
 
   /**
-   * @return
+   * Gets env.
+   *
+   * @return env
    */
   Environment getEnv();
 }

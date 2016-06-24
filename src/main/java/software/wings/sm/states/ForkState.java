@@ -6,13 +6,14 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +26,7 @@ import java.util.Map;
  * @author Rishi
  */
 public class ForkState extends State {
-  private static final long serialVersionUID = 1L;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(ForkState.class);
 
   private List<String> forkStateNames = new ArrayList<>();
 
@@ -76,11 +76,10 @@ public class ForkState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
-    for (Serializable status : response.values()) {
-      ExecutionStatus executionStatus = (ExecutionStatus) status;
+    for (Object status : response.values()) {
+      ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       }

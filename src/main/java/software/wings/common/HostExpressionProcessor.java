@@ -30,7 +30,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  public static final String DEFAULT_EXPRESSION = "hosts()";
+  public static final String DEFAULT_EXPRESSION = "${hosts}";
 
   private static final String EXPRESSION_START_PATTERN = "hosts()";
   private static final String EXPRESSION_EQUAL_PATTERN = "hosts";
@@ -48,6 +48,12 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     // Derive appId, serviceId, serviceTemplate and tags associated from the context
   }
 
+  /**
+   * Convert to host element host element.
+   *
+   * @param host the host
+   * @return the host element
+   */
   static HostElement convertToHostElement(Host host) {
     HostElement element = new HostElement();
     MapperUtils.mapObject(host, element);
@@ -60,12 +66,13 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public boolean matches(String expression) {
-    if (expression != null
-        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
-      return true;
-    }
-    return false;
+  public String getExpressionStartPattern() {
+    return EXPRESSION_START_PATTERN;
+  }
+
+  @Override
+  public String getExpressionEqualPattern() {
+    return EXPRESSION_EQUAL_PATTERN;
   }
 
   @Override
@@ -73,18 +80,11 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return ContextElementType.HOST;
   }
 
-  @Override
-  public String normalizeExpression(String expression) {
-    if (!matches(expression)) {
-      return null;
-    }
-    expression = HOST_EXPR_PROCESSOR + "." + expression;
-    if (!expression.endsWith(".list()")) {
-      expression = expression + ".list()";
-    }
-    return expression;
-  }
-
+  /**
+   * Gets hosts.
+   *
+   * @return the hosts
+   */
   public HostExpressionProcessor getHosts() {
     return this;
   }

@@ -13,6 +13,11 @@ import java.util.Map;
  * Created by peeyushaggarwal on 6/13/16.
  */
 public class MapperUtilsTest {
+  /**
+   * Map object.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void mapObject() throws Exception {
     Map<String, Object> map = Maps.newLinkedHashMap();

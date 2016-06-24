@@ -8,9 +8,14 @@ import software.wings.beans.Graph.Node;
 import software.wings.common.UUIDGenerator;
 
 /**
+ * The type Graph test.
+ *
  * @author Rishi
  */
 public class GraphTest {
+  /**
+   * Should repaint simple graph.
+   */
   @Test
   public void shouldRepaintSimpleGraph() {
     Node node1 = Node.Builder.aNode().withId("node1").build();
@@ -36,6 +41,9 @@ public class GraphTest {
     assertThat(graph.getNodes().get(2).getY()).isEqualTo(Graph.DEFAULT_INITIAL_Y);
   }
 
+  /**
+   * Should repaint nested graph.
+   */
   @Test
   public void shouldRepaintNestedGraph() {
     Graph graph =

@@ -10,6 +10,7 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
@@ -35,14 +36,14 @@ public class EmailState extends State {
   private static final Logger logger = LoggerFactory.getLogger(EmailState.class);
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
-  private static final long serialVersionUID = 1L;
+
   @Attributes(required = true) private String toAddress;
   @Attributes private String ccAddress;
   @Attributes(required = true) private String subject;
   @Attributes private String body;
   private Boolean ignoreDeliveryFailure = true;
 
-  @Inject private transient NotificationService<EmailData> emailNotificationService;
+  @Transient @Inject private NotificationService<EmailData> emailNotificationService;
 
   /**
    * Instantiates a new email state.

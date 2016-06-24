@@ -59,9 +59,21 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/7/16.
  */
 public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
+  /**
+   * The Command unit executor service.
+   */
   @Mock CommandUnitExecutorService commandUnitExecutorService;
+  /**
+   * The Activity service.
+   */
   @Mock ActivityService activityService;
+  /**
+   * The Service resource service.
+   */
   @Mock ServiceResourceService serviceResourceService;
+  /**
+   * The Cmd executor service.
+   */
   @Inject @InjectMocks ServiceCommandExecutorService cmdExecutorService;
 
   private SettingAttribute hostConnAttrPwd =
@@ -102,6 +114,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                                 .withExecutionCredential(credential)
                                                 .build();
 
+  /**
+   * Should execute command for service instance.
+   */
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
@@ -110,6 +125,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
+  /**
+   * Should execute nested command for service instance.
+   */
   @Test
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId(COMMAND_NAME).build();
@@ -120,6 +138,9 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
 
+  /**
+   * Should throw exception for unknown command.
+   */
   @Test
   public void shouldThrowExceptionForUnknownCommand() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId("NON_EXISTENT_COMMAND").build();

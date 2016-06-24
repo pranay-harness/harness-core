@@ -60,9 +60,18 @@ import software.wings.sm.WorkflowStandardParams;
  * Created by peeyushaggarwal on 6/10/16.
  */
 public class CommandStateTest extends WingsBaseTest {
+  /**
+   * The constant RUNTIME_PATH.
+   */
   public static final String RUNTIME_PATH = "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/runtime";
+  /**
+   * The constant BACKUP_PATH.
+   */
   public static final String BACKUP_PATH =
       "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/backup/${timestampId}";
+  /**
+   * The constant STAGING_PATH.
+   */
   public static final String STAGING_PATH =
       "$HOME/${app.name}/${service.name}/${serviceTemplate.name}/staging/${timestampId}";
   private static final Command COMMAND = aCommand().build();
@@ -108,6 +117,11 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
+  /**
+   * Sets up mocks.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUpMocks() throws Exception {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START")).thenReturn(COMMAND);
@@ -140,6 +154,11 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
   }
 
+  /**
+   * Execute.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void execute() throws Exception {
     commandState.execute(context);
@@ -168,6 +187,11 @@ public class CommandStateTest extends WingsBaseTest {
         serviceCommandExecutorService, settingsService);
   }
 
+  /**
+   * Execute with artifact.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void executeWithArtifact() throws Exception {
     Artifact artifact = anArtifact()

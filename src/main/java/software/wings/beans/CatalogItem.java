@@ -121,6 +121,9 @@ public class CatalogItem {
         + ", displayOrder=" + displayOrder + "]";
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String value;
@@ -129,30 +132,64 @@ public class CatalogItem {
 
     private Builder() {}
 
+    /**
+     * A catalog item builder.
+     *
+     * @return the builder
+     */
     public static Builder aCatalogItem() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With value builder.
+     *
+     * @param value the value
+     * @return the builder
+     */
     public Builder withValue(String value) {
       this.value = value;
       return this;
     }
 
+    /**
+     * With display text builder.
+     *
+     * @param displayText the display text
+     * @return the builder
+     */
     public Builder withDisplayText(String displayText) {
       this.displayText = displayText;
       return this;
     }
 
+    /**
+     * With display order builder.
+     *
+     * @param displayOrder the display order
+     * @return the builder
+     */
     public Builder withDisplayOrder(Integer displayOrder) {
       this.displayOrder = displayOrder;
       return this;
     }
 
+    /**
+     * Build catalog item.
+     *
+     * @return the catalog item
+     */
     public CatalogItem build() {
       CatalogItem catalogItem = new CatalogItem();
       catalogItem.setName(name);

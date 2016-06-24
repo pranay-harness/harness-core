@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -270,16 +271,16 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerAsync() throws InterruptedException {
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateSync("stateA" + new Random().nextInt(10000));
+    State stateA = new StateSync("stateA" + nextInt(0, 10000));
     sm.addState(stateA);
-    StateSync stateB = new StateSync("stateB" + new Random().nextInt(10000));
+    StateSync stateB = new StateSync("stateB" + nextInt(0, 10000));
     sm.addState(stateB);
-    StateSync stateC = new StateSync("stateC" + new Random().nextInt(10000));
+    StateSync stateC = new StateSync("stateC" + nextInt(0, 10000));
     sm.addState(stateC);
 
-    State stateAB = new StateAsync("StateAB" + new Random().nextInt(10000), 2000);
+    State stateAB = new StateAsync("StateAB" + nextInt(0, 10000), 2000);
     sm.addState(stateAB);
-    State stateBC = new StateAsync("StateBC" + new Random().nextInt(10000), 1000);
+    State stateBC = new StateAsync("StateBC" + nextInt(0, 10000), 1000);
     sm.addState(stateBC);
 
     sm.setInitialStateName(stateA.getName());
@@ -468,8 +469,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + new Random().nextInt(10000));
     sm.addState(stateC);
 
-    RuntimeException exception = new RuntimeException("Exception for testing");
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, exception);
+    State stateAB = new StateMachineTest.StateAsync("StateAB" + new Random().nextInt(10000), 2000, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -684,7 +684,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should trigger simple workflow.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
@@ -782,7 +782,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Trigger pipeline.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void triggerPipeline() throws InterruptedException {
@@ -814,7 +814,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should update pipeline with graph.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldListPipelinExecutions() throws InterruptedException {
@@ -914,6 +914,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .build();
   }
 
+  /**
+   * Should trigger orchestration.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldTriggerOrchestration() throws InterruptedException {
     Environment env =
@@ -921,6 +926,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     triggerOrchestration(env);
   }
 
+  /**
+   * Trigger orchestration.
+   *
+   * @param env the env
+   * @throws InterruptedException the interrupted exception
+   */
   public void triggerOrchestration(Environment env) throws InterruptedException {
     Orchestration orchestration = createExecutableOrchestration(env);
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -986,7 +997,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Should list orchestration.
    *
-   * @throws InterruptedException
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void shouldListOrchestration() throws InterruptedException {
@@ -1003,11 +1014,22 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  /**
+   * The type Workflow execution update mock.
+   */
   public static class WorkflowExecutionUpdateMock extends WorkflowExecutionUpdate {
     private String signalId;
 
+    /**
+     * Instantiates a new Workflow execution update mock.
+     */
     public WorkflowExecutionUpdateMock() {}
 
+    /**
+     * Instantiates a new Workflow execution update mock.
+     *
+     * @param signalId the signal id
+     */
     public WorkflowExecutionUpdateMock(String signalId) {
       super();
       this.signalId = signalId;
@@ -1015,14 +1037,25 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     @Override
     public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
+      System.out.println(status);
       super.callback(context, status, ex);
       workflowExecutionSignals.get(signalId).countDown();
     }
 
+    /**
+     * Gets signal id.
+     *
+     * @return the signal id
+     */
     public String getSignalId() {
       return signalId;
     }
 
+    /**
+     * Sets signal id.
+     *
+     * @param signalId the signal id
+     */
     public void setSignalId(String signalId) {
       this.signalId = signalId;
     }

@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.stream.Collectors.toList;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static software.wings.sm.StateType.REPEAT;
@@ -11,7 +13,6 @@ import com.google.common.collect.Lists;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +58,9 @@ public class StateMachine extends Base {
 
   private Graph graph;
 
-  @Serialized private List<State> states = new ArrayList<>();
+  private List<State> states = Lists.newArrayList();
 
-  @Serialized private List<Transition> transitions = new ArrayList<>();
+  private List<Transition> transitions = Lists.newArrayList();
 
   private String initialStateName;
 
@@ -148,10 +149,10 @@ public class StateMachine extends Base {
             ((ForkState) stateFrom).addForkState(stateTo);
           } else if (transitionType == TransitionType.REPEAT) {
             ((RepeatState) stateFrom).setRepeatTransitionStateName(stateTo.getName());
-          } else {
-            addTransition(
-                aTransition().withFromState(stateFrom).withTransitionType(transitionType).withToState(stateTo).build());
           }
+
+          addTransition(
+              aTransition().withFromState(stateFrom).withTransitionType(transitionType).withToState(stateTo).build());
         }
       }
       validate();
@@ -162,6 +163,9 @@ public class StateMachine extends Base {
     }
   }
 
+  /**
+   * Clear cache.
+   */
   void clearCache() {
     cachedStatesMap = null;
     cachedTransitionFlowMap = null;
@@ -328,6 +332,12 @@ public class StateMachine extends Base {
     return transitionFlowMap.get(fromStateName).get(transitionType);
   }
 
+  /**
+   * Gets next states.
+   *
+   * @param fromStateName the from state name
+   * @return the next states
+   */
   public List<State> getNextStates(String fromStateName) {
     Map<String, Map<TransitionType, List<State>>> transitionFlowMap = getTransitionFlowMap();
     if (transitionFlowMap == null || transitionFlowMap.get(fromStateName) == null) {
@@ -471,6 +481,12 @@ public class StateMachine extends Base {
     return statesMap.get(stateName);
   }
 
+  /**
+   * Gets transition from.
+   *
+   * @param stateFrom the state from
+   * @return the transition from
+   */
   public List<Transition> getTransitionFrom(State stateFrom) {
     return transitions.stream().filter(transition -> transition.getFromState() == stateFrom).collect(toList());
   }
@@ -497,6 +513,9 @@ public class StateMachine extends Base {
     return true;
   }
 
+  /**
+   * Add repeaters based on state required context element.
+   */
   void addRepeatersBasedOnStateRequiredContextElement() {
     for (List<State> path : getPaths()) {
       List<ContextElementType> contextElementsPresent = Lists.newArrayList(ContextElementType.OTHER);
@@ -511,6 +530,8 @@ public class StateMachine extends Base {
           List<Transition> transitionsToOldState = getTransitionsTo(state);
           List<Transition> transitionsFromOldState = getTransitionFrom(state);
 
+          String newStateName =
+              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name());
           State newRepeatState = addState(
               aRepeatState()
                   .withName(state.getName())
@@ -518,12 +539,14 @@ public class StateMachine extends Base {
                   .withExecutionStrategy(ExecutionStrategy.PARALLEL)
                   .withRepeatElementExpression(
                       WingsExpressionProcessorFactory.getDefaultExpression(state.getRequiredContextElementType()))
+                  .withRepeatTransitionStateName(newStateName)
                   .build());
 
           transitions.removeAll(transitionsToOldState);
           transitions.removeAll(transitionsFromOldState);
 
-          state.setName(state.getName() + "-Inner");
+          state.setName(
+              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name()));
 
           addTransition(aTransition()
                             .withTransitionType(TransitionType.REPEAT)
@@ -544,7 +567,6 @@ public class StateMachine extends Base {
                                 .build());
             }
           }
-          System.out.println(transitions);
         }
       }
     }

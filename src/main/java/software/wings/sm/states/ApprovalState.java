@@ -14,8 +14,6 @@ import software.wings.utils.Misc;
  * @author Rishi
  */
 public class ApprovalState extends State {
-  private static final long serialVersionUID = 1L;
-
   private String groupName;
 
   /**

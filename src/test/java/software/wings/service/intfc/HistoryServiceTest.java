@@ -24,12 +24,22 @@ public class HistoryServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private HistoryService historyService;
 
+  /**
+   * Should create history.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldCreateHistory() throws Exception {
     historyService.create(aHistory().withAppId(APP_ID).build());
     verify(wingsPersistence).save(any(History.class));
   }
 
+  /**
+   * Should list history.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldListHistory() throws Exception {
     historyService.list(new PageRequest<>());

@@ -16,7 +16,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import javax.inject.Inject;
 
@@ -80,7 +79,7 @@ public class WaitNotifyEngine {
    * @param response      response object for the task.
    * @return id of notification response object.
    */
-  public <T extends Serializable> String notify(String correlationId, T response) {
+  public <T extends NotifyResponseData> String notify(String correlationId, T response) {
     Preconditions.checkArgument(StringUtils.isNotEmpty(correlationId), "correlationId is null or empty");
 
     log().debug("notify request received for the correlationId : {}", correlationId);

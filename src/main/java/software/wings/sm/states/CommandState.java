@@ -51,8 +51,6 @@ public class CommandState extends State {
    */
   public static final String STAGING_PATH = "STAGING_PATH";
 
-  private static final long serialVersionUID = -6767922416807341483L;
-
   @Inject private transient ServiceResourceService serviceResourceService;
 
   @Inject private transient ServiceInstanceService serviceInstanceService;
@@ -84,6 +82,7 @@ public class CommandState extends State {
    */
   public CommandState(String name) {
     super(name, COMMAND.name());
+    this.setRequiredContextElementType(ContextElementType.INSTANCE);
   }
 
   /**

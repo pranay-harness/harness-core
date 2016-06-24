@@ -34,11 +34,23 @@ import javax.ws.rs.QueryParam;
 public class HistoryResource {
   private HistoryService historyService;
 
+  /**
+   * Instantiates a new History resource.
+   *
+   * @param historyService the history service
+   */
   @Inject
   public HistoryResource(HistoryService historyService) {
     this.historyService = historyService;
   }
 
+  /**
+   * List rest response.
+   *
+   * @param appId   the app id
+   * @param request the request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<History>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<History> request) {

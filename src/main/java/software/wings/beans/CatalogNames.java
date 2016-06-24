@@ -43,7 +43,13 @@ public interface CatalogNames {
    */
   String COMMANDS = "COMMANDS";
 
+  /**
+   * The constant SERVICE_COMMAND.
+   */
   String SERVICE_COMMAND = "SERVICE_COMMAND";
 
+  /**
+   * The constant EXECUTION_TYPE.
+   */
   String EXECUTION_TYPE = "EXECUTION_TYPE";
 }

@@ -68,30 +68,60 @@ public class ServiceElement implements ContextElement {
     return map;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String uuid;
     private String name;
 
     private Builder() {}
 
+    /**
+     * A service element builder.
+     *
+     * @return the builder
+     */
     public static Builder aServiceElement() {
       return new Builder();
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aServiceElement().withUuid(uuid).withName(name);
     }
 
+    /**
+     * Build service element.
+     *
+     * @return the service element
+     */
     public ServiceElement build() {
       ServiceElement serviceElement = new ServiceElement();
       serviceElement.setUuid(uuid);

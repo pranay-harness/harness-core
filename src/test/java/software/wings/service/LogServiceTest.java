@@ -75,6 +75,9 @@ public class LogServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(eq(Log.class), eq(BUILDER.build()));
   }
 
+  /**
+   * Should get unit execution result.
+   */
   @Test
   public void shouldGetUnitExecutionResult() {
     Query<Log> logQuery = datastore.createQuery(Log.class);

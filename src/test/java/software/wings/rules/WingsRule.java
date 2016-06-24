@@ -45,6 +45,7 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.ManagedDistributedLockSvc;
+import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
@@ -107,6 +108,7 @@ public class WingsRule implements MethodRule {
    * Before.
    *
    * @param annotations the annotations
+   * @param testName    the test name
    * @throws Throwable the throwable
    */
   protected void before(List<Annotation> annotations, String testName) throws Throwable {
@@ -142,6 +144,7 @@ public class WingsRule implements MethodRule {
     }
 
     Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     datastore = morphia.createDatastore(mongoClient, "wings");
     distributedLockSvc = new ManagedDistributedLockSvc(
         new DistributedLockSvcFactory(new DistributedLockSvcOptions(mongoClient, "wings", "locks")).getLockSvc());

@@ -56,6 +56,9 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessorTest extends WingsBaseTest {
+  /**
+   * The Injector.
+   */
   @Inject Injector injector;
   /**
    * The App service.
@@ -66,9 +69,18 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Inject EnvironmentService environmentService;
 
+  /**
+   * The Service instance service.
+   */
   @Inject ServiceInstanceService serviceInstanceService;
 
+  /**
+   * The Service instance service mock.
+   */
   @Mock ServiceInstanceService serviceInstanceServiceMock;
+  /**
+   * The Service template service mock.
+   */
   @Mock ServiceTemplateService serviceTemplateServiceMock;
   @Inject private WingsPersistence wingsPersistence;
 

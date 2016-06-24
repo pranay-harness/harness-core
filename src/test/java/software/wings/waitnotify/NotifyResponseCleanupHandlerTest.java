@@ -6,6 +6,7 @@ package software.wings.waitnotify;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -38,7 +39,8 @@ public class NotifyResponseCleanupHandlerTest extends WingsBaseTest {
   @Test
   public void shouldCleanup() throws InterruptedException {
     String corrId = UUIDGenerator.getUuid();
-    NotifyResponse<String> notifyResponse = new NotifyResponse<>(corrId, "TEST");
+    NotifyResponse<StringNotifyResponseData> notifyResponse =
+        new NotifyResponse<>(corrId, aStringNotifyResponseData().withData("TEST").build());
     notifyResponse.setStatus(ExecutionStatus.SUCCESS);
     wingsPersistence.save(notifyResponse);
 

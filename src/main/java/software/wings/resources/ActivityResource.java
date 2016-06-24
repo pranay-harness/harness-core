@@ -117,6 +117,13 @@ public class ActivityResource {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
   }
 
+  /**
+   * Export logs response.
+   *
+   * @param appId      the app id
+   * @param activityId the activity id
+   * @return the response
+   */
   @GET
   @Path("{activityId}/all-logs")
   @Encoded

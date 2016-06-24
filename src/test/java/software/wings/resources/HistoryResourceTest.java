@@ -27,14 +27,26 @@ import javax.ws.rs.core.GenericType;
  * Created by peeyushaggarwal on 6/20/16.
  */
 public class HistoryResourceTest {
+  /**
+   * The constant HISTORY_SERVICE.
+   */
   public static final HistoryService HISTORY_SERVICE = mock(HistoryService.class);
 
+  /**
+   * The constant HISTORY_RESOURCE.
+   */
   public static final HistoryResource HISTORY_RESOURCE = new HistoryResource(HISTORY_SERVICE);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder().addResource(HISTORY_RESOURCE).addProvider(WingsExceptionMapper.class).build();
 
+  /**
+   * Sets up.
+   */
   @Before
   public void setUp() {
     reset(HISTORY_SERVICE);
@@ -43,6 +55,11 @@ public class HistoryResourceTest {
     when(HISTORY_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
   }
 
+  /**
+   * Should list.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldList() throws Exception {
     RestResponse<PageResponse<History>> restResponse =

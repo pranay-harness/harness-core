@@ -3,11 +3,9 @@ package software.wings.waitnotify;
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Serialized;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
@@ -21,8 +19,8 @@ import java.util.Objects;
  */
 @Embedded
 @Entity(value = "notifyResponses", noClassnameStored = true)
-public class NotifyResponse<T extends Serializable> extends Base {
-  @Serialized private T response;
+public class NotifyResponse<T extends NotifyResponseData> extends Base {
+  private T response;
 
   @Indexed private Date expiryTs;
 

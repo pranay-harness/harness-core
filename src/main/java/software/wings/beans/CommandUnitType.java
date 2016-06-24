@@ -97,6 +97,11 @@ public enum CommandUnitType {
     }
   }
 
+  /**
+   * Gets command unit class.
+   *
+   * @return the command unit class
+   */
   public Class<? extends CommandUnit> getCommandUnitClass() {
     return commandUnitClass;
   }

@@ -19,7 +19,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +86,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     }
 
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
-    Map<String, Serializable> responseMap = new HashMap<>();
+    Map<String, NotifyResponseData> responseMap = new HashMap<>();
 
     SearchFilter searchFilter = new SearchFilter();
     searchFilter.setFieldName(ID_KEY);

@@ -117,10 +117,18 @@ public class ServiceInstance extends Base {
     this.artifact = artifact;
   }
 
+  /**
+   * Gets display name.
+   *
+   * @return the display name
+   */
   public String getDisplayName() {
     return host.getHostName() + ":" + serviceTemplate.getName();
   }
 
+  /**
+   * Sets display name.
+   */
   public void setDisplayName() {}
 
   @Override
