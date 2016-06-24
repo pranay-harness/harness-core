@@ -30,7 +30,7 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  public static final String DEFAULT_EXPRESSION = "hosts()";
+  public static final String DEFAULT_EXPRESSION = "${hosts}";
 
   private static final String EXPRESSION_START_PATTERN = "hosts()";
   private static final String EXPRESSION_EQUAL_PATTERN = "hosts";
@@ -60,29 +60,18 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public boolean matches(String expression) {
-    if (expression != null
-        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
-      return true;
-    }
-    return false;
+  public String getExpressionStartPattern() {
+    return EXPRESSION_START_PATTERN;
+  }
+
+  @Override
+  public String getExpressionEqualPattern() {
+    return EXPRESSION_EQUAL_PATTERN;
   }
 
   @Override
   public ContextElementType getContextElementType() {
     return ContextElementType.HOST;
-  }
-
-  @Override
-  public String normalizeExpression(String expression) {
-    if (!matches(expression)) {
-      return null;
-    }
-    expression = HOST_EXPR_PROCESSOR + "." + expression;
-    if (!expression.endsWith(".list()")) {
-      expression = expression + ".list()";
-    }
-    return expression;
   }
 
   public HostExpressionProcessor getHosts() {

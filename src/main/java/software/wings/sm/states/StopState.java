@@ -17,7 +17,6 @@ import software.wings.sm.StateType;
  * @author Rishi
  */
 public class StopState extends State {
-  private static final long serialVersionUID = 1L;
   private String serviceId;
 
   /**

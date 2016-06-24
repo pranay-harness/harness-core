@@ -38,7 +38,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
-  public static final String DEFAULT_EXPRESSION = "services()";
+  public static final String DEFAULT_EXPRESSION = "${services}";
   private static final String EXPRESSION_START_PATTERN = "services()";
   private static final String EXPRESSION_EQUAL_PATTERN = "services";
 
@@ -71,29 +71,18 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public boolean matches(String expression) {
-    if (expression != null
-        && (expression.startsWith(EXPRESSION_START_PATTERN) || expression.equals(EXPRESSION_EQUAL_PATTERN))) {
-      return true;
-    }
-    return false;
+  public String getExpressionStartPattern() {
+    return EXPRESSION_START_PATTERN;
+  }
+
+  @Override
+  public String getExpressionEqualPattern() {
+    return EXPRESSION_EQUAL_PATTERN;
   }
 
   @Override
   public ContextElementType getContextElementType() {
     return ContextElementType.SERVICE;
-  }
-
-  @Override
-  public String normalizeExpression(String expression) {
-    if (!matches(expression)) {
-      return null;
-    }
-    expression = SERVICE_EXPR_PROCESSOR + "." + expression;
-    if (!expression.endsWith(Constants.EXPRESSION_LIST_SUFFIX)) {
-      expression = expression + Constants.EXPRESSION_LIST_SUFFIX;
-    }
-    return expression;
   }
 
   public ServiceExpressionProcessor getServices() {

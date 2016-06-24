@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import java.io.Serializable;
-
 // TODO: Auto-generated Javadoc
 
 /**
@@ -9,8 +7,7 @@ import java.io.Serializable;
  *
  * @author Rishi
  */
-public class Transition implements Serializable {
-  private static final long serialVersionUID = 1L;
+public class Transition {
   private State fromState;
   private State toState;
   private TransitionType transitionType;

@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 
-import java.io.Serializable;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -12,12 +11,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public abstract class State implements Serializable {
-  /**
-   * The constant serialVersionUID.
-   */
-  protected static final long serialVersionUID = 1L;
-
+public abstract class State {
   @SchemaIgnore private String name;
 
   @SchemaIgnore private ContextElementType requiredContextElementType;
@@ -119,8 +113,7 @@ public abstract class State implements Serializable {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContextImpl context, Map<String, ? extends Serializable> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, ?> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;
   }

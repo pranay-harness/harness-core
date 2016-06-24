@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static java.util.stream.Collectors.toList;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static software.wings.sm.StateType.REPEAT;
@@ -11,7 +13,6 @@ import com.google.common.collect.Lists;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Serialized;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,9 +58,9 @@ public class StateMachine extends Base {
 
   private Graph graph;
 
-  @Serialized private List<State> states = new ArrayList<>();
+  private List<State> states = Lists.newArrayList();
 
-  @Serialized private List<Transition> transitions = new ArrayList<>();
+  private List<Transition> transitions = Lists.newArrayList();
 
   private String initialStateName;
 
@@ -148,10 +149,10 @@ public class StateMachine extends Base {
             ((ForkState) stateFrom).addForkState(stateTo);
           } else if (transitionType == TransitionType.REPEAT) {
             ((RepeatState) stateFrom).setRepeatTransitionStateName(stateTo.getName());
-          } else {
-            addTransition(
-                aTransition().withFromState(stateFrom).withTransitionType(transitionType).withToState(stateTo).build());
           }
+
+          addTransition(
+              aTransition().withFromState(stateFrom).withTransitionType(transitionType).withToState(stateTo).build());
         }
       }
       validate();
@@ -511,6 +512,8 @@ public class StateMachine extends Base {
           List<Transition> transitionsToOldState = getTransitionsTo(state);
           List<Transition> transitionsFromOldState = getTransitionFrom(state);
 
+          String newStateName =
+              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name());
           State newRepeatState = addState(
               aRepeatState()
                   .withName(state.getName())
@@ -518,12 +521,14 @@ public class StateMachine extends Base {
                   .withExecutionStrategy(ExecutionStrategy.PARALLEL)
                   .withRepeatElementExpression(
                       WingsExpressionProcessorFactory.getDefaultExpression(state.getRequiredContextElementType()))
+                  .withRepeatTransitionStateName(newStateName)
                   .build());
 
           transitions.removeAll(transitionsToOldState);
           transitions.removeAll(transitionsFromOldState);
 
-          state.setName(state.getName() + "-Inner");
+          state.setName(
+              state.getName() + "--" + UPPER_UNDERSCORE.to(UPPER_CAMEL, state.getRequiredContextElementType().name()));
 
           addTransition(aTransition()
                             .withTransitionType(TransitionType.REPEAT)
@@ -544,7 +549,6 @@ public class StateMachine extends Base {
                                 .build());
             }
           }
-          System.out.println(transitions);
         }
       }
     }
