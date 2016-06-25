@@ -11,6 +11,7 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
+import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
@@ -108,6 +109,7 @@ public class OrchestrationResource {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
     orchestration.setEnvironment(env);
+    orchestration.setWorkflowType(WorkflowType.ORCHESTRATION);
     return new RestResponse<>(workflowService.createWorkflow(Orchestration.class, orchestration));
   }
 

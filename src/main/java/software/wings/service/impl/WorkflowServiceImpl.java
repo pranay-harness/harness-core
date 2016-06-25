@@ -63,6 +63,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -312,6 +313,19 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    boolean workflowTypeFilter = false;
+    if (pageRequest != null && pageRequest.getFilters() != null) {
+      for (SearchFilter filter : pageRequest.getFilters()) {
+        if (filter != null && filter.getFieldName() != null && filter.getFieldName().equals("workflowType")) {
+          workflowTypeFilter = true;
+        }
+      }
+    }
+    if (!workflowTypeFilter) {
+      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
+                                .withField("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION)
+                                .build());
+    }
     PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
