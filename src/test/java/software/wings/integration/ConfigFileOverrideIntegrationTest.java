@@ -6,8 +6,6 @@ import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
-import static software.wings.beans.Infra.InfraBuilder.anInfra;
-import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -163,17 +161,18 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException {
     // DB cleanup
-    Arrays.asList(Host.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class, SettingAttribute.class)
+    Arrays
+        .asList(Host.class, Infra.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class,
+            SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Infra infra = infraService.save(
-        anInfra().withAppId(app.getUuid()).withEnvId(environment.getUuid()).withInfraType(STATIC).build());
+    String infraId = hostService.getInfraId(environment.getAppId(), environment.getUuid());
 
-    hosts = importAndGetHosts(infra); // FIXME split
+    hosts = importAndGetHosts(app.getUuid(), infraId); // FIXME split
 
     // create Tag hierarchy
     Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
@@ -365,12 +364,12 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<Host> importAndGetHosts(Infra infra) throws IOException {
+  private List<Host> importAndGetHosts(String appId, String infraId) throws IOException {
     SettingAttribute settingAttribute =
-        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(infra.getAppId()).build());
+        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
-                        .withAppId(infra.getAppId())
-                        .withInfraId(infra.getUuid())
+                        .withAppId(appId)
+                        .withInfraId(infraId)
                         .withHostConnAttr(settingAttribute)
                         .withBastionConnAttr(settingAttribute)
                         .build();
@@ -384,8 +383,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     hostService.bulkSave(baseHost, hostNames);
     //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("infraId", infra.getUuid(), EQ);
-    pageRequest.addFilter("appId", infra.getAppId(), EQ);
+    pageRequest.addFilter("infraId", infraId, EQ);
+    pageRequest.addFilter("appId", appId, EQ);
     return hostService.list(pageRequest).getResponse();
   }
 

@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -86,7 +87,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
     String infraId = hostService.getInfraId(appId, envId);
-    List<Host> hosts = hostIds.stream().map(hostId -> hostService.get(appId, infraId, hostId)).collect(toList());
+    List<Host> hosts = hostIds.stream()
+                           .map(hostId -> hostService.get(appId, infraId, hostId))
+                           .filter(Objects::nonNull)
+                           .collect(toList());
 
     List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
