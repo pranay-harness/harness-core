@@ -106,7 +106,8 @@ public class CommandState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    ExecutionStatus executionStatus;
+    String activityId = null;
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
@@ -187,17 +188,21 @@ public class CommandState extends State {
       }
 
       Activity activity = activityService.save(activityBuilder.build());
+      activityId = activity.getUuid();
 
-      executionDataBuilder.withActivityId(activity.getUuid());
+      executionDataBuilder.withActivityId(activityId);
 
       ExecutionResult executionResult = serviceCommandExecutorService.execute(
-          serviceInstance, command, commandExecutionContextBuilder.withActivityId(activity.getUuid()).build());
+          serviceInstance, command, commandExecutionContextBuilder.withActivityId(activityId).build());
 
       activityService.updateStatus(
-          activity.getUuid(), appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+          activityId, appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
 
       executionStatus = executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
+      if (activityId != null) {
+        activityService.updateStatus(activityId, appId, Status.FAILED);
+      }
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withStateExecutionData(executionDataBuilder.build())

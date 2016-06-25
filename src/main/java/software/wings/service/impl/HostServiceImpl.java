@@ -6,6 +6,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Host;
 import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Infra;
@@ -14,6 +15,8 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
@@ -31,6 +34,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private TagService tagService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -45,7 +50,14 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host get(String appId, String infraId, String hostId) {
-    return wingsPersistence.get(Host.class, hostId);
+    return wingsPersistence.createQuery(Host.class)
+        .field(ID_KEY)
+        .equal(hostId)
+        .field("infraId")
+        .equal(infraId)
+        .field("appId")
+        .equal(appId)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -88,13 +100,15 @@ public class HostServiceImpl implements HostService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#getHostsById(java.lang.String, java.util.List)
+   * @see software.wings.service.intfc.HostService#getHostsByHostIds(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsById(String appId, List<String> hostUuids) {
+  public List<Host> getHostsByHostIds(String appId, String infraId, List<String> hostUuids) {
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
+        .field("infraId")
+        .equal(infraId)
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
@@ -104,8 +118,28 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getHostsByTags(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsByTags(String appId, List<Tag> tags) {
-    return wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("tags").hasAnyOf(tags).asList();
+  public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
+    String infraId = getInfraId(appId, envId);
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .field("tags")
+        .hasAnyOf(tags)
+        .asList();
+  }
+
+  @Override
+  public void setTags(Host host, List<Tag> tags) {
+    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
+    wingsPersistence.update(host, updateOp);
+  }
+
+  @Override
+  public void removeTagFromHost(Host host, Tag tag) {
+    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
+    wingsPersistence.update(host, updateOp);
   }
 
   /* (non-Javadoc)
@@ -121,8 +155,14 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getInfraId(java.lang.String, java.lang.String)
    */
   @Override
-  public String getInfraId(String envId, String appId) {
-    return wingsPersistence.createQuery(Infra.class).field("envId").equal(envId).get().getUuid();
+  public String getInfraId(String appId, String envId) {
+    return wingsPersistence.createQuery(Infra.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .get()
+        .getUuid();
   }
 
   /* (non-Javadoc)
@@ -130,7 +170,11 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public void delete(String appId, String infraId, String hostId) {
-    wingsPersistence.delete(Host.class, hostId);
+    Host host = get(appId, infraId, hostId);
+    if (host != null) {
+      wingsPersistence.delete(host);
+      serviceTemplateService.deleteHostFromTemplates(host);
+    }
   }
 
   /* (non-Javadoc)

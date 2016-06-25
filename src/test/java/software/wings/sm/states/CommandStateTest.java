@@ -21,7 +21,7 @@ import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
-import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;

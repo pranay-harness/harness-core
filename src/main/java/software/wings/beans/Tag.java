@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -21,12 +22,12 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("envId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Tag extends Base {
-  private String name;
+  @NotEmpty private String name;
   private String description;
   private String autoTaggingRule;
   private boolean rootTag = false;
   private String rootTagId;
-  private String envId;
+  @NotEmpty private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
@@ -205,9 +206,9 @@ public class Tag extends Base {
   }
 
   /**
-   * The Class TagBuilder.
+   * The Class Builder.
    */
-  public static final class TagBuilder {
+  public static final class Builder {
     private String name;
     private String description;
     private String autoTaggingRule;
@@ -224,15 +225,15 @@ public class Tag extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private TagBuilder() {}
+    private Builder() {}
 
     /**
      * A tag.
      *
      * @return the tag builder
      */
-    public static TagBuilder aTag() {
-      return new TagBuilder();
+    public static Builder aTag() {
+      return new Builder();
     }
 
     /**
@@ -241,7 +242,7 @@ public class Tag extends Base {
      * @param name the name
      * @return the tag builder
      */
-    public TagBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
@@ -252,7 +253,7 @@ public class Tag extends Base {
      * @param description the description
      * @return the tag builder
      */
-    public TagBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
@@ -263,7 +264,7 @@ public class Tag extends Base {
      * @param autoTaggingRule the auto tagging rule
      * @return the tag builder
      */
-    public TagBuilder withAutoTaggingRule(String autoTaggingRule) {
+    public Builder withAutoTaggingRule(String autoTaggingRule) {
       this.autoTaggingRule = autoTaggingRule;
       return this;
     }
@@ -274,7 +275,7 @@ public class Tag extends Base {
      * @param rootTag the root tag
      * @return the tag builder
      */
-    public TagBuilder withRootTag(boolean rootTag) {
+    public Builder withRootTag(boolean rootTag) {
       this.rootTag = rootTag;
       return this;
     }
@@ -285,7 +286,7 @@ public class Tag extends Base {
      * @param rootTagId the root tag id
      * @return the tag builder
      */
-    public TagBuilder withRootTagId(String rootTagId) {
+    public Builder withRootTagId(String rootTagId) {
       this.rootTagId = rootTagId;
       return this;
     }
@@ -296,7 +297,7 @@ public class Tag extends Base {
      * @param envId the env id
      * @return the tag builder
      */
-    public TagBuilder withEnvId(String envId) {
+    public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
@@ -307,7 +308,7 @@ public class Tag extends Base {
      * @param children the children
      * @return the tag builder
      */
-    public TagBuilder withChildren(List<Tag> children) {
+    public Builder withChildren(List<Tag> children) {
       this.children = children;
       return this;
     }
@@ -318,7 +319,7 @@ public class Tag extends Base {
      * @param configFiles the config files
      * @return the tag builder
      */
-    public TagBuilder withConfigFiles(List<ConfigFile> configFiles) {
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
@@ -329,7 +330,7 @@ public class Tag extends Base {
      * @param uuid the uuid
      * @return the tag builder
      */
-    public TagBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
@@ -340,7 +341,7 @@ public class Tag extends Base {
      * @param appId the app id
      * @return the tag builder
      */
-    public TagBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
@@ -351,7 +352,7 @@ public class Tag extends Base {
      * @param createdBy the created by
      * @return the tag builder
      */
-    public TagBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
@@ -362,7 +363,7 @@ public class Tag extends Base {
      * @param createdAt the created at
      * @return the tag builder
      */
-    public TagBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
@@ -373,7 +374,7 @@ public class Tag extends Base {
      * @param lastUpdatedBy the last updated by
      * @return the tag builder
      */
-    public TagBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
@@ -384,7 +385,7 @@ public class Tag extends Base {
      * @param lastUpdatedAt the last updated at
      * @return the tag builder
      */
-    public TagBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
@@ -395,7 +396,7 @@ public class Tag extends Base {
      * @param active the active
      * @return the tag builder
      */
-    public TagBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
@@ -405,7 +406,7 @@ public class Tag extends Base {
      *
      * @return the tag builder
      */
-    public TagBuilder but() {
+    public Builder but() {
       return aTag()
           .withName(name)
           .withDescription(description)

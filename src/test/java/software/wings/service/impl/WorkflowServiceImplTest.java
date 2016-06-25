@@ -15,7 +15,7 @@ import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
-import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import org.junit.Test;

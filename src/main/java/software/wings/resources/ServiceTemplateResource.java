@@ -144,7 +144,7 @@ public class ServiceTemplateResource {
   @Path("{templateId}/map-hosts")
   public RestResponse<ServiceTemplate> mapHosts(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, List<String> hostIds) {
-    return new RestResponse<>(serviceTemplateService.updateHosts(appId, serviceTemplateId, hostIds));
+    return new RestResponse<>(serviceTemplateService.updateHosts(appId, envId, serviceTemplateId, hostIds));
   }
 
   /**
@@ -160,7 +160,7 @@ public class ServiceTemplateResource {
   @Path("{templateId}/map-tags")
   public RestResponse<ServiceTemplate> mapTags(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId, List<String> tagIds) {
-    return new RestResponse<>(serviceTemplateService.updateTags(appId, serviceTemplateId, tagIds));
+    return new RestResponse<>(serviceTemplateService.updateTags(appId, envId, serviceTemplateId, tagIds));
   }
 
   /**
@@ -193,7 +193,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @BeanParam PageRequest<Host> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", hostService.getInfraId(envId, appId), EQ);
-    return new RestResponse<>(serviceTemplateService.getTaggedHosts(templateId, pageRequest));
+    pageRequest.addFilter("infraId", hostService.getInfraId(appId, envId), EQ);
+    return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
 }

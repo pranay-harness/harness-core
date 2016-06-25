@@ -6,12 +6,10 @@ import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
-import static software.wings.beans.Infra.InfraBuilder.anInfra;
-import static software.wings.beans.Infra.InfraType.STATIC;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Tag.TagBuilder.aTag;
+import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import org.junit.Before;
@@ -163,34 +161,42 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() throws IOException {
     // DB cleanup
-    Arrays.asList(Host.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class, SettingAttribute.class)
+    Arrays
+        .asList(Host.class, Infra.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class,
+            SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    Infra infra = infraService.save(
-        anInfra().withAppId(app.getUuid()).withEnvId(environment.getUuid()).withInfraType(STATIC).build());
+    String infraId = hostService.getInfraId(environment.getAppId(), environment.getUuid());
 
-    hosts = importAndGetHosts(infra); // FIXME split
+    hosts = importAndGetHosts(app.getUuid(), infraId); // FIXME split
 
     // create Tag hierarchy
     Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
 
-    nc = tagService.saveTag(rootTag.getUuid(), aTag().withName("NC").build());
-    ncOz1 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ1").build());
-    ncOz2 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ2").build());
-    ncOz3 = tagService.saveTag(nc.getUuid(), aTag().withName("NC_OZ3").build());
+    nc = tagService.save(
+        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC").build());
+    ncOz1 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ1").build());
+    ncOz2 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ2").build());
+    ncOz3 = tagService.save(
+        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ3").build());
 
-    or = tagService.saveTag(rootTag.getUuid(), aTag().withName("OR").build());
-    orOz1 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ1").build());
-    orOz2 = tagService.saveTag(or.getUuid(), aTag().withName("OR_OZ2").build());
+    or = tagService.save(
+        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR").build());
+    orOz1 = tagService.save(
+        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ1").build());
+    orOz2 = tagService.save(
+        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ2").build());
 
     // Tag hosts
-    tagService.tagHosts(app.getUuid(), ncOz1.getUuid(),
+    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz1.getUuid(),
         Arrays.asList(hosts.get(0).getUuid(), hosts.get(1).getUuid(), hosts.get(2).getUuid()));
-    tagService.tagHosts(app.getUuid(), ncOz3.getUuid(),
+    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz3.getUuid(),
         Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
 
     template = templateService.save(aServiceTemplate()
@@ -204,8 +210,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // add hosts and tags to template
     List<String> selectedTags = Arrays.asList(ncOz1.getUuid(), ncOz2.getUuid(), ncOz3.getUuid());
     List<String> selectedHosts = Arrays.asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());
-    templateService.updateHosts(app.getUuid(), template.getUuid(), selectedHosts);
-    templateService.updateTags(app.getUuid(), template.getUuid(), selectedTags);
+    templateService.updateHosts(app.getUuid(), template.getEnvId(), template.getUuid(), selectedHosts);
+    templateService.updateTags(app.getUuid(), template.getEnvId(), template.getUuid(), selectedTags);
   }
 
   /**
@@ -358,12 +364,12 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<Host> importAndGetHosts(Infra infra) throws IOException {
+  private List<Host> importAndGetHosts(String appId, String infraId) throws IOException {
     SettingAttribute settingAttribute =
-        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(infra.getAppId()).build());
+        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
-                        .withAppId(infra.getAppId())
-                        .withInfraId(infra.getUuid())
+                        .withAppId(appId)
+                        .withInfraId(infraId)
                         .withHostConnAttr(settingAttribute)
                         .withBastionConnAttr(settingAttribute)
                         .build();
@@ -377,8 +383,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     hostService.bulkSave(baseHost, hostNames);
     //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("infraId", infra.getUuid(), EQ);
-    pageRequest.addFilter("appId", infra.getAppId(), EQ);
+    pageRequest.addFilter("infraId", infraId, EQ);
+    pageRequest.addFilter("appId", appId, EQ);
     return hostService.list(pageRequest).getResponse();
   }
 

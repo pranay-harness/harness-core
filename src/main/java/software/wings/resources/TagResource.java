@@ -55,7 +55,7 @@ public class TagResource {
     request.addFilter("appId", appId, EQ);
     request.addFilter("envId", envId, EQ);
     request.addFilter("rootTag", true, EQ);
-    return new RestResponse<>(tagService.listRootTags(request));
+    return new RestResponse<>(tagService.list(request));
   }
 
   /**
@@ -72,7 +72,7 @@ public class TagResource {
       @QueryParam("parentTagId") String parentTagId, Tag tag) {
     tag.setEnvId(envId);
     tag.setAppId(appId);
-    return new RestResponse<>(tagService.saveTag(parentTagId, tag));
+    return new RestResponse<>(tagService.save(parentTagId, tag));
   }
 
   /**
@@ -84,8 +84,9 @@ public class TagResource {
    */
   @GET
   @Path("{tagId}")
-  public RestResponse<Tag> get(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
-    return new RestResponse<>(tagService.getTag(appId, tagId));
+  public RestResponse<Tag> get(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("tagId") String tagId) {
+    return new RestResponse<>(tagService.get(appId, envId, tagId));
   }
 
   /**
@@ -98,10 +99,12 @@ public class TagResource {
    */
   @PUT
   @Path("{tagId}")
-  public RestResponse<Tag> update(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, Tag tag) {
+  public RestResponse<Tag> update(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("tagId") String tagId, Tag tag) {
     tag.setAppId(appId);
+    tag.setEnvId(envId);
     tag.setUuid(tagId);
-    return new RestResponse<>(tagService.updateTag(tag));
+    return new RestResponse<>(tagService.update(tag));
   }
 
   /**
@@ -113,8 +116,9 @@ public class TagResource {
    */
   @DELETE
   @Path("{tagId}")
-  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("tagId") String tagId) {
-    tagService.deleteTag(appId, tagId);
+  public RestResponse delete(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("tagId") String tagId) {
+    tagService.delete(appId, envId, tagId);
     return new RestResponse();
   }
 
@@ -128,8 +132,9 @@ public class TagResource {
    */
   @POST
   @Path("{tagId}/tag-hosts")
-  public RestResponse tagHosts(@QueryParam("appId") String appId, @PathParam("tagId") String tagId, UuidList uuidList) {
-    tagService.tagHosts(appId, tagId, uuidList.getUuids());
+  public RestResponse tagHosts(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @PathParam("tagId") String tagId, UuidList uuidList) {
+    tagService.tagHosts(appId, envId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
 }
