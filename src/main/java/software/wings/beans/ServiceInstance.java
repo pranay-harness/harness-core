@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.ServiceTemplate.ServiceTemplateBuilder.aServiceTemplate;
+
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -10,6 +13,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.Objects;
+import java.util.Optional;
 
 // TODO: Auto-generated Javadoc
 
@@ -123,7 +127,8 @@ public class ServiceInstance extends Base {
    * @return the display name
    */
   public String getDisplayName() {
-    return host.getHostName() + ":" + serviceTemplate.getName();
+    return Optional.ofNullable(host).orElse(aHost().withHostName("").build()).getHostName() + ":"
+        + Optional.ofNullable(serviceTemplate).orElse(aServiceTemplate().withName("").build()).getName();
   }
 
   /**

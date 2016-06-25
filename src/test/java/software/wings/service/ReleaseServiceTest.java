@@ -25,6 +25,7 @@ import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ReleaseService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -110,7 +111,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
                                            .withDescription("BUILD2")
                                            .build()));
 
-    assertThat(releaseService.list(new PageRequest<>())).containsExactlyElementsOf(releases);
+    assertThat(releaseService.list(new PageRequest<>())).hasSameElementsAs(releases);
   }
 
   /**

@@ -189,13 +189,6 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest) {
-    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
-      SortOrder sortOrder = new SortOrder();
-      sortOrder.setFieldName("createdAt");
-      sortOrder.setOrderType(OrderType.DESC);
-      pageRequest.addOrder(sortOrder);
-    }
-
     PageResponse<Pipeline> res = wingsPersistence.query(Pipeline.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Pipeline pipeline : res.getResponse()) {
@@ -311,11 +304,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
 
-    SortOrder order = new SortOrder();
-    order.setFieldName("lastUpdatedAt");
-    order.setOrderType(OrderType.DESC);
-    req.addOrder(order);
-
     return wingsPersistence.get(StateMachine.class, req);
   }
 
@@ -324,13 +312,6 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
-    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
-      SortOrder sortOrder = new SortOrder();
-      sortOrder.setFieldName("createdAt");
-      sortOrder.setOrderType(OrderType.DESC);
-      pageRequest.addOrder(sortOrder);
-    }
-
     PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
@@ -386,12 +367,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
-    if (pageRequest.getOrders() == null || pageRequest.getOrders().size() == 0) {
-      SortOrder sortOrder = new SortOrder();
-      sortOrder.setFieldName("createdAt");
-      sortOrder.setOrderType(OrderType.DESC);
-      pageRequest.addOrder(sortOrder);
-    }
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (res == null || res.size() == 0) {
       return res;
@@ -794,11 +769,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     filter.setFieldValues(WorkflowType.SIMPLE);
     filter.setOp(Operator.EQ);
     req.addFilter(filter);
-
-    SortOrder order = new SortOrder();
-    order.setFieldName("lastUpdatedAt");
-    order.setOrderType(OrderType.DESC);
-    req.addOrder(order);
 
     Orchestration workflow = wingsPersistence.get(Orchestration.class, req, ReadPref.CRITICAL);
     if (workflow == null) {
