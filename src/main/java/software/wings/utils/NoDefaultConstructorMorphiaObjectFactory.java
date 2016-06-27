@@ -2,9 +2,11 @@ package software.wings.utils;
 
 import org.mongodb.morphia.mapping.DefaultCreator;
 import org.mongodb.morphia.mapping.MappingException;
-import sun.reflect.ReflectionFactory;
+import software.wings.exception.WingsException;
+import sun.misc.Unsafe;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 
 /**
  * Created by peeyushaggarwal on 6/23/16.
@@ -18,10 +20,7 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
         return constructor.newInstance();
       }
       try {
-        return ReflectionFactory.getReflectionFactory()
-            .newConstructorForSerialization(clazz, Object.class.getDeclaredConstructor(null))
-            .newInstance(null);
-      } catch (Exception e) {
+        return getUnsafe().allocateInstance(clazz);
         throw new MappingException("Failed to instantiate " + clazz.getName(), e);
       }
     } catch (Exception e) {
@@ -37,5 +36,27 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
     } catch (NoSuchMethodException e) {
       return null;
     }
+  }
+
+  @SuppressWarnings("restriction")
+  private static Unsafe getUnsafe() {
+    try {
+      Field singleoneInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
+      singleoneInstanceField.setAccessible(true);
+      return (Unsafe) singleoneInstanceField.get(null);
+
+    } catch (IllegalArgumentException e) {
+      throw createExceptionForObtainingUnsafe(e);
+    } catch (SecurityException e) {
+      throw createExceptionForObtainingUnsafe(e);
+    } catch (NoSuchFieldException e) {
+      throw createExceptionForObtainingUnsafe(e);
+    } catch (IllegalAccessException e) {
+      throw createExceptionForObtainingUnsafe(e);
+    }
+  }
+
+  private static WingsException createExceptionForObtainingUnsafe(Exception e) {
+    throw new WingsException(e);
   }
 }
