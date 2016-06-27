@@ -21,6 +21,7 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
       }
       try {
         return getUnsafe().allocateInstance(clazz);
+      } catch (Exception e) {
         throw new MappingException("Failed to instantiate " + clazz.getName(), e);
       }
     } catch (Exception e) {
