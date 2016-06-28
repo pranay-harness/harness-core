@@ -447,6 +447,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private Graph generateGraph(
       List<StateExecutionInstance> response, String originState, List<String> expandedGroupIds) {
+    if (response == null || response.size() == 0) {
+      return null;
+    }
+
     String originNodeId = null;
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
