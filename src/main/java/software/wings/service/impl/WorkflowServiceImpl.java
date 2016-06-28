@@ -467,8 +467,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
       }
       if ((StateType.REPEAT.name().equals(instance.getStateType())
-              || StateType.FORK.name().equals(instance.getStateType())
-                  && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid())))) {
+              || StateType.FORK.name().equals(instance.getStateType()))
+          && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
         collapsedInstanceIds.add(instance.getUuid());
       } else {
