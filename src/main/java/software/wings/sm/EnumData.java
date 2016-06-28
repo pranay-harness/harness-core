@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import software.wings.stencils.EnumDataProvider;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -11,10 +13,7 @@ import java.lang.annotation.Target;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.FIELD})
 public @interface EnumData {
-  /**
-   * Catalog string.
-   *
-   * @return the string
-   */
-  String catalog();
+  boolean expandIntoMultipleEntries() default false;
+
+  Class<? extends EnumDataProvider> enumDataProvider();
 }

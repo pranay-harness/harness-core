@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.CatalogNames.SERVICE_COMMAND;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
@@ -9,6 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Graph.Node;
+import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.sm.EnumData;
 import software.wings.utils.MapperUtils;
 
@@ -25,7 +24,10 @@ import javax.validation.constraints.NotNull;
  */
 @Attributes(title = "COMMAND")
 public class Command extends CommandUnit {
-  @EnumData(catalog = SERVICE_COMMAND) @Attributes(title = "Name") private String referenceId;
+  @EnumData(expandIntoMultipleEntries = true, enumDataProvider = ServiceResourceServiceImpl.class)
+  @Attributes(title = "Name")
+  private String referenceId;
+
   @SchemaIgnore @NotNull private Graph graph;
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
@@ -110,7 +112,7 @@ public class Command extends CommandUnit {
 
       CommandUnitType type = CommandUnitType.valueOf(node.getType().toUpperCase());
 
-      CommandUnit commandUnit = type.newInstance();
+      CommandUnit commandUnit = type.newInstance("");
       MapperUtils.mapObject(node.getProperties(), commandUnit);
       commandUnit.setName(node.getName());
       commandUnits.add(commandUnit);

@@ -17,7 +17,10 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateTypeScope;
+import software.wings.stencils.Stencil;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -38,6 +41,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("orchestrations")
 @Path("/orchestrations")
+@Produces("application/json")
 public class OrchestrationResource {
   private WorkflowService workflowService;
   private EnvironmentService environmentService;
@@ -63,7 +67,6 @@ public class OrchestrationResource {
    * @return the rest response
    */
   @GET
-  @Produces("application/json")
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
@@ -85,7 +88,6 @@ public class OrchestrationResource {
    */
   @GET
   @Path("{orchestrationId}")
-  @Produces("application/json")
   public RestResponse<Orchestration> read(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId) {
     return new RestResponse<>(workflowService.readOrchestration(appId, envId, orchestrationId));
@@ -100,7 +102,6 @@ public class OrchestrationResource {
    * @return the rest response
    */
   @POST
-  @Produces("application/json")
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
@@ -124,7 +125,6 @@ public class OrchestrationResource {
    */
   @PUT
   @Path("{orchestrationId}")
-  @Produces("application/json")
   public RestResponse<Orchestration> update(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
@@ -147,10 +147,16 @@ public class OrchestrationResource {
    */
   @DELETE
   @Path("{orchestrationId}")
-  @Produces("application/json")
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId, Pipeline pipeline) {
     workflowService.deleteWorkflow(Orchestration.class, appId, orchestrationId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("stencils")
+  public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(workflowService.stencils(appId, StateTypeScope.ORCHESTRATION_STENCILS)
+                                  .get(StateTypeScope.ORCHESTRATION_STENCILS));
   }
 }

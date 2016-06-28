@@ -17,7 +17,7 @@ public abstract class State {
 
   @SchemaIgnore private ContextElementType requiredContextElementType;
 
-  private String stateType;
+  @SchemaIgnore private String stateType;
 
   /**
    * Instantiates a new state.
@@ -75,6 +75,7 @@ public abstract class State {
    *
    * @return the state type
    */
+  @SchemaIgnore
   public String getStateType() {
     return stateType;
   }
@@ -84,6 +85,7 @@ public abstract class State {
    *
    * @param stateType the state type
    */
+  @SchemaIgnore
   public void setStateType(String stateType) {
     this.stateType = stateType;
   }

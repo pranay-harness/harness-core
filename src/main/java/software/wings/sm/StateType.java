@@ -21,9 +21,8 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.StartState;
-import software.wings.sm.states.StopState;
 import software.wings.sm.states.WaitState;
+import software.wings.stencils.OverridingStencil;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -62,19 +61,6 @@ public enum StateType implements StateTypeDescriptor {
    * Pause state type.
    */
   PAUSE(PauseState.class, ORCHESTRATION_STENCILS),
-
-  /**
-   * Start state type.
-   */
-  // DEPLOY(ORCHESTRATION_STENCILS),
-  // DEPLOY(ORCHESTRATION_STENCILS),
-  START(StartState.class, ORCHESTRATION_STENCILS),
-
-  /**
-   * Stop state type.
-   */
-  STOP(StopState.class, ORCHESTRATION_STENCILS),
-  // RESTART(ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.
@@ -148,12 +134,12 @@ public enum StateType implements StateTypeDescriptor {
   }
 
   @Override
-  public Class<? extends State> getStateClass() {
+  public Class<? extends State> getTypeClass() {
     return stateClass;
   }
 
   @Override
-  public Object getJsonSchema() {
+  public JsonNode getJsonSchema() {
     return ((JsonNode) jsonSchema).deepCopy();
   }
 
@@ -167,6 +153,11 @@ public enum StateType implements StateTypeDescriptor {
     return scopes;
   }
 
+  @Override
+  public String getName() {
+    return name();
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -175,6 +166,11 @@ public enum StateType implements StateTypeDescriptor {
   @Override
   public State newInstance(String id) {
     return on(stateClass).create(id).get();
+  }
+
+  @Override
+  public OverridingStencil getOverridingStencil() {
+    return new OverridingStateTypeDescriptor(this);
   }
 
   private JsonNode loadJsonSchema() {

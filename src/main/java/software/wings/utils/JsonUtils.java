@@ -321,6 +321,32 @@ public class JsonUtils {
   }
 
   /**
+   * Converts object to jsonNode for advanced processing.
+   *
+   * @param json string
+   * @return the json node
+   */
+  public static JsonNode readTree(String json) {
+    return readTree(mapper, json);
+  }
+
+  /**
+   * Converts object to jsonNode for advanced processing.
+   *
+   * @param objectMapper the object mapper
+   * @param json       String
+   * @return the json node
+   */
+  public static JsonNode readTree(ObjectMapper objectMapper, String json) {
+    try {
+      return objectMapper.readTree(json);
+    } catch (Exception e) {
+      logger.error("", e);
+      throw Throwables.propagate(e);
+    }
+  }
+
+  /**
    * Deserializes json string to list of objects of given type.
    *
    * @param <T>            collection type.

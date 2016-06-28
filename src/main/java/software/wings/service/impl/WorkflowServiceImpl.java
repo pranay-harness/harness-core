@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -54,6 +55,8 @@ import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.TransitionType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -62,7 +65,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -83,6 +86,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private PluginManager pluginManager;
   @Inject private EnvironmentService environmentService;
   @Inject private StaticConfiguration staticConfiguration;
+  @Inject private StencilPostProcessor stencilPostProcessor;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -128,13 +132,16 @@ public class WorkflowServiceImpl implements WorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes) {
-    Map<StateTypeScope, List<StateTypeDescriptor>> mapByScope = loadStateTypes();
+  public Map<StateTypeScope, List<Stencil>> stencils(String appId, StateTypeScope... stateTypeScopes) {
+    Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
+
+    Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
+        stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
 
     if (ArrayUtils.isEmpty(stateTypeScopes)) {
       return new HashMap<>(mapByScope);
     } else {
-      Map<StateTypeScope, List<StateTypeDescriptor>> maps = new HashMap<>();
+      Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
       for (StateTypeScope scope : stateTypeScopes) {
         maps.put(scope, mapByScope.get(scope));
       }
@@ -467,8 +474,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
       }
       if ((StateType.REPEAT.name().equals(instance.getStateType())
-              || StateType.FORK.name().equals(instance.getStateType())
-                  && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid())))) {
+              || StateType.FORK.name().equals(instance.getStateType()))
+          && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
         collapsedInstanceIds.add(instance.getUuid());
       } else {

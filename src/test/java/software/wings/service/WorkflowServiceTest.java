@@ -6,6 +6,7 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -29,10 +30,10 @@ import software.wings.sm.State;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineTest.StateSync;
 import software.wings.sm.StateType;
-import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
+import software.wings.stencils.Stencil;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
@@ -369,7 +370,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
             .addNodes(
                 aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
             .addNodes(
-                aNode().withId("n1").withName("stop").withX(200).withY(50).withType(StateType.STOP.name()).build())
+                aNode().withId("n1").withName("stop").withX(200).withY(50).withType(StateType.ENV_STATE.name()).build())
             .addNodes(aNode()
                           .withId("n2")
                           .withName("wait")
@@ -378,8 +379,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
                           .withType(StateType.WAIT.name())
                           .addProperty("duration", 1l)
                           .build())
-            .addNodes(
-                aNode().withId("n3").withName("start").withX(300).withY(50).withType(StateType.START.name()).build())
+            .addNodes(aNode()
+                          .withId("n3")
+                          .withName("start")
+                          .withX(300)
+                          .withY(50)
+                          .withType(StateType.ENV_STATE.name())
+                          .build())
             .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
             .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
             .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
@@ -427,13 +433,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void stencils()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencils = workflowService.stencils();
+    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(2).containsKeys(
         StateTypeScope.ORCHESTRATION_STENCILS, StateTypeScope.PIPELINE_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
-        .extracting(StateTypeDescriptor::getType)
-        .contains(/*"DEPLOY",*/ "START", "STOP");
+        .extracting(Stencil::getType)
+        .contains("REPEAT", "FORK");
   }
 
   /**
@@ -447,14 +453,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void stencilsForPipeline()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
-        workflowService.stencils(StateTypeScope.PIPELINE_STENCILS);
+    Map<StateTypeScope, List<Stencil>> stencils = workflowService.stencils(APP_ID, StateTypeScope.PIPELINE_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.PIPELINE_STENCILS);
     assertThat(stencils.get(StateTypeScope.PIPELINE_STENCILS))
-        .extracting(StateTypeDescriptor::getType)
+        .extracting(Stencil::getType)
         .contains("BUILD", "ENV_STATE")
-        .doesNotContain("START", "STOP");
+        .doesNotContain("REPEAT", "FORK");
   }
 
   /**
@@ -468,13 +473,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Test
   public void stencilsForOrchestration()
       throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, IntrospectionException {
-    Map<StateTypeScope, List<StateTypeDescriptor>> stencils =
-        workflowService.stencils(StateTypeScope.ORCHESTRATION_STENCILS);
+    Map<StateTypeScope, List<Stencil>> stencils =
+        workflowService.stencils(APP_ID, StateTypeScope.ORCHESTRATION_STENCILS);
     logger.debug(JsonUtils.asJson(stencils));
     assertThat(stencils).isNotNull().hasSize(1).containsKeys(StateTypeScope.ORCHESTRATION_STENCILS);
     assertThat(stencils.get(StateTypeScope.ORCHESTRATION_STENCILS))
-        .extracting(StateTypeDescriptor::getType)
+        .extracting(Stencil::getType)
         .doesNotContain("BUILD", "ENV_STATE")
-        .contains("START", "STOP" /*,"DEPLOY"*/);
+        .contains("REPEAT", "FORK");
   }
 }

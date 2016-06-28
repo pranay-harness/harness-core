@@ -8,8 +8,8 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
+import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
@@ -119,7 +119,7 @@ public interface WorkflowService {
    * @param stateTypeScopes the state type scopes
    * @return the map
    */
-  Map<StateTypeScope, List<StateTypeDescriptor>> stencils(StateTypeScope... stateTypeScopes);
+  Map<StateTypeScope, List<Stencil>> stencils(String appId, StateTypeScope... stateTypeScopes);
 
   /**
    * List orchestration.

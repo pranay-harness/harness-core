@@ -21,6 +21,7 @@ import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.stencils.EnumDataProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import javax.inject.Singleton;
  * Created by anubhaw on 4/1/16.
  */
 @Singleton
-public class EnvironmentServiceImpl implements EnvironmentService {
+public class EnvironmentServiceImpl implements EnvironmentService, EnumDataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -54,7 +55,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> listForEnum(String appId) {
+  public Map<String, String> getDataForEnum(String appId, String... params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, Operator.EQ);
     return list(pageRequest).stream().collect(toMap(Environment::getUuid, Environment::getName));

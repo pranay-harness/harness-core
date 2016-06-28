@@ -108,9 +108,6 @@ public class ServiceExpressionProcessorTest {
   public void shouldReturnListAllFromContext() {
     Service serviceC = aService().withName("C1234").build();
 
-    List<Service> services =
-        Lists.newArrayList(aService().withName("A1234").build(), aService().withName("B1234").build(), serviceC);
-
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
 

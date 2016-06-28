@@ -18,6 +18,7 @@ import com.mongodb.BasicDBObject;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Command;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -27,8 +28,13 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.stencils.EnumDataProvider;
+import software.wings.stencils.Stencil;
+import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -40,25 +46,12 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 3/25/16.
  */
 @ValidateOnExecution
-public class ServiceResourceServiceImpl implements ServiceResourceService {
-  private WingsPersistence wingsPersistence;
-  private ConfigService configService;
-  private ServiceTemplateService serviceTemplateService;
+public class ServiceResourceServiceImpl implements ServiceResourceService, EnumDataProvider {
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private ConfigService configService;
+  @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
-
-  /**
-   * Instantiates a new service resource service impl.
-   *  @param wingsPersistence the wings persistence
-   * @param configService    the config service
-   * @param serviceTemplateService
-   */
-  @Inject
-  public ServiceResourceServiceImpl(
-      WingsPersistence wingsPersistence, ConfigService configService, ServiceTemplateService serviceTemplateService) {
-    this.wingsPersistence = wingsPersistence;
-    this.configService = configService;
-    this.serviceTemplateService = serviceTemplateService;
-  }
+  @Inject private StencilPostProcessor stencilPostProcessor;
 
   /**
    * {@inheritDoc}
@@ -215,8 +208,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
-    Service service = get(appId, serviceId);
+  public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
+    return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId);
+  }
+
+  @Override
+  public Map<String, String> getDataForEnum(String appId, String... params) {
+    Service service = get(appId, params[0]);
     if (isEmpty(service.getCommands())) {
       return emptyMap();
     } else {

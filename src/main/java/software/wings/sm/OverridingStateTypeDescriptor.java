@@ -1,15 +1,19 @@
 package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.JsonNode;
+import software.wings.stencils.OverridingStencil;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 6/6/16.
  */
-public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
+public class OverridingStateTypeDescriptor implements StateTypeDescriptor, OverridingStencil<State> {
   private final StateTypeDescriptor stateTypeDescriptor;
-  @JsonIgnore private Object overridingJsonSchema;
+  @JsonIgnore private Optional<String> overridingName = Optional.empty();
+  @JsonIgnore private Optional<JsonNode> overridingJsonSchema = Optional.empty();
 
   /**
    * Instantiates a new Overriding state type descriptor.
@@ -25,8 +29,8 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
    *
    * @return Value for property 'overridingJsonSchema'.
    */
-  public Object getOverridingJsonSchema() {
-    return overridingJsonSchema;
+  public JsonNode getOverridingJsonSchema() {
+    return overridingJsonSchema.orElse(null);
   }
 
   /**
@@ -34,8 +38,29 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
    *
    * @param overridingJsonSchema Value to set for property 'overridingJsonSchema'.
    */
-  public void setOverridingJsonSchema(Object overridingJsonSchema) {
-    this.overridingJsonSchema = overridingJsonSchema;
+  @Override
+  public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
+    this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
+  }
+
+  /**
+   * Gets overriding state type.
+   *
+   * @return the overriding state type
+   */
+  @Override
+  public String getOverridingName() {
+    return overridingName.orElse(null);
+  }
+
+  /**
+   * Sets overriding state type.
+   *
+   * @param overridingName the overriding state type
+   */
+  @Override
+  public void setOverridingName(String overridingName) {
+    this.overridingName = Optional.ofNullable(overridingName);
   }
 
   /**
@@ -58,20 +83,16 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
    * {@inheritDoc}
    */
   @Override
-  public Class<? extends State> getStateClass() {
-    return stateTypeDescriptor.getStateClass();
+  public Class<?> getTypeClass() {
+    return stateTypeDescriptor.getTypeClass();
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Object getJsonSchema() {
-    if (getOverridingJsonSchema() != null) {
-      return overridingJsonSchema;
-    } else {
-      return stateTypeDescriptor.getJsonSchema();
-    }
+  public JsonNode getJsonSchema() {
+    return overridingJsonSchema.orElse(stateTypeDescriptor.getJsonSchema());
   }
 
   /**
@@ -80,6 +101,16 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor {
   @Override
   public Object getUiSchema() {
     return stateTypeDescriptor.getUiSchema();
+  }
+
+  @Override
+  public String getName() {
+    return overridingName.orElse(stateTypeDescriptor.getName());
+  }
+
+  @Override
+  public OverridingStencil getOverridingStencil() {
+    return stateTypeDescriptor.getOverridingStencil();
   }
 
   /**

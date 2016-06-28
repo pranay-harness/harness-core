@@ -1,7 +1,7 @@
 package software.wings.sm;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;
+import software.wings.stencils.Stencil;
 
 import java.util.List;
 
@@ -12,47 +12,11 @@ import java.util.List;
  *
  * @author Rishi
  */
-public interface StateTypeDescriptor extends ExtensionPoint {
-  /**
-   * Gets type.
-   *
-   * @return the type
-   */
-  String getType();
-
+public interface StateTypeDescriptor extends ExtensionPoint, Stencil<State> {
   /**
    * Gets scopes.
    *
    * @return the scopes
    */
   List<StateTypeScope> getScopes();
-
-  /**
-   * Gets state class.
-   *
-   * @return the state class
-   */
-  @JsonIgnore Class<? extends State> getStateClass();
-
-  /**
-   * Gets json schema.
-   *
-   * @return the json schema
-   */
-  Object getJsonSchema();
-
-  /**
-   * Gets ui schema.
-   *
-   * @return the ui schema
-   */
-  Object getUiSchema();
-
-  /**
-   * New instance.
-   *
-   * @param id the id
-   * @return the state
-   */
-  State newInstance(String id);
 }

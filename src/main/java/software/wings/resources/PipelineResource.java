@@ -15,7 +15,10 @@ import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateTypeScope;
+import software.wings.stencils.Stencil;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -36,6 +39,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("pipelines")
 @Path("/pipelines")
+@Produces("application/json")
 public class PipelineResource {
   private WorkflowService workflowService;
 
@@ -57,7 +61,6 @@ public class PipelineResource {
    * @return the rest response
    */
   @GET
-  @Produces("application/json")
   public RestResponse<PageResponse<Pipeline>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Pipeline> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
@@ -73,7 +76,6 @@ public class PipelineResource {
    */
   @GET
   @Path("{pipelineId}")
-  @Produces("application/json")
   public RestResponse<Pipeline> read(@QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
     return new RestResponse<>(workflowService.readPipeline(appId, pipelineId));
   }
@@ -86,7 +88,6 @@ public class PipelineResource {
    * @return the rest response
    */
   @POST
-  @Produces("application/json")
   public RestResponse<Pipeline> create(@QueryParam("appId") String appId, Pipeline pipeline) {
     pipeline.setAppId(appId);
     return new RestResponse<>(workflowService.createWorkflow(Pipeline.class, pipeline));
@@ -102,7 +103,6 @@ public class PipelineResource {
    */
   @PUT
   @Path("{pipelineId}")
-  @Produces("application/json")
   public RestResponse<Pipeline> update(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     pipeline.setAppId(appId);
@@ -120,7 +120,6 @@ public class PipelineResource {
    */
   @DELETE
   @Path("{pipelineId}")
-  @Produces("application/json")
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, Pipeline pipeline) {
     workflowService.deleteWorkflow(Pipeline.class, appId, pipelineId);
@@ -137,7 +136,6 @@ public class PipelineResource {
    */
   @GET
   @Path("{pipelineId}/executions")
-  @Produces("application/json")
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
       @PathParam("pipelineId") String pipelineId, @BeanParam PageRequest<WorkflowExecution> pageRequest) {
     SearchFilter filter = new SearchFilter();
@@ -165,9 +163,15 @@ public class PipelineResource {
    */
   @POST
   @Path("{pipelineId}/executions")
-  @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowService.triggerPipelineExecution(appId, pipelineId));
+  }
+
+  @GET
+  @Path("stencils")
+  public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(
+        workflowService.stencils(appId, StateTypeScope.PIPELINE_STENCILS).get(StateTypeScope.PIPELINE_STENCILS));
   }
 }
