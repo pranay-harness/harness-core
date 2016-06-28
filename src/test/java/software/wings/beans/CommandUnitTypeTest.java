@@ -36,6 +36,6 @@ public class CommandUnitTypeTest {
   public void shouldCreateNewInstanceFor(String commandUnitTypeName) throws Exception {
     CommandUnitType commandUnitType = CommandUnitType.valueOf(UPPER_CAMEL.to(UPPER_UNDERSCORE, commandUnitTypeName));
     assertThat(commandUnitType).isNotNull();
-    assertThat(commandUnitType.newInstance()).isNotNull();
+    assertThat(commandUnitType.newInstance("")).isNotNull();
   }
 }

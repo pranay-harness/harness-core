@@ -7,10 +7,11 @@ import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.stencils.Stencil;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
-import java.util.Map;
+import java.util.List;
 import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
@@ -107,5 +108,5 @@ public interface ServiceResourceService {
    * @param serviceId the service id
    * @return the command stencils
    */
-  Map<String, String> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId);
+  List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId);
 }

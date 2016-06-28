@@ -4,8 +4,6 @@ import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-import java.util.Map;
-
 // TODO: Auto-generated Javadoc
 
 /**
@@ -19,14 +17,6 @@ public interface EnvironmentService {
    * @return the page response
    */
   PageResponse<Environment> list(PageRequest<Environment> request);
-
-  /**
-   * List for enum map.
-   *
-   * @param appId the app id
-   * @return the map
-   */
-  Map<String, String> listForEnum(String appId);
 
   /**
    * Gets the.

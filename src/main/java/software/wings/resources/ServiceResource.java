@@ -13,7 +13,9 @@ import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.stencils.Stencil;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -167,5 +169,12 @@ public class ServiceResource {
   public RestResponse<Service> deleteCommand(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @PathParam("commandName") String commandName) {
     return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, commandName));
+  }
+
+  @GET
+  @Path("{serviceId}/commands/stencils")
+  public RestResponse<List<Stencil>> stencils(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId));
   }
 }

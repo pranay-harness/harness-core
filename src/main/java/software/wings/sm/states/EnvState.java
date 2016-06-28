@@ -1,8 +1,7 @@
 package software.wings.sm.states;
 
-import static software.wings.beans.CatalogNames.ENVIRONMENTS;
-
 import com.github.reinert.jjschema.Attributes;
+import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.sm.EnumData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -19,7 +18,9 @@ import software.wings.utils.Misc;
  */
 @Attributes(title = "Env")
 public class EnvState extends State {
-  @EnumData(catalog = ENVIRONMENTS) @Attributes(required = true, title = "Environment") private String envId;
+  @EnumData(expandIntoMultipleEntries = true, enumDataProvider = EnvironmentServiceImpl.class)
+  @Attributes(required = true, title = "Environment")
+  private String envId;
 
   @Attributes(required = true) private String workflowId;
 

@@ -11,7 +11,7 @@ import java.lang.reflect.Constructor;
  * Created by peeyushaggarwal on 6/23/16.
  */
 public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
-  private static final Objenesis objenesis = new ObjenesisStd();
+  private static final Objenesis objenesis = new ObjenesisStd(true);
 
   @Override
   public Object createInstance(Class clazz) {
@@ -22,7 +22,6 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
       }
       try {
         return objenesis.newInstance(clazz);
-
       } catch (Exception e) {
         throw new MappingException("Failed to instantiate " + clazz.getName(), e);
       }
