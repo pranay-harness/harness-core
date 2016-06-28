@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -51,6 +52,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ConfigService configService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
+  @Inject private ExecutorService executorService;
+
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
@@ -222,6 +225,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                                 .equal(envId)
                                 .field(ID_KEY)
                                 .equal(serviceTemplateId));
+    executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
   }
 
   @Override

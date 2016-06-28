@@ -10,6 +10,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -20,6 +21,7 @@ import javax.inject.Inject;
 public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostService hostService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.InfraService#list(software.wings.dl.PageRequest)
@@ -54,7 +56,7 @@ public class InfraServiceImpl implements InfraService {
                                                   .field(ID_KEY)
                                                   .equal(infraId));
     if (deleted) {
-      hostService.deleteByInfra(appId, infraId);
+      executorService.submit(() -> hostService.deleteByInfra(appId, infraId));
     }
   }
 }

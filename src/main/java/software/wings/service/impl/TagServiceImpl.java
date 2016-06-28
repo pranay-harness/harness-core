@@ -22,6 +22,7 @@ import software.wings.service.intfc.TagService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -36,6 +37,7 @@ public class TagServiceImpl implements TagService {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.TagService#list(software.wings.dl.PageRequest)
@@ -142,7 +144,7 @@ public class TagServiceImpl implements TagService {
       if (tag.getChildren() != null && tag.getChildren().size() > 0) {
         tag.getChildren().forEach(this ::cascadingDelete);
       } else { // leaf tag should update hostInstance mapping
-        updateAllServiceTemplatesWithDeletedHosts(tag);
+        executorService.submit(() -> updateAllServiceTemplatesWithDeletedHosts(tag));
       }
     }
   }

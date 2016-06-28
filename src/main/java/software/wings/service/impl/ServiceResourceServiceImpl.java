@@ -30,6 +30,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.utils.Validator;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -43,6 +44,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   private WingsPersistence wingsPersistence;
   private ConfigService configService;
   private ServiceTemplateService serviceTemplateService;
+  @Inject private ExecutorService executorService;
 
   /**
    * Instantiates a new service resource service impl.
@@ -113,8 +115,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
   public void delete(String appId, String serviceId) {
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
     if (deleted) {
-      serviceTemplateService.deleteByService(appId, serviceId);
-      configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
+      executorService.submit(() -> {
+        serviceTemplateService.deleteByService(appId, serviceId);
+        configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
+      });
     }
   }
 

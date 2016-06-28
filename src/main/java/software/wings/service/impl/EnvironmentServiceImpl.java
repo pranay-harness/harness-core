@@ -24,6 +24,7 @@ import software.wings.service.intfc.TagService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -39,6 +40,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private TagService tagService;
+  @Inject private ExecutorService executorService;
 
   /**
    * {@inheritDoc}
@@ -109,10 +111,12 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   public void delete(String appId, String envId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).field(ID_KEY).equal(envId));
-    serviceInstanceService.deleteByEnv(appId, envId);
-    serviceTemplateService.deleteByEnv(appId, envId);
-    tagService.deleteByEnv(appId, envId);
-    infraService.deleteByEnv(appId, envId);
+    executorService.submit(() -> {
+      serviceInstanceService.deleteByEnv(appId, envId);
+      serviceTemplateService.deleteByEnv(appId, envId);
+      tagService.deleteByEnv(appId, envId);
+      infraService.deleteByEnv(appId, envId);
+    });
   }
 
   @Override

@@ -15,6 +15,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -33,6 +34,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private AppContainerService appContainerService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -81,9 +83,11 @@ public class AppServiceImpl implements AppService {
   public void delete(String appId) {
     boolean deleted = wingsPersistence.delete(Application.class, appId);
     if (deleted) {
-      serviceResourceService.deleteByAppId(appId);
-      environmentService.deleteByAppId(appId);
-      appContainerService.deleteByAppId(appId);
+      executorService.submit(() -> {
+        serviceResourceService.deleteByAppId(appId);
+        environmentService.deleteByAppId(appId);
+        appContainerService.deleteByAppId(appId);
+      });
     }
   }
 }
