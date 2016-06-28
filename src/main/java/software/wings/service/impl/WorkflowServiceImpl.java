@@ -8,6 +8,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.dl.MongoHelper.setUnset;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -30,8 +31,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -63,6 +62,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -312,6 +312,19 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public PageResponse<Orchestration> listOrchestration(PageRequest<Orchestration> pageRequest) {
+    boolean workflowTypeFilter = false;
+    if (pageRequest != null && pageRequest.getFilters() != null) {
+      for (SearchFilter filter : pageRequest.getFilters()) {
+        if (filter != null && filter.getFieldName() != null && filter.getFieldName().equals("workflowType")) {
+          workflowTypeFilter = true;
+        }
+      }
+    }
+    if (!workflowTypeFilter) {
+      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
+                                .withField("workflowType", Operator.EQ, WorkflowType.ORCHESTRATION)
+                                .build());
+    }
     PageResponse<Orchestration> res = wingsPersistence.query(Orchestration.class, pageRequest);
     if (res != null && res.size() > 0) {
       for (Orchestration orchestration : res.getResponse()) {
@@ -375,7 +388,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(workflowExecution);
+      populateGraph(workflowExecution, null);
     }
     return res;
   }
@@ -396,44 +409,49 @@ public class WorkflowServiceImpl implements WorkflowService {
       String appId, String workflowExecutionId, List<String> expandedGroupIds) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null) {
-      populateGraph(workflowExecution);
+      populateGraph(workflowExecution, expandedGroupIds);
     }
     return workflowExecution;
   }
 
-  private void populateGraph(WorkflowExecution workflowExecution) {
+  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds) {
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    PageRequest<StateExecutionInstance> pageRequest = new PageRequest<>();
 
-    SearchFilter filter = new SearchFilter();
-    filter.setFieldName("appId");
-    filter.setFieldValues(workflowExecution.getAppId());
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
-
-    filter = new SearchFilter();
-    filter.setFieldName("executionUuid");
-    filter.setFieldValues(workflowExecution.getUuid());
-    filter.setOp(Operator.EQ);
-    pageRequest.addFilter(filter);
-
-    SortOrder order = new SortOrder();
-    order.setFieldName("createdAt");
-    order.setOrderType(OrderType.ASC);
-    pageRequest.addOrder(order);
-
-    PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, pageRequest);
-    if (res != null && res.size() > 0) {
-      workflowExecution.setGraph(generateGraph(res.getResponse(), sm.getInitialStateName()));
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field("appId")
+                                              .equal(workflowExecution.getAppId())
+                                              .field("executionUuid")
+                                              .equal(workflowExecution.getUuid());
+    if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
+      query.field("parentInstanceId").doesNotExist();
+    } else {
+      query.or(
+          query.criteria("parentInstanceId").doesNotExist(), query.criteria("parentInstanceId").in(expandedGroupIds));
     }
+    query.order("createdAt");
+
+    List<StateExecutionInstance> res = wingsPersistence.executeGetListQuery(query);
+
+    if (res != null && res.size() > 0) {
+      if (res.size() == 1
+          && (StateType.REPEAT.name().equals(res.get(0).getStateType())
+                 || StateType.FORK.name().equals(res.get(0).getStateType()))) {
+        expandedGroupIds = Lists.newArrayList(res.get(0).getUuid());
+        populateGraph(workflowExecution, expandedGroupIds);
+        return;
+      }
+    }
+    workflowExecution.setGraph(generateGraph(res, sm.getInitialStateName(), expandedGroupIds));
   }
 
-  private Graph generateGraph(List<StateExecutionInstance> response, String originState) {
+  private Graph generateGraph(
+      List<StateExecutionInstance> response, String originState, List<String> expandedGroupIds) {
     String originNodeId = null;
     Graph graph = new Graph();
     List<Node> nodes = new ArrayList<>();
     List<Link> links = new ArrayList<>();
+    List<String> collapsedInstanceIds = new ArrayList<>();
     for (StateExecutionInstance instance : response) {
       Node node = new Node();
       node.setId(instance.getUuid());
@@ -444,6 +462,15 @@ public class WorkflowServiceImpl implements WorkflowService {
         node.setExecutionSummary(instance.getStateExecutionData().getExecutionSummary());
         node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
       }
+      if ((StateType.REPEAT.name().equals(instance.getStateType())
+              || StateType.FORK.name().equals(instance.getStateType())
+                  && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid())))) {
+        node.setExpanded(false);
+        collapsedInstanceIds.add(instance.getUuid());
+      } else {
+        node.setExpanded(true);
+      }
+
       nodes.add(node);
       if (node.getName().equals(originState)) {
         originNodeId = node.getId();

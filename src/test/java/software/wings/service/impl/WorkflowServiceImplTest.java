@@ -67,6 +67,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+
 import javax.inject.Inject;
 
 /**
@@ -987,6 +988,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withEnvironment(env)
                                       .withGraph(graph)
+                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
                                       .build();
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
     assertThat(orchestration).isNotNull();

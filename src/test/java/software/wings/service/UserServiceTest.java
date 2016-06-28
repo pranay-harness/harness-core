@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Datastore;
@@ -70,6 +71,11 @@ public class UserServiceTest extends WingsBaseTest {
   @Inject @InjectMocks private UserService userService;
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
+  @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
+  @Captor private ArgumentCaptor<User> userArgumentCaptor;
+  @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
+  @Captor private ArgumentCaptor<Query<EmailVerificationToken>> emailVerificationQueryArgumentCaptor;
+
   /**
    * Sets mocks.
    */
@@ -101,13 +107,11 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.register(userBuilder.build());
 
-    ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
     verify(wingsPersistence).saveAndGet(eq(User.class), userArgumentCaptor.capture());
     assertThat(BCrypt.checkpw(PASSWORD, userArgumentCaptor.getValue().getPasswordHash())).isTrue();
     assertThat(userArgumentCaptor.getValue().isEmailVerified()).isFalse();
     assertThat(userArgumentCaptor.getValue().getCompanyName()).isEqualTo(COMPANY_NAME);
 
-    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
@@ -145,9 +149,8 @@ public class UserServiceTest extends WingsBaseTest {
     PageRequest<User> request = new PageRequest<>();
     request.addFilter("appId", GLOBAL_APP_ID, EQ);
     userService.list(request);
-    ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
-    verify(wingsPersistence).query(eq(User.class), argument.capture());
-    SearchFilter filter = (SearchFilter) argument.getValue().getFilters().get(0);
+    verify(wingsPersistence).query(eq(User.class), pageRequestArgumentCaptor.capture());
+    SearchFilter filter = (SearchFilter) pageRequestArgumentCaptor.getValue().getFilters().get(0);
     assertThat(filter.getFieldName()).isEqualTo("appId");
     assertThat(filter.getFieldValues()).containsExactly(GLOBAL_APP_ID);
     assertThat(filter.getOp()).isEqualTo(EQ);
@@ -178,16 +181,15 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldVerifyEmail() {
-    ArgumentCaptor<Query> argumentCaptor = ArgumentCaptor.forClass(Query.class);
-    when(wingsPersistence.executeGetOneQuery(argumentCaptor.capture()))
+    when(wingsPersistence.executeGetOneQuery(emailVerificationQueryArgumentCaptor.capture()))
         .thenReturn(EmailVerificationToken.Builder.anEmailVerificationToken()
                         .withUuid("TOKEN_ID")
                         .withUserId(USER_ID)
                         .withToken("TOKEN")
                         .build());
     userService.verifyEmail("TOKEN");
-    assertThat(argumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
-    assertThat(argumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");
+    assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
+    assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("emailVerified", true));
     verify(wingsPersistence).delete(EmailVerificationToken.class, "TOKEN_ID");
   }

@@ -412,22 +412,6 @@ public class Graph {
   }
 
   /**
-   * The enum Collapse status.
-   */
-  public enum CollapseStatus {
-    /**
-     * Collapsed collapse status.
-     */
-    COLLAPSED, /**
-                * Expanded collapse status.
-                */
-    EXPANDED, /**
-               * Expanded fully collapse status.
-               */
-    EXPANDED_FULLY;
-  }
-
-  /**
    * The Class Node.
    */
   public static class Node implements Serializable {
@@ -441,11 +425,11 @@ public class Graph {
     private int y;
     private int width;
     private int height;
-    private CollapseStatus collapseStatus;
 
     private Object executionSummary;
     private Object executionDetails;
     private String detailsReference;
+    private boolean expanded;
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -665,22 +649,12 @@ public class Graph {
       this.detailsReference = detailsReference;
     }
 
-    /**
-     * Gets collapse status.
-     *
-     * @return the collapse status
-     */
-    public CollapseStatus getCollapseStatus() {
-      return collapseStatus;
+    public boolean isExpanded() {
+      return expanded;
     }
 
-    /**
-     * Sets collapse status.
-     *
-     * @param collapseStatus the collapse status
-     */
-    public void setCollapseStatus(CollapseStatus collapseStatus) {
-      this.collapseStatus = collapseStatus;
+    public void setExpanded(boolean expanded) {
+      this.expanded = expanded;
     }
 
     /**
