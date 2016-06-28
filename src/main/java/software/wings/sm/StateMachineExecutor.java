@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -309,13 +310,7 @@ public class StateMachineExecutor {
             anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
       }
     } else {
-      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-      cloned.setUuid(null);
-      cloned.setStateName(nextState.getName());
-      cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
-      cloned.setParentInstanceId(null);
-      cloned.setContextElementName(null);
-      cloned.setContextElementType(null);
+      StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
       return triggerExecution(sm, cloned);
     }
 
@@ -347,16 +342,26 @@ public class StateMachineExecutor {
             anExecutionStatusData().withExecutionStatus(ExecutionStatus.FAILED).build());
       }
     } else {
-      StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
-      cloned.setUuid(null);
-      cloned.setStateName(nextState.getName());
-      cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
-      cloned.setParentInstanceId(null);
-      cloned.setContextElementName(null);
-      cloned.setContextElementType(null);
+      StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
       return triggerExecution(sm, cloned);
     }
     return null;
+  }
+
+  /**
+   * @param stateExecutionInstance
+   * @param nextState
+   * @return
+   */
+  private StateExecutionInstance clone(StateExecutionInstance stateExecutionInstance, State nextState) {
+    StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+    cloned.setUuid(null);
+    cloned.setStateName(nextState.getName());
+    cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
+    cloned.setParentInstanceId(null);
+    cloned.setContextElementName(null);
+    cloned.setContextElementType(null);
+    return cloned;
   }
 
   private void updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue) {
