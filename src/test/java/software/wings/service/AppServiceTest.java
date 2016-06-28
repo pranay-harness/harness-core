@@ -41,7 +41,7 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(app).isNotNull();
     assertThat(app.getUuid()).isNotNull();
 
-    Application app2 = appService.findByUuid(app.getUuid());
+    Application app2 = appService.get(app.getUuid());
     assertThat(app2).isNotNull();
     assertThat(app2.getUuid()).isNotNull();
     assertThat(app2).isEqualToComparingOnlyGivenFields(app, "uuid", "name", "description");
@@ -121,7 +121,7 @@ public class AppServiceTest extends WingsBaseTest {
         .doesNotContainNull()
         .containsExactly(app2.getUuid(), app1.getUuid());
 
-    appService.deleteApp(app1.getUuid());
+    appService.delete(app1.getUuid());
     list = appService.list(req);
     assertThat(list).isNotNull();
     assertThat(list.size()).isEqualTo(1);

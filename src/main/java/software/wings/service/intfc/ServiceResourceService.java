@@ -108,4 +108,12 @@ public interface ServiceResourceService {
    * @return the command stencils
    */
   Map<String, String> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * Delete by app id boolean.
+   *
+   * @param appId the app id
+   * @return the boolean
+   */
+  void deleteByAppId(String appId);
 }

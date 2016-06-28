@@ -107,7 +107,7 @@ public class EnvironmentResource {
   @DELETE
   @Path("{envId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    envService.delete(envId);
+    envService.delete(appId, envId);
     return new RestResponse();
   }
 }

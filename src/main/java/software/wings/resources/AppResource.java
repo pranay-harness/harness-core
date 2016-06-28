@@ -91,7 +91,7 @@ public class AppResource {
   @GET
   @Path("{appId}")
   public RestResponse<Application> get(@PathParam("appId") String appId) {
-    return new RestResponse<>(appService.findByUuid(appId));
+    return new RestResponse<>(appService.get(appId));
   }
 
   /**
@@ -103,7 +103,7 @@ public class AppResource {
   @DELETE
   @Path("{appId}")
   public RestResponse delete(@PathParam("appId") String appId) {
-    appService.deleteApp(appId);
+    appService.delete(appId);
     return new RestResponse();
   }
 }

@@ -142,6 +142,17 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.update(host, updateOp);
   }
 
+  @Override
+  public void deleteByInfra(String appId, String infraId) {
+    wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .asList()
+        .forEach(this ::delete);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#exportHosts(java.lang.String, java.lang.String)
    */
@@ -156,13 +167,9 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public String getInfraId(String appId, String envId) {
-    return wingsPersistence.createQuery(Infra.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .get()
-        .getUuid();
+    Infra infra =
+        wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).get();
+    return infra == null ? null : infra.getUuid();
   }
 
   /* (non-Javadoc)
@@ -171,6 +178,10 @@ public class HostServiceImpl implements HostService {
   @Override
   public void delete(String appId, String infraId, String hostId) {
     Host host = get(appId, infraId, hostId);
+    delete(host);
+  }
+
+  private void delete(Host host) {
     if (host != null) {
       wingsPersistence.delete(host);
       serviceTemplateService.deleteHostFromTemplates(host);

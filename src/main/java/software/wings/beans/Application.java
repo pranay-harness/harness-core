@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 
@@ -18,7 +19,7 @@ import java.util.Objects;
  */
 @Entity(value = "applications", noClassnameStored = true)
 public class Application extends Base {
-  private String name;
+  @NotEmpty private String name;
   private String description;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;

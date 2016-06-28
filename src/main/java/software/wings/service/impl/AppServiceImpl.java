@@ -9,11 +9,14 @@ import software.wings.beans.Application;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
@@ -22,10 +25,14 @@ import javax.inject.Singleton;
  *
  * @author Rishi
  */
-@Singleton
+
+@ValidateOnExecution
 public class AppServiceImpl implements AppService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private AppContainerService appContainerService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -47,10 +54,10 @@ public class AppServiceImpl implements AppService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#findByUuid(java.lang.String)
+   * @see software.wings.service.intfc.AppService#get(java.lang.String)
    */
   @Override
-  public Application findByUuid(String uuid) {
+  public Application get(String uuid) {
     return wingsPersistence.get(Application.class, uuid);
   }
 
@@ -68,10 +75,15 @@ public class AppServiceImpl implements AppService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.AppService#deleteApp(java.lang.String)
+   * @see software.wings.service.intfc.AppService#delete(java.lang.String)
    */
   @Override
-  public void deleteApp(String appId) {
-    wingsPersistence.delete(Application.class, appId);
+  public void delete(String appId) {
+    boolean deleted = wingsPersistence.delete(Application.class, appId);
+    if (deleted) {
+      serviceResourceService.deleteByAppId(appId);
+      environmentService.deleteByAppId(appId);
+      appContainerService.deleteByAppId(appId);
+    }
   }
 }

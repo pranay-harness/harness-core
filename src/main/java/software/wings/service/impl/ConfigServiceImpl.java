@@ -91,4 +91,19 @@ public class ConfigServiceImpl implements ConfigService {
                                        .asList();
     return configFiles != null ? configFiles : new ArrayList<>();
   }
+
+  @Override
+  public void deleteByEntityId(String appId, String entityId, String templateId) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("appId")
+                                       .equal(appId)
+                                       .field("entityId")
+                                       .equal(entityId)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .asList();
+    if (configFiles != null) {
+      configFiles.forEach(configFile -> delete(configFile.getUuid()));
+    }
+  }
 }

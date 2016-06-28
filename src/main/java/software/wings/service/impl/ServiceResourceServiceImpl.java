@@ -26,6 +26,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.utils.Validator;
 
 import java.util.Map;
@@ -41,17 +42,20 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceResourceServiceImpl implements ServiceResourceService {
   private WingsPersistence wingsPersistence;
   private ConfigService configService;
+  private ServiceTemplateService serviceTemplateService;
 
   /**
    * Instantiates a new service resource service impl.
-   *
-   * @param wingsPersistence the wings persistence
+   *  @param wingsPersistence the wings persistence
    * @param configService    the config service
+   * @param serviceTemplateService
    */
   @Inject
-  public ServiceResourceServiceImpl(WingsPersistence wingsPersistence, ConfigService configService) {
+  public ServiceResourceServiceImpl(
+      WingsPersistence wingsPersistence, ConfigService configService, ServiceTemplateService serviceTemplateService) {
     this.wingsPersistence = wingsPersistence;
     this.configService = configService;
+    this.serviceTemplateService = serviceTemplateService;
   }
 
   /**
@@ -107,7 +111,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService {
    */
   @Override
   public void delete(String appId, String serviceId) {
-    wingsPersistence.delete(Service.class, serviceId);
+    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
+    if (deleted) {
+      serviceTemplateService.deleteByService(appId, serviceId);
+      configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
+    }
+  }
+
+  @Override
+  public void deleteByAppId(String appId) {
+    wingsPersistence.createQuery(Service.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(service -> delete(appId, service.getUuid()));
   }
 
   /**

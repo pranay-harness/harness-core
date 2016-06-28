@@ -134,4 +134,6 @@ public interface HostService {
    * @param tag  the tag
    */
   void removeTagFromHost(Host host, Tag tag);
+
+  void deleteByInfra(String appId, String infraId);
 }

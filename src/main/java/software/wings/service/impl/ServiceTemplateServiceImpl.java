@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.IN;
 
@@ -208,6 +209,44 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         template, wingsPersistence.createUpdateOperations(ServiceTemplate.class).add("leafTags", tag));
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#delete(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
+  @Override
+  public void delete(String appId, String envId, String serviceTemplateId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("envId")
+                                .equal(envId)
+                                .field(ID_KEY)
+                                .equal(serviceTemplateId));
+  }
+
+  @Override
+  public void deleteByEnv(String appId, String envId) {
+    wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .asList()
+        .forEach(serviceTemplate -> delete(appId, envId, serviceTemplate.getUuid()));
+  }
+
+  @Override
+  public void deleteByService(String appId, String serviceId) {
+    wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(appId)
+        .field("service")
+        .equal(serviceId)
+        .asList()
+        .forEach(serviceTemplate
+            -> delete(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid()));
+  }
+
   private List<ServiceTemplate> getTemplatesByMappedTags(Tag tag) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
         .field("appId")
@@ -280,15 +319,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
     }
     return computedHostConfigs;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceTemplateService#delete(java.lang.String, java.lang.String,
-   * java.lang.String)
-   */
-  @Override
-  public void delete(String appId, String envId, String serviceTemplateId) {
-    wingsPersistence.delete(ServiceTemplate.class, serviceTemplateId);
   }
 
   /* (non-Javadoc)

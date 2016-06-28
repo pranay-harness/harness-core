@@ -98,4 +98,28 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
       }
     });
   }
+
+  @Override
+  public void deleteByEnv(String appId, String envId) {
+    wingsPersistence.createQuery(ServiceInstance.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .asList()
+        .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
+  }
+
+  @Override
+  public void deleteByServiceTemplate(String appId, String envId, String templateId) {
+    wingsPersistence.createQuery(ServiceInstance.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("serviceTemplate")
+        .equal(templateId)
+        .asList()
+        .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
+  }
 }

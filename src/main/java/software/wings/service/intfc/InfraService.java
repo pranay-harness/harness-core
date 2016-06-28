@@ -31,5 +31,7 @@ public interface InfraService {
    *
    * @param infraId the infra id
    */
-  void delete(String infraId);
+  void delete(String appId, String envId, String infraId);
+
+  void deleteByEnv(String appId, String envId);
 }

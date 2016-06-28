@@ -17,7 +17,12 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.TagService;
 
+import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -30,6 +35,10 @@ import javax.inject.Singleton;
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private InfraService infraService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private TagService tagService;
 
   /**
    * {@inheritDoc}
@@ -97,7 +106,19 @@ public class EnvironmentServiceImpl implements EnvironmentService {
    * {@inheritDoc}
    */
   @Override
-  public void delete(String envId) {
-    wingsPersistence.delete(Environment.class, envId);
+  public void delete(String appId, String envId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).field(ID_KEY).equal(envId));
+    serviceInstanceService.deleteByEnv(appId, envId);
+    serviceTemplateService.deleteByEnv(appId, envId);
+    tagService.deleteByEnv(appId, envId);
+    infraService.deleteByEnv(appId, envId);
+  }
+
+  @Override
+  public void deleteByAppId(String appId) {
+    List<Environment> environments =
+        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
+    environments.forEach(environment -> delete(appId, environment.getUuid()));
   }
 }

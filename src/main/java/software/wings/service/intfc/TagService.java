@@ -39,6 +39,7 @@ public interface TagService {
    * Gets the tag.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    * @return the tag
    */
@@ -56,6 +57,7 @@ public interface TagService {
    * Delete tag.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    */
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId);
@@ -73,6 +75,7 @@ public interface TagService {
    * Tag hosts.
    *
    * @param appId   the app id
+   * @param envId   the env id
    * @param tagId   the tag id
    * @param hostIds the host ids
    */
@@ -95,4 +98,12 @@ public interface TagService {
    * @return the leaf tags
    */
   List<Tag> getLeafTags(@NotNull Tag root);
+
+  /**
+   * Delete by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnv(String appId, String envId);
 }

@@ -150,4 +150,20 @@ public interface ServiceTemplateService {
    * @param tag      the tag
    */
   void addLeafTag(ServiceTemplate template, Tag tag);
+
+  /**
+   * Delete by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnv(String appId, String envId);
+
+  /**
+   * Delete by service.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   */
+  void deleteByService(String appId, String serviceId);
 }

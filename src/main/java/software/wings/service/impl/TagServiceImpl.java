@@ -147,6 +147,19 @@ public class TagServiceImpl implements TagService {
     }
   }
 
+  @Override
+  public void deleteByEnv(String appId, String envId) {
+    wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("rootTag")
+        .equal(true)
+        .asList()
+        .forEach(this ::cascadingDelete);
+  }
+
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
     List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);

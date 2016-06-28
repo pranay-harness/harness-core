@@ -116,7 +116,7 @@ public class ReleaseResource {
   @ExceptionMetered
   public RestResponse<Release> save(@QueryParam("appId") String appId, Release release) {
     try {
-      Application application = appService.findByUuid(appId);
+      Application application = appService.get(appId);
       if (application == null) {
         throw new NotFoundException("application with id " + appId + " not found.");
       }
