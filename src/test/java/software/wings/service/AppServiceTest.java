@@ -4,18 +4,35 @@
 
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 
 import javax.inject.Inject;
 
@@ -25,109 +42,82 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class AppServiceTest extends WingsBaseTest {
-  /**
-   * The App service.
-   */
-  @Inject AppService appService;
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private SettingsService settingsService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private AppContainerService appContainerService;
 
-  /**
-   * Should save and get.
-   */
+  @Inject @InjectMocks AppService appService;
+
+  @Mock Query<Application> query;
+  @Mock FieldEnd end;
+  @Mock UpdateOperations<Application> updateOperations;
+
+  @Before
+  public void setUp() throws Exception {
+    when(wingsPersistence.createQuery(Application.class)).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(Application.class)).thenReturn(updateOperations);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+    when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+  }
+
   @Test
-  public void shouldSaveAndGet() {
-    Application app = Application.Builder.anApplication().withName("AppA").withDescription("Description1").build();
-
+  public void shouldSaveApplication() {
+    Application app = anApplication().withName("AppA").withDescription("Description1").build();
+    Application savedApp = anApplication().withUuid(APP_ID).withName("AppA").withDescription("Description1").build();
+    when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
     appService.save(app);
-    assertThat(app).isNotNull();
-    assertThat(app.getUuid()).isNotNull();
-
-    Application app2 = appService.get(app.getUuid());
-    assertThat(app2).isNotNull();
-    assertThat(app2.getUuid()).isNotNull();
-    assertThat(app2).isEqualToComparingOnlyGivenFields(app, "uuid", "name", "description");
+    verify(wingsPersistence).saveAndGet(Application.class, app);
+    verify(settingsService).createDefaultSettings(APP_ID);
   }
 
   /**
    * Should list.
    */
   @Test
-  public void shouldList() {
-    Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();
-    appService.save(app1);
-    Application app2 = Application.Builder.anApplication().withName("App2").withDescription("Description1").build();
-    appService.save(app2);
-    Application app3 = Application.Builder.anApplication().withName("App3").withDescription("Description1").build();
-    appService.save(app3);
-    Application app4 = Application.Builder.anApplication().withName("App4").withDescription("Description1").build();
-    appService.save(app4);
-    Application app5 = Application.Builder.anApplication().withName("App5").withDescription("Description1").build();
-    appService.save(app5);
+  public void shouldListApplication() {
+    Application application = anApplication().build();
+    PageResponse<Application> pageResponse = new PageResponse<>();
+    PageRequest<Application> pageRequest = new PageRequest<>();
+    pageResponse.setResponse(asList(application));
+    when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
+    PageResponse<Application> applications = appService.list(pageRequest);
+    assertThat(applications).containsAll(asList(application));
+  }
 
-    PageRequest<Application> req =
-        PageRequest.Builder.aPageRequest()
-            .withLimit("2")
-            .withOffset("1")
-            .addFilter(SearchFilter.Builder.aSearchFilter()
-                           .withField("name", Operator.IN, "App1", "App2", "App3", "App4")
-                           .build())
-            .addOrder(SortOrder.Builder.aSortOrder().withField("name", OrderType.DESC).build())
-            .build();
-    PageResponse<Application> list = appService.list(req);
-
-    assertThat(list).isNotNull();
-    assertThat(list.size()).isEqualTo(2);
-    assertThat(list.getTotal()).isEqualTo(4);
-    assertThat(list.getStart()).isEqualTo(1);
-    assertThat(list.getResponse())
-        .extracting(Application::getUuid)
-        .doesNotContainNull()
-        .containsExactly(app3.getUuid(), app2.getUuid());
+  @Test
+  public void shouldGetApplication() {
+    appService.get(APP_ID);
+    verify(wingsPersistence).get(Application.class, APP_ID);
   }
 
   /**
    * Should update.
    */
   @Test
-  public void shouldUpdate() {
-    Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();
-    appService.save(app1);
-    assertThat(app1).isNotNull();
-    assertThat(app1.getUuid()).isNotNull();
-    app1.setName("App2");
-    app1.setDescription("Description2");
-    Application app2 = appService.update(app1);
-
-    assertThat(app2).isNotNull();
-    assertThat(app2.getUuid()).isNotNull();
-    assertThat(app2).isEqualToComparingOnlyGivenFields(app1, "uuid", "name", "description");
+  public void shouldUpdateApplication() {
+    appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
+    verify(query).field(ID_KEY);
+    verify(end).equal(APP_ID);
+    verify(updateOperations).set("name", "App_Name");
+    verify(updateOperations).set("description", "Description");
+    verify(wingsPersistence).update(query, updateOperations);
+    verify(wingsPersistence).get(Application.class, APP_ID);
   }
 
   /**
    * Should delete.
    */
   @Test
-  public void shouldDelete() {
-    Application app1 = Application.Builder.anApplication().withName("App1").withDescription("Description1").build();
-    appService.save(app1);
-    Application app2 = Application.Builder.anApplication().withName("App2").withDescription("Description1").build();
-    appService.save(app2);
-
-    PageRequest<Application> req = PageRequest.Builder.aPageRequest().build();
-    PageResponse<Application> list = appService.list(req);
-    assertThat(list).isNotNull();
-    assertThat(list.size()).isEqualTo(2);
-    assertThat(list.getResponse())
-        .extracting(Application::getUuid)
-        .doesNotContainNull()
-        .containsExactly(app2.getUuid(), app1.getUuid());
-
-    appService.delete(app1.getUuid());
-    list = appService.list(req);
-    assertThat(list).isNotNull();
-    assertThat(list.size()).isEqualTo(1);
-    assertThat(list.getResponse())
-        .extracting(Application::getUuid)
-        .doesNotContainNull()
-        .containsExactly(app2.getUuid());
+  public void shouldDeleteApplication() {
+    when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    appService.delete(APP_ID);
+    InOrder inOrder = inOrder(wingsPersistence, serviceResourceService, environmentService, appContainerService);
+    inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
+    inOrder.verify(serviceResourceService).deleteByAppId(APP_ID);
+    inOrder.verify(environmentService).deleteByAppId(APP_ID);
+    inOrder.verify(appContainerService).deleteByAppId(APP_ID);
   }
 }
