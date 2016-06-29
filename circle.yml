@@ -13,14 +13,14 @@ dependencies:
     - "~/.node"
 test:
   override:
-    - mvn verify site
+    - if [[ $SKIP_TESTS != "false" ]] ; then mvn verify site ; fi
   post:
-    - cp -r target/site $CIRCLE_ARTIFACTS
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit/ 
-    - mkdir -p $CIRCLE_TEST_REPORTS/integration/ 
-    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
-    - find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \;
-    - python sendmail.py
+    - if [[ $SKIP_TESTS != "false" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
+    - if [[ $SKIP_TESTS != "false" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi
+    - if [[ $SKIP_TESTS != "false" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/integration/ ; fi
+    - if [[ $SKIP_TESTS != "false" ]] ; then find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \; ; fi
+    - if [[ $SKIP_TESTS != "false" ]] ; then find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \; ;fi
+    - if [[ $SKIP_TESTS != "false" ]] ; then python sendmail.py; fi
 deployment:
   integration:
     branch: master
