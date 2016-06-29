@@ -68,8 +68,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(environment));
     when(wingsPersistence.query(Environment.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Environment> applications = environmentService.list(pageRequest);
-    assertThat(applications).containsAll(asList(environment));
+    PageResponse<Environment> environments = environmentService.list(pageRequest);
+    assertThat(environments).containsAll(asList(environment));
   }
 
   @Test
