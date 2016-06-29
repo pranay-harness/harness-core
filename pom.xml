@@ -9,6 +9,12 @@
     <artifactId>portal</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
+    <scm>
+        <url>https://github.com/wings-software/wings</url>
+        <connection>scm:git:git://github.com/wings-software/wings.git</connection>
+        <developerConnection>scm:git:git@github.com:wings-software/wings.git</developerConnection>
+    </scm>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -22,6 +28,14 @@
     </properties>
 
     <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-palantir-releases</id>
+            <name>bintray</name>
+            <url>http://palantir.bintray.com/releases</url>
+        </repository>
         <repository>
             <id>localrepository</id>
             <url>file://${basedir}/repo</url>
@@ -280,6 +294,12 @@
             <version>${dropwizard.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.palantir.versioninfo</groupId>
+            <artifactId>dropwizard-version-info</artifactId>
+            <version>0.6.0</version>
+        </dependency>
+
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.dropwizard</groupId>
@@ -535,6 +555,36 @@
             </plugins>
         </pluginManagement>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>generate</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>create-metadata</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <attach>true</attach>
+                    <!--make it available for jar/war classpath resource -->
+                    <shortRevisionLength>5</shortRevisionLength>
+                    <properties>
+                        <productVersion>${project.version}-${buildNumber}-${timestamp}</productVersion>
+                    </properties>
+                    <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>

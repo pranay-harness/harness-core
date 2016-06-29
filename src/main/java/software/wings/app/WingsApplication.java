@@ -8,6 +8,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.palantir.versioninfo.VersionInfoBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
@@ -93,6 +94,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         return mainConfiguration.getSwaggerBundleConfiguration();
       }
     });
+    bootstrap.addBundle(new VersionInfoBundle("build.properties"));
 
     logger.info("bootstrapping done.");
   }
