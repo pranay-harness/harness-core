@@ -25,7 +25,8 @@ deployment:
   integration:
     branch: master
     commands:
-      - export FILE_TO_PULL=`ssh -l ubuntu ec2-50-16-106-255.compute-1.amazonaws.com 'ls -t wingsui/*.tgz | head -1'`
-      - scp ubuntu@ec2-50-16-106-255.compute-1.amazonaws.com:/home/ubuntu/wingsui/$FILE_TO_PULL .
+      - scp ubuntu@ec2-50-16-106-255.compute-1.amazonaws.com:/home/ubuntu/wingsui/$FILE_TO_PULL .:
+        environment:
+          - FILE_TO_PULL: $(ssh -l ubuntu ec2-50-16-106-255.compute-1.amazonaws.com 'ls -t wingsui/*.tgz | head -1')
       - tar xzvf *.tgz -C src/main/resources
       - mvn deploy -Denv=int
