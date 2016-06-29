@@ -117,7 +117,7 @@ public class AppServiceTest extends WingsBaseTest {
     InOrder inOrder = inOrder(wingsPersistence, serviceResourceService, environmentService, appContainerService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
     inOrder.verify(serviceResourceService).deleteByAppId(APP_ID);
-    inOrder.verify(environmentService).deleteByAppId(APP_ID);
+    inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(appContainerService).deleteByAppId(APP_ID);
   }
 }

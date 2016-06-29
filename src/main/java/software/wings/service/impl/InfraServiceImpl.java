@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Infra.InfraBuilder.anInfra;
+import static software.wings.beans.Infra.InfraType.STATIC;
 
 import software.wings.beans.Infra;
 import software.wings.dl.PageRequest;
@@ -44,6 +46,11 @@ public class InfraServiceImpl implements InfraService {
     List<Infra> infras =
         wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).asList();
     infras.forEach(infra -> delete(appId, envId, infra.getUuid()));
+  }
+
+  @Override
+  public Infra createDefaultInfraForEnvironment(String appId, String envId) {
+    return save(anInfra().withAppId(appId).withEnvId(envId).withInfraType(STATIC).build());
   }
 
   @Override

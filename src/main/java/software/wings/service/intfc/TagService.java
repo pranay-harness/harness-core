@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Environment;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -106,4 +107,11 @@ public interface TagService {
    * @param envId the env id
    */
   void deleteByEnv(String appId, String envId);
+
+  /**
+   * Create default root tag for environment.
+   *
+   * @param env the env
+   */
+  Tag createDefaultRootTagForEnvironment(Environment env);
 }

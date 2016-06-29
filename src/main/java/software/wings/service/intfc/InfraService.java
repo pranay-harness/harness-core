@@ -29,9 +29,24 @@ public interface InfraService {
   /**
    * Delete.
    *
+   * @param appId   the app id
+   * @param envId   the env id
    * @param infraId the infra id
    */
   void delete(String appId, String envId, String infraId);
 
+  /**
+   * Delete by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
   void deleteByEnv(String appId, String envId);
+
+  /**
+   * Create default infra for environment.
+   *  @param appId the app id
+   * @param envId the env id
+   */
+  Infra createDefaultInfraForEnvironment(String appId, String envId);
 }

@@ -46,10 +46,15 @@ public interface EnvironmentService {
   /**
    * Delete.
    *
-   * @param appId
+   * @param appId the app id
    * @param envId the env id
    */
   void delete(String appId, String envId);
 
-  void deleteByAppId(String appId);
+  /**
+   * Delete by app id.
+   *
+   * @param appId the app id
+   */
+  void deleteByApp(String appId);
 }

@@ -6,6 +6,7 @@ import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -85,9 +86,18 @@ public class AppServiceImpl implements AppService {
     if (deleted) {
       executorService.submit(() -> {
         serviceResourceService.deleteByAppId(appId);
-        environmentService.deleteByAppId(appId);
+        environmentService.deleteByApp(appId);
         appContainerService.deleteByAppId(appId);
       });
     }
+  }
+
+  @Override
+  public void addEnvironment(Environment env) {
+    UpdateOperations<Application> updateOperations =
+        wingsPersistence.createUpdateOperations(Application.class).add("environments", env);
+    Query<Application> updateQuery =
+        wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(env.getAppId());
+    wingsPersistence.update(updateQuery, updateOperations);
   }
 }

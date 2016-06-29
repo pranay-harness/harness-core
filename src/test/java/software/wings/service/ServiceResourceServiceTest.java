@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -36,6 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Datastore;
@@ -53,6 +55,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.ArrayList;
 
@@ -75,6 +78,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
+  @Mock private ServiceTemplateService serviceTemplateService;
   /**
    * The Verifier.
    */
@@ -172,8 +176,12 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteService() {
+    when(wingsPersistence.delete(any(), any())).thenReturn(true);
     srs.delete(APP_ID, SERVICE_ID);
-    verify(wingsPersistence).delete(Service.class, SERVICE_ID);
+    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, configService);
+    inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
+    inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
+    inOrder.verify(configService).deleteByEntityId(APP_ID, SERVICE_ID, DEFAULT_TEMPLATE_ID);
   }
 
   /**

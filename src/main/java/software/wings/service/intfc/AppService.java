@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -51,4 +52,11 @@ public interface AppService {
    * @param appId the app id
    */
   void delete(@NotEmpty String appId);
+
+  /**
+   * Add environment.
+   *
+   * @param env the env
+   */
+  void addEnvironment(Environment env);
 }

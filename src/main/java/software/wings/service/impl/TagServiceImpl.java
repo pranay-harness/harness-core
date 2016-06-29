@@ -3,11 +3,13 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Tag.Builder.aTag;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -160,6 +162,18 @@ public class TagServiceImpl implements TagService {
         .equal(true)
         .asList()
         .forEach(this ::cascadingDelete);
+  }
+
+  @Override
+  public Tag createDefaultRootTagForEnvironment(Environment env) {
+    return save(null,
+        aTag()
+            .withAppId(env.getAppId())
+            .withEnvId(env.getUuid())
+            .withName(env.getName())
+            .withDescription(env.getName())
+            .withRootTag(true)
+            .build());
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
