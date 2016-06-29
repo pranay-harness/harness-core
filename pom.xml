@@ -875,6 +875,13 @@
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
                                          command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000" />
+                                <echo message="cleanup files" />
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="cd $HOME/backup; ls -tQ *.yml| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.jar| tail -n+4 | xargs --no-run-if-empty rm; ls -tQ *.log| tail -n+4 | xargs --no-run-if-empty rm"
+                                         timeout="120000" />
                                 <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
                                     <classpath refid="maven.plugin.classpath" />
                                 </taskdef>

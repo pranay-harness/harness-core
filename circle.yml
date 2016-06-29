@@ -8,21 +8,24 @@ dependencies:
     - mvn dependency:go-offline
     - mvn mongodb:start mongodb:stop
     - mvn -DbuildUI=true frontend:install-node-and-npm
+    - mvn verify site
   cache_directories:
     - "~/.embedmongo"
     - "~/.node"
 test:
   override:
-    - mvn verify site
+    - if [[ $SKIP_TESTS != "false" ]] ; then mvn verify site ; fi
   post:
-    - cp -r target/site $CIRCLE_ARTIFACTS
-    - mkdir -p $CIRCLE_TEST_REPORTS/junit/ 
-    - mkdir -p $CIRCLE_TEST_REPORTS/integration/ 
-    - find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \;
-    - find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \;
-    - python sendmail.py
+    - if [[ $SKIP_TESTS != "true" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/integration/ ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \; ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \; ;fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then python sendmail.py; fi
 deployment:
   integration:
     branch: master
     commands:
-      - mvn deploy -DbuildUI=true -Denv=int
+      - scp ubuntu@ec2-50-16-106-255.compute-1.amazonaws.com:/home/ubuntu/$(ssh -l ubuntu ec2-50-16-106-255.compute-1.amazonaws.com 'ls -t wingsui/*.tgz | head -1') .
+      - tar xzvf *.tgz -C src/main/resources
+      - mvn deploy -Denv=int

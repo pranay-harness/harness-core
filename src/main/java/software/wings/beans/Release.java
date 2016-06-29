@@ -1,15 +1,12 @@
 package software.wings.beans;
 
-import static java.util.stream.Collectors.toSet;
-import static software.wings.beans.Service.Builder.aService;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Reference;
 import software.wings.utils.validation.FutureDate;
 
 import java.util.List;
@@ -27,6 +24,8 @@ public class Release extends Base {
   @NotEmpty private String releaseName;
   private String description;
   @FutureDate private Long targetDate;
+
+  @Reference(idOnly = true) private Set<Service> services;
 
   private List<ArtifactSource> artifactSources = Lists.newArrayList();
 
@@ -123,16 +122,21 @@ public class Release extends Base {
   }
 
   /**
+   * Sets services.
+   *
+   * @param services the services
+   */
+  public void setServices(Set<Service> services) {
+    this.services = services;
+  }
+
+  /**
    * Gets services.
    *
    * @return the services
    */
-  @JsonProperty("services")
   public Set<Service> getServices() {
-    return artifactSources.stream()
-        .flatMap(artifactSource -> artifactSource.getServices().stream())
-        .map(service -> aService().withUuid(service.getUuid()).withName(service.getName()).build())
-        .collect(toSet());
+    return services;
   }
 
   /**
