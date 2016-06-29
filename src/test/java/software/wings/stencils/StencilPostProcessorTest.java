@@ -50,12 +50,12 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             tuple("Value1",
                 JsonUtils.readTree(
                     "{\"type\":\"object\",\"properties\":{\"expand\":{\"type\":\"string\",\"enum\":[\"Name1\",\"Name2\"],\"enumNames\":[\"Value1\",\"Value2\"],"
-                    + "\"default\":\"Value1\"}}}"),
+                    + "\"default\":\"Name1\"}}}"),
                 "TYPE"),
             tuple("Value2",
                 JsonUtils.readTree(
                     "{\"type\":\"object\",\"properties\":{\"expand\":{\"type\":\"string\",\"enum\":[\"Name1\",\"Name2\"],\"enumNames\":[\"Value1\",\"Value2\"],"
-                    + "\"default\":\"Value2\"}}}"),
+                    + "\"default\":\"Name2\"}}}"),
                 "TYPE"));
   }
 
