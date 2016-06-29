@@ -13,14 +13,14 @@ dependencies:
     - "~/.node"
 test:
   override:
-    - if [[ $SKIP_TESTS != "false" ]] ; then mvn verify site ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mvn verify site ; fi
   post:
-    - if [[ $SKIP_TESTS != "false" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
-    - if [[ $SKIP_TESTS != "false" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi
-    - if [[ $SKIP_TESTS != "false" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/integration/ ; fi
-    - if [[ $SKIP_TESTS != "false" ]] ; then find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \; ; fi
-    - if [[ $SKIP_TESTS != "false" ]] ; then find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \; ;fi
-    - if [[ $SKIP_TESTS != "false" ]] ; then python sendmail.py; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/integration/ ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/junit/ \; ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then find . -type f -regex ".*/target/failsafe-reports/.*xml" -exec cp {} $CIRCLE_TEST_REPORTS/integration/ \; ;fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then python sendmail.py; fi
 deployment:
   integration:
     branch: master
