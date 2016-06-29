@@ -15,12 +15,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 4/25/16.
  */
+@ValidateOnExecution
+@Singleton
 public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;

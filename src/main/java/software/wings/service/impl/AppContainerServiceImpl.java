@@ -17,12 +17,16 @@ import software.wings.service.intfc.FileService.FileBucket;
 import java.io.InputStream;
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/4/16.
  */
+@ValidateOnExecution
+@Singleton
 public class AppContainerServiceImpl implements AppContainerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;

@@ -18,6 +18,7 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -29,6 +30,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 
 @ValidateOnExecution
+@Singleton
 public class AppServiceImpl implements AppService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingsService;

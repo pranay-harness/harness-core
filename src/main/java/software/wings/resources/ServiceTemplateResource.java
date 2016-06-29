@@ -14,7 +14,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
-import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
@@ -47,7 +47,7 @@ public class ServiceTemplateResource {
    * The Service template service.
    */
   @Inject ServiceTemplateService serviceTemplateService;
-  @Inject private HostService hostService;
+  @Inject private InfraService infraService;
 
   /**
    * List.
@@ -193,7 +193,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @BeanParam PageRequest<Host> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", hostService.getInfraId(appId, envId), EQ);
+    pageRequest.addFilter("infraId", infraService.getInfraIdByEnvId(appId, envId), EQ);
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
 }

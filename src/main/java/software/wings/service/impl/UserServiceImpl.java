@@ -36,6 +36,7 @@ import software.wings.service.intfc.UserService;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -44,6 +45,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 3/9/16.
  */
 @ValidateOnExecution
+@Singleton
 public class UserServiceImpl implements UserService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;

@@ -31,12 +31,14 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * The Class FileServiceImpl.
  */
+@ValidateOnExecution
 @Singleton
 public class FileServiceImpl implements FileService {
   private final Logger logger = LoggerFactory.getLogger(getClass());

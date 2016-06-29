@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import com.mongodb.DuplicateKeyException;
@@ -16,12 +17,16 @@ import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/26/16.
  */
+@ValidateOnExecution
+@Singleton
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
@@ -51,20 +56,18 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceInstanceService#delete(java.lang.String, java.lang.String,
-   * java.lang.String)
-   */
-  @Override
-  public void delete(String appId, String envId, String instanceId) {
-    wingsPersistence.delete(ServiceInstance.class, instanceId);
-  }
-
-  /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceInstanceService#get(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
   public ServiceInstance get(String appId, String envId, String instanceId) {
-    return wingsPersistence.get(ServiceInstance.class, instanceId);
+    return wingsPersistence.createQuery(ServiceInstance.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field(ID_KEY)
+        .equal(instanceId)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -97,6 +100,21 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         logger.warn("Reinserting an existing service instance ignore");
       }
     });
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceInstanceService#delete(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
+  @Override
+  public void delete(String appId, String envId, String instanceId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceInstance.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field("envId")
+                                .equal(envId)
+                                .field(ID_KEY)
+                                .equal(instanceId));
   }
 
   @Override

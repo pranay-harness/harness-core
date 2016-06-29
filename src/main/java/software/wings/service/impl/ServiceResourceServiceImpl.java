@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -46,6 +47,7 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 3/25/16.
  */
 @ValidateOnExecution
+@Singleton
 public class ServiceResourceServiceImpl implements ServiceResourceService, EnumDataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;

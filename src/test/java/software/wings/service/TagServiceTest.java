@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -36,6 +37,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -50,6 +52,7 @@ public class TagServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private HostService hostService;
+  @Mock private InfraService infraService;
   @Mock private ServiceTemplateService serviceTemplateService;
 
   @Inject @InjectMocks private TagService tagService;
@@ -119,6 +122,29 @@ public class TagServiceTest extends WingsBaseTest {
     tagService.delete(tag.getAppId(), tag.getEnvId(), tag.getUuid());
     verify(wingsPersistence).createQuery(Tag.class);
     verifyZeroInteractions(wingsPersistence);
+  }
+
+  @Test
+  public void shouldDeleteByEnv() {
+    Tag tag = getTagBuilder()
+                  .withAppId(APP_ID)
+                  .withEnvId(ENV_ID)
+                  .withUuid(TAG_ID)
+                  .withRootTag(true)
+                  .withRootTagId(null)
+                  .withChildren(asList())
+                  .build();
+    ServiceTemplate serviceTemplate = aServiceTemplate().withAppId(APP_ID).withUuid(TEMPLATE_ID).build();
+    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).build();
+
+    when(query.asList()).thenReturn(asList(tag));
+    when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
+    when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
+
+    tagService.deleteByEnv(APP_ID, ENV_ID);
+
+    verify(wingsPersistence).delete(tag);
+    verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(host));
   }
 
   @Test
@@ -198,11 +224,11 @@ public class TagServiceTest extends WingsBaseTest {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
-    Host host = Host.HostBuilder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).build();
+    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).build();
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(host));
 
     tagService.tagHosts(APP_ID, ENV_ID, TAG_ID, asList(HOST_ID));
@@ -216,16 +242,11 @@ public class TagServiceTest extends WingsBaseTest {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
-    Host host = Host.HostBuilder.aHost()
-                    .withAppId(APP_ID)
-                    .withInfraId(INFRA_ID)
-                    .withUuid(HOST_ID)
-                    .withTags(asList(tag))
-                    .build();
+    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).withTags(asList(tag)).build();
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
     tagService.tagHosts(APP_ID, ENV_ID, TAG_ID, asList());
@@ -239,17 +260,13 @@ public class TagServiceTest extends WingsBaseTest {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
-    Host newHost = Host.HostBuilder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("NEW_HOST_ID").build();
-    Host existingHost = Host.HostBuilder.aHost()
-                            .withAppId(APP_ID)
-                            .withInfraId(INFRA_ID)
-                            .withUuid("EXISTING_HOST_ID")
-                            .withTags(asList(tag))
-                            .build();
+    Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("NEW_HOST_ID").build();
+    Host existingHost =
+        aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("EXISTING_HOST_ID").withTags(asList(tag)).build();
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(existingHost));
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList("NEW_HOST_ID"))).thenReturn(asList(newHost));
 

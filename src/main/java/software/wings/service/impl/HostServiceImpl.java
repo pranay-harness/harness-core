@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -15,14 +16,15 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
 import java.io.File;
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -31,11 +33,12 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 5/9/16.
  */
 @ValidateOnExecution
+@Singleton
 public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private TagService tagService;
+  @Inject private InfraService infraService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -93,7 +96,8 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public int importHosts(String appId, String infraId, BoundedInputStream inputStream) {
-    Infra infra = wingsPersistence.get(Infra.class, infraId); // TODO: validate infra
+    Infra infra = wingsPersistence.get(Infra.class, infraId);
+    notNullCheck("infra", infra);
     List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
     List<String> Ids = wingsPersistence.save(hosts);
     return Ids.size();
@@ -119,7 +123,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
-    String infraId = getInfraId(appId, envId);
+    String infraId = infraService.getInfraIdByEnvId(appId, envId);
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
@@ -142,17 +146,6 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.update(host, updateOp);
   }
 
-  @Override
-  public void deleteByInfra(String appId, String infraId) {
-    wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("infraId")
-        .equal(infraId)
-        .asList()
-        .forEach(this ::delete);
-  }
-
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#exportHosts(java.lang.String, java.lang.String)
    */
@@ -160,16 +153,6 @@ public class HostServiceImpl implements HostService {
   public File exportHosts(String appId, String infraId) {
     List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList();
     return csvFileHelper.createHostsFile(hosts);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#getInfraId(java.lang.String, java.lang.String)
-   */
-  @Override
-  public String getInfraId(String appId, String envId) {
-    Infra infra =
-        wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).get();
-    return infra == null ? null : infra.getUuid();
   }
 
   /* (non-Javadoc)
@@ -188,11 +171,23 @@ public class HostServiceImpl implements HostService {
     }
   }
 
+  @Override
+  public void deleteByInfra(String appId, String infraId) {
+    wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .asList()
+        .forEach(this ::delete);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
    */
   @Override
   public void bulkSave(Host baseHost, List<String> hostNames) {
+    ;
     hostNames.forEach(hostName -> {
       if (hostName != null && hostName.length() > 0) {
         HostBuilder builder = aHost()

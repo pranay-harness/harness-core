@@ -17,6 +17,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -34,10 +36,12 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 4/25/16.
  */
 @ValidateOnExecution
+@Singleton
 public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
+  @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
 
@@ -213,7 +217,7 @@ public class TagServiceImpl implements TagService {
     }
 
     List<Host> inputHosts =
-        hostService.getHostsByHostIds(appId, hostService.getInfraId(appId, tag.getEnvId()), hostIds);
+        hostService.getHostsByHostIds(appId, infraService.getInfraIdByEnvId(appId, tag.getEnvId()), hostIds);
     List<Host> existingMappedHosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
     List<Host> hostToBeUntagged =
         existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());

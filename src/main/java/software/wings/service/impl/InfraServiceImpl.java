@@ -14,12 +14,16 @@ import software.wings.service.intfc.InfraService;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * The Class InfraServiceImpl.
  */
+@ValidateOnExecution
+@Singleton
 public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostService hostService;
@@ -51,6 +55,13 @@ public class InfraServiceImpl implements InfraService {
   @Override
   public Infra createDefaultInfraForEnvironment(String appId, String envId) {
     return save(anInfra().withAppId(appId).withEnvId(envId).withInfraType(STATIC).build());
+  }
+
+  @Override
+  public String getInfraIdByEnvId(String appId, String envId) {
+    Infra infra =
+        wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).get();
+    return infra == null ? null : infra.getUuid();
   }
 
   @Override

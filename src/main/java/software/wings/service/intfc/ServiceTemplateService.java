@@ -157,7 +157,7 @@ public interface ServiceTemplateService {
    * @param appId the app id
    * @param envId the env id
    */
-  void deleteByEnv(String appId, String envId);
+  void deleteByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Delete by service.
@@ -165,5 +165,5 @@ public interface ServiceTemplateService {
    * @param appId     the app id
    * @param serviceId the service id
    */
-  void deleteByService(String appId, String serviceId);
+  void deleteByService(@NotEmpty String appId, @NotEmpty String serviceId);
 }

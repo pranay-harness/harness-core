@@ -22,12 +22,15 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 4/1/16.
  */
+
+@ValidateOnExecution
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService, EnumDataProvider {
   @Inject private WingsPersistence wingsPersistence;

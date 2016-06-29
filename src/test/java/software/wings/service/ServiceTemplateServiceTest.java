@@ -7,8 +7,10 @@ import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Host.HostBuilder.aHost;
@@ -29,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -39,8 +42,10 @@ import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -59,12 +64,15 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
   @Mock private HostService hostService;
+  @Mock private InfraService infraService;
   @Mock private ServiceInstanceService serviceInstanceService;
 
-  @InjectMocks @Inject private ServiceTemplateService templateService;
+  @Inject @InjectMocks private ServiceTemplateService templateService;
 
-  @Mock private Query<ServiceTemplate> query;
-  @Mock private FieldEnd end;
+  @Spy @InjectMocks private ServiceTemplateService spyTemplateService = new ServiceTemplateServiceImpl();
+
+  @Mock Query<ServiceTemplate> query;
+  @Mock FieldEnd end;
 
   private ServiceTemplate.Builder builder = aServiceTemplate()
                                                 .withUuid(TEMPLATE_ID)
@@ -121,10 +129,58 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldDeleteServiceTemplate() {
+    templateService.delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(wingsPersistence).delete(query);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field(ID_KEY);
+    verify(end).equal(TEMPLATE_ID);
+    verify(serviceInstanceService).deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
+  }
+
+  @Test
+  public void shouldDeleteByEnv() {
+    when(query.asList())
+        .thenReturn(asList(aServiceTemplate()
+                               .withUuid(TEMPLATE_ID)
+                               .withAppId(APP_ID)
+                               .withEnvId(ENV_ID)
+                               .withName(TEMPLATE_NAME)
+                               .build()));
+    doNothing().when(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    spyTemplateService.deleteByEnv(APP_ID, ENV_ID);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+  }
+
+  @Test
+  public void shouldDeleteByService() {
+    doNothing().when(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+    when(query.asList())
+        .thenReturn(asList(aServiceTemplate()
+                               .withUuid(TEMPLATE_ID)
+                               .withAppId(APP_ID)
+                               .withEnvId(ENV_ID)
+                               .withName(TEMPLATE_NAME)
+                               .build()));
+    spyTemplateService.deleteByService(APP_ID, SERVICE_ID);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("service");
+    verify(end).equal(SERVICE_ID);
+    verify(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
+  }
+
+  @Test
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
-    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
     ServiceTemplate template = builder.build();
@@ -150,7 +206,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
     when(hostService.get(APP_ID, INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
-    when(hostService.getInfraId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(existingHost)).build());
 

@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -28,6 +28,7 @@ import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
@@ -39,7 +40,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 6/28/16.
  */
-
 public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
@@ -48,6 +48,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private TagService tagService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
+
+  @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
   @Mock Query<Environment> query;
   @Mock FieldEnd end;
@@ -113,7 +115,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldDeleteByApp() {
-    EnvironmentService spyEnvService = Mockito.spy(environmentService);
     when(query.asList()).thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build()));
     doNothing().when(spyEnvService).delete(APP_ID, ENV_ID);
     spyEnvService.deleteByApp(APP_ID);

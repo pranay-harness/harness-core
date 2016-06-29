@@ -45,8 +45,19 @@ public interface InfraService {
 
   /**
    * Create default infra for environment.
-   *  @param appId the app id
+   *
+   * @param appId the app id
    * @param envId the env id
+   * @return the infra
    */
   Infra createDefaultInfraForEnvironment(String appId, String envId);
+
+  /**
+   * Gets infra id by env id.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the infra id by env id
+   */
+  String getInfraIdByEnvId(String appId, String envId);
 }

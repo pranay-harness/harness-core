@@ -11,12 +11,14 @@ import software.wings.service.intfc.UserService;
 import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 3/23/16.
  */
+@ValidateOnExecution
 @Singleton
 public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
