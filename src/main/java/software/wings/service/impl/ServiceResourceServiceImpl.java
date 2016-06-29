@@ -60,7 +60,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, EnumD
    */
   @Override
   public PageResponse<Service> list(PageRequest<Service> request) {
-    return wingsPersistence.query(Service.class, request);
+    PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
+    pageResponse.getResponse().forEach(service -> {
+      service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+    });
+    return pageResponse;
   }
 
   /**

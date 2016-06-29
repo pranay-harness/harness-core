@@ -51,6 +51,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
 import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
@@ -115,6 +116,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldListServices() {
     PageRequest<Service> request = new PageRequest<>();
     request.addFilter("appId", APP_ID, EQ);
+    when(wingsPersistence.query(Service.class, request)).thenReturn(new PageResponse<Service>());
     srs.list(request);
     ArgumentCaptor<PageRequest> argument = ArgumentCaptor.forClass(PageRequest.class);
     verify(wingsPersistence).query(eq(Service.class), argument.capture());
