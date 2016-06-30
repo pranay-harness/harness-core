@@ -1,6 +1,4 @@
 machine:
-  environment:
-    _JAVA_OPTIONS: "-Xms512m -Xmx1024m"
   java:
     version: oraclejdk8
 dependencies:
@@ -8,13 +6,12 @@ dependencies:
     - mvn dependency:go-offline
     - mvn mongodb:start mongodb:stop
     - mvn -DbuildUI=true frontend:install-node-and-npm
-    - mvn -T4 verify site
   cache_directories:
     - "~/.embedmongo"
     - "~/.node"
 test:
   override:
-    - if [[ $SKIP_TESTS != "false" ]] ; then mvn verify site ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then mvn -T4 verify site ; fi
   post:
     - if [[ $SKIP_TESTS != "true" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
     - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi

@@ -1,1 +1,9 @@
-{}
+{
+  "ui:order": ["url", "method", "header", "body", "assertion"],
+  "body": {
+    "ui:widget": "textarea"
+  },
+  "assertion": {
+    "ui:widget": "textarea"
+  }
+}
