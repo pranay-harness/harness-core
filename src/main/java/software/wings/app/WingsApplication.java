@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static software.wings.app.LoggingInitializer.initializeLogging;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -22,6 +23,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -53,6 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -119,6 +122,12 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerScheduledJobs(injector);
 
+    FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+    System.out.println(configuration.getCorsDomains());
+    cors.setInitParameters(ImmutableMap.of("allowedOrigins", configuration.getCorsDomains(), "allowedHeaders",
+        "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
+        "OPTIONS,GET,PUT,POST,DELETE,HEAD"));
+    cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     environment.servlets()
         .addFilter("AuditResponseFilter", injector.getInstance(AuditResponseFilter.class))
         .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
