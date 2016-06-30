@@ -219,7 +219,7 @@ public class WorkflowStandardParams implements ContextElement {
    */
   public Application getApp() {
     if (app == null && appId != null) {
-      app = appService.findByUuid(appId);
+      app = appService.get(appId);
     }
     return app;
   }

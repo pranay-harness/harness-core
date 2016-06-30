@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -46,7 +47,15 @@ public interface EnvironmentService {
   /**
    * Delete.
    *
+   * @param appId the app id
    * @param envId the env id
    */
-  void delete(String envId);
+  void delete(@NotEmpty String appId, @NotEmpty String envId);
+
+  /**
+   * Delete by app id.
+   *
+   * @param appId the app id
+   */
+  void deleteByApp(String appId);
 }

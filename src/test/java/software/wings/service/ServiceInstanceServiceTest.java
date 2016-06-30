@@ -7,8 +7,10 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
@@ -28,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
@@ -40,6 +43,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
@@ -56,6 +60,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
 
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
+
+  @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
 
   private Builder builder =
       aServiceInstance()
@@ -126,12 +132,17 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetServiceInstance() {
-    ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).build();
-    when(wingsPersistence.get(ServiceInstance.class, SERVICE_INSTANCE_ID)).thenReturn(serviceInstance);
-
+    when(query.get()).thenReturn(builder.withUuid(SERVICE_INSTANCE_ID).build());
     ServiceInstance savedServiceInstance = serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     assertThat(savedServiceInstance).isNotNull();
     assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
+    verify(query).get();
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field(ID_KEY);
+    verify(end).equal(SERVICE_INSTANCE_ID);
   }
 
   /**
@@ -140,7 +151,41 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteServiceInstance() {
     serviceInstanceService.delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    verify(wingsPersistence).delete(ServiceInstance.class, SERVICE_INSTANCE_ID);
+    verify(wingsPersistence).delete(query);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field(ID_KEY);
+    verify(end).equal(SERVICE_INSTANCE_ID);
+  }
+
+  @Test
+  public void shouldDeleteByEnv() {
+    when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
+    doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    spyInstanceService.deleteByEnv(APP_ID, ENV_ID);
+    verify(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).asList();
+  }
+
+  @Test
+  public void shouldDeleteByServiceTemplate() {
+    when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
+    doNothing().when(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    spyInstanceService.deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(spyInstanceService).delete(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field("serviceTemplate");
+    verify(end).equal(TEMPLATE_ID);
+    verify(query).asList();
   }
 
   @Test

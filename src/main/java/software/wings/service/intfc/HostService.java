@@ -55,24 +55,6 @@ public interface HostService {
   @ValidationGroups(Update.class) public Host update(@Valid Host host);
 
   /**
-   * Export hosts.
-   *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @return the file
-   */
-  File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
-
-  /**
-   * Gets the infra id.
-   *
-   * @param envId the env id
-   * @param appId the app id
-   * @return the infra id
-   */
-  String getInfraId(@NotEmpty String envId, @NotEmpty String appId);
-
-  /**
    * Delete.
    *
    * @param appId   the app id
@@ -80,6 +62,23 @@ public interface HostService {
    * @param hostId  the host id
    */
   void delete(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
+
+  /**
+   * Delete by infra.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   */
+  void deleteByInfra(String appId, String infraId);
+
+  /**
+   * Export hosts.
+   *
+   * @param appId   the app id
+   * @param infraId the infra id
+   * @return the file
+   */
+  File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
 
   /**
    * Bulk save.

@@ -66,4 +66,21 @@ public interface ServiceInstanceService {
    * @param deletedHosts the deleted hosts
    */
   void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
+
+  /**
+   * Delete by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnv(String appId, String envId);
+
+  /**
+   * Delete by service template.
+   *
+   * @param appId      the app id
+   * @param envId      the env id
+   * @param templateId the template id
+   */
+  void deleteByServiceTemplate(String appId, String envId, String templateId);
 }

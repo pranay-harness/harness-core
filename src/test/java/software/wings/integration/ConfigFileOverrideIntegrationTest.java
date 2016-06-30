@@ -170,7 +170,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
-    String infraId = hostService.getInfraId(environment.getAppId(), environment.getUuid());
+    String infraId = infraService.getInfraIdByEnvId(environment.getAppId(), environment.getUuid());
 
     hosts = importAndGetHosts(app.getUuid(), infraId); // FIXME split
 

@@ -20,6 +20,17 @@ public class WingsTestConstants {
    * The constant ENV_ID.
    */
   public static final String ENV_ID = "ENV_ID";
+
+  /**
+   * The constant ENV_NAME.
+   */
+  public static final String ENV_NAME = "ENV_NAME";
+
+  /**
+   * The constant ENV_DESCRIPTION.
+   */
+  public static final String ENV_DESCRIPTION = "ENV_DESCRIPTION";
+
   /**
    * The constant INFRA_ID.
    */

@@ -115,6 +115,15 @@ public class Service extends Base {
   }
 
   /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
+  }
+
+  /**
    * Gets app container.
    *
    * @return the app container

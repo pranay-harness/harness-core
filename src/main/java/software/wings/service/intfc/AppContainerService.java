@@ -58,4 +58,6 @@ public interface AppContainerService {
    * @param appContainerId the app container id
    */
   void delete(String appId, String appContainerId);
+
+  void deleteByAppId(String appId);
 }

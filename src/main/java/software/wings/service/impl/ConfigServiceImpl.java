@@ -15,12 +15,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 4/25/16.
  */
+@ValidateOnExecution
+@Singleton
 public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
@@ -90,5 +94,20 @@ public class ConfigServiceImpl implements ConfigService {
                                        .equal(entityId)
                                        .asList();
     return configFiles != null ? configFiles : new ArrayList<>();
+  }
+
+  @Override
+  public void deleteByEntityId(String appId, String entityId, String templateId) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("appId")
+                                       .equal(appId)
+                                       .field("entityId")
+                                       .equal(entityId)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .asList();
+    if (configFiles != null) {
+      configFiles.forEach(configFile -> delete(configFile.getUuid()));
+    }
   }
 }

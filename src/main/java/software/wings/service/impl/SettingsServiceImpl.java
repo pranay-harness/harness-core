@@ -24,12 +24,16 @@ import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/17/16.
  */
+@ValidateOnExecution
+@Singleton
 public class SettingsServiceImpl implements SettingsService {
   @Inject private WingsPersistence wingsPersistence;
 

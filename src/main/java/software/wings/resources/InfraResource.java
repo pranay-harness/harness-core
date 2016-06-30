@@ -81,7 +81,7 @@ public class InfraResource {
   @DELETE
   public RestResponse delete(
       @PathParam("infraId") String infraId, @QueryParam("appId") String appId, @QueryParam("envId") String envId) {
-    infraService.delete(infraId);
+    infraService.delete(appId, envId, infraId);
     return new RestResponse();
   }
 }

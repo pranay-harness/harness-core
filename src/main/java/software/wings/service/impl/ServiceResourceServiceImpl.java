@@ -27,6 +27,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.EnumDataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -35,7 +36,9 @@ import software.wings.utils.Validator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -44,9 +47,12 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 3/25/16.
  */
 @ValidateOnExecution
+@Singleton
 public class ServiceResourceServiceImpl implements ServiceResourceService, EnumDataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
+  @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ExecutorService executorService;
   @Inject private StencilPostProcessor stencilPostProcessor;
 
   /**
@@ -54,7 +60,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, EnumD
    */
   @Override
   public PageResponse<Service> list(PageRequest<Service> request) {
-    return wingsPersistence.query(Service.class, request);
+    PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
+    pageResponse.getResponse().forEach(service -> {
+      service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+    });
+    return pageResponse;
   }
 
   /**
@@ -102,7 +112,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, EnumD
    */
   @Override
   public void delete(String appId, String serviceId) {
-    wingsPersistence.delete(Service.class, serviceId);
+    boolean deleted = wingsPersistence.delete(Service.class, serviceId);
+    if (deleted) {
+      executorService.submit(() -> {
+        serviceTemplateService.deleteByService(appId, serviceId);
+        configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
+      });
+    }
+  }
+
+  @Override
+  public void deleteByAppId(String appId) {
+    wingsPersistence.createQuery(Service.class)
+        .field("appId")
+        .equal(appId)
+        .asList()
+        .forEach(service -> delete(appId, service.getUuid()));
   }
 
   /**

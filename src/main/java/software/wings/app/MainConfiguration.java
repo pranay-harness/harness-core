@@ -22,6 +22,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty private PortalConfig portal;
   @JsonProperty private boolean enableAuth;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
+  @JsonProperty private String corsDomains;
 
   /**
    * Gets swagger bundle configuration.
@@ -119,5 +120,23 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @Override
   public AssetsConfiguration getAssetsConfiguration() {
     return assets;
+  }
+
+  /**
+   * Getter for property 'corsDomains'.
+   *
+   * @return Value for property 'corsDomains'.
+   */
+  public String getCorsDomains() {
+    return corsDomains;
+  }
+
+  /**
+   * Setter for property 'corsDomains'.
+   *
+   * @param corsDomains Value to set for property 'corsDomains'.
+   */
+  public void setCorsDomains(String corsDomains) {
+    this.corsDomains = corsDomains;
   }
 }

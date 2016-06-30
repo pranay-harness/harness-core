@@ -3,11 +3,13 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Tag.Builder.aTag;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mongodb.morphia.query.Query;
+import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -15,6 +17,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -22,7 +25,9 @@ import software.wings.service.intfc.TagService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -31,11 +36,14 @@ import javax.validation.executable.ValidateOnExecution;
  * Created by anubhaw on 4/25/16.
  */
 @ValidateOnExecution
+@Singleton
 public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
+  @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.TagService#list(software.wings.dl.PageRequest)
@@ -142,9 +150,34 @@ public class TagServiceImpl implements TagService {
       if (tag.getChildren() != null && tag.getChildren().size() > 0) {
         tag.getChildren().forEach(this ::cascadingDelete);
       } else { // leaf tag should update hostInstance mapping
-        updateAllServiceTemplatesWithDeletedHosts(tag);
+        executorService.submit(() -> updateAllServiceTemplatesWithDeletedHosts(tag));
       }
     }
+  }
+
+  @Override
+  public void deleteByEnv(String appId, String envId) {
+    wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("rootTag")
+        .equal(true)
+        .asList()
+        .forEach(this ::cascadingDelete);
+  }
+
+  @Override
+  public Tag createDefaultRootTagForEnvironment(Environment env) {
+    return save(null,
+        aTag()
+            .withAppId(env.getAppId())
+            .withEnvId(env.getUuid())
+            .withName(env.getName())
+            .withDescription(env.getName())
+            .withRootTag(true)
+            .build());
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
@@ -184,7 +217,7 @@ public class TagServiceImpl implements TagService {
     }
 
     List<Host> inputHosts =
-        hostService.getHostsByHostIds(appId, hostService.getInfraId(appId, tag.getEnvId()), hostIds);
+        hostService.getHostsByHostIds(appId, infraService.getInfraIdByEnvId(appId, tag.getEnvId()), hostIds);
     List<Host> existingMappedHosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
     List<Host> hostToBeUntagged =
         existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());

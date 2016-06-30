@@ -23,6 +23,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
@@ -32,13 +33,14 @@ import javax.ws.rs.core.GenericType;
  */
 public class HostResourceTest extends WingsBaseTest {
   private static final HostService RESOURCE_SERVICE = mock(HostService.class);
+  private static final InfraService INFRA_SERVICE = mock(InfraService.class);
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new HostResource(RESOURCE_SERVICE))
+                                                       .addResource(new HostResource(RESOURCE_SERVICE, INFRA_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
   private static final Host aHost =

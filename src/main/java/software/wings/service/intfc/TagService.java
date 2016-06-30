@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Environment;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -39,6 +40,7 @@ public interface TagService {
    * Gets the tag.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    * @return the tag
    */
@@ -56,6 +58,7 @@ public interface TagService {
    * Delete tag.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    */
   void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId);
@@ -73,6 +76,7 @@ public interface TagService {
    * Tag hosts.
    *
    * @param appId   the app id
+   * @param envId   the env id
    * @param tagId   the tag id
    * @param hostIds the host ids
    */
@@ -95,4 +99,19 @@ public interface TagService {
    * @return the leaf tags
    */
   List<Tag> getLeafTags(@NotNull Tag root);
+
+  /**
+   * Delete by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   */
+  void deleteByEnv(String appId, String envId);
+
+  /**
+   * Create default root tag for environment.
+   *
+   * @param env the env
+   */
+  Tag createDefaultRootTagForEnvironment(Environment env);
 }

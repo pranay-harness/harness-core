@@ -94,7 +94,7 @@ public class ReleaseResourceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     reset(APP_SERVICE, RELEASE_SERVICE);
-    when(APP_SERVICE.findByUuid(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(APP_SERVICE.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     when(RELEASE_SERVICE.create(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
     when(RELEASE_SERVICE.update(any(Release.class))).then(invocation -> invocation.getArgumentAt(0, Release.class));
     when(RELEASE_SERVICE.softDelete(anyString(), anyString())).then(invocation -> releaseBuilder.but().build());
@@ -120,7 +120,7 @@ public class ReleaseResourceTest extends WingsBaseTest {
             .request()
             .post(Entity.entity(release, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
-    verify(APP_SERVICE).findByUuid(APP_ID);
+    verify(APP_SERVICE).get(APP_ID);
     verify(RELEASE_SERVICE).create(release);
   }
 
@@ -154,7 +154,7 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                .request()
                                .post(Entity.entity(release, MediaType.APPLICATION_JSON),
                                    new GenericType<RestResponse<Release>>() {}));
-    verify(APP_SERVICE).findByUuid("BAD_APP_ID");
+    verify(APP_SERVICE).get("BAD_APP_ID");
   }
 
   /**

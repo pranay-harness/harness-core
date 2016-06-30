@@ -37,3 +37,5 @@ assets:
 
 swagger:
   resourcePackage: software.wings.resources,software.wings.utils
+
+corsDomains: http://localhost:8000

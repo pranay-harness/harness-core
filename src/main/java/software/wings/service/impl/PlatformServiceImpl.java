@@ -9,12 +9,14 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.PlatformService;
 
 import javax.inject.Inject;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * The Class PlatformServiceImpl.
  */
+@ValidateOnExecution
 @Singleton
 public class PlatformServiceImpl implements PlatformService {
   @Inject private WingsPersistence wingsPersistence;

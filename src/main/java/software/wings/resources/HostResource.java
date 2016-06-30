@@ -14,6 +14,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfraService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -47,15 +48,18 @@ import javax.ws.rs.core.Response;
 @Consumes("application/json")
 public class HostResource {
   private HostService hostService;
+  private InfraService infraService;
 
   /**
    * Instantiates a new Host resource.
    *
    * @param hostService the host service
+   * @param infraService
    */
   @Inject
-  public HostResource(HostService hostService) {
+  public HostResource(HostService hostService, InfraService infraService) {
     this.hostService = hostService;
+    this.infraService = infraService;
   }
 
   /**
@@ -70,7 +74,7 @@ public class HostResource {
   @GET
   public RestResponse<PageResponse<Host>> list(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Host> pageRequest) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("infraId", infraId, EQ);
     return new RestResponse<>(hostService.list(pageRequest));
@@ -89,7 +93,7 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse<Host> get(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     return new RestResponse<>(hostService.get(appId, infraId, hostId));
   }
 
@@ -105,7 +109,7 @@ public class HostResource {
   @POST
   public RestResponse save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, Host baseHost) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     baseHost.setAppId(appId);
     baseHost.setInfraId(infraId);
     hostService.bulkSave(baseHost, baseHost.getHostNames());
@@ -126,7 +130,7 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     host.setUuid(hostId);
     host.setInfraId(infraId);
     host.setAppId(appId);
@@ -146,7 +150,7 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     hostService.delete(appId, infraId, hostId);
     return new RestResponse();
   }
@@ -167,7 +171,7 @@ public class HostResource {
   public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     hostService.importHosts(
         appId, infraId, new BoundedInputStream(uploadedInputStream, 40 * 1000 * 1000)); // TODO: read from config
     return new RestResponse();
@@ -186,7 +190,7 @@ public class HostResource {
   @Encoded
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
-    infraId = hostService.getInfraId(appId, envId);
+    infraId = infraService.getInfraIdByEnvId(appId, envId);
     File hostsFile = hostService.exportHosts(appId, infraId);
     Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
     response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());

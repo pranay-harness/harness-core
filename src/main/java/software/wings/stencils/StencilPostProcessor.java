@@ -70,7 +70,7 @@ public class StencilPostProcessor {
           ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(field.getName()));
           jsonSchemaField.set("enum", JsonUtils.asTree(data.keySet()));
           jsonSchemaField.set("enumNames", JsonUtils.asTree(data.values()));
-          jsonSchemaField.set("default", JsonUtils.asTree(data.get(key)));
+          jsonSchemaField.set("default", JsonUtils.asTree(key));
           OverridingStencil overridingStencil = t.getOverridingStencil();
           overridingStencil.setOverridingJsonSchema(jsonSchema);
           overridingStencil.setOverridingName(data.get(key));

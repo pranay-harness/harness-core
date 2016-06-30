@@ -15,13 +15,18 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.InputStream;
+import java.util.List;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * Created by anubhaw on 5/4/16.
  */
+@ValidateOnExecution
+@Singleton
 public class AppContainerServiceImpl implements AppContainerService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
@@ -72,16 +77,31 @@ public class AppContainerServiceImpl implements AppContainerService {
    */
   @Override
   public void delete(String appId, String appContainerId) {
-    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
-    for (Service service : application.getServices()) {
-      if (service.getAppContainer().getUuid().equals(appContainerId)) {
-        throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
-      }
-    }
+    ensureAppContainerNotInUse(appContainerId);
     // safe to delete
     AppContainer appContainer = wingsPersistence.get(AppContainer.class, appContainerId);
     wingsPersistence.delete(AppContainer.class, appContainerId);
     fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
+  }
+
+  private void ensureAppContainerNotInUse(String appContainerId) {
+    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
+    if (application != null && application.getServices() != null) {
+      for (Service service : application.getServices()) {
+        if (service.getAppContainer().getUuid().equals(appContainerId)) {
+          throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
+        }
+      }
+    }
+  }
+
+  @Override
+  public void deleteByAppId(String appId) {
+    List<AppContainer> containers =
+        wingsPersistence.createQuery(AppContainer.class).field("appId").equal(appId).asList();
+    if (containers != null) {
+      containers.forEach(appContainer -> delete(appId, appContainer.getUuid()));
+    }
   }
 
   private boolean newPlatformSoftwareBinaryUploaded(AppContainer storedAppContainer, AppContainer appContainer) {

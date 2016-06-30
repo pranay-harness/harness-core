@@ -112,10 +112,10 @@ import javax.ws.rs.core.Response;
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
-  private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 2; /* Max 10   */
-  private static final int NUM_HOSTS_PER_INFRA = 10; /* No limit */
+  private static final int NUM_ENV_PER_APP = 3; /* Max 10   */
+  private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private static final String API_BASE = "http://localhost:9090/api";
@@ -189,16 +189,21 @@ public class DataGenUtil extends WingsBaseTest {
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      Map<String, String> envWorkflowMap =
-          addOrchestration(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      Pipeline pipeline = addPipeline(
-          application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
-      addPipelineExecution(application, pipeline);
+      addOrchestrationAndPipeline(services, appEnvs, application);
     }
+  }
+
+  private void addOrchestrationAndPipeline(
+      Map<String, List<Service>> services, Map<String, List<Environment>> appEnvs, Application application) {
+    Map<String, String> envWorkflowMap = addOrchestrationAndPipeline(
+        application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+    Pipeline pipeline = addPipeline(
+        application, services.get(application.getUuid()), appEnvs.get(application.getUuid()), envWorkflowMap);
+    addPipelineExecution(application, pipeline);
+    addPipelineExecution(application, pipeline);
+    addPipelineExecution(application, pipeline);
+    addPipelineExecution(application, pipeline);
+    addPipelineExecution(application, pipeline);
   }
 
   private void addPipelineExecution(Application application, Pipeline pipeline) {
@@ -261,7 +266,7 @@ public class DataGenUtil extends WingsBaseTest {
     return pipeline;
   }
 
-  private Map<String, String> addOrchestration(
+  private Map<String, String> addOrchestrationAndPipeline(
       Application application, List<Service> services, List<Environment> environments) {
     Graph graph =
         aGraph()
@@ -345,7 +350,7 @@ public class DataGenUtil extends WingsBaseTest {
                 .withAppId(service.getAppId())
                 .withEnvId(environment.getUuid())
                 .withService(service)
-                .withName("catalog:8080")
+                .withName(service.getName())
                 .build());
         Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
         Artifact artifact =
@@ -547,14 +552,15 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFilesToBeAdded) throws IOException {
     while (numConfigFilesToBeAdded > 0) {
-      if (addOneConfigFileToEntity(templateId, entity.getUuid())) {
+      if (addOneConfigFileToEntity(entity.getAppId(), templateId, entity.getUuid())) {
         numConfigFilesToBeAdded--;
       }
     }
   }
 
-  private boolean addOneConfigFileToEntity(String templateId, String entityId) throws IOException {
-    WebTarget target = client.target(format(API_BASE + "/configs/?entityId=%s&templateId=%s", entityId, templateId));
+  private boolean addOneConfigFileToEntity(String appId, String templateId, String entityId) throws IOException {
+    WebTarget target =
+        client.target(format(API_BASE + "/configs/?appId=%s&entityId=%s&templateId=%s", appId, entityId, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
     FormDataMultiPart multiPart =

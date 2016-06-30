@@ -1,20 +1,33 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Infra.InfraBuilder.anInfra;
+import static software.wings.beans.Infra.InfraType.STATIC;
+
 import software.wings.beans.Infra;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
 
 /**
  * The Class InfraServiceImpl.
  */
+@ValidateOnExecution
+@Singleton
 public class InfraServiceImpl implements InfraService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private HostService hostService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.InfraService#list(software.wings.dl.PageRequest)
@@ -32,11 +45,36 @@ public class InfraServiceImpl implements InfraService {
     return wingsPersistence.saveAndGet(Infra.class, infra);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.InfraService#delete(java.lang.String)
-   */
   @Override
-  public void delete(String infraId) {
-    wingsPersistence.delete(Infra.class, infraId);
+  public void deleteByEnv(String appId, String envId) {
+    List<Infra> infras =
+        wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).asList();
+    infras.forEach(infra -> delete(appId, envId, infra.getUuid()));
+  }
+
+  @Override
+  public Infra createDefaultInfraForEnvironment(String appId, String envId) {
+    return save(anInfra().withAppId(appId).withEnvId(envId).withInfraType(STATIC).build());
+  }
+
+  @Override
+  public String getInfraIdByEnvId(String appId, String envId) {
+    Infra infra =
+        wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).get();
+    return infra == null ? null : infra.getUuid();
+  }
+
+  @Override
+  public void delete(String appId, String envId, String infraId) {
+    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Infra.class)
+                                                  .field("appId")
+                                                  .equal(appId)
+                                                  .field("envId")
+                                                  .equal(envId)
+                                                  .field(ID_KEY)
+                                                  .equal(infraId));
+    if (deleted) {
+      executorService.submit(() -> hostService.deleteByInfra(appId, infraId));
+    }
   }
 }

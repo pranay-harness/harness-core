@@ -15,17 +15,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ConfigService;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.GeneralSecurityException;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
-import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -33,9 +27,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 // TODO: Auto-generated Javadoc
 
@@ -59,7 +50,8 @@ public class ConfigResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("entityId") String entityId,
+  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("appId") String appId,
+      @QueryParam("entityId") String entityId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @BeanParam PageRequest<ConfigFile> pageRequest) {
     pageRequest.addFilter("templateId", templateId, EQ);
@@ -78,10 +70,11 @@ public class ConfigResource {
    */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> save(@QueryParam("entityId") String entityId,
+  public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setEntityId(entityId);
+    configFile.setAppId(appId);
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }
@@ -94,7 +87,7 @@ public class ConfigResource {
    */
   @GET
   @Path("{configId}")
-  public RestResponse<ConfigFile> get(@PathParam("configId") String configId) {
+  public RestResponse<ConfigFile> get(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     return new RestResponse<>(configService.get(configId));
   }
 
@@ -110,7 +103,7 @@ public class ConfigResource {
   @PUT
   @Path("{configId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse update(@PathParam("configId") String configId,
+  public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setUuid(configId);
@@ -126,30 +119,8 @@ public class ConfigResource {
    */
   @DELETE
   @Path("{configId}")
-  public RestResponse delete(@PathParam("configId") String configId) {
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     configService.delete(configId);
     return new RestResponse();
-  }
-
-  /**
-   * Download.
-   *
-   * @param appId the app id
-   * @return the response
-   * @throws IOException              Signals that an I/O exception has occurred.
-   * @throws GeneralSecurityException the general security exception
-   */
-  @GET
-  @Path("download/{appId}")
-  @Encoded
-  public Response download(@PathParam("appId") String appId) throws IOException, GeneralSecurityException {
-    try {
-      URL url = this.getClass().getResource("/temp-config.txt");
-      ResponseBuilder response = Response.ok(new File(url.toURI()), MediaType.APPLICATION_OCTET_STREAM);
-      response.header("Content-Disposition", "attachment; filename=app.config");
-      return response.build();
-    } catch (URISyntaxException ex) {
-      return Response.noContent().build();
-    }
   }
 }
