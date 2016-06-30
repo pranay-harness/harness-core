@@ -592,7 +592,6 @@
                      <skip>true</skip>
                      <forkCount>4</forkCount>
                      <reuseForks>true</reuseForks>
-                     <argLine>-Xms1024m -Xmx2048m</argLine>
                 </configuration>
                 <executions>
                     <execution>
@@ -609,7 +608,6 @@
                             </excludes>
                             <forkCount>4</forkCount>
                             <reuseForks>true</reuseForks>
-                            <argLine>-Xms1024m -Xmx2048m</argLine>
                         </configuration>
                     </execution>
                 </executions>
@@ -823,7 +821,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.48</minimum>
+                                            <minimum>0.47</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
