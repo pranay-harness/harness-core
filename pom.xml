@@ -589,8 +589,8 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
-                     <forkCount>3</forkCount>
+                     <skip>true</skip>
+                     <forkCount>4</forkCount>
                      <reuseForks>true</reuseForks>
                 </configuration>
                 <executions>
@@ -816,7 +816,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.61</minimum>
+                                            <minimum>0.63</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>

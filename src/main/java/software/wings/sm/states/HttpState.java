@@ -8,6 +8,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -32,7 +33,7 @@ import java.util.List;
  *
  * @author Rishi
  */
-@Attributes(title = "HttpState")
+@Attributes
 public class HttpState extends State {
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();
 
@@ -40,12 +41,14 @@ public class HttpState extends State {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpState.class);
 
-  @Attributes(required = true) private String url;
-  @Attributes(required = true) private String method;
-  @Attributes private String header;
-  @Attributes private String body;
-  @Attributes(required = true) private String assertion;
-  @Attributes private int socketTimeoutMillis = 10000;
+  @Attributes(required = true, title = "URL") private String url;
+  @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
+  private String method;
+  @Attributes(title = "Header", description = "Content-Type: application/json, Accept: application/json,...")
+  private String header;
+  @Attributes(title = "Body") private String body;
+  @Attributes(title = "Assertion") private String assertion;
+  @SchemaIgnore private int socketTimeoutMillis = 10000;
 
   /**
    * Create a new Http State with given name.
@@ -245,6 +248,7 @@ public class HttpState extends State {
    *
    * @return the socket timeout millis
    */
+  @SchemaIgnore
   public int getSocketTimeoutMillis() {
     return socketTimeoutMillis;
   }
@@ -254,6 +258,7 @@ public class HttpState extends State {
    *
    * @param socketTimeoutMillis the socket timeout millis
    */
+  @SchemaIgnore
   public void setSocketTimeoutMillis(int socketTimeoutMillis) {
     this.socketTimeoutMillis = socketTimeoutMillis;
   }
