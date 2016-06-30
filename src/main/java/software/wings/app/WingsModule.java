@@ -41,6 +41,7 @@ import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
+import software.wings.service.impl.SetupServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -71,6 +72,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
@@ -135,6 +137,7 @@ public class WingsModule extends AbstractModule {
     bind(LogService.class).to(LogServiceImpl.class);
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(HistoryService.class).to(HistoryServiceImpl.class);
+    bind(SetupService.class).to(SetupServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

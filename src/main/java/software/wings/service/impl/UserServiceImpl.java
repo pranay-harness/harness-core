@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String baseURl = configuration.getPortal().getUrl();
+      String baseURl = configuration.getPortal().getUrl().trim();
       if (baseURl.charAt(baseURl.length() - 1) != '/') {
         baseURl += "/";
       }

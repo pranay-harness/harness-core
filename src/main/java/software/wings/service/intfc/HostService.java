@@ -124,7 +124,7 @@ public interface HostService {
    * @param host the host
    * @param tags the tags
    */
-  void setTags(Host host, List<Tag> tags);
+  void setTags(@NotNull Host host, @NotNull List<Tag> tags);
 
   /**
    * Remove tag from host.
@@ -132,5 +132,14 @@ public interface HostService {
    * @param host the host
    * @param tag  the tag
    */
-  void removeTagFromHost(Host host, Tag tag);
+  void removeTagFromHost(@NotNull Host host, @NotNull Tag tag);
+
+  /**
+   * Gets hosts by env.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the hosts by env
+   */
+  List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 }
