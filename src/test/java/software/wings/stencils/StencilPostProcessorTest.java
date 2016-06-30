@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.sm.EnumData;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashMap;
@@ -35,7 +34,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   @Before
   public void setUpMocks() throws Exception {
-    when(injector.getInstance(TestEnumDataProvider.class)).thenReturn(new TestEnumDataProvider());
+    when(injector.getInstance(TestDataProvider.class)).thenReturn(new TestDataProvider());
   }
 
   @Test
@@ -75,15 +74,15 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   public interface StencilObject {}
 
-  public static class TestEnumDataProvider implements EnumDataProvider {
+  public static class TestDataProvider implements DataProvider {
     @Override
-    public Map<String, String> getDataForEnum(String appId, String... params) {
+    public Map<String, String> getData(String appId, String... params) {
       return ImmutableMap.of("Name1", "Value1", "Name2", "Value2");
     }
   }
 
   public static class ExpandStencilObject implements StencilObject {
-    @EnumData(expandIntoMultipleEntries = true, enumDataProvider = TestEnumDataProvider.class) private String expand;
+    @EnumData(expandIntoMultipleEntries = true, enumDataProvider = TestDataProvider.class) private String expand;
 
     /**
      * Getter for property 'expand'.
@@ -105,7 +104,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
   }
 
   public static class EnumStencilObject implements StencilObject {
-    @EnumData(enumDataProvider = TestEnumDataProvider.class) private String enumField;
+    @EnumData(enumDataProvider = TestDataProvider.class) private String enumField;
 
     /**
      * Getter for property 'enumField'.

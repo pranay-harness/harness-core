@@ -5,6 +5,7 @@ import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anEx
 
 import com.google.inject.name.Named;
 
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.common.UUIDGenerator;
@@ -31,7 +32,7 @@ public class WaitState extends State {
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  private long duration;
+  @Attributes(title = "Wait Duration") private long duration;
 
   /**
    * Creates a new wait state.

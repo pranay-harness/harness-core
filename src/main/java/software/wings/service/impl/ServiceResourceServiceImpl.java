@@ -28,7 +28,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
-import software.wings.stencils.EnumDataProvider;
+import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
@@ -48,7 +48,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
-public class ServiceResourceServiceImpl implements ServiceResourceService, EnumDataProvider {
+public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -219,7 +219,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, EnumD
   }
 
   @Override
-  public Map<String, String> getDataForEnum(String appId, String... params) {
+  public Map<String, String> getData(String appId, String... params) {
     Service service = get(appId, params[0]);
     if (isEmpty(service.getCommands())) {
       return emptyMap();

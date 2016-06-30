@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static software.wings.api.PauseStateExecutionData.Builder.aPauseStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
+import com.github.reinert.jjschema.Attributes;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.PauseStateExecutionData;
 import software.wings.common.UUIDGenerator;
@@ -18,6 +19,7 @@ import software.wings.utils.MapperUtils;
  *
  * @author Rishi
  */
+@Attributes
 public class PauseState extends EmailState {
   /**
    * Creates pause state with given name.
@@ -50,5 +52,35 @@ public class PauseState extends EmailState {
         .addCorrelationIds(correlationId)
         .withStateExecutionData(pauseStateExecutionData)
         .build();
+  }
+
+  @Attributes(title = "Body", required = true)
+  @Override
+  public String getBody() {
+    return super.getBody();
+  }
+
+  @Attributes(title = "CC")
+  @Override
+  public String getCcAddress() {
+    return super.getCcAddress();
+  }
+
+  @Attributes(title = "To", required = true)
+  @Override
+  public String getToAddress() {
+    return super.getToAddress();
+  }
+
+  @Attributes(title = "Subject", required = true)
+  @Override
+  public String getSubject() {
+    return super.getSubject();
+  }
+
+  @Attributes(title = "Ignore Delivery Failure?")
+  @Override
+  public Boolean isIgnoreDeliveryFailure() {
+    return super.isIgnoreDeliveryFailure();
   }
 }

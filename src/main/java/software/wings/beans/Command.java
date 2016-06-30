@@ -8,7 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Graph.Node;
 import software.wings.service.impl.ServiceResourceServiceImpl;
-import software.wings.sm.EnumData;
+import software.wings.stencils.EnumData;
 import software.wings.utils.MapperUtils;
 
 import java.util.Arrays;

@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
  *
  * @author Rishi
  */
-@Attributes(title = "Repeat")
+@Attributes
 public class RepeatState extends State {
   private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
 

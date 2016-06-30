@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static org.joor.Reflect.on;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
@@ -155,7 +157,7 @@ public enum StateType implements StateTypeDescriptor {
 
   @Override
   public String getName() {
-    return name();
+    return UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
   }
 
   /*

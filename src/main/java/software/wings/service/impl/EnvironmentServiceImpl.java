@@ -15,7 +15,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
-import software.wings.stencils.EnumDataProvider;
+import software.wings.stencils.DataProvider;
 
 import java.util.List;
 import java.util.Map;
@@ -32,7 +32,7 @@ import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @Singleton
-public class EnvironmentServiceImpl implements EnvironmentService, EnumDataProvider {
+public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -52,7 +52,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, EnumDataProvi
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> getDataForEnum(String appId, String... params) {
+  public Map<String, String> getData(String appId, String... params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", appId, Operator.EQ);
     return list(pageRequest).stream().collect(toMap(Environment::getUuid, Environment::getName));
