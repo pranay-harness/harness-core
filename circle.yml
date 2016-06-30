@@ -8,7 +8,7 @@ dependencies:
     - mvn dependency:go-offline
     - mvn mongodb:start mongodb:stop
     - mvn -DbuildUI=true frontend:install-node-and-npm
-    - mvn verify site
+    - mvn -T4 verify site
   cache_directories:
     - "~/.embedmongo"
     - "~/.node"
