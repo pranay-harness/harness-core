@@ -42,6 +42,11 @@ public enum ContextElementType {
   PARAM,
 
   /**
+   * Partition context element type.
+   */
+  PARTITION,
+
+  /**
    * Other context element type.
    */
   OTHER;

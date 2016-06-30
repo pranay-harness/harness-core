@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
+import software.wings.api.PartitionElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -46,6 +47,8 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -431,5 +434,147 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     assertThat(elements.get(0)).isNotNull();
     assertThat(elements.get(0).getUuid()).isEqualTo(instance1.getUuid());
     assertThat(elements.get(0).getDisplayName()).isEqualTo(instance1.getDisplayName());
+  }
+
+  /**
+   * Should return from partition.
+   */
+  @Test
+  public void shouldReturnInstancesFromPartition() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
+    InstanceElement i1 = InstanceElement.Builder.anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
+    InstanceElement i2 = InstanceElement.Builder.anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
+    InstanceElement i3 = InstanceElement.Builder.anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();
+    PartitionElement<InstanceElement> pe = new PartitionElement<>();
+    pe.setPartitionElements(Lists.newArrayList(i1, i2, i3));
+    when(context.getContextElementList(ContextElementType.PARTITION)).thenReturn(Lists.newArrayList(pe));
+
+    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    List<InstanceElement> elements = processor.list();
+
+    assertThat(elements).isNotNull().hasSize(3).doesNotContainNull().containsExactly(i1, i2, i3);
+  }
+
+  /**
+   * Should partition.
+   */
+  @Test
+  public void shouldPartitionInstances() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+
+    StateExecutionInstance stateExecutionInstance =
+        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(app);
+    when(context.getEnv()).thenReturn(env);
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    ServiceInstance instance1 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance2 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host2").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance3 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance4 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance5 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance6 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    ServiceInstance instance7 =
+        Builder.aServiceInstance()
+            .withUuid(UUIDGenerator.getUuid())
+            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withServiceTemplate(aServiceTemplate()
+                                     .withName("template")
+                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
+                                     .build())
+            .build();
+    List<ServiceInstance> instances =
+        Lists.newArrayList(instance1, instance2, instance3, instance4, instance5, instance6, instance7);
+    res.setResponse(instances);
+
+    when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
+    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+
+    InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
+    processor.setServiceInstanceService(serviceInstanceServiceMock);
+    processor.setServiceTemplateService(serviceTemplateServiceMock);
+
+    List<PartitionElement<InstanceElement>> partitions = processor.partitions("2", "30 %", "50 %");
+    assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();
+    assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull();
+    assertThat(partitions.get(1).getPartitionElements()).hasSize(2).doesNotContainNull();
+    assertThat(partitions.get(2).getPartitionElements()).hasSize(3).doesNotContainNull();
+
+    String[] instanceIds = new String[] {instance1.getUuid(), instance2.getUuid(), instance3.getUuid(),
+        instance4.getUuid(), instance5.getUuid(), instance6.getUuid(), instance7.getUuid()};
+    assertThat(
+        partitions.get(0).getPartitionElements().stream().map(InstanceElement::getUuid).collect(Collectors.toList()))
+        .isSubsetOf(instanceIds);
+    assertThat(
+        partitions.get(0).getPartitionElements().stream().map(InstanceElement::getUuid).collect(Collectors.toList()))
+        .isSubsetOf(instanceIds);
+    assertThat(
+        partitions.get(0).getPartitionElements().stream().map(InstanceElement::getUuid).collect(Collectors.toList()))
+        .isSubsetOf(instanceIds);
   }
 }

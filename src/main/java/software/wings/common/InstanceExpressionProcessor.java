@@ -12,6 +12,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.InstanceElement;
+import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
@@ -42,6 +43,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -51,7 +53,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-public class InstanceExpressionProcessor implements ExpressionProcessor {
+public class InstanceExpressionProcessor extends PartitionProcessor<InstanceElement> implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
@@ -188,12 +190,31 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<InstanceElement> list() {
-    PageRequest<ServiceInstance> pageRequest = buildPageRequest();
+    PartitionElement instancePartition = getInstancesPartition();
+    if (instancePartition != null) {
+      // TODO -- apply additional filters based on host name and instanceIds
+      return instancePartition.getPartitionElements();
+    }
 
+    PageRequest<ServiceInstance> pageRequest = buildPageRequest();
     PageResponse<ServiceInstance> instances = serviceInstanceService.list(pageRequest);
     return convertToInstanceElements(instances.getResponse());
   }
 
+  private PartitionElement getInstancesPartition() {
+    List<ContextElement> partitions = context.getContextElementList(ContextElementType.PARTITION);
+    if (partitions == null || partitions.isEmpty()) {
+      return null;
+    }
+
+    for (ContextElement element : partitions) {
+      PartitionElement partition = (PartitionElement) element;
+      if (partition.getPartitionElementType() == ContextElementType.INSTANCE) {
+        return partition;
+      }
+    }
+    return null;
+  }
   /**
    * Build page request page request.
    *
@@ -383,5 +404,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    */
   public void setServiceTemplateService(ServiceTemplateService serviceTemplateService) {
     this.serviceTemplateService = serviceTemplateService;
+  }
+
+  @Override
+  protected List<InstanceElement> elements() {
+    return list();
   }
 }
