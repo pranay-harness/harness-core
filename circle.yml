@@ -12,8 +12,9 @@ dependencies:
     - "~/.node"
 test:
   override:
-    - if [[ $SKIP_TESTS != "true" ]] ; then mvn -T4 verify site ; fi
+    - if [[ $SKIP_TESTS != "true" ]] ; then set -o pipefail && mvn -T4 verify site | tee ~/test_output.txt ; fi
   post:
+    - if [[ $SKIP_TESTS != "true" ]] ; then cp ~/test_output.txt $CIRCLE_ARTIFACTS; fi
     - if [[ $SKIP_TESTS != "true" ]] ; then cp -r target/site $CIRCLE_ARTIFACTS; fi
     - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/junit/ ; fi
     - if [[ $SKIP_TESTS != "true" ]] ; then mkdir -p $CIRCLE_TEST_REPORTS/integration/ ; fi
