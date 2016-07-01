@@ -31,7 +31,8 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
 
   @Override
   public JsonNode getJsonSchema() {
-    return overridingJsonSchema.orElse(commandUnitDescriptor.getJsonSchema());
+    return overridingJsonSchema.isPresent() ? overridingJsonSchema.get().deepCopy()
+                                            : commandUnitDescriptor.getJsonSchema();
   }
 
   @Override
@@ -57,6 +58,11 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
   @Override
   public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
     this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
+  }
+
+  @Override
+  public JsonNode getOverridingJsonSchema() {
+    return overridingJsonSchema.orElse(null);
   }
 
   @Override

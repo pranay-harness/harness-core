@@ -189,7 +189,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
     @Override
     public JsonNode getJsonSchema() {
-      return overridingJsonSchema.orElse(stencilType.getJsonSchema());
+      return overridingJsonSchema.isPresent() ? overridingJsonSchema.get().deepCopy() : stencilType.getJsonSchema();
     }
 
     @Override
@@ -215,6 +215,11 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     @Override
     public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
       this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
+    }
+
+    @Override
+    public JsonNode getOverridingJsonSchema() {
+      return overridingJsonSchema.orElse(null);
     }
 
     @Override

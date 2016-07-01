@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Singleton;
 
 import software.wings.stencils.DataProvider;
 
@@ -9,9 +10,10 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 6/30/16.
  */
+@Singleton
 public class CommandStateDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return ImmutableMap.of("START", "Start", "STOP", "Stop", "INSTALL", "Install", "", "Command");
+    return ImmutableMap.of("START", "START", "STOP", "STOP", "INSTALL", "INSTALL", "", "Command");
   }
 }

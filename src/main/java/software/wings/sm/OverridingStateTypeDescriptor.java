@@ -29,6 +29,7 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
    *
    * @return Value for property 'overridingJsonSchema'.
    */
+  @Override
   public JsonNode getOverridingJsonSchema() {
     return overridingJsonSchema.orElse(null);
   }
@@ -92,7 +93,8 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
    */
   @Override
   public JsonNode getJsonSchema() {
-    return overridingJsonSchema.orElse(stateTypeDescriptor.getJsonSchema());
+    return overridingJsonSchema.isPresent() ? overridingJsonSchema.get().deepCopy()
+                                            : stateTypeDescriptor.getJsonSchema();
   }
 
   /**

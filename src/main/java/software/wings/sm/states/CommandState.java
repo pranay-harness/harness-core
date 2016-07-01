@@ -34,6 +34,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 
 /**
@@ -63,7 +64,10 @@ public class CommandState extends State {
 
   @Inject private transient SettingsService settingsService;
 
-  @Attributes(title = "Command") @Expand(dataProvider = CommandStateDataProvider.class) private String commandName;
+  @Attributes(title = "Command")
+  @Expand(dataProvider = CommandStateDataProvider.class)
+  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
+  private String commandName;
 
   /**
    * Instantiates a new Command state.
