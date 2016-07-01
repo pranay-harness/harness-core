@@ -2,6 +2,10 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Embedded;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +16,8 @@ import java.util.List;
  * Created by anubhaw on 3/16/16.
  */
 @Entity(value = "roles", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Role extends Base {
   private String name;
   private String description;

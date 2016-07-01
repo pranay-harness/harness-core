@@ -4,6 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
@@ -18,6 +22,7 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(unique = true)))
 public class Application extends Base {
   @NotEmpty private String name;
   private String description;

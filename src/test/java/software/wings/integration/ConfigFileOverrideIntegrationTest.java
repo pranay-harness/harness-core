@@ -162,8 +162,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   public void setUp() throws IOException {
     // DB cleanup
     Arrays
-        .asList(Host.class, Infra.class, Tag.class, ConfigFile.class, ServiceTemplate.class, Service.class,
-            SettingAttribute.class)
+        .asList(Application.class, Environment.class, Host.class, Infra.class, Tag.class, ConfigFile.class,
+            ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
