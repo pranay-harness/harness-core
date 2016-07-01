@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.SearchFilter.Operator.IN;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -13,16 +14,20 @@ import org.eclipse.jetty.util.ArrayQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Environment;
 import software.wings.beans.Host;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
@@ -57,6 +62,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private HostService hostService;
   @Inject private InfraService infraService;
   @Inject private ExecutorService executorService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
 
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -253,6 +260,30 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .asList()
         .forEach(serviceTemplate
             -> delete(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid()));
+  }
+
+  @Override
+  public void createDefaultTemplatesByEnv(Environment env) {
+    List<Service> services = serviceResourceService.findServicesByApp(env.getAppId());
+    services.forEach(service
+        -> save(aServiceTemplate()
+                    .withAppId(service.getAppId())
+                    .withEnvId(env.getUuid())
+                    .withService(service)
+                    .withName(service.getName())
+                    .build()));
+  }
+
+  @Override
+  public void createDefaultTemplatesByService(Service service) {
+    List<Environment> environments = environmentService.getEnvByApp(service.getAppId());
+    environments.forEach(environment
+        -> save(aServiceTemplate()
+                    .withAppId(service.getAppId())
+                    .withEnvId(environment.getUuid())
+                    .withService(service)
+                    .withName(service.getName())
+                    .build()));
   }
 
   private List<ServiceTemplate> getTemplatesByMappedTags(Tag tag) {

@@ -117,4 +117,6 @@ public interface ServiceResourceService {
    * @return the boolean
    */
   void deleteByAppId(String appId);
+
+  List<Service> findServicesByApp(String appId);
 }

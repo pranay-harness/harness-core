@@ -21,8 +21,7 @@ public class SeedData {
   /**
    * The Env names.
    */
-  public static List<String> envNames =
-      asList("DEV", "QA", "UAT", "PROD", "STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
+  public static List<String> envNames = asList("STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
   /**
    * The constant containerNames.
    */

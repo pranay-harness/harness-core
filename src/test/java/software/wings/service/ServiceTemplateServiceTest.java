@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -22,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TAG_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -36,7 +38,9 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Environment;
 import software.wings.beans.Host;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
@@ -44,9 +48,11 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
@@ -66,6 +72,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private InfraService infraService;
   @Mock private ServiceInstanceService serviceInstanceService;
+  @Mock private ServiceResourceService serviceResourceService;
+  @Mock private EnvironmentService environmentService;
 
   @Inject @InjectMocks private ServiceTemplateService templateService;
 
@@ -113,6 +121,39 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate template = templateService.save(builder.build());
     assertThat(template.getName()).isEqualTo(TEMPLATE_NAME);
     assertThat(template.getService().getUuid()).isEqualTo(SERVICE_ID);
+  }
+
+  @Test
+  public void shouldCreateDefaultServiceTemplateByEnv() {
+    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    when(serviceResourceService.findServicesByApp(APP_ID)).thenReturn(asList(service));
+    templateService.createDefaultTemplatesByEnv(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    verify(serviceResourceService).findServicesByApp(APP_ID);
+    verify(wingsPersistence)
+        .saveAndGet(ServiceTemplate.class,
+            aServiceTemplate()
+                .withAppId(APP_ID)
+                .withEnvId(ENV_ID)
+                .withService(service)
+                .withName(service.getName())
+                .build());
+  }
+
+  @Test
+  public void shouldCreateDefaultServiceTemplateByService() {
+    Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+    Environment environment = Environment.EnvironmentBuilder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    when(environmentService.getEnvByApp(APP_ID)).thenReturn(asList(environment));
+    templateService.createDefaultTemplatesByService(service);
+    verify(environmentService).getEnvByApp(APP_ID);
+    verify(wingsPersistence)
+        .saveAndGet(ServiceTemplate.class,
+            aServiceTemplate()
+                .withAppId(APP_ID)
+                .withEnvId(ENV_ID)
+                .withService(service)
+                .withName(service.getName())
+                .build());
   }
 
   /**

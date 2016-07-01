@@ -7,6 +7,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -46,7 +47,8 @@ public class AppServiceImpl implements AppService {
   @Metered
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
-    settingsService.createDefaultSettings(application.getUuid()); // FIXME: Should be at common place
+    settingsService.createDefaultSettings(application.getUuid());
+    environmentService.createDefaultEnvironments(application.getUuid());
     return application;
   }
 
@@ -101,5 +103,10 @@ public class AppServiceImpl implements AppService {
     Query<Application> updateQuery =
         wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(env.getAppId());
     wingsPersistence.update(updateQuery, updateOperations);
+  }
+
+  @Override
+  public void addService(Service service) {
+    wingsPersistence.addToList(Application.class, service.getAppId(), "services", service);
   }
 }

@@ -23,7 +23,6 @@ import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.User.Builder.anUser;
@@ -114,7 +113,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
-  private static final int NUM_ENV_PER_APP = 3; /* Max 10   */
+  private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
   private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
@@ -145,7 +144,7 @@ public class DataGenUtil extends WingsBaseTest {
     assertThat(NUM_APP_CONTAINER_PER_APP).isBetween(1, 1000);
     assertThat(NUM_SERVICES_PER_APP).isBetween(1, 1000);
     assertThat(NUM_CONFIG_FILE_PER_SERVICE).isBetween(0, 100);
-    assertThat(NUM_ENV_PER_APP).isBetween(1, 10);
+    assertThat(NUM_ENV_PER_APP).isBetween(0, 10);
     assertThat(NUM_TAG_GROUPS_PER_ENV).isBetween(1, 10);
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
 
@@ -345,16 +344,15 @@ public class DataGenUtil extends WingsBaseTest {
                                .field("infraId")
                                .equal(infraId)
                                .asList();
-        ServiceTemplate template = wingsPersistence.saveAndGet(ServiceTemplate.class,
-            aServiceTemplate()
-                .withAppId(service.getAppId())
-                .withEnvId(environment.getUuid())
-                .withService(service)
-                .withName(service.getName())
-                .build());
         Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
         Artifact artifact =
             wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
+        ServiceTemplate template = wingsPersistence.createQuery(ServiceTemplate.class)
+                                       .field("appId")
+                                       .equal(environment.getAppId())
+                                       .field("envId")
+                                       .equal(environment.getUuid())
+                                       .get();
 
         hosts.forEach(host
             -> wingsPersistence.save(aServiceInstance()
@@ -540,12 +538,17 @@ public class DataGenUtil extends WingsBaseTest {
       serviceMap.put("appId", appId);
       serviceMap.put("artifactType", WAR.name());
       serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size())));
-      RestResponse<Service> response = getRequestWithAuthHeader(target).post(
-          Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() {});
-      assertThat(response.getResource()).isInstanceOf(Service.class);
-      services.add(response.getResource());
+      RestResponse<Base> response = getRequestWithAuthHeader(target).post(
+          Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Base>>() { // FIXME
+          });
+      //      assertThat(response.getResource()).isInstanceOf(Service.class);
+      String serviceId = response.getResource().getUuid();
+      Service service = wingsPersistence.get(Service.class, serviceId);
+      services.add(service);
+      assertThat(service).isNotNull();
+
       configFileNames = new ArrayList<>(seedNames);
-      addConfigFilesToEntity(response.getResource(), DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE);
+      addConfigFilesToEntity(service, DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE);
     }
     return services;
   }

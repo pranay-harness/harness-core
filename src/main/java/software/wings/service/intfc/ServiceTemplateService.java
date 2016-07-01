@@ -3,7 +3,9 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.Environment;
 import software.wings.beans.Host;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
@@ -166,4 +168,18 @@ public interface ServiceTemplateService {
    * @param serviceId the service id
    */
   void deleteByService(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
+   * Create default templates by env.
+   *
+   * @param env the env
+   */
+  void createDefaultTemplatesByEnv(Environment env);
+
+  /**
+   * Create default templates by service.
+   *
+   * @param service the service
+   */
+  void createDefaultTemplatesByService(Service service);
 }
