@@ -66,6 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -443,7 +444,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (res != null && res.size() > 0) {
       if (res.size() == 1
           && (StateType.REPEAT.name().equals(res.get(0).getStateType())
-                 || StateType.FORK.name().equals(res.get(0).getStateType()))) {
+                 || StateType.FORK.name().equals(res.get(0).getStateType()))
+          && (expandedGroupIds == null || !expandedGroupIds.contains(res.get(0).getUuid()))) {
         expandedGroupIds = Lists.newArrayList(res.get(0).getUuid());
         populateGraph(workflowExecution, expandedGroupIds);
         return;
