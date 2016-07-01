@@ -43,29 +43,28 @@ public class StencilPostProcessor {
           .filter(field -> field.getAnnotation(EnumData.class) != null || field.getAnnotation(Expand.class) != null)
           .flatMap(field -> {
             EnumData enumData = field.getAnnotation(EnumData.class);
-
+            Expand expand = field.getAnnotation(Expand.class);
+            T stencil = t;
             if (enumData != null) {
               DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
               Map<String, String> data = dataProvider.getData(appId, args);
               if (!isEmpty(data)) {
                 if (enumData.expandIntoMultipleEntries()) {
-                  return expandBasedOnEnumData(t, data, field);
+                  return expandBasedOnEnumData(stencil, data, field);
                 } else {
-                  return Stream.of(addEnumDataToNode(t, data, field));
+                  stencil = (T) addEnumDataToNode(stencil, data, field);
                 }
-              } else {
-                return Stream.of(t);
               }
-            } else {
-              Expand expand = field.getAnnotation(Expand.class);
+            }
+
+            if (expand != null) {
               DataProvider dataProvider = injector.getInstance(expand.dataProvider());
               Map<String, String> data = dataProvider.getData(appId, args);
               if (!isEmpty(data)) {
-                return expandBasedOnData(t, data, field);
-              } else {
-                return Stream.of(t);
+                return expandBasedOnData(stencil, data, field);
               }
             }
+            return Stream.of(stencil);
           });
     } else {
       return Stream.of(t);

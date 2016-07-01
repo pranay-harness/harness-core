@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 public interface OverridingStencil<T> extends Stencil<T> {
   void setOverridingJsonSchema(JsonNode overridingJsonSchema);
 
+  JsonNode getOverridingJsonSchema();
+
   String getOverridingName();
 
   void setOverridingName(String overridingName);
