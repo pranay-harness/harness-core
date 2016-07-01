@@ -84,7 +84,7 @@ public class SetupServiceImpl implements SetupService {
       setup.getActions().add(mandatoryAction);
     } else {
       setup.setSetupStatus(COMPLETE);
-      // Get suggestions here
+      // TODO: Get suggestions here
     }
     return setup;
   }
