@@ -1,1 +1,6 @@
-{}
+{
+  "ui:order": ["toAddress", "ccAddress", "subject", "body", "isIgnoreDeliveryFailure"],
+  "body": {
+    "ui:widget": "textarea"
+  }
+}

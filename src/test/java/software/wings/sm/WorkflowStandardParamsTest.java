@@ -49,6 +49,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     Environment env = Environment.EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
     env = environmentService.save(env);
+    app = appService.get(app.getUuid());
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);

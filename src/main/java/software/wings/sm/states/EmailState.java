@@ -31,17 +31,17 @@ import java.util.ArrayList;
  *
  * @author Rishi
  */
-@Attributes(title = "Email")
+@Attributes
 public class EmailState extends State {
   private static final Logger logger = LoggerFactory.getLogger(EmailState.class);
 
   private static final Splitter COMMA_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
 
-  @Attributes(required = true) private String toAddress;
-  @Attributes private String ccAddress;
-  @Attributes(required = true) private String subject;
-  @Attributes private String body;
-  private Boolean ignoreDeliveryFailure = true;
+  @Attributes(required = true, title = "To") private String toAddress;
+  @Attributes(title = "CC") private String ccAddress;
+  @Attributes(required = true, title = "Subject") private String subject;
+  @Attributes(title = "Body") private String body;
+  @Attributes(title = "Ignore delivery failure?") private Boolean ignoreDeliveryFailure = true;
 
   @Transient @Inject private NotificationService<EmailData> emailNotificationService;
 

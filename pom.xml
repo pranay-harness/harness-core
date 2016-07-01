@@ -25,6 +25,7 @@
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <mongodb.port>27017</mongodb.port>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
     <repositories>
@@ -578,7 +579,7 @@
                 <configuration>
                     <attach>true</attach>
                     <!--make it available for jar/war classpath resource -->
-                    <shortRevisionLength>5</shortRevisionLength>
+                    <shortRevisionLength>7</shortRevisionLength>
                     <properties>
                         <productVersion>${project.version}-${buildNumber}-${timestamp}</productVersion>
                     </properties>
@@ -588,9 +589,9 @@
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <skip>true</skip>
-<!--                     <forkCount>3</forkCount> -->
-<!--                     <reuseForks>true</reuseForks> -->
+                     <skip>true</skip>
+                     <forkCount>4</forkCount>
+                     <reuseForks>true</reuseForks>
                 </configuration>
                 <executions>
                     <execution>
@@ -605,6 +606,8 @@
                                 <exclude>**/*IntegrationTest.java</exclude>
                                 <exclude>**/IntegrationTest*.java</exclude>
                             </excludes>
+                            <forkCount>4</forkCount>
+                            <reuseForks>true</reuseForks>
                         </configuration>
                     </execution>
                 </executions>
@@ -813,7 +816,7 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.61</minimum>
+                                            <minimum>0.63</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>

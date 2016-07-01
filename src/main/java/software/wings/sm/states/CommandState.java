@@ -9,6 +9,7 @@ import static software.wings.sm.StateType.COMMAND;
 
 import com.google.inject.Inject;
 
+import com.github.reinert.jjschema.Attributes;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
@@ -33,6 +34,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.EnumData;
+import software.wings.stencils.Expand;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -61,6 +64,9 @@ public class CommandState extends State {
 
   @Inject private transient SettingsService settingsService;
 
+  @Attributes(title = "Command")
+  @Expand(dataProvider = CommandStateDataProvider.class)
+  @EnumData(enumDataProvider = CommandStateEnumDataProvider.class)
   private String commandName;
 
   /**

@@ -1,6 +1,4 @@
-package software.wings.sm;
-
-import software.wings.stencils.EnumDataProvider;
+package software.wings.stencils;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,5 +13,5 @@ import java.lang.annotation.Target;
 public @interface EnumData {
   boolean expandIntoMultipleEntries() default false;
 
-  Class<? extends EnumDataProvider> enumDataProvider();
+  Class<? extends DataProvider> enumDataProvider();
 }

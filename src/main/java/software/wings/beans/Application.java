@@ -4,6 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 
 import java.util.ArrayList;
@@ -18,13 +22,14 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "applications", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(unique = true)))
 public class Application extends Base {
   @NotEmpty private String name;
   private String description;
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services = new ArrayList<>();
 
-  @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments = new ArrayList<>();
 
   /**
    * Gets name.
@@ -81,18 +86,6 @@ public class Application extends Base {
   }
 
   /**
-   * Adds the service.
-   *
-   * @param service the service
-   */
-  public void addService(Service service) {
-    if (this.services == null) {
-      this.services = new ArrayList<>();
-    }
-    this.services.add(service);
-  }
-
-  /**
    * Gets environments.
    *
    * @return the environments
@@ -110,21 +103,11 @@ public class Application extends Base {
     this.environments = environments;
   }
 
-  /**
-   * Adds the environment.
-   *
-   * @param environment the environment
-   */
-  public void addEnvironment(Environment environment) {
-    if (this.environments == null) {
-      this.environments = new ArrayList<>();
-    }
-    this.environments.add(environment);
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(name, description, services, environments);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -136,45 +119,31 @@ public class Application extends Base {
     if (!super.equals(obj)) {
       return false;
     }
-    Application that = (Application) obj;
-    return Objects.equals(name, that.name) && Objects.equals(description, that.description)
-        && Objects.equals(services, that.services);
+    final Application other = (Application) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.services, other.services) && Objects.equals(this.environments, other.environments);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hash(super.hashCode(), name, description, services);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("uuid", getUuid())
-        .add("createdBy", getCreatedBy())
-        .add("createdAt", getCreatedAt())
-        .add("lastUpdatedBy", getLastUpdatedBy())
-        .add("lastUpdatedAt", getLastUpdatedAt())
-        .add("active", isActive())
         .add("name", name)
         .add("description", description)
         .add("services", services)
+        .add("environments", environments)
         .toString();
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
-  public static class Builder {
+  public static final class Builder {
     private String name;
     private String description;
-    private List<Service> services;
+    private List<Service> services = new ArrayList<>();
+    private List<Environment> environments = new ArrayList<>();
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -183,125 +152,73 @@ public class Application extends Base {
 
     private Builder() {}
 
-    /**
-     * An application.
-     *
-     * @return the builder
-     */
     public static Builder anApplication() {
       return new Builder();
     }
 
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With description.
-     *
-     * @param description the description
-     * @return the builder
-     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With services.
-     *
-     * @param services the services
-     * @return the builder
-     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withEnvironments(List<Environment> environments) {
+      this.environments = environments;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anApplication()
           .withName(name)
           .withDescription(description)
           .withServices(services)
+          .withEnvironments(environments)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -309,17 +226,14 @@ public class Application extends Base {
           .withActive(active);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the application
-     */
     public Application build() {
       Application application = new Application();
       application.setName(name);
       application.setDescription(description);
       application.setServices(services);
+      application.setEnvironments(environments);
       application.setUuid(uuid);
+      application.setAppId(appId);
       application.setCreatedBy(createdBy);
       application.setCreatedAt(createdAt);
       application.setLastUpdatedBy(lastUpdatedBy);

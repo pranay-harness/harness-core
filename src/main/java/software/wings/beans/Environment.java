@@ -1,6 +1,10 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
@@ -14,6 +18,8 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "environments", noClassnameStored = true)
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
   private String name;
   private String description;
