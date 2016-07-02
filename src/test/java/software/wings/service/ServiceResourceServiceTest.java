@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,13 +39,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Application;
 import software.wings.beans.Command;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
@@ -54,11 +57,14 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.ArrayList;
+import java.util.List;
 
 // TODO: Auto-generated Javadoc
 
@@ -80,6 +86,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private AppService appService;
   /**
    * The Verifier.
    */
@@ -91,6 +98,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     }
   };
   @Inject @InjectMocks private ServiceResourceService srs;
+
+  @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
+
+  @Captor private ArgumentCaptor<Graph> graphArgumentCaptor = ArgumentCaptor.forClass(Graph.class);
 
   /**
    * Sets the up.
@@ -131,15 +142,19 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveService() {
-    Service service = srs.save(builder.but().build());
-    assertThat(service.getUuid()).isEqualTo(SERVICE_ID);
-    verify(wingsPersistence).addToList(Application.class, service.getAppId(), "services", service);
+    Service service = builder.but().build();
+    doReturn(service).when(spyServiceResourceService).addCommand(any(), any(), any());
+    Service savedService = spyServiceResourceService.save(service);
+
+    assertThat(savedService.getUuid()).isEqualTo(SERVICE_ID);
     verify(wingsPersistence).saveAndGet(Service.class, service);
-    verify(wingsPersistence, times(6)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence, times(3))
-        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), anyString(), anyString());
-    verify(wingsPersistence, times(3)).createQuery(Service.class);
-    verify(configService, times(3)).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(appService).addService(savedService);
+    verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
+    verify(spyServiceResourceService, times(3)).addCommand(eq(APP_ID), eq(SERVICE_ID), graphArgumentCaptor.capture());
+    List<Graph> allValues = graphArgumentCaptor.getAllValues();
+    assertThat(
+        allValues.stream().filter(graph -> asList("START", "STOP", "INSTALL").contains(graph.getGraphName())).count())
+        .isEqualTo(3);
   }
 
   /**

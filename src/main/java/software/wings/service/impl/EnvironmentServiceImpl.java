@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -67,6 +69,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     appService.addEnvironment(env);
     infraService.createDefaultInfraForEnvironment(env.getAppId(), env.getUuid()); // FIXME: stopgap for Alpha
     tagService.createDefaultRootTagForEnvironment(env);
+    serviceTemplateService.createDefaultTemplatesByEnv(env);
     return env;
   }
 
@@ -107,5 +110,15 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     List<Environment> environments =
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     environments.forEach(environment -> delete(appId, environment.getUuid()));
+  }
+
+  @Override
+  public void createDefaultEnvironments(String appId) {
+    asList("DEV", "QA", "PROD", "UAT").forEach(name -> save(anEnvironment().withAppId(appId).withName(name).build()));
+  }
+
+  @Override
+  public List<Environment> getEnvByApp(String appId) {
+    return wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
   }
 }

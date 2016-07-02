@@ -5,6 +5,8 @@ import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.List;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -58,4 +60,19 @@ public interface EnvironmentService {
    * @param appId the app id
    */
   void deleteByApp(String appId);
+
+  /**
+   * Create default environments.
+   *
+   * @param appId the app id
+   */
+  void createDefaultEnvironments(String appId);
+
+  /**
+   * Gets env by app.
+   *
+   * @param appId the app id
+   * @return the env by app
+   */
+  List<Environment> getEnvByApp(String appId);
 }

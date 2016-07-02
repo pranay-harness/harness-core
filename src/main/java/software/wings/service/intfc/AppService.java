@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -59,4 +60,11 @@ public interface AppService {
    * @param env the env
    */
   void addEnvironment(Environment env);
+
+  /**
+   * Add service.
+   *
+   * @param service the service
+   */
+  void addService(Service service);
 }

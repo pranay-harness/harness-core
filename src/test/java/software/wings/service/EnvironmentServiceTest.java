@@ -82,15 +82,16 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldSaveEnvironment() {
     Environment environment =
         anEnvironment().withAppId(APP_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
-    Environment savedEnv =
+    Environment savedEnvironment =
         anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
-    when(wingsPersistence.saveAndGet(Environment.class, environment)).thenReturn(savedEnv);
+    when(wingsPersistence.saveAndGet(Environment.class, environment)).thenReturn(savedEnvironment);
 
     environmentService.save(environment);
     verify(wingsPersistence).saveAndGet(Environment.class, environment);
-    verify(appService).addEnvironment(savedEnv);
+    verify(appService).addEnvironment(savedEnvironment);
     verify(infraService).createDefaultInfraForEnvironment(APP_ID, ENV_ID);
-    verify(tagService).createDefaultRootTagForEnvironment(savedEnv);
+    verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
+    verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
   }
 
   @Test

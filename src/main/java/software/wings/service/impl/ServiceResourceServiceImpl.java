@@ -16,7 +16,6 @@ import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.BasicDBObject;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.Application;
 import software.wings.beans.Command;
 import software.wings.beans.CommandUnitType;
 import software.wings.beans.Graph;
@@ -25,6 +24,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -54,6 +54,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
   @Inject private StencilPostProcessor stencilPostProcessor;
+  @Inject private AppService appService;
 
   /**
    * {@inheritDoc}
@@ -73,15 +74,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service save(Service service) {
     Service savedService = wingsPersistence.saveAndGet(Service.class, service);
-    addDefaultCommands(savedService);
-    wingsPersistence.addToList(Application.class, service.getAppId(), "services", savedService);
+    savedService = addDefaultCommands(savedService);
+    appService.addService(savedService);
+    serviceTemplateService.createDefaultTemplatesByService(savedService);
     return savedService;
   }
 
-  private void addDefaultCommands(Service service) {
+  private Service addDefaultCommands(Service service) {
     addCommand(service.getAppId(), service.getUuid(), getInstallCommandGraph());
     addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
-    addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
+    return addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
   }
 
   /**
@@ -128,6 +130,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         .equal(appId)
         .asList()
         .forEach(service -> delete(appId, service.getUuid()));
+  }
+
+  @Override
+  public List<Service> findServicesByApp(String appId) {
+    return wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
   }
 
   /**
