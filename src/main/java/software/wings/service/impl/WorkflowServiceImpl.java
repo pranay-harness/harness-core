@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
@@ -61,8 +63,11 @@ import software.wings.stencils.StencilPostProcessor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -422,36 +427,89 @@ public class WorkflowServiceImpl implements WorkflowService {
     return workflowExecution;
   }
 
-  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds) {
+  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIdsRequested) {
+    List<String> expandedGroupIds = new ArrayList<>();
+    if (expandedGroupIdsRequested != null) {
+      expandedGroupIds.addAll(expandedGroupIdsRequested);
+    }
+
+    List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
+    if (instances != null && instances.size() > 0) {
+      if (instances.size() == 1
+          && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
+                 || StateType.FORK.name().equals(instances.get(0).getStateType()))
+          && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
+        expandedGroupIds = Lists.newArrayList(instances.get(0).getUuid());
+        populateGraph(workflowExecution, expandedGroupIds);
+        return;
+      }
+    }
+
+    Map<String, StateExecutionInstance> instanceIdMap =
+        instances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
+    HashSet<String> missingParentInstanceIds = getMissingParentInstanceIds(instances, expandedGroupIds);
+
+    while (missingParentInstanceIds != null && missingParentInstanceIds.size() > 0) {
+      List<StateExecutionInstance> moreInstances =
+          queryStateExecutionInstances(workflowExecution, missingParentInstanceIds, true);
+      if (moreInstances != null) {
+        Map<String, StateExecutionInstance> moreInstanceIdMap =
+            moreInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
+        instanceIdMap.putAll(moreInstanceIdMap);
+      }
+      if (!instanceIdMap.keySet().containsAll(missingParentInstanceIds)) {
+        WingsException ex =
+            new WingsException("Corrupt data.. some of parentinstanceIds are invalid " + missingParentInstanceIds);
+        logger.error(ex.getMessage(), ex);
+        throw ex;
+      }
+      expandedGroupIds.addAll(missingParentInstanceIds);
+      missingParentInstanceIds = getMissingParentInstanceIds(instances, expandedGroupIds);
+    }
+
+    instances = new ArrayList<>(instanceIdMap.values());
+    Collections.sort(instances, Base.createdAtComparator);
+
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+    workflowExecution.setGraph(generateGraph(instances, sm.getInitialStateName(), expandedGroupIds));
+  }
 
+  private HashSet<String> getMissingParentInstanceIds(List<StateExecutionInstance> list, List<String> instanceIds) {
+    if (list == null || list.isEmpty()) {
+      return null;
+    }
+
+    HashSet<String> missingParentInstanceIds = new HashSet<>();
+    for (StateExecutionInstance instance : list) {
+      if (instance.getParentInstanceId() != null
+          && (instanceIds == null || !instanceIds.contains(instance.getParentInstanceId()))) {
+        missingParentInstanceIds.add(instance.getParentInstanceId());
+      }
+    }
+
+    return missingParentInstanceIds;
+  }
+
+  private List<StateExecutionInstance> queryStateExecutionInstances(
+      WorkflowExecution workflowExecution, Collection<String> expandedGroupIds, boolean byParentInstanceOnly) {
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .field("appId")
                                               .equal(workflowExecution.getAppId())
                                               .field("executionUuid")
                                               .equal(workflowExecution.getUuid());
-    if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
-      query.field("parentInstanceId").doesNotExist();
+    if (byParentInstanceOnly) {
+      query.or(query.criteria("uuid").in(expandedGroupIds), query.criteria("parentInstanceId").in(expandedGroupIds));
     } else {
-      query.or(
-          query.criteria("parentInstanceId").doesNotExist(), query.criteria("parentInstanceId").in(expandedGroupIds));
-    }
-    query.order("createdAt");
-
-    List<StateExecutionInstance> res = wingsPersistence.executeGetListQuery(query);
-
-    if (res != null && res.size() > 0) {
-      if (res.size() == 1
-          && (StateType.REPEAT.name().equals(res.get(0).getStateType())
-                 || StateType.FORK.name().equals(res.get(0).getStateType()))
-          && (expandedGroupIds == null || !expandedGroupIds.contains(res.get(0).getUuid()))) {
-        expandedGroupIds = Lists.newArrayList(res.get(0).getUuid());
-        populateGraph(workflowExecution, expandedGroupIds);
-        return;
+      if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
+        query.field("parentInstanceId").doesNotExist();
+      } else {
+        query.or(query.criteria("parentInstanceId").doesNotExist(), query.criteria("uuid").in(expandedGroupIds),
+            query.criteria("parentInstanceId").in(expandedGroupIds));
       }
     }
-    workflowExecution.setGraph(generateGraph(res, sm.getInitialStateName(), expandedGroupIds));
+
+    return wingsPersistence.executeGetListQuery(query);
   }
 
   private Graph generateGraph(
