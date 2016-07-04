@@ -551,7 +551,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       link.setTo(instance.getUuid());
 
       String fromInstanceId = null;
-      if (instance.getParentInstanceId() != null) {
+      if (instance.isContextTransition()) {
         // This is scenario like fork, repeat or sub workflow
         node = new Node();
         node.setId(UUIDGenerator.getUuid());

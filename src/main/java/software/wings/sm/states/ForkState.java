@@ -63,6 +63,7 @@ public class ForkState extends State {
       childStateExecutionInstance.setContextElementType(StateType.FORK.name());
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(notifyId);
+      childStateExecutionInstance.setContextTransition(true);
       executionResponse.add(childStateExecutionInstance);
       correlationIds.add(notifyId);
     }

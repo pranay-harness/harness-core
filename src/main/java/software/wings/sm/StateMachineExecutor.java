@@ -360,6 +360,7 @@ public class StateMachineExecutor {
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
     cloned.setContextElementName(null);
     cloned.setContextElementType(null);
+    cloned.setContextTransition(false);
     return cloned;
   }
 
