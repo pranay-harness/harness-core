@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
@@ -12,6 +13,7 @@ import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifac
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -37,6 +39,8 @@ import software.wings.service.intfc.FileService.FileBucket;
 import java.io.File;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.UriInfo;
 
 // TODO: Auto-generated Javadoc
 
@@ -182,6 +186,40 @@ public class ArtifactServiceTest extends WingsBaseTest {
   public void shouldListArtifact() {
     Artifact savedArtifact = artifactService.create(builder.but().build());
     assertThat(artifactService.list(new PageRequest<>())).hasSize(1).containsExactly(savedArtifact);
+  }
+
+  /**
+   * Should list artifact.
+   */
+  @Test
+  public void shouldListArtifactByReleases() {
+    wingsRule.getDatastore().save(
+        aRelease()
+            .withUuid(RELEASE_ID + "1")
+            .withAppId(APP_ID)
+            .withArtifactSources(Lists.newArrayList(aJenkinsArtifactSource().withSourceName("ARTIFACT_SOURCE").build()))
+            .build());
+
+    Artifact savedArtifact1 = artifactService.create(builder.but().build());
+
+    Artifact savedArtifact2 =
+        artifactService.create(builder.but().withRelease(aRelease().withUuid(RELEASE_ID + "1").build()).build());
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<String, String>() {
+      { putSingle("release", RELEASE_ID); }
+    });
+    assertThat(artifactService.list(aPageRequest().withUriInfo(uriInfo).build()))
+        .hasSize(1)
+        .containsExactly(savedArtifact1);
+
+    uriInfo = mock(UriInfo.class);
+    when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<String, String>() {
+      { putSingle("release", RELEASE_ID + "1"); }
+    });
+    assertThat(artifactService.list(aPageRequest().withUriInfo(uriInfo).build()))
+        .hasSize(1)
+        .containsExactly(savedArtifact2);
   }
 
   /**

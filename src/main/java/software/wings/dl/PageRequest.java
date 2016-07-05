@@ -6,7 +6,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
+import org.mongodb.morphia.mapping.Mapper;
+import software.wings.beans.Base;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
@@ -229,7 +232,7 @@ public class PageRequest<T> {
    *
    * @param mappedClass the mapped class
    */
-  public void populateFilters(MappedClass mappedClass) {
+  public void populateFilters(MappedClass mappedClass, Mapper mapper) {
     if (uriInfo == null) {
       return;
     }
@@ -248,7 +251,21 @@ public class PageRequest<T> {
           isOr = true;
         }
       } else if (!(key.startsWith("search") || key.startsWith("sort") || mappedClass.getMappedField(key) == null)) {
-        filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+        if (mappedClass.getMappedField(key).isReference()) {
+          try {
+            Base referenceObject = (Base) mappedClass.getMappedField(key).getCTor().getDeclaringClass().newInstance();
+            String collection = mapper.getCollectionName(referenceObject);
+            filters.add(
+                aSearchFilter()
+                    .withField(key, Operator.IN,
+                        map.get(key).stream().map(s -> new Key(referenceObject.getClass(), collection, s)).toArray())
+                    .build());
+          } catch (IllegalAccessException | InstantiationException e) {
+            filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+          }
+        } else {
+          filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
+        }
       }
     }
     for (int index = 0; index < fieldCount; index++) {

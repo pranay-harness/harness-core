@@ -3,6 +3,8 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
+import org.mongodb.morphia.annotations.Reference;
+
 import java.util.List;
 
 // TODO: Auto-generated Javadoc
@@ -11,7 +13,7 @@ import java.util.List;
  * The Class ArtifactFile.
  */
 public class ArtifactFile extends BaseFile {
-  private List<Service> services;
+  @Reference(idOnly = true) private List<Service> services;
 
   /**
    * Gets services.
