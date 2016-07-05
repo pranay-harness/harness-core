@@ -21,7 +21,7 @@ public interface ExpressionProcessorFactory {
    * @param context    the context
    * @return the expression processor
    */
-  public ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context);
+  ExpressionProcessor getExpressionProcessor(String expression, ExecutionContext context);
 
   /**
    * Gets the expression processors.
@@ -29,5 +29,5 @@ public interface ExpressionProcessorFactory {
    * @param executionContext the execution context
    * @return the expression processors
    */
-  public List<ExpressionProcessor> getExpressionProcessors(ExecutionContext executionContext);
+  List<ExpressionProcessor> getExpressionProcessors(ExecutionContext executionContext);
 }

@@ -47,6 +47,10 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
     if (processor.matches(expression)) {
       return processor;
     }
+    processor = new InstancePartitionExpressionProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
 
     return null;
   }

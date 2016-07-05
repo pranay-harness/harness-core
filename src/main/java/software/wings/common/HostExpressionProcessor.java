@@ -16,6 +16,7 @@ import software.wings.sm.ExpressionProcessor;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -66,13 +67,13 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public String getExpressionStartPattern() {
-    return EXPRESSION_START_PATTERN;
+  public List<String> getExpressionStartPatterns() {
+    return Collections.singletonList(EXPRESSION_START_PATTERN);
   }
 
   @Override
-  public String getExpressionEqualPattern() {
-    return EXPRESSION_EQUAL_PATTERN;
+  public List<String> getExpressionEqualPatterns() {
+    return Collections.singletonList(EXPRESSION_EQUAL_PATTERN);
   }
 
   @Override

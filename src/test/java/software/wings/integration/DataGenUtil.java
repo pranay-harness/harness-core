@@ -311,7 +311,7 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void addAdminUser() {
     String userName = "admin@wings.software";
-    String password = "YAg@bp2wWB";
+    String password = "admin";
     String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
     WebTarget target = client.target(API_BASE + "/users/");
     RestResponse<User> response = target.request().post(

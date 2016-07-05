@@ -4,6 +4,7 @@
 
 package software.wings.common;
 
+import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.common.collect.Lists;
@@ -40,10 +41,10 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -53,7 +54,7 @@ import javax.inject.Inject;
  *
  * @author Rishi
  */
-public class InstanceExpressionProcessor extends PartitionProcessor<InstanceElement> implements ExpressionProcessor {
+public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * The Expression start pattern.
    */
@@ -106,13 +107,13 @@ public class InstanceExpressionProcessor extends PartitionProcessor<InstanceElem
   }
 
   @Override
-  public String getExpressionStartPattern() {
-    return EXPRESSION_START_PATTERN;
+  public List<String> getExpressionStartPatterns() {
+    return Collections.singletonList(EXPRESSION_START_PATTERN);
   }
 
   @Override
-  public String getExpressionEqualPattern() {
-    return EXPRESSION_EQUAL_PATTERN;
+  public List<String> getExpressionEqualPatterns() {
+    return Collections.singletonList(EXPRESSION_EQUAL_PATTERN);
   }
 
   @Override
@@ -193,7 +194,10 @@ public class InstanceExpressionProcessor extends PartitionProcessor<InstanceElem
     PartitionElement instancePartition = getInstancesPartition();
     if (instancePartition != null) {
       // TODO -- apply additional filters based on host name and instanceIds
-      return instancePartition.getPartitionElements();
+      return instancePartition.getPartitionElements()
+          .stream()
+          .map(contextElement -> (InstanceElement) contextElement)
+          .collect(toList());
     }
 
     PageRequest<ServiceInstance> pageRequest = buildPageRequest();
@@ -404,10 +408,5 @@ public class InstanceExpressionProcessor extends PartitionProcessor<InstanceElem
    */
   public void setServiceTemplateService(ServiceTemplateService serviceTemplateService) {
     this.serviceTemplateService = serviceTemplateService;
-  }
-
-  @Override
-  protected List<InstanceElement> elements() {
-    return list();
   }
 }

@@ -11,6 +11,8 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.common.Constants;
 
+import java.util.List;
+
 /**
  * The Interface ExpressionProcessor.
  *
@@ -44,14 +46,14 @@ public interface ExpressionProcessor {
    *
    * @return the expression start pattern
    */
-  String getExpressionStartPattern();
+  List<String> getExpressionStartPatterns();
 
   /**
    * Gets expression equal pattern.
    *
    * @return the expression equal pattern
    */
-  String getExpressionEqualPattern();
+  List<String> getExpressionEqualPatterns();
 
   /**
    * Gets context element type.
@@ -68,10 +70,18 @@ public interface ExpressionProcessor {
    */
   default boolean
     matches(String expression) {
-      if (startsWith(expression, getExpressionStartPattern())
-          || StringUtils.equals(expression, getExpressionEqualPattern())
-          || startsWith(expression, EXPRESSION_PREFIX + getExpressionStartPattern())
-          || StringUtils.equals(expression, EXPRESSION_PREFIX + getExpressionEqualPattern() + EXPRESSION_SUFFIX)) {
+      if (getExpressionStartPatterns()
+              .stream()
+              .filter(pattern -> startsWith(expression, pattern) || startsWith(expression, EXPRESSION_PREFIX + pattern))
+              .findFirst()
+              .isPresent()
+          || getExpressionEqualPatterns()
+                 .stream()
+                 .filter(pattern
+                     -> StringUtils.equals(expression, pattern)
+                         || StringUtils.equals(expression, EXPRESSION_PREFIX + pattern + EXPRESSION_SUFFIX))
+                 .findFirst()
+                 .isPresent()) {
         return true;
       }
       return false;

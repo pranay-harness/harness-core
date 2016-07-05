@@ -22,6 +22,7 @@ import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,13 +78,13 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   }
 
   @Override
-  public String getExpressionStartPattern() {
-    return EXPRESSION_START_PATTERN;
+  public List<String> getExpressionStartPatterns() {
+    return Collections.singletonList(EXPRESSION_START_PATTERN);
   }
 
   @Override
-  public String getExpressionEqualPattern() {
-    return EXPRESSION_EQUAL_PATTERN;
+  public List<String> getExpressionEqualPatterns() {
+    return Collections.singletonList(EXPRESSION_EQUAL_PATTERN);
   }
 
   @Override
