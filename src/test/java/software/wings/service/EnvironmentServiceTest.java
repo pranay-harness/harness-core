@@ -3,6 +3,7 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -26,6 +27,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.Orchestration;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -35,6 +37,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -47,6 +50,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private InfraService infraService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
+  @Mock private WorkflowService workflowService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -93,6 +97,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(infraService).createDefaultInfraForEnvironment(APP_ID, ENV_ID);
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
+    verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
   }
 
   @Test
