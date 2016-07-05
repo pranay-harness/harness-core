@@ -100,6 +100,10 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
     return INSTANCE_PHASE_EXPR_PROCESSOR;
   }
 
+  public InstancePartitionExpressionProcessor getPhases() {
+    return this;
+  }
+
   @Override
   public ContextElementType getContextElementType() {
     return ContextElementType.PARTITION;
