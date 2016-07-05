@@ -24,6 +24,7 @@ public class StateExecutionInstance extends Base {
   private String stateType;
   private String contextElementType;
   private String contextElementName;
+  private boolean contextTransition;
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -359,6 +360,14 @@ public class StateExecutionInstance extends Base {
    */
   public StateExecutionData getStateExecutionData() {
     return stateExecutionMap.get(stateName);
+  }
+
+  public boolean isContextTransition() {
+    return contextTransition;
+  }
+
+  public void setContextTransition(boolean contextTransition) {
+    this.contextTransition = contextTransition;
   }
 
   /**

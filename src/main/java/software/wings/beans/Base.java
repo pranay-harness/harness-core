@@ -12,7 +12,9 @@ import software.wings.common.UUIDGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.utils.validation.Update;
 
+import java.util.Comparator;
 import java.util.Objects;
+
 import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
@@ -232,4 +234,12 @@ public class Base {
         .add("active", active)
         .toString();
   }
+
+  public static final Comparator<Base> createdAtComparator = new Comparator<Base>() {
+
+    @Override
+    public int compare(Base o1, Base o2) {
+      return new Long(o1.createdAt).compareTo(new Long(o2.createdAt));
+    }
+  };
 }

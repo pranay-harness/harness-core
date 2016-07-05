@@ -358,9 +358,9 @@ public class StateMachineExecutor {
     cloned.setUuid(null);
     cloned.setStateName(nextState.getName());
     cloned.setPrevInstanceId(stateExecutionInstance.getUuid());
-    cloned.setParentInstanceId(null);
     cloned.setContextElementName(null);
     cloned.setContextElementType(null);
+    cloned.setContextTransition(false);
     return cloned;
   }
 

@@ -41,7 +41,7 @@ public class Graph {
   /**
    * The Default initial x.
    */
-  static final int DEFAULT_INITIAL_X = 0;
+  static final int DEFAULT_INITIAL_X = 10;
 
   /**
    * The Default initial y.
