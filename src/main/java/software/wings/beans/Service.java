@@ -3,7 +3,6 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -13,6 +12,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ArtifactSource.ArtifactType;
 
 import java.util.List;
+import java.util.Objects;
 
 // TODO: Auto-generated Javadoc
 
@@ -32,6 +32,9 @@ public class Service extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private AppContainer appContainer;
 
   @Transient private List<ConfigFile> configFiles;
+
+  @Transient private Activity lastDeploymentActivity;
+  @Transient private Activity lastProdDeploymentActivity;
 
   /**
    * Gets name.
@@ -141,34 +144,48 @@ public class Service extends Base {
     this.appContainer = appContainer;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    if (!super.equals(o))
-      return false;
-    Service service = (Service) o;
-    return Objects.equal(name, service.name) && Objects.equal(description, service.description)
-        && artifactType == service.artifactType && Objects.equal(commands, service.commands)
-        && Objects.equal(appContainer, service.appContainer) && Objects.equal(configFiles, service.configFiles);
+  public Activity getLastDeploymentActivity() {
+    return lastDeploymentActivity;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
+  public void setLastDeploymentActivity(Activity lastDeploymentActivity) {
+    this.lastDeploymentActivity = lastDeploymentActivity;
+  }
+
+  public Activity getLastProdDeploymentActivity() {
+    return lastProdDeploymentActivity;
+  }
+
+  public void setLastProdDeploymentActivity(Activity lastProdDeploymentActivity) {
+    this.lastProdDeploymentActivity = lastProdDeploymentActivity;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hashCode(super.hashCode(), name, description, artifactType, commands, appContainer, configFiles);
+    return 31 * super.hashCode()
+        + Objects.hash(name, description, artifactType, commands, appContainer, configFiles, lastDeploymentActivity,
+              lastProdDeploymentActivity);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Service other = (Service) obj;
+    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.artifactType, other.artifactType) && Objects.equals(this.commands, other.commands)
+        && Objects.equals(this.appContainer, other.appContainer) && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.lastDeploymentActivity, other.lastDeploymentActivity)
+        && Objects.equals(this.lastProdDeploymentActivity, other.lastProdDeploymentActivity);
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -178,12 +195,11 @@ public class Service extends Base {
         .add("commands", commands)
         .add("appContainer", appContainer)
         .add("configFiles", configFiles)
+        .add("lastDeploymentActivity", lastDeploymentActivity)
+        .add("lastProdDeploymentActivity", lastProdDeploymentActivity)
         .toString();
   }
 
-  /**
-   * The Class Builder.
-   */
   public static final class Builder {
     private String name;
     private String description;
@@ -191,6 +207,8 @@ public class Service extends Base {
     private List<Command> commands = Lists.newArrayList();
     private AppContainer appContainer;
     private List<ConfigFile> configFiles;
+    private Activity lastDeploymentActivity;
+    private Activity lastProdDeploymentActivity;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -201,182 +219,100 @@ public class Service extends Base {
 
     private Builder() {}
 
-    /**
-     * A service.
-     *
-     * @return the builder
-     */
     public static Builder aService() {
       return new Builder();
     }
 
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With description.
-     *
-     * @param description the description
-     * @return the builder
-     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With artifact type.
-     *
-     * @param artifactType the artifact type
-     * @return the builder
-     */
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
-    /**
-     * Adds the commands.
-     *
-     * @param commands the commands
-     * @return the builder
-     */
     public Builder addCommands(Command... commands) {
       this.commands.addAll(asList(commands));
       return this;
     }
 
-    /**
-     * With commands.
-     *
-     * @param commands the commands
-     * @return the builder
-     */
     public Builder withCommands(List<Command> commands) {
       this.commands = commands;
       return this;
     }
 
-    /**
-     * With app container.
-     *
-     * @param appContainer the app container
-     * @return the builder
-     */
     public Builder withAppContainer(AppContainer appContainer) {
       this.appContainer = appContainer;
       return this;
     }
 
-    /**
-     * With config files.
-     *
-     * @param configFiles the config files
-     * @return the builder
-     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withLastDeploymentActivity(Activity lastDeploymentActivity) {
+      this.lastDeploymentActivity = lastDeploymentActivity;
+      return this;
+    }
+
+    public Builder withLastProdDeploymentActivity(Activity lastProdDeploymentActivity) {
+      this.lastProdDeploymentActivity = lastProdDeploymentActivity;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aService()
           .withName(name)
           .withDescription(description)
           .withArtifactType(artifactType)
-          .withCommands(Lists.newArrayList(commands))
+          .withCommands(commands)
           .withAppContainer(appContainer)
           .withConfigFiles(configFiles)
+          .withLastDeploymentActivity(lastDeploymentActivity)
+          .withLastProdDeploymentActivity(lastProdDeploymentActivity)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -386,11 +322,6 @@ public class Service extends Base {
           .withActive(active);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the service
-     */
     public Service build() {
       Service service = new Service();
       service.setName(name);
@@ -399,6 +330,8 @@ public class Service extends Base {
       service.setCommands(commands);
       service.setAppContainer(appContainer);
       service.setConfigFiles(configFiles);
+      service.setLastDeploymentActivity(lastDeploymentActivity);
+      service.setLastProdDeploymentActivity(lastProdDeploymentActivity);
       service.setUuid(uuid);
       service.setAppId(appId);
       service.setCreatedBy(createdBy);

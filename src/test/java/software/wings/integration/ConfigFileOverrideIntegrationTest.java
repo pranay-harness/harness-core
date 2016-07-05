@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -169,7 +168,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
-    Environment environment = environmentService.save(anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
+    Environment environment = environmentService.getEnvByApp(app.getUuid()).get(0);
     String infraId = infraService.getInfraIdByEnvId(environment.getAppId(), environment.getUuid());
 
     hosts = importAndGetHosts(app.getUuid(), infraId); // FIXME split

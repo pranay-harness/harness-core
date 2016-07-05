@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import software.wings.beans.Activity;
 import software.wings.beans.Command;
 import software.wings.beans.CommandUnit;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -66,5 +67,27 @@ public class ActivityServiceImpl implements ActivityService {
       commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
     });
     return command.getCommandUnits();
+  }
+
+  @Override
+  public Activity getLastActivityForService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(Activity.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .get();
+  }
+
+  @Override
+  public Activity getLastProductionActivityForService(String appId, String serviceId) {
+    return wingsPersistence.createQuery(Activity.class)
+        .field("appId")
+        .equal(appId)
+        .field("serviceId")
+        .equal(serviceId)
+        .field("environmentType")
+        .equal(EnvironmentType.PROD)
+        .get();
   }
 }

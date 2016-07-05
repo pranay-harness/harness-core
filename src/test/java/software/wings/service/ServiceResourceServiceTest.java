@@ -58,6 +58,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -87,6 +88,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private AppService appService;
+  @Mock private ActivityService activityService;
+
   /**
    * The Verifier.
    */
@@ -161,13 +164,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
    * Should fetch service.
    */
   @Test
-  public void shouldFetchService() {
+  public void shouldGetService() {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
     when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(new ArrayList<ConfigFile>());
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
+    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
   }
 
   /**

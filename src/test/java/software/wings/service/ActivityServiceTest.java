@@ -113,4 +113,19 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(commandUnits.get(0).getCommandUnitType()).isEqualTo(EXEC);
     assertThat(commandUnits.get(0).getName()).isEqualTo(COMMAND_UNIT_NAME);
   }
+
+  @Test
+  public void shouldgetLastActivityForService() {
+    wingsPersistence.save(activity);
+    Activity activityForService = activityService.getLastActivityForService(APP_ID, SERVICE_ID);
+    assertThat(activityForService).isEqualTo(activity);
+  }
+
+  @Test
+  public void shouldgetLastProductionActivityForService() {
+    activity.setEnvironmentType(PROD);
+    wingsPersistence.save(activity);
+    Activity lastProductionActivityForService = activityService.getLastProductionActivityForService(APP_ID, SERVICE_ID);
+    assertThat(lastProductionActivityForService).isEqualTo(activity);
+  }
 }

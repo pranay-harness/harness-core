@@ -24,6 +24,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -55,6 +56,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private ExecutorService executorService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private AppService appService;
+  @Inject private ActivityService activityService;
 
   /**
    * {@inheritDoc}
@@ -105,6 +107,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service != null) {
       service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
+      service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
     }
     return service;
   }
