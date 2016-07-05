@@ -26,7 +26,7 @@ import software.wings.WingsBaseTest;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentBuilder;
+import software.wings.beans.Environment.Builder;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
@@ -36,7 +36,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceInstance.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -668,8 +667,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldReadSimpleWorkflow() {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
     Orchestration workflow = impl.readLatestSimpleWorkflow(app.getUuid(), env.getUuid());
@@ -691,8 +690,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   public void shouldTriggerSimpleWorkflow() throws InterruptedException {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -739,7 +738,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
 
-    Builder builder =
+    software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
     String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
@@ -922,8 +921,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldTriggerOrchestration() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerOrchestration(env);
   }
 
@@ -1003,8 +1001,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldListOrchestration() throws InterruptedException {
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
 
     triggerOrchestration(env);
 

@@ -3,7 +3,9 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.OTHER;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -87,7 +89,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment update(Environment environment) {
     wingsPersistence.updateFields(Environment.class, environment.getUuid(),
-        ImmutableMap.of("name", environment.getName(), "description", environment.getDescription()));
+        ImmutableMap.of("name", environment.getName(), "description", environment.getDescription(), "environmentType",
+            environment.getEnvironmentType()));
     return wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
   }
 
@@ -114,7 +117,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    asList("DEV", "QA", "PROD", "UAT").forEach(name -> save(anEnvironment().withAppId(appId).withName(name).build()));
+    save(anEnvironment().withAppId(appId).withName("PROD").withEnvironmentType(PROD).build());
+    asList("DEV", "QA", "UAT")
+        .forEach(name -> save(anEnvironment().withAppId(appId).withName(name).withEnvironmentType(OTHER).build()));
   }
 
   @Override

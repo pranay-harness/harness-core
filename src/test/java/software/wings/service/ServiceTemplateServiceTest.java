@@ -13,7 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -39,6 +39,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.Builder;
 import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -142,7 +143,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldCreateDefaultServiceTemplateByService() {
     Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
-    Environment environment = Environment.EnvironmentBuilder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    Environment environment = Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
     when(environmentService.getEnvByApp(APP_ID)).thenReturn(asList(environment));
     templateService.createDefaultTemplatesByService(service);
     verify(environmentService).getEnvByApp(APP_ID);

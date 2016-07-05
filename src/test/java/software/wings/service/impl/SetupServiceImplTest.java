@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;

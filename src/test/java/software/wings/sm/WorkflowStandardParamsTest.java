@@ -12,6 +12,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.Builder;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 
@@ -47,7 +48,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
 
-    Environment env = Environment.EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
     env = environmentService.save(env);
     app = appService.get(app.getUuid());
 

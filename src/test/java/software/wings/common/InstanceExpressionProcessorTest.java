@@ -26,12 +26,11 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentBuilder;
+import software.wings.beans.Environment.Builder;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.ServiceInstance.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -95,8 +94,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -107,7 +106,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
@@ -116,7 +115,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance2 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host2").build())
             .withServiceTemplate(aServiceTemplate()
@@ -125,7 +124,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance3 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
@@ -169,8 +168,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -222,8 +221,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -278,8 +277,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -337,7 +336,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
+        Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
@@ -350,7 +349,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
@@ -388,8 +387,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldFetchInstanceElements() {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
@@ -406,7 +405,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
             .withDescription("TEMPLATE_DESCRIPTION")
             .build());
 
-    Builder builder =
+    ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
     ServiceInstance instance1 = serviceInstanceService.save(builder.withHost(host1).build());
@@ -444,8 +443,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -474,8 +473,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env = wingsPersistence.saveAndGet(
-        Environment.class, EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -486,7 +485,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
     ServiceInstance instance1 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
@@ -495,7 +494,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance2 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host2").build())
             .withServiceTemplate(aServiceTemplate()
@@ -504,7 +503,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance3 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
@@ -513,7 +512,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance4 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
@@ -522,7 +521,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance5 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
@@ -531,7 +530,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance6 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
@@ -540,7 +539,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
                                      .build())
             .build();
     ServiceInstance instance7 =
-        Builder.aServiceInstance()
+        ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
             .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()

@@ -7,7 +7,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -96,11 +97,17 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateEnvironment() {
-    Environment environment =
-        anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    Environment environment = anEnvironment()
+                                  .withAppId(APP_ID)
+                                  .withUuid(ENV_ID)
+                                  .withName(ENV_NAME)
+                                  .withEnvironmentType(PROD)
+                                  .withDescription(ENV_DESCRIPTION)
+                                  .build();
     environmentService.update(environment);
     verify(wingsPersistence)
-        .updateFields(Environment.class, ENV_ID, ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION));
+        .updateFields(Environment.class, ENV_ID,
+            ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION, "environmentType", PROD));
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 

@@ -1,11 +1,15 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
 import java.util.List;
+import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
 
@@ -28,7 +32,7 @@ public interface EnvironmentService {
    * @param envId the env id
    * @return the environment
    */
-  Environment get(String appId, String envId);
+  Environment get(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Save.
@@ -36,7 +40,7 @@ public interface EnvironmentService {
    * @param environment the environment
    * @return the environment
    */
-  Environment save(Environment environment);
+  @ValidationGroups(Create.class) Environment save(@Valid Environment environment);
 
   /**
    * Update.
@@ -44,7 +48,7 @@ public interface EnvironmentService {
    * @param environment the environment
    * @return the environment
    */
-  Environment update(Environment environment);
+  @ValidationGroups(Update.class) Environment update(@Valid Environment environment);
 
   /**
    * Delete.
@@ -59,14 +63,14 @@ public interface EnvironmentService {
    *
    * @param appId the app id
    */
-  void deleteByApp(String appId);
+  void deleteByApp(@NotEmpty String appId);
 
   /**
    * Create default environments.
    *
    * @param appId the app id
    */
-  void createDefaultEnvironments(String appId);
+  void createDefaultEnvironments(@NotEmpty String appId);
 
   /**
    * Gets env by app.
@@ -74,5 +78,5 @@ public interface EnvironmentService {
    * @param appId the app id
    * @return the env by app
    */
-  List<Environment> getEnvByApp(String appId);
+  List<Environment> getEnvByApp(@NotEmpty String appId);
 }
