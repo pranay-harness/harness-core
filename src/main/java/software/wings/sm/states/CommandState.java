@@ -166,6 +166,7 @@ public class CommandState extends State {
                                              .withAppId(serviceInstance.getAppId())
                                              .withEnvironmentId(environment.getUuid())
                                              .withEnvironmentName(environment.getName())
+                                             .withEnvironmentType(environment.getEnvironmentType())
                                              .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
                                              .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
                                              .withServiceId(service.getUuid())

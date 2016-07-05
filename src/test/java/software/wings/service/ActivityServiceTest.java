@@ -6,6 +6,7 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Activity.Status.RUNNING;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
@@ -45,6 +46,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   private static final Activity activity = anActivity()
                                                .withEnvironmentId(ENV_ID)
                                                .withEnvironmentName(ENV_NAME)
+                                               .withEnvironmentType(PROD)
                                                .withAppId(APP_ID)
                                                .withArtifactName(ARTIFACT_NAME)
                                                .withCommandName(COMMAND_NAME)

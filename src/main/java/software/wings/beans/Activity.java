@@ -4,8 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Environment.EnvironmentType;
 
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 public class Activity extends Base {
   @NotEmpty private String environmentId;
   @NotEmpty private String environmentName;
+  @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
   @NotEmpty private String commandType;
   @NotEmpty private String serviceId;
@@ -252,11 +255,20 @@ public class Activity extends Base {
     this.environmentName = environmentName;
   }
 
+  public EnvironmentType getEnvironmentType() {
+    return environmentType;
+  }
+
+  public void setEnvironmentType(EnvironmentType environmentType) {
+    this.environmentType = environmentType;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(environmentId, environmentName, commandName, commandType, serviceId, serviceName,
-              serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactName, status);
+        + Objects.hash(environmentId, environmentName, environmentType, commandName, commandType, serviceId,
+              serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactName,
+              status);
   }
 
   @Override
@@ -273,6 +285,7 @@ public class Activity extends Base {
     final Activity other = (Activity) obj;
     return Objects.equals(this.environmentId, other.environmentId)
         && Objects.equals(this.environmentName, other.environmentName)
+        && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.commandName, other.commandName) && Objects.equals(this.commandType, other.commandType)
         && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
@@ -287,6 +300,7 @@ public class Activity extends Base {
     return MoreObjects.toStringHelper(this)
         .add("environmentId", environmentId)
         .add("environmentName", environmentName)
+        .add("environmentType", environmentType)
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("serviceId", serviceId)
@@ -326,6 +340,7 @@ public class Activity extends Base {
   public static final class Builder {
     private String environmentId;
     private String environmentName;
+    private EnvironmentType environmentType;
     private String commandName;
     private String commandType;
     private String serviceId;
@@ -358,6 +373,11 @@ public class Activity extends Base {
 
     public Builder withEnvironmentName(String environmentName) {
       this.environmentName = environmentName;
+      return this;
+    }
+
+    public Builder withEnvironmentType(EnvironmentType environmentType) {
+      this.environmentType = environmentType;
       return this;
     }
 
@@ -455,6 +475,7 @@ public class Activity extends Base {
       return anActivity()
           .withEnvironmentId(environmentId)
           .withEnvironmentName(environmentName)
+          .withEnvironmentType(environmentType)
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withServiceId(serviceId)
@@ -479,6 +500,7 @@ public class Activity extends Base {
       Activity activity = new Activity();
       activity.setEnvironmentId(environmentId);
       activity.setEnvironmentName(environmentName);
+      activity.setEnvironmentType(environmentType);
       activity.setCommandName(commandName);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);
