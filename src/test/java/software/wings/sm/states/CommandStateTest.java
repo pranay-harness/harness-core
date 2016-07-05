@@ -17,6 +17,7 @@ import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
+import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
 import static software.wings.beans.Host.HostBuilder.aHost;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
@@ -29,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -48,6 +50,7 @@ import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -115,6 +118,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private ServiceCommandExecutorService serviceCommandExecutorService;
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
+  @Mock private EnvironmentService environmentService;
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
   /**
@@ -124,6 +128,8 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
+    when(environmentService.get(APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START")).thenReturn(COMMAND);
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);

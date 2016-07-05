@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -43,6 +44,7 @@ import java.util.List;
 public class ActivityServiceTest extends WingsBaseTest {
   private static final Activity activity = anActivity()
                                                .withEnvironmentId(ENV_ID)
+                                               .withEnvironmentName(ENV_NAME)
                                                .withAppId(APP_ID)
                                                .withArtifactName(ARTIFACT_NAME)
                                                .withCommandName(COMMAND_NAME)

@@ -33,6 +33,8 @@ public class Service extends Base {
 
   @Transient private List<ConfigFile> configFiles;
 
+  //  @Transient private
+
   /**
    * Gets name.
    *

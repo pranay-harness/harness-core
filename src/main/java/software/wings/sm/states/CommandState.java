@@ -18,11 +18,13 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -63,6 +65,8 @@ public class CommandState extends State {
   @Inject private transient ActivityService activityService;
 
   @Inject private transient SettingsService settingsService;
+
+  @Inject private transient EnvironmentService environmentService;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateDataProvider.class)
@@ -118,6 +122,7 @@ public class CommandState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String envId = workflowStandardParams.getEnvId();
+    Environment environment = environmentService.get(appId, envId);
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
 
@@ -159,7 +164,8 @@ public class CommandState extends State {
 
       Activity.Builder activityBuilder = anActivity()
                                              .withAppId(serviceInstance.getAppId())
-                                             .withEnvironmentId(serviceInstance.getEnvId())
+                                             .withEnvironmentId(environment.getUuid())
+                                             .withEnvironmentName(environment.getName())
                                              .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
                                              .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
                                              .withServiceId(service.getUuid())
