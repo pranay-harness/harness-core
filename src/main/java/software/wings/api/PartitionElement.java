@@ -14,10 +14,10 @@ import java.util.Map;
  * @author Rishi
  *
  */
-public class PartitionElement<T extends ContextElement> implements ContextElement {
+public class PartitionElement implements ContextElement {
   private String uuid;
   private String name;
-  private List<T> partitionElements = new ArrayList<>();
+  private List<ContextElement> partitionElements = new ArrayList<>();
   private ContextElementType partitionElementType;
 
   @Override
@@ -34,11 +34,11 @@ public class PartitionElement<T extends ContextElement> implements ContextElemen
     this.uuid = uuid;
   }
 
-  public List<T> getPartitionElements() {
+  public List<ContextElement> getPartitionElements() {
     return partitionElements;
   }
 
-  public void setPartitionElements(List<T> partitionElements) {
+  public void setPartitionElements(List<ContextElement> partitionElements) {
     this.partitionElements = partitionElements;
   }
 

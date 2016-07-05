@@ -9,24 +9,26 @@ public interface Constants {
   /**
    * The constant CATALOG_STENCILS.
    */
-  static final String CATALOG_STENCILS = "STENCILS";
+  String CATALOG_STENCILS = "STENCILS";
   /**
    * The constant DEFAULT_WORKFLOW_NAME.
    */
-  static final String DEFAULT_WORKFLOW_NAME = "MAIN";
+  String DEFAULT_WORKFLOW_NAME = "MAIN";
   /**
    * The constant WILD_CHAR.
    */
-  static final char WILD_CHAR = '*';
+  char WILD_CHAR = '*';
 
   /**
    * The constant EXPRESSION_LIST_SUFFIX.
    */
-  static final String EXPRESSION_LIST_SUFFIX = ".list()";
+  String EXPRESSION_LIST_SUFFIX = ".list()";
+
+  String EXPRESSION_PARTITIONS_SUFFIX = ".partitions()";
   /**
    * The constant EXPRESSION_NAME_SUFFIX.
    */
-  static final String EXPRESSION_NAME_SUFFIX = ".names()";
+  String EXPRESSION_NAME_SUFFIX = ".names()";
 
   /**
    * The constant STATIC_CATALOG_URL.
@@ -39,26 +41,26 @@ public interface Constants {
   /**
    * The constant SERVICE_INSTANCE_IDS_PARAMS.
    */
-  static final String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
+  String SERVICE_INSTANCE_IDS_PARAMS = "SERVICE_INSTANCE_IDS_PARAMS";
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
    */
-  static final String SIMPLE_ORCHESTRATION_NAME = "DefaultSimpleWorkflow";
+  String SIMPLE_ORCHESTRATION_NAME = "DefaultSimpleWorkflow";
   /**
    * The constant SIMPLE_ORCHESTRATION_DESC.
    */
-  static final String SIMPLE_ORCHESTRATION_DESC = "This is a simple workflow designed to trigger multiple instances";
+  String SIMPLE_ORCHESTRATION_DESC = "This is a simple workflow designed to trigger multiple instances";
   /**
    * The constant SIMPLE_WORKFLOW_REPEAT_STRATEGY.
    */
-  static final String SIMPLE_WORKFLOW_REPEAT_STRATEGY = "SIMPLE_WORKFLOW_REPEAT_STRATEGY";
+  String SIMPLE_WORKFLOW_REPEAT_STRATEGY = "SIMPLE_WORKFLOW_REPEAT_STRATEGY";
 
   /**
    * The constant SIMPLE_WORKFLOW_COMMAND_NAME.
    */
-  static final String SIMPLE_WORKFLOW_COMMAND_NAME = "SIMPLE_WORKFLOW_COMMAND_NAME";
+  String SIMPLE_WORKFLOW_COMMAND_NAME = "SIMPLE_WORKFLOW_COMMAND_NAME";
   /**
    * The constant SUMMARY_PAYLOAD_LIMIT.
    */
-  static final int SUMMARY_PAYLOAD_LIMIT = 1024;
+  int SUMMARY_PAYLOAD_LIMIT = 1024;
 }
