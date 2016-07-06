@@ -11,7 +11,7 @@ import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CommandUnitType.EXEC;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;

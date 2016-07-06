@@ -18,6 +18,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
+import software.wings.beans.Host.Builder;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -44,7 +45,7 @@ public class HostResourceTest extends WingsBaseTest {
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
   private static final Host aHost =
-      Host.HostBuilder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).build();
+      Builder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).build();
 
   /**
    * Should list hosts.

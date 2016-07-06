@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -203,6 +205,20 @@ public class Tag extends Base {
         && Objects.equals(this.autoTaggingRule, other.autoTaggingRule) && Objects.equals(this.rootTag, other.rootTag)
         && Objects.equals(this.rootTagId, other.rootTagId) && Objects.equals(this.envId, other.envId)
         && Objects.equals(this.children, other.children) && Objects.equals(this.configFiles, other.configFiles);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("description", description)
+        .add("autoTaggingRule", autoTaggingRule)
+        .add("rootTag", rootTag)
+        .add("rootTagId", rootTagId)
+        .add("envId", envId)
+        .add("children", children)
+        .add("configFiles", configFiles)
+        .toString();
   }
 
   /**

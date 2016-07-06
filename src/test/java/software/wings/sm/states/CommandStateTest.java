@@ -18,7 +18,7 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;

@@ -21,7 +21,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PartitionElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
+import software.wings.beans.Host.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
@@ -95,7 +95,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance1 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
+            .withHost(Builder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -104,7 +104,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance2 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host2").build())
+            .withHost(Builder.aHost().withHostName("host2").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -113,7 +113,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance3 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -122,7 +122,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance4 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -131,7 +131,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance5 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -140,7 +140,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance6 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -149,7 +149,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance7 =
         aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())

@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
 import com.google.common.base.MoreObjects;

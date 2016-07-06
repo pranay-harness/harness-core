@@ -112,7 +112,7 @@ public class HostResource {
     infraId = infraService.getInfraIdByEnvId(appId, envId);
     baseHost.setAppId(appId);
     baseHost.setInfraId(infraId);
-    hostService.bulkSave(baseHost, baseHost.getHostNames());
+    hostService.bulkSave(envId, baseHost);
     return new RestResponse();
   }
 

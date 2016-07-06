@@ -9,7 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -26,8 +26,8 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.Builder;
 import software.wings.beans.Host;
+import software.wings.beans.Host.Builder;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -92,8 +92,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -106,7 +106,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance1 =
         ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
+            .withHost(Builder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -115,7 +115,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance2 =
         ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host2").build())
+            .withHost(Builder.aHost().withHostName("host2").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -124,7 +124,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance3 =
         ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host3").build())
+            .withHost(Builder.aHost().withHostName("host3").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -166,8 +166,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -219,8 +219,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -275,8 +275,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
@@ -334,7 +334,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
     Environment env = wingsPersistence.saveAndGet(
-        Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build());
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     std.setAppId(app.getUuid());
@@ -349,7 +349,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     ServiceInstance instance1 =
         ServiceInstance.Builder.aServiceInstance()
             .withUuid(UUIDGenerator.getUuid())
-            .withHost(Host.HostBuilder.aHost().withHostName("host1").build())
+            .withHost(Builder.aHost().withHostName("host1").build())
             .withServiceTemplate(aServiceTemplate()
                                      .withName("template")
                                      .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
@@ -385,8 +385,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
   public void shouldFetchInstanceElements() {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
@@ -441,8 +441,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Application app =
         wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
     String appId = app.getUuid();
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    Environment env = wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     StateExecutionInstance stateExecutionInstance =
         StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();

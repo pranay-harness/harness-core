@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.System.currentTimeMillis;
 
 import com.google.common.base.MoreObjects;

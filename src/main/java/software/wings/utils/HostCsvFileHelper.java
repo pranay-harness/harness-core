@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.csv.CSVFormat.DEFAULT;
 import static software.wings.beans.ErrorCodes.INVALID_CSV_FILE;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;

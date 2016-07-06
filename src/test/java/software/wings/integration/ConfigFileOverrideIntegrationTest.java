@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -171,7 +171,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Environment environment = environmentService.getEnvByApp(app.getUuid()).get(0);
     String infraId = infraService.getInfraIdByEnvId(environment.getAppId(), environment.getUuid());
 
-    hosts = importAndGetHosts(app.getUuid(), infraId); // FIXME split
+    hosts = importAndGetHosts(app.getUuid(), environment.getUuid(), infraId); // FIXME split
 
     // create Tag hierarchy
     Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
@@ -363,9 +363,9 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<Host> importAndGetHosts(String appId, String infraId) throws IOException {
-    SettingAttribute settingAttribute =
-        wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
+  private List<Host> importAndGetHosts(String appId, String envId, String infraId) {
+    SettingAttribute settingAttribute = wingsPersistence.saveAndGet(
+        SettingAttribute.class, aSettingAttribute().withAppId(appId).withEnvId(envId).build());
     Host baseHost = aHost()
                         .withAppId(appId)
                         .withInfraId(infraId)
@@ -379,7 +379,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     for (int i = 1; i <= 10; i++) {
       hostNames.add(String.format("host%s.app.com", i));
     }
-    hostService.bulkSave(baseHost, hostNames);
+    baseHost.setHostNames(hostNames);
+    hostService.bulkSave(envId, baseHost);
     //    log().info("{} host imported", numOfHostsImported);
     PageRequest<Host> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infraId, EQ);
