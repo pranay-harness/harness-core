@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static com.google.common.collect.Sets.newHashSet;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -112,11 +113,19 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldListSavedServiceTemplates() {
     PageResponse<ServiceTemplate> pageResponse = new PageResponse<>();
+    Tag tag = aTag().withUuid(TAG_ID).build();
+    Host host = aHost().withUuid(HOST_ID).build();
+
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
-    pageResponse.setResponse(asList(builder.build()));
+    pageResponse.setResponse(asList(builder.withTags(asList(tag)).withLeafTags(newHashSet(tag)).build()));
+
     when(wingsPersistence.query(ServiceTemplate.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<ServiceTemplate> templates = templateService.list(pageRequest);
-    assertThat(templates).containsAll(asList(builder.build()));
+    when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
+
+    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest);
+    assertThat(templatePageResponse.getResponse().get(0)).isEqualTo(builder.build());
+    assertThat(templatePageResponse.getResponse().get(0).getTaggedHosts()).containsExactlyInAnyOrder(host);
+    verify(hostService).getHostsByTags(APP_ID, ENV_ID, asList(tag));
   }
 
   /**

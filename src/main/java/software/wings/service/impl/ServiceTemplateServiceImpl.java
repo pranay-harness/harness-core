@@ -71,7 +71,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest) {
-    return wingsPersistence.query(ServiceTemplate.class, pageRequest);
+    PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
+    pageResponse.getResponse().forEach(template -> {
+      if (template.getTags().size() != 0) {
+        template.setTaggedHosts(hostService.getHostsByTags(
+            template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
+      }
+    });
+    return pageResponse;
   }
 
   /* (non-Javadoc)
@@ -213,7 +220,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .flatMap(List::stream)
         .collect(Collectors.toSet())
         .stream()
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -364,7 +371,12 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId) {
-    return wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
+    if (serviceTemplate.getTags().size() != 0) {
+      serviceTemplate.setTaggedHosts(
+          hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
+    }
+    return serviceTemplate;
   }
 
   /* (non-Javadoc)

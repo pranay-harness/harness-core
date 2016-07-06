@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,7 +31,8 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<Tag>();
+  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
+  @Transient private List<Host> taggedHosts = new ArrayList<>();
 
   /**
    * Gets name.
@@ -156,6 +158,24 @@ public class ServiceTemplate extends Base {
    */
   public void setLeafTags(Set<Tag> leafTags) {
     this.leafTags = leafTags;
+  }
+
+  /**
+   * Gets tagged hosts.
+   *
+   * @return the tagged hosts
+   */
+  public List<Host> getTaggedHosts() {
+    return taggedHosts;
+  }
+
+  /**
+   * Sets tagged hosts.
+   *
+   * @param taggedHosts the tagged hosts
+   */
+  public void setTaggedHosts(List<Host> taggedHosts) {
+    this.taggedHosts = taggedHosts;
   }
 
   @Override
