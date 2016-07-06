@@ -30,12 +30,25 @@ import javax.ws.rs.QueryParam;
 public class SetupResource {
   @Inject private SetupService setupService;
 
+  /**
+   * Verify application rest response.
+   *
+   * @param appId the app id
+   * @return the rest response
+   */
   @GET
   @Path("/applications/{appId}")
   public RestResponse<Setup> verifyApplication(@PathParam("appId") String appId) {
     return new RestResponse<>(setupService.getApplicationSetupStatus(appId));
   }
 
+  /**
+   * Verify service rest response.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
   @GET
   @Path("/services/{serviceId}")
   public RestResponse<Setup> verifyService(
@@ -43,6 +56,13 @@ public class SetupResource {
     return new RestResponse<>(setupService.getServiceSetupStatus(appId, serviceId));
   }
 
+  /**
+   * Verify environment rest response.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the rest response
+   */
   @GET
   @Path("/environments/{envId}")
   public RestResponse<Setup> verifyEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {

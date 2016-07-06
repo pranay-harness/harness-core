@@ -67,6 +67,14 @@ import javax.inject.Inject;
  * Created by anubhaw on 4/29/16.
  */
 public class ServiceTemplateServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<ServiceTemplate> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
@@ -75,14 +83,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
-
   @Inject @InjectMocks private ServiceTemplateService templateService;
-
   @Spy @InjectMocks private ServiceTemplateService spyTemplateService = new ServiceTemplateServiceImpl();
-
-  @Mock Query<ServiceTemplate> query;
-  @Mock FieldEnd end;
-
   private ServiceTemplate.Builder builder = aServiceTemplate()
                                                 .withUuid(TEMPLATE_ID)
                                                 .withAppId(APP_ID)
@@ -91,6 +93,11 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                                                 .withName(TEMPLATE_NAME)
                                                 .withDescription(TEMPLATE_DESCRIPTION);
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(ServiceTemplate.class)).thenReturn(query);
@@ -124,6 +131,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     assertThat(template.getService().getUuid()).isEqualTo(SERVICE_ID);
   }
 
+  /**
+   * Should create default service template by env.
+   */
   @Test
   public void shouldCreateDefaultServiceTemplateByEnv() {
     Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
@@ -140,6 +150,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                 .build());
   }
 
+  /**
+   * Should create default service template by service.
+   */
   @Test
   public void shouldCreateDefaultServiceTemplateByService() {
     Service service = aService().withAppId(APP_ID).withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
@@ -170,6 +183,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                 aService().withUuid(SERVICE_ID).build()));
   }
 
+  /**
+   * Should delete service template.
+   */
   @Test
   public void shouldDeleteServiceTemplate() {
     templateService.delete(APP_ID, ENV_ID, TEMPLATE_ID);
@@ -183,6 +199,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).deleteByServiceTemplate(APP_ID, ENV_ID, TEMPLATE_ID);
   }
 
+  /**
+   * Should delete by env.
+   */
   @Test
   public void shouldDeleteByEnv() {
     when(query.asList())
@@ -200,6 +219,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(end).equal(ENV_ID);
   }
 
+  /**
+   * Should delete by service.
+   */
   @Test
   public void shouldDeleteByService() {
     doNothing().when(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
@@ -218,6 +240,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(spyTemplateService).delete(APP_ID, ENV_ID, TEMPLATE_ID);
   }
 
+  /**
+   * Should add hosts.
+   */
   @Test
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
@@ -231,6 +256,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(host), asList());
   }
 
+  /**
+   * Should delete hosts.
+   */
   @Test
   public void shouldDeleteHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
@@ -243,6 +271,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(), asList(host));
   }
 
+  /**
+   * Should add and delete hosts.
+   */
   @Test
   public void shouldAddAndDeleteHosts() {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
@@ -258,6 +289,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(newHost), asList(existingHost));
   }
 
+  /**
+   * Should add tags.
+   */
   @Test
   public void shouldAddTags() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
@@ -275,6 +309,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(host), asList());
   }
 
+  /**
+   * Should delete tags.
+   */
   @Test
   public void shouldDeleteTags() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
@@ -292,6 +329,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(), asList(host));
   }
 
+  /**
+   * Should add and delete tags.
+   */
   @Test
   public void shouldAddAndDeleteTags() {
     Tag existingTag = aTag().withEnvId(ENV_ID).withUuid("EXISTING_TAG_ID").build();
@@ -315,6 +355,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(newTagHost), asList(existingTagHost));
   }
 
+  /**
+   * Should fetch templates by tag.
+   */
   @Test
   public void shouldFetchTemplatesByTag() {
     Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();

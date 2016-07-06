@@ -73,6 +73,11 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withEnvId(ENV_ID);
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(ServiceInstance.class)).thenReturn(query);
@@ -160,6 +165,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(end).equal(SERVICE_INSTANCE_ID);
   }
 
+  /**
+   * Should delete by env.
+   */
   @Test
   public void shouldDeleteByEnv() {
     when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
@@ -173,6 +181,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(query).asList();
   }
 
+  /**
+   * Should delete by service template.
+   */
   @Test
   public void shouldDeleteByServiceTemplate() {
     when(query.asList()).thenReturn(asList(builder.withUuid(SERVICE_INSTANCE_ID).build()));
@@ -188,6 +199,9 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(query).asList();
   }
 
+  /**
+   * Should update host instance mapping.
+   */
   @Test
   public void shouldUpdateHostInstanceMapping() {
     List<Host> newHostList = asList(aHost().withUuid("NEW_HOST_ID").build());

@@ -12,26 +12,56 @@ public class SetupAction {
   private String code;
   private String url;
 
+  /**
+   * Gets display text.
+   *
+   * @return the display text
+   */
   public String getDisplayText() {
     return displayText;
   }
 
+  /**
+   * Sets display text.
+   *
+   * @param displayText the display text
+   */
   public void setDisplayText(String displayText) {
     this.displayText = displayText;
   }
 
+  /**
+   * Gets code.
+   *
+   * @return the code
+   */
   public String getCode() {
     return code;
   }
 
+  /**
+   * Sets code.
+   *
+   * @param code the code
+   */
   public void setCode(String code) {
     this.code = code;
   }
 
+  /**
+   * Gets url.
+   *
+   * @return the url
+   */
   public String getUrl() {
     return url;
   }
 
+  /**
+   * Sets url.
+   *
+   * @param url the url
+   */
   public void setUrl(String url) {
     this.url = url;
   }
@@ -63,6 +93,9 @@ public class SetupAction {
         .toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String displayText;
     private String code;
@@ -70,29 +103,62 @@ public class SetupAction {
 
     private Builder() {}
 
+    /**
+     * A setup action builder.
+     *
+     * @return the builder
+     */
     public static Builder aSetupAction() {
       return new Builder();
     }
 
+    /**
+     * With display text builder.
+     *
+     * @param displayText the display text
+     * @return the builder
+     */
     public Builder withDisplayText(String displayText) {
       this.displayText = displayText;
       return this;
     }
 
+    /**
+     * With code builder.
+     *
+     * @param code the code
+     * @return the builder
+     */
     public Builder withCode(String code) {
       this.code = code;
       return this;
     }
 
+    /**
+     * With url builder.
+     *
+     * @param url the url
+     * @return the builder
+     */
     public Builder withUrl(String url) {
       this.url = url;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aSetupAction().withDisplayText(displayText).withCode(code).withUrl(url);
     }
 
+    /**
+     * Build setup action.
+     *
+     * @return the setup action
+     */
     public SetupAction build() {
       SetupAction setupAction = new SetupAction();
       setupAction.setDisplayText(displayText);

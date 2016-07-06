@@ -112,6 +112,7 @@ public interface TagService {
    * Create default root tag for environment.
    *
    * @param env the env
+   * @return the tag
    */
   Tag createDefaultRootTagForEnvironment(Environment env);
 }

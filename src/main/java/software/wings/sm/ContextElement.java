@@ -52,7 +52,7 @@ public interface ContextElement {
   /**
    * Gets uuid.
    *
-   * @return uuid
+   * @return uuid uuid
    */
   public String getUuid();
 

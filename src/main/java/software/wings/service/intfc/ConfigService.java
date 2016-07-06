@@ -66,7 +66,7 @@ public interface ConfigService {
    * Delete by entity id.
    *
    * @param appId      the app id
-   * @param entityId  the service id
+   * @param entityId   the service id
    * @param templateId the template id
    */
   void deleteByEntityId(String appId, String entityId, String templateId);

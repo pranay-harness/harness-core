@@ -153,6 +153,13 @@ public class OrchestrationResource {
     return new RestResponse();
   }
 
+  /**
+   * Stencils rest response.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the rest response
+   */
   @GET
   @Path("stencils")
   public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {

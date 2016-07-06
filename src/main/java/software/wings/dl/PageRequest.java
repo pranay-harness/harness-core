@@ -231,6 +231,7 @@ public class PageRequest<T> {
    * Converts the filter to morphia form.
    *
    * @param mappedClass the mapped class
+   * @param mapper      the mapper
    */
   public void populateFilters(MappedClass mappedClass, Mapper mapper) {
     if (uriInfo == null) {

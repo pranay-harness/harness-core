@@ -42,18 +42,33 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class AppServiceTest extends WingsBaseTest {
+  /**
+   * The App service.
+   */
+  @Inject @InjectMocks AppService appService;
+  /**
+   * The Query.
+   */
+  @Mock Query<Application> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
+  /**
+   * The Update operations.
+   */
+  @Mock UpdateOperations<Application> updateOperations;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
   @Mock private AppContainerService appContainerService;
 
-  @Inject @InjectMocks AppService appService;
-
-  @Mock Query<Application> query;
-  @Mock FieldEnd end;
-  @Mock UpdateOperations<Application> updateOperations;
-
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Application.class)).thenReturn(query);
@@ -63,6 +78,9 @@ public class AppServiceTest extends WingsBaseTest {
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
   }
 
+  /**
+   * Should save application.
+   */
   @Test
   public void shouldSaveApplication() {
     Application app = anApplication().withName("AppA").withDescription("Description1").build();
@@ -87,6 +105,9 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(applications).containsAll(asList(application));
   }
 
+  /**
+   * Should get application.
+   */
   @Test
   public void shouldGetApplication() {
     appService.get(APP_ID);

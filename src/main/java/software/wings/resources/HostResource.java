@@ -53,8 +53,8 @@ public class HostResource {
   /**
    * Instantiates a new Host resource.
    *
-   * @param hostService the host service
-   * @param infraService
+   * @param hostService  the host service
+   * @param infraService the infra service
    */
   @Inject
   public HostResource(HostService hostService, InfraService infraService) {

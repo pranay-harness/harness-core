@@ -31,47 +31,73 @@ public class Environment extends Base {
   @Transient private List<ConfigFile> configFiles;
 
   /**
-   * The enum Environment type.
+   * Gets name.
+   *
+   * @return the name
    */
-  public enum EnvironmentType {
-    /**
-     * Prod environment type.
-     */
-    PROD,
-    /**
-     * Other environment type.
-     */
-    OTHER
-  }
-
   public String getName() {
     return name;
   }
 
+  /**
+   * Sets name.
+   *
+   * @param name the name
+   */
   public void setName(String name) {
     this.name = name;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }
 
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
   public void setDescription(String description) {
     this.description = description;
   }
 
+  /**
+   * Gets environment type.
+   *
+   * @return the environment type
+   */
   public EnvironmentType getEnvironmentType() {
     return environmentType;
   }
 
+  /**
+   * Sets environment type.
+   *
+   * @param environmentType the environment type
+   */
   public void setEnvironmentType(EnvironmentType environmentType) {
     this.environmentType = environmentType;
   }
 
+  /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
   public List<ConfigFile> getConfigFiles() {
     return configFiles;
   }
 
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
   }
@@ -99,6 +125,19 @@ public class Environment extends Base {
   }
 
   /**
+   * The enum Environment type.
+   */
+  public enum EnvironmentType {
+    /**
+     * Prod environment type.
+     */
+    PROD, /**
+           * Other environment type.
+           */
+    OTHER
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -116,65 +155,141 @@ public class Environment extends Base {
 
     private Builder() {}
 
+    /**
+     * An environment builder.
+     *
+     * @return the builder
+     */
     public static Builder anEnvironment() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With environment type builder.
+     *
+     * @param environmentType the environment type
+     * @return the builder
+     */
     public Builder withEnvironmentType(EnvironmentType environmentType) {
       this.environmentType = environmentType;
       return this;
     }
 
+    /**
+     * With config files builder.
+     *
+     * @param configFiles the config files
+     * @return the builder
+     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anEnvironment()
           .withName(name)
@@ -190,6 +305,11 @@ public class Environment extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build environment.
+     *
+     * @return the environment
+     */
     public Environment build() {
       Environment environment = new Environment();
       environment.setName(name);

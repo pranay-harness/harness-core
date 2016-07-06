@@ -65,6 +65,7 @@ public class MongoHelper {
    * @param query       the query
    * @param req         the req
    * @param mappedClass the mapped class
+   * @param mapper      the mapper
    * @return the query
    */
   public static <T> Query<T> applyPageRequest(

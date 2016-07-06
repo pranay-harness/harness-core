@@ -37,16 +37,24 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/29/16.
  */
 public class InfraServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<Infra> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private HostService hostService;
-
   @Inject @InjectMocks private InfraService infraService;
-
   @Spy @InjectMocks private InfraService spyInfraService = new InfraServiceImpl();
 
-  @Mock Query<Infra> query;
-  @Mock FieldEnd end;
-
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Infra.class)).thenReturn(query);
@@ -54,6 +62,9 @@ public class InfraServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
   }
 
+  /**
+   * Should list.
+   */
   @Test
   public void shouldList() {
     Infra infra = Infra.InfraBuilder.anInfra().build();
@@ -65,6 +76,9 @@ public class InfraServiceTest extends WingsBaseTest {
     assertThat(infras).containsAll(asList(infra));
   }
 
+  /**
+   * Should save.
+   */
   @Test
   public void shouldSave() {
     Infra infra = InfraBuilder.anInfra().withAppId(APP_ID).withEnvId(ENV_ID).build();
@@ -75,6 +89,9 @@ public class InfraServiceTest extends WingsBaseTest {
     Assertions.assertThat(savedInfra).isInstanceOf(Infra.class);
   }
 
+  /**
+   * Should create default infra for environment.
+   */
   @Test
   public void shouldCreateDefaultInfraForEnvironment() {
     infraService.createDefaultInfraForEnvironment(APP_ID, ENV_ID);
@@ -82,6 +99,9 @@ public class InfraServiceTest extends WingsBaseTest {
         .saveAndGet(Infra.class, anInfra().withAppId(APP_ID).withEnvId(ENV_ID).withInfraType(STATIC).build());
   }
 
+  /**
+   * Should get infra id by env id.
+   */
   @Test
   public void shouldGetInfraIdByEnvId() {
     when(query.get()).thenReturn(anInfra().withUuid(INFRA_ID).withAppId(APP_ID).withEnvId(ENV_ID).build());
@@ -94,6 +114,9 @@ public class InfraServiceTest extends WingsBaseTest {
     assertThat(infraId).isEqualTo(INFRA_ID);
   }
 
+  /**
+   * Should delete.
+   */
   @Test
   public void shouldDelete() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
@@ -107,6 +130,9 @@ public class InfraServiceTest extends WingsBaseTest {
     verify(end).equal(INFRA_ID);
   }
 
+  /**
+   * Should delete by env.
+   */
   @Test
   public void shouldDeleteByEnv() {
     when(query.asList()).thenReturn(asList(anInfra().withUuid(INFRA_ID).withAppId(APP_ID).withEnvId(ENV_ID).build()));

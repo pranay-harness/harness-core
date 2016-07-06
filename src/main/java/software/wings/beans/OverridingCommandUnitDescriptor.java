@@ -14,6 +14,11 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
   private Optional<String> overridingName = Optional.empty();
   private Optional<JsonNode> overridingJsonSchema = Optional.empty();
 
+  /**
+   * Instantiates a new Overriding command unit descriptor.
+   *
+   * @param commandUnitDescriptor the command unit descriptor
+   */
   public OverridingCommandUnitDescriptor(CommandUnitDescriptor commandUnitDescriptor) {
     this.commandUnitDescriptor = commandUnitDescriptor;
   }
@@ -56,13 +61,13 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
   }
 
   @Override
-  public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
-    this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
+  public JsonNode getOverridingJsonSchema() {
+    return overridingJsonSchema.orElse(null);
   }
 
   @Override
-  public JsonNode getOverridingJsonSchema() {
-    return overridingJsonSchema.orElse(null);
+  public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
+    this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
   }
 
   @Override

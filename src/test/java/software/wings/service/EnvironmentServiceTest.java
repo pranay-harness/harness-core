@@ -45,20 +45,28 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/28/16.
  */
 public class EnvironmentServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<Environment> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
   @Mock private InfraService infraService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
   @Mock private WorkflowService workflowService;
-
   @Inject @InjectMocks private EnvironmentService environmentService;
-
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
-  @Mock Query<Environment> query;
-  @Mock FieldEnd end;
-
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
@@ -66,6 +74,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
   }
 
+  /**
+   * Should list environments.
+   */
   @Test
   public void shouldListEnvironments() {
     Environment environment = anEnvironment().build();
@@ -77,12 +88,18 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(environments).containsAll(asList(environment));
   }
 
+  /**
+   * Should get environment.
+   */
   @Test
   public void shouldGetEnvironment() {
     environmentService.get(APP_ID, ENV_ID);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
+  /**
+   * Should save environment.
+   */
   @Test
   public void shouldSaveEnvironment() {
     Environment environment =
@@ -100,6 +117,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
   }
 
+  /**
+   * Should update environment.
+   */
   @Test
   public void shouldUpdateEnvironment() {
     Environment environment = anEnvironment()
@@ -116,6 +136,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
+  /**
+   * Should delete environment.
+   */
   @Test
   public void shouldDeleteEnvironment() {
     environmentService.delete(APP_ID, ENV_ID);
@@ -126,6 +149,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     inOrder.verify(infraService).deleteByEnv(APP_ID, ENV_ID);
   }
 
+  /**
+   * Should delete by app.
+   */
   @Test
   public void shouldDeleteByApp() {
     when(query.asList()).thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build()));

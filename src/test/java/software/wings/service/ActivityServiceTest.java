@@ -114,6 +114,9 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(commandUnits.get(0).getName()).isEqualTo(COMMAND_UNIT_NAME);
   }
 
+  /**
+   * Shouldget last activity for service.
+   */
   @Test
   public void shouldgetLastActivityForService() {
     wingsPersistence.save(activity);
@@ -121,6 +124,9 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(activityForService).isEqualTo(activity);
   }
 
+  /**
+   * Shouldget last production activity for service.
+   */
   @Test
   public void shouldgetLastProductionActivityForService() {
     activity.setEnvironmentType(PROD);

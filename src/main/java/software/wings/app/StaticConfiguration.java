@@ -26,7 +26,7 @@ public class StaticConfiguration {
   /**
    * Default simple workflow graph.
    *
-   * @return graph
+   * @return graph graph
    */
   public Graph defaultSimpleWorkflow() {
     URL url = this.getClass().getResource(Constants.SIMPLE_WORKFLOW_DEFAULT_GRAPH_URL);

@@ -79,6 +79,7 @@ public class TagResource {
    * Gets the.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    * @return the rest response
    */
@@ -93,6 +94,7 @@ public class TagResource {
    * Update.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    * @param tag   the tag
    * @return the rest response
@@ -111,6 +113,7 @@ public class TagResource {
    * Delete.
    *
    * @param appId the app id
+   * @param envId the env id
    * @param tagId the tag id
    * @return the rest response
    */
@@ -126,6 +129,7 @@ public class TagResource {
    * Tag hosts.
    *
    * @param appId    the app id
+   * @param envId    the env id
    * @param tagId    the tag id
    * @param uuidList the uuid list
    * @return the rest response

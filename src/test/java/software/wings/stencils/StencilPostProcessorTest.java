@@ -32,11 +32,21 @@ public class StencilPostProcessorTest extends WingsBaseTest {
 
   @InjectMocks @Inject private StencilPostProcessor stencilPostProcessor;
 
+  /**
+   * Sets up mocks.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUpMocks() throws Exception {
     when(injector.getInstance(TestDataProvider.class)).thenReturn(new TestDataProvider());
   }
 
+  /**
+   * Should expand stencil on post process.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldExpandStencilOnPostProcess() throws Exception {
     List<Stencil> processedStencils =
@@ -58,6 +68,11 @@ public class StencilPostProcessorTest extends WingsBaseTest {
                 "TYPE"));
   }
 
+  /**
+   * Should not expand for stencil enum on post process.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldNotExpandForStencilEnumOnPostProcess() throws Exception {
     List<Stencil> processedStencils =
@@ -72,8 +87,14 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
 
+  /**
+   * The interface Stencil object.
+   */
   public interface StencilObject {}
 
+  /**
+   * The type Test data provider.
+   */
   public static class TestDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {
@@ -81,6 +102,9 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The type Expand stencil object.
+   */
   public static class ExpandStencilObject implements StencilObject {
     @EnumData(expandIntoMultipleEntries = true, enumDataProvider = TestDataProvider.class) private String expand;
 
@@ -103,6 +127,9 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The type Enum stencil object.
+   */
   public static class EnumStencilObject implements StencilObject {
     @EnumData(enumDataProvider = TestDataProvider.class) private String enumField;
 
@@ -125,9 +152,17 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The type Stencil type.
+   */
   public static class StencilType implements Stencil<StencilObject> {
     private Class<? extends StencilObject> clazz;
 
+    /**
+     * Instantiates a new Stencil type.
+     *
+     * @param clazz the clazz
+     */
     public StencilType(Class<? extends StencilObject> clazz) {
       this.clazz = clazz;
     }
@@ -168,11 +203,19 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The type Overriding stencil type.
+   */
   public static class OverridingStencilType implements Stencil<StencilObject>, OverridingStencil<StencilObject> {
     private final StencilType stencilType;
     private Optional<String> overridingName = Optional.empty();
     private Optional<JsonNode> overridingJsonSchema = Optional.empty();
 
+    /**
+     * Instantiates a new Overriding stencil type.
+     *
+     * @param stencilType the stencil type
+     */
     public OverridingStencilType(StencilType stencilType) {
       this.stencilType = stencilType;
     }
@@ -213,13 +256,13 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     }
 
     @Override
-    public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
-      this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
+    public JsonNode getOverridingJsonSchema() {
+      return overridingJsonSchema.orElse(null);
     }
 
     @Override
-    public JsonNode getOverridingJsonSchema() {
-      return overridingJsonSchema.orElse(null);
+    public void setOverridingJsonSchema(JsonNode overridingJsonSchema) {
+      this.overridingJsonSchema = Optional.ofNullable(overridingJsonSchema);
     }
 
     @Override

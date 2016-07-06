@@ -152,65 +152,141 @@ public class Application extends Base {
 
     private Builder() {}
 
+    /**
+     * An application builder.
+     *
+     * @return the builder
+     */
     public static Builder anApplication() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
+    /**
+     * With environments builder.
+     *
+     * @param environments the environments
+     * @return the builder
+     */
     public Builder withEnvironments(List<Environment> environments) {
       this.environments = environments;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anApplication()
           .withName(name)
@@ -226,6 +302,11 @@ public class Application extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build application.
+     *
+     * @return the application
+     */
     public Application build() {
       Application application = new Application();
       application.setName(name);

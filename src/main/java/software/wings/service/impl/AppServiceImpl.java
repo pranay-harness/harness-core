@@ -29,7 +29,6 @@ import javax.validation.executable.ValidateOnExecution;
  *
  * @author Rishi
  */
-
 @ValidateOnExecution
 @Singleton
 public class AppServiceImpl implements AppService {
