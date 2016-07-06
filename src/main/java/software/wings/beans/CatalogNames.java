@@ -26,4 +26,9 @@ public interface CatalogNames {
    * The constant EXECUTION_TYPE.
    */
   String EXECUTION_TYPE = "EXECUTION_TYPE";
+
+  /**
+   * The constant ENVIRONMENT_TYPE.
+   */
+  String ENVIRONMENT_TYPE = "ENVIRONMENT_TYPE";
 }

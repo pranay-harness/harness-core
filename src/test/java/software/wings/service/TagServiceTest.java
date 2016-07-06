@@ -279,6 +279,28 @@ public class TagServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldFlattenTagTree() {
+    Tag childTag1 = getTagBuilder().withUuid("TAG_ID_1").withName("TAG_1").withRootTagId("ROOT_TAG_ID").build();
+    Tag childTag2 = getTagBuilder().withUuid("TAG_ID_2").withName("TAG_1").withRootTagId("ROOT_TAG_ID").build();
+    Tag rootTag = getTagBuilder()
+                      .withUuid("ROOT_TAG_ID")
+                      .withName("ROOT_TAG")
+                      .withRootTag(false)
+                      .withChildren(asList(childTag1, childTag2))
+                      .build();
+    when(query.get()).thenReturn(rootTag);
+    List<Tag> tags = tagService.flattenTagTree(APP_ID, ENV_ID, null);
+    assertThat(tags).isNotNull().hasSize(3).containsExactlyInAnyOrder(rootTag, childTag1, childTag2);
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field("envId");
+    verify(end).equal(ENV_ID);
+    verify(query).field("rootTag");
+    verify(end).equal(true);
+    verify(query).get();
+  }
+
+  @Test
   @Ignore
   public void shouldGetLeafTags() {}
 }

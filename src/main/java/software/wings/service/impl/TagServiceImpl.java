@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -178,6 +179,23 @@ public class TagServiceImpl implements TagService {
             .withDescription(env.getName())
             .withRootTag(true)
             .build());
+  }
+
+  @Override
+  public List<Tag> flattenTagTree(String appId, String envId, String tagId) {
+    Tag tag = isNullOrEmpty(tagId) ? getRootConfigTag(appId, envId) : get(appId, envId, tagId);
+    List<Tag> flattenTreeNodes = new ArrayList<>();
+    collectTreeNodes(tag, flattenTreeNodes);
+    return flattenTreeNodes;
+  }
+
+  private void collectTreeNodes(Tag tag, List<Tag> flattenTree) {
+    if (tag != null) {
+      flattenTree.add(tag);
+      if (tag.getChildren() != null && tag.getChildren().size() > 0) {
+        tag.getChildren().forEach(child -> collectTreeNodes(child, flattenTree));
+      }
+    }
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {

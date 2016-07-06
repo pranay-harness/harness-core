@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
@@ -96,6 +97,7 @@ public class CatalogResource {
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
+      catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
@@ -129,6 +131,9 @@ public class CatalogResource {
             catalogs.put(catalogType, ExecutionType.values());
             ;
             break;
+          }
+          case CatalogNames.ENVIRONMENT_TYPE: {
+            catalogs.put(catalogType, EnvironmentType.values());
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }

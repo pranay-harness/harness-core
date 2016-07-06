@@ -112,6 +112,17 @@ public interface TagService {
    * Create default root tag for environment.
    *
    * @param env the env
+   * @return the tag
    */
   Tag createDefaultRootTagForEnvironment(Environment env);
+
+  /**
+   * Flatten tag tree list.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param tagId the tag id
+   * @return the list
+   */
+  List<Tag> flattenTagTree(String appId, String envId, String tagId);
 }

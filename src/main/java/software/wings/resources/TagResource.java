@@ -15,6 +15,7 @@ import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TagService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -50,8 +51,8 @@ public class TagResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Tag>> list(
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Tag> request) {
+  public RestResponse<PageResponse<Tag>> list(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
+      @QueryParam("flatten") boolean flatten, @BeanParam PageRequest<Tag> request) {
     request.addFilter("appId", appId, EQ);
     request.addFilter("envId", envId, EQ);
     request.addFilter("rootTag", true, EQ);
@@ -136,5 +137,12 @@ public class TagResource {
       @PathParam("tagId") String tagId, UuidList uuidList) {
     tagService.tagHosts(appId, envId, tagId, uuidList.getUuids());
     return new RestResponse();
+  }
+
+  @GET
+  @Path("/flatten-tree")
+  public RestResponse<List<Tag>> tagTree(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("tagId") String tagId) {
+    return new RestResponse<>(tagService.flattenTagTree(appId, envId, tagId));
   }
 }
