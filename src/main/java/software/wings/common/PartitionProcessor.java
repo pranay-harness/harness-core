@@ -110,11 +110,14 @@ public interface PartitionProcessor {
 
       List<PartitionElement> partLists = new ArrayList<>();
       int ind = 0;
+      int partitionIndex = 1;
       for (int count : finalCounts) {
         List<ContextElement> elementPart = elements.subList(ind, ind + count);
         ind += count;
         PartitionElement pe = new PartitionElement();
         pe.setPartitionElements(elementPart);
+        pe.setName("Phase " + partitionIndex);
+        partitionIndex++;
         partLists.add(pe);
       }
       return partLists;
