@@ -105,7 +105,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                             .withY(50)
                             .addProperty("executionStrategy", "SERIAL")
                             .addProperty(
-                                "repeatElementExpression", "${phases.partitions(\"10%\",\"20%\",\"30%\",\"40%\")}")
+                                "repeatElementExpression", "${phases.withPercentages(\"10%\",\"20%\",\"30%\",\"40%\")}")
                             .build(),
                         aNode()
                             .withId("n3")
