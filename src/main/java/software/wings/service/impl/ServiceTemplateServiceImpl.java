@@ -55,6 +55,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceTemplateServiceImpl implements ServiceTemplateService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TagService tagService;
   @Inject private ConfigService configService;
@@ -64,8 +65,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)

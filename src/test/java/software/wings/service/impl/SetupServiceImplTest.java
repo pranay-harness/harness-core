@@ -44,12 +44,20 @@ public class SetupServiceImplTest extends WingsBaseTest {
 
   @Mock private PortalConfig portalConfig;
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://localhost:9090/wings/");
   }
 
+  /**
+   * Should get application setup status.
+   */
   @Test
   public void shouldGetApplicationSetupStatus() {
     Application application = Builder.anApplication()
@@ -64,6 +72,9 @@ public class SetupServiceImplTest extends WingsBaseTest {
     assertThat(setupStatus.getActions()).isEmpty();
   }
 
+  /**
+   * Should get incomplete status for application without service.
+   */
   @Test
   public void shouldGetIncompleteStatusForApplicationWithoutService() {
     Application application = Builder.anApplication().withUuid(APP_ID).build();
@@ -74,6 +85,9 @@ public class SetupServiceImplTest extends WingsBaseTest {
     assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("SERVICE_NOT_CONFIGURED");
   }
 
+  /**
+   * Should get incomplete status for application without environment.
+   */
   @Test
   public void shouldGetIncompleteStatusForApplicationWithoutEnvironment() {
     Application application =
@@ -85,6 +99,9 @@ public class SetupServiceImplTest extends WingsBaseTest {
     assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("ENVIRONMENT_NOT_CONFIGURED");
   }
 
+  /**
+   * Should get service setup status.
+   */
   @Test
   public void shouldGetServiceSetupStatus() {
     when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(aService().build());
@@ -93,6 +110,9 @@ public class SetupServiceImplTest extends WingsBaseTest {
     assertThat(setupStatus.getActions()).isEmpty();
   }
 
+  /**
+   * Should get environment setup status.
+   */
   @Test
   public void shouldGetEnvironmentSetupStatus() {
     when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
@@ -102,6 +122,9 @@ public class SetupServiceImplTest extends WingsBaseTest {
     assertThat(setupStatus.getActions()).isEmpty();
   }
 
+  /**
+   * Should get incomplete status for environment with no host.
+   */
   @Test
   public void shouldGetIncompleteStatusForEnvironmentWithNoHost() {
     when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());

@@ -44,6 +44,7 @@ public class ConfigResource {
   /**
    * List.
    *
+   * @param appId       the app id
    * @param entityId    the entity id
    * @param templateId  the template id
    * @param pageRequest the page request
@@ -62,6 +63,7 @@ public class ConfigResource {
   /**
    * Save.
    *
+   * @param appId               the app id
    * @param entityId            the entity id
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
@@ -82,6 +84,7 @@ public class ConfigResource {
   /**
    * Gets the.
    *
+   * @param appId    the app id
    * @param configId the config id
    * @return the rest response
    */
@@ -94,6 +97,7 @@ public class ConfigResource {
   /**
    * Update.
    *
+   * @param appId               the app id
    * @param configId            the config id
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
@@ -114,6 +118,7 @@ public class ConfigResource {
   /**
    * Delete.
    *
+   * @param appId    the app id
    * @param configId the config id
    * @return the rest response
    */

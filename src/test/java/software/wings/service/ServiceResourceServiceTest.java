@@ -86,10 +86,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private Datastore datastore;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ConfigService configService;
-  @Mock private ServiceTemplateService serviceTemplateService;
-  @Mock private AppService appService;
-  @Mock private ActivityService activityService;
-
   /**
    * The Verifier.
    */
@@ -100,6 +96,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(configService, wingsPersistence);
     }
   };
+  @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private AppService appService;
+  @Mock private ActivityService activityService;
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();

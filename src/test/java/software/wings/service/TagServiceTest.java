@@ -49,17 +49,26 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/24/16.
  */
 public class TagServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<Tag> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private HostService hostService;
   @Mock private InfraService infraService;
   @Mock private ServiceTemplateService serviceTemplateService;
-
   @Inject @InjectMocks private TagService tagService;
 
-  @Mock Query<Tag> query;
-  @Mock FieldEnd end;
-
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Tag.class)).thenReturn(query);
@@ -71,6 +80,9 @@ public class TagServiceTest extends WingsBaseTest {
     return aTag().withAppId(APP_ID).withEnvId(ENV_ID).withName(TAG_NAME);
   }
 
+  /**
+   * Should list tags.
+   */
   @Test
   public void shouldListTags() {
     PageResponse<Tag> pageResponse = new PageResponse<>();
@@ -81,6 +93,9 @@ public class TagServiceTest extends WingsBaseTest {
     assertThat(tags).containsAll(asList(getTagBuilder().build()));
   }
 
+  /**
+   * Should get tag.
+   */
   @Test
   public void shouldGetTag() {
     tagService.get(APP_ID, ENV_ID, TAG_ID);
@@ -93,6 +108,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(query).get();
   }
 
+  /**
+   * Should update tag.
+   */
   @Test
   public void shouldUpdateTag() {
     Tag tag = getTagBuilder().withUuid(TAG_ID).withDescription("TAG_DESCRIPTION").build();
@@ -100,6 +118,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateFields(Tag.class, TAG_ID, of("name", TAG_NAME, "description", "TAG_DESCRIPTION"));
   }
 
+  /**
+   * Should delete tag.
+   */
   @Test
   public void shouldDeleteTag() {
     Tag child = getTagBuilder().withUuid(TAG_ID).withRootTagId("ROOT_TAG_ID").build();
@@ -113,6 +134,9 @@ public class TagServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).delete(child);
   }
 
+  /**
+   * Should not delete root tag.
+   */
   @Test
   public void shouldNotDeleteRootTag() {
     Tag tag =
@@ -124,6 +148,9 @@ public class TagServiceTest extends WingsBaseTest {
     verifyZeroInteractions(wingsPersistence);
   }
 
+  /**
+   * Should delete by env.
+   */
   @Test
   public void shouldDeleteByEnv() {
     Tag tag = getTagBuilder()
@@ -147,12 +174,18 @@ public class TagServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(host));
   }
 
+  /**
+   * Should save root tag.
+   */
   @Test
   public void shouldSaveRootTag() {
     tagService.save(null, getTagBuilder().build());
     verify(wingsPersistence).saveAndGet(Tag.class, getTagBuilder().withRootTag(true).build());
   }
 
+  /**
+   * Should save normal tag.
+   */
   @Test
   public void shouldSaveNormalTag() {
     Tag savedTag = getTagBuilder().withUuid(TAG_ID).withRootTagId("ROOT_TAG_ID").build();
@@ -184,6 +217,9 @@ public class TagServiceTest extends WingsBaseTest {
         .addLeafTag(aServiceTemplate().withUuid(TEMPLATE_ID).build(), savedTag); // template updated
   }
 
+  /**
+   * Should get root config tag.
+   */
   @Test
   public void shouldGetRootConfigTag() {
     tagService.getRootConfigTag(APP_ID, ENV_ID);
@@ -196,6 +232,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(query).get();
   }
 
+  /**
+   * Should get tags by name.
+   */
   @Test
   public void shouldGetTagsByName() {
     when(query.get())
@@ -219,6 +258,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(query, times(3)).get();
   }
 
+  /**
+   * Should tag hosts.
+   */
   @Test
   public void shouldTagHosts() {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
@@ -237,6 +279,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(host), asList());
   }
 
+  /**
+   * Should un tag hosts.
+   */
   @Test
   public void shouldUnTagHosts() {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
@@ -255,6 +300,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(host));
   }
 
+  /**
+   * Should tag and untag hosts.
+   */
   @Test
   public void shouldTagAndUntagHosts() {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
@@ -300,6 +348,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(query).get();
   }
 
+  /**
+   * Should get leaf tags.
+   */
   @Test
   @Ignore
   public void shouldGetLeafTags() {}

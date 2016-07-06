@@ -649,10 +649,20 @@ public class Graph {
       this.detailsReference = detailsReference;
     }
 
+    /**
+     * Is expanded boolean.
+     *
+     * @return the boolean
+     */
     public boolean isExpanded() {
       return expanded;
     }
 
+    /**
+     * Sets expanded.
+     *
+     * @param expanded the expanded
+     */
     public void setExpanded(boolean expanded) {
       this.expanded = expanded;
     }

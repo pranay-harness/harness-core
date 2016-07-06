@@ -14,7 +14,6 @@ import software.wings.utils.validation.Update;
 
 import java.util.Comparator;
 import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
@@ -36,19 +35,22 @@ public class Base {
    * The constant GLOBAL_ENV_ID.
    */
   public static final String GLOBAL_ENV_ID = "__GLOBAL_ENV_ID__";
+  /**
+   * The constant createdAtComparator.
+   */
+  public static final Comparator<Base> createdAtComparator = new Comparator<Base>() {
 
+    @Override
+    public int compare(Base o1, Base o2) {
+      return new Long(o1.createdAt).compareTo(new Long(o2.createdAt));
+    }
+  };
   @Id @NotNull(groups = {Update.class}) private String uuid;
-
   @Indexed @NotNull private String appId;
-
   @Reference(idOnly = true, ignoreMissing = true) private User createdBy;
-
   @Indexed private long createdAt;
-
   @Reference(idOnly = true, ignoreMissing = true) private User lastUpdatedBy;
-
   private long lastUpdatedAt;
-
   @Indexed private boolean active = true;
 
   /**
@@ -234,12 +236,4 @@ public class Base {
         .add("active", active)
         .toString();
   }
-
-  public static final Comparator<Base> createdAtComparator = new Comparator<Base>() {
-
-    @Override
-    public int compare(Base o1, Base o2) {
-      return new Long(o1.createdAt).compareTo(new Long(o2.createdAt));
-    }
-  };
 }

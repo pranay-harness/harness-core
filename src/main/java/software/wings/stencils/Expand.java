@@ -11,5 +11,10 @@ import java.lang.annotation.Target;
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = {ElementType.FIELD})
 public @interface Expand {
+  /**
+   * Data provider class.
+   *
+   * @return the class
+   */
   Class<? extends DataProvider> dataProvider();
 }

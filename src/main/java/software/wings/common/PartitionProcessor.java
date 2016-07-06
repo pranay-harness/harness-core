@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.common;
 
 import static org.eclipse.jetty.util.LazyList.isEmpty;
@@ -18,35 +19,62 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author Rishi
+ * The interface Partition processor.
  *
+ * @author Rishi
  */
 public interface PartitionProcessor {
+  /**
+   * The constant PCT.
+   */
   String PCT = "%";
+  /**
+   * The constant minCount.
+   */
   int minCount = 1;
 
+  /**
+   * With breakdowns partition processor.
+   *
+   * @param breakdowns the breakdowns
+   * @return the partition processor
+   */
   default PartitionProcessor
     withBreakdowns(String... breakdowns) {
       setBreakdowns(breakdowns);
       return this;
     }
 
+  /**
+   * With percentages partition processor.
+   *
+   * @param percentages the percentages
+   * @return the partition processor
+   */
   default PartitionProcessor
     withPercentages(String... percentages) {
       setPercentages(percentages);
       return this;
     }
 
-    void setPercentages(String[] percentages);
-
+  /**
+   * With counts partition processor.
+   *
+   * @param counts the counts
+   * @return the partition processor
+   */
   default PartitionProcessor
     withCounts(String... counts) {
       setCounts(counts);
       return this;
     }
 
-    void setCounts(String[] counts);
-
+  /**
+   * Partitions list.
+   *
+   * @param breakdownsParams the breakdowns params
+   * @return the list
+   */
   default List
     <PartitionElement> partitions(String... breakdownsParams) {
       if (ArrayUtils.isNotEmpty(breakdownsParams)) {
@@ -92,13 +120,12 @@ public interface PartitionProcessor {
       return partLists;
     }
 
-    /**
-     * Setter for property 'breakdowns'.
-     *
-     * @param breakdowns Value to set for property 'breakdowns'.
-     */
-    void setBreakdowns(String[] breakdowns);
-
+  /**
+   * Compute counts list.
+   *
+   * @param total the total
+   * @return the list
+   */
   default List
     <Integer> computeCounts(int total) {
       String[] breakdowns = getBreakdowns();
@@ -140,11 +167,25 @@ public interface PartitionProcessor {
     String[] getCounts();
 
     /**
+     * Sets counts.
+     *
+     * @param counts the counts
+     */
+    void setCounts(String[] counts);
+
+    /**
      * Getter for property 'percentages'.
      *
      * @return Value for property 'percentages'.
      */
     String[] getPercentages();
+
+    /**
+     * Sets percentages.
+     *
+     * @param percentages the percentages
+     */
+    void setPercentages(String[] percentages);
 
     /**
      * Getter for property 'breakdowns'.
@@ -153,6 +194,20 @@ public interface PartitionProcessor {
      */
     String[] getBreakdowns();
 
+    /**
+     * Setter for property 'breakdowns'.
+     *
+     * @param breakdowns Value to set for property 'breakdowns'.
+     */
+    void setBreakdowns(String[] breakdowns);
+
+  /**
+   * Pct count value integer.
+   *
+   * @param total the total
+   * @param val   the val
+   * @return the integer
+   */
   default Integer
     pctCountValue(int total, String val) {
       int count;
@@ -168,8 +223,18 @@ public interface PartitionProcessor {
       return count;
     }
 
+    /**
+     * Elements list.
+     *
+     * @return the list
+     */
     List<ContextElement> elements();
 
+  /**
+   * Log logger.
+   *
+   * @return the logger
+   */
   default Logger
     log() {
       return LoggerFactory.getLogger(getClass());

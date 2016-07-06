@@ -35,13 +35,12 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SetupServiceImpl implements SetupService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration configuration;
-
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
   public Setup getApplicationSetupStatus(String appId) {

@@ -92,6 +92,7 @@ public class ReleaseServiceImpl implements ReleaseService {
     setUnset(updateOperations, "releaseName", release.getReleaseName());
     setUnset(updateOperations, "description", release.getDescription());
     setUnset(updateOperations, "targetDate", release.getTargetDate());
+    setUnset(updateOperations, "services", release.getServices());
 
     wingsPersistence.update(query, updateOperations);
     return get(release.getUuid(), release.getAppId());

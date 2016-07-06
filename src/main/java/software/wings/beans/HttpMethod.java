@@ -6,10 +6,12 @@ package software.wings.beans;
  * @author Rishi
  */
 public enum HttpMethod {
-  OPTIONS,
   /**
-   * Head http method.
+   * Options http method.
    */
+  OPTIONS, /**
+            * Head http method.
+            */
   HEAD, /**
          * Get http method.
          */

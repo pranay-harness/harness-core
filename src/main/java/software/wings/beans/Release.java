@@ -122,21 +122,21 @@ public class Release extends Base {
   }
 
   /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(Set<Service> services) {
-    this.services = services;
-  }
-
-  /**
    * Gets services.
    *
    * @return the services
    */
   public Set<Service> getServices() {
     return services;
+  }
+
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
+  public void setServices(Set<Service> services) {
+    this.services = services;
   }
 
   /**

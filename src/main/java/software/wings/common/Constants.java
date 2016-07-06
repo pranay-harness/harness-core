@@ -24,6 +24,9 @@ public interface Constants {
    */
   String EXPRESSION_LIST_SUFFIX = ".list()";
 
+  /**
+   * The constant EXPRESSION_PARTITIONS_SUFFIX.
+   */
   String EXPRESSION_PARTITIONS_SUFFIX = ".partitions()";
   /**
    * The constant EXPRESSION_NAME_SUFFIX.

@@ -76,6 +76,11 @@ public class HostServiceTest extends WingsBaseTest {
                                     .withHostConnAttr(HOST_CONN_ATTR_PWD)
                                     .withHostConnectionCredential(CREDENTIAL);
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
@@ -169,6 +174,9 @@ public class HostServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).deleteHostFromTemplates(host);
   }
 
+  /**
+   * Should delete by infra.
+   */
   @Test
   public void shouldDeleteByInfra() {
     Host host = builder.withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).build();
@@ -184,6 +192,9 @@ public class HostServiceTest extends WingsBaseTest {
     verify(serviceTemplateService).deleteHostFromTemplates(host);
   }
 
+  /**
+   * Should get hosts by tags.
+   */
   @Test
   public void shouldGetHostsByTags() {
     List<Tag> tags = asList(Tag.Builder.aTag().withUuid(TAG_ID).build());
@@ -203,6 +214,9 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
   }
 
+  /**
+   * Should get hosts by host ids.
+   */
   @Test
   public void shouldGetHostsByHostIds() {
     when(query.asList()).thenReturn(asList(aHost().withUuid(HOST_ID).build()));
@@ -220,6 +234,9 @@ public class HostServiceTest extends WingsBaseTest {
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
   }
 
+  /**
+   * Should bulk save.
+   */
   @Test
   public void shouldBulkSave() {
     HostBuilder hostBuilder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostConnAttr(
@@ -228,6 +245,9 @@ public class HostServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Host.class, hostBuilder.withHostName(HOST_NAME).build());
   }
 
+  /**
+   * Should remove tag from host.
+   */
   @Test
   public void shouldRemoveTagFromHost() {
     Host host = builder.withUuid(HOST_ID).build();
@@ -239,6 +259,9 @@ public class HostServiceTest extends WingsBaseTest {
     verify(updateOperations).removeAll("tags", tag);
   }
 
+  /**
+   * Should set tags.
+   */
   @Test
   public void shouldSetTags() {
     Host host = builder.withUuid(HOST_ID).build();
