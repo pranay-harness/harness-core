@@ -1,11 +1,16 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
 import java.io.InputStream;
 import java.util.List;
+import javax.validation.Valid;
 
 // TODO: Auto-generated Javadoc
 
@@ -28,15 +33,17 @@ public interface ConfigService {
    * @param inputStream the input stream
    * @return the string
    */
-  String save(ConfigFile configFile, InputStream inputStream);
+  @ValidationGroups(Create.class) String save(@Valid ConfigFile configFile, InputStream inputStream);
 
   /**
    * Gets the.
    *
+   *
+   * @param appId
    * @param configId the config id
    * @return the config file
    */
-  ConfigFile get(String configId);
+  ConfigFile get(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
    * Update.
@@ -44,14 +51,15 @@ public interface ConfigService {
    * @param configFile  the config file
    * @param inputStream the input stream
    */
-  void update(ConfigFile configFile, InputStream inputStream);
+  @ValidationGroups(Update.class) void update(@Valid ConfigFile configFile, InputStream inputStream);
 
   /**
    * Delete.
    *
+   * @param appId
    * @param configId the config id
    */
-  void delete(String configId);
+  void delete(@NotEmpty String appId, @NotEmpty String configId);
 
   /**
    * Gets the config files for entity.
@@ -60,7 +68,7 @@ public interface ConfigService {
    * @param entityId   the entity id
    * @return the config files for entity
    */
-  List<ConfigFile> getConfigFilesForEntity(String templateId, String entityId);
+  List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId);
 
   /**
    * Delete by entity id.

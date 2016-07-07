@@ -10,7 +10,6 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +49,8 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#get(java.lang.String)
    */
   @Override
-  public ConfigFile get(String configId) {
-    return wingsPersistence.get(ConfigFile.class, configId);
+  public ConfigFile get(String appId, String configId) {
+    return wingsPersistence.get(ConfigFile.class, appId, configId);
   }
 
   /* (non-Javadoc)
@@ -76,8 +75,8 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#delete(java.lang.String)
    */
   @Override
-  public void delete(String configId) {
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, configId);
+  public void delete(String appId, String configId) {
+    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
     fileService.deleteFile(configFile.getFileUuid(), CONFIGS);
     wingsPersistence.delete(configFile);
   }
@@ -86,14 +85,15 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
-  public List<ConfigFile> getConfigFilesForEntity(String templateId, String entityId) {
-    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .field("templateId")
-                                       .equal(templateId)
-                                       .field("entityId")
-                                       .equal(entityId)
-                                       .asList();
-    return configFiles != null ? configFiles : new ArrayList<>();
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+    return wingsPersistence.createQuery(ConfigFile.class)
+        .field("appId")
+        .equal(appId)
+        .field("templateId")
+        .equal(templateId)
+        .field("entityId")
+        .equal(entityId)
+        .asList();
   }
 
   @Override
@@ -107,7 +107,7 @@ public class ConfigServiceImpl implements ConfigService {
                                        .equal(templateId)
                                        .asList();
     if (configFiles != null) {
-      configFiles.forEach(configFile -> delete(configFile.getUuid()));
+      configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }
   }
 }

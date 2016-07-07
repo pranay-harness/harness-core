@@ -325,8 +325,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     /* override order(left to right): Service -> Env -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
-        configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
-    List<ConfigFile> envConfigFiles = configService.getConfigFilesForEntity(templateId, serviceTemplate.getEnvId());
+        configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
+    List<ConfigFile> envConfigFiles =
+        configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getEnvId());
 
     // service -> env overrides
     logger.info("Apply env config.");
@@ -349,7 +350,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     // Untagged hosts override: env->host
     logger.info("Apply host overrides for untagged hosts");
     for (Host host : serviceTemplate.getHosts()) {
-      List<ConfigFile> configFiles = configService.getConfigFilesForEntity(templateId, host.getUuid());
+      List<ConfigFile> configFiles = configService.getConfigFilesForEntity(appId, templateId, host.getUuid());
       computedHostConfigs.put(host.getUuid(), overrideConfigFiles(envConfigFiles, configFiles));
     }
 
@@ -360,7 +361,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       for (Host host : taggedHosts) {
         computedHostConfigs.put(host.getUuid(),
             overrideConfigFiles(
-                tag.getConfigFiles(), configService.getConfigFilesForEntity(templateId, host.getUuid())));
+                tag.getConfigFiles(), configService.getConfigFilesForEntity(appId, templateId, host.getUuid())));
       }
     }
     return computedHostConfigs;
@@ -401,8 +402,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (rootTag == null) {
       return leafTagNodes;
     }
-    rootTag.getConfigFiles().addAll(
-        configService.getConfigFilesForEntity(serviceTemplate.getUuid(), rootTag.getUuid()));
+    rootTag.getConfigFiles().addAll(configService.getConfigFilesForEntity(
+        serviceTemplate.getAppId(), serviceTemplate.getUuid(), rootTag.getUuid()));
 
     Queue<Tag> queue = new ArrayQueue<>();
     queue.add(rootTag);
@@ -411,8 +412,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       Tag root = queue.poll();
       leafTagNodes.add(root);
       for (Tag child : root.getChildren()) {
-        child.getConfigFiles().addAll(
-            configService.getConfigFilesForEntity(serviceTemplate.getUuid(), child.getUuid()));
+        child.getConfigFiles().addAll(configService.getConfigFilesForEntity(
+            serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
         child.setConfigFiles(overrideConfigFiles(root.getConfigFiles(), child.getConfigFiles()));
         queue.add(child);
       }

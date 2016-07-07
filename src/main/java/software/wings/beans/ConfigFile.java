@@ -35,7 +35,7 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("entityId") @NotEmpty private String entityId;
 
-  @FormDataParam("relativePath") @NotEmpty private String relativePath;
+  @FormDataParam("relativePath") private String relativePath;
 
   /**
    * The enum Entity type.

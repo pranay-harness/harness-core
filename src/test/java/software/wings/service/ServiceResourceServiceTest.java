@@ -165,11 +165,11 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetService() {
     when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
-    when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID))
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(new ArrayList<ConfigFile>());
     srs.get(APP_ID, SERVICE_ID);
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
-    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
     verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
   }
@@ -234,7 +234,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
             eq(commandBuilder.withGraph(commandGraph).build()));
     verify(wingsPersistence).createQuery(Service.class);
-    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**
@@ -278,7 +278,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).createUpdateOperations(Service.class);
     verify(wingsPersistence).createQuery(Service.class);
-    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**
@@ -323,7 +323,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createUpdateOperations(Service.class);
     verify(wingsPersistence).createQuery(Service.class);
     verify(wingsPersistence).update(any(Query.class), any());
-    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
   /**
@@ -353,6 +353,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(srs.getCommandByName(APP_ID, SERVICE_ID, "START")).isNotNull();
 
     verify(wingsPersistence, times(1)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(configService).getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 }

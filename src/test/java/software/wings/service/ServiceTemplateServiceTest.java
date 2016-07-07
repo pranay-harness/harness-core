@@ -402,13 +402,13 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(aHost().withUuid("HOST_ID_1").build())).build());
 
-    when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID))
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_1").withName("PROPERTIES_FILE").build()));
 
-    when(configService.getConfigFilesForEntity("TEMPLATE_ID", ENV_ID))
+    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", ENV_ID))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_2").withName("PROPERTIES_FILE").build()));
 
-    when(configService.getConfigFilesForEntity("TEMPLATE_ID", "HOST_ID_1"))
+    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1"))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
 
     Map<String, List<ConfigFile>> hostConfigFileMapping =
