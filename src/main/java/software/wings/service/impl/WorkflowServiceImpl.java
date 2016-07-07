@@ -419,11 +419,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
-        populateSimpleWorkflowDetails(workflowExecution);
-      } else {
+      populateGraph(workflowExecution, null, null, null, workflowExecution.getWorkflowType() == WorkflowType.SIMPLE);
+      /*if () {
+        //populateSimpleWorkflowDetails(workflowExecution);
         populateGraph(workflowExecution, null, null, null, false);
-      }
+      } else {
+
+      }*/
     }
     return res;
   }
