@@ -1,6 +1,5 @@
 package software.wings.sm;
 
-import java.io.Serializable;
 import java.util.LinkedHashMap;
 
 /**
@@ -8,9 +7,7 @@ import java.util.LinkedHashMap;
  *
  * @author Rishi
  */
-public class StateExecutionData implements Serializable {
-  private static final long serialVersionUID = 1L;
-
+public class StateExecutionData {
   private String stateName;
   private Long startTs;
   private Long endTs;

@@ -818,7 +818,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    * @throws InterruptedException the interrupted exception
    */
   @Test
-  public void shouldListPipelinExecutions() throws InterruptedException {
+  public void shouldListPipelineExecutions() throws InterruptedException {
     Pipeline pipeline = createPipeline();
     WorkflowExecution workflowExecution = triggerPipeline(pipeline);
     PageRequest<WorkflowExecution> pageRequest = new PageRequest<>();

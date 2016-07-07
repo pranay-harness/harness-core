@@ -3,16 +3,19 @@ package software.wings.resources;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -93,8 +96,10 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> getExecutionDetails(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      @QueryParam("expandedGroupId") List<String> expandedGroupIds) {
-    return new RestResponse<>(workflowService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds));
+      @QueryParam("expandedGroupId") List<String> expandedGroupIds,
+      @QueryParam("requestedGroupId") String requestedGroupId, @QueryParam("nodeOps") Graph.NodeOps nodeOps) {
+    return new RestResponse<>(
+        workflowService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds, requestedGroupId, nodeOps));
   }
 
   /**
@@ -157,9 +162,13 @@ public class ExecutionResource {
   @PUT
   @Path("{workflowExecutionId}")
   @Produces("application/json")
-  public RestResponse<WorkflowExecution> updateExecutionDetails(@QueryParam("appId") String appId,
-      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId) {
-    // TODO - implement abort and pause functionality
-    return null;
+  public RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
+      WorkflowExecutionEvent workflowExecutionEvent) {
+    workflowExecutionEvent.setAppId(appId);
+    workflowExecutionEvent.setEnvId(envId);
+    workflowExecutionEvent.setWorkflowExecutionId(workflowExecutionId);
+
+    return workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent);
   }
 }

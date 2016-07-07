@@ -208,7 +208,7 @@ public class RepeatState extends State {
         JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
     childStateExecutionInstance.setStateName(repeatTransitionStateName);
     childStateExecutionInstance.setNotifyId(notifyId);
-    childStateExecutionInstance.setPrevInstanceId(prevInstanceId);
+    //    childStateExecutionInstance.setPrevInstanceId(prevInstanceId);
 
     childStateExecutionInstance.getContextElements().push(repeatElement);
     childStateExecutionInstance.setContextElementName(repeatElement.getName());

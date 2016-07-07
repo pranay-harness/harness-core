@@ -12,7 +12,6 @@ import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
 
 import java.io.Serializable;
@@ -20,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,37 +39,39 @@ public class Graph {
   /**
    * The Default initial x.
    */
-  static final int DEFAULT_INITIAL_X = 10;
+  public static final int DEFAULT_INITIAL_X = 10;
 
   /**
    * The Default initial y.
    */
-  static final int DEFAULT_INITIAL_Y = 0;
+  public static final int DEFAULT_INITIAL_Y = 0;
 
   /**
    * The Default node width.
    */
-  static final int DEFAULT_NODE_WIDTH = 75;
+  public static final int DEFAULT_NODE_WIDTH = 75;
 
   /**
    * The Default node height.
    */
-  static final int DEFAULT_NODE_HEIGHT = 50;
+  public static final int DEFAULT_NODE_HEIGHT = 75;
 
   /**
    * The Default arrow width.
    */
-  static final int DEFAULT_ARROW_WIDTH = 100;
+  public static final int DEFAULT_ARROW_WIDTH = 75;
 
   /**
    * The Default arrow height.
    */
-  static final int DEFAULT_ARROW_HEIGHT = 75;
+  public static final int DEFAULT_ARROW_HEIGHT = 25;
 
   /**
    * The Default group padding.
    */
-  static final int DEFAULT_GROUP_PADDING = 10;
+  public static final int DEFAULT_GROUP_PADDING = 10;
+
+  private static final String GROUP_TYPE = "group";
 
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
@@ -79,6 +79,9 @@ public class Graph {
   private List<Link> links = new ArrayList<>();
 
   private Optional<Node> originState = null;
+
+  public enum NodeOps { EXPAND, COLLAPSE }
+  ;
 
   /**
    * Gets graph name.
@@ -117,6 +120,15 @@ public class Graph {
   }
 
   /**
+   * Add node.
+   *
+   * @param node the node
+   */
+  public void addNode(Node node) {
+    this.nodes.add(node);
+  }
+
+  /**
    * Gets links.
    *
    * @return the links
@@ -132,6 +144,15 @@ public class Graph {
    */
   public void setLinks(List<Link> links) {
     this.links = links;
+  }
+
+  /**
+   * Add link.
+   *
+   * @param link the link
+   */
+  public void addLink(Link link) {
+    this.links.add(link);
   }
 
   /**
@@ -237,120 +258,6 @@ public class Graph {
     };
   }
 
-  /**
-   * Repaint.
-   *
-   * @param originNodeId the origin node id
-   */
-  public void repaint(String originNodeId) {
-    Map<String, Node> nodesMap = getNodesMap();
-    Map<String, List<Link>> repeatLinkMap = getRepeatLinkMap();
-    Map<String, Link> nextLinkMap = getNextLinkMap();
-
-    extrapolateDimensions(nodesMap.get(originNodeId), nodesMap, nextLinkMap, repeatLinkMap);
-    List<Link> updatedLinks = new ArrayList<>();
-    repaint(nodesMap.get(originNodeId), DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, nodesMap, nextLinkMap, repeatLinkMap,
-        updatedLinks);
-    setLinks(updatedLinks);
-  }
-
-  private void extrapolateDimensions(
-      Node node, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap, Map<String, List<Link>> repeatLinkMap) {
-    node.setWidth(DEFAULT_NODE_WIDTH);
-    node.setHeight(DEFAULT_NODE_HEIGHT);
-    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
-    if (repeatLinks != null) {
-      for (Link link : repeatLinks) {
-        Node repeatNode = nodesMap.get(link.getTo());
-        extrapolateDimensions(repeatNode, nodesMap, nextLinkMap, repeatLinkMap);
-        if (node.getWidth() < repeatNode.getWidth()) {
-          node.setWidth(repeatNode.getWidth());
-        }
-        node.setHeight(node.getHeight() + repeatNode.getHeight() + DEFAULT_ARROW_HEIGHT);
-      }
-    }
-    if (nextLinkMap.get(node.getId()) != null) {
-      Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
-      extrapolateDimensions(nextNode, nodesMap, nextLinkMap, repeatLinkMap);
-      if (node.getHeight() < nextNode.getHeight()) {
-        node.setHeight(nextNode.getHeight());
-      }
-      node.setWidth(node.getWidth() + nextNode.getWidth() + DEFAULT_ARROW_WIDTH);
-    }
-  }
-
-  private void repaint(Node node, int nodeX, int nodeY, Map<String, Node> nodesMap, Map<String, Link> nextLinkMap,
-      Map<String, List<Link>> repeatLinkMap, List<Link> updatedLinks) {
-    node.setX(nodeX);
-    node.setY(nodeY);
-
-    // repaint the repeat node
-    List<Link> repeatLinks = repeatLinkMap.get(node.getId());
-    if (repeatLinks != null) {
-      int y = nodeY + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT;
-
-      Node groupNode =
-          Node.Builder.aNode()
-              .withId(UUIDGenerator.getUuid())
-              .withType("group")
-              .withX(nodeX - DEFAULT_GROUP_PADDING)
-              .withY(y - DEFAULT_GROUP_PADDING)
-              .withWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING)
-              .withHeight(node.getHeight() + 2 * DEFAULT_GROUP_PADDING - DEFAULT_NODE_HEIGHT - DEFAULT_ARROW_HEIGHT)
-              .build();
-
-      getNodes().add(0, groupNode);
-
-      updatedLinks.add(Link.Builder.aLink()
-                           .withId(repeatLinks.get(0).getId())
-                           .withFrom(repeatLinks.get(0).getFrom())
-                           .withTo(groupNode.getId())
-                           .withType(repeatLinks.get(0).getType())
-                           .build());
-
-      boolean serialRepeat = false;
-      if (node.getExecutionSummary() != null && node.getExecutionSummary() instanceof LinkedHashMap
-          && ((LinkedHashMap) node.getExecutionSummary()).get("executionStrategy") != null
-          && ((LinkedHashMap) node.getExecutionSummary())
-                 .get("executionStrategy")
-                 .equals(ExecutionStrategy.SERIAL.name())) {
-        serialRepeat = false;
-      }
-
-      Node priorElement = null;
-
-      for (Link link : repeatLinks) {
-        Node repeatNode = nodesMap.get(link.getTo());
-        repaint(repeatNode, nodeX, y, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
-        y += repeatNode.getHeight() + DEFAULT_ARROW_HEIGHT;
-
-        // Take care os serial element links
-        if (serialRepeat && priorElement != null) {
-          updatedLinks.add(Link.Builder.aLink()
-                               .withId(UUIDGenerator.getUuid())
-                               .withFrom(priorElement.getId())
-                               .withTo(repeatNode.getId())
-                               .withType(repeatLinks.get(0).getType())
-                               .build());
-        }
-        priorElement = repeatNode;
-      }
-    }
-
-    if (nextLinkMap.get(node.getId()) != null) {
-      Node nextNode = nodesMap.get(nextLinkMap.get(node.getId()).getTo());
-      if (repeatLinks == null
-          || !(TransitionType.REPEAT.name().toLowerCase().equals(nextNode.getType())
-                 || TransitionType.FORK.name().toLowerCase().equals(nextNode.getType()))) {
-        repaint(nextNode, nodeX + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, nodeY, nodesMap, nextLinkMap, repeatLinkMap,
-            updatedLinks);
-      } else {
-        repaint(nextNode, nodeX + node.getWidth(), nodeY, nodesMap, nextLinkMap, repeatLinkMap, updatedLinks);
-      }
-      updatedLinks.add(nextLinkMap.get(node.getId()));
-    }
-  }
-
   /*
    * (non-Javadoc)
    *
@@ -414,9 +321,36 @@ public class Graph {
   /**
    * The Class Node.
    */
-  public static class Node implements Serializable {
-    private static final long serialVersionUID = 7894954599933362678L;
+  public static class Group extends Node {
+    @JsonIgnore private List<Node> elements = new ArrayList<>();
 
+    @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
+
+    public Group() {
+      setType("group");
+    }
+
+    public List<Node> getElements() {
+      return elements;
+    }
+
+    public void setElements(List<Node> elements) {
+      this.elements = elements;
+    }
+
+    public ExecutionStrategy getExecutionStrategy() {
+      return executionStrategy;
+    }
+
+    public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
+      this.executionStrategy = executionStrategy;
+    }
+  }
+
+  /**
+   * The Class Node.
+   */
+  public static class Node {
     private String id;
     private String name;
     private String type;
@@ -432,6 +366,9 @@ public class Graph {
     private boolean expanded;
 
     private Map<String, Object> properties = new HashMap<>();
+
+    @JsonIgnore private Node next;
+    @JsonIgnore private Group group;
 
     /**
      * Gets id.
@@ -655,6 +592,22 @@ public class Graph {
 
     public void setExpanded(boolean expanded) {
       this.expanded = expanded;
+    }
+
+    public Node getNext() {
+      return next;
+    }
+
+    public void setNext(Node next) {
+      this.next = next;
+    }
+
+    public Group getGroup() {
+      return group;
+    }
+
+    public void setGroup(Group group) {
+      this.group = group;
     }
 
     /**

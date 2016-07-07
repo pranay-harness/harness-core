@@ -8,8 +8,6 @@ import software.wings.sm.ExecutionStatus;
  * Created by peeyushaggarwal on 6/7/16.
  */
 public class PauseStateExecutionData extends EmailStateExecutionData {
-  private static final long serialVersionUID = 7716476856171051155L;
-
   private String resumeId;
 
   /**

@@ -16,6 +16,7 @@ import software.wings.utils.XmlUtils;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import javax.xml.parsers.ParserConfigurationException;
 
 // TODO: Auto-generated Javadoc
@@ -26,7 +27,6 @@ import javax.xml.parsers.ParserConfigurationException;
  * @author Rishi
  */
 public class HttpStateExecutionData extends StateExecutionData {
-  private static final long serialVersionUID = -435324810208952473L;
   private String httpUrl;
   private String httpMethod;
   private int httpResponseCode;

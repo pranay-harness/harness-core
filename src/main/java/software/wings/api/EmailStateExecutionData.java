@@ -16,7 +16,6 @@ import java.util.Map;
  * Created by peeyushaggarwal on 5/26/16.
  */
 public class EmailStateExecutionData extends StateExecutionData {
-  private static final long serialVersionUID = -8664130788122512084L;
   private String toAddress;
   private String ccAddress;
   private String subject;

@@ -1,10 +1,13 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.sm.StateMachine;
@@ -13,6 +16,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -194,8 +198,8 @@ public interface WorkflowService {
    * @param expandedGroupIds    the expanded group ids
    * @return the execution details
    */
-  WorkflowExecution getExecutionDetails(
-      @NotNull String appId, @NotNull String workflowExecutionId, List<String> expandedGroupIds);
+  WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId,
+      List<String> expandedGroupIds, String requestedGroupId, NodeOps nodeOps);
 
   /**
    * Trigger env execution workflow execution.
@@ -206,4 +210,10 @@ public interface WorkflowService {
    * @return the workflow execution
    */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
+
+  /**
+   * @param workflowExecutionEvent
+   * @return
+   */
+  RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
 }

@@ -9,12 +9,14 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,7 +53,9 @@ public class ForkState extends State {
     List<String> correlationIds = new ArrayList<>();
 
     SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
-
+    ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
+    forkStateExecutionData.setForkStateNames(forkStateNames);
+    forkStateExecutionData.setElements(new ArrayList<>());
     int index = 0;
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
@@ -66,6 +70,7 @@ public class ForkState extends State {
       childStateExecutionInstance.setContextTransition(true);
       executionResponse.add(childStateExecutionInstance);
       correlationIds.add(notifyId);
+      forkStateExecutionData.getElements().add(childStateExecutionInstance.getContextElementName());
     }
 
     executionResponse.setAsync(true);
@@ -73,7 +78,9 @@ public class ForkState extends State {
     return executionResponse;
   }
 
-  /* (non-Javadoc)
+  /*
+   * (non-Javadoc)
+   *
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
@@ -115,5 +122,52 @@ public class ForkState extends State {
    */
   public void addForkState(State state) {
     this.forkStateNames.add(state.getName());
+  }
+
+  public static class ForkStateExecutionData extends StateExecutionData {
+    private List<String> elements;
+    private List<String> forkStateNames;
+
+    public List<String> getElements() {
+      return elements;
+    }
+
+    public void setElements(List<String> elements) {
+      this.elements = elements;
+    }
+
+    public List<String> getForkStateNames() {
+      return forkStateNames;
+    }
+
+    public void setForkStateNames(List<String> forkStateNames) {
+      this.forkStateNames = forkStateNames;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getExecutionSummary() {
+      LinkedHashMap<String, Object> execData = fillExecutionData();
+      execData.putAll((Map<String, Object>) super.getExecutionSummary());
+      return execData;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Object getExecutionDetails() {
+      LinkedHashMap<String, Object> execData = fillExecutionData();
+      execData.putAll((Map<String, Object>) super.getExecutionSummary());
+      return execData;
+    }
+
+    private LinkedHashMap<String, Object> fillExecutionData() {
+      LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
+      putNotNull(orderedMap, "forkStateNames", forkStateNames.toString());
+      return orderedMap;
+    }
   }
 }

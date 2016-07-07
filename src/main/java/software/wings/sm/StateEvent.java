@@ -7,22 +7,27 @@ package software.wings.sm;
  */
 public enum StateEvent {
   /**
-   * Success state event.
+   * Abort state event.
    */
-  SUCCESS, /**
-            * Failure state event.
-            */
-  FAILURE, /**
-            * Abort state event.
-            */
-  ABORT, /**
-          * Pause state event.
-          */
-  PAUSE, /**
-          * Continue state event.
-          */
-  CONTINUE, /**
-             * Retry state event.
-             */
+  ABORT,
+  /**
+   * Abort all state event.
+   */
+  ABORT_ALL,
+  /**
+   * Pause state event.
+   */
+  PAUSE,
+  /**
+   * Pause all state event.
+   */
+  PAUSE_ALL,
+  /**
+   * Continue state event.
+   */
+  CONTINUE,
+  /**
+   * Retry state event.
+   */
   RETRY;
 }

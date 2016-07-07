@@ -8,6 +8,13 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
+import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
+import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
+import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
+import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
+import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
+import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
+import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.Lists;
@@ -23,19 +30,22 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
-import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Group;
 import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
+import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -48,6 +58,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -55,8 +66,9 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
-import software.wings.sm.TransitionType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.ForkState.ForkStateExecutionData;
+import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 
@@ -64,13 +76,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -401,7 +413,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(workflowExecution, null);
+      populateGraph(workflowExecution, null, null, null);
     }
     return res;
   }
@@ -411,36 +423,42 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId) {
-    return getExecutionDetails(appId, workflowExecutionId, null);
+    return getExecutionDetails(appId, workflowExecutionId, null, null, null);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution getExecutionDetails(
-      String appId, String workflowExecutionId, List<String> expandedGroupIds) {
+  public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, List<String> expandedGroupIds,
+      String requestedGroupId, Graph.NodeOps nodeOps) {
+    if (expandedGroupIds == null) {
+      expandedGroupIds = new ArrayList<>();
+    }
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null) {
-      populateGraph(workflowExecution, expandedGroupIds);
+      populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps);
     }
+    workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
   }
 
-  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIdsRequested) {
-    List<String> expandedGroupIds = new ArrayList<>();
-    if (expandedGroupIdsRequested != null) {
-      expandedGroupIds.addAll(expandedGroupIdsRequested);
+  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
+      String requestedGroupId, Graph.NodeOps nodeOps) {
+    if (expandedGroupIds == null) {
+      expandedGroupIds = new ArrayList<>();
     }
-
+    if (nodeOps != Graph.NodeOps.COLLAPSE && !expandedGroupIds.contains(requestedGroupId)) {
+      expandedGroupIds.add(requestedGroupId);
+    }
     List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
     if (instances != null && instances.size() > 0) {
-      if (instances.size() == 1
+      if (instances.size() == 1 && (requestedGroupId != null || nodeOps != null)
           && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
                  || StateType.FORK.name().equals(instances.get(0).getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
         expandedGroupIds = Lists.newArrayList(instances.get(0).getUuid());
-        populateGraph(workflowExecution, expandedGroupIds);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps);
         return;
       }
     }
@@ -467,12 +485,28 @@ public class WorkflowServiceImpl implements WorkflowService {
       missingParentInstanceIds = getMissingParentInstanceIds(instances, expandedGroupIds);
     }
 
-    instances = new ArrayList<>(instanceIdMap.values());
-    Collections.sort(instances, Base.createdAtComparator);
+    if (nodeOps == Graph.NodeOps.COLLAPSE && requestedGroupId != null) {
+      List<String> childrenIds = new ArrayList<>();
+      collectChildrenIds(instanceIdMap, requestedGroupId, childrenIds);
+      childrenIds.forEach(childId -> { instanceIdMap.remove(childId); });
+    }
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    workflowExecution.setGraph(generateGraph(instances, sm.getInitialStateName(), expandedGroupIds));
+    workflowExecution.setGraph(generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds));
+  }
+
+  private void collectChildrenIds(
+      Map<String, StateExecutionInstance> instanceIdMap, String collapseGroupId, List<String> childrenIds) {
+    if (collapseGroupId == null || instanceIdMap.get(collapseGroupId) == null) {
+      return;
+    }
+    for (StateExecutionInstance instance : instanceIdMap.values()) {
+      if (collapseGroupId.equals(instance.getParentInstanceId())) {
+        childrenIds.add(instance.getUuid());
+        collectChildrenIds(instanceIdMap, instance.getUuid(), childrenIds);
+      }
+    }
   }
 
   private HashSet<String> getMissingParentInstanceIds(List<StateExecutionInstance> list, List<String> instanceIds) {
@@ -513,17 +547,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private Graph generateGraph(
-      List<StateExecutionInstance> response, String originState, List<String> expandedGroupIds) {
-    if (response == null || response.size() == 0) {
-      return null;
-    }
+      Map<String, StateExecutionInstance> instanceIdMap, String initialStateName, List<String> expandedGroupIds) {
+    Node originNode = null;
+    Map<String, Node> nodeIdMap = new HashMap<>();
+    Map<String, Node> prevInstanceIdMap = new HashMap<>();
+    Map<String, Map<String, Node>> parentIdElementsMap = new HashMap<>();
 
-    String originNodeId = null;
-    Graph graph = new Graph();
-    List<Node> nodes = new ArrayList<>();
-    List<Link> links = new ArrayList<>();
-    List<String> collapsedInstanceIds = new ArrayList<>();
-    for (StateExecutionInstance instance : response) {
+    for (StateExecutionInstance instance : instanceIdMap.values()) {
       Node node = new Node();
       node.setId(instance.getUuid());
       node.setName(instance.getStateName());
@@ -537,60 +567,174 @@ public class WorkflowServiceImpl implements WorkflowService {
               || StateType.FORK.name().equals(instance.getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
-        collapsedInstanceIds.add(instance.getUuid());
       } else {
         node.setExpanded(true);
       }
 
-      nodes.add(node);
-      if (node.getName().equals(originState)) {
-        originNodeId = node.getId();
+      if (node.getName().equals(initialStateName)) {
+        originNode = node;
       }
 
-      Link link = new Link();
-      link.setTo(instance.getUuid());
-
-      String fromInstanceId = null;
-      if (instance.isContextTransition()) {
-        // This is scenario like fork, repeat or sub workflow
-        node = new Node();
-        node.setId(UUIDGenerator.getUuid());
-        node.setName(instance.getContextElementName());
-        node.setType("element");
-        node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
-        nodes.add(node);
-
-        links.add(Link.Builder.aLink()
-                      .withId(instance.getParentInstanceId() + "-" + node.getId())
-                      .withFrom(instance.getParentInstanceId())
-                      .withTo(node.getId())
-                      .withType(TransitionType.REPEAT.name().toLowerCase())
-                      .build());
-
-        fromInstanceId = node.getId();
-
-      } else if (instance.getPrevInstanceId() != null) {
-        fromInstanceId = instance.getPrevInstanceId();
+      if (instance.getParentInstanceId() != null && instance.isContextTransition()) {
+        Map<String, Node> elementsMap = parentIdElementsMap.get(instance.getParentInstanceId());
+        if (elementsMap == null) {
+          elementsMap = new HashMap<>();
+          parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
+        }
+        elementsMap.put(instance.getContextElementName(), node);
       }
-      // TODO : additional link needed for serial repeat
 
-      if (fromInstanceId != null) {
-        link.setId(fromInstanceId + "-" + instance.getUuid());
-        link.setFrom(fromInstanceId);
-        link.setType(node.getStatus());
-        links.add(link);
+      if (instance.getPrevInstanceId() != null) {
+        prevInstanceIdMap.put(instance.getPrevInstanceId(), node);
       }
+
+      nodeIdMap.put(node.getId(), node);
     }
-    graph.setNodes(nodes);
-    graph.setLinks(links);
-    Map<String, Node> nodesMap = graph.getNodesMap();
-    links.forEach(link -> {
-      if (link.getType() == null) {
-        link.setType(nodesMap.get(link.getFrom()).getStatus());
-      }
-    });
-    graph.repaint(originNodeId);
+
+    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
+
+    extrapolateDimension(originNode);
+    Graph graph = new Graph();
+    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
     return graph;
+  }
+
+  private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node) {
+    if (parentIdElementsMap.get(node.getId()) != null) {
+      StateExecutionInstance instance = instanceIdMap.get(node.getId());
+
+      Group group = new Group();
+      group.setId(node.getId() + "-group");
+
+      List<String> elements = null;
+      StateExecutionData sed = instance.getStateExecutionData();
+      if (sed != null && sed instanceof ForkStateExecutionData) {
+        elements = ((ForkStateExecutionData) sed).getElements();
+      } else if (sed != null && sed instanceof RepeatStateExecutionData) {
+        elements = ((RepeatStateExecutionData) sed)
+                       .getRepeatElements()
+                       .stream()
+                       .map(ContextElement::getName)
+                       .collect(Collectors.toList());
+        group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
+      }
+
+      if (elements != null) {
+        for (String element : elements) {
+          Node elementNode =
+              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("element").build();
+          group.getElements().add(elementNode);
+          Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+          if (elementRepeatNode != null) {
+            elementNode.setStatus(elementRepeatNode.getStatus());
+            elementNode.setNext(elementRepeatNode);
+            generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode);
+          }
+        }
+      }
+
+      node.setGroup(group);
+    }
+
+    if (prevInstanceIdMap.get(node.getId()) != null) {
+      Node nextNode = prevInstanceIdMap.get(node.getId());
+      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode);
+      node.setNext(nextNode);
+    }
+  }
+
+  private void paintGraph(Group group, Graph graph, int x, int y) {
+    group.setX(x - DEFAULT_GROUP_PADDING);
+    group.setY(y);
+    group.setWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING);
+    graph.addNode(group);
+
+    y += DEFAULT_GROUP_PADDING;
+    Node priorElement = null;
+    for (Node node : group.getElements()) {
+      paintGraph(node, graph, x, y);
+      y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
+
+      if (group.getExecutionStrategy() == ExecutionStrategy.SERIAL && priorElement != null) {
+        graph.addLink(Link.Builder.aLink()
+                          .withId(UUIDGenerator.getUuid())
+                          .withFrom(priorElement.getId())
+                          .withTo(node.getId())
+                          .withType("success")
+                          .build());
+      }
+      priorElement = node;
+    }
+  }
+
+  private void paintGraph(Node node, Graph graph, int x, int y) {
+    node.setX(x);
+    node.setY(y);
+    graph.addNode(node);
+
+    Group group = node.getGroup();
+    if (group != null) {
+      paintGraph(group, graph, x, y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT);
+      graph.addLink(Link.Builder.aLink()
+                        .withId(UUIDGenerator.getUuid())
+                        .withFrom(node.getId())
+                        .withTo(group.getId())
+                        .withType("repeat")
+                        .build());
+      ;
+    }
+
+    Node next = node.getNext();
+    if (next != null) {
+      if (group == null) {
+        paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+      } else {
+        paintGraph(next, graph, node.getWidth(), y);
+      }
+      graph.addLink(Link.Builder.aLink()
+                        .withId(UUIDGenerator.getUuid())
+                        .withFrom(node.getId())
+                        .withTo(next.getId())
+                        .withType(node.getType())
+                        .build());
+      ;
+    }
+  }
+
+  private void extrapolateDimension(Group group) {
+    group.setWidth(2 * DEFAULT_GROUP_PADDING);
+    group.setHeight(2 * DEFAULT_GROUP_PADDING);
+    for (Node node : group.getElements()) {
+      extrapolateDimension(node);
+      if (group.getWidth() < node.getWidth()) {
+        group.setWidth(node.getWidth());
+      }
+      group.setHeight(group.getHeight() + node.getHeight() + DEFAULT_ARROW_HEIGHT);
+    }
+  }
+
+  private void extrapolateDimension(Node node) {
+    node.setWidth(DEFAULT_NODE_WIDTH);
+    node.setHeight(DEFAULT_NODE_HEIGHT);
+
+    Group group = node.getGroup();
+    if (group != null) {
+      extrapolateDimension(group);
+      if (node.getWidth() < group.getWidth()) {
+        node.setWidth(group.getWidth());
+      }
+      node.setHeight(node.getHeight() + group.getHeight() + DEFAULT_ARROW_HEIGHT);
+    }
+
+    Node next = node.getNext();
+    if (next != null) {
+      extrapolateDimension(next);
+      if (node.getHeight() < next.getHeight()) {
+        node.setHeight(next.getHeight());
+      }
+      node.setWidth(node.getWidth() + next.getWidth() + DEFAULT_ARROW_WIDTH);
+    }
   }
 
   /**
@@ -946,5 +1090,12 @@ public class WorkflowServiceImpl implements WorkflowService {
    */
   public void setStaticConfiguration(StaticConfiguration staticConfiguration) {
     this.staticConfiguration = staticConfiguration;
+  }
+
+  @Override
+  public RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(
+      WorkflowExecutionEvent workflowExecutionEvent) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

@@ -7,8 +7,6 @@ import software.wings.sm.StateExecutionData;
  * Created by peeyushaggarwal on 6/17/16.
  */
 public class CommandStateExecutionData extends StateExecutionData {
-  private static final long serialVersionUID = 8379244073342534217L;
-
   private String hostName;
   private String hostId;
   private String commandName;

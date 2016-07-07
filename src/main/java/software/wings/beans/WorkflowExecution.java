@@ -9,6 +9,8 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.List;
+
 // TODO: Auto-generated Javadoc
 
 /**
@@ -25,6 +27,7 @@ public class WorkflowExecution extends Base {
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
+  @Transient private List<String> expandedGroupIds;
 
   private String name;
 
@@ -152,5 +155,13 @@ public class WorkflowExecution extends Base {
    */
   public void setEnvId(String envId) {
     this.envId = envId;
+  }
+
+  public List<String> getExpandedGroupIds() {
+    return expandedGroupIds;
+  }
+
+  public void setExpandedGroupIds(List<String> expandedGroupIds) {
+    this.expandedGroupIds = expandedGroupIds;
   }
 }
