@@ -72,18 +72,15 @@ import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -828,16 +825,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowId(orchestrationId);
-    String name = "";
-    if (orchestration.getName() != null) {
-      name = orchestration.getName() + " ";
-    }
-    try {
-      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
-    } catch (Exception e) {
-      throw new WingsException("Error in date formatting");
-    }
-    workflowExecution.setName(name);
+    workflowExecution.setName(orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
@@ -1016,17 +1004,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotalInstances(executionArgs.getServiceInstanceIds().size());
-
-    String name = "";
-    if (workflow.getName() != null) {
-      name = workflow.getName() + " ";
-    }
-    try {
-      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
-    } catch (Exception e) {
-      throw new WingsException("Error in date formatting");
-    }
-    workflowExecution.setName(name);
+    workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
