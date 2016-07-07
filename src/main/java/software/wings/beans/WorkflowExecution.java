@@ -30,6 +30,7 @@ public class WorkflowExecution extends Base {
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
+  @Transient SimpleWorkflowDetails simpleWorkflowDetails;
 
   private String name;
   private int totalInstances;
@@ -203,6 +204,14 @@ public class WorkflowExecution extends Base {
     this.instancesInProgress = instancesInProgress;
   }
 
+  public SimpleWorkflowDetails getSimpleWorkflowDetails() {
+    return simpleWorkflowDetails;
+  }
+
+  public void setSimpleWorkflowDetails(SimpleWorkflowDetails simpleWorkflowDetails) {
+    this.simpleWorkflowDetails = simpleWorkflowDetails;
+  }
+
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -213,6 +222,7 @@ public class WorkflowExecution extends Base {
         .add("status", status)
         .add("graph", graph)
         .add("expandedGroupIds", expandedGroupIds)
+        .add("simpleWorkflowDetails", simpleWorkflowDetails)
         .add("name", name)
         .add("totalInstances", totalInstances)
         .add("instancesSucceeded", instancesSucceeded)
