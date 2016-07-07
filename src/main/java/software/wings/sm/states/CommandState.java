@@ -10,8 +10,10 @@ import static software.wings.sm.StateType.COMMAND;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
@@ -29,6 +31,8 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -38,6 +42,8 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+
+import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -56,17 +62,19 @@ public class CommandState extends State {
    */
   public static final String STAGING_PATH = "STAGING_PATH";
 
-  @Inject private transient ServiceResourceService serviceResourceService;
+  @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
-  @Inject private transient ServiceInstanceService serviceInstanceService;
+  @Inject @Transient private transient ServiceInstanceService serviceInstanceService;
 
-  @Inject private transient ServiceCommandExecutorService serviceCommandExecutorService;
+  @Inject @Transient private transient ServiceCommandExecutorService serviceCommandExecutorService;
 
-  @Inject private transient ActivityService activityService;
+  @Inject @Transient private transient ActivityService activityService;
 
-  @Inject private transient SettingsService settingsService;
+  @Inject @Transient private transient SettingsService settingsService;
 
-  @Inject private transient EnvironmentService environmentService;
+  @Inject @Transient private transient EnvironmentService environmentService;
+
+  @Inject @Transient private transient WorkflowService workflowService;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateDataProvider.class)
@@ -125,6 +133,8 @@ public class CommandState extends State {
     Environment environment = environmentService.get(appId, envId);
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+
+    updateWorflowExecutionStatsInProgress(context);
 
     try {
       if (instanceElement == null) {
@@ -205,27 +215,67 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
 
-      ExecutionResult executionResult = serviceCommandExecutorService.execute(
-          serviceInstance, command, commandExecutionContextBuilder.withActivityId(activityId).build());
+      CommandExecutionContext commandExecutionContext =
+          commandExecutionContextBuilder.withActivityId(activityId).build();
+      ExecutionResult executionResult =
+          serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
 
       activityService.updateStatus(
           activityId, appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+
+      if (executionResult.equals(SUCCESS) && command.isArtifactNeeded()) {
+        serviceInstance.setRelease(commandExecutionContext.getArtifact().getRelease());
+        serviceInstance.setArtifact(commandExecutionContext.getArtifact());
+        serviceInstanceService.update(serviceInstance);
+      }
 
       executionStatus = executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       if (activityId != null) {
         activityService.updateStatus(activityId, appId, Status.FAILED);
       }
+      updateWorflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withStateExecutionData(executionDataBuilder.build())
           .withErrorMessage(e.getMessage())
           .build();
     }
+    updateWorflowExecutionStats(executionStatus, context);
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withStateExecutionData(executionDataBuilder.build())
         .build();
+  }
+
+  private void updateWorflowExecutionStats(ExecutionStatus executionStatus, ExecutionContext context) {
+    Optional<ContextElement> simpleWorkflowParamOpt =
+        context.getContextElementList(ContextElementType.PARAM)
+            .stream()
+            .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
+            .findFirst();
+    if (simpleWorkflowParamOpt.isPresent()) {
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      String appId = workflowStandardParams.getAppId();
+      if (executionStatus == ExecutionStatus.FAILED) {
+        workflowService.incrementFailed(appId, context.getWorkflowExecutionId(), 1);
+      } else {
+        workflowService.incrementSuccess(appId, context.getWorkflowExecutionId(), 1);
+      }
+    }
+  }
+
+  private void updateWorflowExecutionStatsInProgress(ExecutionContext context) {
+    Optional<ContextElement> simpleWorkflowParamOpt =
+        context.getContextElementList(ContextElementType.PARAM)
+            .stream()
+            .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
+            .findFirst();
+    if (simpleWorkflowParamOpt.isPresent()) {
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      String appId = workflowStandardParams.getAppId();
+      workflowService.incrementInProgressCount(appId, context.getWorkflowExecutionId(), 1);
+    }
   }
 
   private String getEvaluatedSettingValue(ExecutionContext context, String appId, String envId, String variable) {

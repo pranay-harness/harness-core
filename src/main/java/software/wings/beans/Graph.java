@@ -692,7 +692,10 @@ public class Graph {
     @Override
     public String toString() {
       return "Node [id=" + id + ", name=" + name + ", type=" + type + ", status=" + status + ", x=" + x + ", y=" + y
-          + ", width=" + width + ", height=" + height + ", properties=" + properties + "]";
+          + ", width=" + width + ", height=" + height + ", executionSummary=" + executionSummary
+          + ", executionDetails=" + executionDetails + ", detailsReference=" + detailsReference
+          + ", expanded=" + expanded + ", properties=" + properties + ", next=" + (next == null ? null : next.getId())
+          + ", group=" + (group == null ? null : group.getId()) + "]";
     }
 
     /**

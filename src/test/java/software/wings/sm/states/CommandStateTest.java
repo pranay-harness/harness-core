@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
@@ -42,6 +43,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
@@ -55,6 +57,7 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
@@ -112,6 +115,8 @@ public class CommandStateTest extends WingsBaseTest {
           .build();
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
+  private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
+
   @Mock private ExecutionContextImpl context;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceInstanceService serviceInstanceService;
@@ -119,6 +124,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
   @Mock private EnvironmentService environmentService;
+  @Mock private WorkflowService workflowService;
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
   /**
@@ -152,6 +158,7 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute().withValue(aStringValue().withValue(STAGING_PATH).build()).build());
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
+    when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(asList(SIMPLE_WORKFLOW_PARAM));
 
     when(context.getContextElement(ContextElementType.SERVICE))
         .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
@@ -184,13 +191,18 @@ public class CommandStateTest extends WingsBaseTest {
                 .withActivityId(ACTIVITY_ID)
                 .build());
 
-    verify(context).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
     verify(context).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(2)).getWorkflowExecutionId();
     verify(context, times(4)).renderExpression(anyString());
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
-        serviceCommandExecutorService, settingsService);
+        serviceCommandExecutorService, settingsService, workflowService);
   }
 
   /**
@@ -245,12 +257,17 @@ public class CommandStateTest extends WingsBaseTest {
                 .withArtifact(artifact)
                 .build());
 
-    verify(context).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(3)).getContextElement(ContextElementType.STANDARD);
     verify(context).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(2)).getWorkflowExecutionId();
     verify(context, times(4)).renderExpression(anyString());
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verify(serviceInstanceService).update(any(ServiceInstance.class));
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
-        serviceCommandExecutorService, settingsService);
+        serviceCommandExecutorService, settingsService, workflowService);
   }
 }

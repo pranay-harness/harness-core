@@ -89,4 +89,6 @@ public interface ExecutionContext {
    * @return env env
    */
   Environment getEnv();
+
+  String getWorkflowExecutionId();
 }
