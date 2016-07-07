@@ -68,7 +68,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.Transition;
 import software.wings.sm.TransitionType;
 import software.wings.sm.states.ForkState;
-import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
@@ -788,29 +787,30 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .containsExactly(workflowExecution.getUuid(), app.getUuid(), workflowExecution.getStateMachineId(),
             workflowExecution.getWorkflowId());
     assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    Graph graph2 = workflowExecution2.getGraph();
-    assertThat(graph2).isNotNull();
-    assertThat(graph2.getNodes()).hasSize(6).doesNotContainNull();
-    assertThat(graph2.getNodes())
+
+    graph = workflowExecution2.getGraph();
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).hasSize(6).doesNotContainNull();
+    assertThat(graph.getNodes())
         .extracting("name")
         .containsExactly("RepeatByInstances", null, "host2:TEMPLATE_NAME", "email", "host1:TEMPLATE_NAME", "email");
-    assertThat(graph2.getNodes())
+    assertThat(graph.getNodes())
         .extracting("type")
         .containsExactly("REPEAT", "group", "element", "EMAIL", "element", "EMAIL");
-    assertThat(graph2.getNodes())
+    assertThat(graph.getNodes())
         .extracting("status")
         .containsExactly("success", null, "success", "success", "success", "success");
 
     int col1 = DEFAULT_INITIAL_X;
     int col2 = DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
-    assertThat(graph2.getNodes())
+    assertThat(graph.getNodes())
         .extracting("x")
         .containsExactly(col1, col1 - DEFAULT_GROUP_PADDING, col1, col2, col1, col2);
 
     int row1 = DEFAULT_INITIAL_Y;
     int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
     int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
-    assertThat(graph2.getNodes())
+    assertThat(graph.getNodes())
         .extracting("y")
         .containsExactly(row1, row2 - DEFAULT_GROUP_PADDING, row2, row2, row3, row3);
   }
@@ -945,50 +945,91 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .extracting("uuid", "status")
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
     assertThat(execution.getExpandedGroupIds()).isEmpty();
-    Graph graph2 = execution.getGraph();
-    String json = JsonUtils.asJson(graph2);
-    assertThat(graph2).isNotNull().extracting("nodes", "links").doesNotContainNull();
-    assertThat(graph2.getNodes().get(0))
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
         .containsExactly("RepeatByServices", "REPEAT", "success", true);
-    assertThat(graph2.getNodes())
+    assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
         .allMatch(n
             -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
-    assertThat(graph2.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
-    assertThat(graph2.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
-    assertThat(graph2.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
+    assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
 
     List<Node> repeatByInstances =
-        graph2.getNodes().stream().filter(n -> "RepeatByInstances".equals(n.getName())).collect(Collectors.toList());
+        graph.getNodes().stream().filter(n -> "RepeatByInstances".equals(n.getName())).collect(Collectors.toList());
 
     execution = workflowService.getExecutionDetails(
         app.getUuid(), executionId, null, repeatByInstances.get(0).getId(), NodeOps.EXPAND);
     assertThat(execution.getExpandedGroupIds()).hasSize(2);
 
-    Graph graph3 = execution.getGraph();
-    assertThat(graph3).isNotNull().extracting("nodes", "links").doesNotContainNull();
-    assertThat(graph3.getNodes().get(0))
+    List<String> twoLevelExpanded = execution.getExpandedGroupIds();
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
         .containsExactly("RepeatByServices", "REPEAT", "success", true);
-    assertThat(graph3.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
-    assertThat(graph3.getNodes()).filteredOn("name", "instRepeatWait").hasSize(2);
-    assertThat(graph3.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
-    assertThat(graph3.getNodes()).filteredOn("name", "RepeatByInstances").hasSize(2);
-    assertThat(graph3.getNodes())
+    assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "RepeatByInstances").hasSize(2);
+    assertThat(graph.getNodes())
         .filteredOn("id", repeatByInstances.get(0).getId())
         .hasSize(1)
         .allMatch(n
             -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && n.isExpanded() && n.getGroup() != null
                 && n.getNext() != null);
-    assertThat(graph3.getNodes())
+    assertThat(graph.getNodes())
         .filteredOn("id", repeatByInstances.get(1).getId())
         .hasSize(1)
         .allMatch(n
             -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId, execution.getExpandedGroupIds(),
+        repeatByInstances.get(0).getId(), NodeOps.COLLAPSE);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    assertThat(execution.getExpandedGroupIds()).hasSize(1);
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status", "expanded")
+        .containsExactly("RepeatByServices", "REPEAT", "success", true);
+    assertThat(graph.getNodes())
+        .filteredOn("name", "RepeatByInstances")
+        .hasSize(2)
+        .allMatch(n
+            -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
+                && n.getGroup() == null && n.getNext() != null);
+    assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
+    assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
+    assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
+
+    execution = workflowService.getExecutionDetails(
+        app.getUuid(), executionId, twoLevelExpanded, graph.getNodes().get(0).getId(), NodeOps.COLLAPSE);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    assertThat(execution.getExpandedGroupIds()).isEmpty();
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes()).hasSize(1);
+    assertThat(graph.getLinks()).isEmpty();
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status", "expanded")
+        .containsExactly("RepeatByServices", "REPEAT", "success", false);
   }
 
   /**

@@ -81,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -410,7 +411,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(workflowExecution, null, null, null);
+      populateGraph(workflowExecution, null, null, null, false);
     }
     return res;
   }
@@ -434,14 +435,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null) {
-      populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps);
+      populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
   }
 
   private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
-      String requestedGroupId, Graph.NodeOps nodeOps) {
+      String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested) {
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }
@@ -450,12 +451,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
     if (instances != null && instances.size() > 0) {
-      if (instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
+      if (detailsRequested && instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
           && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
                  || StateType.FORK.name().equals(instances.get(0).getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
         expandedGroupIds = Lists.newArrayList(instances.get(0).getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false);
         return;
       }
     }
@@ -486,6 +487,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       List<String> childrenIds = new ArrayList<>();
       collectChildrenIds(instanceIdMap, requestedGroupId, childrenIds);
       childrenIds.forEach(childId -> { instanceIdMap.remove(childId); });
+      if (expandedGroupIds.contains(requestedGroupId)) {
+        expandedGroupIds.remove(requestedGroupId);
+      }
     }
 
     StateMachine sm =
