@@ -60,6 +60,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
    */
+  @Override
   public User register(User user) {
     if (!domainAllowedToRegister(user.getEmail())) {
       throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
@@ -73,7 +74,7 @@ public class UserServiceImpl implements UserService {
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
-    executorService.submit(() -> sendVerificationEmail(savedUser));
+    executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
   }
 
@@ -86,10 +87,7 @@ public class UserServiceImpl implements UserService {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String baseURl = configuration.getPortal().getUrl().trim();
-      if (baseURl.charAt(baseURl.length() - 1) != '/') {
-        baseURl += "/";
-      }
+      String baseURl = getBaseUrlString();
       String relativeApiPath = "api/users/verify/" + emailVerificationToken.getToken();
       String apiUrl = baseURl + relativeApiPath;
 
@@ -105,7 +103,16 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  public User verifyEmail(String emailToken) {
+  private String getBaseUrlString() {
+    String baseURl = configuration.getPortal().getUrl().trim();
+    if (baseURl.charAt(baseURl.length() - 1) != '/') {
+      baseURl += "/";
+    }
+    return baseURl;
+  }
+
+  @Override
+  public String verifyEmail(String emailToken) {
     EmailVerificationToken verificationToken =
         wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(EmailVerificationToken.class)
                                                 .field("appId")
@@ -118,7 +125,7 @@ public class UserServiceImpl implements UserService {
     }
     wingsPersistence.updateFields(User.class, verificationToken.getUserId(), ImmutableMap.of("emailVerified", true));
     wingsPersistence.delete(EmailVerificationToken.class, verificationToken.getUuid());
-    return get(verificationToken.getUuid());
+    return getBaseUrlString() + "#/login";
   }
 
   private boolean userAlreadyRegistered(User user) {
@@ -134,6 +141,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#matchPassword(java.lang.String, java.lang.String)
    */
+  @Override
   public boolean matchPassword(String password, String hash) {
     return BCrypt.checkpw(password, hash);
   }
@@ -141,6 +149,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#update(software.wings.beans.User)
    */
+  @Override
   public User update(User user) {
     Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
     if (user.getPassword() != null && user.getPassword().length() > 0) {
@@ -153,6 +162,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#list(software.wings.dl.PageRequest)
    */
+  @Override
   public PageResponse<User> list(PageRequest<User> pageRequest) {
     return wingsPersistence.query(User.class, pageRequest);
   }
@@ -160,6 +170,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#delete(java.lang.String)
    */
+  @Override
   public void delete(String userId) {
     wingsPersistence.delete(User.class, userId);
   }
@@ -167,6 +178,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#get(java.lang.String)
    */
+  @Override
   public User get(String userId) {
     return wingsPersistence.get(User.class, userId);
   }
@@ -174,6 +186,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#addRole(java.lang.String, java.lang.String)
    */
+  @Override
   public User addRole(String userId, String roleId) {
     ensureUserExists(userId);
     Role role = ensureRolePresent(roleId);
@@ -187,6 +200,7 @@ public class UserServiceImpl implements UserService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#revokeRole(java.lang.String, java.lang.String)
    */
+  @Override
   public User revokeRole(String userId, String roleId) {
     ensureUserExists(userId);
     Role role = ensureRolePresent(roleId);
