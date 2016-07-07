@@ -5,7 +5,6 @@
 package software.wings.service.impl;
 
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
@@ -17,10 +16,7 @@ import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SimpleWorkflowDetails.Builder.aSimpleWorkflowDetails;
-import static software.wings.beans.SimpleWorkflowDetails.Instance.Builder.anInstance;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -48,9 +44,6 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.ServiceInstance;
-import software.wings.beans.SimpleWorkflowDetails;
-import software.wings.beans.SimpleWorkflowDetails.Instance;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecutionEvent;
@@ -90,7 +83,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -420,12 +412,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     for (WorkflowExecution workflowExecution : res) {
       populateGraph(workflowExecution, null, null, null, workflowExecution.getWorkflowType() == WorkflowType.SIMPLE);
-      /*if () {
-        //populateSimpleWorkflowDetails(workflowExecution);
-        populateGraph(workflowExecution, null, null, null, false);
-      } else {
-
-      }*/
     }
     return res;
   }
@@ -509,64 +495,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     workflowExecution.setGraph(generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds));
-  }
-
-  private void populateSimpleWorkflowDetails(WorkflowExecution workflowExecution) {
-    StateExecutionInstance firstInstance =
-        wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                .field("appId")
-                                                .equal(workflowExecution.getAppId())
-                                                .field("executionUuid")
-                                                .equal(workflowExecution.getUuid()));
-    SimpleWorkflowParam simpleWorkflowParam =
-        (SimpleWorkflowParam) firstInstance.getContextElements()
-            .stream()
-            .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
-            .findFirst()
-            .get();
-
-    PageResponse<ServiceInstance> instances = serviceInstanceService.list(
-        aPageRequest()
-            .addFilter(
-                aSearchFilter().withField(ID_KEY, Operator.IN, simpleWorkflowParam.getInstanceIds().toArray()).build())
-            .build());
-    SimpleWorkflowDetails simpleWorkflowDetails =
-        aSimpleWorkflowDetails()
-            .withExecutionStrategy(simpleWorkflowParam.getExecutionStrategy())
-            .withInstances(instances.getResponse()
-                               .stream()
-                               .map(serviceInstance
-                                   -> anInstance()
-                                          .withHostName(serviceInstance.getHost().getHostName())
-                                          .withTemplateName(serviceInstance.getServiceTemplate().getName())
-                                          .build())
-                               .collect(toList()))
-            .build();
-
-    List<StateExecutionInstance> instanceExecution =
-        wingsPersistence.executeGetListQuery(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                 .field("appId")
-                                                 .equal(workflowExecution.getAppId())
-                                                 .field("executionUuid")
-                                                 .equal(workflowExecution.getUuid())
-                                                 .field("stateType")
-                                                 .equal(StateType.COMMAND.name()));
-
-    List<Instance> displayInstances =
-        instanceExecution.stream()
-            .map(stateExecutionInstance
-                -> anInstance()
-                       .withHostName(StringUtils.substringBefore(stateExecutionInstance.getContextElementName(), ":"))
-                       .withTemplateName(
-                           StringUtils.substringAfter(stateExecutionInstance.getContextElementName(), ":"))
-                       .withStatus(stateExecutionInstance.getStatus())
-                       .build())
-            .collect(toList());
-
-    simpleWorkflowDetails.getInstances().removeAll(displayInstances);
-    displayInstances.addAll(simpleWorkflowDetails.getInstances());
-    simpleWorkflowDetails.setInstances(displayInstances);
-    workflowExecution.setSimpleWorkflowDetails(simpleWorkflowDetails);
   }
 
   private void collectChildrenIds(

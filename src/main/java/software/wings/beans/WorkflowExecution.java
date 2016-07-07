@@ -4,8 +4,6 @@
 
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -30,7 +28,6 @@ public class WorkflowExecution extends Base {
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
-  @Transient SimpleWorkflowDetails simpleWorkflowDetails;
 
   private String name;
   private int totalInstances;
@@ -202,32 +199,5 @@ public class WorkflowExecution extends Base {
 
   public void setInstancesInProgress(int instancesInProgress) {
     this.instancesInProgress = instancesInProgress;
-  }
-
-  public SimpleWorkflowDetails getSimpleWorkflowDetails() {
-    return simpleWorkflowDetails;
-  }
-
-  public void setSimpleWorkflowDetails(SimpleWorkflowDetails simpleWorkflowDetails) {
-    this.simpleWorkflowDetails = simpleWorkflowDetails;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("workflowId", workflowId)
-        .add("stateMachineId", stateMachineId)
-        .add("envId", envId)
-        .add("workflowType", workflowType)
-        .add("status", status)
-        .add("graph", graph)
-        .add("expandedGroupIds", expandedGroupIds)
-        .add("simpleWorkflowDetails", simpleWorkflowDetails)
-        .add("name", name)
-        .add("totalInstances", totalInstances)
-        .add("instancesSucceeded", instancesSucceeded)
-        .add("instancesFailed", instancesFailed)
-        .add("instancesInProgress", instancesInProgress)
-        .toString();
   }
 }
