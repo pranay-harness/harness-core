@@ -120,6 +120,7 @@ public interface WorkflowService {
   /**
    * Stencils.
    *
+   * @param appId           the app id
    * @param stateTypeScopes the state type scopes
    * @return the map
    */

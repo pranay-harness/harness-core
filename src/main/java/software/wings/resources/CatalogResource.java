@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CatalogNames;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
@@ -64,9 +65,9 @@ public class CatalogResource {
   /**
    * Creates a new catalog resource.
    *
-   * @param catalogService         catalogService object.
-   * @param jenkinsBuildService    JenkinsBuildService object.
-   * @param settingsService        SettingService object
+   * @param catalogService      catalogService object.
+   * @param jenkinsBuildService JenkinsBuildService object.
+   * @param settingsService     SettingService object
    */
   @Inject
   public CatalogResource(
@@ -96,6 +97,7 @@ public class CatalogResource {
 
     if (catalogTypes == null || catalogTypes.size() == 0) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
+      catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
@@ -130,58 +132,13 @@ public class CatalogResource {
             ;
             break;
           }
+          case CatalogNames.ENVIRONMENT_TYPE: {
+            catalogs.put(catalogType, EnvironmentType.values());
+          }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
       }
     }
     return catalogs;
   }
-  /*
-    private Object postProcess(List<StateTypeDescriptor> stateTypeDescriptors, UriInfo uriInfo) {
-      return stateTypeDescriptors.stream().map(stateTypeDescriptor -> processStateTypeDescriptor(stateTypeDescriptor,
-    uriInfo)).collect(toList());
-    }
-
-    private StateTypeDescriptor processStateTypeDescriptor(StateTypeDescriptor stateTypeDescriptor, UriInfo uriInfo) {
-      OverridingStateTypeDescriptor result = new OverridingStateTypeDescriptor(stateTypeDescriptor);
-      JsonNode jsonSchema = ((JsonNode) stateTypeDescriptor.getJsonSchema());
-
-      stream(stateTypeDescriptor.getTypeClass().getDeclaredFields()).filter(field -> field.getAnnotation(EnumData.class)
-    != null).forEach(field -> { String catalogName = field.getAnnotation(EnumData.class).catalog(); try { Map<String,
-    Object> catalogs = getCatalogs(singletonList(catalogName), uriInfo); Map<String, Object> catalogData = (Map<String,
-    Object>) catalogs.get(catalogName); if (catalogData != null) { ObjectNode jsonSchemaField = ((ObjectNode)
-    jsonSchema.get("properties").get(field.getName())); jsonSchemaField.set("enum",
-    JsonUtils.asTree(catalogData.keySet())); jsonSchemaField.set("enumNames", JsonUtils.asTree(catalogData.values()));
-          }
-        } catch (Exception e) {
-          logger.warn("Unable to fill in values for stateType {}:field {} with catalog {}", stateTypeDescriptor,
-    field.getName(), catalogName);
-        }
-      });
-
-      result.setOverridingJsonSchema(jsonSchema);
-      return result;
-    }
-
-    private List<Map<String, Object>> postProcessCommandStencil(List<Map<String, Object>> stencils, UriInfo uriInfo) {
-      stencils.forEach(stencil -> processCommandStencil(stencil, uriInfo));
-      return stencils;
-    }
-
-    private void processCommandStencil(Map<String, Object> stencil, UriInfo uriInfo) {
-      CommandUnitType commandUnitType = CommandUnitType.valueOf((String) stencil.get("type"));
-      JsonNode jsonSchema = (JsonNode) stencil.get("jsonSchema");
-      stream(commandUnitType.getTypeClass().getDeclaredFields()).filter(field -> field.getAnnotation(EnumData.class) !=
-    null).forEach(field -> { String catalogName = field.getAnnotation(EnumData.class).catalog(); try { Map<String,
-    Object> catalogs = getCatalogs(singletonList(catalogName), uriInfo); Map<String, Object> catalogData = (Map<String,
-    Object>) catalogs.get(catalogName); if (catalogData != null) { ObjectNode jsonSchemaField = ((ObjectNode)
-    jsonSchema.get("properties").get(field.getName())); jsonSchemaField.set("enum",
-    JsonUtils.asTree(catalogData.keySet())); jsonSchemaField.set("enumNames", JsonUtils.asTree(catalogData.values()));
-          }
-        } catch (Exception e) {
-          logger.warn("Unable to fill in values for stateType {}:field {} with catalog {}", stencil, field.getName(),
-    catalogName);
-        }
-      });
-    }*/
 }

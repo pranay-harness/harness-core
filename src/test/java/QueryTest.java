@@ -14,7 +14,6 @@ import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class QueryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;

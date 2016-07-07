@@ -2,11 +2,11 @@ package software.wings.sm.states;
 
 import com.github.reinert.jjschema.Attributes;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.stencils.EnumData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
+import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 
 // TODO: Auto-generated Javadoc

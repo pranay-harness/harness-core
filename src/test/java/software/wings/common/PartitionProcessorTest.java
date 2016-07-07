@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.common;
 
 import static java.util.stream.Collectors.toList;
@@ -16,10 +17,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author Rishi
+ * The type Partition processor test.
  *
+ * @author Rishi
  */
 public class PartitionProcessorTest {
+  /**
+   * Should partition by count.
+   */
   @Test
   public void shouldPartitionByCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -36,6 +41,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(1).doesNotContainNull().containsExactly(e4);
   }
 
+  /**
+   * Should partition by pct.
+   */
   @Test
   public void shouldPartitionByPct() {
     SampleElement e1 = new SampleElement("e1");
@@ -54,6 +62,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e5, e6);
   }
 
+  /**
+   * Should partition by mixed pct and count.
+   */
   @Test
   public void shouldPartitionByMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -72,6 +83,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
   }
 
+  /**
+   * Should partition with mixed pct and count.
+   */
   @Test
   public void shouldPartitionWithMixedPctAndCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -91,6 +105,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
   }
 
+  /**
+   * Should partition by with pct.
+   */
   @Test
   public void shouldPartitionByWithPct() {
     SampleElement e1 = new SampleElement("e1");
@@ -110,6 +127,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
   }
 
+  /**
+   * Should partition by with count.
+   */
   @Test
   public void shouldPartitionByWithCount() {
     SampleElement e1 = new SampleElement("e1");
@@ -129,6 +149,45 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
   }
 
+  /**
+   * The type Sample element.
+   */
+  public static class SampleElement implements ContextElement {
+    private String uuid;
+
+    /**
+     * Instantiates a new Sample element.
+     *
+     * @param uuid the uuid
+     */
+    public SampleElement(String uuid) {
+      this.uuid = uuid;
+    }
+
+    @Override
+    public ContextElementType getElementType() {
+      return null;
+    }
+
+    @Override
+    public String getUuid() {
+      return uuid;
+    }
+
+    @Override
+    public String getName() {
+      return null;
+    }
+
+    @Override
+    public Map<String, Object> paramMap() {
+      return null;
+    }
+  }
+
+  /**
+   * The type Sample partition processor.
+   */
   public class SamplePartitionProcessor implements PartitionProcessor {
     private String[] breakdowns;
     private String[] percentages;
@@ -136,6 +195,11 @@ public class PartitionProcessorTest {
 
     private List<SampleElement> sampleElements;
 
+    /**
+     * Instantiates a new Sample partition processor.
+     *
+     * @param sampleElements the sample elements
+     */
     public SamplePartitionProcessor(List<SampleElement> sampleElements) {
       super();
       this.sampleElements = sampleElements;
@@ -174,32 +238,6 @@ public class PartitionProcessorTest {
     @Override
     public List<ContextElement> elements() {
       return sampleElements.stream().map(sampleElement -> (ContextElement) sampleElement).collect(toList());
-    }
-  }
-  public static class SampleElement implements ContextElement {
-    private String uuid;
-
-    public SampleElement(String uuid) {
-      this.uuid = uuid;
-    }
-    @Override
-    public ContextElementType getElementType() {
-      return null;
-    }
-
-    @Override
-    public String getUuid() {
-      return uuid;
-    }
-
-    @Override
-    public String getName() {
-      return null;
-    }
-
-    @Override
-    public Map<String, Object> paramMap() {
-      return null;
     }
   }
 }

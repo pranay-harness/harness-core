@@ -8,6 +8,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -30,7 +31,8 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<Tag>();
+  @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
+  @Transient private List<Host> taggedHosts = new ArrayList<>();
 
   /**
    * Gets name.
@@ -158,6 +160,24 @@ public class ServiceTemplate extends Base {
     this.leafTags = leafTags;
   }
 
+  /**
+   * Gets tagged hosts.
+   *
+   * @return the tagged hosts
+   */
+  public List<Host> getTaggedHosts() {
+    return taggedHosts;
+  }
+
+  /**
+   * Sets tagged hosts.
+   *
+   * @param taggedHosts the tagged hosts
+   */
+  public void setTaggedHosts(List<Host> taggedHosts) {
+    this.taggedHosts = taggedHosts;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts, leafTags);
@@ -215,80 +235,174 @@ public class ServiceTemplate extends Base {
 
     private Builder() {}
 
+    /**
+     * A service template builder.
+     *
+     * @return the builder
+     */
     public static Builder aServiceTemplate() {
       return new Builder();
     }
 
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With service builder.
+     *
+     * @param service the service
+     * @return the builder
+     */
     public Builder withService(Service service) {
       this.service = service;
       return this;
     }
 
+    /**
+     * With tags builder.
+     *
+     * @param tags the tags
+     * @return the builder
+     */
     public Builder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
+    /**
+     * With hosts builder.
+     *
+     * @param hosts the hosts
+     * @return the builder
+     */
     public Builder withHosts(List<Host> hosts) {
       this.hosts = hosts;
       return this;
     }
 
+    /**
+     * With leaf tags builder.
+     *
+     * @param leafTags the leaf tags
+     * @return the builder
+     */
     public Builder withLeafTags(Set<Tag> leafTags) {
       this.leafTags = leafTags;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aServiceTemplate()
           .withEnvId(envId)
@@ -307,6 +421,11 @@ public class ServiceTemplate extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build service template.
+     *
+     * @return the service template
+     */
     public ServiceTemplate build() {
       ServiceTemplate serviceTemplate = new ServiceTemplate();
       serviceTemplate.setEnvId(envId);

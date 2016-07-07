@@ -24,7 +24,6 @@
         <dropwizard.version>0.9.2</dropwizard.version>
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
-        <mongodb.port>27017</mongodb.port>
         <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 

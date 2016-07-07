@@ -68,6 +68,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
+
   @Inject @InjectMocks private UserService userService;
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
@@ -187,6 +188,7 @@ public class UserServiceTest extends WingsBaseTest {
                         .withUserId(USER_ID)
                         .withToken("TOKEN")
                         .build());
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     userService.verifyEmail("TOKEN");
     assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
     assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");

@@ -17,6 +17,8 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.UserService;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -28,6 +30,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 // TODO: Auto-generated Javadoc
 
@@ -134,8 +137,8 @@ public class UserResource {
    */
   @GET
   @Path("verify/{token}")
-  public RestResponse<User> verifyEmail(@PathParam("token") String token) {
-    return new RestResponse<>(userService.verifyEmail(token));
+  public Response verifyEmail(@PathParam("token") String token) throws URISyntaxException {
+    return Response.seeOther(new URI(userService.verifyEmail(token))).build();
   }
 
   /**

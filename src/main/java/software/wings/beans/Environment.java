@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static software.wings.beans.Environment.EnvironmentType.OTHER;
+
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -9,6 +12,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -21,8 +25,9 @@ import java.util.Objects;
 @Indexes(@Index(fields = { @Field("appId")
                            , @Field("name") }, options = @IndexOptions(unique = true)))
 public class Environment extends Base {
-  private String name;
+  @NotEmpty private String name;
   private String description;
+  @NotNull private EnvironmentType environmentType = OTHER;
   @Transient private List<ConfigFile> configFiles;
 
   /**
@@ -62,6 +67,33 @@ public class Environment extends Base {
   }
 
   /**
+   * Gets environment type.
+   *
+   * @return the environment type
+   */
+  public EnvironmentType getEnvironmentType() {
+    return environmentType;
+  }
+
+  /**
+   * Sets environment type.
+   *
+   * @param environmentType the environment type
+   */
+  public void setEnvironmentType(EnvironmentType environmentType) {
+    this.environmentType = environmentType;
+  }
+
+  /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
+  }
+
+  /**
    * Sets config files.
    *
    * @param configFiles the config files
@@ -70,17 +102,11 @@ public class Environment extends Base {
     this.configFiles = configFiles;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
-   */
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(name, description, configFiles);
+    return 31 * super.hashCode() + Objects.hash(name, description, environmentType, configFiles);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -94,15 +120,30 @@ public class Environment extends Base {
     }
     final Environment other = (Environment) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.configFiles, other.configFiles);
   }
 
   /**
-   * The Class EnvironmentBuilder.
+   * The enum Environment type.
    */
-  public static final class EnvironmentBuilder {
+  public enum EnvironmentType {
+    /**
+     * Prod environment type.
+     */
+    PROD, /**
+           * Other environment type.
+           */
+    OTHER
+  }
+
+  /**
+   * The type Builder.
+   */
+  public static final class Builder {
     private String name;
     private String description;
+    private EnvironmentType environmentType = OTHER;
     private List<ConfigFile> configFiles;
     private String uuid;
     private String appId;
@@ -112,136 +153,148 @@ public class Environment extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private EnvironmentBuilder() {}
+    private Builder() {}
 
     /**
-     * An environment.
+     * An environment builder.
      *
-     * @return the environment builder
+     * @return the builder
      */
-    public static EnvironmentBuilder anEnvironment() {
-      return new EnvironmentBuilder();
+    public static Builder anEnvironment() {
+      return new Builder();
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
     /**
-     * With description.
+     * With description builder.
      *
      * @param description the description
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
     /**
-     * With config files.
+     * With environment type builder.
+     *
+     * @param environmentType the environment type
+     * @return the builder
+     */
+    public Builder withEnvironmentType(EnvironmentType environmentType) {
+      this.environmentType = environmentType;
+      return this;
+    }
+
+    /**
+     * With config files builder.
      *
      * @param configFiles the config files
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withConfigFiles(List<ConfigFile> configFiles) {
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
     /**
-     * But.
+     * But builder.
      *
-     * @return the environment builder
+     * @return the builder
      */
-    public EnvironmentBuilder but() {
+    public Builder but() {
       return anEnvironment()
           .withName(name)
           .withDescription(description)
+          .withEnvironmentType(environmentType)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
@@ -253,7 +306,7 @@ public class Environment extends Base {
     }
 
     /**
-     * Builds the.
+     * Build environment.
      *
      * @return the environment
      */
@@ -261,6 +314,7 @@ public class Environment extends Base {
       Environment environment = new Environment();
       environment.setName(name);
       environment.setDescription(description);
+      environment.setEnvironmentType(environmentType);
       environment.setConfigFiles(configFiles);
       environment.setUuid(uuid);
       environment.setAppId(appId);

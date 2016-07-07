@@ -3,11 +3,13 @@ package software.wings.service;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.Orchestration;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -34,6 +37,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -41,19 +45,28 @@ import javax.inject.Inject;
  * Created by anubhaw on 6/28/16.
  */
 public class EnvironmentServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<Environment> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AppService appService;
   @Mock private InfraService infraService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
-
+  @Mock private WorkflowService workflowService;
   @Inject @InjectMocks private EnvironmentService environmentService;
-
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
 
-  @Mock Query<Environment> query;
-  @Mock FieldEnd end;
-
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Environment.class)).thenReturn(query);
@@ -61,6 +74,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
   }
 
+  /**
+   * Should list environments.
+   */
   @Test
   public void shouldListEnvironments() {
     Environment environment = anEnvironment().build();
@@ -72,12 +88,18 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     assertThat(environments).containsAll(asList(environment));
   }
 
+  /**
+   * Should get environment.
+   */
   @Test
   public void shouldGetEnvironment() {
     environmentService.get(APP_ID, ENV_ID);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
+  /**
+   * Should save environment.
+   */
   @Test
   public void shouldSaveEnvironment() {
     Environment environment =
@@ -92,18 +114,31 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(infraService).createDefaultInfraForEnvironment(APP_ID, ENV_ID);
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
+    verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
   }
 
+  /**
+   * Should update environment.
+   */
   @Test
   public void shouldUpdateEnvironment() {
-    Environment environment =
-        anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).withDescription(ENV_DESCRIPTION).build();
+    Environment environment = anEnvironment()
+                                  .withAppId(APP_ID)
+                                  .withUuid(ENV_ID)
+                                  .withName(ENV_NAME)
+                                  .withEnvironmentType(PROD)
+                                  .withDescription(ENV_DESCRIPTION)
+                                  .build();
     environmentService.update(environment);
     verify(wingsPersistence)
-        .updateFields(Environment.class, ENV_ID, ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION));
+        .updateFields(Environment.class, ENV_ID,
+            ImmutableMap.of("name", ENV_NAME, "description", ENV_DESCRIPTION, "environmentType", PROD));
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
+  /**
+   * Should delete environment.
+   */
   @Test
   public void shouldDeleteEnvironment() {
     environmentService.delete(APP_ID, ENV_ID);
@@ -114,6 +149,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     inOrder.verify(infraService).deleteByEnv(APP_ID, ENV_ID);
   }
 
+  /**
+   * Should delete by app.
+   */
   @Test
   public void shouldDeleteByApp() {
     when(query.asList()).thenReturn(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build()));

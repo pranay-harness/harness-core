@@ -6,7 +6,7 @@ import static software.wings.beans.BastionConnectionAttributes.BastionConnection
 import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
@@ -33,7 +33,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
-import software.wings.beans.Host.HostBuilder;
+import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SettingAttribute;
@@ -92,14 +92,14 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Mock LogService logService;
 
   @Inject @InjectMocks private CommandUnitExecutorService sshCommandUnitExecutorService;
-  private HostBuilder hostBuilder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME);
+  private Builder builder = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME);
 
   /**
    * Should create password based ssh config.
    */
   @Test
   public void shouldCreatePasswordBasedSshConfig() {
-    Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
                                              .withAppId(APP_ID)
                                              .withExecutionId(ACTIVITY_ID)
@@ -120,7 +120,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateKeyBasedSshConfig() {
-    Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_KEY)
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_KEY)
                     .withHostConnectionCredential(aHostConnectionCredential().withSshUser(SSH_USER_NAME).build())
                     .build();
     SshSessionConfig expectedSshConfig = aSshSessionConfig()
@@ -143,7 +143,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldCreateBastionHostBasedSshConfig() {
-    Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD)
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD)
                     .withHostConnectionCredential(CREDENTIAL)
                     .withBastionConnAttr(BASTION_HOST_ATTR)
                     .build();
@@ -169,7 +169,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteExecCommand() {
-    Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT, ACTIVITY_ID);
@@ -181,7 +181,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldExecuteCopyCommand() {
-    Host host = hostBuilder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
     CopyCommandUnit commandUnit = aCopyArtifactCommandUnit()
                                       .withCommandUnitType(COPY_ARTIFACT)
                                       .withFileId(FILE_ID)

@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.shuffle;
+import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
@@ -12,8 +13,9 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.Environment.EnvironmentBuilder.anEnvironment;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -22,7 +24,6 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.ReleaseBuilder.aRelease;
-import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.User.Builder.anUser;
@@ -68,7 +69,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Tag;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -93,7 +93,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -254,7 +253,7 @@ public class DataGenUtil extends WingsBaseTest {
             .withAppId(application.getUuid())
             .withName("pipeline1")
             .withDescription("Sample Pipeline")
-            .addServices(services.stream().map(Service::getUuid).collect(Collectors.toList()).toArray(new String[0]))
+            .addServices(services.stream().map(Service::getUuid).collect(toList()).toArray(new String[0]))
             .withGraph(graph)
             .build();
 
@@ -334,6 +333,7 @@ public class DataGenUtil extends WingsBaseTest {
 
   private void addServiceInstances(List<Service> services, List<Environment> appEnvs) {
     // TODO: improve make http calls and use better generation scheme
+
     services.forEach(service -> {
       appEnvs.forEach(environment -> {
         String infraId =
@@ -344,9 +344,6 @@ public class DataGenUtil extends WingsBaseTest {
                                .field("infraId")
                                .equal(infraId)
                                .asList();
-        Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
-        Artifact artifact =
-            wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
         ServiceTemplate template = wingsPersistence.createQuery(ServiceTemplate.class)
                                        .field("appId")
                                        .equal(environment.getAppId())
@@ -354,15 +351,11 @@ public class DataGenUtil extends WingsBaseTest {
                                        .equal(environment.getUuid())
                                        .get();
 
-        hosts.forEach(host
-            -> wingsPersistence.save(aServiceInstance()
-                                         .withAppId(host.getAppId())
-                                         .withEnvId(environment.getUuid())
-                                         .withHost(host)
-                                         .withServiceTemplate(template)
-                                         .withRelease(release)
-                                         .withArtifact(artifact)
-                                         .build()));
+        List<String> hostIds = hosts.stream().map(Host::getUuid).collect(toList());
+
+        WebTarget target = client.target(String.format("%s/service-templates/%s/map-hosts?appId=%s&envId=%s", API_BASE,
+            template.getUuid(), template.getAppId(), template.getEnvId()));
+        getRequestWithAuthHeader(target).put(Entity.entity(hostIds, APPLICATION_JSON));
       });
     });
   }
@@ -380,8 +373,9 @@ public class DataGenUtil extends WingsBaseTest {
                              .asList();
       ServiceTemplate template = wingsPersistence.query(ServiceTemplate.class, new PageRequest<>()).get(0);
       template.setService(services.get(0));
-      Release release = wingsPersistence.query(Release.class, new PageRequest<>()).get(0);
-      Artifact artifact = wingsPersistence.query(Artifact.class, new PageRequest<>()).get(0);
+      Release release = wingsPersistence.saveAndGet(Release.class, aRelease().withReleaseName("Rel1.1").build());
+      Artifact artifact =
+          wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
 
       shuffle(hosts);
       createDeployActivity(application, environment, template, hosts.get(0), release, artifact, Status.RUNNING);
@@ -482,7 +476,7 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private void createGlobalSettings() {
-    WebTarget target = client.target(API_BASE + "/settings/?appId=" + Base.GLOBAL_APP_ID);
+    WebTarget target = client.target(API_BASE + "/settings/?appId=" + GLOBAL_APP_ID);
     getRequestWithAuthHeader(target).post(
         Entity.entity(aSettingAttribute()
                           .withName("Wings Jenkins")
@@ -614,8 +608,10 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private List<Environment> addEnvs(String appId) throws IOException {
-    List<Environment> environments = new ArrayList<>();
+    List<Environment> environments =
+        wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).asList();
     WebTarget target = client.target(API_BASE + "/environments?appId=" + appId);
+
     for (int i = 0; i < NUM_ENV_PER_APP; i++) {
       RestResponse<Environment> response = getRequestWithAuthHeader(target).post(
           Entity.entity(
@@ -624,20 +620,12 @@ public class DataGenUtil extends WingsBaseTest {
           new GenericType<RestResponse<Environment>>() {});
       assertThat(response.getResource()).isInstanceOf(Environment.class);
       environments.add(response.getResource());
-      addHostsToEnv(response.getResource());
-      //      createAndTagHosts(response.getResource());
     }
+    environments.forEach(this ::addHostsToEnv);
     return environments;
   }
 
-  private void createAndTagHosts(Environment environment) {
-    RestResponse<PageResponse<Tag>> response = getRequestWithAuthHeader(
-        client.target(format(API_BASE + "/tag-types?appId=%s&envId=%s", environment.getAppId(), environment.getUuid())))
-                                                   .get(new GenericType<RestResponse<PageResponse<Tag>>>() {});
-    log().info(response.getResource().getResponse().toString());
-  }
-
-  private void addHostsToEnv(Environment env) throws IOException {
+  private void addHostsToEnv(Environment env) {
     if (envAttr == null) {
       envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
           aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());

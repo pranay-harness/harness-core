@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.WebApplicationException;
 
 // TODO: Auto-generated Javadoc
@@ -87,6 +86,7 @@ public class WingsException extends WebApplicationException {
    * @param errorCode the error code
    * @param key       the key
    * @param value     the value
+   * @param cause     the cause
    */
   public WingsException(ErrorCodes errorCode, String key, Object value, Throwable cause) {
     this(errorCode, cause);

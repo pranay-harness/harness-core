@@ -61,4 +61,22 @@ public interface ActivityService {
    * @return the command units
    */
   List<CommandUnit> getCommandUnits(String appId, String activityId);
+
+  /**
+   * Gets last activity for service.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the last activity for service
+   */
+  Activity getLastActivityForService(String appId, String serviceId);
+
+  /**
+   * Gets lastproduction activity for service.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the lastproduction activity for service
+   */
+  Activity getLastProductionActivityForService(String appId, String serviceId);
 }

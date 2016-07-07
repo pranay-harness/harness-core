@@ -117,7 +117,8 @@ public class CatalogResourceTest extends WingsBaseTest {
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES)},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE)}};
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE)},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENT_TYPE)}};
   }
 
   /**

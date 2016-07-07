@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * Created by peeyushaggarwal on 6/27/16.
+ *
+ * @param <T> the type parameter
  */
 public interface Stencil<T> {
   /**
@@ -42,6 +44,11 @@ public interface Stencil<T> {
    */
   String getName();
 
+  /**
+   * Gets overriding stencil.
+   *
+   * @return the overriding stencil
+   */
   @JsonIgnore OverridingStencil getOverridingStencil();
 
   /**

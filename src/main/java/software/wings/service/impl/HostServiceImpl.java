@@ -1,28 +1,36 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.beans.Base;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
-import software.wings.beans.Host.HostBuilder;
 import software.wings.beans.Infra;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -39,6 +47,8 @@ public class HostServiceImpl implements HostService {
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private InfraService infraService;
+  @Inject private SettingsService settingsService;
+  @Inject private TagService tagService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -66,8 +76,7 @@ public class HostServiceImpl implements HostService {
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#save(software.wings.beans.Host)
    */
-  @Override
-  public Host save(Host host) {
+  private Host save(Host host) {
     host.setHostName(host.getHostName().trim());
     return wingsPersistence.saveAndGet(Host.class, host);
   }
@@ -77,9 +86,9 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host update(Host host) {
-    Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                                          .put("hostName", host.getHostName())
-                                          .put("hostConnAttr", host.getHostConnAttr());
+    ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder()
+                                       .put("hostName", host.getHostName())
+                                       .put("hostConnAttr", host.getHostConnAttr());
     if (host.getBastionConnAttr() != null) {
       builder.put("bastionConnAttr", host.getBastionConnAttr());
     }
@@ -197,25 +206,81 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
    */
   @Override
-  public void bulkSave(Host baseHost, List<String> hostNames) {
-    ;
+  public void bulkSave(String envId, Host baseHost) {
+    List<String> hostNames = baseHost.getHostNames()
+                                 .stream()
+                                 .filter(hostName -> !isNullOrEmpty(hostName))
+                                 .map(String::trim)
+                                 .collect(Collectors.toList());
+    List<ServiceTemplate> serviceTemplates =
+        validateAndFetchServiceTemplate(baseHost.getAppId(), envId, baseHost.getServiceTemplates());
+
     hostNames.forEach(hostName -> {
-      if (hostName != null && hostName.length() > 0) {
-        HostBuilder builder = aHost()
-                                  .withHostName(hostName)
-                                  .withAppId(baseHost.getAppId())
-                                  .withInfraId(baseHost.getInfraId())
-                                  .withHostConnAttr(baseHost.getHostConnAttr());
-        if (isValidBastionHostConnectionReference(baseHost)) {
-          builder.withBastionConnAttr(baseHost.getBastionConnAttr()).withTags(baseHost.getTags());
-        }
-        save(builder.build());
+      Host host = aHost()
+                      .withHostName(hostName)
+                      .withAppId(baseHost.getAppId())
+                      .withInfraId(baseHost.getInfraId())
+                      .withHostConnAttr(baseHost.getHostConnAttr())
+                      .build();
+      SettingAttribute bastionConnSttr =
+          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), envId, baseHost.getBastionConnAttr());
+      if (bastionConnSttr != null) {
+        host.setBastionConnAttr(bastionConnSttr);
       }
+      List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
+      host.setTags(tags);
+      save(host); // dedup
     });
+    serviceTemplates.forEach(serviceTemplate
+        -> serviceTemplateService.updateHosts(baseHost.getAppId(), envId, serviceTemplate.getUuid(), hostNames));
   }
 
-  private boolean isValidBastionHostConnectionReference(Host baseHost) {
-    return baseHost.getBastionConnAttr() != null && baseHost.getBastionConnAttr().getUuid() != null
-        && baseHost.getBastionConnAttr().getUuid().length() > 0;
+  private List<ServiceTemplate> validateAndFetchServiceTemplate(
+      String appId, String envId, List<ServiceTemplate> serviceTemplates) {
+    List<ServiceTemplate> fetchedServiceTemplate = new ArrayList<>();
+    if (serviceTemplates != null) {
+      serviceTemplates.stream()
+          .filter(this ::isValidDbReference)
+          .map(serviceTemplate -> serviceTemplateService.get(appId, envId, serviceTemplate.getUuid()))
+          .forEach(serviceTemplate -> {
+            if (serviceTemplate == null) {
+              throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "service mapping");
+            }
+            fetchedServiceTemplate.add(serviceTemplate);
+          });
+    }
+    return fetchedServiceTemplate;
+  }
+
+  private List<Tag> validateAndFetchTags(String appId, String envId, List<Tag> tags) {
+    List<Tag> fetchedTags = new ArrayList<>();
+    if (tags != null) {
+      tags.forEach(tag -> {
+        if (isValidDbReference(tag)) {
+          Tag fetchedTag = tagService.get(appId, envId, tag.getUuid());
+          if (fetchedTag == null) {
+            throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "tags");
+          }
+          fetchedTags.add(fetchedTag);
+        }
+      });
+    }
+    return fetchedTags;
+  }
+
+  private SettingAttribute validateAndFetchBastionHostConnectionReference(
+      String appId, String envId, SettingAttribute settingAttribute) {
+    if (!isValidDbReference(settingAttribute)) {
+      return null;
+    }
+    SettingAttribute fetchedAttribute = settingsService.get(appId, envId, settingAttribute.getUuid());
+    if (fetchedAttribute == null) {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "bastionConnAttr");
+    }
+    return fetchedAttribute;
+  }
+
+  private boolean isValidDbReference(Base base) {
+    return base != null && !isNullOrEmpty(base.getUuid());
   }
 }

@@ -15,6 +15,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.Builder;
 import software.wings.common.UUIDGenerator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -100,7 +101,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     Application app = Application.Builder.anApplication().withName("AppA").build();
     app = appService.save(app);
 
-    Environment env = Environment.EnvironmentBuilder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();

@@ -13,6 +13,9 @@ import java.util.List;
  * Created by peeyushaggarwal on 7/1/16.
  */
 public class InstancePartitionExpressionProcessor extends InstanceExpressionProcessor implements PartitionProcessor {
+  /**
+   * The constant DEFAULT_EXPRESSION_FOR_PARTITION.
+   */
   public static final String DEFAULT_EXPRESSION_FOR_PARTITION = "${phases}";
 
   private static final List<String> EXPRESSION_START_PATTERNS =
@@ -34,6 +37,11 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
     super(context);
   }
 
+  /**
+   * Phases instance partition expression processor.
+   *
+   * @return the instance partition expression processor
+   */
   public InstancePartitionExpressionProcessor phases() {
     return this;
   }
@@ -98,6 +106,15 @@ public class InstancePartitionExpressionProcessor extends InstanceExpressionProc
   @Override
   public String getPrefixObjectName() {
     return INSTANCE_PHASE_EXPR_PROCESSOR;
+  }
+
+  /**
+   * Gets phases.
+   *
+   * @return the phases
+   */
+  public InstancePartitionExpressionProcessor getPhases() {
+    return this;
   }
 
   @Override

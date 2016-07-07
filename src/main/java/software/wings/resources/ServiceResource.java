@@ -171,6 +171,13 @@ public class ServiceResource {
     return new RestResponse<>(serviceResourceService.deleteCommand(appId, serviceId, commandName));
   }
 
+  /**
+   * Stencils rest response.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the rest response
+   */
   @GET
   @Path("{serviceId}/commands/stencils")
   public RestResponse<List<Stencil>> stencils(

@@ -6,6 +6,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.mapping.MappedClass;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -36,8 +37,10 @@ public class MongoHelper {
    */
   public static <T> PageResponse<T> queryPageRequest(Datastore datastore, Class<T> cls, PageRequest<T> req) {
     Query q = datastore.createQuery(cls);
-    MappedClass mappedClass = ((DatastoreImpl) datastore).getMapper().addMappedClass(cls);
-    q = MongoHelper.applyPageRequest(q, req, mappedClass);
+
+    Mapper mapper = ((DatastoreImpl) datastore).getMapper();
+    MappedClass mappedClass = mapper.addMappedClass(cls);
+    q = MongoHelper.applyPageRequest(q, req, mappedClass, mapper);
 
     long total = q.countAll();
     q.offset(req.getStart());
@@ -62,14 +65,16 @@ public class MongoHelper {
    * @param query       the query
    * @param req         the req
    * @param mappedClass the mapped class
+   * @param mapper      the mapper
    * @return the query
    */
-  public static <T> Query<T> applyPageRequest(Query<T> query, PageRequest<T> req, MappedClass mappedClass) {
+  public static <T> Query<T> applyPageRequest(
+      Query<T> query, PageRequest<T> req, MappedClass mappedClass, Mapper mapper) {
     if (req == null) {
       return query;
     }
 
-    req.populateFilters(mappedClass);
+    req.populateFilters(mappedClass, mapper);
 
     if (req.getFilters() != null) {
       for (SearchFilter filter : req.getFilters()) {

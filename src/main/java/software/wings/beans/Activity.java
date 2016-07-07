@@ -1,10 +1,13 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import software.wings.beans.Environment.EnvironmentType;
+
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -14,6 +17,8 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "activities", noClassnameStored = true)
 public class Activity extends Base {
   @NotEmpty private String environmentId;
+  @NotEmpty private String environmentName;
+  @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
   @NotEmpty private String commandType;
   @NotEmpty private String serviceId;
@@ -242,11 +247,48 @@ public class Activity extends Base {
     this.status = status;
   }
 
+  /**
+   * Gets environment name.
+   *
+   * @return the environment name
+   */
+  public String getEnvironmentName() {
+    return environmentName;
+  }
+
+  /**
+   * Sets environment name.
+   *
+   * @param environmentName the environment name
+   */
+  public void setEnvironmentName(String environmentName) {
+    this.environmentName = environmentName;
+  }
+
+  /**
+   * Gets environment type.
+   *
+   * @return the environment type
+   */
+  public EnvironmentType getEnvironmentType() {
+    return environmentType;
+  }
+
+  /**
+   * Sets environment type.
+   *
+   * @param environmentType the environment type
+   */
+  public void setEnvironmentType(EnvironmentType environmentType) {
+    this.environmentType = environmentType;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hashCode(environmentId, commandName, commandType, serviceId, serviceName, serviceTemplateId,
-              serviceTemplateName, hostName, releaseId, releaseName, artifactName, status);
+        + Objects.hash(environmentId, environmentName, environmentType, commandName, commandType, serviceId,
+              serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactName,
+              status);
   }
 
   @Override
@@ -261,20 +303,24 @@ public class Activity extends Base {
       return false;
     }
     final Activity other = (Activity) obj;
-    return Objects.equal(this.environmentId, other.environmentId) && Objects.equal(this.commandName, other.commandName)
-        && Objects.equal(this.commandType, other.commandType) && Objects.equal(this.serviceId, other.serviceId)
-        && Objects.equal(this.serviceName, other.serviceName)
-        && Objects.equal(this.serviceTemplateId, other.serviceTemplateId)
-        && Objects.equal(this.serviceTemplateName, other.serviceTemplateName)
-        && Objects.equal(this.hostName, other.hostName) && Objects.equal(this.releaseId, other.releaseId)
-        && Objects.equal(this.releaseName, other.releaseName) && Objects.equal(this.artifactName, other.artifactName)
-        && Objects.equal(this.status, other.status);
+    return Objects.equals(this.environmentId, other.environmentId)
+        && Objects.equals(this.environmentName, other.environmentName)
+        && Objects.equals(this.environmentType, other.environmentType)
+        && Objects.equals(this.commandName, other.commandName) && Objects.equals(this.commandType, other.commandType)
+        && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
+        && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
+        && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
+        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.releaseId, other.releaseId)
+        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactName, other.artifactName)
+        && Objects.equals(this.status, other.status);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("environmentId", environmentId)
+        .add("environmentName", environmentName)
+        .add("environmentType", environmentType)
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("serviceId", serviceId)
@@ -309,10 +355,12 @@ public class Activity extends Base {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String environmentId;
+    private String environmentName;
+    private EnvironmentType environmentType;
     private String commandName;
     private String commandType;
     private String serviceId;
@@ -335,7 +383,7 @@ public class Activity extends Base {
     private Builder() {}
 
     /**
-     * An activity.
+     * An activity builder.
      *
      * @return the builder
      */
@@ -344,7 +392,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With environment id.
+     * With environment id builder.
      *
      * @param environmentId the environment id
      * @return the builder
@@ -355,7 +403,29 @@ public class Activity extends Base {
     }
 
     /**
-     * With command name.
+     * With environment name builder.
+     *
+     * @param environmentName the environment name
+     * @return the builder
+     */
+    public Builder withEnvironmentName(String environmentName) {
+      this.environmentName = environmentName;
+      return this;
+    }
+
+    /**
+     * With environment type builder.
+     *
+     * @param environmentType the environment type
+     * @return the builder
+     */
+    public Builder withEnvironmentType(EnvironmentType environmentType) {
+      this.environmentType = environmentType;
+      return this;
+    }
+
+    /**
+     * With command name builder.
      *
      * @param commandName the command name
      * @return the builder
@@ -366,7 +436,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With command type.
+     * With command type builder.
      *
      * @param commandType the command type
      * @return the builder
@@ -377,7 +447,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With service id.
+     * With service id builder.
      *
      * @param serviceId the service id
      * @return the builder
@@ -388,7 +458,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With service name.
+     * With service name builder.
      *
      * @param serviceName the service name
      * @return the builder
@@ -399,7 +469,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With service template id.
+     * With service template id builder.
      *
      * @param serviceTemplateId the service template id
      * @return the builder
@@ -410,7 +480,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With service template name.
+     * With service template name builder.
      *
      * @param serviceTemplateName the service template name
      * @return the builder
@@ -421,7 +491,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With host name.
+     * With host name builder.
      *
      * @param hostName the host name
      * @return the builder
@@ -432,7 +502,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With release id.
+     * With release id builder.
      *
      * @param releaseId the release id
      * @return the builder
@@ -443,7 +513,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With release name.
+     * With release name builder.
      *
      * @param releaseName the release name
      * @return the builder
@@ -454,7 +524,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With artifact name.
+     * With artifact name builder.
      *
      * @param artifactName the artifact name
      * @return the builder
@@ -465,7 +535,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With status.
+     * With status builder.
      *
      * @param status the status
      * @return the builder
@@ -476,7 +546,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
      * @return the builder
@@ -487,7 +557,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
      * @return the builder
@@ -498,7 +568,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
      * @return the builder
@@ -509,7 +579,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
      * @return the builder
@@ -520,7 +590,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
      * @return the builder
@@ -531,7 +601,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
      * @return the builder
@@ -542,7 +612,7 @@ public class Activity extends Base {
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
      * @return the builder
@@ -553,13 +623,15 @@ public class Activity extends Base {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return anActivity()
           .withEnvironmentId(environmentId)
+          .withEnvironmentName(environmentName)
+          .withEnvironmentType(environmentType)
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withServiceId(serviceId)
@@ -581,13 +653,15 @@ public class Activity extends Base {
     }
 
     /**
-     * Builds the.
+     * Build activity.
      *
      * @return the activity
      */
     public Activity build() {
       Activity activity = new Activity();
       activity.setEnvironmentId(environmentId);
+      activity.setEnvironmentName(environmentName);
+      activity.setEnvironmentType(environmentType);
       activity.setCommandName(commandName);
       activity.setCommandType(commandType);
       activity.setServiceId(serviceId);

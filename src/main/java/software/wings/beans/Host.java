@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -44,11 +46,16 @@ public class Host extends Base {
 
   @FormDataParam("tags") @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
 
-  @Transient @JsonProperty(access = WRITE_ONLY) private List<String> hostNames; // to support bulk add host API
-
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
-  @Transient private HostConnectionCredential hostConnectionCredential;
+  @Transient private HostConnectionCredential hostConnectionCredential; // TODO: remove
+
+  @Transient @JsonProperty(access = WRITE_ONLY) private List<String> hostNames; // to support bulk add host API
+
+  @FormDataParam("serviceTemplates")
+  @Transient
+  @JsonProperty(access = WRITE_ONLY)
+  private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
   /**
    * Gets infra id.
@@ -212,19 +219,31 @@ public class Host extends Base {
     this.osType = osType;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
+  /**
+   * Gets service templates.
+   *
+   * @return the service templates
    */
+  public List<ServiceTemplate> getServiceTemplates() {
+    return serviceTemplates;
+  }
+
+  /**
+   * Sets service templates.
+   *
+   * @param serviceTemplates the service templates
+   */
+  public void setServiceTemplates(List<ServiceTemplate> serviceTemplates) {
+    this.serviceTemplates = serviceTemplates;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, tags, hostNames, configFiles,
-              hostConnectionCredential);
+        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, tags, configFiles,
+              hostConnectionCredential, hostNames, serviceTemplates);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -240,23 +259,42 @@ public class Host extends Base {
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
         && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
         && Objects.equals(this.bastionConnAttr, other.bastionConnAttr) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.hostNames, other.hostNames) && Objects.equals(this.configFiles, other.configFiles)
-        && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential);
+        && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential)
+        && Objects.equals(this.hostNames, other.hostNames)
+        && Objects.equals(this.serviceTemplates, other.serviceTemplates);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("infraId", infraId)
+        .add("hostName", hostName)
+        .add("osType", osType)
+        .add("hostConnAttr", hostConnAttr)
+        .add("bastionConnAttr", bastionConnAttr)
+        .add("tags", tags)
+        .add("configFiles", configFiles)
+        .add("hostConnectionCredential", hostConnectionCredential)
+        .add("hostNames", hostNames)
+        .add("serviceTemplates", serviceTemplates)
+        .toString();
   }
 
   /**
-   * The Class HostBuilder.
+   * The type Builder.
    */
-  public static final class HostBuilder {
+  public static final class Builder {
     private String infraId;
     private String hostName;
     private String osType;
     private SettingAttribute hostConnAttr;
     private SettingAttribute bastionConnAttr;
     private List<Tag> tags = new ArrayList<>();
-    private List<String> hostNames; // to support bulk add host API
     private List<ConfigFile> configFiles = new ArrayList<>();
-    private HostConnectionCredential hostConnectionCredential;
+    private HostConnectionCredential hostConnectionCredential; // TODO: remove
+    private List<String> hostNames; // to support bulk add host API
+    private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
     private String uuid;
     private String appId;
     private User createdBy;
@@ -265,199 +303,210 @@ public class Host extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private HostBuilder() {}
+    private Builder() {}
 
     /**
-     * A host.
+     * A host builder.
      *
-     * @return the host builder
+     * @return the builder
      */
-    public static HostBuilder aHost() {
-      return new HostBuilder();
+    public static Builder aHost() {
+      return new Builder();
     }
 
     /**
-     * With infra id.
+     * With infra id builder.
      *
      * @param infraId the infra id
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withInfraId(String infraId) {
+    public Builder withInfraId(String infraId) {
       this.infraId = infraId;
       return this;
     }
 
     /**
-     * With host name.
+     * With host name builder.
      *
      * @param hostName the host name
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withHostName(String hostName) {
+    public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
     /**
-     * With os type.
+     * With os type builder.
      *
      * @param osType the os type
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withOsType(String osType) {
+    public Builder withOsType(String osType) {
       this.osType = osType;
       return this;
     }
 
     /**
-     * With host conn attr.
+     * With host conn attr builder.
      *
      * @param hostConnAttr the host conn attr
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withHostConnAttr(SettingAttribute hostConnAttr) {
+    public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
       return this;
     }
 
     /**
-     * With bastion conn attr.
+     * With bastion conn attr builder.
      *
      * @param bastionConnAttr the bastion conn attr
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withBastionConnAttr(SettingAttribute bastionConnAttr) {
+    public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
     /**
-     * With tags.
+     * With tags builder.
      *
      * @param tags the tags
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withTags(List<Tag> tags) {
+    public Builder withTags(List<Tag> tags) {
       this.tags = tags;
       return this;
     }
 
     /**
-     * With host names.
-     *
-     * @param hostNames the host names
-     * @return the host builder
-     */
-    public HostBuilder withHostNames(List<String> hostNames) {
-      this.hostNames = hostNames;
-      return this;
-    }
-
-    /**
-     * With config files.
+     * With config files builder.
      *
      * @param configFiles the config files
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withConfigFiles(List<ConfigFile> configFiles) {
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
     /**
-     * With host connection credential.
+     * With host connection credential builder.
      *
      * @param hostConnectionCredential the host connection credential
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
+    public Builder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
       this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
     /**
-     * With uuid.
+     * With host names builder.
+     *
+     * @param hostNames the host names
+     * @return the builder
+     */
+    public Builder withHostNames(List<String> hostNames) {
+      this.hostNames = hostNames;
+      return this;
+    }
+
+    /**
+     * With service templates builder.
+     *
+     * @param serviceTemplates the service templates
+     * @return the builder
+     */
+    public Builder withServiceTemplates(List<ServiceTemplate> serviceTemplates) {
+      this.serviceTemplates = serviceTemplates;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
     /**
-     * But.
+     * But builder.
      *
-     * @return the host builder
+     * @return the builder
      */
-    public HostBuilder but() {
+    public Builder but() {
       return aHost()
           .withInfraId(infraId)
           .withHostName(hostName)
@@ -465,9 +514,10 @@ public class Host extends Base {
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
           .withTags(tags)
-          .withHostNames(hostNames)
           .withConfigFiles(configFiles)
           .withHostConnectionCredential(hostConnectionCredential)
+          .withHostNames(hostNames)
+          .withServiceTemplates(serviceTemplates)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -478,7 +528,7 @@ public class Host extends Base {
     }
 
     /**
-     * Builds the.
+     * Build host.
      *
      * @return the host
      */
@@ -490,9 +540,10 @@ public class Host extends Base {
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
       host.setTags(tags);
-      host.setHostNames(hostNames);
       host.setConfigFiles(configFiles);
       host.setHostConnectionCredential(hostConnectionCredential);
+      host.setHostNames(hostNames);
+      host.setServiceTemplates(serviceTemplates);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);

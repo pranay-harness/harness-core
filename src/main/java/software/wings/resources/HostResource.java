@@ -53,8 +53,8 @@ public class HostResource {
   /**
    * Instantiates a new Host resource.
    *
-   * @param hostService the host service
-   * @param infraService
+   * @param hostService  the host service
+   * @param infraService the infra service
    */
   @Inject
   public HostResource(HostService hostService, InfraService infraService) {
@@ -112,7 +112,7 @@ public class HostResource {
     infraId = infraService.getInfraIdByEnvId(appId, envId);
     baseHost.setAppId(appId);
     baseHost.setInfraId(infraId);
-    hostService.bulkSave(baseHost, baseHost.getHostNames());
+    hostService.bulkSave(envId, baseHost);
     return new RestResponse();
   }
 

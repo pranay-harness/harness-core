@@ -9,7 +9,7 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.CommandUnitType.EXEC;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.Host.HostBuilder.aHost;
+import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;

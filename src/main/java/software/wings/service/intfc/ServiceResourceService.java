@@ -118,5 +118,11 @@ public interface ServiceResourceService {
    */
   void deleteByAppId(String appId);
 
+  /**
+   * Find services by app list.
+   *
+   * @param appId the app id
+   * @return the list
+   */
   List<Service> findServicesByApp(String appId);
 }

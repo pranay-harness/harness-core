@@ -39,14 +39,6 @@ public interface HostService {
   public Host get(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
 
   /**
-   * Save.
-   *
-   * @param host the host
-   * @return the host
-   */
-  public Host save(@Valid Host host);
-
-  /**
    * Update.
    *
    * @param host the host
@@ -79,14 +71,6 @@ public interface HostService {
    * @return the file
    */
   File exportHosts(@NotEmpty String appId, @NotEmpty String infraId);
-
-  /**
-   * Bulk save.
-   *
-   * @param baseHost  the base host
-   * @param hostNames the host names
-   */
-  void bulkSave(Host baseHost, List<String> hostNames);
 
   /**
    * Import hosts.
@@ -142,4 +126,12 @@ public interface HostService {
    * @return the hosts by env
    */
   List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
+
+  /**
+   * Bulk save.
+   *
+   * @param envId    the env id
+   * @param baseHost the base host
+   */
+  void bulkSave(String envId, Host baseHost);
 }

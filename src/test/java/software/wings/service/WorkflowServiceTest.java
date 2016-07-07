@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentBuilder;
+import software.wings.beans.Environment.Builder;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
@@ -67,7 +67,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   public Environment getEnvironment() {
     if (env == null) {
-      env = wingsPersistence.saveAndGet(Environment.class, EnvironmentBuilder.anEnvironment().withAppId(appId).build());
+      env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     }
     return env;
   }

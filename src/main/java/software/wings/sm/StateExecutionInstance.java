@@ -362,10 +362,20 @@ public class StateExecutionInstance extends Base {
     return stateExecutionMap.get(stateName);
   }
 
+  /**
+   * Is context transition boolean.
+   *
+   * @return the boolean
+   */
   public boolean isContextTransition() {
     return contextTransition;
   }
 
+  /**
+   * Sets context transition.
+   *
+   * @param contextTransition the context transition
+   */
   public void setContextTransition(boolean contextTransition) {
     this.contextTransition = contextTransition;
   }
