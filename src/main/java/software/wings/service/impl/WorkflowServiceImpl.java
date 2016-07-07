@@ -448,12 +448,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }
-    if (nodeOps != Graph.NodeOps.COLLAPSE && !expandedGroupIds.contains(requestedGroupId)) {
+    if (nodeOps != Graph.NodeOps.COLLAPSE && requestedGroupId != null && !expandedGroupIds.contains(requestedGroupId)) {
       expandedGroupIds.add(requestedGroupId);
     }
     List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
     if (instances != null && instances.size() > 0) {
-      if (instances.size() == 1 && (requestedGroupId != null || nodeOps != null)
+      if (instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
           && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
                  || StateType.FORK.name().equals(instances.get(0).getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
@@ -548,6 +548,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private Graph generateGraph(
       Map<String, StateExecutionInstance> instanceIdMap, String initialStateName, List<String> expandedGroupIds) {
+    logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
+        instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
     Map<String, Node> nodeIdMap = new HashMap<>();
     Map<String, Node> prevInstanceIdMap = new HashMap<>();
@@ -590,22 +592,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       nodeIdMap.put(node.getId(), node);
     }
+    logger.debug(
+        "generateNodeHierarchy invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
+        instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
     generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
     extrapolateDimension(originNode);
     Graph graph = new Graph();
     paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    logger.debug("graph generated: {}", graph);
     return graph;
   }
 
   private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node) {
+    logger.debug("generateNodeHierarchy requested- node: {}", node);
     if (parentIdElementsMap.get(node.getId()) != null) {
       StateExecutionInstance instance = instanceIdMap.get(node.getId());
 
       Group group = new Group();
       group.setId(node.getId() + "-group");
+      logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
+      node.setGroup(group);
 
       List<String> elements = null;
       StateExecutionData sed = instance.getStateExecutionData();
@@ -619,28 +628,29 @@ public class WorkflowServiceImpl implements WorkflowService {
                        .collect(Collectors.toList());
         group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
       }
-
+      logger.debug("generateNodeHierarchy processing group - node: {}", elements);
       if (elements != null) {
         for (String element : elements) {
           Node elementNode =
               Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("element").build();
           group.getElements().add(elementNode);
+          logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
           Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
           if (elementRepeatNode != null) {
             elementNode.setStatus(elementRepeatNode.getStatus());
             elementNode.setNext(elementRepeatNode);
+            logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
             generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode);
           }
         }
       }
-
-      node.setGroup(group);
     }
 
     if (prevInstanceIdMap.get(node.getId()) != null) {
       Node nextNode = prevInstanceIdMap.get(node.getId());
-      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode);
+      logger.debug("generateNodeHierarchy nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
+      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode);
     }
   }
 
@@ -908,7 +918,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   WorkflowExecution triggerEnvExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
-      logger.info("Received an orchestrated execution request");
+      logger.debug("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
         logger.error("orchestrationId is null for an orchestrated execution");
         throw new WingsException(
@@ -916,7 +926,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
-      logger.info("Received an simple execution request");
+      logger.debug("Received an simple execution request");
       if (executionArgs.getServiceId() == null) {
         logger.error("serviceId is null for a simple execution");
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");

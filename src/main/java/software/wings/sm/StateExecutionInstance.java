@@ -380,6 +380,17 @@ public class StateExecutionInstance extends Base {
     this.contextTransition = contextTransition;
   }
 
+  @Override
+  public String toString() {
+    return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName + ", stateType="
+        + stateType + ", contextElementType=" + contextElementType + ", contextElementName=" + contextElementName
+        + ", contextTransition=" + contextTransition + ", contextElements=" + contextElements
+        + ", stateExecutionMap=" + stateExecutionMap + ", callback=" + callback + ", executionUuid=" + executionUuid
+        + ", parentInstanceId=" + parentInstanceId + ", prevInstanceId=" + prevInstanceId
+        + ", nextInstanceId=" + nextInstanceId + ", cloneInstanceId=" + cloneInstanceId + ", notifyId=" + notifyId
+        + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs + "]";
+  }
+
   /**
    * The Class Builder.
    */
