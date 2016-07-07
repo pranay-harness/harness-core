@@ -1,6 +1,9 @@
 package software.wings.beans;
 
+import static software.wings.beans.ChecksumType.MD5;
+
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -8,6 +11,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
 // TODO: Auto-generated Javadoc
@@ -26,8 +30,31 @@ public class ConfigFile extends BaseFile {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
-  @FormDataParam("entityId") private String entityId;
-  @FormDataParam("relativePath") private String relativePath;
+
+  @FormDataParam("entityType") @NotNull private EntityType entityType;
+
+  @FormDataParam("entityId") @NotEmpty private String entityId;
+
+  @FormDataParam("relativePath") @NotEmpty private String relativePath;
+
+  /**
+   * The enum Entity type.
+   */
+  public enum EntityType {
+    /**
+     * Service entity type.
+     */
+    SERVICE, /**
+              * Environment entity type.
+              */
+    ENVIRONMENT, /**
+                  * Tag entity type.
+                  */
+    TAG, /**
+          * Host entity type.
+          */
+    HOST
+  }
 
   /**
    * Gets entity id.
@@ -83,17 +110,29 @@ public class ConfigFile extends BaseFile {
     this.templateId = templateId;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#hashCode()
+  /**
+   * Gets entity type.
+   *
+   * @return the entity type
    */
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(templateId, entityId, relativePath);
+  public EntityType getEntityType() {
+    return entityType;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#equals(java.lang.Object)
+  /**
+   * Sets entity type.
+   *
+   * @param entityType the entity type
    */
+  public void setEntityType(EntityType entityType) {
+    this.entityType = entityType;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(templateId, entityType, entityId, relativePath);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -106,24 +145,26 @@ public class ConfigFile extends BaseFile {
       return false;
     }
     final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.entityId, other.entityId)
-        && Objects.equals(this.relativePath, other.relativePath);
+    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.entityType, other.entityType)
+        && Objects.equals(this.entityId, other.entityId) && Objects.equals(this.relativePath, other.relativePath);
   }
 
   /**
-   * The Class ConfigFileBuilder.
+   * The type Config file builder.
    */
   public static final class ConfigFileBuilder {
     private String templateId;
+    private EntityType entityType;
     private String entityId;
     private String relativePath;
     private String fileUuid;
     private String name;
     private String mimeType;
     private long size;
-    private ChecksumType checksumType;
+    private ChecksumType checksumType = MD5;
     private String checksum;
     private String uuid;
+    private String appId;
     private User createdBy;
     private long createdAt;
     private User lastUpdatedBy;
@@ -133,7 +174,7 @@ public class ConfigFile extends BaseFile {
     private ConfigFileBuilder() {}
 
     /**
-     * A config file.
+     * A config file config file builder.
      *
      * @return the config file builder
      */
@@ -142,7 +183,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With template id.
+     * With template id config file builder.
      *
      * @param templateId the template id
      * @return the config file builder
@@ -153,7 +194,18 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With entity id.
+     * With entity type config file builder.
+     *
+     * @param entityType the entity type
+     * @return the config file builder
+     */
+    public ConfigFileBuilder withEntityType(EntityType entityType) {
+      this.entityType = entityType;
+      return this;
+    }
+
+    /**
+     * With entity id config file builder.
      *
      * @param entityId the entity id
      * @return the config file builder
@@ -164,7 +216,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With relative path.
+     * With relative path config file builder.
      *
      * @param relativePath the relative path
      * @return the config file builder
@@ -175,7 +227,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With file uuid.
+     * With file uuid config file builder.
      *
      * @param fileUuid the file uuid
      * @return the config file builder
@@ -186,7 +238,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With name.
+     * With name config file builder.
      *
      * @param name the name
      * @return the config file builder
@@ -197,7 +249,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With mime type.
+     * With mime type config file builder.
      *
      * @param mimeType the mime type
      * @return the config file builder
@@ -208,7 +260,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With size.
+     * With size config file builder.
      *
      * @param size the size
      * @return the config file builder
@@ -219,7 +271,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With checksum type.
+     * With checksum type config file builder.
      *
      * @param checksumType the checksum type
      * @return the config file builder
@@ -230,7 +282,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With checksum.
+     * With checksum config file builder.
      *
      * @param checksum the checksum
      * @return the config file builder
@@ -241,7 +293,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With uuid.
+     * With uuid config file builder.
      *
      * @param uuid the uuid
      * @return the config file builder
@@ -252,7 +304,18 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With created by.
+     * With app id config file builder.
+     *
+     * @param appId the app id
+     * @return the config file builder
+     */
+    public ConfigFileBuilder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With created by config file builder.
      *
      * @param createdBy the created by
      * @return the config file builder
@@ -263,7 +326,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With created at.
+     * With created at config file builder.
      *
      * @param createdAt the created at
      * @return the config file builder
@@ -274,7 +337,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With last updated by.
+     * With last updated by config file builder.
      *
      * @param lastUpdatedBy the last updated by
      * @return the config file builder
@@ -285,7 +348,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With last updated at.
+     * With last updated at config file builder.
      *
      * @param lastUpdatedAt the last updated at
      * @return the config file builder
@@ -296,7 +359,7 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With active.
+     * With active config file builder.
      *
      * @param active the active
      * @return the config file builder
@@ -307,13 +370,14 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * But.
+     * But config file builder.
      *
      * @return the config file builder
      */
     public ConfigFileBuilder but() {
       return aConfigFile()
           .withTemplateId(templateId)
+          .withEntityType(entityType)
           .withEntityId(entityId)
           .withRelativePath(relativePath)
           .withFileUuid(fileUuid)
@@ -323,6 +387,7 @@ public class ConfigFile extends BaseFile {
           .withChecksumType(checksumType)
           .withChecksum(checksum)
           .withUuid(uuid)
+          .withAppId(appId)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
@@ -331,13 +396,14 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * Builds the.
+     * Build config file.
      *
      * @return the config file
      */
     public ConfigFile build() {
       ConfigFile configFile = new ConfigFile();
       configFile.setTemplateId(templateId);
+      configFile.setEntityType(entityType);
       configFile.setEntityId(entityId);
       configFile.setRelativePath(relativePath);
       configFile.setFileUuid(fileUuid);
@@ -347,6 +413,7 @@ public class ConfigFile extends BaseFile {
       configFile.setChecksumType(checksumType);
       configFile.setChecksum(checksum);
       configFile.setUuid(uuid);
+      configFile.setAppId(appId);
       configFile.setCreatedBy(createdBy);
       configFile.setCreatedAt(createdAt);
       configFile.setLastUpdatedBy(lastUpdatedBy);

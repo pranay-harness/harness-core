@@ -1,12 +1,10 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
-import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -21,7 +19,6 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.ResponseMessage;
-import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
@@ -235,7 +232,7 @@ public class HostServiceImpl implements HostService {
                       .withHostConnAttr(baseHost.getHostConnAttr())
                       .build();
       SettingAttribute bastionConnSttr =
-          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), envId, baseHost.getBastionConnAttr());
+          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
       if (bastionConnSttr != null) {
         host.setBastionConnAttr(bastionConnSttr);
       }
@@ -292,11 +289,11 @@ public class HostServiceImpl implements HostService {
   }
 
   private SettingAttribute validateAndFetchBastionHostConnectionReference(
-      String appId, String envId, SettingAttribute settingAttribute) {
+      String appId, SettingAttribute settingAttribute) {
     if (!isValidDbReference(settingAttribute)) {
       return null;
     }
-    SettingAttribute fetchedAttribute = settingsService.get(appId, envId, settingAttribute.getUuid());
+    SettingAttribute fetchedAttribute = settingsService.get(appId, settingAttribute.getUuid());
     if (fetchedAttribute == null) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "bastionConnAttr");
     }
