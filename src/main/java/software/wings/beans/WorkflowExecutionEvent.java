@@ -12,7 +12,6 @@ import software.wings.sm.StateEvent;
 public class WorkflowExecutionEvent extends Base {
   private StateEvent stateEvent;
 
-  private String appId;
   private String envId;
   private String workflowExecutionId;
   private String stateExecutionInstanceId;

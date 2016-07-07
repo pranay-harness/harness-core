@@ -101,7 +101,7 @@ public class AppServiceTest extends WingsBaseTest {
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest);
+    PageResponse<Application> applications = appService.list(pageRequest, false);
     assertThat(applications).containsAll(asList(application));
   }
 

@@ -16,6 +16,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -38,6 +39,7 @@ public class AppServiceImpl implements AppService {
   @Inject private EnvironmentService environmentService;
   @Inject private AppContainerService appContainerService;
   @Inject private ExecutorService executorService;
+  @Inject private WorkflowService workflowService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -55,8 +57,18 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req) {
-    return wingsPersistence.query(Application.class, req);
+  public PageResponse<Application> list(PageRequest<Application> req, boolean summary) {
+    PageResponse<Application> response = wingsPersistence.query(Application.class, req);
+    /*if (summary) {
+      List<String> appIds = response.getResponse().stream().map(Base::getUuid).collect(toList());
+      Datastore datastore = wingsPersistence.getDatastore();
+      Iterator<WorkflowExecution> it =
+          datastore.createAggregation(WorkflowExecution.class).match(datastore.createQuery(WorkflowExecution.class).field("appId").in(appIds))
+              .sort(Sort.descending("lastUpdatedAt")).group("appId").limit(5).aggregate(WorkflowExecution.class);
+      System.out.println(it.hasNext());
+      it.forEachRemaining(workflowExecution -> System.out.println(workflowExecution));
+    }*/
+    return response;
   }
 
   /* (non-Javadoc)

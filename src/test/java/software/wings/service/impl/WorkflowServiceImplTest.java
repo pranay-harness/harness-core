@@ -1137,6 +1137,36 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     triggerOrchestration(env);
   }
 
+  @Test
+  public void shouldUpdateInProgressCount() throws InterruptedException {
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+    triggerOrchestration(env);
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    assertThat(workflowExecution.getInstancesInProgress()).isEqualTo(1);
+  }
+
+  @Test
+  public void shouldUpdateSuccessCount() throws InterruptedException {
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+    triggerOrchestration(env);
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    assertThat(workflowExecution.getInstancesSucceeded()).isEqualTo(1);
+  }
+
+  @Test
+  public void shouldUpdateFailedCount() throws InterruptedException {
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+    triggerOrchestration(env);
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    workflowService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+    assertThat(workflowExecution.getInstancesFailed()).isEqualTo(1);
+  }
+
   /**
    * Trigger orchestration.
    *

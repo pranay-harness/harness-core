@@ -13,12 +13,14 @@ import software.wings.service.intfc.AppService;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 // TODO: Auto-generated Javadoc
 
@@ -53,8 +55,9 @@ public class AppResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest) {
-    return new RestResponse<>(appService.list(pageRequest));
+  public RestResponse<PageResponse<Application>> list(
+      @BeanParam PageRequest<Application> pageRequest, @QueryParam("summary") @DefaultValue("false") boolean summary) {
+    return new RestResponse<>(appService.list(pageRequest, summary));
   }
 
   /**

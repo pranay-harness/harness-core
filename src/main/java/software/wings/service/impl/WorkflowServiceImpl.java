@@ -72,18 +72,15 @@ import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -838,16 +835,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowId(orchestrationId);
-    String name = "";
-    if (orchestration.getName() != null) {
-      name = orchestration.getName() + " ";
-    }
-    try {
-      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
-    } catch (Exception e) {
-      throw new WingsException("Error in date formatting");
-    }
-    workflowExecution.setName(name);
+    workflowExecution.setName(orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
 
@@ -904,6 +892,64 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs) {
     return triggerEnvExecution(appId, envId, executionArgs, null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
+    UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
+    ops.set("active", false);
+    wingsPersistence.update(
+        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
+  }
+
+  @Override
+  public void incrementInProgressCount(String appId, String workflowExecutionId, int inc) {
+    UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+    ops.inc("instancesInProgress", inc);
+    wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field(ID_KEY)
+                                .equal(workflowExecutionId),
+        ops);
+  }
+
+  @Override
+  public void incrementSuccess(String appId, String workflowExecutionId, int inc) {
+    UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+    ops.inc("instancesSucceeded", inc);
+    ops.inc("instancesInProgress", -1 * inc);
+    wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field(ID_KEY)
+                                .equal(workflowExecutionId),
+        ops);
+  }
+
+  @Override
+  public void incrementFailed(String appId, String workflowExecutionId, int inc) {
+    UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+    ops.inc("instancesFailed", inc);
+    ops.inc("instancesInProgress", -1 * inc);
+    wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
+                                .field("appId")
+                                .equal(appId)
+                                .field(ID_KEY)
+                                .equal(workflowExecutionId),
+        ops);
+  }
+
+  /**
+   * Sets static configuration.
+   *
+   * @param staticConfiguration the static configuration
+   */
+  public void setStaticConfiguration(StaticConfiguration staticConfiguration) {
+    this.staticConfiguration = staticConfiguration;
   }
 
   /**
@@ -967,17 +1013,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
-
-    String name = "";
-    if (workflow.getName() != null) {
-      name = workflow.getName() + " ";
-    }
-    try {
-      name += new SimpleDateFormat("MM/dd/yyyy hh:mm aa").format(new Date());
-    } catch (Exception e) {
-      throw new WingsException("Error in date formatting");
-    }
-    workflowExecution.setName(name);
+    workflowExecution.setTotalInstances(executionArgs.getServiceInstanceIds().size());
+    workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
@@ -1080,26 +1117,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       return null;
     }
     return pageResponse.getResponse();
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public <T extends Workflow> void deleteWorkflow(Class<T> cls, String appId, String workflowId) {
-    UpdateOperations<T> ops = wingsPersistence.createUpdateOperations(cls);
-    ops.set("active", false);
-    wingsPersistence.update(
-        wingsPersistence.createQuery(cls).field("appId").equal(appId).field(ID_KEY).equal(workflowId), ops);
-  }
-
-  /**
-   * Sets static configuration.
-   *
-   * @param staticConfiguration the static configuration
-   */
-  public void setStaticConfiguration(StaticConfiguration staticConfiguration) {
-    this.staticConfiguration = staticConfiguration;
   }
 
   @Override

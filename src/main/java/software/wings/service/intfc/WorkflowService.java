@@ -217,4 +217,10 @@ public interface WorkflowService {
    * @return
    */
   RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
+
+  void incrementInProgressCount(String appId, String workflowExecutionId, int inc);
+
+  void incrementSuccess(String appId, String workflowExecutionId, int inc);
+
+  void incrementFailed(String appId, String workflowExecutionId, int inc);
 }
