@@ -223,6 +223,7 @@ public class HostServiceImpl implements HostService {
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(baseHost.getAppId(), envId, baseHost.getServiceTemplates());
     List<String> duplicateHostNames = new ArrayList<>();
+    List<String> hostIds = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
@@ -239,14 +240,15 @@ public class HostServiceImpl implements HostService {
       List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
       host.setTags(tags);
       try {
-        save(host);
+        Host savedHost = save(host);
+        hostIds.add(savedHost.getUuid());
       } catch (DuplicateKeyException dupEx) {
         logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
         duplicateHostNames.add(host.getHostName());
       }
     });
     serviceTemplates.forEach(serviceTemplate
-        -> serviceTemplateService.updateHosts(baseHost.getAppId(), envId, serviceTemplate.getUuid(), hostNames));
+        -> serviceTemplateService.updateHosts(baseHost.getAppId(), envId, serviceTemplate.getUuid(), hostIds));
 
     return aResponseMessage()
         .withErrorType(WARN)
