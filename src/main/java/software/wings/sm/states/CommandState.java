@@ -215,11 +215,19 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
 
-      ExecutionResult executionResult = serviceCommandExecutorService.execute(
-          serviceInstance, command, commandExecutionContextBuilder.withActivityId(activityId).build());
+      CommandExecutionContext commandExecutionContext =
+          commandExecutionContextBuilder.withActivityId(activityId).build();
+      ExecutionResult executionResult =
+          serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
 
       activityService.updateStatus(
           activityId, appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+
+      if (executionResult.equals(SUCCESS) && command.isArtifactNeeded()) {
+        serviceInstance.setRelease(commandExecutionContext.getArtifact().getRelease());
+        serviceInstance.setArtifact(commandExecutionContext.getArtifact());
+        serviceInstanceService.update(serviceInstance);
+      }
 
       executionStatus = executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {

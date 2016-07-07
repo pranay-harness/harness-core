@@ -266,6 +266,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
     verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verify(serviceInstanceService).update(any(ServiceInstance.class));
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowService);
   }
