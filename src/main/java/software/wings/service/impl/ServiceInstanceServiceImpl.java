@@ -3,6 +3,9 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
+
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -52,7 +55,16 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public ServiceInstance update(ServiceInstance serviceInstance) {
-    return wingsPersistence.saveAndGet(ServiceInstance.class, serviceInstance);
+    Builder<String, Object> builder =
+        ImmutableMap.<String, Object>builder().put("lastDeployedOn", serviceInstance.getLastDeployedOn());
+    if (serviceInstance.getArtifact() != null) {
+      builder.put("artifact", serviceInstance.getArtifact());
+    }
+    if (serviceInstance.getRelease() != null) {
+      builder.put("release", serviceInstance.getRelease());
+    }
+    wingsPersistence.updateFields(ServiceInstance.class, serviceInstance.getUuid(), builder.build());
+    return get(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getUuid());
   }
 
   /* (non-Javadoc)

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.lang.System.currentTimeMillis;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -223,9 +224,12 @@ public class CommandState extends State {
       activityService.updateStatus(
           activityId, appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
 
-      if (executionResult.equals(SUCCESS) && command.isArtifactNeeded()) {
-        serviceInstance.setRelease(commandExecutionContext.getArtifact().getRelease());
-        serviceInstance.setArtifact(commandExecutionContext.getArtifact());
+      if (executionResult.equals(SUCCESS)) {
+        serviceInstance.setLastDeployedOn(currentTimeMillis());
+        if (command.isArtifactNeeded()) {
+          serviceInstance.setRelease(commandExecutionContext.getArtifact().getRelease());
+          serviceInstance.setArtifact(commandExecutionContext.getArtifact());
+        }
         serviceInstanceService.update(serviceInstance);
       }
 

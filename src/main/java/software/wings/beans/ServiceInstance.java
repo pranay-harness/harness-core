@@ -30,6 +30,7 @@ public class ServiceInstance extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
   @Reference(idOnly = true, ignoreMissing = true) private Release release;
   @Reference(idOnly = true, ignoreMissing = true) private Artifact artifact;
+  private long lastDeployedOn;
 
   /**
    * Gets env id.
@@ -136,9 +137,27 @@ public class ServiceInstance extends Base {
    */
   public void setDisplayName() {}
 
+  /**
+   * Gets last deployed on.
+   *
+   * @return the last deployed on
+   */
+  public long getLastDeployedOn() {
+    return lastDeployedOn;
+  }
+
+  /**
+   * Sets last deployed on.
+   *
+   * @param lastDeployedOn the last deployed on
+   */
+  public void setLastDeployedOn(long lastDeployedOn) {
+    this.lastDeployedOn = lastDeployedOn;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, host, serviceTemplate, release, artifact);
+    return 31 * super.hashCode() + Objects.hash(envId, host, serviceTemplate, release, artifact, lastDeployedOn);
   }
 
   @Override
@@ -155,7 +174,7 @@ public class ServiceInstance extends Base {
     final ServiceInstance other = (ServiceInstance) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.host, other.host)
         && Objects.equals(this.serviceTemplate, other.serviceTemplate) && Objects.equals(this.release, other.release)
-        && Objects.equals(this.artifact, other.artifact);
+        && Objects.equals(this.artifact, other.artifact) && Objects.equals(this.lastDeployedOn, other.lastDeployedOn);
   }
 
   @Override
@@ -166,11 +185,12 @@ public class ServiceInstance extends Base {
         .add("serviceTemplate", serviceTemplate)
         .add("release", release)
         .add("artifact", artifact)
+        .add("lastDeployedOn", lastDeployedOn)
         .toString();
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String envId;
@@ -178,6 +198,7 @@ public class ServiceInstance extends Base {
     private ServiceTemplate serviceTemplate;
     private Release release;
     private Artifact artifact;
+    private long lastDeployedOn;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -189,19 +210,19 @@ public class ServiceInstance extends Base {
     private Builder() {}
 
     /**
-     * A service instance service instance builder.
+     * A service instance builder.
      *
-     * @return the service instance builder
+     * @return the builder
      */
     public static Builder aServiceInstance() {
       return new Builder();
     }
 
     /**
-     * With env id service instance builder.
+     * With env id builder.
      *
      * @param envId the env id
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withEnvId(String envId) {
       this.envId = envId;
@@ -209,10 +230,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With host service instance builder.
+     * With host builder.
      *
      * @param host the host
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withHost(Host host) {
       this.host = host;
@@ -220,10 +241,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With service template service instance builder.
+     * With service template builder.
      *
      * @param serviceTemplate the service template
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceTemplate = serviceTemplate;
@@ -231,10 +252,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With release service instance builder.
+     * With release builder.
      *
      * @param release the release
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withRelease(Release release) {
       this.release = release;
@@ -242,10 +263,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With artifact service instance builder.
+     * With artifact builder.
      *
      * @param artifact the artifact
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
@@ -253,10 +274,21 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With uuid service instance builder.
+     * With last deployed on builder.
+     *
+     * @param lastDeployedOn the last deployed on
+     * @return the builder
+     */
+    public Builder withLastDeployedOn(long lastDeployedOn) {
+      this.lastDeployedOn = lastDeployedOn;
+      return this;
+    }
+
+    /**
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
@@ -264,10 +296,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With app id service instance builder.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
@@ -275,10 +307,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With created by service instance builder.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
@@ -286,10 +318,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With created at service instance builder.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
@@ -297,10 +329,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With last updated by service instance builder.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
@@ -308,10 +340,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With last updated at service instance builder.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
@@ -319,10 +351,10 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * With active service instance builder.
+     * With active builder.
      *
      * @param active the active
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder withActive(boolean active) {
       this.active = active;
@@ -330,9 +362,9 @@ public class ServiceInstance extends Base {
     }
 
     /**
-     * But service instance builder.
+     * But builder.
      *
-     * @return the service instance builder
+     * @return the builder
      */
     public Builder but() {
       return aServiceInstance()
@@ -341,6 +373,7 @@ public class ServiceInstance extends Base {
           .withServiceTemplate(serviceTemplate)
           .withRelease(release)
           .withArtifact(artifact)
+          .withLastDeployedOn(lastDeployedOn)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -362,6 +395,7 @@ public class ServiceInstance extends Base {
       serviceInstance.setServiceTemplate(serviceTemplate);
       serviceInstance.setRelease(release);
       serviceInstance.setArtifact(artifact);
+      serviceInstance.setLastDeployedOn(lastDeployedOn);
       serviceInstance.setUuid(uuid);
       serviceInstance.setAppId(appId);
       serviceInstance.setCreatedBy(createdBy);
