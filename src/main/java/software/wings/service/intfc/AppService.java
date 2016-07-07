@@ -29,7 +29,7 @@ public interface AppService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<Application> list(PageRequest<Application> req);
+  PageResponse<Application> list(PageRequest<Application> req, boolean summary);
 
   /**
    * Find by uuid.

@@ -269,4 +269,9 @@ public class ExecutionContextImpl implements ExecutionContext {
 
     return sb.toString();
   }
+
+  @Override
+  public String getWorkflowExecutionId() {
+    return stateExecutionInstance.getExecutionUuid();
+  }
 }
