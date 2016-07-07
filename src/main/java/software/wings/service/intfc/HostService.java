@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Host;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -133,5 +134,5 @@ public interface HostService {
    * @param envId    the env id
    * @param baseHost the base host
    */
-  void bulkSave(String envId, Host baseHost);
+  ResponseMessage bulkSave(String envId, Host baseHost);
 }

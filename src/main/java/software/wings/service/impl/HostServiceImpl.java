@@ -1,17 +1,27 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.Builder.aHost;
+import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
+import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
+import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
+import software.wings.beans.ResponseMessage;
+import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
@@ -49,6 +59,7 @@ public class HostServiceImpl implements HostService {
   @Inject private InfraService infraService;
   @Inject private SettingsService settingsService;
   @Inject private TagService tagService;
+  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -206,7 +217,7 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
    */
   @Override
-  public void bulkSave(String envId, Host baseHost) {
+  public ResponseMessage bulkSave(String envId, Host baseHost) {
     List<String> hostNames = baseHost.getHostNames()
                                  .stream()
                                  .filter(hostName -> !isNullOrEmpty(hostName))
@@ -214,6 +225,7 @@ public class HostServiceImpl implements HostService {
                                  .collect(Collectors.toList());
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(baseHost.getAppId(), envId, baseHost.getServiceTemplates());
+    List<String> duplicateHostNames = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
@@ -229,10 +241,21 @@ public class HostServiceImpl implements HostService {
       }
       List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
       host.setTags(tags);
-      save(host); // dedup
+      try {
+        save(host);
+      } catch (DuplicateKeyException dupEx) {
+        logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
+        duplicateHostNames.add(host.getHostName());
+      }
     });
     serviceTemplates.forEach(serviceTemplate
         -> serviceTemplateService.updateHosts(baseHost.getAppId(), envId, serviceTemplate.getUuid(), hostNames));
+
+    return aResponseMessage()
+        .withErrorType(WARN)
+        .withCode(ErrorCodes.DUPLICATE_HOST_NAMES)
+        .withMessage(Joiner.on(",").join(duplicateHostNames))
+        .build();
   }
 
   private List<ServiceTemplate> validateAndFetchServiceTemplate(
