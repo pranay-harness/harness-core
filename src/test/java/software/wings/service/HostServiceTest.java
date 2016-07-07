@@ -261,20 +261,33 @@ public class HostServiceTest extends WingsBaseTest {
                            .withServiceTemplates(asList(serviceTemplate))
                            .withServiceTemplates(asList(serviceTemplate))
                            .build();
-    Host savedHost = aHost()
-                         .withAppId(APP_ID)
-                         .withInfraId(INFRA_ID)
-                         .withHostName(HOST_NAME)
-                         .withHostConnAttr(hostConnAttr)
-                         .withTags(asList(tag))
-                         .build();
+
+    Host hostPreSave = aHost()
+                           .withAppId(APP_ID)
+                           .withInfraId(INFRA_ID)
+                           .withHostName(HOST_NAME)
+                           .withHostConnAttr(hostConnAttr)
+                           .withTags(asList(tag))
+                           .build();
+    Host hostPostSave = aHost()
+                            .withUuid(HOST_ID)
+                            .withAppId(APP_ID)
+                            .withInfraId(INFRA_ID)
+                            .withHostName(HOST_NAME)
+                            .withHostConnAttr(hostConnAttr)
+                            .withTags(asList(tag))
+                            .build();
 
     when(serviceTemplateService.get(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(tagService.get(APP_ID, ENV_ID, TAG_ID)).thenReturn(tag);
+    when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
+
     hostService.bulkSave(ENV_ID, requestHost);
-    verify(wingsPersistence).saveAndGet(Host.class, savedHost); // TODO:: add more operation
+
+    verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
     verify(serviceTemplateService).get(APP_ID, ENV_ID, TEMPLATE_ID);
     verify(tagService).get(APP_ID, ENV_ID, TAG_ID);
+    verify(serviceTemplateService).updateHosts(APP_ID, ENV_ID, TEMPLATE_ID, asList(HOST_ID));
   }
 
   /**
