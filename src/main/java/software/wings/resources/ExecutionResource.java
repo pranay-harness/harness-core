@@ -169,6 +169,6 @@ public class ExecutionResource {
     workflowExecutionEvent.setEnvId(envId);
     workflowExecutionEvent.setWorkflowExecutionId(workflowExecutionId);
 
-    return workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent);
+    return new RestResponse<>(workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent));
   }
 }

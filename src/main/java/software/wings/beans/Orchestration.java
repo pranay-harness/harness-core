@@ -8,6 +8,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Reference;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -63,6 +65,7 @@ public class Orchestration extends Workflow {
   public static final class Builder {
     private String name;
     private String description;
+    private List<Service> services = new ArrayList<>();
     private Graph graph;
     private Environment environment;
     private WorkflowType workflowType;
@@ -93,6 +96,10 @@ public class Orchestration extends Workflow {
      */
     public Builder withName(String name) {
       this.name = name;
+      return this;
+    }
+    public Builder withServices(List<Service> services) {
+      this.services = services;
       return this;
     }
 
@@ -247,6 +254,7 @@ public class Orchestration extends Workflow {
       Orchestration orchestration = new Orchestration();
       orchestration.setName(name);
       orchestration.setDescription(description);
+      orchestration.setServices(services);
       orchestration.setGraph(graph);
       orchestration.setEnvironment(environment);
       orchestration.setWorkflowType(workflowType);

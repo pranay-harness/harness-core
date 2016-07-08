@@ -5,7 +5,7 @@ package software.wings.sm;
  *
  * @author Rishi
  */
-public enum StateEvent {
+public enum ExecutionEventType {
   /**
    * Abort state event.
    */
@@ -29,5 +29,13 @@ public enum StateEvent {
   /**
    * Retry state event.
    */
-  RETRY;
+  RETRY,
+  /**
+   * Resume state event.
+   */
+  RESUME,
+  /**
+   * Resume all state event.
+   */
+  RESUME_ALL;
 }

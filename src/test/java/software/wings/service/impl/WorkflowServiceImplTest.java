@@ -1195,7 +1195,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
   }
 
   @Test
