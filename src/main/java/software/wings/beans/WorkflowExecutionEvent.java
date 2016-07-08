@@ -3,25 +3,27 @@
  */
 package software.wings.beans;
 
-import software.wings.sm.StateEvent;
+import org.mongodb.morphia.annotations.Entity;
+import software.wings.sm.ExecutionEventType;
 
 /**
  * @author Rishi
  *
  */
+@Entity(value = "workflowExecutionEvent", noClassnameStored = true)
 public class WorkflowExecutionEvent extends Base {
-  private StateEvent stateEvent;
+  private ExecutionEventType executionEventType;
 
   private String envId;
   private String workflowExecutionId;
   private String stateExecutionInstanceId;
 
-  public StateEvent getStateEvent() {
-    return stateEvent;
+  public ExecutionEventType getExecutionEventType() {
+    return executionEventType;
   }
 
-  public void setStateEvent(StateEvent stateEvent) {
-    this.stateEvent = stateEvent;
+  public void setExecutionEventType(ExecutionEventType executionEventType) {
+    this.executionEventType = executionEventType;
   }
 
   public String getEnvId() {

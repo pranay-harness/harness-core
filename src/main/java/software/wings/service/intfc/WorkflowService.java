@@ -4,7 +4,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecutionEvent;
@@ -216,7 +215,7 @@ public interface WorkflowService {
    * @param workflowExecutionEvent
    * @return
    */
-  RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
+  WorkflowExecutionEvent triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
 
   void incrementInProgressCount(String appId, String workflowExecutionId, int inc);
 

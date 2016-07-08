@@ -9,6 +9,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -206,6 +208,19 @@ public class StateMachineExecutor {
       handleExecuteResponse(context, executionResponse);
     } catch (Exception ex) {
       handleExecuteResponseException(context, ex);
+    }
+  }
+
+  public void handleEvent(WorkflowExecutionEvent workflowExecutionEvent) {
+    StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
+        workflowExecutionEvent.getAppId(), workflowExecutionEvent.getStateExecutionInstanceId());
+    StateMachine sm = wingsPersistence.get(
+        StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
+    State currentState = sm.getState(stateExecutionInstance.getStateName());
+    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+    try {
+      currentState.handleEvent(context, workflowExecutionEvent);
+    } catch (Exception ex) {
     }
   }
 

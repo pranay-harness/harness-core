@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 
 import com.google.common.collect.Lists;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;
@@ -20,27 +19,7 @@ import java.util.List;
  */
 @Entity(value = "pipelines", noClassnameStored = true)
 public class Pipeline extends Workflow {
-  @NotEmpty private List<String> services = Lists.newArrayList();
-
   private String cronSchedule;
-
-  /**
-   * Gets services.
-   *
-   * @return the services
-   */
-  public List<String> getServices() {
-    return services;
-  }
-
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(List<String> services) {
-    this.services = services;
-  }
 
   /**
    * Gets cron schedule.
@@ -262,7 +241,6 @@ public class Pipeline extends Workflow {
       pipeline.setName(name);
       pipeline.setDescription(description);
       pipeline.setGraph(graph);
-      pipeline.setServices(services);
       pipeline.setCronSchedule(cronSchedule);
       pipeline.setUuid(uuid);
       pipeline.setAppId(appId);

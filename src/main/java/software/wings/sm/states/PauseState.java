@@ -2,15 +2,26 @@ package software.wings.sm.states;
 
 import static software.wings.api.PauseStateExecutionData.Builder.aPauseStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
+import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.PauseStateExecutionData;
+import software.wings.beans.ErrorCodes;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.common.UUIDGenerator;
+import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionEventType;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.utils.MapperUtils;
+import software.wings.waitnotify.WaitNotifyEngine;
+
+import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -21,6 +32,8 @@ import software.wings.utils.MapperUtils;
  */
 @Attributes
 public class PauseState extends EmailState {
+  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+
   /**
    * Creates pause state with given name.
    *
@@ -52,6 +65,18 @@ public class PauseState extends EmailState {
         .addCorrelationIds(correlationId)
         .withStateExecutionData(pauseStateExecutionData)
         .build();
+  }
+
+  @Override
+  public void handleEvent(ExecutionContextImpl context, WorkflowExecutionEvent workflowExecutionEvent) {
+    if (workflowExecutionEvent.getExecutionEventType() == ExecutionEventType.RESUME) {
+      PauseStateExecutionData pauseStateExecutionData = (PauseStateExecutionData) context.getStateExecutionData();
+      waitNotifyEngine.notify(pauseStateExecutionData.getResumeId(),
+          anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+      return;
+    }
+    throw new WingsException(
+        ErrorCodes.INVALID_REQUEST, "message", "Execution even not supported by " + getStateType() + " state");
   }
 
   @Attributes(title = "Body", required = true)

@@ -20,6 +20,7 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -42,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -59,6 +61,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   private Environment env;
+  private List<Service> services;
 
   /**
    * Gets environment.
@@ -70,6 +73,16 @@ public class WorkflowServiceTest extends WingsBaseTest {
       env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     }
     return env;
+  }
+
+  public List<Service> getServices() {
+    if (services == null) {
+      services = Lists.newArrayList(wingsPersistence.saveAndGet(Service.class,
+                                        Service.Builder.aService().withAppId(appId).withName("catalog").build()),
+          wingsPersistence.saveAndGet(
+              Service.class, Service.Builder.aService().withAppId(appId).withName("content").build()));
+    }
+    return services;
   }
 
   /**
@@ -175,7 +188,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void updatePipeline(Pipeline pipeline, int graphCount) {
     pipeline.setDescription("newDescription");
     pipeline.setName("pipeline2");
-    List<String> newServices = Lists.newArrayList("123", "345");
+
+    List<Service> newServices = Lists.newArrayList(
+        wingsPersistence.saveAndGet(Service.class, Service.Builder.aService().withAppId(appId).withName("ui").build()),
+        wingsPersistence.saveAndGet(
+            Service.class, Service.Builder.aService().withAppId(appId).withName("server").build()));
     pipeline.setServices(newServices);
 
     Graph graph = pipeline.getGraph();
@@ -285,7 +302,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     pipeline.setName("pipeline1");
     pipeline.setDescription("Sample Pipeline");
 
-    pipeline.setServices(Lists.newArrayList("service1", "service2"));
+    pipeline.setServices(getServices());
 
     pipeline = workflowService.createWorkflow(Pipeline.class, pipeline);
     assertThat(pipeline).isNotNull();
@@ -397,6 +414,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
                                       .withDescription("Sample Workflow")
                                       .withEnvironment(getEnvironment())
                                       .withGraph(graph)
+                                      .withServices(getServices())
                                       .build();
 
     orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);

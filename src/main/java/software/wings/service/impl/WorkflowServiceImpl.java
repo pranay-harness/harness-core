@@ -40,7 +40,6 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
-import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
@@ -1124,9 +1123,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(
-      WorkflowExecutionEvent workflowExecutionEvent) {
-    // TODO Auto-generated method stub
-    return null;
+  public WorkflowExecutionEvent triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent) {
+    workflowExecutionEvent = wingsPersistence.saveAndGet(WorkflowExecutionEvent.class, workflowExecutionEvent);
+    stateMachineExecutor.handleEvent(workflowExecutionEvent);
+    return workflowExecutionEvent;
   }
 }
