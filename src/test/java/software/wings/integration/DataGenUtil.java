@@ -15,6 +15,7 @@ import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ConfigFile.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -58,6 +59,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.ConfigFile.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
@@ -542,22 +544,24 @@ public class DataGenUtil extends WingsBaseTest {
       assertThat(service).isNotNull();
 
       configFileNames = new ArrayList<>(seedNames);
-      addConfigFilesToEntity(service, DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE);
+      addConfigFilesToEntity(service, DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE, SERVICE);
     }
     return services;
   }
 
-  private void addConfigFilesToEntity(Base entity, String templateId, int numConfigFilesToBeAdded) throws IOException {
+  private void addConfigFilesToEntity(
+      Base entity, String templateId, int numConfigFilesToBeAdded, EntityType entityType) throws IOException {
     while (numConfigFilesToBeAdded > 0) {
-      if (addOneConfigFileToEntity(entity.getAppId(), templateId, entity.getUuid())) {
+      if (addOneConfigFileToEntity(entity.getAppId(), templateId, entity.getUuid(), entityType)) {
         numConfigFilesToBeAdded--;
       }
     }
   }
 
-  private boolean addOneConfigFileToEntity(String appId, String templateId, String entityId) throws IOException {
-    WebTarget target =
-        client.target(format(API_BASE + "/configs/?appId=%s&entityId=%s&templateId=%s", appId, entityId, templateId));
+  private boolean addOneConfigFileToEntity(String appId, String templateId, String entityId, EntityType entityType)
+      throws IOException {
+    WebTarget target = client.target(format(API_BASE + "/configs/?appId=%s&entityId=%s&entityType=%s&templateId=%s",
+        appId, entityId, entityType, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
     FileDataBodyPart filePart = new FileDataBodyPart("file", file);
     FormDataMultiPart multiPart =

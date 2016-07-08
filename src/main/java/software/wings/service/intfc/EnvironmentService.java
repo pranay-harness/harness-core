@@ -23,7 +23,7 @@ public interface EnvironmentService {
    * @param request the request
    * @return the page response
    */
-  PageResponse<Environment> list(PageRequest<Environment> request);
+  PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary);
 
   /**
    * Gets the.
@@ -32,7 +32,7 @@ public interface EnvironmentService {
    * @param envId the env id
    * @return the environment
    */
-  Environment get(@NotEmpty String appId, @NotEmpty String envId);
+  Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);
 
   /**
    * Save.

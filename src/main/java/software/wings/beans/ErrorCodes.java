@@ -153,7 +153,9 @@ public enum ErrorCodes {
   /**
    * Duplicate artifactsource names error codes.
    */
-  DUPLICATE_ARTIFACTSOURCE_NAMES("DUPLICATE_ARTIFACTSOURCE_NAMES");
+  DUPLICATE_ARTIFACTSOURCE_NAMES("DUPLICATE_ARTIFACTSOURCE_NAMES"),
+
+  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES");
 
   /**
    * The constant ARGS_NAME.

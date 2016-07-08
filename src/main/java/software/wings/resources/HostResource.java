@@ -1,6 +1,9 @@
 package software.wings.resources;
 
+import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static javax.ws.rs.core.Response.Status.OK;
+import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -9,6 +12,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.Host;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -107,13 +111,13 @@ public class HostResource {
    * @return the rest response
    */
   @POST
-  public RestResponse save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  public Response save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, Host baseHost) {
     infraId = infraService.getInfraIdByEnvId(appId, envId);
     baseHost.setAppId(appId);
     baseHost.setInfraId(infraId);
-    hostService.bulkSave(envId, baseHost);
-    return new RestResponse();
+    ResponseMessage responseMessage = hostService.bulkSave(envId, baseHost);
+    return Response.status(OK).entity(aRestResponse().withResponseMessages(asList(responseMessage)).build()).build();
   }
 
   /**

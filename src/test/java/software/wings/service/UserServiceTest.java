@@ -70,6 +70,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
 
   @Inject @InjectMocks private UserService userService;
+
   @Inject @Named("primaryDatastore") private Datastore datastore;
 
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;

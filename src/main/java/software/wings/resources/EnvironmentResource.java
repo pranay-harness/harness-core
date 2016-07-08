@@ -51,7 +51,7 @@ public class EnvironmentResource {
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    return new RestResponse<>(envService.list(pageRequest));
+    return new RestResponse<>(envService.list(pageRequest, true));
   }
 
   /**
@@ -77,7 +77,7 @@ public class EnvironmentResource {
   @GET
   @Path("{envId}")
   public RestResponse<Environment> list(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    return new RestResponse<>(envService.get(appId, envId));
+    return new RestResponse<>(envService.get(appId, envId, true));
   }
 
   /**

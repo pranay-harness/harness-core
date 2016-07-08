@@ -125,11 +125,11 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateServiceInstance() {
-    ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).build();
-    when(wingsPersistence.saveAndGet(eq(ServiceInstance.class), eq(serviceInstance))).thenReturn(serviceInstance);
+    ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).withLastDeployedOn(100).build();
+    when(query.get()).thenReturn(builder.withUuid(SERVICE_INSTANCE_ID).build());
+
     ServiceInstance savedServiceInstance = serviceInstanceService.update(serviceInstance);
-    assertThat(savedServiceInstance).isNotNull();
-    assertThat(savedServiceInstance).isInstanceOf(ServiceInstance.class);
+    assertThat(savedServiceInstance).isNotNull().isInstanceOf(ServiceInstance.class); // TODO" improve
   }
 
   /**

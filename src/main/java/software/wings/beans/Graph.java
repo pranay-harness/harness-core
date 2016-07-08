@@ -8,6 +8,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -327,7 +328,7 @@ public class Graph {
     @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
 
     public Group() {
-      setType("group");
+      setType("GROUP");
     }
 
     public List<Node> getElements() {
@@ -691,11 +692,23 @@ public class Graph {
 
     @Override
     public String toString() {
-      return "Node [id=" + id + ", name=" + name + ", type=" + type + ", status=" + status + ", x=" + x + ", y=" + y
-          + ", width=" + width + ", height=" + height + ", executionSummary=" + executionSummary
-          + ", executionDetails=" + executionDetails + ", detailsReference=" + detailsReference
-          + ", expanded=" + expanded + ", properties=" + properties + ", next=" + (next == null ? null : next.getId())
-          + ", group=" + (group == null ? null : group.getId()) + "]";
+      return MoreObjects.toStringHelper(this)
+          .add("id", id)
+          .add("name", name)
+          .add("type", type)
+          .add("status", status)
+          .add("x", x)
+          .add("y", y)
+          .add("width", width)
+          .add("height", height)
+          .add("executionSummary", executionSummary)
+          .add("executionDetails", executionDetails)
+          .add("detailsReference", detailsReference)
+          .add("expanded", expanded)
+          .add("properties", properties)
+          .add("next", next == null ? null : next.getId())
+          .add("group", group == null ? null : group.getId())
+          .toString();
     }
 
     /**

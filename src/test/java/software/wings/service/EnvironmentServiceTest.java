@@ -1,15 +1,19 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_DESCRIPTION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -19,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -28,6 +34,9 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.Orchestration;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -59,8 +68,12 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
   @Mock private WorkflowService workflowService;
+
   @Inject @InjectMocks private EnvironmentService environmentService;
+
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();
+
+  @Captor private ArgumentCaptor<Environment> environmentArgumentCaptor;
 
   /**
    * Sets up.
@@ -79,13 +92,36 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListEnvironments() {
-    Environment environment = anEnvironment().build();
-    PageResponse<Environment> pageResponse = new PageResponse<>();
-    PageRequest<Environment> pageRequest = new PageRequest<>();
-    pageResponse.setResponse(asList(environment));
-    when(wingsPersistence.query(Environment.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Environment> environments = environmentService.list(pageRequest);
+    Environment environment = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
+    PageRequest<Environment> envPageRequest = new PageRequest<>();
+    PageResponse<Environment> envPageResponse = new PageResponse<>();
+    envPageResponse.setResponse(asList(environment));
+    when(wingsPersistence.query(Environment.class, envPageRequest)).thenReturn(envPageResponse);
+
+    ServiceTemplate serviceTemplate = Builder.aServiceTemplate().build();
+    PageRequest<ServiceTemplate> serviceTemplatePageRequest = new PageRequest<>();
+    serviceTemplatePageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    serviceTemplatePageRequest.addFilter("envId", environment.getUuid(), EQ);
+    PageResponse<ServiceTemplate> serviceTemplatePageResponse = new PageResponse<>();
+    serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
+    when(serviceTemplateService.list(serviceTemplatePageRequest)).thenReturn(serviceTemplatePageResponse);
+
+    Orchestration orchestration =
+        Orchestration.Builder.anOrchestration().withAppId(APP_ID).withEnvironment(environment).build();
+    PageRequest<Orchestration> orchestrationPageRequest = new PageRequest<>();
+    orchestrationPageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    orchestrationPageRequest.addFilter("environment", environment, SearchFilter.Operator.EQ);
+    PageResponse<Orchestration> orchestrationPageResponse = new PageResponse<>();
+    orchestrationPageResponse.setResponse(asList(orchestration));
+    when(workflowService.listOrchestration(orchestrationPageRequest)).thenReturn(orchestrationPageResponse);
+
+    PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
+
     assertThat(environments).containsAll(asList(environment));
+    assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
+    assertThat(environments.get(0).getOrchestrations()).containsAll(asList(orchestration));
+    verify(serviceTemplateService).list(serviceTemplatePageRequest);
+    verify(workflowService).listOrchestration(orchestrationPageRequest);
   }
 
   /**
@@ -93,7 +129,11 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetEnvironment() {
-    environmentService.get(APP_ID, ENV_ID);
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
+        .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
+    when(serviceTemplateService.list(any(PageRequest.class))).thenReturn(new PageResponse<ServiceTemplate>());
+    when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<Orchestration>());
+    environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 
@@ -160,5 +200,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(spyEnvService).delete(APP_ID, ENV_ID);
+  }
+
+  @Test
+  public void shouldCreateDefaultEnvironments() {
+    doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
+    spyEnvService.createDefaultEnvironments(APP_ID);
+    verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
+    assertThat(asList("PROD", "UAT", "QA", "DEV"))
+        .isEqualTo(environmentArgumentCaptor.getAllValues().stream().map(Environment::getName).collect(toList()));
   }
 }

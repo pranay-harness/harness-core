@@ -4,7 +4,7 @@
 
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
@@ -32,10 +32,8 @@ public class WorkflowExecution extends Base {
   @Transient private List<String> expandedGroupIds;
 
   private String name;
-  private int totalInstances;
-  private int instancesSucceeded = 0;
-  private int instancesFailed = 0;
-  private int instancesInProgress = 0;
+  private int total;
+  private CountsByStatuses breakdown = aCountsByStatuses().build();
 
   /**
    * Gets name.
@@ -171,53 +169,29 @@ public class WorkflowExecution extends Base {
     this.expandedGroupIds = expandedGroupIds;
   }
 
-  public int getTotalInstances() {
-    return totalInstances;
+  /**
+   * Getter for property 'total'.
+   *
+   * @return Value for property 'total'.
+   */
+  public int getTotal() {
+    return total;
   }
 
-  public void setTotalInstances(int totalInstances) {
-    this.totalInstances = totalInstances;
+  /**
+   * Setter for property 'total'.
+   *
+   * @param total Value to set for property 'total'.
+   */
+  public void setTotal(int total) {
+    this.total = total;
   }
 
-  public int getInstancesSucceeded() {
-    return instancesSucceeded;
+  public CountsByStatuses getBreakdown() {
+    return breakdown;
   }
 
-  public void setInstancesSucceeded(int instancesSucceeded) {
-    this.instancesSucceeded = instancesSucceeded;
-  }
-
-  public int getInstancesFailed() {
-    return instancesFailed;
-  }
-
-  public void setInstancesFailed(int instancesFailed) {
-    this.instancesFailed = instancesFailed;
-  }
-
-  public int getInstancesInProgress() {
-    return instancesInProgress;
-  }
-
-  public void setInstancesInProgress(int instancesInProgress) {
-    this.instancesInProgress = instancesInProgress;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("workflowId", workflowId)
-        .add("stateMachineId", stateMachineId)
-        .add("envId", envId)
-        .add("workflowType", workflowType)
-        .add("status", status)
-        .add("graph", graph)
-        .add("expandedGroupIds", expandedGroupIds)
-        .add("name", name)
-        .add("totalInstances", totalInstances)
-        .add("instancesSucceeded", instancesSucceeded)
-        .add("instancesFailed", instancesFailed)
-        .add("instancesInProgress", instancesInProgress)
-        .toString();
+  public void setBreakdown(CountsByStatuses breakdown) {
+    this.breakdown = breakdown;
   }
 }

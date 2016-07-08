@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ConfigFile.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFile.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -73,10 +75,13 @@ public class ConfigResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
+      @QueryParam("entityType") EntityType entityType, @QueryParam("envId") String envId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setEntityId(entityId);
+    configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setAppId(appId);
+    configFile.setEnvId(envId);
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }
@@ -91,7 +96,7 @@ public class ConfigResource {
   @GET
   @Path("{configId}")
   public RestResponse<ConfigFile> get(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    return new RestResponse<>(configService.get(configId));
+    return new RestResponse<>(configService.get(appId, configId));
   }
 
   /**
@@ -125,7 +130,7 @@ public class ConfigResource {
   @DELETE
   @Path("{configId}")
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    configService.delete(configId);
+    configService.delete(appId, configId);
     return new RestResponse();
   }
 }

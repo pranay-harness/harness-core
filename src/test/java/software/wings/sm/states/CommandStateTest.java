@@ -134,7 +134,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
-    when(environmentService.get(APP_ID, ENV_ID))
+    when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START")).thenReturn(COMMAND);
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
@@ -201,6 +201,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verify(serviceInstanceService).update(SERVICE_INSTANCE);
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowService);
   }

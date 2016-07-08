@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.ChecksumType.MD5;
-
 import com.google.common.base.MoreObjects;
 
 import org.apache.commons.lang3.StringUtils;
@@ -19,7 +17,7 @@ public class BaseFile extends Base {
   @FormDataParam("name") private String name;
   private String mimeType;
   private long size;
-  private ChecksumType checksumType = MD5;
+  private ChecksumType checksumType = ChecksumType.MD5;
   @FormDataParam("md5") private String checksum;
 
   /**

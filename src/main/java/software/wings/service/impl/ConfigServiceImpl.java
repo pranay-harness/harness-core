@@ -1,16 +1,21 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import software.wings.beans.ConfigFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TagService;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +33,10 @@ import javax.validation.executable.ValidateOnExecution;
 public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private TagService tagService;
+  @Inject private HostService hostService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -50,8 +59,26 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#get(java.lang.String)
    */
   @Override
-  public ConfigFile get(String configId) {
-    return wingsPersistence.get(ConfigFile.class, configId);
+  public ConfigFile get(String appId, String configId) {
+    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
+    configFile.setOverridePath(generateOverridePath(configFile));
+    return configFile;
+  }
+
+  private String generateOverridePath(ConfigFile configFile) {
+    switch (configFile.getEntityType()) {
+      case SERVICE:
+        return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
+      case ENVIRONMENT:
+        return environmentService.get(configFile.getAppId(), configFile.getEntityId(), false).getName();
+      case TAG:
+        return tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()).getName();
+      case HOST:
+        return hostService.getHostByEnv(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId())
+            .getHostName();
+      default:
+        throw new WingsException(UNKNOWN_ERROR);
+    }
   }
 
   /* (non-Javadoc)
@@ -62,7 +89,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
     }
-
     Map<String, Object> updateMap = new HashMap<>();
     updateMap.put("name", configFile.getName());
     updateMap.put("relativePath", configFile.getRelativePath());
@@ -76,8 +102,8 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#delete(java.lang.String)
    */
   @Override
-  public void delete(String configId) {
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, configId);
+  public void delete(String appId, String configId) {
+    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
     fileService.deleteFile(configFile.getFileUuid(), CONFIGS);
     wingsPersistence.delete(configFile);
   }
@@ -86,14 +112,15 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#getConfigFilesForEntity(java.lang.String, java.lang.String)
    */
   @Override
-  public List<ConfigFile> getConfigFilesForEntity(String templateId, String entityId) {
-    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .field("templateId")
-                                       .equal(templateId)
-                                       .field("entityId")
-                                       .equal(entityId)
-                                       .asList();
-    return configFiles != null ? configFiles : new ArrayList<>();
+  public List<ConfigFile> getConfigFilesForEntity(String appId, String templateId, String entityId) {
+    return wingsPersistence.createQuery(ConfigFile.class)
+        .field("appId")
+        .equal(appId)
+        .field("templateId")
+        .equal(templateId)
+        .field("entityId")
+        .equal(entityId)
+        .asList();
   }
 
   @Override
@@ -107,7 +134,21 @@ public class ConfigServiceImpl implements ConfigService {
                                        .equal(templateId)
                                        .asList();
     if (configFiles != null) {
-      configFiles.forEach(configFile -> delete(configFile.getUuid()));
+      configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }
+  }
+
+  @Override
+  public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String templateId) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("appId")
+                                       .equal(appId)
+                                       .field("envId")
+                                       .equal(envId)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .asList();
+    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile)));
+    return configFiles;
   }
 }

@@ -65,7 +65,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public PageResponse<Service> list(PageRequest<Service> request) {
     PageResponse<Service> pageResponse = wingsPersistence.query(Service.class, request);
     pageResponse.getResponse().forEach(service -> {
-      service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.setConfigFiles(
+          configService.getConfigFilesForEntity(service.getAppId(), DEFAULT_TEMPLATE_ID, service.getUuid()));
     });
     return pageResponse;
   }
@@ -106,7 +107,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service != null) {
-      service.setConfigFiles(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, service.getUuid()));
+      service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
       service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
       service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
     }

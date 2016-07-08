@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
 import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;

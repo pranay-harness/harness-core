@@ -75,8 +75,6 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
-    System.setProperty("DEBUG.MONGO", "true");
-    System.setProperty("DB.TRACE", "true");
     new WingsApplication().run(args);
   }
 

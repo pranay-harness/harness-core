@@ -12,7 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ConfigFile.ConfigFileBuilder.aConfigFile;
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
@@ -402,13 +402,13 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(aHost().withUuid("HOST_ID_1").build())).build());
 
-    when(configService.getConfigFilesForEntity(DEFAULT_TEMPLATE_ID, SERVICE_ID))
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_1").withName("PROPERTIES_FILE").build()));
 
-    when(configService.getConfigFilesForEntity("TEMPLATE_ID", ENV_ID))
+    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", ENV_ID))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_2").withName("PROPERTIES_FILE").build()));
 
-    when(configService.getConfigFilesForEntity("TEMPLATE_ID", "HOST_ID_1"))
+    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1"))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
 
     Map<String, List<ConfigFile>> hostConfigFileMapping =

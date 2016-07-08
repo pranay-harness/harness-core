@@ -33,6 +33,7 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
   @Transient private List<Host> taggedHosts = new ArrayList<>();
+  @Transient private List<ConfigFile> configFiles;
 
   /**
    * Gets name.
@@ -176,6 +177,24 @@ public class ServiceTemplate extends Base {
    */
   public void setTaggedHosts(List<Host> taggedHosts) {
     this.taggedHosts = taggedHosts;
+  }
+
+  /**
+   * Gets config files.
+   *
+   * @return the config files
+   */
+  public List<ConfigFile> getConfigFiles() {
+    return configFiles;
+  }
+
+  /**
+   * Sets config files.
+   *
+   * @param configFiles the config files
+   */
+  public void setConfigFiles(List<ConfigFile> configFiles) {
+    this.configFiles = configFiles;
   }
 
   @Override
