@@ -1185,7 +1185,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesInProgress()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
   }
 
   @Test
@@ -1195,7 +1195,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesSucceeded()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(1);
   }
 
   @Test
@@ -1205,7 +1205,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesFailed()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
   }
 
   /**

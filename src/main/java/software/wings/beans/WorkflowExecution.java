@@ -4,6 +4,8 @@
 
 package software.wings.beans;
 
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
+
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -30,10 +32,8 @@ public class WorkflowExecution extends Base {
   @Transient private List<String> expandedGroupIds;
 
   private String name;
-  private int totalInstances;
-  private int instancesSucceeded = 0;
-  private int instancesFailed = 0;
-  private int instancesInProgress = 0;
+  private int total;
+  private CountsByStatuses breakdown = aCountsByStatuses().build();
 
   /**
    * Gets name.
@@ -169,35 +169,29 @@ public class WorkflowExecution extends Base {
     this.expandedGroupIds = expandedGroupIds;
   }
 
-  public int getTotalInstances() {
-    return totalInstances;
+  /**
+   * Getter for property 'total'.
+   *
+   * @return Value for property 'total'.
+   */
+  public int getTotal() {
+    return total;
   }
 
-  public void setTotalInstances(int totalInstances) {
-    this.totalInstances = totalInstances;
+  /**
+   * Setter for property 'total'.
+   *
+   * @param total Value to set for property 'total'.
+   */
+  public void setTotal(int total) {
+    this.total = total;
   }
 
-  public int getInstancesSucceeded() {
-    return instancesSucceeded;
+  public CountsByStatuses getBreakdown() {
+    return breakdown;
   }
 
-  public void setInstancesSucceeded(int instancesSucceeded) {
-    this.instancesSucceeded = instancesSucceeded;
-  }
-
-  public int getInstancesFailed() {
-    return instancesFailed;
-  }
-
-  public void setInstancesFailed(int instancesFailed) {
-    this.instancesFailed = instancesFailed;
-  }
-
-  public int getInstancesInProgress() {
-    return instancesInProgress;
-  }
-
-  public void setInstancesInProgress(int instancesInProgress) {
-    this.instancesInProgress = instancesInProgress;
+  public void setBreakdown(CountsByStatuses breakdown) {
+    this.breakdown = breakdown;
   }
 }

@@ -914,7 +914,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementInProgressCount(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesInProgress", inc);
+    ops.inc("breakdown.inprogress", inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -926,8 +926,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementSuccess(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesSucceeded", inc);
-    ops.inc("instancesInProgress", -1 * inc);
+    ops.inc("breakdown.success", inc);
+    ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -939,8 +939,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementFailed(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesFailed", inc);
-    ops.inc("instancesInProgress", -1 * inc);
+    ops.inc("breakdown.failed", inc);
+    ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -1019,7 +1019,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setTotalInstances(executionArgs.getServiceInstanceIds().size());
+    workflowExecution.setTotal(executionArgs.getServiceInstanceIds().size());
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
 
