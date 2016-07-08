@@ -26,7 +26,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 // TODO: Auto-generated Javadoc
@@ -129,7 +128,7 @@ public class ActivityResource {
   @Encoded
   public Response exportLogs(@QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     File logFile = logService.exportLogs(appId, activityId);
-    Response.ResponseBuilder response = Response.ok(logFile, MediaType.TEXT_PLAIN);
+    Response.ResponseBuilder response = Response.ok(logFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + logFile.getName());
     return response.build();
   }

@@ -15,13 +15,16 @@ import software.wings.beans.ConfigFile.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ConfigService;
 
+import java.io.File;
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -29,6 +32,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 
 // TODO: Auto-generated Javadoc
 
@@ -38,6 +42,7 @@ import javax.ws.rs.QueryParam;
  * @author Rishi
  */
 @Api("configs")
+@AuthRule
 @Path("/configs")
 @Produces("application/json")
 public class ConfigResource {
@@ -132,5 +137,15 @@ public class ConfigResource {
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     configService.delete(appId, configId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("{configId}/download")
+  @Encoded
+  public Response exportLogs(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
+    File configFile = configService.download(appId, configId);
+    Response.ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
+    response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
+    return response.build();
   }
 }

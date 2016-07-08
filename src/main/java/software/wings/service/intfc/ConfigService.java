@@ -9,6 +9,7 @@ import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.List;
 import javax.validation.Valid;
@@ -89,4 +90,6 @@ public interface ConfigService {
    * @return the config file by template
    */
   List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate);
+
+  File download(String appId, String configId);
 }
