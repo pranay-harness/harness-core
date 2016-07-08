@@ -77,6 +77,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         template.setTaggedHosts(hostService.getHostsByTags(
             template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
       }
+      template.setConfigFiles(
+          configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template.getUuid()));
     });
     return pageResponse;
   }

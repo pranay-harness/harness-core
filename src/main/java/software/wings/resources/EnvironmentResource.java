@@ -51,7 +51,7 @@ public class EnvironmentResource {
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    return new RestResponse<>(envService.list(pageRequest));
+    return new RestResponse<>(envService.list(pageRequest, true));
   }
 
   /**

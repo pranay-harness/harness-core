@@ -23,7 +23,7 @@ public interface EnvironmentService {
    * @param request the request
    * @return the page response
    */
-  PageResponse<Environment> list(PageRequest<Environment> request);
+  PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary);
 
   /**
    * Gets the.

@@ -129,10 +129,21 @@ public interface HostService {
   List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
+   * Gets host by env.
+   *
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
+   * @return the host by env
+   */
+  Host getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+
+  /**
    * Bulk save.
    *
    * @param envId    the env id
    * @param baseHost the base host
+   * @return the response message
    */
   ResponseMessage bulkSave(String envId, Host baseHost);
 }

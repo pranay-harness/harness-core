@@ -665,7 +665,6 @@ public class DataGenUtil extends WingsBaseTest {
   }
 
   private String getName(List<String> names) {
-    System.out.println("Remaining names -------" + names.size());
     int nameIdx = randomInt(0, names.size());
     String name = names.get(nameIdx);
     names.remove(nameIdx);

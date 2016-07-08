@@ -28,7 +28,9 @@ public class Environment extends Base {
   @NotEmpty private String name;
   private String description;
   @NotNull private EnvironmentType environmentType = OTHER;
+  @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
+  @Transient private List<Orchestration> orchestrations;
 
   /**
    * Gets name.
@@ -100,6 +102,22 @@ public class Environment extends Base {
    */
   public void setConfigFiles(List<ConfigFile> configFiles) {
     this.configFiles = configFiles;
+  }
+
+  public List<ServiceTemplate> getServiceTemplates() {
+    return serviceTemplates;
+  }
+
+  public void setServiceTemplates(List<ServiceTemplate> serviceTemplates) {
+    this.serviceTemplates = serviceTemplates;
+  }
+
+  public List<Orchestration> getOrchestrations() {
+    return orchestrations;
+  }
+
+  public void setOrchestrations(List<Orchestration> orchestrations) {
+    this.orchestrations = orchestrations;
   }
 
   @Override

@@ -1,13 +1,19 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import software.wings.beans.ConfigFile;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.TagService;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -27,6 +33,10 @@ import javax.validation.executable.ValidateOnExecution;
 public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private TagService tagService;
+  @Inject private HostService hostService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -50,7 +60,25 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public ConfigFile get(String appId, String configId) {
-    return wingsPersistence.get(ConfigFile.class, appId, configId);
+    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
+    configFile.setOverridePath(generateOverridePath(configFile));
+    return configFile;
+  }
+
+  private String generateOverridePath(ConfigFile configFile) {
+    switch (configFile.getEntityType()) {
+      case SERVICE:
+        return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
+      case ENVIRONMENT:
+        return environmentService.get(configFile.getAppId(), configFile.getEntityId()).getName();
+      case TAG:
+        return tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()).getName();
+      case HOST:
+        return hostService.getHostByEnv(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId())
+            .getHostName();
+      default:
+        throw new WingsException(UNKNOWN_ERROR);
+    }
   }
 
   /* (non-Javadoc)
@@ -61,7 +89,6 @@ public class ConfigServiceImpl implements ConfigService {
     if (uploadedInputStream != null) {
       fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
     }
-
     Map<String, Object> updateMap = new HashMap<>();
     updateMap.put("name", configFile.getName());
     updateMap.put("relativePath", configFile.getRelativePath());
@@ -109,5 +136,19 @@ public class ConfigServiceImpl implements ConfigService {
     if (configFiles != null) {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }
+  }
+
+  @Override
+  public List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String templateId) {
+    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                       .field("appId")
+                                       .equal(appId)
+                                       .field("envId")
+                                       .equal(envId)
+                                       .field("templateId")
+                                       .equal(templateId)
+                                       .asList();
+    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile)));
+    return configFiles;
   }
 }

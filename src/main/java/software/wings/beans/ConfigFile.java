@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static software.wings.beans.ChecksumType.MD5;
+import com.google.common.base.MoreObjects;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -31,11 +31,15 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
+  @FormDataParam("envId") @DefaultValue(GLOBAL_ENV_ID) private String envId;
+
   @FormDataParam("entityType") @NotNull private EntityType entityType;
 
   @FormDataParam("entityId") @NotEmpty private String entityId;
 
   @FormDataParam("relativePath") private String relativePath;
+
+  private String overridePath;
 
   /**
    * The enum Entity type.
@@ -128,9 +132,45 @@ public class ConfigFile extends BaseFile {
     this.entityType = entityType;
   }
 
+  /**
+   * Gets override path.
+   *
+   * @return the override path
+   */
+  public String getOverridePath() {
+    return overridePath;
+  }
+
+  /**
+   * Sets override path.
+   *
+   * @param overridePath the override path
+   */
+  public void setOverridePath(String overridePath) {
+    this.overridePath = overridePath;
+  }
+
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
+  public String getEnvId() {
+    return envId;
+  }
+
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
+  public void setEnvId(String envId) {
+    this.envId = envId;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(templateId, entityType, entityId, relativePath);
+    return 31 * super.hashCode() + Objects.hash(templateId, envId, entityType, entityId, relativePath, overridePath);
   }
 
   @Override
@@ -145,23 +185,39 @@ public class ConfigFile extends BaseFile {
       return false;
     }
     final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.entityType, other.entityType)
-        && Objects.equals(this.entityId, other.entityId) && Objects.equals(this.relativePath, other.relativePath);
+    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.relativePath, other.relativePath)
+        && Objects.equals(this.overridePath, other.overridePath);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("templateId", templateId)
+        .add("envId", envId)
+        .add("entityType", entityType)
+        .add("entityId", entityId)
+        .add("relativePath", relativePath)
+        .add("overridePath", overridePath)
+        .toString();
   }
 
   /**
-   * The type Config file builder.
+   * The type Builder.
    */
-  public static final class ConfigFileBuilder {
+  public static final class Builder {
     private String templateId;
+    private String envId;
     private EntityType entityType;
     private String entityId;
     private String relativePath;
+    private String overridePath;
     private String fileUuid;
     private String name;
     private String mimeType;
     private long size;
-    private ChecksumType checksumType = MD5;
+    private ChecksumType checksumType = ChecksumType.MD5;
     private String checksum;
     private String uuid;
     private String appId;
@@ -171,215 +227,239 @@ public class ConfigFile extends BaseFile {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ConfigFileBuilder() {}
+    private Builder() {}
 
     /**
-     * A config file config file builder.
+     * A config file builder.
      *
-     * @return the config file builder
+     * @return the builder
      */
-    public static ConfigFileBuilder aConfigFile() {
-      return new ConfigFileBuilder();
+    public static Builder aConfigFile() {
+      return new Builder();
     }
 
     /**
-     * With template id config file builder.
+     * With template id builder.
      *
      * @param templateId the template id
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withTemplateId(String templateId) {
+    public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
     /**
-     * With entity type config file builder.
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
+    public Builder withEnvId(String envId) {
+      this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With entity type builder.
      *
      * @param entityType the entity type
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withEntityType(EntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
     /**
-     * With entity id config file builder.
+     * With entity id builder.
      *
      * @param entityId the entity id
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withEntityId(String entityId) {
+    public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
     /**
-     * With relative path config file builder.
+     * With relative path builder.
      *
      * @param relativePath the relative path
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withRelativePath(String relativePath) {
+    public Builder withRelativePath(String relativePath) {
       this.relativePath = relativePath;
       return this;
     }
 
     /**
-     * With file uuid config file builder.
+     * With override path builder.
+     *
+     * @param overridePath the override path
+     * @return the builder
+     */
+    public Builder withOverridePath(String overridePath) {
+      this.overridePath = overridePath;
+      return this;
+    }
+
+    /**
+     * With file uuid builder.
      *
      * @param fileUuid the file uuid
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withFileUuid(String fileUuid) {
+    public Builder withFileUuid(String fileUuid) {
       this.fileUuid = fileUuid;
       return this;
     }
 
     /**
-     * With name config file builder.
+     * With name builder.
      *
      * @param name the name
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
     /**
-     * With mime type config file builder.
+     * With mime type builder.
      *
      * @param mimeType the mime type
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withMimeType(String mimeType) {
+    public Builder withMimeType(String mimeType) {
       this.mimeType = mimeType;
       return this;
     }
 
     /**
-     * With size config file builder.
+     * With size builder.
      *
      * @param size the size
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withSize(long size) {
+    public Builder withSize(long size) {
       this.size = size;
       return this;
     }
 
     /**
-     * With checksum type config file builder.
+     * With checksum type builder.
      *
      * @param checksumType the checksum type
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withChecksumType(ChecksumType checksumType) {
+    public Builder withChecksumType(ChecksumType checksumType) {
       this.checksumType = checksumType;
       return this;
     }
 
     /**
-     * With checksum config file builder.
+     * With checksum builder.
      *
      * @param checksum the checksum
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withChecksum(String checksum) {
+    public Builder withChecksum(String checksum) {
       this.checksum = checksum;
       return this;
     }
 
     /**
-     * With uuid config file builder.
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
     /**
-     * With app id config file builder.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
     /**
-     * With created by config file builder.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
     /**
-     * With created at config file builder.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
     /**
-     * With last updated by config file builder.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
     /**
-     * With last updated at config file builder.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
     /**
-     * With active config file builder.
+     * With active builder.
      *
      * @param active the active
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
     /**
-     * But config file builder.
+     * But builder.
      *
-     * @return the config file builder
+     * @return the builder
      */
-    public ConfigFileBuilder but() {
+    public Builder but() {
       return aConfigFile()
           .withTemplateId(templateId)
+          .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
           .withRelativePath(relativePath)
+          .withOverridePath(overridePath)
           .withFileUuid(fileUuid)
           .withName(name)
           .withMimeType(mimeType)
@@ -403,9 +483,11 @@ public class ConfigFile extends BaseFile {
     public ConfigFile build() {
       ConfigFile configFile = new ConfigFile();
       configFile.setTemplateId(templateId);
+      configFile.setEnvId(envId);
       configFile.setEntityType(entityType);
       configFile.setEntityId(entityId);
       configFile.setRelativePath(relativePath);
+      configFile.setOverridePath(overridePath);
       configFile.setFileUuid(fileUuid);
       configFile.setName(name);
       configFile.setMimeType(mimeType);

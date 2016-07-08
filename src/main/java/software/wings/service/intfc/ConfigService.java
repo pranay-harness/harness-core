@@ -38,8 +38,7 @@ public interface ConfigService {
   /**
    * Gets the.
    *
-   *
-   * @param appId
+   * @param appId    the app id
    * @param configId the config id
    * @return the config file
    */
@@ -56,7 +55,7 @@ public interface ConfigService {
   /**
    * Delete.
    *
-   * @param appId
+   * @param appId    the app id
    * @param configId the config id
    */
   void delete(@NotEmpty String appId, @NotEmpty String configId);
@@ -64,6 +63,7 @@ public interface ConfigService {
   /**
    * Gets the config files for entity.
    *
+   * @param appId      the app id
    * @param templateId the template id
    * @param entityId   the entity id
    * @return the config files for entity
@@ -78,4 +78,13 @@ public interface ConfigService {
    * @param templateId the template id
    */
   void deleteByEntityId(String appId, String entityId, String templateId);
+
+  /**
+   * Gets config file by template.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @return the config file by template
+   */
+  List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String templateId);
 }

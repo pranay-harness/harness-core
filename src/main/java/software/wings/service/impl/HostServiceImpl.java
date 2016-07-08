@@ -174,6 +174,19 @@ public class HostServiceImpl implements HostService {
         .asList();
   }
 
+  @Override
+  public Host getHostByEnv(String appId, String envId, String hostId) {
+    String infraId = infraService.getInfraIdByEnvId(appId, envId);
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .field(ID_KEY)
+        .equal(hostId)
+        .get();
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#exportHosts(java.lang.String, java.lang.String)
    */

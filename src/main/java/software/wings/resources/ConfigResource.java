@@ -75,11 +75,13 @@ public class ConfigResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
-      @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
+      @QueryParam("entityType") EntityType entityType, @QueryParam("envId") String envId,
+      @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setAppId(appId);
+    configFile.setEnvId(envId);
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }

@@ -10,12 +10,14 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.common.collect.ImmutableMap;
 
 import software.wings.beans.Environment;
 import software.wings.beans.Orchestration;
-import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -57,8 +59,40 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<Environment> list(PageRequest<Environment> request) {
-    return wingsPersistence.query(Environment.class, request);
+  public PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary) {
+    PageResponse<Environment> pageResponse = wingsPersistence.query(Environment.class, request);
+    if (withSummary) {
+      pageResponse.getResponse().forEach(environment -> {
+        addServiceTemplates(environment);
+        addWorkflows(environment);
+      });
+    }
+    return pageResponse;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Environment get(String appId, String envId) {
+    Environment environment = wingsPersistence.get(Environment.class, appId, envId);
+    addServiceTemplates(environment);
+    addWorkflows(environment);
+    return environment;
+  }
+
+  private void addWorkflows(Environment environment) {
+    PageRequest<Orchestration> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("environment", environment, SearchFilter.Operator.EQ);
+    environment.setOrchestrations(workflowService.listOrchestration(pageRequest).getResponse());
+  }
+
+  private void addServiceTemplates(Environment environment) {
+    PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
+    pageRequest.addFilter("envId", environment.getUuid(), EQ);
+    environment.setServiceTemplates(serviceTemplateService.list(pageRequest).getResponse());
   }
 
   /**
@@ -67,8 +101,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Map<String, String> getData(String appId, String... params) {
     PageRequest<Environment> pageRequest = new PageRequest<>();
-    pageRequest.addFilter("appId", appId, Operator.EQ);
-    return list(pageRequest).stream().collect(toMap(Environment::getUuid, Environment::getName));
+    pageRequest.addFilter("appId", appId, EQ);
+    return list(pageRequest, false).stream().collect(toMap(Environment::getUuid, Environment::getName));
   }
 
   /**
@@ -172,14 +206,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public Environment get(String appId, String envId) {
-    return wingsPersistence.get(Environment.class, appId, envId);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
   public Environment update(Environment environment) {
     wingsPersistence.updateFields(Environment.class, environment.getUuid(),
         ImmutableMap.of("name", environment.getName(), "description", environment.getDescription(), "environmentType",
@@ -211,7 +237,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public void createDefaultEnvironments(String appId) {
     save(anEnvironment().withAppId(appId).withName("PROD").withEnvironmentType(PROD).build());
-    asList("DEV", "QA", "UAT")
+    asList("UAT", "QA", "DEV")
         .forEach(name -> save(anEnvironment().withAppId(appId).withName(name).withEnvironmentType(OTHER).build()));
   }
 
