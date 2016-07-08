@@ -71,7 +71,7 @@ public class SetupServiceImpl implements SetupService {
 
   @Override
   public Setup getEnvironmentSetupStatus(String appId, String envId) {
-    Environment environment = environmentService.get(appId, envId);
+    Environment environment = environmentService.get(appId, envId, false);
     if (environment == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
     }

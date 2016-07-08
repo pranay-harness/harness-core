@@ -231,7 +231,7 @@ public class WorkflowStandardParams implements ContextElement {
    */
   public Environment getEnv() {
     if (env == null && envId != null) {
-      env = environmentService.get(appId, envId);
+      env = environmentService.get(appId, envId, false);
     }
     return env;
   }

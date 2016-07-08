@@ -131,7 +131,7 @@ public class CommandState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String appId = workflowStandardParams.getAppId();
     String envId = workflowStandardParams.getEnvId();
-    Environment environment = environmentService.get(appId, envId);
+    Environment environment = environmentService.get(appId, envId, false);
 
     InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
 

@@ -115,7 +115,8 @@ public class SetupServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetEnvironmentSetupStatus() {
-    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(environmentService.get(APP_ID, ENV_ID, false))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(aHost().build()));
     Setup setupStatus = setupService.getEnvironmentSetupStatus(APP_ID, ENV_ID);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
@@ -127,7 +128,8 @@ public class SetupServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetIncompleteStatusForEnvironmentWithNoHost() {
-    when(environmentService.get(APP_ID, ENV_ID)).thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(environmentService.get(APP_ID, ENV_ID, false))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList());
     Setup setupStatus = setupService.getEnvironmentSetupStatus(APP_ID, ENV_ID);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(INCOMPLETE);

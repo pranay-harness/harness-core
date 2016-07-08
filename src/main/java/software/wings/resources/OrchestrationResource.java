@@ -70,7 +70,7 @@ public class OrchestrationResource {
   public RestResponse<PageResponse<Orchestration>> list(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Orchestration> pageRequest) {
     pageRequest.addFilter("appId", appId, SearchFilter.Operator.EQ);
-    Environment env = environmentService.get(appId, envId);
+    Environment env = environmentService.get(appId, envId, false);
     if (env == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
@@ -105,7 +105,7 @@ public class OrchestrationResource {
   public RestResponse<Orchestration> create(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, Orchestration orchestration) {
     orchestration.setAppId(appId);
-    Environment env = environmentService.get(appId, envId);
+    Environment env = environmentService.get(appId, envId, false);
     if (env == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }
@@ -129,7 +129,7 @@ public class OrchestrationResource {
       @PathParam("orchestrationId") String orchestrationId, Orchestration orchestration) {
     orchestration.setAppId(appId);
     orchestration.setUuid(orchestrationId);
-    Environment env = environmentService.get(appId, envId);
+    Environment env = environmentService.get(appId, envId, false);
     if (env == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown environment");
     }

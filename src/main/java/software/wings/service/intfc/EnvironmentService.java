@@ -32,7 +32,7 @@ public interface EnvironmentService {
    * @param envId the env id
    * @return the environment
    */
-  Environment get(@NotEmpty String appId, @NotEmpty String envId);
+  Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);
 
   /**
    * Save.

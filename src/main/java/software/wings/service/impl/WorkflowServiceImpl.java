@@ -1079,7 +1079,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     orchestration.setDescription(Constants.SIMPLE_ORCHESTRATION_DESC);
     orchestration.setWorkflowType(WorkflowType.SIMPLE);
     orchestration.setAppId(appId);
-    orchestration.setEnvironment(environmentService.get(appId, envId));
+    orchestration.setEnvironment(environmentService.get(appId, envId, false));
 
     Graph graph = staticConfiguration.defaultSimpleWorkflow();
     orchestration.setGraph(graph);

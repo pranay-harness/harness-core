@@ -133,7 +133,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
     when(serviceTemplateService.list(any(PageRequest.class))).thenReturn(new PageResponse<ServiceTemplate>());
     when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<Orchestration>());
-    environmentService.get(APP_ID, ENV_ID);
+    environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
 

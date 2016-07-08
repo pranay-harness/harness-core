@@ -70,7 +70,7 @@ public class ConfigServiceImpl implements ConfigService {
       case SERVICE:
         return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
       case ENVIRONMENT:
-        return environmentService.get(configFile.getAppId(), configFile.getEntityId()).getName();
+        return environmentService.get(configFile.getAppId(), configFile.getEntityId(), false).getName();
       case TAG:
         return tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()).getName();
       case HOST:

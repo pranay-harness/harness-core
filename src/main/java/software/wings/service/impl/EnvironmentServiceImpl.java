@@ -74,10 +74,12 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public Environment get(String appId, String envId) {
+  public Environment get(String appId, String envId, boolean withSummary) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
-    addServiceTemplates(environment);
-    addWorkflows(environment);
+    if (withSummary) {
+      addServiceTemplates(environment);
+      addWorkflows(environment);
+    }
     return environment;
   }
 
