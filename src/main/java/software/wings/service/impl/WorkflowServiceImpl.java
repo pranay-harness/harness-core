@@ -844,6 +844,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setName(orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
+    workflowExecution.setTotal(1);
+    workflowExecution.getBreakdown().setInprogress(1);
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);

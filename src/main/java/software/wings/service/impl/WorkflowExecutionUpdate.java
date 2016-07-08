@@ -10,8 +10,10 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -104,6 +106,25 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", status);
+
+    if (!context.getContextElementList(ContextElementType.PARAM)
+             .stream()
+             .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
+             .findFirst()
+             .isPresent()) {
+      String breakdownKey = "breakdown.";
+      switch (status) {
+        case SUCCESS:
+          breakdownKey += "success";
+          break;
+        case FAILED:
+        case ERROR:
+          breakdownKey += "failed";
+          break;
+      }
+      updateOps.set(breakdownKey, 1);
+      updateOps.set("breakdown.inprogress", 0);
+    }
     wingsPersistence.update(query, updateOps);
   }
 }
