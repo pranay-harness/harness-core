@@ -7,7 +7,6 @@ package software.wings.beans;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
@@ -366,8 +365,6 @@ public class Graph {
     private Object executionDetails;
     private String detailsReference;
     private boolean expanded;
-    private int total;
-    private CountsByStatuses breakdown = aCountsByStatuses().build();
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -625,42 +622,6 @@ public class Graph {
     }
 
     /**
-     * Getter for property 'total'.
-     *
-     * @return Value for property 'total'.
-     */
-    public int getTotal() {
-      return total;
-    }
-
-    /**
-     * Setter for property 'total'.
-     *
-     * @param total Value to set for property 'total'.
-     */
-    public void setTotal(int total) {
-      this.total = total;
-    }
-
-    /**
-     * Getter for property 'breakdown'.
-     *
-     * @return Value for property 'breakdown'.
-     */
-    public CountsByStatuses getBreakdown() {
-      return breakdown;
-    }
-
-    /**
-     * Setter for property 'breakdown'.
-     *
-     * @param breakdown Value to set for property 'breakdown'.
-     */
-    public void setBreakdown(CountsByStatuses breakdown) {
-      this.breakdown = breakdown;
-    }
-
-    /**
      * Is origin boolean.
      *
      * @return the boolean
@@ -744,8 +705,6 @@ public class Graph {
           .add("executionDetails", executionDetails)
           .add("detailsReference", detailsReference)
           .add("expanded", expanded)
-          .add("total", total)
-          .add("breakdown", breakdown)
           .add("properties", properties)
           .add("next", next == null ? null : next.getId())
           .add("group", group == null ? null : group.getId())

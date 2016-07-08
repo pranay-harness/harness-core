@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import software.wings.beans.CountsByStatuses;
+
 import java.util.LinkedHashMap;
 
 /**
@@ -127,6 +129,20 @@ public class StateExecutionData {
     putNotNull(orderedMap, "errorMsg", errorMsg);
     putNotNull(orderedMap, "startTs", startTs);
     putNotNull(orderedMap, "endTs", endTs);
+    putNotNull(orderedMap, "total", 1);
+    CountsByStatuses breakDown = new CountsByStatuses();
+    switch (status) {
+      case FAILED:
+        breakDown.setFailed(1);
+        break;
+      case RUNNING:
+        breakDown.setInprogress(1);
+        break;
+      case SUCCESS:
+        breakDown.setSuccess(1);
+        break;
+    }
+    putNotNull(orderedMap, "breakdown", breakDown);
     return orderedMap;
   }
 
