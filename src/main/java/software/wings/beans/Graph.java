@@ -7,7 +7,9 @@ package software.wings.beans;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -327,7 +329,7 @@ public class Graph {
     @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
 
     public Group() {
-      setType("group");
+      setType("GROUP");
     }
 
     public List<Node> getElements() {
@@ -364,6 +366,8 @@ public class Graph {
     private Object executionDetails;
     private String detailsReference;
     private boolean expanded;
+    private int total;
+    private CountsByStatuses breakdown = aCountsByStatuses().build();
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -621,6 +625,42 @@ public class Graph {
     }
 
     /**
+     * Getter for property 'total'.
+     *
+     * @return Value for property 'total'.
+     */
+    public int getTotal() {
+      return total;
+    }
+
+    /**
+     * Setter for property 'total'.
+     *
+     * @param total Value to set for property 'total'.
+     */
+    public void setTotal(int total) {
+      this.total = total;
+    }
+
+    /**
+     * Getter for property 'breakdown'.
+     *
+     * @return Value for property 'breakdown'.
+     */
+    public CountsByStatuses getBreakdown() {
+      return breakdown;
+    }
+
+    /**
+     * Setter for property 'breakdown'.
+     *
+     * @param breakdown Value to set for property 'breakdown'.
+     */
+    public void setBreakdown(CountsByStatuses breakdown) {
+      this.breakdown = breakdown;
+    }
+
+    /**
      * Is origin boolean.
      *
      * @return the boolean
@@ -691,11 +731,25 @@ public class Graph {
 
     @Override
     public String toString() {
-      return "Node [id=" + id + ", name=" + name + ", type=" + type + ", status=" + status + ", x=" + x + ", y=" + y
-          + ", width=" + width + ", height=" + height + ", executionSummary=" + executionSummary
-          + ", executionDetails=" + executionDetails + ", detailsReference=" + detailsReference
-          + ", expanded=" + expanded + ", properties=" + properties + ", next=" + (next == null ? null : next.getId())
-          + ", group=" + (group == null ? null : group.getId()) + "]";
+      return MoreObjects.toStringHelper(this)
+          .add("id", id)
+          .add("name", name)
+          .add("type", type)
+          .add("status", status)
+          .add("x", x)
+          .add("y", y)
+          .add("width", width)
+          .add("height", height)
+          .add("executionSummary", executionSummary)
+          .add("executionDetails", executionDetails)
+          .add("detailsReference", detailsReference)
+          .add("expanded", expanded)
+          .add("total", total)
+          .add("breakdown", breakdown)
+          .add("properties", properties)
+          .add("next", next == null ? null : next.getId())
+          .add("group", group == null ? null : group.getId())
+          .toString();
     }
 
     /**

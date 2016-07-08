@@ -124,7 +124,6 @@ public class StateExecutionData {
 
   private LinkedHashMap<String, Object> fillExecutionData() {
     LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-    orderedMap.put("status", status);
     putNotNull(orderedMap, "errorMsg", errorMsg);
     putNotNull(orderedMap, "startTs", startTs);
     putNotNull(orderedMap, "endTs", endTs);

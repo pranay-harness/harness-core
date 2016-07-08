@@ -25,9 +25,11 @@ public enum ExecutionStatus {
   ABORTED, /**
             * Failed execution status.
             */
-  FAILED, /**
-           * Scheduled execution status.
-           */
+  FAILED,
+  QUEUED,
+  /**
+   * Scheduled execution status.
+   */
   SCHEDULED, /**
               * Error execution status.
               */

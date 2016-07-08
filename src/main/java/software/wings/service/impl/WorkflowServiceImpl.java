@@ -4,8 +4,8 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.base.Ascii.toUpperCase;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
@@ -17,10 +17,7 @@ import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SimpleWorkflowDetails.Builder.aSimpleWorkflowDetails;
-import static software.wings.beans.SimpleWorkflowDetails.Instance.Builder.anInstance;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -48,9 +45,6 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.ServiceInstance;
-import software.wings.beans.SimpleWorkflowDetails;
-import software.wings.beans.SimpleWorkflowDetails.Instance;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecutionEvent;
@@ -90,7 +84,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -419,11 +412,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
-        populateSimpleWorkflowDetails(workflowExecution);
-      } else {
-        populateGraph(workflowExecution, null, null, null, false);
-      }
+      populateGraph(workflowExecution, null, null, null, workflowExecution.getWorkflowType() == WorkflowType.SIMPLE);
     }
     return res;
   }
@@ -509,64 +498,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setGraph(generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds));
   }
 
-  private void populateSimpleWorkflowDetails(WorkflowExecution workflowExecution) {
-    StateExecutionInstance firstInstance =
-        wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                .field("appId")
-                                                .equal(workflowExecution.getAppId())
-                                                .field("executionUuid")
-                                                .equal(workflowExecution.getUuid()));
-    SimpleWorkflowParam simpleWorkflowParam =
-        (SimpleWorkflowParam) firstInstance.getContextElements()
-            .stream()
-            .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
-            .findFirst()
-            .get();
-
-    PageResponse<ServiceInstance> instances = serviceInstanceService.list(
-        aPageRequest()
-            .addFilter(
-                aSearchFilter().withField(ID_KEY, Operator.IN, simpleWorkflowParam.getInstanceIds().toArray()).build())
-            .build());
-    SimpleWorkflowDetails simpleWorkflowDetails =
-        aSimpleWorkflowDetails()
-            .withExecutionStrategy(simpleWorkflowParam.getExecutionStrategy())
-            .withInstances(instances.getResponse()
-                               .stream()
-                               .map(serviceInstance
-                                   -> anInstance()
-                                          .withHostName(serviceInstance.getHost().getHostName())
-                                          .withTemplateName(serviceInstance.getServiceTemplate().getName())
-                                          .build())
-                               .collect(toList()))
-            .build();
-
-    List<StateExecutionInstance> instanceExecution =
-        wingsPersistence.executeGetListQuery(wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                 .field("appId")
-                                                 .equal(workflowExecution.getAppId())
-                                                 .field("executionUuid")
-                                                 .equal(workflowExecution.getUuid())
-                                                 .field("stateType")
-                                                 .equal(StateType.COMMAND.name()));
-
-    List<Instance> displayInstances =
-        instanceExecution.stream()
-            .map(stateExecutionInstance
-                -> anInstance()
-                       .withHostName(StringUtils.substringBefore(stateExecutionInstance.getContextElementName(), ":"))
-                       .withTemplateName(
-                           StringUtils.substringAfter(stateExecutionInstance.getContextElementName(), ":"))
-                       .withStatus(stateExecutionInstance.getStatus())
-                       .build())
-            .collect(toList());
-
-    simpleWorkflowDetails.getInstances().removeAll(displayInstances);
-    displayInstances.addAll(simpleWorkflowDetails.getInstances());
-    simpleWorkflowDetails.setInstances(displayInstances);
-    workflowExecution.setSimpleWorkflowDetails(simpleWorkflowDetails);
-  }
-
   private void collectChildrenIds(
       Map<String, StateExecutionInstance> instanceIdMap, String collapseGroupId, List<String> childrenIds) {
     if (collapseGroupId == null || instanceIdMap.get(collapseGroupId) == null) {
@@ -631,7 +562,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       node.setId(instance.getUuid());
       node.setName(instance.getStateName());
       node.setType(instance.getStateType());
-      node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
+      node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
       if (instance.getStateExecutionData() != null) {
         node.setExecutionSummary(instance.getStateExecutionData().getExecutionSummary());
         node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
@@ -703,12 +634,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (elements != null) {
         for (String element : elements) {
           Node elementNode =
-              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("element").build();
+              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
           group.getElements().add(elementNode);
+          elementNode.setStatus(ExecutionStatus.QUEUED.name());
           logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
           Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
           if (elementRepeatNode != null) {
-            elementNode.setStatus(elementRepeatNode.getStatus());
+            elementNode.setStatus(toUpperCase(elementRepeatNode.getStatus()));
             elementNode.setNext(elementRepeatNode);
             logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
             generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode);
@@ -982,7 +914,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementInProgressCount(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesInProgress", inc);
+    ops.inc("breakdown.inprogress", inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -994,8 +926,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementSuccess(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesSucceeded", inc);
-    ops.inc("instancesInProgress", -1 * inc);
+    ops.inc("breakdown.success", inc);
+    ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -1007,8 +939,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public void incrementFailed(String appId, String workflowExecutionId, int inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
-    ops.inc("instancesFailed", inc);
-    ops.inc("instancesInProgress", -1 * inc);
+    ops.inc("breakdown.failed", inc);
+    ops.inc("breakdown.inprogress", -1 * inc);
     wingsPersistence.update(wingsPersistence.createQuery(WorkflowExecution.class)
                                 .field("appId")
                                 .equal(appId)
@@ -1087,7 +1019,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setTotalInstances(executionArgs.getServiceInstanceIds().size());
+    workflowExecution.setTotal(executionArgs.getServiceInstanceIds().size());
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
 

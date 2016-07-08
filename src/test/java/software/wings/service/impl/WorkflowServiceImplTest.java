@@ -796,10 +796,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .containsExactly("RepeatByInstances", null, "host2:TEMPLATE_NAME", "email", "host1:TEMPLATE_NAME", "email");
     assertThat(graph.getNodes())
         .extracting("type")
-        .containsExactly("REPEAT", "group", "element", "EMAIL", "element", "EMAIL");
+        .containsExactly("REPEAT", "GROUP", "ELEMENT", "EMAIL", "ELEMENT", "EMAIL");
     assertThat(graph.getNodes())
         .extracting("status")
-        .containsExactly("success", null, "success", "success", "success", "success");
+        .containsExactly("SUCCESS", null, "SUCCESS", "SUCCESS", "SUCCESS", "SUCCESS");
 
     int col1 = DEFAULT_INITIAL_X;
     int col2 = DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
@@ -950,12 +950,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "success", true);
+        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
         .allMatch(n
-            -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
+            -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
     assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
@@ -974,7 +974,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "success", true);
+        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
@@ -983,13 +983,13 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .filteredOn("id", repeatByInstances.get(0).getId())
         .hasSize(1)
         .allMatch(n
-            -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && n.isExpanded() && n.getGroup() != null
+            -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && n.isExpanded() && n.getGroup() != null
                 && n.getNext() != null);
     assertThat(graph.getNodes())
         .filteredOn("id", repeatByInstances.get(1).getId())
         .hasSize(1)
         .allMatch(n
-            -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
+            -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
 
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId, execution.getExpandedGroupIds(),
@@ -1004,12 +1004,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "success", true);
+        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
         .allMatch(n
-            -> "REPEAT".equals(n.getType()) && "success".equals(n.getStatus()) && !n.isExpanded()
+            -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
     assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
@@ -1029,7 +1029,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getLinks()).isEmpty();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "success", false);
+        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", false);
   }
 
   /**
@@ -1185,7 +1185,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesInProgress()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
   }
 
   @Test
@@ -1195,7 +1195,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesSucceeded()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(1);
   }
 
   @Test
@@ -1205,7 +1205,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     workflowService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getInstancesFailed()).isEqualTo(1);
+    assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
   }
 
   /**
