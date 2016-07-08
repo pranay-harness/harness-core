@@ -188,12 +188,15 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveNormalTag() {
-    Tag savedTag = getTagBuilder().withUuid(TAG_ID).withRootTagId("ROOT_TAG_ID").build();
+    Tag tagPreSave = getTagBuilder().withParentTagId("PARENT_TAG_ID").withRootTagId("ROOT_TAG_ID").build();
+    Tag tagPostSave =
+        getTagBuilder().withUuid(TAG_ID).withParentTagId("PARENT_TAG_ID").withRootTagId("ROOT_TAG_ID").build();
     Tag parentTag = getTagBuilder()
                         .withUuid("PARENT_TAG_ID")
+                        .withParentTagId("ROOT_TAG_ID")
                         .withRootTagId("ROOT_TAG_ID")
                         .withRootTag(false)
-                        .withChildren(asList(savedTag))
+                        .withChildren(asList(tagPostSave))
                         .build();
     Tag rootTag = getTagBuilder()
                       .withUuid("ROOT_TAG_ID")
@@ -203,18 +206,16 @@ public class TagServiceTest extends WingsBaseTest {
                       .build();
 
     when(wingsPersistence.get(Tag.class, "PARENT_TAG_ID")).thenReturn(parentTag);
-    when(wingsPersistence.saveAndGet(Tag.class, getTagBuilder().withRootTagId("ROOT_TAG_ID").build()))
-        .thenReturn(savedTag);
-    when(query.get()).thenReturn(parentTag).thenReturn(rootTag); // tag->parent->root
+    when(wingsPersistence.saveAndGet(Tag.class, tagPreSave)).thenReturn(tagPostSave);
+    when(query.get()).thenReturn(parentTag).thenReturn(rootTag);
     when(serviceTemplateService.getTemplateByMappedTags(asList(parentTag, rootTag)))
         .thenReturn(asList(aServiceTemplate().withUuid(TEMPLATE_ID).build()));
 
-    savedTag = tagService.save("PARENT_TAG_ID", getTagBuilder().build());
+    tagPostSave = tagService.save("PARENT_TAG_ID", getTagBuilder().build());
 
-    verify(wingsPersistence).saveAndGet(Tag.class, getTagBuilder().withRootTagId("ROOT_TAG_ID").build()); // Tag saved
-    verify(wingsPersistence).addToList(Tag.class, "PARENT_TAG_ID", "children", TAG_ID); // parent updated
-    verify(serviceTemplateService)
-        .addLeafTag(aServiceTemplate().withUuid(TEMPLATE_ID).build(), savedTag); // template updated
+    verify(wingsPersistence).saveAndGet(Tag.class, tagPreSave);
+    verify(wingsPersistence).addToList(Tag.class, "PARENT_TAG_ID", "children", TAG_ID);
+    verify(serviceTemplateService).addLeafTag(aServiceTemplate().withUuid(TEMPLATE_ID).build(), tagPostSave);
   }
 
   /**

@@ -1,3 +1,4 @@
+
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -65,6 +66,7 @@ public class TagServiceImpl implements TagService {
     } else {
       Tag parentTag = wingsPersistence.get(Tag.class, parentTagId);
       tag.setRootTagId(parentTag.isRootTag() ? parentTagId : parentTag.getRootTagId());
+      tag.setParentTagId(parentTagId);
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
       wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
       updateServiceTemplateWithCommandPredecessor(tag);
@@ -187,6 +189,18 @@ public class TagServiceImpl implements TagService {
     List<Tag> flattenTreeNodes = new ArrayList<>();
     collectTreeNodes(tag, flattenTreeNodes);
     return flattenTreeNodes;
+  }
+
+  @Override
+  public String getTagHierarchyPathString(Tag tag) {
+    String path = tag.getName().trim();
+    int maxDepth = 10;
+    while (maxDepth > 0 && !isNullOrEmpty(tag.getParentTagId())) {
+      maxDepth--;
+      tag = get(tag.getAppId(), tag.getEnvId(), tag.getParentTagId());
+      path = tag.getName().trim() + "/" + path;
+    }
+    return path;
   }
 
   private void collectTreeNodes(Tag tag, List<Tag> flattenTree) {

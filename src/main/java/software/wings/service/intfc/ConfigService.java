@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -82,9 +83,10 @@ public interface ConfigService {
   /**
    * Gets config file by template.
    *
-   * @param appId      the app id
-   * @param templateId the template id
+   * @param appId           the app id
+   * @param envId           the env id
+   * @param serviceTemplate the service template
    * @return the config file by template
    */
-  List<ConfigFile> getConfigFileByTemplate(String appId, String envId, String templateId);
+  List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate);
 }

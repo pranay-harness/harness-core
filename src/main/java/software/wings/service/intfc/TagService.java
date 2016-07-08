@@ -125,4 +125,12 @@ public interface TagService {
    * @return the list
    */
   List<Tag> flattenTagTree(String appId, String envId, String tagId);
+
+  /**
+   * Gets tag hierarchy path string.
+   *
+   * @param tag the tag
+   * @return the tag hierarchy path string
+   */
+  String getTagHierarchyPathString(Tag tag);
 }
