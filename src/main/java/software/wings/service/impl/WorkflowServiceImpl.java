@@ -4,6 +4,7 @@
 
 package software.wings.service.impl;
 
+import static com.google.common.base.Ascii.toUpperCase;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -561,7 +562,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       node.setId(instance.getUuid());
       node.setName(instance.getStateName());
       node.setType(instance.getStateType());
-      node.setStatus(String.valueOf(instance.getStatus()).toLowerCase());
+      node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
       if (instance.getStateExecutionData() != null) {
         node.setExecutionSummary(instance.getStateExecutionData().getExecutionSummary());
         node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
@@ -633,12 +634,13 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (elements != null) {
         for (String element : elements) {
           Node elementNode =
-              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("element").build();
+              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
           group.getElements().add(elementNode);
+          elementNode.setStatus(ExecutionStatus.QUEUED.name());
           logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
           Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
           if (elementRepeatNode != null) {
-            elementNode.setStatus(elementRepeatNode.getStatus());
+            elementNode.setStatus(toUpperCase(elementRepeatNode.getStatus()));
             elementNode.setNext(elementRepeatNode);
             logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
             generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode);

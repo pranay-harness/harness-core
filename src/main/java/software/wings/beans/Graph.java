@@ -327,7 +327,7 @@ public class Graph {
     @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
 
     public Group() {
-      setType("group");
+      setType("GROUP");
     }
 
     public List<Node> getElements() {
