@@ -204,6 +204,7 @@ public class StateMachineExecutor {
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+    injector.injectMembers(context);
     try {
       ExecutionResponse executionResponse = currentState.handleAsyncResponse(context, response);
       handleExecuteResponse(context, executionResponse);
@@ -220,6 +221,7 @@ public class StateMachineExecutor {
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+    injector.injectMembers(context);
     try {
       currentState.handleEvent(context, workflowExecutionEvent);
     } catch (Exception ex) {
