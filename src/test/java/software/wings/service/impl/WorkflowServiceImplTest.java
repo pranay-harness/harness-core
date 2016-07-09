@@ -48,6 +48,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -58,6 +59,7 @@ import software.wings.service.StaticMap;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionEventType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -1294,6 +1296,114 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     PageResponse<Orchestration> res = workflowService.listOrchestration(pageRequest);
 
     assertThat(res).isNotNull().hasSize(2);
+  }
+
+  /**
+   * Should trigger complex workflow.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldPauseAndResumeState() throws InterruptedException {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+
+    Graph graph = aGraph()
+                      .addNodes(aNode().withId("n0").withName("ORIGIN").build())
+                      .addNodes(aNode()
+                                    .withId("wait1")
+                                    .withName("wait1")
+                                    .withType(StateType.WAIT.name())
+                                    .addProperty("duration", 1)
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("pause1")
+                                    .withName("pause1")
+                                    .withType(StateType.PAUSE.name())
+                                    .addProperty("toAddress", "to1")
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("wait2")
+                                    .withName("wait2")
+                                    .withType(StateType.WAIT.name())
+                                    .addProperty("duration", 1)
+                                    .build())
+                      .addLinks(aLink().withId("l0").withFrom("n0").withTo("wait1").withType("success").build())
+                      .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
+                      .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
+                      .build();
+
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(app.getUuid())
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withEnvironment(env)
+                                      .withGraph(graph)
+                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .build();
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
+                                          orchestration.getUuid(), executionArgs, callback);
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+
+    Thread.sleep(5000);
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.RUNNING);
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes()).hasSize(2);
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status")
+        .containsExactly("wait1", "WAIT", "SUCCESS");
+    assertThat(graph.getNodes().get(1))
+        .extracting("name", "type", "status")
+        .containsExactly("pause1", "PAUSE", "PAUSED");
+
+    WorkflowExecutionEvent workflowExecutionEvent = WorkflowExecutionEvent.Builder.aWorkflowExecutionEvent()
+                                                        .withAppId(app.getUuid())
+                                                        .withEnvId(env.getUuid())
+                                                        .withWorkflowExecutionId(executionId)
+                                                        .withStateExecutionInstanceId(graph.getNodes().get(1).getId())
+                                                        .withExecutionEventType(ExecutionEventType.RESUME)
+                                                        .build();
+    workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent);
+    workflowExecutionSignals.get(signalId).await();
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes()).hasSize(3);
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status")
+        .containsExactly("wait1", "WAIT", "SUCCESS");
+    assertThat(graph.getNodes().get(1))
+        .extracting("name", "type", "status")
+        .containsExactly("pause1", "PAUSE", "SUCCESS");
+    assertThat(graph.getNodes().get(2))
+        .extracting("name", "type", "status")
+        .containsExactly("wait2", "WAIT", "SUCCESS");
   }
 
   /**

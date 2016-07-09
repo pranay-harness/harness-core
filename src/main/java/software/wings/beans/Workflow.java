@@ -23,6 +23,8 @@ public class Workflow extends Base {
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services = new ArrayList<>();
 
+  private ErrorStrategy errorStrategy;
+
   @Transient private Graph graph;
 
   /**

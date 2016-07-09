@@ -26,6 +26,9 @@ public enum ExecutionStatus {
             * Failed execution status.
             */
   FAILED,
+  /**
+   * Queued execution status.
+   */
   QUEUED,
   /**
    * Scheduled execution status.
@@ -33,7 +36,11 @@ public enum ExecutionStatus {
   SCHEDULED, /**
               * Error execution status.
               */
-  ERROR;
+  ERROR,
+  /**
+   * Paused execution status.
+   */
+  PAUSED;
 
   /**
    * The type Execution status data.

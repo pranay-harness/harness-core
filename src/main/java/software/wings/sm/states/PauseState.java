@@ -1,22 +1,14 @@
 package software.wings.sm.states;
 
-import static software.wings.api.PauseStateExecutionData.Builder.aPauseStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
-import software.wings.api.PauseStateExecutionData;
-import software.wings.beans.WorkflowExecutionEvent;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionEventType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.utils.MapperUtils;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import javax.inject.Inject;
@@ -52,28 +44,10 @@ public class PauseState extends EmailState {
     EmailStateExecutionData emailStateExecutionData =
         (EmailStateExecutionData) emailExecutionResponse.getStateExecutionData();
 
-    String correlationId = UUIDGenerator.getUuid();
-
-    PauseStateExecutionData pauseStateExecutionData = aPauseStateExecutionData().build();
-    MapperUtils.mapObject(emailStateExecutionData, pauseStateExecutionData);
-    pauseStateExecutionData.setResumeId(correlationId);
-
     return anExecutionResponse()
-        .withAsync(true)
-        .addCorrelationIds(correlationId)
-        .withStateExecutionData(pauseStateExecutionData)
+        .withStateExecutionData(emailStateExecutionData)
+        .withExecutionStatus(ExecutionStatus.PAUSED)
         .build();
-  }
-
-  @Override
-  public void handleEvent(ExecutionContextImpl context, WorkflowExecutionEvent workflowExecutionEvent) {
-    if (workflowExecutionEvent.getExecutionEventType() == ExecutionEventType.RESUME) {
-      PauseStateExecutionData pauseStateExecutionData = (PauseStateExecutionData) context.getStateExecutionData();
-      waitNotifyEngine.notify(pauseStateExecutionData.getResumeId(),
-          anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
-      return;
-    }
-    super.handleEvent(context, workflowExecutionEvent);
   }
 
   @Attributes(title = "Body")
