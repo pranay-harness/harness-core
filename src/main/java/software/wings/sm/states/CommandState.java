@@ -252,6 +252,14 @@ public class CommandState extends State {
         .build();
   }
 
+  /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+
   private void updateWorflowExecutionStats(ExecutionStatus executionStatus, ExecutionContext context) {
     Optional<ContextElement> simpleWorkflowParamOpt =
         context.getContextElementList(ContextElementType.PARAM)

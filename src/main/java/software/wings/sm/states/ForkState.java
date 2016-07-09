@@ -79,6 +79,14 @@ public class ForkState extends State {
     return executionResponse;
   }
 
+  /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+
   /*
    * (non-Javadoc)
    *

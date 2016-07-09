@@ -1,9 +1,6 @@
 package software.wings.sm;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.beans.ErrorCodes;
-import software.wings.beans.WorkflowExecutionEvent;
-import software.wings.exception.WingsException;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
@@ -102,16 +99,11 @@ public abstract class State {
   public abstract ExecutionResponse execute(ExecutionContext context);
 
   /**
-   * Handle event.
+   * Handle abort event.
    *
    * @param context the context
-   * @param workflowExecutionEvent   the workflowExecutionEvent
    */
-  public void handleEvent(ExecutionContext context, WorkflowExecutionEvent workflowExecutionEvent) {
-    throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
-        workflowExecutionEvent.getExecutionEventType() + " execution event not supported by " + getStateType()
-            + " state");
-  }
+  public abstract void handleAbortEvent(ExecutionContext context);
 
   /* (non-Javadoc)
    * @see java.lang.Object#toString()

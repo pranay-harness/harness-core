@@ -111,6 +111,14 @@ public class RepeatState extends State {
   }
 
   /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+
+  /**
    * {@inheritDoc}
    */
   @Override

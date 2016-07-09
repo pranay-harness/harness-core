@@ -88,6 +88,14 @@ public class EmailState extends State {
   }
 
   /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+
+  /**
    * Gets to address.
    *
    * @return the to address

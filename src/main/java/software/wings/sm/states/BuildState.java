@@ -31,4 +31,12 @@ public class BuildState extends State {
     Misc.quietSleep(2000);
     return new ExecutionResponse();
   }
+
+  /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
 }

@@ -18,6 +18,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -63,6 +64,14 @@ public class WaitState extends State {
         .withStateExecutionData(waitStateExecutionData)
         .build();
   }
+
+  /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
 
   /**
    * Gets duration.

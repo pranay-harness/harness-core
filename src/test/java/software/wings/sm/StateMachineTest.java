@@ -650,6 +650,14 @@ public class StateMachineTest extends WingsBaseTest {
       return response;
     }
 
+    /**
+     * Handle abort event.
+     *
+     * @param context the context
+     */
+    @Override
+    public void handleAbortEvent(ExecutionContext context) {}
+
     @Override
     public int hashCode() {
       return Objects.hash(shouldFail);
@@ -739,6 +747,14 @@ public class StateMachineTest extends WingsBaseTest {
       ThreadPool.execute(notifier);
       return response;
     }
+
+    /**
+     * Handle abort event.
+     *
+     * @param context the context
+     */
+    @Override
+    public void handleAbortEvent(ExecutionContext context) {}
 
     /* (non-Javadoc)
      * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)

@@ -35,6 +35,14 @@ public class ApprovalState extends State {
   }
 
   /**
+   * Handle abort event.
+   *
+   * @param context the context
+   */
+  @Override
+  public void handleAbortEvent(ExecutionContext context) {}
+
+  /**
    * Gets group name.
    *
    * @return the group name
