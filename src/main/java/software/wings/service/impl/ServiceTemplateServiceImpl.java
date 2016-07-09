@@ -78,7 +78,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
             template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
       }
       template.setConfigFiles(
-          configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template.getUuid()));
+          configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template));
     });
     return pageResponse;
   }

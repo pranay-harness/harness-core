@@ -208,7 +208,7 @@ public class ActivityResourceTest {
                             .get();
     assertThat(response.getStatus()).isEqualTo(200);
     assertThat(response.getHeaderString("Content-Disposition")).isEqualTo("attachment; filename=FILE_NAME");
-    assertThat(response.getHeaderString("Content-type")).isEqualTo("text/plain");
+    assertThat(response.getHeaderString("Content-type")).isEqualTo("application/x-unknown");
     verify(LOG_SERVICE).exportLogs(APP_ID, ACTIVITY_ID);
   }
 

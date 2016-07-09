@@ -29,6 +29,7 @@ public class Tag extends Base {
   private String autoTaggingRule;
   private boolean rootTag = false;
   private String rootTagId;
+  private String parentTagId;
   @NotEmpty private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
@@ -177,18 +178,31 @@ public class Tag extends Base {
     this.rootTagId = rootTagId;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
+  /**
+   * Gets parent tag.
+   *
+   * @return the parent tag
    */
+  public String getParentTagId() {
+    return parentTagId;
+  }
+
+  /**
+   * Sets parent tag.
+   *
+   * @param parentTagId the parent tag
+   */
+  public void setParentTagId(String parentTagId) {
+    this.parentTagId = parentTagId;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, description, autoTaggingRule, rootTag, rootTagId, envId, children, configFiles);
+        + Objects.hash(
+              name, description, autoTaggingRule, rootTag, rootTagId, parentTagId, envId, children, configFiles);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
-   */
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -203,8 +217,9 @@ public class Tag extends Base {
     final Tag other = (Tag) obj;
     return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
         && Objects.equals(this.autoTaggingRule, other.autoTaggingRule) && Objects.equals(this.rootTag, other.rootTag)
-        && Objects.equals(this.rootTagId, other.rootTagId) && Objects.equals(this.envId, other.envId)
-        && Objects.equals(this.children, other.children) && Objects.equals(this.configFiles, other.configFiles);
+        && Objects.equals(this.rootTagId, other.rootTagId) && Objects.equals(this.parentTagId, other.parentTagId)
+        && Objects.equals(this.envId, other.envId) && Objects.equals(this.children, other.children)
+        && Objects.equals(this.configFiles, other.configFiles);
   }
 
   @Override
@@ -215,6 +230,7 @@ public class Tag extends Base {
         .add("autoTaggingRule", autoTaggingRule)
         .add("rootTag", rootTag)
         .add("rootTagId", rootTagId)
+        .add("parentTagId", parentTagId)
         .add("envId", envId)
         .add("children", children)
         .add("configFiles", configFiles)
@@ -222,7 +238,7 @@ public class Tag extends Base {
   }
 
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
     private String name;
@@ -230,8 +246,9 @@ public class Tag extends Base {
     private String autoTaggingRule;
     private boolean rootTag = false;
     private String rootTagId;
+    private String parentTagId;
     private String envId;
-    private List<Tag> children;
+    private List<Tag> children = new ArrayList<>();
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
     private String appId;
@@ -244,19 +261,19 @@ public class Tag extends Base {
     private Builder() {}
 
     /**
-     * A tag.
+     * A tag builder.
      *
-     * @return the tag builder
+     * @return the builder
      */
     public static Builder aTag() {
       return new Builder();
     }
 
     /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withName(String name) {
       this.name = name;
@@ -264,10 +281,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With description.
+     * With description builder.
      *
      * @param description the description
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withDescription(String description) {
       this.description = description;
@@ -275,10 +292,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With auto tagging rule.
+     * With auto tagging rule builder.
      *
      * @param autoTaggingRule the auto tagging rule
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withAutoTaggingRule(String autoTaggingRule) {
       this.autoTaggingRule = autoTaggingRule;
@@ -286,10 +303,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With root tag.
+     * With root tag builder.
      *
      * @param rootTag the root tag
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withRootTag(boolean rootTag) {
       this.rootTag = rootTag;
@@ -297,10 +314,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With root tag id.
+     * With root tag id builder.
      *
      * @param rootTagId the root tag id
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withRootTagId(String rootTagId) {
       this.rootTagId = rootTagId;
@@ -308,10 +325,21 @@ public class Tag extends Base {
     }
 
     /**
-     * With env id.
+     * With parent tag id builder.
+     *
+     * @param parentTagId the parent tag id
+     * @return the builder
+     */
+    public Builder withParentTagId(String parentTagId) {
+      this.parentTagId = parentTagId;
+      return this;
+    }
+
+    /**
+     * With env id builder.
      *
      * @param envId the env id
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withEnvId(String envId) {
       this.envId = envId;
@@ -319,10 +347,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With children.
+     * With children builder.
      *
      * @param children the children
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withChildren(List<Tag> children) {
       this.children = children;
@@ -330,10 +358,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With config files.
+     * With config files builder.
      *
      * @param configFiles the config files
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
@@ -341,10 +369,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
@@ -352,10 +380,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withAppId(String appId) {
       this.appId = appId;
@@ -363,10 +391,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
@@ -374,10 +402,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
@@ -385,10 +413,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
@@ -396,10 +424,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
@@ -407,10 +435,10 @@ public class Tag extends Base {
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
-     * @return the tag builder
+     * @return the builder
      */
     public Builder withActive(boolean active) {
       this.active = active;
@@ -418,9 +446,9 @@ public class Tag extends Base {
     }
 
     /**
-     * But.
+     * But builder.
      *
-     * @return the tag builder
+     * @return the builder
      */
     public Builder but() {
       return aTag()
@@ -429,6 +457,7 @@ public class Tag extends Base {
           .withAutoTaggingRule(autoTaggingRule)
           .withRootTag(rootTag)
           .withRootTagId(rootTagId)
+          .withParentTagId(parentTagId)
           .withEnvId(envId)
           .withChildren(children)
           .withConfigFiles(configFiles)
@@ -442,7 +471,7 @@ public class Tag extends Base {
     }
 
     /**
-     * Builds the.
+     * Build tag.
      *
      * @return the tag
      */
@@ -453,6 +482,7 @@ public class Tag extends Base {
       tag.setAutoTaggingRule(autoTaggingRule);
       tag.setRootTag(rootTag);
       tag.setRootTagId(rootTagId);
+      tag.setParentTagId(parentTagId);
       tag.setEnvId(envId);
       tag.setChildren(children);
       tag.setConfigFiles(configFiles);
