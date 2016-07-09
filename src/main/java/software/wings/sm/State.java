@@ -108,8 +108,9 @@ public abstract class State {
    * @param workflowExecutionEvent   the workflowExecutionEvent
    */
   public void handleEvent(ExecutionContextImpl context, WorkflowExecutionEvent workflowExecutionEvent) {
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Execution even not supported by " + getStateType() + " state");
+    throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+        workflowExecutionEvent.getExecutionEventType() + " execution event not supported by " + getStateType()
+            + " state");
   }
 
   /* (non-Javadoc)

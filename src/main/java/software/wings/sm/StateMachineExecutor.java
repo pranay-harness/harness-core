@@ -202,6 +202,7 @@ public class StateMachineExecutor {
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
+    injector.injectMembers(currentState);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     try {
       ExecutionResponse executionResponse = currentState.handleAsyncResponse(context, response);
@@ -217,6 +218,7 @@ public class StateMachineExecutor {
     StateMachine sm = wingsPersistence.get(
         StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
+    injector.injectMembers(currentState);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     try {
       currentState.handleEvent(context, workflowExecutionEvent);

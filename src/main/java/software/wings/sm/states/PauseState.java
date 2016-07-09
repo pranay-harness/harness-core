@@ -8,10 +8,8 @@ import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.api.PauseStateExecutionData;
-import software.wings.beans.ErrorCodes;
 import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.common.UUIDGenerator;
-import software.wings.exception.WingsException;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionEventType;
@@ -75,11 +73,10 @@ public class PauseState extends EmailState {
           anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
       return;
     }
-    throw new WingsException(
-        ErrorCodes.INVALID_REQUEST, "message", "Execution even not supported by " + getStateType() + " state");
+    super.handleEvent(context, workflowExecutionEvent);
   }
 
-  @Attributes(title = "Body", required = true)
+  @Attributes(title = "Body")
   @Override
   public String getBody() {
     return super.getBody();
