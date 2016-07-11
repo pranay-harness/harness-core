@@ -150,18 +150,38 @@ public abstract class CommandUnit {
 
       private String errorMessage;
 
+      /**
+       * Gets result.
+       *
+       * @return the result
+       */
       public ExecutionResult getResult() {
         return result;
       }
 
+      /**
+       * Sets result.
+       *
+       * @param result the result
+       */
       public void setResult(ExecutionResult result) {
         this.result = result;
       }
 
+      /**
+       * Gets error message.
+       *
+       * @return the error message
+       */
       public String getErrorMessage() {
         return errorMessage;
       }
 
+      /**
+       * Sets error message.
+       *
+       * @param errorMessage the error message
+       */
       public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
       }
@@ -188,30 +208,60 @@ public abstract class CommandUnit {
         return Objects.equals(this.result, other.result) && Objects.equals(this.errorMessage, other.errorMessage);
       }
 
+      /**
+       * The type Builder.
+       */
       public static final class Builder {
         private ExecutionResult result;
         private String errorMessage;
 
         private Builder() {}
 
+        /**
+         * An execution result data builder.
+         *
+         * @return the builder
+         */
         public static Builder anExecutionResultData() {
           return new Builder();
         }
 
+        /**
+         * With result builder.
+         *
+         * @param result the result
+         * @return the builder
+         */
         public Builder withResult(ExecutionResult result) {
           this.result = result;
           return this;
         }
 
+        /**
+         * With error message builder.
+         *
+         * @param errorMessage the error message
+         * @return the builder
+         */
         public Builder withErrorMessage(String errorMessage) {
           this.errorMessage = errorMessage;
           return this;
         }
 
+        /**
+         * But builder.
+         *
+         * @return the builder
+         */
         public Builder but() {
           return anExecutionResultData().withResult(result).withErrorMessage(errorMessage);
         }
 
+        /**
+         * Build execution result data.
+         *
+         * @return the execution result data
+         */
         public ExecutionResultData build() {
           ExecutionResultData executionResultData = new ExecutionResultData();
           executionResultData.setResult(result);

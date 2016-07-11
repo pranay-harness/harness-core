@@ -74,6 +74,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return env;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     if (services == null) {
       services = Lists.newArrayList(wingsPersistence.saveAndGet(Service.class,

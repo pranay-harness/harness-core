@@ -448,6 +448,11 @@ public class StateMachineExecutor {
     }
   }
 
+  /**
+   * Handle event.
+   *
+   * @param workflowExecutionEvent the workflow execution event
+   */
   public void handleEvent(WorkflowExecutionEvent workflowExecutionEvent) {
     switch (workflowExecutionEvent.getExecutionEventType()) {
       case RESUME: {

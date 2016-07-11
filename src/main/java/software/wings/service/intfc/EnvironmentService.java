@@ -20,7 +20,8 @@ public interface EnvironmentService {
   /**
    * List.
    *
-   * @param request the request
+   * @param request     the request
+   * @param withSummary the with summary
    * @return the page response
    */
   PageResponse<Environment> list(PageRequest<Environment> request, boolean withSummary);
@@ -28,8 +29,9 @@ public interface EnvironmentService {
   /**
    * Gets the.
    *
-   * @param appId the app id
-   * @param envId the env id
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param withSummary the with summary
    * @return the environment
    */
   Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);

@@ -99,6 +99,12 @@ public class Orchestration extends Workflow {
       return this;
     }
 
+    /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;

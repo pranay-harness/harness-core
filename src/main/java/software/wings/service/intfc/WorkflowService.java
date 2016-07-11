@@ -196,6 +196,8 @@ public interface WorkflowService {
    * @param appId               the app id
    * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
+   * @param requestedGroupId    the requested group id
+   * @param nodeOps             the node ops
    * @return the execution details
    */
   WorkflowExecution getExecutionDetails(@NotNull String appId, @NotNull String workflowExecutionId,
@@ -212,14 +214,37 @@ public interface WorkflowService {
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
   /**
-   * @param workflowExecutionEvent
-   * @return
+   * Trigger workflow execution event workflow execution event.
+   *
+   * @param workflowExecutionEvent the workflow execution event
+   * @return workflow execution event
    */
   WorkflowExecutionEvent triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
 
+  /**
+   * Increment in progress count.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @param inc                 the inc
+   */
   void incrementInProgressCount(String appId, String workflowExecutionId, int inc);
 
+  /**
+   * Increment success.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @param inc                 the inc
+   */
   void incrementSuccess(String appId, String workflowExecutionId, int inc);
 
+  /**
+   * Increment failed.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @param inc                 the inc
+   */
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
 }

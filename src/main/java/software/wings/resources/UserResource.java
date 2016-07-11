@@ -134,6 +134,7 @@ public class UserResource {
    *
    * @param token the token
    * @return the rest response
+   * @throws URISyntaxException the uri syntax exception
    */
   @GET
   @Path("verify/{token}")

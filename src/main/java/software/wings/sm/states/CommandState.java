@@ -366,11 +366,21 @@ public class CommandState extends State {
     return settingValue;
   }
 
+  /**
+   * Gets executor service.
+   *
+   * @return the executor service
+   */
   @SchemaIgnore
   public ExecutorService getExecutorService() {
     return executorService;
   }
 
+  /**
+   * Sets executor service.
+   *
+   * @param executorService the executor service
+   */
   @SchemaIgnore
   public void setExecutorService(ExecutorService executorService) {
     this.executorService = executorService;

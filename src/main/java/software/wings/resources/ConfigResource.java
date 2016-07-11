@@ -72,6 +72,8 @@ public class ConfigResource {
    *
    * @param appId               the app id
    * @param entityId            the entity id
+   * @param entityType          the entity type
+   * @param envId               the env id
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
    * @param configFile          the config file
@@ -139,6 +141,13 @@ public class ConfigResource {
     return new RestResponse();
   }
 
+  /**
+   * Export logs response.
+   *
+   * @param appId    the app id
+   * @param configId the config id
+   * @return the response
+   */
   @GET
   @Path("{configId}/download")
   @Encoded
