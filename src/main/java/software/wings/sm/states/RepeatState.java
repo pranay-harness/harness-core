@@ -86,6 +86,7 @@ public class RepeatState extends State {
     RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) context.getStateExecutionData();
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
 
+    executionStrategy = repeatStateExecutionData.getExecutionStrategy();
     if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
         || repeatStateExecutionData.indexReachedMax()) {
       ExecutionResponse executionResponse = new ExecutionResponse();
@@ -163,7 +164,6 @@ public class RepeatState extends State {
     if (repeatTransitionStateName == null) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage("No repeatTransitionStateName defined");
       return executionResponse;
     }
 

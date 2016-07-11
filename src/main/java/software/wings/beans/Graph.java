@@ -81,9 +81,6 @@ public class Graph {
 
   private Optional<Node> originState = null;
 
-  public enum NodeOps { EXPAND, COLLAPSE }
-  ;
-
   /**
    * Gets graph name.
    *
@@ -92,6 +89,8 @@ public class Graph {
   public String getGraphName() {
     return graphName;
   }
+
+  ;
 
   /**
    * Sets graph name.
@@ -320,6 +319,19 @@ public class Graph {
   }
 
   /**
+   * The enum Node ops.
+   */
+  public enum NodeOps {
+    /**
+     * Expand node ops.
+     */
+    EXPAND, /**
+             * Collapse node ops.
+             */
+    COLLAPSE
+  }
+
+  /**
    * The Class Node.
    */
   public static class Group extends Node {
@@ -327,22 +339,45 @@ public class Graph {
 
     @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
 
+    /**
+     * Instantiates a new Group.
+     */
     public Group() {
       setType("GROUP");
     }
 
+    /**
+     * Gets elements.
+     *
+     * @return the elements
+     */
     public List<Node> getElements() {
       return elements;
     }
 
+    /**
+     * Sets elements.
+     *
+     * @param elements the elements
+     */
     public void setElements(List<Node> elements) {
       this.elements = elements;
     }
 
+    /**
+     * Gets execution strategy.
+     *
+     * @return the execution strategy
+     */
     public ExecutionStrategy getExecutionStrategy() {
       return executionStrategy;
     }
 
+    /**
+     * Sets execution strategy.
+     *
+     * @param executionStrategy the execution strategy
+     */
     public void setExecutionStrategy(ExecutionStrategy executionStrategy) {
       this.executionStrategy = executionStrategy;
     }
@@ -605,18 +640,38 @@ public class Graph {
       this.expanded = expanded;
     }
 
+    /**
+     * Gets next.
+     *
+     * @return the next
+     */
     public Node getNext() {
       return next;
     }
 
+    /**
+     * Sets next.
+     *
+     * @param next the next
+     */
     public void setNext(Node next) {
       this.next = next;
     }
 
+    /**
+     * Gets group.
+     *
+     * @return the group
+     */
     public Group getGroup() {
       return group;
     }
 
+    /**
+     * Sets group.
+     *
+     * @param group the group
+     */
     public void setGroup(Group group) {
       this.group = group;
     }

@@ -161,10 +161,20 @@ public class WorkflowExecution extends Base {
     this.envId = envId;
   }
 
+  /**
+   * Gets expanded group ids.
+   *
+   * @return the expanded group ids
+   */
   public List<String> getExpandedGroupIds() {
     return expandedGroupIds;
   }
 
+  /**
+   * Sets expanded group ids.
+   *
+   * @param expandedGroupIds the expanded group ids
+   */
   public void setExpandedGroupIds(List<String> expandedGroupIds) {
     this.expandedGroupIds = expandedGroupIds;
   }
@@ -187,10 +197,20 @@ public class WorkflowExecution extends Base {
     this.total = total;
   }
 
+  /**
+   * Gets breakdown.
+   *
+   * @return the breakdown
+   */
   public CountsByStatuses getBreakdown() {
     return breakdown;
   }
 
+  /**
+   * Sets breakdown.
+   *
+   * @param breakdown the breakdown
+   */
   public void setBreakdown(CountsByStatuses breakdown) {
     this.breakdown = breakdown;
   }

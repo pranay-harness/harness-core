@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -449,6 +448,11 @@ public class StateMachineExecutor {
     }
   }
 
+  /**
+   * Handle event.
+   *
+   * @param workflowExecutionEvent the workflow execution event
+   */
   public void handleEvent(WorkflowExecutionEvent workflowExecutionEvent) {
     switch (workflowExecutionEvent.getExecutionEventType()) {
       case RESUME: {

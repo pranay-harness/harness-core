@@ -48,6 +48,7 @@ import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
 import software.wings.waitnotify.Notifier;
+import software.wings.waitnotify.NotifyResponseCleanupHandler;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -182,6 +183,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Initializing scheduledJobs...");
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30000L, TimeUnit.MILLISECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
+        .scheduleWithFixedDelay(
+            injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30000L, TimeUnit.MILLISECONDS);
   }
 
   private void registerJerseyProviders(Environment environment) {

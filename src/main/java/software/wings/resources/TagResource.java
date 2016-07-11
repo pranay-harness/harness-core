@@ -47,6 +47,7 @@ public class TagResource {
    *
    * @param appId   the app id
    * @param envId   the env id
+   * @param flatten the flatten
    * @param request the request
    * @return the rest response
    */
@@ -143,6 +144,14 @@ public class TagResource {
     return new RestResponse();
   }
 
+  /**
+   * Tag tree rest response.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @param tagId the tag id
+   * @return the rest response
+   */
   @GET
   @Path("/flatten-tree")
   public RestResponse<List<Tag>> tagTree(

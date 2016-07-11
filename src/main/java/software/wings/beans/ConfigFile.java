@@ -42,25 +42,6 @@ public class ConfigFile extends BaseFile {
   private String overridePath;
 
   /**
-   * The enum Entity type.
-   */
-  public enum EntityType {
-    /**
-     * Service entity type.
-     */
-    SERVICE, /**
-              * Environment entity type.
-              */
-    ENVIRONMENT, /**
-                  * Tag entity type.
-                  */
-    TAG, /**
-          * Host entity type.
-          */
-    HOST
-  }
-
-  /**
    * Gets entity id.
    *
    * @return the entity id
@@ -201,6 +182,25 @@ public class ConfigFile extends BaseFile {
         .add("relativePath", relativePath)
         .add("overridePath", overridePath)
         .toString();
+  }
+
+  /**
+   * The enum Entity type.
+   */
+  public enum EntityType {
+    /**
+     * Service entity type.
+     */
+    SERVICE, /**
+              * Environment entity type.
+              */
+    ENVIRONMENT, /**
+                  * Tag entity type.
+                  */
+    TAG, /**
+          * Host entity type.
+          */
+    HOST
   }
 
   /**

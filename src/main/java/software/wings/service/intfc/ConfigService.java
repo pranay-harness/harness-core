@@ -91,5 +91,12 @@ public interface ConfigService {
    */
   List<ConfigFile> getConfigFileByTemplate(String appId, String envId, ServiceTemplate serviceTemplate);
 
+  /**
+   * Download file.
+   *
+   * @param appId    the app id
+   * @param configId the config id
+   * @return the file
+   */
   File download(String appId, String configId);
 }

@@ -28,6 +28,7 @@ public class Activity extends Base {
   @NotEmpty private String hostName;
   private String releaseId;
   private String releaseName;
+  private String artifactId;
   private String artifactName;
   private Status status = Status.RUNNING;
 
@@ -283,12 +284,30 @@ public class Activity extends Base {
     this.environmentType = environmentType;
   }
 
+  /**
+   * Gets artifact id.
+   *
+   * @return the artifact id
+   */
+  public String getArtifactId() {
+    return artifactId;
+  }
+
+  /**
+   * Sets artifact id.
+   *
+   * @param artifactId the artifact id
+   */
+  public void setArtifactId(String artifactId) {
+    this.artifactId = artifactId;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(environmentId, environmentName, environmentType, commandName, commandType, serviceId,
-              serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactName,
-              status);
+              serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactId,
+              artifactName, status);
   }
 
   @Override
@@ -311,8 +330,8 @@ public class Activity extends Base {
         && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
         && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
         && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.releaseId, other.releaseId)
-        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactName, other.artifactName)
-        && Objects.equals(this.status, other.status);
+        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactId, other.artifactId)
+        && Objects.equals(this.artifactName, other.artifactName) && Objects.equals(this.status, other.status);
   }
 
   @Override
@@ -330,6 +349,7 @@ public class Activity extends Base {
         .add("hostName", hostName)
         .add("releaseId", releaseId)
         .add("releaseName", releaseName)
+        .add("artifactId", artifactId)
         .add("artifactName", artifactName)
         .add("status", status)
         .toString();
@@ -370,6 +390,7 @@ public class Activity extends Base {
     private String hostName;
     private String releaseId;
     private String releaseName;
+    private String artifactId;
     private String artifactName;
     private Status status = Status.RUNNING;
     private String uuid;
@@ -524,6 +545,17 @@ public class Activity extends Base {
     }
 
     /**
+     * With artifact id builder.
+     *
+     * @param artifactId the artifact id
+     * @return the builder
+     */
+    public Builder withArtifactId(String artifactId) {
+      this.artifactId = artifactId;
+      return this;
+    }
+
+    /**
      * With artifact name builder.
      *
      * @param artifactName the artifact name
@@ -641,6 +673,7 @@ public class Activity extends Base {
           .withHostName(hostName)
           .withReleaseId(releaseId)
           .withReleaseName(releaseName)
+          .withArtifactId(artifactId)
           .withArtifactName(artifactName)
           .withStatus(status)
           .withUuid(uuid)
@@ -671,6 +704,7 @@ public class Activity extends Base {
       activity.setHostName(hostName);
       activity.setReleaseId(releaseId);
       activity.setReleaseName(releaseName);
+      activity.setArtifactId(artifactId);
       activity.setArtifactName(artifactName);
       activity.setStatus(status);
       activity.setUuid(uuid);

@@ -327,6 +327,9 @@ public class TagServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(existingHost));
   }
 
+  /**
+   * Should flatten tag tree.
+   */
   @Test
   public void shouldFlattenTagTree() {
     Tag childTag1 = getTagBuilder().withUuid("TAG_ID_1").withName("TAG_1").withRootTagId("ROOT_TAG_ID").build();

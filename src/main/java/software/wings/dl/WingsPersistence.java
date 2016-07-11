@@ -163,6 +163,7 @@ public interface WingsPersistence {
    * @param <T>              the generic type
    * @param updateQuery      the update query
    * @param updateOperations the update operations
+   * @return the update results
    */
   <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 

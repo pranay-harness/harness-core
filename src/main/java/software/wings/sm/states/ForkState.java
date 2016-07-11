@@ -133,22 +133,45 @@ public class ForkState extends State {
     this.forkStateNames.add(state.getName());
   }
 
+  /**
+   * The type Fork state execution data.
+   */
   public static class ForkStateExecutionData extends StateExecutionData {
     private List<String> elements;
     private List<String> forkStateNames;
 
+    /**
+     * Gets elements.
+     *
+     * @return the elements
+     */
     public List<String> getElements() {
       return elements;
     }
 
+    /**
+     * Sets elements.
+     *
+     * @param elements the elements
+     */
     public void setElements(List<String> elements) {
       this.elements = elements;
     }
 
+    /**
+     * Gets fork state names.
+     *
+     * @return the fork state names
+     */
     public List<String> getForkStateNames() {
       return forkStateNames;
     }
 
+    /**
+     * Sets fork state names.
+     *
+     * @param forkStateNames the fork state names
+     */
     public void setForkStateNames(List<String> forkStateNames) {
       this.forkStateNames = forkStateNames;
     }

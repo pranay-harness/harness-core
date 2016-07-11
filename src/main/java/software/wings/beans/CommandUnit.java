@@ -2,11 +2,16 @@ package software.wings.beans;
 
 // TODO: Auto-generated Javadoc
 
+import com.google.common.base.MoreObjects;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.waitnotify.NotifyResponseData;
+
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -135,6 +140,135 @@ public abstract class CommandUnit {
     FAILURE, /**
               * Running execution result.
               */
-    RUNNING
+    RUNNING;
+
+    /**
+     * Created by peeyushaggarwal on 7/8/16.
+     */
+    public static class ExecutionResultData implements NotifyResponseData {
+      private ExecutionResult result;
+
+      private String errorMessage;
+
+      /**
+       * Gets result.
+       *
+       * @return the result
+       */
+      public ExecutionResult getResult() {
+        return result;
+      }
+
+      /**
+       * Sets result.
+       *
+       * @param result the result
+       */
+      public void setResult(ExecutionResult result) {
+        this.result = result;
+      }
+
+      /**
+       * Gets error message.
+       *
+       * @return the error message
+       */
+      public String getErrorMessage() {
+        return errorMessage;
+      }
+
+      /**
+       * Sets error message.
+       *
+       * @param errorMessage the error message
+       */
+      public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
+      }
+
+      @Override
+      public String toString() {
+        return MoreObjects.toStringHelper(this).add("result", result).add("errorMessage", errorMessage).toString();
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(result, errorMessage);
+      }
+
+      @Override
+      public boolean equals(Object obj) {
+        if (this == obj) {
+          return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+          return false;
+        }
+        final ExecutionResultData other = (ExecutionResultData) obj;
+        return Objects.equals(this.result, other.result) && Objects.equals(this.errorMessage, other.errorMessage);
+      }
+
+      /**
+       * The type Builder.
+       */
+      public static final class Builder {
+        private ExecutionResult result;
+        private String errorMessage;
+
+        private Builder() {}
+
+        /**
+         * An execution result data builder.
+         *
+         * @return the builder
+         */
+        public static Builder anExecutionResultData() {
+          return new Builder();
+        }
+
+        /**
+         * With result builder.
+         *
+         * @param result the result
+         * @return the builder
+         */
+        public Builder withResult(ExecutionResult result) {
+          this.result = result;
+          return this;
+        }
+
+        /**
+         * With error message builder.
+         *
+         * @param errorMessage the error message
+         * @return the builder
+         */
+        public Builder withErrorMessage(String errorMessage) {
+          this.errorMessage = errorMessage;
+          return this;
+        }
+
+        /**
+         * But builder.
+         *
+         * @return the builder
+         */
+        public Builder but() {
+          return anExecutionResultData().withResult(result).withErrorMessage(errorMessage);
+        }
+
+        /**
+         * Build execution result data.
+         *
+         * @return the execution result data
+         */
+        public ExecutionResultData build() {
+          ExecutionResultData executionResultData = new ExecutionResultData();
+          executionResultData.setResult(result);
+          executionResultData.setErrorMessage(errorMessage);
+          return executionResultData;
+        }
+      }
+    }
   }
 }
