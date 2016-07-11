@@ -1,11 +1,11 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 /**
  * @author Rishi
- *
  */
 public enum ErrorStrategy {
   CONTINUE("Continue"),

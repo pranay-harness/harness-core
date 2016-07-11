@@ -22,7 +22,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 
 import java.io.IOException;
-
 import javax.inject.Inject;
 
 /**

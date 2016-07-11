@@ -50,13 +50,13 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class HostServiceImpl implements HostService {
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private InfraService infraService;
   @Inject private SettingsService settingsService;
   @Inject private TagService tagService;
-  private final Logger logger = LoggerFactory.getLogger(getClass());
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)

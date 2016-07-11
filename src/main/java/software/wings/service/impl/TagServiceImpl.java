@@ -1,4 +1,3 @@
-
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;

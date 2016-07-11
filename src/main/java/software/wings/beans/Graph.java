@@ -81,9 +81,6 @@ public class Graph {
 
   private Optional<Node> originState = null;
 
-  public enum NodeOps { EXPAND, COLLAPSE }
-  ;
-
   /**
    * Gets graph name.
    *
@@ -92,6 +89,8 @@ public class Graph {
   public String getGraphName() {
     return graphName;
   }
+
+  ;
 
   /**
    * Sets graph name.
@@ -318,6 +317,8 @@ public class Graph {
     return "Graph [graphName=" + graphName + ", nodes=" + nodes + ", links=" + links + ", originState=" + originState
         + "]";
   }
+
+  public enum NodeOps { EXPAND, COLLAPSE }
 
   /**
    * The Class Node.

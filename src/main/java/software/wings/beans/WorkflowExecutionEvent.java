@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -8,7 +9,6 @@ import software.wings.sm.ExecutionEventType;
 
 /**
  * @author Rishi
- *
  */
 @Entity(value = "workflowExecutionEvent", noClassnameStored = true)
 public class WorkflowExecutionEvent extends Base {
