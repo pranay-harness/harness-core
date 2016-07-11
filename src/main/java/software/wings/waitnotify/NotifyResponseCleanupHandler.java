@@ -6,19 +6,18 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,30 +41,24 @@ public final class NotifyResponseCleanupHandler implements Runnable {
   @Override
   public void run() {
     try {
-      PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-      reqNotifyRes.addFilter("status", ExecutionStatus.SUCCESS, Operator.EQ);
-      reqNotifyRes.setLimit(PageRequest.UNLIMITED);
-      reqNotifyRes.addFieldsIncluded(ID_KEY);
-      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
+      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class,
+          aPageRequest()
+              .addFilter(aSearchFilter().withField("status", Operator.EQ, ExecutionStatus.SUCCESS).build())
+              .addFieldsIncluded(ID_KEY)
+              .build());
       if (isEmpty(notifyPageResponses)) {
         logger.debug("There are no NotifyResponse entries to cleanup");
         return;
       }
 
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-
-      // Get wait queue entries
-      SearchFilter filter = new SearchFilter();
-      filter.setFieldName("correlationId");
-      ArrayList<Object> fieldValues = new ArrayList<>();
-      fieldValues.addAll(correlationIds);
-      filter.setFieldValues(fieldValues);
-      filter.setOp(Operator.IN);
-      PageRequest<WaitQueue> req = new PageRequest<>();
-      req.addFilter(filter);
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
+          aPageRequest()
+              .addFilter(aSearchFilter().withField("correlationId", Operator.IN, correlationIds.toArray()).build())
+              .build());
 
       Map<String, List<WaitQueue>> waitQueueMap = new HashMap<>();
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+
       if (isEmpty(waitQueuesResponse)) {
         waitQueueMap = waitQueuesResponse.stream().collect(toMap(WaitQueue::getCorrelationId,
             waitQueue

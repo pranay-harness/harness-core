@@ -368,7 +368,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
           PageRequest.Builder.aPageRequest()
               .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
               .addFilter(SearchFilter.Builder.aSearchFilter().withField("name", Operator.EQ, serviceName).build())
-              .withFieldsIncluded(Lists.newArrayList("uuid"))
+              .addFieldsIncluded(ID_KEY)
               .build();
 
       PageResponse<Service> services = serviceResourceService.list(svcPageRequest);

@@ -938,7 +938,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public void incrementFailed(String appId, String workflowExecutionId, int inc) {
+  public void incrementFailed(String appId, String workflowExecutionId, Integer inc) {
     UpdateOperations<WorkflowExecution> ops = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
     ops.inc("breakdown.failed", inc);
     ops.inc("breakdown.inprogress", -1 * inc);

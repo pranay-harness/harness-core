@@ -221,5 +221,5 @@ public interface WorkflowService {
 
   void incrementSuccess(String appId, String workflowExecutionId, int inc);
 
-  void incrementFailed(String appId, String workflowExecutionId, int inc);
+  void incrementFailed(String appId, String workflowExecutionId, Integer inc);
 }
