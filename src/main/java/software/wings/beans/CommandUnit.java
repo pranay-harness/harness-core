@@ -2,14 +2,26 @@ package software.wings.beans;
 
 // TODO: Auto-generated Javadoc
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
 
 /**
  * Created by anubhaw on 5/25/16.
  */
+@JsonTypeInfo(use = Id.NAME, property = "commandUnitType")
+@JsonSubTypes({
+  @Type(value = Command.class, name = "COMMAND")
+  , @Type(value = ExecCommandUnit.class, name = "EXEC"),
+      @Type(value = CopyArtifactCommandUnit.class, name = "COPY_ARTIFACT"),
+      @Type(value = CopyAppContainerCommandUnit.class, name = "COPY_CONTAINER")
+})
 public abstract class CommandUnit {
   private String name;
-  private CommandUnitType commandUnitType;
+  @JsonTypeId private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
 
