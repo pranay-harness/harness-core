@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -165,14 +166,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   /**
    * {@inheritDoc}
+   * @return
    */
   @Override
-  public <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+  public <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
     updateOperations.set("lastUpdatedAt", currentTimeMillis());
     if (UserThreadLocal.get() != null) {
       updateOperations.set("lastUpdatedBy", UserThreadLocal.get());
     }
-    primaryDatastore.update(updateQuery, updateOperations);
+    return primaryDatastore.update(updateQuery, updateOperations);
   }
 
   /**

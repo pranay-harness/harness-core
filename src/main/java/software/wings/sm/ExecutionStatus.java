@@ -13,18 +13,30 @@ public enum ExecutionStatus {
   /**
    * New execution status.
    */
-  NEW, /**
-        * Running execution status.
-        */
-  RUNNING, /**
-            * Success execution status.
-            */
-  SUCCESS, /**
-            * Aborted execution status.
-            */
-  ABORTED, /**
-            * Failed execution status.
-            */
+  NEW,
+  /**
+   * Starting execution status.
+   */
+  STARTING,
+  /**
+   * Running execution status.
+   */
+  RUNNING,
+  /**
+   * Success execution status.
+   */
+  SUCCESS,
+  /**
+   * Aborting execution status.
+   */
+  ABORTING,
+  /**
+   * Aborted execution status.
+   */
+  ABORTED,
+  /**
+   * Failed execution status.
+   */
   FAILED,
   /**
    * Queued execution status.
@@ -33,9 +45,10 @@ public enum ExecutionStatus {
   /**
    * Scheduled execution status.
    */
-  SCHEDULED, /**
-              * Error execution status.
-              */
+  SCHEDULED,
+  /**
+   * Error execution status.
+   */
   ERROR,
   /**
    * Paused execution status.

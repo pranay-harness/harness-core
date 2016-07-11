@@ -164,7 +164,7 @@ public interface WingsPersistence {
    * @param updateQuery      the update query
    * @param updateOperations the update operations
    */
-  <T> void update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
+  <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 
   /**
    * Update fields.
