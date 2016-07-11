@@ -4,7 +4,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -21,7 +20,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 })
 public abstract class CommandUnit {
   private String name;
-  @JsonTypeId private CommandUnitType commandUnitType;
+  private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
 

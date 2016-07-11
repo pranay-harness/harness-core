@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
