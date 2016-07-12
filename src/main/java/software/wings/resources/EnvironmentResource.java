@@ -79,6 +79,9 @@ public class EnvironmentResource {
   @Path("{envId}")
   public RestResponse<Environment> get(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, @QueryParam("status") SetupStatus status) {
+    if (status == null) {
+      status = SetupStatus.COMPLETE;
+    }
     return new RestResponse<>(envService.get(appId, envId, status));
   }
 
