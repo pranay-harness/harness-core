@@ -55,14 +55,14 @@ public class AppResource {
    * List.
    *
    * @param pageRequest the page request
-   * @param summary     the summary
+   * @param overview     the summary
    * @return the rest response
    */
   @GET
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
-      @QueryParam("summary") @DefaultValue("false") boolean summary,
+      @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {
-    return new RestResponse<>(appService.list(pageRequest, summary, numberOfExecutions));
+    return new RestResponse<>(appService.list(pageRequest, overview, numberOfExecutions));
   }
 
   /**

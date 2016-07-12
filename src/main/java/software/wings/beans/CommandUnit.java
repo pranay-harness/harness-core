@@ -24,7 +24,7 @@ import java.util.Objects;
       @Type(value = CopyAppContainerCommandUnit.class, name = "COPY_CONTAINER")
 })
 public abstract class CommandUnit {
-  private String name;
+  @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   private boolean artifactNeeded;
@@ -95,6 +95,7 @@ public abstract class CommandUnit {
    *
    * @return the name
    */
+  @SchemaIgnore
   public String getName() {
     return name;
   }
@@ -104,6 +105,7 @@ public abstract class CommandUnit {
    *
    * @param name the name
    */
+  @SchemaIgnore
   public void setName(String name) {
     this.name = name;
   }
@@ -123,6 +125,7 @@ public abstract class CommandUnit {
    *
    * @param artifactNeeded the artifact needed
    */
+  @SchemaIgnore
   public void setArtifactNeeded(boolean artifactNeeded) {
     this.artifactNeeded = artifactNeeded;
   }

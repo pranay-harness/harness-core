@@ -68,9 +68,9 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req, boolean summary, int numberOfExecutions) {
+  public PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
-    if (summary) {
+    if (overview) {
       response.getResponse().parallelStream().forEach(application -> {
         application.setLast5Executions(
             workflowService

@@ -28,10 +28,10 @@ public interface AppService {
    * List.
    *
    * @param req     the req
-   * @param summary the summary
+   * @param overview the summary
    * @return the page response
    */
-  PageResponse<Application> list(PageRequest<Application> req, boolean summary, int numberOfExecutions);
+  PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions);
 
   /**
    * Find by uuid.
