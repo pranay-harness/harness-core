@@ -155,16 +155,11 @@ public enum ErrorCodes {
    */
   DUPLICATE_ARTIFACTSOURCE_NAMES("DUPLICATE_ARTIFACTSOURCE_NAMES"),
 
-  /**
-   * Duplicate host names error codes.
-   */
-  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"), /**
-                                                 * State not for resume error codes.
-                                                 */
-  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"), /**
-                                                 * State not for abort error codes.
-                                                 */
-  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT");
+  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"),
+  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"),
+  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"),
+  STATE_ABORT_FAILED("STATE_ABORT_FAILED"),
+  STATE_PAUSE_FAILED("STATE_PAUSE_FAILED");
 
   /**
    * The constant ARGS_NAME.

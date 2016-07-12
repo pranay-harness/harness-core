@@ -3,6 +3,7 @@ package software.wings.sm;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
@@ -22,11 +23,11 @@ import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -177,18 +178,31 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine stateMachine = context.getStateMachine();
 
-    updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING, ExecutionStatus.NEW);
+    boolean updated =
+        updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING, Lists.newArrayList(ExecutionStatus.NEW));
+    if (!updated) {
+      WingsException ex =
+          new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
+      logger.error(ex.getMessage(), ex);
+      throw ex;
+    }
 
     State currentState = null;
+    ExecutionResponse executionResponse = null;
+    Exception ex = null;
     try {
       currentState = stateMachine.getState(stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
-      ExecutionResponse executionResponse = currentState.execute(context);
+      executionResponse = currentState.execute(context);
+    } catch (Exception exception) {
+      logger.warn("Error in " + stateExecutionInstance.getStateName() + " execution", exception);
+      ex = exception;
+    }
+
+    if (ex == null) {
       handleExecuteResponse(context, executionResponse);
-    } catch (Exception exeception) {
-      stateExecutionInstance.setStatus(ExecutionStatus.FAILED);
-      stateExecutionInstance.setEndTs(System.currentTimeMillis());
-      handleExecuteResponseException(context, exeception);
+    } else {
+      handleExecuteResponseException(context, ex);
     }
   }
 
@@ -212,13 +226,19 @@ public class StateMachineExecutor {
             executionResponse.getCorrelationIds().toArray(new String[executionResponse.getCorrelationIds().size()]));
       }
 
-      updateStateExecutionData(
+      boolean updated = updateStateExecutionData(
           stateExecutionInstance, executionResponse.getStateExecutionData(), ExecutionStatus.RUNNING, null);
+      if (!updated) {
+        throw new WingsException("updateStateExecutionData failed");
+      }
       handleSpawningStateExecutionInstances(sm, stateExecutionInstance, executionResponse);
 
     } else {
-      updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(), status,
-          executionResponse.getErrorMessage());
+      boolean updated = updateStateExecutionData(stateExecutionInstance, executionResponse.getStateExecutionData(),
+          status, executionResponse.getErrorMessage());
+      if (!updated) {
+        throw new WingsException("updateStateExecutionData failed");
+      }
       if (status == ExecutionStatus.SUCCESS) {
         return successTransition(context);
       } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR) {
@@ -335,32 +355,34 @@ public class StateMachineExecutor {
     cloned.setContextElementName(null);
     cloned.setContextElementType(null);
     cloned.setContextTransition(false);
+    cloned.setStatus(ExecutionStatus.NEW);
     return cloned;
   }
 
   private boolean updateStartStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      ExecutionStatus... existingExecutionStatus) {
+      List<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setStartTs(System.currentTimeMillis());
     return updateStatus(
         stateExecutionInstance, "startTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus);
   }
 
   private boolean updateEndStatus(StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
-      ExecutionStatus... existingExecutionStatus) {
+      List<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setEndTs(System.currentTimeMillis());
     return updateStatus(
         stateExecutionInstance, "endTs", stateExecutionInstance.getStartTs(), status, existingExecutionStatus);
   }
 
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue,
-      ExecutionStatus status, ExecutionStatus... existingExecutionStatus) {
-    List<ExecutionStatus> existingExecutionStatusList = Arrays.asList(existingExecutionStatus);
+      ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setStatus(status);
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
     ops.set("status", stateExecutionInstance.getStatus());
-    ops.set(tsField, tsValue);
+    if (tsField != null) {
+      ops.set(tsField, tsValue);
+    }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
                                               .field("appId")
@@ -368,19 +390,19 @@ public class StateMachineExecutor {
                                               .field(ID_KEY)
                                               .equal(stateExecutionInstance.getUuid())
                                               .field("status")
-                                              .in(existingExecutionStatusList);
+                                              .in(existingExecutionStatus);
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       logger.warn(
           "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, tsField: {}, tsValue: {}, status: {}, existingExecutionStatus: {}, ",
-          stateExecutionInstance.getUuid(), tsField, tsValue, Arrays.toString(existingExecutionStatus));
+          stateExecutionInstance.getUuid(), tsField, tsValue, status, existingExecutionStatus);
       return false;
     } else {
       return true;
     }
   }
 
-  private void updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
+  private boolean updateStateExecutionData(StateExecutionInstance stateExecutionInstance,
       StateExecutionData stateExecutionData, ExecutionStatus status, String errorMsg) {
     Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
     if (stateExecutionMap == null) {
@@ -416,7 +438,24 @@ public class StateMachineExecutor {
       stateExecutionInstance.setEndTs(System.currentTimeMillis());
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
-    wingsPersistence.update(stateExecutionInstance, ops);
+
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .field("appId")
+            .equal(stateExecutionInstance.getAppId())
+            .field(ID_KEY)
+            .equal(stateExecutionInstance.getUuid())
+            .field("status")
+            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING));
+    UpdateResults updateResult = wingsPersistence.update(query, ops);
+    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
+      logger.warn(
+          "StateExecutionInstance status could not be updated- stateExecutionInstance: {}, stateExecutionData: {}, status: {}, errorMsg: {}, ",
+          stateExecutionInstance.getUuid(), stateExecutionData, status, errorMsg);
+      return false;
+    } else {
+      return true;
+    }
   }
 
   /**
@@ -429,15 +468,23 @@ public class StateMachineExecutor {
   public void resume(String appId, String stateExecutionInstanceId, Map<String, NotifyResponseData> response) {
     StateExecutionInstance stateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
-    // TODO - more elegant way
-    while (stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING) {
-      logger.warn("stateExecutionInstance: {} status is not in RUNNING state yet", stateExecutionInstance.getUuid());
-      Misc.quietSleep(500);
-      stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
-    }
     StateMachine sm = wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId());
     State currentState = sm.getState(stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
+
+    while (stateExecutionInstance.getStatus() == ExecutionStatus.NEW
+        || stateExecutionInstance.getStatus() == ExecutionStatus.STARTING) {
+      logger.warn("stateExecutionInstance: {} status is not in RUNNING state yet", stateExecutionInstance.getUuid());
+      // TODO - more elegant way
+      Misc.quietSleep(500);
+      stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    }
+    if (stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING) {
+      WingsException ex = new WingsException(
+          "stateExecutionInstance: " + stateExecutionInstance.getUuid() + " status is no longer in RUNNING state");
+      logger.error(ex.getMessage(), ex);
+      throw ex;
+    }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     try {
@@ -465,7 +512,11 @@ public class StateMachineExecutor {
           throw new WingsException(ErrorCodes.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
         }
 
-        updateEndStatus(stateExecutionInstance, ExecutionStatus.SUCCESS, ExecutionStatus.PAUSED);
+        boolean updated = updateEndStatus(
+            stateExecutionInstance, ExecutionStatus.SUCCESS, Lists.newArrayList(ExecutionStatus.PAUSED));
+        if (!updated) {
+          throw new WingsException(ErrorCodes.STATE_PAUSE_FAILED, "stateName", stateExecutionInstance.getStateName());
+        }
         StateMachine sm = wingsPersistence.get(
             StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
@@ -486,15 +537,29 @@ public class StateMachineExecutor {
             && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
           throw new WingsException(ErrorCodes.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
         }
-        updateEndStatus(stateExecutionInstance, ExecutionStatus.ABORTED, ExecutionStatus.NEW, ExecutionStatus.STARTING,
-            ExecutionStatus.RUNNING, ExecutionStatus.PAUSED);
+        boolean updated = updateEndStatus(stateExecutionInstance, ExecutionStatus.ABORTING,
+            Lists.newArrayList(
+                ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING, ExecutionStatus.PAUSED));
+        if (!updated) {
+          throw new WingsException(ErrorCodes.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
+        }
         StateMachine sm = wingsPersistence.get(
             StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
         State currentState = sm.getState(stateExecutionInstance.getStateName());
         injector.injectMembers(currentState);
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        currentState.handleAbortEvent(context);
+        try {
+          updated = false;
+          currentState.handleAbortEvent(context);
+          updated = updateEndStatus(
+              stateExecutionInstance, ExecutionStatus.ABORTED, Lists.newArrayList(ExecutionStatus.ABORTING));
+        } catch (Exception e) {
+          logger.error("Error in aborting", e);
+        }
+        if (!updated) {
+          throw new WingsException(ErrorCodes.STATE_ABORT_FAILED, "stateName", stateExecutionInstance.getStateName());
+        }
         break;
       }
     }
