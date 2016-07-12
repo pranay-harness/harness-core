@@ -170,7 +170,8 @@ public class CommandState extends State {
           .withTemplateId(serviceInstance.getServiceTemplate().getUuid())
           .withTemplateName(serviceInstance.getServiceTemplate().getName())
           .withHostId(serviceInstance.getHost().getInfraId())
-          .withHostName(serviceInstance.getHost().getHostName());
+          .withHostName(serviceInstance.getHost().getHostName())
+          .withAppId(appId);
 
       String actualCommand = commandName;
       try {
@@ -186,7 +187,7 @@ public class CommandState extends State {
             String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
       }
 
-      executionDataBuilder.withCommandName(command.getName());
+      executionDataBuilder.withCommandName(command.getName()).withTotalCommandUnits(command.getCommandUnits().size());
 
       Activity.Builder activityBuilder = anActivity()
                                              .withAppId(serviceInstance.getAppId())

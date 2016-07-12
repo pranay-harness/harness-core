@@ -115,6 +115,9 @@ public class StateExecutionData {
     return fillExecutionData();
   }
 
+  public Object getExecutionSummaryWithData() {
+    return fillExecutionData();
+  }
   /**
    * Gets execution details.
    *

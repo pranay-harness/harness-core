@@ -420,7 +420,7 @@ public class StateMachineExecutor {
     if (stateExecutionInstance.getEndTs() != null) {
       stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());
     }
-    stateExecutionData.setStatus(stateExecutionInstance.getStatus());
+    stateExecutionData.setStatus(status);
     if (errorMsg != null) {
       stateExecutionData.setErrorMsg(errorMsg);
     }
