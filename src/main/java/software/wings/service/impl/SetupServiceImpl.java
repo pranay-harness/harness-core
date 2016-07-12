@@ -73,7 +73,7 @@ public class SetupServiceImpl implements SetupService {
     if (hosts.size() == 0) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
-          .withDisplayText("Please add atlast one host to environment")
+          .withDisplayText("Please add at least one host to environment")
           .withUrl(getBaseUrl() + String.format("#/app/%s/env/%s", environment.getAppId(), environment.getUuid()))
           .build();
     }
@@ -84,7 +84,7 @@ public class SetupServiceImpl implements SetupService {
     if (app.getServices() == null || app.getServices().size() == 0) {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
-          .withDisplayText("Please configure atlast one service.")
+          .withDisplayText("Please configure at least one service.")
           .withUrl(getBaseUrl() + String.format("#/app/%s/services", app.getUuid()))
           .build();
     }
@@ -92,7 +92,7 @@ public class SetupServiceImpl implements SetupService {
     if ((app.getEnvironments() == null || app.getEnvironments().size() == 0)) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
-          .withDisplayText("Please configure atlast one environment")
+          .withDisplayText("Please configure at least one environment")
           .withUrl(getBaseUrl() + String.format("#/app/%s/environments", app.getUuid()))
           .build();
     } else {
