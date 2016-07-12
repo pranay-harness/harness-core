@@ -107,7 +107,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(workflowService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     PageResponse<Application> applications = appService.list(pageRequest, true, 5);
     assertThat(applications).containsAll(asList(application));
-    assertThat(application.getLast5Executions()).isNotNull();
+    assertThat(application.getRecentExecutions()).isNotNull();
   }
 
   /**
