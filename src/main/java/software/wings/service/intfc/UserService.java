@@ -82,5 +82,11 @@ public interface UserService {
    */
   public User revokeRole(@NotEmpty String userId, @NotEmpty String roleId);
 
+  /**
+   * Verify email string.
+   *
+   * @param token the token
+   * @return the string
+   */
   String verifyEmail(String token);
 }

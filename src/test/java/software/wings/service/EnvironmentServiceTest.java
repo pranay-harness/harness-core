@@ -202,6 +202,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(spyEnvService).delete(APP_ID, ENV_ID);
   }
 
+  /**
+   * Should create default environments.
+   */
   @Test
   public void shouldCreateDefaultEnvironments() {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));

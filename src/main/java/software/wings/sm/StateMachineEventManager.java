@@ -1,12 +1,21 @@
 /**
  *
  */
+
 package software.wings.sm;
 
 import software.wings.beans.WorkflowExecutionEvent;
 
 /**
- * @author Rishi
+ * The interface State machine event manager.
  *
+ * @author Rishi
  */
-public interface StateMachineEventManager { WorkflowExecutionEvent checkForEvent(); }
+public interface StateMachineEventManager {
+  /**
+   * Check for event workflow execution event.
+   *
+   * @return the workflow execution event
+   */
+  WorkflowExecutionEvent checkForEvent();
+}

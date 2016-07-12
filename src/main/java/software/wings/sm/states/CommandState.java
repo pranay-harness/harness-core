@@ -1,16 +1,21 @@
 package software.wings.sm.states;
 
 import static java.lang.System.currentTimeMillis;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.Release.ReleaseBuilder.aRelease;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
@@ -21,6 +26,7 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -36,6 +42,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -43,8 +50,13 @@ import software.wings.sm.StateExecutionException;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
+import software.wings.waitnotify.NotifyResponseData;
+import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Created by peeyushaggarwal on 5/31/16.
@@ -76,6 +88,10 @@ public class CommandState extends State {
   @Inject @Transient private transient EnvironmentService environmentService;
 
   @Inject @Transient private transient WorkflowService workflowService;
+
+  @Inject @Transient private transient ExecutorService executorService;
+
+  @Inject private transient WaitNotifyEngine waitNotifyEngine;
 
   @Attributes(title = "Command")
   @Expand(dataProvider = CommandStateDataProvider.class)
@@ -125,7 +141,6 @@ public class CommandState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData();
-    ExecutionStatus executionStatus;
     String activityId = null;
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -206,7 +221,8 @@ public class CommandState extends State {
         }
         activityBuilder.withReleaseId(artifact.getRelease().getUuid())
             .withReleaseName(artifact.getRelease().getReleaseName())
-            .withArtifactName(artifact.getDisplayName());
+            .withArtifactName(artifact.getDisplayName())
+            .withArtifactId(artifact.getUuid());
         commandExecutionContextBuilder.withArtifact(artifact);
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       }
@@ -216,40 +232,85 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
 
-      CommandExecutionContext commandExecutionContext =
-          commandExecutionContextBuilder.withActivityId(activityId).build();
-      ExecutionResult executionResult =
-          serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
-
-      activityService.updateStatus(
-          activityId, appId, executionResult.equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
-
-      if (executionResult.equals(SUCCESS)) {
-        serviceInstance.setLastDeployedOn(currentTimeMillis());
-        if (command.isArtifactNeeded()) {
-          serviceInstance.setRelease(commandExecutionContext.getArtifact().getRelease());
-          serviceInstance.setArtifact(commandExecutionContext.getArtifact());
+      String finalActivityId = activityId;
+      executorService.execute(() -> {
+        ExecutionResult executionResult;
+        String errorMessage = null;
+        try {
+          CommandExecutionContext commandExecutionContext =
+              commandExecutionContextBuilder.withActivityId(finalActivityId).build();
+          executionResult = serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
+        } catch (Exception e) {
+          executionResult = ExecutionResult.FAILURE;
+          errorMessage = e.getMessage();
         }
-        serviceInstanceService.update(serviceInstance);
-      }
-
-      executionStatus = executionResult.equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+        waitNotifyEngine.notify(finalActivityId,
+            anExecutionResultData().withResult(executionResult).withErrorMessage(errorMessage).build());
+      });
     } catch (Exception e) {
-      if (activityId != null) {
-        activityService.updateStatus(activityId, appId, Status.FAILED);
-      }
-      updateWorflowExecutionStats(ExecutionStatus.FAILED, context);
+      handleCommandException(context, activityId, appId);
+      updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
           .withStateExecutionData(executionDataBuilder.build())
           .withErrorMessage(e.getMessage())
           .build();
     }
-    updateWorflowExecutionStats(executionStatus, context);
+
     return anExecutionResponse()
-        .withExecutionStatus(executionStatus)
+        .withAsync(true)
+        .withCorrelationIds(Collections.singletonList(activityId))
         .withStateExecutionData(executionDataBuilder.build())
         .build();
+  }
+
+  private void handleCommandException(ExecutionContext context, String activityId, String appId) {
+    if (activityId != null) {
+      activityService.updateStatus(activityId, appId, Status.FAILED);
+    }
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String appId = workflowStandardParams.getAppId();
+    String envId = workflowStandardParams.getEnvId();
+
+    InstanceElement instanceElement = context.getContextElement(ContextElementType.INSTANCE);
+    ServiceInstance serviceInstance = serviceInstanceService.get(appId, envId, instanceElement.getUuid());
+
+    ExecutionResultData executionResultData = null;
+    String activityId = null;
+    for (Object status : response.values()) {
+      executionResultData = ((ExecutionResultData) status);
+    }
+
+    for (String key : response.keySet()) {
+      activityId = key;
+    }
+
+    if (executionResultData.getResult() != SUCCESS && isNotEmpty(executionResultData.getErrorMessage())) {
+      handleCommandException(context, activityId, appId);
+    }
+
+    activityService.updateStatus(
+        activityId, appId, executionResultData.getResult().equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+
+    Activity activity = activityService.get(activityId, appId);
+    if (executionResultData.getResult().equals(SUCCESS)) {
+      serviceInstance.setLastDeployedOn(currentTimeMillis());
+      if (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId())) {
+        serviceInstance.setRelease(aRelease().withUuid(activity.getReleaseId()).build());
+        serviceInstance.setArtifact(anArtifact().withUuid(activity.getArtifactId()).build());
+      }
+      serviceInstanceService.update(serviceInstance);
+    }
+
+    ExecutionStatus executionStatus =
+        executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+    updateWorkflowExecutionStats(executionStatus, context);
+
+    return anExecutionResponse().withExecutionStatus(executionStatus).build();
   }
 
   /**
@@ -260,21 +321,25 @@ public class CommandState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  private void updateWorflowExecutionStats(ExecutionStatus executionStatus, ExecutionContext context) {
+  private void updateWorkflowExecutionStats(ExecutionStatus executionStatus, ExecutionContext context) {
     Optional<ContextElement> simpleWorkflowParamOpt =
         context.getContextElementList(ContextElementType.PARAM)
             .stream()
             .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
             .findFirst();
     if (simpleWorkflowParamOpt.isPresent()) {
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      String appId = workflowStandardParams.getAppId();
+      String appId = getAppId(context);
       if (executionStatus == ExecutionStatus.FAILED) {
         workflowService.incrementFailed(appId, context.getWorkflowExecutionId(), 1);
       } else {
         workflowService.incrementSuccess(appId, context.getWorkflowExecutionId(), 1);
       }
     }
+  }
+
+  private String getAppId(ExecutionContext context) {
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    return workflowStandardParams.getAppId();
   }
 
   private void updateWorflowExecutionStatsInProgress(ExecutionContext context) {
@@ -284,8 +349,7 @@ public class CommandState extends State {
             .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
             .findFirst();
     if (simpleWorkflowParamOpt.isPresent()) {
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      String appId = workflowStandardParams.getAppId();
+      String appId = getAppId(context);
       workflowService.incrementInProgressCount(appId, context.getWorkflowExecutionId(), 1);
     }
   }
@@ -300,5 +364,25 @@ public class CommandState extends State {
       // ignore
     }
     return settingValue;
+  }
+
+  /**
+   * Gets executor service.
+   *
+   * @return the executor service
+   */
+  @SchemaIgnore
+  public ExecutorService getExecutorService() {
+    return executorService;
+  }
+
+  /**
+   * Sets executor service.
+   *
+   * @param executorService the executor service
+   */
+  @SchemaIgnore
+  public void setExecutorService(ExecutorService executorService) {
+    this.executorService = executorService;
   }
 }

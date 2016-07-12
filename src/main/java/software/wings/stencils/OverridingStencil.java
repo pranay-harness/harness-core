@@ -1,5 +1,6 @@
 package software.wings.stencils;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
@@ -13,7 +14,7 @@ public interface OverridingStencil<T> extends Stencil<T> {
    *
    * @return the overriding json schema
    */
-  JsonNode getOverridingJsonSchema();
+  @JsonIgnore JsonNode getOverridingJsonSchema();
 
   /**
    * Sets overriding json schema.
@@ -27,7 +28,7 @@ public interface OverridingStencil<T> extends Stencil<T> {
    *
    * @return the overriding name
    */
-  String getOverridingName();
+  @JsonIgnore String getOverridingName();
 
   /**
    * Sets overriding name.

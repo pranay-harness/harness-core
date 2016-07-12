@@ -67,6 +67,9 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
     return map;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private ExecutionStrategy executionStrategy;
     private String serviceId;
@@ -75,30 +78,64 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
 
     private Builder() {}
 
+    /**
+     * A simple workflow param builder.
+     *
+     * @return the builder
+     */
     public static Builder aSimpleWorkflowParam() {
       return new Builder();
     }
 
+    /**
+     * With execution strategy builder.
+     *
+     * @param executionStrategy the execution strategy
+     * @return the builder
+     */
     public Builder withExecutionStrategy(ExecutionStrategy executionStrategy) {
       this.executionStrategy = executionStrategy;
       return this;
     }
 
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With command name builder.
+     *
+     * @param commandName the command name
+     * @return the builder
+     */
     public Builder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
     }
 
+    /**
+     * With instance ids builder.
+     *
+     * @param instanceIds the instance ids
+     * @return the builder
+     */
     public Builder withInstanceIds(List<String> instanceIds) {
       this.instanceIds = instanceIds;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aSimpleWorkflowParam()
           .withExecutionStrategy(executionStrategy)
@@ -107,6 +144,11 @@ public class SimpleWorkflowParam extends ServiceInstanceIdsParam {
           .withInstanceIds(instanceIds);
     }
 
+    /**
+     * Build simple workflow param.
+     *
+     * @return the simple workflow param
+     */
     public SimpleWorkflowParam build() {
       SimpleWorkflowParam simpleWorkflowParam = new SimpleWorkflowParam();
       simpleWorkflowParam.setExecutionStrategy(executionStrategy);

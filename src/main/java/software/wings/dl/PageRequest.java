@@ -17,6 +17,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
@@ -480,8 +481,8 @@ public class PageRequest<T> {
      * @param fieldsIncluded the fields included
      * @return the builder
      */
-    public Builder withFieldsIncluded(List<String> fieldsIncluded) {
-      this.fieldsIncluded = fieldsIncluded;
+    public Builder addFieldsIncluded(String... fieldsIncluded) {
+      this.fieldsIncluded.addAll(Arrays.asList(fieldsIncluded));
       return this;
     }
 
@@ -491,8 +492,8 @@ public class PageRequest<T> {
      * @param fieldsExcluded the fields excluded
      * @return the builder
      */
-    public Builder withFieldsExcluded(List<String> fieldsExcluded) {
-      this.fieldsExcluded = fieldsExcluded;
+    public Builder addFieldsExcluded(String... fieldsExcluded) {
+      this.fieldsExcluded.addAll(Arrays.asList(fieldsExcluded));
       return this;
     }
 

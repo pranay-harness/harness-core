@@ -26,7 +26,8 @@ public interface AppService {
   /**
    * List.
    *
-   * @param req the req
+   * @param req     the req
+   * @param summary the summary
    * @return the page response
    */
   PageResponse<Application> list(PageRequest<Application> req, boolean summary);

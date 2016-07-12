@@ -52,5 +52,8 @@ public class ExecutorModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("notifier"))
         .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("notifyResponseCleaner"))
+        .toInstance(new ManagedScheduledExecutorService(new ScheduledThreadPoolExecutor(1)));
   }
 }

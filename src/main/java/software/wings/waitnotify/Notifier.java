@@ -3,19 +3,18 @@ package software.wings.waitnotify;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.queue.Queue;
-import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.PersistentLocker;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -45,9 +44,9 @@ public class Notifier implements Runnable {
         log().warn("Persistent lock could not be acquired for the Notifier");
         return;
       }
-      PageRequest<NotifyResponse> reqNotifyRes = new PageRequest<>();
-      reqNotifyRes.addFieldsIncluded(ID_KEY);
-      PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(NotifyResponse.class, reqNotifyRes);
+
+      PageResponse<NotifyResponse> notifyPageResponses =
+          wingsPersistence.query(NotifyResponse.class, aPageRequest().addFieldsIncluded(ID_KEY).build());
 
       if (isEmpty(notifyPageResponses)) {
         log().debug("There are no NotifyResponse entries to process");
@@ -57,17 +56,10 @@ public class Notifier implements Runnable {
       List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
       // Get wait queue entries
-      SearchFilter filter = new SearchFilter();
-      filter.setFieldName("correlationId");
-
-      ArrayList<Object> fieldValues = new ArrayList();
-      fieldValues.addAll(correlationIds);
-      filter.setFieldValues(fieldValues);
-      filter.setOp(Operator.IN);
-      PageRequest<WaitQueue> req = new PageRequest<>();
-      req.addFilter(filter);
-
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req);
+      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
+          aPageRequest()
+              .addFilter(aSearchFilter().withField("correlationId", Operator.IN, correlationIds.toArray()).build())
+              .build());
 
       if (isEmpty(waitQueuesResponse)) {
         log().warn("No entry in the waitQueue found for the correlationIds: {} skipping ...", correlationIds);

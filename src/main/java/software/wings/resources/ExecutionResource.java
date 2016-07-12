@@ -15,7 +15,6 @@ import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -89,6 +88,8 @@ public class ExecutionResource {
    * @param envId               the env id
    * @param workflowExecutionId the workflow execution id
    * @param expandedGroupIds    the expanded group ids
+   * @param requestedGroupId    the requested group id
+   * @param nodeOps             the node ops
    * @return the execution details
    */
   @GET
@@ -154,9 +155,10 @@ public class ExecutionResource {
   /**
    * Update execution details rest response.
    *
-   * @param appId               the app id
-   * @param envId               the env id
-   * @param workflowExecutionId the workflow execution id
+   * @param appId                  the app id
+   * @param envId                  the env id
+   * @param workflowExecutionId    the workflow execution id
+   * @param workflowExecutionEvent the workflow execution event
    * @return the rest response
    */
   @PUT

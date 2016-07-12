@@ -43,7 +43,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -75,6 +74,11 @@ public class WorkflowServiceTest extends WingsBaseTest {
     return env;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     if (services == null) {
       services = Lists.newArrayList(wingsPersistence.saveAndGet(Service.class,

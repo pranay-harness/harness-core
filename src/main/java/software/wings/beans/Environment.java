@@ -104,18 +104,38 @@ public class Environment extends Base {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Gets service templates.
+   *
+   * @return the service templates
+   */
   public List<ServiceTemplate> getServiceTemplates() {
     return serviceTemplates;
   }
 
+  /**
+   * Sets service templates.
+   *
+   * @param serviceTemplates the service templates
+   */
   public void setServiceTemplates(List<ServiceTemplate> serviceTemplates) {
     this.serviceTemplates = serviceTemplates;
   }
 
+  /**
+   * Gets orchestrations.
+   *
+   * @return the orchestrations
+   */
   public List<Orchestration> getOrchestrations() {
     return orchestrations;
   }
 
+  /**
+   * Sets orchestrations.
+   *
+   * @param orchestrations the orchestrations
+   */
   public void setOrchestrations(List<Orchestration> orchestrations) {
     this.orchestrations = orchestrations;
   }

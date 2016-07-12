@@ -76,7 +76,7 @@ public class StencilPostProcessor {
             return Stream.of(stencil);
           });
     } else {
-      return Stream.of(t);
+      return Stream.of(t.getOverridingStencil());
     }
   }
 
