@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
@@ -68,4 +69,6 @@ public interface AppService {
    * @param service the service
    */
   void addService(Service service);
+
+  Application get(String appId, SetupStatus status);
 }

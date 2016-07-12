@@ -35,6 +35,7 @@ public class Service extends Base {
 
   @Transient private Activity lastDeploymentActivity;
   @Transient private Activity lastProdDeploymentActivity;
+  @Transient private Setup setup;
 
   /**
    * Gets name.
@@ -178,6 +179,14 @@ public class Service extends Base {
    */
   public void setLastProdDeploymentActivity(Activity lastProdDeploymentActivity) {
     this.lastProdDeploymentActivity = lastProdDeploymentActivity;
+  }
+
+  public Setup getSetup() {
+    return setup;
+  }
+
+  public void setSetup(Setup setup) {
+    this.setup = setup;
   }
 
   @Override

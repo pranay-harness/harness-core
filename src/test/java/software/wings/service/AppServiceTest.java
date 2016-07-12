@@ -110,6 +110,7 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetApplication() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     appService.get(APP_ID);
     verify(wingsPersistence).get(Application.class, APP_ID);
   }

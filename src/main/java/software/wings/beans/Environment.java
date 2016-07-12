@@ -31,6 +31,7 @@ public class Environment extends Base {
   @Transient private List<ServiceTemplate> serviceTemplates;
   @Transient private List<ConfigFile> configFiles;
   @Transient private List<Orchestration> orchestrations;
+  @Transient private Setup setup;
 
   /**
    * Gets name.
@@ -138,6 +139,24 @@ public class Environment extends Base {
    */
   public void setOrchestrations(List<Orchestration> orchestrations) {
     this.orchestrations = orchestrations;
+  }
+
+  /**
+   * Gets setup.
+   *
+   * @return the setup
+   */
+  public Setup getSetup() {
+    return setup;
+  }
+
+  /**
+   * Sets setup.
+   *
+   * @param setup the setup
+   */
+  public void setSetup(Setup setup) {
+    this.setup = setup;
   }
 
   @Override

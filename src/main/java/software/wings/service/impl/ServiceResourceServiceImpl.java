@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
@@ -9,6 +8,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
 import static software.wings.utils.DefaultCommands.getStartCommandGraph;
 import static software.wings.utils.DefaultCommands.getStopCommandGraph;
@@ -21,6 +22,7 @@ import software.wings.beans.Command;
 import software.wings.beans.CommandUnitType;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -30,6 +32,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SetupService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -58,6 +61,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
+  @Inject private SetupService setupService;
 
   /**
    * {@inheritDoc}
@@ -107,11 +111,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public Service get(String appId, String serviceId) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
-    if (service != null) {
-      service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-      service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
-      service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
+    if (service == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
     }
+
+    service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
+    service.setLastDeploymentActivity(activityService.getLastActivityForService(appId, serviceId));
+    service.setLastProdDeploymentActivity(activityService.getLastProductionActivityForService(appId, serviceId));
     return service;
   }
 
@@ -141,6 +147,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Override
   public List<Service> findServicesByApp(String appId) {
     return wingsPersistence.createQuery(Service.class).field("appId").equal(appId).asList();
+  }
+
+  @Override
+  public Service get(String appId, String serviceId, SetupStatus status) {
+    Service service = get(appId, serviceId);
+    if (status == INCOMPLETE) {
+      service.setSetup(setupService.getServiceSetupStatus(service));
+    }
+    return service;
   }
 
   /**

@@ -8,6 +8,9 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Setup;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SetupService;
 
 import javax.ws.rs.Consumes;
@@ -29,6 +32,9 @@ import javax.ws.rs.QueryParam;
 @Path("setup")
 public class SetupResource {
   @Inject private SetupService setupService;
+  @Inject private AppService appService;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private EnvironmentService environmentService;
 
   /**
    * Verify application rest response.
@@ -39,7 +45,7 @@ public class SetupResource {
   @GET
   @Path("/applications/{appId}")
   public RestResponse<Setup> verifyApplication(@PathParam("appId") String appId) {
-    return new RestResponse<>(setupService.getApplicationSetupStatus(appId));
+    return new RestResponse<>(setupService.getApplicationSetupStatus(appService.get(appId)));
   }
 
   /**
@@ -53,7 +59,7 @@ public class SetupResource {
   @Path("/services/{serviceId}")
   public RestResponse<Setup> verifyService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(setupService.getServiceSetupStatus(appId, serviceId));
+    return new RestResponse<>(setupService.getServiceSetupStatus(serviceResourceService.get(appId, serviceId)));
   }
 
   /**
@@ -66,6 +72,6 @@ public class SetupResource {
   @GET
   @Path("/environments/{envId}")
   public RestResponse<Setup> verifyEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    return new RestResponse<>(setupService.getEnvironmentSetupStatus(appId, envId));
+    return new RestResponse<>(setupService.getEnvironmentSetupStatus(environmentService.get(appId, envId, false)));
   }
 }

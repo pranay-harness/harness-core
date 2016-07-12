@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 
 import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
@@ -8,15 +10,17 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.SetupService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -39,7 +43,7 @@ public class AppServiceImpl implements AppService {
   @Inject private EnvironmentService environmentService;
   @Inject private AppContainerService appContainerService;
   @Inject private ExecutorService executorService;
-  @Inject private WorkflowService workflowService;
+  @Inject private SetupService setupService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -76,7 +80,11 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public Application get(String uuid) {
-    return wingsPersistence.get(Application.class, uuid);
+    Application application = wingsPersistence.get(Application.class, uuid);
+    if (application == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
+    }
+    return application;
   }
 
   /* (non-Javadoc)
@@ -119,5 +127,14 @@ public class AppServiceImpl implements AppService {
   @Override
   public void addService(Service service) {
     wingsPersistence.addToList(Application.class, service.getAppId(), "services", service);
+  }
+
+  @Override
+  public Application get(String appId, SetupStatus status) {
+    Application application = get(appId);
+    if (status == INCOMPLETE) {
+      application.setSetup(setupService.getApplicationSetupStatus(application));
+    }
+    return application;
   }
 }

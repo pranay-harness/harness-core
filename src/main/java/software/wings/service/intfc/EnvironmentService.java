@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Environment;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -10,6 +11,7 @@ import software.wings.utils.validation.Update;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 // TODO: Auto-generated Javadoc
 
@@ -35,6 +37,16 @@ public interface EnvironmentService {
    * @return the environment
    */
   Environment get(@NotEmpty String appId, @NotEmpty String envId, boolean withSummary);
+
+  /**
+   * Get environment.
+   *
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param status the status
+   * @return the environment
+   */
+  Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status);
 
   /**
    * Save.

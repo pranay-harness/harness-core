@@ -1,10 +1,13 @@
 package software.wings.resources;
 
+import static software.wings.beans.Setup.SetupStatus.COMPLETE;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -94,8 +97,11 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
-  public RestResponse<Application> get(@PathParam("appId") String appId) {
-    return new RestResponse<>(appService.get(appId));
+  public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status) {
+    if (status == null) {
+      status = COMPLETE; // don't verify setup status
+    }
+    return new RestResponse<>(appService.get(appId, status));
   }
 
   /**

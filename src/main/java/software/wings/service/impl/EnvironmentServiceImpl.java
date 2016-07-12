@@ -6,6 +6,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -14,18 +15,22 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Environment;
 import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -37,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 // TODO: Auto-generated Javadoc
@@ -54,6 +60,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ExecutorService executorService;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
+  @Inject private SetupService setupService;
 
   /**
    * {@inheritDoc}
@@ -76,9 +83,21 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment get(String appId, String envId, boolean withSummary) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
+    if (environment == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
+    }
     if (withSummary) {
       addServiceTemplates(environment);
       addWorkflows(environment);
+    }
+    return environment;
+  }
+
+  @Override
+  public Environment get(@NotEmpty String appId, @NotEmpty String envId, @NotNull SetupStatus status) {
+    Environment environment = get(appId, envId, true);
+    if (status == SetupStatus.INCOMPLETE) {
+      environment.setSetup(setupService.getEnvironmentSetupStatus(environment));
     }
     return environment;
   }
