@@ -31,7 +31,7 @@ public interface AppService {
    * @param summary the summary
    * @return the page response
    */
-  PageResponse<Application> list(PageRequest<Application> req, boolean summary);
+  PageResponse<Application> list(PageRequest<Application> req, boolean summary, int numberOfExecutions);
 
   /**
    * Find by uuid.

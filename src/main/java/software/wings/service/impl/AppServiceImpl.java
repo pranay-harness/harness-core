@@ -2,15 +2,20 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -21,6 +26,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -44,6 +50,7 @@ public class AppServiceImpl implements AppService {
   @Inject private AppContainerService appContainerService;
   @Inject private ExecutorService executorService;
   @Inject private SetupService setupService;
+  @Inject private WorkflowService workflowService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -61,17 +68,22 @@ public class AppServiceImpl implements AppService {
    * @see software.wings.service.intfc.AppService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Application> list(PageRequest<Application> req, boolean summary) {
+  public PageResponse<Application> list(PageRequest<Application> req, boolean summary, int numberOfExecutions) {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
-    /*if (summary) {
-      List<String> appIds = response.getResponse().stream().map(Base::getUuid).collect(toList());
-      Datastore datastore = wingsPersistence.getDatastore();
-      Iterator<WorkflowExecution> it =
-          datastore.createAggregation(WorkflowExecution.class).match(datastore.createQuery(WorkflowExecution.class).field("appId").in(appIds))
-              .sort(Sort.descending("lastUpdatedAt")).group("appId").limit(5).aggregate(WorkflowExecution.class);
-      System.out.println(it.hasNext());
-      it.forEachRemaining(workflowExecution -> System.out.println(workflowExecution));
-    }*/
+    if (summary) {
+      response.getResponse().parallelStream().forEach(application -> {
+        application.setLast5Executions(
+            workflowService
+                .listExecutions(
+                    aPageRequest()
+                        .withLimit(Integer.toString(numberOfExecutions))
+                        .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
+                        .addOrder(aSortOrder().withField("lastUpdatedAt", OrderType.DESC).build())
+                        .build(),
+                    false)
+                .getResponse());
+      });
+    }
     return response;
   }
 

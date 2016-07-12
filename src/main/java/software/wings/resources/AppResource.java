@@ -59,9 +59,10 @@ public class AppResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Application>> list(
-      @BeanParam PageRequest<Application> pageRequest, @QueryParam("summary") @DefaultValue("false") boolean summary) {
-    return new RestResponse<>(appService.list(pageRequest, summary));
+  public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
+      @QueryParam("summary") @DefaultValue("false") boolean summary,
+      @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {
+    return new RestResponse<>(appService.list(pageRequest, summary, numberOfExecutions));
   }
 
   /**
