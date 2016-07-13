@@ -1,10 +1,14 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -13,9 +17,11 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.stencils.DataProvider;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -27,7 +33,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 @Singleton
-public class AppContainerServiceImpl implements AppContainerService {
+public class AppContainerServiceImpl implements AppContainerService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
 
@@ -111,5 +117,14 @@ public class AppContainerServiceImpl implements AppContainerService {
       }
     }
     return true;
+  }
+
+  @Override
+  public Map<String, String> getData(String appId, String... params) {
+    return (Map<String, String>) list(
+        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build()).build())
+        .getResponse()
+        .stream()
+        .collect(toMap(AppContainer::getUuid, AppContainer::getName));
   }
 }

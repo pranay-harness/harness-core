@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,8 +29,10 @@ public class Application extends Base {
   private String description;
 
   @Reference(idOnly = true, ignoreMissing = true) private List<Service> services = new ArrayList<>();
-
   @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments = new ArrayList<>();
+
+  @Transient private Setup setup;
+  @Transient private List<WorkflowExecution> recentExecutions;
 
   /**
    * Gets name.
@@ -101,6 +104,32 @@ public class Application extends Base {
    */
   public void setEnvironments(List<Environment> environments) {
     this.environments = environments;
+  }
+
+  /**
+   * Gets setup.
+   *
+   * @return the setup
+   */
+  public Setup getSetup() {
+    return setup;
+  }
+
+  /**
+   * Sets setup.
+   *
+   * @param setup the setup
+   */
+  public void setSetup(Setup setup) {
+    this.setup = setup;
+  }
+
+  public List<WorkflowExecution> getRecentExecutions() {
+    return recentExecutions;
+  }
+
+  public void setRecentExecutions(List<WorkflowExecution> recentExecutions) {
+    this.recentExecutions = recentExecutions;
   }
 
   @Override

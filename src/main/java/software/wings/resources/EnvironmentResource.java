@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -76,8 +77,12 @@ public class EnvironmentResource {
    */
   @GET
   @Path("{envId}")
-  public RestResponse<Environment> list(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
-    return new RestResponse<>(envService.get(appId, envId, true));
+  public RestResponse<Environment> get(
+      @QueryParam("appId") String appId, @PathParam("envId") String envId, @QueryParam("status") SetupStatus status) {
+    if (status == null) {
+      status = SetupStatus.COMPLETE;
+    }
+    return new RestResponse<>(envService.get(appId, envId, status));
   }
 
   /**

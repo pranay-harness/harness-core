@@ -21,6 +21,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -85,13 +86,13 @@ public class ServiceResourceTest {
    */
   @Test
   public void shouldGetService() {
-    when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID)).thenReturn(aSERVICE);
+    when(RESOURCE_SERVICE.get(APP_ID, SERVICE_ID, SetupStatus.COMPLETE)).thenReturn(aSERVICE);
     RestResponse<Service> restResponse = RESOURCES.client()
                                              .target(format("/services/%s?appId=%s", SERVICE_ID, APP_ID))
                                              .request()
                                              .get(new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(RESOURCE_SERVICE).get(APP_ID, SERVICE_ID);
+    verify(RESOURCE_SERVICE).get(APP_ID, SERVICE_ID, SetupStatus.COMPLETE);
   }
 
   /**

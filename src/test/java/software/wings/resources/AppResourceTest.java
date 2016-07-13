@@ -6,6 +6,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 
 import org.junit.After;
 import org.junit.ClassRule;
@@ -50,10 +51,10 @@ public class AppResourceTest {
    */
   @Test
   public void testFindByName() {
-    when(appService.get(TEST_UUID)).thenReturn(testApp);
+    when(appService.get(TEST_UUID, COMPLETE)).thenReturn(testApp);
     RestResponse<Application> actual =
         resources.client().target("/apps/" + TEST_UUID).request().get(new GenericType<RestResponse<Application>>() {});
     assertThat(actual.getResource()).isEqualTo(testApp);
-    verify(appService).get(TEST_UUID);
+    verify(appService).get(TEST_UUID, COMPLETE);
   }
 }

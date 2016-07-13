@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.Setup.Builder.aSetup;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -15,11 +14,7 @@ import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.SetupAction;
-import software.wings.exception.WingsException;
-import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SetupService;
 
 import java.util.List;
@@ -36,20 +31,13 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class SetupServiceImpl implements SetupService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
-  @Inject private AppService appService;
-  @Inject private ServiceResourceService serviceResourceService;
-  @Inject private EnvironmentService environmentService;
   @Inject private HostService hostService;
   @Inject private MainConfiguration configuration;
 
   @Override
-  public Setup getApplicationSetupStatus(String appId) {
-    Application application = appService.get(appId);
-    if (application == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
-    }
+  public Setup getApplicationSetupStatus(Application application) {
     SetupAction mandatoryAction = fetchIncompleteMandatoryApplicationAction(application);
-    Setup setup = aSetup().withEntity(application).build();
+    Setup setup = aSetup().build();
     if (mandatoryAction != null) {
       setup.setSetupStatus(INCOMPLETE);
       setup.getActions().add(mandatoryAction);
@@ -61,23 +49,14 @@ public class SetupServiceImpl implements SetupService {
   }
 
   @Override
-  public Setup getServiceSetupStatus(String appId, String serviceId) {
-    Service service = serviceResourceService.get(appId, serviceId);
-    if (service == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
-    }
-    return aSetup().withEntity(service).withSetupStatus(COMPLETE).build();
+  public Setup getServiceSetupStatus(Service service) {
+    return aSetup().withSetupStatus(COMPLETE).build();
   }
 
   @Override
-  public Setup getEnvironmentSetupStatus(String appId, String envId) {
-    Environment environment = environmentService.get(appId, envId, false);
-    if (environment == null) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
-    }
-
+  public Setup getEnvironmentSetupStatus(Environment environment) {
     SetupAction mandatoryAction = fetchIncompleteMandatoryEnvironmentAction(environment);
-    Setup setup = aSetup().withEntity(environment).build();
+    Setup setup = aSetup().build();
     if (mandatoryAction != null) {
       setup.setSetupStatus(INCOMPLETE);
       setup.getActions().add(mandatoryAction);
@@ -94,7 +73,7 @@ public class SetupServiceImpl implements SetupService {
     if (hosts.size() == 0) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
-          .withDisplayText("Please add atlast one host to environment")
+          .withDisplayText("Please add at least one host to environment")
           .withUrl(getBaseUrl() + String.format("#/app/%s/env/%s", environment.getAppId(), environment.getUuid()))
           .build();
     }
@@ -105,7 +84,7 @@ public class SetupServiceImpl implements SetupService {
     if (app.getServices() == null || app.getServices().size() == 0) {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
-          .withDisplayText("Please configure atlast one service.")
+          .withDisplayText("Please configure at least one service.")
           .withUrl(getBaseUrl() + String.format("#/app/%s/services", app.getUuid()))
           .build();
     }
@@ -113,7 +92,7 @@ public class SetupServiceImpl implements SetupService {
     if ((app.getEnvironments() == null || app.getEnvironments().size() == 0)) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
-          .withDisplayText("Please configure atlast one environment")
+          .withDisplayText("Please configure at least one environment")
           .withUrl(getBaseUrl() + String.format("#/app/%s/environments", app.getUuid()))
           .build();
     } else {

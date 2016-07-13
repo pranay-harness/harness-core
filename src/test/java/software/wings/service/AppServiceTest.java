@@ -33,6 +33,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -50,6 +51,7 @@ public class AppServiceTest extends WingsBaseTest {
    * The Query.
    */
   @Mock Query<Application> query;
+
   /**
    * The End.
    */
@@ -63,6 +65,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
   @Mock private AppContainerService appContainerService;
+  @Mock private WorkflowService workflowService;
 
   /**
    * Sets up.
@@ -95,13 +98,29 @@ public class AppServiceTest extends WingsBaseTest {
    * Should list.
    */
   @Test
+  public void shouldListApplicationWithSummary() {
+    Application application = anApplication().build();
+    PageResponse<Application> pageResponse = new PageResponse<>();
+    PageRequest<Application> pageRequest = new PageRequest<>();
+    pageResponse.setResponse(asList(application));
+    when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
+    when(workflowService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    PageResponse<Application> applications = appService.list(pageRequest, true, 5);
+    assertThat(applications).containsAll(asList(application));
+    assertThat(application.getRecentExecutions()).isNotNull();
+  }
+
+  /**
+   * Should list.
+   */
+  @Test
   public void shouldListApplication() {
     Application application = anApplication().build();
     PageResponse<Application> pageResponse = new PageResponse<>();
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Application> applications = appService.list(pageRequest, false);
+    PageResponse<Application> applications = appService.list(pageRequest, false, 5);
     assertThat(applications).containsAll(asList(application));
   }
 
@@ -110,6 +129,7 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetApplication() {
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
     appService.get(APP_ID);
     verify(wingsPersistence).get(Application.class, APP_ID);
   }

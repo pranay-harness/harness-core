@@ -1,10 +1,13 @@
 package software.wings.resources;
 
+import static software.wings.beans.Setup.SetupStatus.COMPLETE;
+
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -52,13 +55,14 @@ public class AppResource {
    * List.
    *
    * @param pageRequest the page request
-   * @param summary     the summary
+   * @param overview     the summary
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Application>> list(
-      @BeanParam PageRequest<Application> pageRequest, @QueryParam("summary") @DefaultValue("false") boolean summary) {
-    return new RestResponse<>(appService.list(pageRequest, summary));
+  public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
+      @QueryParam("overview") @DefaultValue("false") boolean overview,
+      @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {
+    return new RestResponse<>(appService.list(pageRequest, overview, numberOfExecutions));
   }
 
   /**
@@ -94,8 +98,11 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
-  public RestResponse<Application> get(@PathParam("appId") String appId) {
-    return new RestResponse<>(appService.get(appId));
+  public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status) {
+    if (status == null) {
+      status = COMPLETE; // don't verify setup status
+    }
+    return new RestResponse<>(appService.get(appId, status));
   }
 
   /**

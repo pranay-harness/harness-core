@@ -10,6 +10,7 @@ import io.swagger.annotations.ApiParam;
 import software.wings.beans.Graph;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
@@ -75,8 +76,12 @@ public class ServiceResource {
    */
   @GET
   @Path("{serviceId}")
-  public RestResponse<Service> get(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(serviceResourceService.get(appId, serviceId));
+  public RestResponse<Service> get(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @QueryParam("status") SetupStatus status) {
+    if (status == null) {
+      status = SetupStatus.COMPLETE;
+    }
+    return new RestResponse<>(serviceResourceService.get(appId, serviceId, status));
   }
 
   /**

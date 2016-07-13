@@ -3,10 +3,13 @@ package software.wings.api;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
+import java.util.LinkedHashMap;
+
 /**
  * Created by peeyushaggarwal on 6/17/16.
  */
 public class CommandStateExecutionData extends StateExecutionData {
+  private String appId;
   private String hostName;
   private String hostId;
   private String commandName;
@@ -17,6 +20,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String activityId;
   private String artifactId;
   private String artifactName;
+  private int totalCommandUnits;
 
   /**
    * Getter for property 'hostName'.
@@ -199,233 +203,205 @@ public class CommandStateExecutionData extends StateExecutionData {
   }
 
   /**
-   * The type Builder.
+   * Getter for property 'totalCommandUnits'.
+   *
+   * @return Value for property 'totalCommandUnits'.
    */
+  public int getTotalCommandUnits() {
+    return totalCommandUnits;
+  }
+
+  /**
+   * Setter for property 'totalCommandUnits'.
+   *
+   * @param totalCommandUnits Value to set for property 'totalCommandUnits'.
+   */
+  public void setTotalCommandUnits(int totalCommandUnits) {
+    this.totalCommandUnits = totalCommandUnits;
+  }
+
+  @Override
+  public Object getExecutionSummary() {
+    LinkedHashMap<String, Object> data = (LinkedHashMap<String, Object>) super.getExecutionSummary();
+    commandExecutionData(data);
+    return data;
+  }
+
+  @Override
+  public Object getExecutionDetails() {
+    LinkedHashMap<String, Object> data = (LinkedHashMap<String, Object>) super.getExecutionSummary();
+    commandExecutionData(data);
+    return data;
+  }
+
+  private void commandExecutionData(LinkedHashMap<String, Object> data) {
+    data.put("total", totalCommandUnits);
+    data.put("activityId", activityId);
+    data.put("hostId", hostId);
+    data.put("hostName", hostName);
+    data.put("templateName", templateName);
+    data.put("templateId", templateId);
+    data.put("commandName", commandName);
+  }
+
+  public String getAppId() {
+    return appId;
+  }
+
+  public void setAppId(String appId) {
+    this.appId = appId;
+  }
+
   public static final class Builder {
-    private String hostName;
-    private String hostId;
-    private String commandName;
     private String stateName;
-    private String serviceName;
+    private String appId;
     private Long startTs;
-    private String serviceId;
+    private String hostName;
     private Long endTs;
-    private String templateName;
+    private String hostId;
     private ExecutionStatus status;
+    private String commandName;
+    private String errorMsg;
+    private String serviceName;
+    private String serviceId;
+    private String templateName;
     private String templateId;
     private String activityId;
     private String artifactId;
     private String artifactName;
+    private int totalCommandUnits;
 
     private Builder() {}
 
-    /**
-     * A command state execution data builder.
-     *
-     * @return the builder
-     */
     public static Builder aCommandStateExecutionData() {
       return new Builder();
     }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
-    public Builder withHostName(String hostName) {
-      this.hostName = hostName;
-      return this;
-    }
-
-    /**
-     * With host id builder.
-     *
-     * @param hostId the host id
-     * @return the builder
-     */
-    public Builder withHostId(String hostId) {
-      this.hostId = hostId;
-      return this;
-    }
-
-    /**
-     * With command name builder.
-     *
-     * @param commandName the command name
-     * @return the builder
-     */
-    public Builder withCommandName(String commandName) {
-      this.commandName = commandName;
-      return this;
-    }
-
-    /**
-     * With state name builder.
-     *
-     * @param stateName the state name
-     * @return the builder
-     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
-    /**
-     * With service name builder.
-     *
-     * @param serviceName the service name
-     * @return the builder
-     */
-    public Builder withServiceName(String serviceName) {
-      this.serviceName = serviceName;
+    public Builder withAppId(String appId) {
+      this.appId = appId;
       return this;
     }
 
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    /**
-     * With service id builder.
-     *
-     * @param serviceId the service id
-     * @return the builder
-     */
-    public Builder withServiceId(String serviceId) {
-      this.serviceId = serviceId;
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
       return this;
     }
 
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    /**
-     * With template name builder.
-     *
-     * @param templateName the template name
-     * @return the builder
-     */
-    public Builder withTemplateName(String templateName) {
-      this.templateName = templateName;
+    public Builder withHostId(String hostId) {
+      this.hostId = hostId;
       return this;
     }
 
-    /**
-     * With status builder.
-     *
-     * @param status the status
-     * @return the builder
-     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
-    /**
-     * With template id builder.
-     *
-     * @param templateId the template id
-     * @return the builder
-     */
+    public Builder withCommandName(String commandName) {
+      this.commandName = commandName;
+      return this;
+    }
+
+    public Builder withErrorMsg(String errorMsg) {
+      this.errorMsg = errorMsg;
+      return this;
+    }
+
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
+    }
+
+    public Builder withTemplateName(String templateName) {
+      this.templateName = templateName;
+      return this;
+    }
+
     public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
-    /**
-     * With activity id builder.
-     *
-     * @param activityId the activity id
-     * @return the builder
-     */
     public Builder withActivityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
-    /**
-     * With artifact id builder.
-     *
-     * @param artifactId the artifact id
-     * @return the builder
-     */
     public Builder withArtifactId(String artifactId) {
       this.artifactId = artifactId;
       return this;
     }
 
-    /**
-     * With artifact name builder.
-     *
-     * @param artifactName the artifact name
-     * @return the builder
-     */
     public Builder withArtifactName(String artifactName) {
       this.artifactName = artifactName;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withTotalCommandUnits(int totalCommandUnits) {
+      this.totalCommandUnits = totalCommandUnits;
+      return this;
+    }
+
     public Builder but() {
       return aCommandStateExecutionData()
-          .withHostName(hostName)
-          .withHostId(hostId)
-          .withCommandName(commandName)
           .withStateName(stateName)
-          .withServiceName(serviceName)
+          .withAppId(appId)
           .withStartTs(startTs)
-          .withServiceId(serviceId)
+          .withHostName(hostName)
           .withEndTs(endTs)
-          .withTemplateName(templateName)
+          .withHostId(hostId)
           .withStatus(status)
+          .withCommandName(commandName)
+          .withErrorMsg(errorMsg)
+          .withServiceName(serviceName)
+          .withServiceId(serviceId)
+          .withTemplateName(templateName)
           .withTemplateId(templateId)
           .withActivityId(activityId)
           .withArtifactId(artifactId)
-          .withArtifactName(artifactName);
+          .withArtifactName(artifactName)
+          .withTotalCommandUnits(totalCommandUnits);
     }
 
-    /**
-     * Build command state execution data.
-     *
-     * @return the command state execution data
-     */
     public CommandStateExecutionData build() {
       CommandStateExecutionData commandStateExecutionData = new CommandStateExecutionData();
-      commandStateExecutionData.setHostName(hostName);
-      commandStateExecutionData.setHostId(hostId);
-      commandStateExecutionData.setCommandName(commandName);
       commandStateExecutionData.setStateName(stateName);
-      commandStateExecutionData.setServiceName(serviceName);
+      commandStateExecutionData.setAppId(appId);
       commandStateExecutionData.setStartTs(startTs);
-      commandStateExecutionData.setServiceId(serviceId);
+      commandStateExecutionData.setHostName(hostName);
       commandStateExecutionData.setEndTs(endTs);
-      commandStateExecutionData.setTemplateName(templateName);
+      commandStateExecutionData.setHostId(hostId);
       commandStateExecutionData.setStatus(status);
+      commandStateExecutionData.setCommandName(commandName);
+      commandStateExecutionData.setErrorMsg(errorMsg);
+      commandStateExecutionData.setServiceName(serviceName);
+      commandStateExecutionData.setServiceId(serviceId);
+      commandStateExecutionData.setTemplateName(templateName);
       commandStateExecutionData.setTemplateId(templateId);
       commandStateExecutionData.setActivityId(activityId);
       commandStateExecutionData.setArtifactId(artifactId);
       commandStateExecutionData.setArtifactName(artifactName);
+      commandStateExecutionData.setTotalCommandUnits(totalCommandUnits);
       return commandStateExecutionData;
     }
   }

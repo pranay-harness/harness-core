@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Command;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;
@@ -125,4 +126,14 @@ public interface ServiceResourceService {
    * @return the list
    */
   List<Service> findServicesByApp(String appId);
+
+  /**
+   * Get service.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param status    the status
+   * @return the service
+   */
+  Service get(String appId, String serviceId, SetupStatus status);
 }

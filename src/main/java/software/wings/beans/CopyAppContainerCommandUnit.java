@@ -4,8 +4,11 @@ import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.Attributes;
+import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.stencils.EnumData;
 
 import javax.inject.Inject;
 
@@ -14,6 +17,9 @@ import javax.inject.Inject;
  */
 public class CopyAppContainerCommandUnit extends CopyCommandUnit {
   @Inject private AppContainerService appContainerService;
+
+  @EnumData(enumDataProvider = AppContainerServiceImpl.class)
+  @Attributes(title = "Application Container")
   private String appContainerId;
 
   /**

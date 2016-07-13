@@ -1,7 +1,8 @@
 package software.wings.beans;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,27 +10,8 @@ import java.util.Objects;
  * Created by anubhaw on 6/29/16.
  */
 public class Setup {
-  private Base entity;
   private SetupStatus setupStatus;
   private List<SetupAction> actions = new ArrayList<>();
-
-  /**
-   * Gets entity.
-   *
-   * @return the entity
-   */
-  public Base getEntity() {
-    return entity;
-  }
-
-  /**
-   * Sets entity.
-   *
-   * @param entity the entity
-   */
-  public void setEntity(Base entity) {
-    this.entity = entity;
-  }
 
   /**
    * Gets setup status.
@@ -67,24 +49,6 @@ public class Setup {
     this.actions = actions;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(entity, setupStatus, actions);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final Setup other = (Setup) obj;
-    return Objects.equals(this.entity, other.entity) && Objects.equals(this.setupStatus, other.setupStatus)
-        && Objects.equals(this.actions, other.actions);
-  }
-
   /**
    * The enum Setup status.
    */
@@ -98,11 +62,32 @@ public class Setup {
     INCOMPLETE
   }
 
+  @Override
+  public int hashCode() {
+    return Objects.hash(setupStatus, actions);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final Setup other = (Setup) obj;
+    return Objects.equals(this.setupStatus, other.setupStatus) && Objects.equals(this.actions, other.actions);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("setupStatus", setupStatus).add("actions", actions).toString();
+  }
+
   /**
    * The type Builder.
    */
   public static final class Builder {
-    private Base entity;
     private SetupStatus setupStatus;
     private List<SetupAction> actions = new ArrayList<>();
 
@@ -118,17 +103,6 @@ public class Setup {
     }
 
     /**
-     * With entity builder.
-     *
-     * @param entity the entity
-     * @return the builder
-     */
-    public Builder withEntity(Base entity) {
-      this.entity = entity;
-      return this;
-    }
-
-    /**
      * With setup status builder.
      *
      * @param setupStatus the setup status
@@ -136,17 +110,6 @@ public class Setup {
      */
     public Builder withSetupStatus(SetupStatus setupStatus) {
       this.setupStatus = setupStatus;
-      return this;
-    }
-
-    /**
-     * Add actions builder.
-     *
-     * @param actions the actions
-     * @return the builder
-     */
-    public Builder addActions(SetupAction... actions) {
-      Collections.addAll(this.actions, actions);
       return this;
     }
 
@@ -167,7 +130,7 @@ public class Setup {
      * @return the builder
      */
     public Builder but() {
-      return aSetup().withEntity(entity).withSetupStatus(setupStatus).withActions(actions);
+      return aSetup().withSetupStatus(setupStatus).withActions(actions);
     }
 
     /**
@@ -177,7 +140,6 @@ public class Setup {
      */
     public Setup build() {
       Setup setup = new Setup();
-      setup.setEntity(entity);
       setup.setSetupStatus(setupStatus);
       setup.setActions(actions);
       return setup;
