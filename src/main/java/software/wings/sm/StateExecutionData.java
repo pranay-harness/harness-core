@@ -136,9 +136,15 @@ public class StateExecutionData {
     CountsByStatuses breakDown = new CountsByStatuses();
     switch (status) {
       case FAILED:
+      case ERROR:
+      case ABORTED:
+      case ABORTING:
         breakDown.setFailed(1);
         break;
+      case NEW:
+      case STARTING:
       case RUNNING:
+      case PAUSED:
         breakDown.setInprogress(1);
         break;
       case SUCCESS:
