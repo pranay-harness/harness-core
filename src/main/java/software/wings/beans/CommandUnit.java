@@ -27,7 +27,7 @@ public abstract class CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
-  private boolean artifactNeeded;
+  @SchemaIgnore private boolean artifactNeeded;
 
   /**
    * Instantiates a new Command unit.

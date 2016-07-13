@@ -137,7 +137,7 @@ public interface FileService {
      * @param bucketName the bucket name
      */
     FileBucket(String bucketName) {
-      this(bucketName, 4 * 1000 * 1000);
+      this(bucketName, 1 * 1000 * 1000);
     }
 
     /**

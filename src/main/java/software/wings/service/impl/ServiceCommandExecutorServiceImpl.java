@@ -6,6 +6,8 @@ import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
 
+import com.google.inject.Injector;
+
 import software.wings.beans.Command;
 import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit;
@@ -40,9 +42,11 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   /**
    * The Command unit executor service.
    */
-  @Inject CommandUnitExecutorService commandUnitExecutorService;
+  @Inject private CommandUnitExecutorService commandUnitExecutorService;
 
   @Inject private ServiceResourceService serviceResourceService;
+
+  @Inject private Injector injector;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
@@ -81,6 +85,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   private ExecutionResult executeCommandUnit(
       ServiceInstance serviceInstance, CommandExecutionContext context, CommandUnit commandUnit) {
+    injector.injectMembers(commandUnit);
     commandUnit.setup(context);
     Host host = serviceInstance.getHost();
     host.setHostConnectionCredential(getHostConnectionCredentialFromExecutionCredential(
