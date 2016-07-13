@@ -4,9 +4,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.CommandUnitType.EXEC;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.nio.file.Paths;
@@ -16,9 +13,8 @@ import java.nio.file.Paths;
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class ExecCommandUnit extends CommandUnit {
+public class ExecCommandUnit extends AbstractExecCommandUnit {
   @NotEmpty private String commandPath;
-  @NotEmpty private String commandString;
 
   /**
    * Instantiates a new exec command unit.
@@ -32,7 +28,7 @@ public class ExecCommandUnit extends CommandUnit {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
             .toString();
-    commandString = format("cd %s && set -m; %s", commandPath, commandString);
+    this.setCommand(format("cd %s && set -m; %s", commandPath, getCommand()));
   }
 
   /**
@@ -53,58 +49,9 @@ public class ExecCommandUnit extends CommandUnit {
     this.commandPath = commandPath;
   }
 
-  /**
-   * Getter for property 'commandString'.
-   *
-   * @return Value for property 'commandString'.
-   */
-  public String getCommandString() {
-    return commandString;
-  }
-
-  /**
-   * Setter for property 'commandString'.
-   *
-   * @param commandString Value to set for property 'commandString'.
-   */
-  public void setCommandString(String commandString) {
-    this.commandString = commandString;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(commandPath, commandString);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final ExecCommandUnit other = (ExecCommandUnit) obj;
-    return Objects.equal(this.commandPath, other.commandPath) && Objects.equal(this.commandString, other.commandString);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("commandPath", commandPath)
-        .add("commandString", commandString)
-        .toString();
-  }
-
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String commandPath;
-    private String commandString;
+    private String command;
     private String name;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
@@ -112,105 +59,54 @@ public class ExecCommandUnit extends CommandUnit {
 
     private Builder() {}
 
-    /**
-     * An exec command unit builder.
-     *
-     * @return the builder
-     */
     public static Builder anExecCommandUnit() {
       return new Builder();
     }
 
-    /**
-     * With command path builder.
-     *
-     * @param commandPath the command path
-     * @return the builder
-     */
     public Builder withCommandPath(String commandPath) {
       this.commandPath = commandPath;
       return this;
     }
 
-    /**
-     * With command string builder.
-     *
-     * @param commandString the command string
-     * @return the builder
-     */
-    public Builder withCommandString(String commandString) {
-      this.commandString = commandString;
+    public Builder withCommand(String command) {
+      this.command = command;
       return this;
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With command unit type builder.
-     *
-     * @param commandUnitType the command unit type
-     * @return the builder
-     */
     public Builder withCommandUnitType(CommandUnitType commandUnitType) {
       this.commandUnitType = commandUnitType;
       return this;
     }
 
-    /**
-     * With execution result builder.
-     *
-     * @param executionResult the execution result
-     * @return the builder
-     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
-    /**
-     * With artifact needed builder.
-     *
-     * @param artifactNeeded the artifact needed
-     * @return the builder
-     */
     public Builder withArtifactNeeded(boolean artifactNeeded) {
       this.artifactNeeded = artifactNeeded;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anExecCommandUnit()
           .withCommandPath(commandPath)
-          .withCommandString(commandString)
+          .withCommand(command)
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
           .withArtifactNeeded(artifactNeeded);
     }
 
-    /**
-     * Build exec command unit.
-     *
-     * @return the exec command unit
-     */
     public ExecCommandUnit build() {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandPath(commandPath);
-      execCommandUnit.setCommandString(commandString);
+      execCommandUnit.setCommand(command);
       execCommandUnit.setName(name);
       execCommandUnit.setCommandUnitType(commandUnitType);
       execCommandUnit.setExecutionResult(executionResult);

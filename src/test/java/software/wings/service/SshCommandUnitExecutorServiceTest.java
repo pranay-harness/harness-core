@@ -69,7 +69,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
           .build();
   private static final HostConnectionCredential CREDENTIAL =
       aHostConnectionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build();
-  private static final ExecCommandUnit EXEC_COMMAND_UNIT = anExecCommandUnit().withCommandString(EXEC_CMD).build();
+  private static final ExecCommandUnit EXEC_COMMAND_UNIT = anExecCommandUnit().withCommand(EXEC_CMD).build();
   /**
    * The Ssh executor factory.
    */

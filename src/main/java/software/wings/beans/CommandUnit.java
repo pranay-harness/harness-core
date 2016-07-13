@@ -130,6 +130,16 @@ public abstract class CommandUnit {
     this.artifactNeeded = artifactNeeded;
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("commandUnitType", commandUnitType)
+        .add("executionResult", executionResult)
+        .add("artifactNeeded", artifactNeeded)
+        .toString();
+  }
+
   /**
    * The Enum ExecutionResult.
    */
