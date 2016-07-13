@@ -6,6 +6,7 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
@@ -34,6 +35,7 @@ import software.wings.app.StaticConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
@@ -53,6 +55,7 @@ import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -1550,6 +1553,31 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .filteredOn("name", "wait2")
         .hasSize(2)
         .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
+  }
+
+  @Test
+  public void shouldThrowInvalidArgumentForInvalidOrchestrationId() {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                                        .withAppId(app.getUuid())
+                                        .withExecutionEventType(ExecutionEventType.PAUSE)
+                                        .withEnvId(env.getUuid())
+                                        .withExecutionUuid(UUIDGenerator.getUuid())
+                                        .build();
+    try {
+      executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+      failBecauseExceptionWasNotThrown(WingsException.class);
+    } catch (WingsException exception) {
+      assertThat(exception.getParams().values()).doesNotContainNull();
+      assertThat(exception.getParams().values().iterator().next())
+          .isInstanceOf(String.class)
+          .asString()
+          .startsWith("no orchestration for executionUuid");
+      assertThat(exception).hasMessage(ErrorCodes.INVALID_ARGUMENT.getCode());
+    }
   }
 
   /**

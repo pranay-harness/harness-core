@@ -19,11 +19,8 @@ public enum ExecutionEventType {
           * Pause all state event.
           */
   PAUSE_ALL, /**
-              * Continue state event.
+              * Retry state event.
               */
-  CONTINUE, /**
-             * Retry state event.
-             */
   RETRY, /**
           * Resume state event.
           */
