@@ -8,13 +8,14 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -164,13 +165,13 @@ public class ExecutionResource {
   @PUT
   @Path("{workflowExecutionId}")
   @Produces("application/json")
-  public RestResponse<WorkflowExecutionEvent> triggerWorkflowExecutionEvent(@QueryParam("appId") String appId,
+  public RestResponse<ExecutionEvent> triggerWorkflowExecutionEvent(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
-      WorkflowExecutionEvent workflowExecutionEvent) {
-    workflowExecutionEvent.setAppId(appId);
-    workflowExecutionEvent.setEnvId(envId);
-    workflowExecutionEvent.setWorkflowExecutionId(workflowExecutionId);
+      ExecutionEvent executionEvent) {
+    executionEvent.setAppId(appId);
+    executionEvent.setEnvId(envId);
+    executionEvent.setExecutionUuid(workflowExecutionId);
 
-    return new RestResponse<>(workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent));
+    return new RestResponse<>(workflowService.triggerExecutionEvent(executionEvent));
   }
 }

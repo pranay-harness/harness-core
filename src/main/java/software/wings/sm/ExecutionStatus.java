@@ -40,9 +40,10 @@ public enum ExecutionStatus {
   SCHEDULED, /**
               * Error execution status.
               */
-  ERROR, /**
-          * Paused execution status.
-          */
+  ERROR,
+  /**
+   * Paused execution status.
+   */
   PAUSED;
 
   /**

@@ -2,22 +2,25 @@
  *
  */
 
-package software.wings.beans;
+package software.wings.sm;
 
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.sm.ExecutionEventType;
+import software.wings.beans.Base;
+import software.wings.beans.User;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * The type Workflow execution event.
  *
  * @author Rishi
  */
-@Entity(value = "workflowExecutionEvent", noClassnameStored = true)
-public class WorkflowExecutionEvent extends Base {
-  private ExecutionEventType executionEventType;
+@Entity(value = "executionEvents", noClassnameStored = true)
+public class ExecutionEvent extends Base {
+  @NotNull private ExecutionEventType executionEventType;
 
-  private String envId;
-  private String workflowExecutionId;
+  @NotNull private String envId;
+  @NotNull private String executionUuid;
   private String stateExecutionInstanceId;
 
   /**
@@ -56,22 +59,12 @@ public class WorkflowExecutionEvent extends Base {
     this.envId = envId;
   }
 
-  /**
-   * Gets workflow execution id.
-   *
-   * @return the workflow execution id
-   */
-  public String getWorkflowExecutionId() {
-    return workflowExecutionId;
+  public String getExecutionUuid() {
+    return executionUuid;
   }
 
-  /**
-   * Sets workflow execution id.
-   *
-   * @param workflowExecutionId the workflow execution id
-   */
-  public void setWorkflowExecutionId(String workflowExecutionId) {
-    this.workflowExecutionId = workflowExecutionId;
+  public void setExecutionUuid(String executionUuid) {
+    this.executionUuid = executionUuid;
   }
 
   /**
@@ -98,7 +91,7 @@ public class WorkflowExecutionEvent extends Base {
   public static final class Builder {
     private ExecutionEventType executionEventType;
     private String envId;
-    private String workflowExecutionId;
+    private String executionUuid;
     private String stateExecutionInstanceId;
     private String uuid;
     private String appId;
@@ -142,13 +135,13 @@ public class WorkflowExecutionEvent extends Base {
     }
 
     /**
-     * With workflow execution id builder.
+     * With executionUuid builder.
      *
-     * @param workflowExecutionId the workflow execution id
+     * @param executionUuid the workflow execution id
      * @return the builder
      */
-    public Builder withWorkflowExecutionId(String workflowExecutionId) {
-      this.workflowExecutionId = workflowExecutionId;
+    public Builder withExecutionUuid(String executionUuid) {
+      this.executionUuid = executionUuid;
       return this;
     }
 
@@ -245,11 +238,11 @@ public class WorkflowExecutionEvent extends Base {
      *
      * @return the workflow execution event
      */
-    public WorkflowExecutionEvent build() {
-      WorkflowExecutionEvent workflowExecutionEvent = new WorkflowExecutionEvent();
+    public ExecutionEvent build() {
+      ExecutionEvent workflowExecutionEvent = new ExecutionEvent();
       workflowExecutionEvent.setExecutionEventType(executionEventType);
       workflowExecutionEvent.setEnvId(envId);
-      workflowExecutionEvent.setWorkflowExecutionId(workflowExecutionId);
+      workflowExecutionEvent.setExecutionUuid(executionUuid);
       workflowExecutionEvent.setStateExecutionInstanceId(stateExecutionInstanceId);
       workflowExecutionEvent.setUuid(uuid);
       workflowExecutionEvent.setAppId(appId);

@@ -1,6 +1,5 @@
 package software.wings.waitnotify;
 
-import java.io.Serializable;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -10,7 +9,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public interface NotifyCallback extends Serializable {
+public interface NotifyCallback {
   /**
    * Notify.
    *
