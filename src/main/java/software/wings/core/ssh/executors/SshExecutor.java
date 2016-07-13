@@ -1,7 +1,8 @@
 package software.wings.core.ssh.executors;
 
+import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.beans.CopyCommandUnit;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -20,23 +21,20 @@ public interface SshExecutor {
   void init(@Valid SshSessionConfig config);
 
   /**
-   * Execute.
+   * Execute execution result.
    *
-   * @param command the command
+   * @param execCommandUnit the exec command unit
    * @return the execution result
    */
-  ExecutionResult execute(@NotNull String command);
+  ExecutionResult execute(@NotNull AbstractExecCommandUnit execCommandUnit);
 
   /**
-   * Transfer file.
+   * Transfer file execution result.
    *
-   * @param gridFsFileId   the grid fs file id
-   * @param remoteFilePath the remote file path
-   * @param fileBucket     the file bucket
+   * @param copyCommandUnit the copy command unit
    * @return the execution result
    */
-  ExecutionResult transferFile(
-      @NotNull String gridFsFileId, @NotNull String remoteFilePath, @NotNull FileBucket fileBucket);
+  ExecutionResult transferFile(CopyCommandUnit copyCommandUnit);
 
   /**
    * Abort.

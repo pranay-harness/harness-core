@@ -25,7 +25,10 @@ import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AbstractExecCommandUnit;
+import software.wings.beans.CommandUnit.CommandUnitExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ErrorCodes;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
@@ -139,11 +142,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @see software.wings.core.ssh.executors.SshExecutor#execute(java.lang.String)
    */
   @Override
-  public ExecutionResult execute(String command) {
-    return genericExecute(command);
-  }
-
-  private ExecutionResult genericExecute(String command) {
+  public ExecutionResult execute(AbstractExecCommandUnit execCommand) {
+    String command = execCommand.getCommand();
     ExecutionResult executionResult = FAILURE;
     try {
       ((ChannelExec) channel).setCommand(command);
@@ -166,8 +166,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
             throw new WingsException(UNKNOWN_ERROR); // TODO: better error reporting
           }
-          text += new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+          String dataReadFromTheStream = new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+
+          text += dataReadFromTheStream;
           text = processStreamData(text, false);
+
+          if (execCommand
+                  .isProcessCommandOutput()) { // Let commandUnit process the stdout data and decide to continue or not
+            CommandUnitExecutionResult commandUnitExecutionResult =
+                execCommand.processCommandOutput(dataReadFromTheStream);
+            if (commandUnitExecutionResult != CommandUnitExecutionResult.CONTINUE) {
+              return commandUnitExecutionResult.getExecutionResult();
+            }
+          }
         }
 
         if (text.length() > 0) {
@@ -195,7 +206,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
-  private void passwordPromtResponder(String line) throws IOException {
+  private void passwordPromptResponder(String line) throws IOException {
     if (matchesPasswordPromptPattern(line)) {
       outputStream.write((config.getSudoAppPassword() + "\n").getBytes(UTF_8));
       outputStream.flush();
@@ -223,7 +234,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     String lastLine = lines[lines.length - 1];
     // last line is processed only if it ends with new line char or stream closed
     if (textEndsAtNewLineChar(text, lastLine) || finishedReading) {
-      passwordPromtResponder(lastLine);
+      passwordPromptResponder(lastLine);
       saveExecutionLog(lastLine);
       return ""; // nothing left to carry over
     }
@@ -326,19 +337,13 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return errorConst;
   }
 
-  /**
-   * **
-   * SCP.
-   * **
-   *
-   * @param gridFsFileId   the grid fs file id
-   * @param remoteFilePath the remote file path
-   * @param gridFsBucket   the grid fs bucket
-   * @return the execution result
-   */
   @Override
-  public ExecutionResult transferFile(String gridFsFileId, String remoteFilePath, FileBucket gridFsBucket) {
+  public ExecutionResult transferFile(CopyCommandUnit copyCommand) {
     ExecutionResult executionResult = FAILURE;
+    String gridFsFileId = copyCommand.getFileId();
+    FileBucket gridFsBucket = copyCommand.getFileBucket();
+    String remoteFilePath = copyCommand.getDestinationFilePath();
+
     try {
       String command = "scp -t " + remoteFilePath;
       Channel channel = session.openChannel("exec");
