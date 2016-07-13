@@ -32,7 +32,7 @@ public class Application extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private List<Environment> environments = new ArrayList<>();
 
   @Transient private Setup setup;
-  @Transient private List<WorkflowExecution> last5Executions;
+  @Transient private List<WorkflowExecution> recentExecutions;
 
   /**
    * Gets name.
@@ -124,12 +124,12 @@ public class Application extends Base {
     this.setup = setup;
   }
 
-  public List<WorkflowExecution> getLast5Executions() {
-    return last5Executions;
+  public List<WorkflowExecution> getRecentExecutions() {
+    return recentExecutions;
   }
 
-  public void setLast5Executions(List<WorkflowExecution> last5Executions) {
-    this.last5Executions = last5Executions;
+  public void setRecentExecutions(List<WorkflowExecution> recentExecutions) {
+    this.recentExecutions = recentExecutions;
   }
 
   @Override

@@ -72,7 +72,7 @@ public class AppServiceImpl implements AppService {
     PageResponse<Application> response = wingsPersistence.query(Application.class, req);
     if (overview) {
       response.getResponse().parallelStream().forEach(application -> {
-        application.setLast5Executions(
+        application.setRecentExecutions(
             workflowService
                 .listExecutions(
                     aPageRequest()
