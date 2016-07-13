@@ -197,7 +197,7 @@ public class StateMachineExecutor {
     if (executionEvent != null && executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE_ALL) {
       updateStatus(stateExecutionInstance, ExecutionStatus.PAUSED_ALL, Lists.newArrayList(ExecutionStatus.NEW));
       waitNotifyEngine.waitForAll(
-          new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid()),
+          new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid()),
           executionEvent.getUuid());
       return;
     }

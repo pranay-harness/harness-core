@@ -1314,7 +1314,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   }
 
   /**
-   * Should trigger complex workflow.
+   * Should pause and resume
    *
    * @throws InterruptedException the interrupted exception
    */
@@ -1419,6 +1419,137 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes().get(2))
         .extracting("name", "type", "status")
         .containsExactly("wait2", "WAIT", "SUCCESS");
+  }
+
+  /**
+   * Should pause and resume
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldPauseAllAndResumeAllState() throws InterruptedException {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+
+    Service service1 = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+    Service service2 = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc2").withAppId(app.getUuid()).build());
+
+    Graph graph =
+        aGraph()
+            .addNodes(aNode().withId("n0").withName("ORIGIN").build())
+            .addNodes(aNode()
+                          .withId("RepeatByServices")
+                          .withName("RepeatByServices")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${services()}")
+                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("wait1")
+                          .withName("wait1")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 2)
+                          .build())
+            .addNodes(aNode()
+                          .withId("wait2")
+                          .withName("wait2")
+                          .withType(StateType.WAIT.name())
+                          .addProperty("duration", 2)
+                          .build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("RepeatByServices").withType("success").build())
+            .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
+            .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
+            .build();
+
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(app.getUuid())
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withEnvironment(env)
+                                      .withGraph(graph)
+                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .build();
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
+                                          orchestration.getUuid(), executionArgs, callback);
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+
+    Thread.sleep(1000);
+
+    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                                        .withAppId(app.getUuid())
+                                        .withExecutionEventType(ExecutionEventType.PAUSE_ALL)
+                                        .withExecutionUuid(executionId)
+                                        .withEnvId(env.getUuid())
+                                        .build();
+    executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+    assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
+
+    Thread.sleep(3000);
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.RUNNING);
+    graph = execution.getGraph();
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status", "expanded")
+        .containsExactly("RepeatByServices", "REPEAT", "RUNNING", true);
+    assertThat(graph.getNodes())
+        .filteredOn("name", "wait1")
+        .hasSize(2)
+        .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
+    assertThat(graph.getNodes())
+        .filteredOn("name", "wait2")
+        .hasSize(2)
+        .allMatch(n -> "WAIT".equals(n.getType()) && "PAUSED_ALL".equals(n.getStatus()));
+
+    executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                         .withAppId(app.getUuid())
+                         .withExecutionEventType(ExecutionEventType.RESUME_ALL)
+                         .withExecutionUuid(executionId)
+                         .withEnvId(env.getUuid())
+                         .build();
+    executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+    assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
+
+    workflowExecutionSignals.get(signalId).await();
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .extracting("uuid", "status")
+        .containsExactly(executionId, ExecutionStatus.SUCCESS);
+
+    graph = execution.getGraph();
+    assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
+    assertThat(graph.getNodes().get(0))
+        .extracting("name", "type", "status", "expanded")
+        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
+    assertThat(graph.getNodes())
+        .filteredOn("name", "wait1")
+        .hasSize(2)
+        .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
+    assertThat(graph.getNodes())
+        .filteredOn("name", "wait2")
+        .hasSize(2)
+        .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
   }
 
   /**
