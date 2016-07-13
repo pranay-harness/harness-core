@@ -30,25 +30,18 @@ public class StateMachineExecutionEventManager {
     boolean inlineHandle = false;
     if (executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE
         || executionEvent.getExecutionEventType() == ExecutionEventType.RESUME
-        || executionEvent.getExecutionEventType() == ExecutionEventType.CONTINUE
         || executionEvent.getExecutionEventType() == ExecutionEventType.RETRY
         || executionEvent.getExecutionEventType() == ExecutionEventType.ABORT) {
       inlineHandle = true;
       if (executionEvent.getStateExecutionInstanceId() == null) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args",
-            "no stateExecutionInstance for id: " + executionEvent.getStateExecutionInstanceId());
+        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "null stateExecutionInstanceId");
       }
 
       StateExecutionInstance stateExecutionInstance = wingsPersistence.get(
           StateExecutionInstance.class, executionEvent.getAppId(), executionEvent.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
         throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args",
-            "no stateExecutionInstance for id: " + executionEvent.getStateExecutionInstanceId());
-      }
-
-      if (executionEvent.getExecutionEventType() == ExecutionEventType.CONTINUE
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
-        throw new WingsException(ErrorCodes.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
+            "invalid stateExecutionInstanceId: " + executionEvent.getStateExecutionInstanceId());
       }
 
       if (executionEvent.getExecutionEventType() == ExecutionEventType.RESUME
@@ -79,10 +72,7 @@ public class StateMachineExecutionEventManager {
 
     PageResponse<ExecutionEvent> res = listExecutionEvents(executionEvent);
 
-    if ((executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE_ALL
-            || executionEvent.getExecutionEventType() == ExecutionEventType.RESUME_ALL
-            || executionEvent.getExecutionEventType() == ExecutionEventType.ABORT_ALL)
-        && isPresent(res, ExecutionEventType.ABORT_ALL)) {
+    if (isPresent(res, ExecutionEventType.ABORT_ALL)) {
       throw new WingsException(ErrorCodes.ABORT_ALL_ALREADY);
     }
 

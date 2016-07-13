@@ -1131,6 +1131,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   @Override
   public ExecutionEvent triggerExecutionEvent(ExecutionEvent executionEvent) {
+    String executionUuid = executionEvent.getExecutionUuid();
+    WorkflowExecution workflowExecution =
+        wingsPersistence.get(WorkflowExecution.class, executionEvent.getAppId(), executionUuid);
+    if (workflowExecution == null) {
+      throw new WingsException(
+          ErrorCodes.INVALID_ARGUMENT, "args", "no workflowExecution for executionUuid:" + executionUuid);
+    }
+
     return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
   }
 }
