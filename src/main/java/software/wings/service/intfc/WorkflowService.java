@@ -6,9 +6,9 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.sm.ExecutionEvent;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -214,12 +214,12 @@ public interface WorkflowService {
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
 
   /**
-   * Trigger workflow execution event workflow execution event.
+   * Trigger execution event
    *
-   * @param workflowExecutionEvent the workflow execution event
-   * @return workflow execution event
+   * @param executionEvent the workflow execution event
+   * @return  execution event
    */
-  WorkflowExecutionEvent triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent);
+  ExecutionEvent triggerExecutionEvent(@Valid ExecutionEvent executionEvent);
 
   /**
    * Increment in progress count.

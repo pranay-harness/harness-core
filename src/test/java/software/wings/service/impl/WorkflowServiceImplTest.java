@@ -7,7 +7,6 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
 import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
@@ -15,6 +14,7 @@ import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
+import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Host.Builder.aHost;
@@ -48,7 +48,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
@@ -59,6 +58,7 @@ import software.wings.service.StaticMap;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionEventType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
@@ -79,6 +79,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 /**
@@ -1391,14 +1392,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .extracting("name", "type", "status")
         .containsExactly("pause1", "PAUSE", "PAUSED");
 
-    WorkflowExecutionEvent workflowExecutionEvent = WorkflowExecutionEvent.Builder.aWorkflowExecutionEvent()
-                                                        .withAppId(app.getUuid())
-                                                        .withEnvId(env.getUuid())
-                                                        .withWorkflowExecutionId(executionId)
-                                                        .withStateExecutionInstanceId(graph.getNodes().get(1).getId())
-                                                        .withExecutionEventType(ExecutionEventType.RESUME)
-                                                        .build();
-    workflowService.triggerWorkflowExecutionEvent(workflowExecutionEvent);
+    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                                        .withAppId(app.getUuid())
+                                        .withEnvId(env.getUuid())
+                                        .withExecutionUuid(executionId)
+                                        .withStateExecutionInstanceId(graph.getNodes().get(1).getId())
+                                        .withExecutionEventType(ExecutionEventType.RESUME)
+                                        .build();
+    workflowService.triggerExecutionEvent(executionEvent);
     workflowExecutionSignals.get(signalId).await();
 
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId);

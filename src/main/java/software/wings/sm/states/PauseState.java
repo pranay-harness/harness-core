@@ -3,15 +3,11 @@ package software.wings.sm.states;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.WaitNotifyEngine;
-
-import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -22,8 +18,6 @@ import javax.inject.Inject;
  */
 @Attributes
 public class PauseState extends EmailState {
-  @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
-
   /**
    * Creates pause state with given name.
    *

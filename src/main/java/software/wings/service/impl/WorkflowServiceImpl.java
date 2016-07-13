@@ -46,7 +46,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.WorkflowExecutionEvent;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
@@ -59,11 +58,13 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
+import software.wings.sm.StateMachineExecutionEventManager;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -83,6 +84,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -105,6 +107,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StaticConfiguration staticConfiguration;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -1127,9 +1130,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   @Override
-  public WorkflowExecutionEvent triggerWorkflowExecutionEvent(WorkflowExecutionEvent workflowExecutionEvent) {
-    workflowExecutionEvent = wingsPersistence.saveAndGet(WorkflowExecutionEvent.class, workflowExecutionEvent);
-    stateMachineExecutor.handleEvent(workflowExecutionEvent);
-    return workflowExecutionEvent;
+  public ExecutionEvent triggerExecutionEvent(ExecutionEvent executionEvent) {
+    return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
   }
 }

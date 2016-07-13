@@ -19,6 +19,7 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -464,6 +465,11 @@ public class PageRequest<T> {
       return this;
     }
 
+    public Builder addFilter(String fieldName, Operator op, Object... fieldValues) {
+      this.filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, op, fieldValues).build());
+      return this;
+    }
+
     /**
      * Adds the order.
      *
@@ -472,6 +478,11 @@ public class PageRequest<T> {
      */
     public Builder addOrder(SortOrder order) {
       this.orders.add(order);
+      return this;
+    }
+
+    public Builder addOrder(String fieldName, OrderType orderType) {
+      this.orders.add(SortOrder.Builder.aSortOrder().withField(fieldName, orderType).build());
       return this;
     }
 

@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author Rishi
  */
-public class StateMachineResumeCallback implements NotifyCallback {
+public class ExecutionResumeAllCallback implements NotifyCallback {
   @Inject private StateMachineExecutor stateMachineExecutor;
 
   private String appId;
@@ -23,7 +23,7 @@ public class StateMachineResumeCallback implements NotifyCallback {
   /**
    * Instantiates a new state machine resume callback.
    */
-  public StateMachineResumeCallback() {}
+  public ExecutionResumeAllCallback() {}
 
   /**
    * Instantiates a new state machine resume callback.
@@ -31,7 +31,7 @@ public class StateMachineResumeCallback implements NotifyCallback {
    * @param appId                    the app id
    * @param stateExecutionInstanceId the state execution instance id
    */
-  public StateMachineResumeCallback(String appId, String stateExecutionInstanceId) {
+  public ExecutionResumeAllCallback(String appId, String stateExecutionInstanceId) {
     this.appId = appId;
     this.stateExecutionInstanceId = stateExecutionInstanceId;
   }
@@ -77,6 +77,6 @@ public class StateMachineResumeCallback implements NotifyCallback {
    */
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
-    stateMachineExecutor.resume(appId, stateExecutionInstanceId, response);
+    stateMachineExecutor.startExecution(appId, stateExecutionInstanceId);
   }
 }

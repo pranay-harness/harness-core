@@ -40,10 +40,15 @@ public enum ExecutionStatus {
   SCHEDULED, /**
               * Error execution status.
               */
-  ERROR, /**
-          * Paused execution status.
-          */
-  PAUSED;
+  ERROR,
+  /**
+   * Paused execution status.
+   */
+  PAUSED,
+  /**
+   * Paused execution status.
+   */
+  PAUSED_ALL;
 
   /**
    * The type Execution status data.
