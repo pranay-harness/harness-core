@@ -195,7 +195,7 @@ public class StateMachineExecutor {
     ExecutionEvent executionEvent = stateMachineExecutionEventManager.checkForExecutionEvent(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid());
     if (executionEvent != null && executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE_ALL) {
-      updateStatus(stateExecutionInstance, ExecutionStatus.PAUSED_ALL, Lists.newArrayList(ExecutionStatus.NEW));
+      updateStatus(stateExecutionInstance, ExecutionStatus.PAUSED, Lists.newArrayList(ExecutionStatus.NEW));
       waitNotifyEngine.waitForAll(
           new ExecutionResumeAllCallback(stateExecutionInstance.getAppId(), stateExecutionInstance.getUuid()),
           executionEvent.getUuid());
@@ -204,7 +204,7 @@ public class StateMachineExecutor {
     StateMachine stateMachine = context.getStateMachine();
 
     boolean updated = updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING,
-        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED_ALL));
+        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED));
     if (!updated) {
       WingsException ex =
           new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");

@@ -1518,7 +1518,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes())
         .filteredOn("name", "wait2")
         .hasSize(2)
-        .allMatch(n -> "WAIT".equals(n.getType()) && "PAUSED_ALL".equals(n.getStatus()));
+        .allMatch(n -> "WAIT".equals(n.getType()) && "PAUSED".equals(n.getStatus()));
 
     executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
                          .withAppId(app.getUuid())

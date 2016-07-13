@@ -44,11 +44,7 @@ public enum ExecutionStatus {
   /**
    * Paused execution status.
    */
-  PAUSED,
-  /**
-   * Paused execution status.
-   */
-  PAUSED_ALL;
+  PAUSED;
 
   /**
    * The type Execution status data.
