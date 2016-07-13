@@ -7,8 +7,6 @@ import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
 import software.wings.utils.JsonUtils;
@@ -36,12 +34,13 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Copy platform command unit type.
    */
-  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class);
+  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class),
+
+  SETUP_ENV(SetupEnvCommandUnit.class);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
 
-  @JsonIgnore private final Logger logger = LoggerFactory.getLogger(getClass());
   private Object uiSchema;
   private JsonNode jsonSchema;
 

@@ -3,20 +3,20 @@ package software.wings.beans;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import com.google.common.base.MoreObjects;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.impl.AppContainerServiceImpl;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.EnumData;
 
-import javax.inject.Inject;
-
 /**
  * Created by anubhaw on 6/10/16.
  */
 public class CopyAppContainerCommandUnit extends CopyCommandUnit {
-  @Inject private AppContainerService appContainerService;
+  @Inject @Transient private transient AppContainerService appContainerService;
 
   @EnumData(enumDataProvider = AppContainerServiceImpl.class)
   @Attributes(title = "Application Container")
@@ -26,7 +26,7 @@ public class CopyAppContainerCommandUnit extends CopyCommandUnit {
    * Instantiates a new copy command unit.
    */
   public CopyAppContainerCommandUnit() {
-    super(CommandUnitType.COMMAND);
+    super(CommandUnitType.COPY_APP_CONTAINER);
   }
 
   @Override

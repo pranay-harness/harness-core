@@ -1,6 +1,11 @@
 package software.wings.utils;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.CommandUnitType.COMMAND;
+import static software.wings.beans.CommandUnitType.COPY_APP_CONTAINER;
+import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
+import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -36,13 +41,15 @@ public class DefaultCommands {
 
     return aGraph()
         .withGraphName("START")
-        .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
+        .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
+                .withX(400)
+                .withY(200)
                 .withId(nodes.get(1))
-                .withType("EXEC")
+                .withType(EXEC.name())
                 .withName("Start Service")
                 .addProperty("commandPath", "")
-                .addProperty("commandString", "sh start.sh")
+                .addProperty("command", "./tomcat/bin/startup.sh")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -63,13 +70,15 @@ public class DefaultCommands {
 
     return aGraph()
         .withGraphName("STOP")
-        .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
+        .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
+                .withX(400)
+                .withY(200)
                 .withId(nodes.get(1))
-                .withType("EXEC")
+                .withType(EXEC.name())
                 .withName("Stop Service")
                 .addProperty("commandPath", "")
-                .addProperty("commandString", "sh stop.sh")
+                .addProperty("command", "[[ -f ./tomcat/bin/shutdown.sh ]] && ./tomcat/bin/shutdown.sh  || true")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -87,38 +96,67 @@ public class DefaultCommands {
    */
   public static Graph getInstallCommandGraph() {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"),
-        graphIdGenerator("node"), graphIdGenerator("node"));
-    List<String> linkes =
-        asList(graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"));
+        graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"), graphIdGenerator("node"));
+    List<String> linkes = asList(graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"),
+        graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"));
 
     return aGraph()
         .withGraphName("INSTALL")
-        .addNodes(aNode().withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
+        .addNodes(aNode().withX(50).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
+                .withX(200)
+                .withY(200)
                 .withId(nodes.get(1))
                 .withName("STOP")
-                .withType("COMMAND")
+                .withType(COMMAND.name())
                 .addProperty("referenceId", "STOP")
                 .build(),
-            aNode().withId(nodes.get(2)).withName("Copy Artifact").withType("COPY_ARTIFACT").build(),
             aNode()
-                .withId(nodes.get(3))
-                .withName("Expand App Server")
-                .withType("EXEC")
-                .addProperty("commandPath", "")
-                .addProperty("commandString", "sh install.sh")
+                .withX(350)
+                .withY(200)
+                .withId(nodes.get(2))
+                .withName("Setup Runtime Paths")
+                .withType(SETUP_ENV.name())
                 .build(),
             aNode()
+                .withX(500)
+                .withY(200)
+                .withId(nodes.get(3))
+                .withName("Copy App Server")
+                .withType(COPY_APP_CONTAINER.name())
+                .build(),
+            aNode()
+                .withX(650)
+                .withY(200)
                 .withId(nodes.get(4))
+                .withName("Expand App Server")
+                .withType(EXEC.name())
+                .addProperty("commandPath", "")
+                .addProperty("command",
+                    "rm -rf tomcat && tar -xvzf apache-tomcat-7.0.70.tar.gz && mv apache-tomcat-7.0.70 tomcat")
+                .build(),
+            aNode()
+                .withX(800)
+                .withY(200)
+                .withId(nodes.get(5))
+                .withName("Copy Artifact")
+                .withType(COPY_ARTIFACT.name())
+                .build(),
+            aNode()
+                .withX(950)
+                .withY(200)
+                .withId(nodes.get(6))
                 .withName("START")
-                .withType("COMMAND")
+                .withType(COMMAND.name())
                 .addProperty("referenceId", "START")
                 .build())
         .addLinks(
             aLink().withFrom(nodes.get(0)).withTo(nodes.get(1)).withType(SUCCESS.name()).withId(linkes.get(0)).build(),
             aLink().withFrom(nodes.get(1)).withTo(nodes.get(2)).withType(SUCCESS.name()).withId(linkes.get(1)).build(),
             aLink().withFrom(nodes.get(2)).withTo(nodes.get(3)).withType(SUCCESS.name()).withId(linkes.get(2)).build(),
-            aLink().withFrom(nodes.get(3)).withTo(nodes.get(4)).withType(SUCCESS.name()).withId(linkes.get(3)).build())
+            aLink().withFrom(nodes.get(3)).withTo(nodes.get(4)).withType(SUCCESS.name()).withId(linkes.get(3)).build(),
+            aLink().withFrom(nodes.get(4)).withTo(nodes.get(5)).withType(SUCCESS.name()).withId(linkes.get(4)).build(),
+            aLink().withFrom(nodes.get(5)).withTo(nodes.get(6)).withType(SUCCESS.name()).withId(linkes.get(5)).build())
         .build();
   }
 }

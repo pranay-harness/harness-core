@@ -104,7 +104,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                           .addCommandUnits(anExecCommandUnit()
                                                .withName(COMMAND_UNIT_NAME)
                                                .withCommandUnitType(EXEC)
-                                               .withCommandString("./bin/start.sh")
+                                               .withCommand("./bin/start.sh")
                                                .build())
                           .build();
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);

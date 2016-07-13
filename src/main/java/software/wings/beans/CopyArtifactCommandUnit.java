@@ -4,10 +4,8 @@ import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
 
-import software.wings.service.intfc.ArtifactService;
+import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;
-
-import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
 
@@ -15,11 +13,7 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 5/31/16.
  */
 public class CopyArtifactCommandUnit extends CopyCommandUnit {
-  /**
-   * The Artifact service.
-   */
-  @Inject ArtifactService artifactService;
-  private String artifactId;
+  @SchemaIgnore private String artifactId;
 
   /**
    * Instantiates a new copy artifact command unit.
@@ -44,6 +38,7 @@ public class CopyArtifactCommandUnit extends CopyCommandUnit {
    *
    * @return the artifact id
    */
+  @SchemaIgnore
   public String getArtifactId() {
     return artifactId;
   }

@@ -27,7 +27,7 @@ public abstract class CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
-  private boolean artifactNeeded;
+  @SchemaIgnore private boolean artifactNeeded;
 
   /**
    * Instantiates a new Command unit.
@@ -128,6 +128,16 @@ public abstract class CommandUnit {
   @SchemaIgnore
   public void setArtifactNeeded(boolean artifactNeeded) {
     this.artifactNeeded = artifactNeeded;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("name", name)
+        .add("commandUnitType", commandUnitType)
+        .add("executionResult", executionResult)
+        .add("artifactNeeded", artifactNeeded)
+        .toString();
   }
 
   /**

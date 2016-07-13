@@ -48,6 +48,7 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Command;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
 import software.wings.beans.SearchFilter;
@@ -73,8 +74,12 @@ import java.util.List;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
-  private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
-      anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build());
+  private static final Command.Builder commandBuilder =
+      aCommand().withName("START").addCommandUnits(anExecCommandUnit()
+                                                       .withCommandUnitType(CommandUnitType.EXEC)
+                                                       .withCommandPath("/home/xxx/tomcat")
+                                                       .withCommand("bin/startup.sh")
+                                                       .build());
   private static final Builder builder = aService()
                                              .withUuid(SERVICE_ID)
                                              .withAppId(APP_ID)
@@ -222,17 +227,20 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                     .withId("1")
                     .withType("EXEC")
                     .addProperty("commandPath", "/home/xxx/tomcat")
-                    .addProperty("commandString", "bin/startup.sh")
+                    .addProperty("command", "bin/startup.sh")
                     .build())
             .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
             .build();
+
+    Command expectedCommand = aCommand().withGraph(commandGraph).build();
+    expectedCommand.transformGraph();
 
     srs.addCommand(APP_ID, SERVICE_ID, commandGraph);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
         .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
-            eq(commandBuilder.withGraph(commandGraph).build()));
+            any(Command.class)); // FIXME
     verify(wingsPersistence).createQuery(Service.class);
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
@@ -298,7 +306,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                     .withId("1")
                     .withType("EXEC")
                     .addProperty("commandPath", "/home/xxx/tomcat")
-                    .addProperty("commandString", "bin/startup.sh")
+                    .addProperty("command", "bin/startup.sh")
                     .build())
             .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
             .build();
@@ -307,8 +315,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     verify(wingsPersistence)
-        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"),
-            eq(commandBuilder.withGraph(commandGraph).build()));
+        .addToList(eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any()); // FIXME
     verify(wingsPersistence).createQuery(Service.class);
   }
 
