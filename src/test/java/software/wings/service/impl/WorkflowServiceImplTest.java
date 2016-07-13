@@ -1503,7 +1503,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionEvent = workflowService.triggerExecutionEvent(executionEvent);
     assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
 
-    Thread.sleep(3000);
+    Thread.sleep(5000);
 
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
