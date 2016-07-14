@@ -287,7 +287,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
     verify(serviceTemplateService).get(APP_ID, ENV_ID, TEMPLATE_ID);
     verify(tagService).get(APP_ID, ENV_ID, TAG_ID);
-    verify(serviceTemplateService).updateHosts(APP_ID, ENV_ID, TEMPLATE_ID, asList(HOST_ID));
+    verify(serviceTemplateService).addHosts(serviceTemplate, asList(hostPostSave));
   }
 
   /**

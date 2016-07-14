@@ -102,6 +102,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplate.getUuid());
   }
 
+  @Override
+  public ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts) {
+    hosts.addAll(template.getHosts());
+    List<Host> uniqueHosts = hosts.stream().collect(toSet()).stream().collect(toList());
+    return updateTemplateAndServiceInstance(template, uniqueHosts);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#updateHosts(java.lang.String, java.lang.String,
    * java.util.List)
@@ -115,10 +122,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                            .filter(Objects::nonNull)
                            .collect(toList());
 
+    return updateTemplateAndServiceInstance(serviceTemplate, hosts);
+  }
+
+  private ServiceTemplate updateTemplateAndServiceInstance(ServiceTemplate serviceTemplate, List<Host> hosts) {
     List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
-    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplateId, ImmutableMap.of("hosts", hosts));
-    return get(appId, envId, serviceTemplateId);
+    wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(), ImmutableMap.of("hosts", hosts));
+    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
   }
 
   /* (non-Javadoc)

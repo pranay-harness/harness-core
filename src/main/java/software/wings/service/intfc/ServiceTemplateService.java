@@ -182,4 +182,12 @@ public interface ServiceTemplateService {
    * @param service the service
    */
   void createDefaultTemplatesByService(Service service);
+
+  /**
+   * Add hosts.
+   *
+   * @param template the template
+   * @param hosts    the hosts
+   */
+  ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts);
 }

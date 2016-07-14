@@ -236,7 +236,7 @@ public class HostServiceImpl implements HostService {
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(baseHost.getAppId(), envId, baseHost.getServiceTemplates());
     List<String> duplicateHostNames = new ArrayList<>();
-    List<String> hostIds = new ArrayList<>();
+    List<Host> savedHosts = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
@@ -245,23 +245,22 @@ public class HostServiceImpl implements HostService {
                       .withInfraId(baseHost.getInfraId())
                       .withHostConnAttr(baseHost.getHostConnAttr())
                       .build();
-      SettingAttribute bastionConnSttr =
+      SettingAttribute bastionConnAttr =
           validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
-      if (bastionConnSttr != null) {
-        host.setBastionConnAttr(bastionConnSttr);
+      if (bastionConnAttr != null) {
+        host.setBastionConnAttr(bastionConnAttr);
       }
       List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
       host.setTags(tags);
       try {
         Host savedHost = save(host);
-        hostIds.add(savedHost.getUuid());
+        savedHosts.add(savedHost);
       } catch (DuplicateKeyException dupEx) {
         logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
         duplicateHostNames.add(host.getHostName());
       }
     });
-    serviceTemplates.forEach(serviceTemplate
-        -> serviceTemplateService.updateHosts(baseHost.getAppId(), envId, serviceTemplate.getUuid(), hostIds));
+    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedHosts));
 
     return aResponseMessage()
         .withErrorType(WARN)
