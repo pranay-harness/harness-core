@@ -821,6 +821,139 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   }
 
   /**
+   * Should trigger simple workflow.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldRenderSimpleWorkflow() throws InterruptedException {
+    Application app =
+        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+
+    Graph graph = aGraph()
+                      .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).build())
+                      .addNodes(aNode()
+                                    .withId("n1")
+                                    .withName("RepeatByInstances")
+                                    .withX(200)
+                                    .withY(50)
+                                    .withType(StateType.REPEAT.name())
+                                    .addProperty("repeatElementExpression", "${instances()}")
+                                    .addProperty("executionStrategyExpression", "${SIMPLE_WORKFLOW_REPEAT_STRATEGY}")
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n2")
+                                    .withName("stop")
+                                    .withX(250)
+                                    .withY(50)
+                                    .withType(StateType.COMMAND.name())
+                                    .addProperty("commandName", "${SIMPLE_WORKFLOW_COMMAND_NAME}")
+                                    .build())
+                      .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
+                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
+                      .build();
+
+    when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
+
+    Host host1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
+    Host host2 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withService(service)
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+
+    software.wings.beans.ServiceInstance.Builder builder =
+        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
+
+    String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
+    String uuid2 = serviceInstanceService.save(builder.withHost(host2).build()).getUuid();
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    List<String> serviceInstanceIds = new ArrayList<>();
+    serviceInstanceIds.add(uuid1);
+    serviceInstanceIds.add(uuid2);
+    executionArgs.setServiceInstanceIds(serviceInstanceIds);
+    executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
+    executionArgs.setCommandName("STOP");
+    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
+    executionArgs.setServiceId("123");
+
+    WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
+
+    impl.setStaticConfiguration(staticConfiguration);
+
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution workflowExecution =
+        impl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
+    workflowExecutionSignals.get(signalId).await();
+
+    assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution.getUuid()).isNotNull();
+
+    WorkflowExecution workflowExecution2 =
+        workflowService.getExecutionDetails(app.getUuid(), workflowExecution.getUuid());
+    assertThat(workflowExecution2)
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
+            WorkflowExecution::getWorkflowId)
+        .containsExactly(workflowExecution.getUuid(), app.getUuid(), workflowExecution.getStateMachineId(),
+            workflowExecution.getWorkflowId());
+    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+
+    graph = workflowExecution2.getGraph();
+    assertThat(graph).isNotNull();
+    assertThat(graph.getNodes()).hasSize(6).doesNotContainNull();
+    assertThat(graph.getNodes())
+        .extracting("name")
+        .containsExactly("RepeatByInstances", null, "host2:TEMPLATE_NAME", "stop", "host1:TEMPLATE_NAME", "stop");
+    assertThat(graph.getNodes())
+        .extracting("type")
+        .containsExactly("REPEAT", "GROUP", "ELEMENT", "COMMAND", "ELEMENT", "COMMAND");
+    assertThat(graph.getNodes())
+        .extracting("status")
+        .containsExactly("FAILED", null, "FAILED", "FAILED", "FAILED", "FAILED");
+
+    int col1 = DEFAULT_INITIAL_X;
+    int col2 = DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    assertThat(graph.getNodes())
+        .extracting("x")
+        .containsExactly(col1, col1 - DEFAULT_GROUP_PADDING, col1, col2, col1, col2);
+
+    int row1 = DEFAULT_INITIAL_Y;
+    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    assertThat(graph.getNodes())
+        .extracting("y")
+        .containsExactly(row1, row2 - DEFAULT_GROUP_PADDING, row2, row2, row3, row3);
+
+    PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
+                                                     .addFilter("appId", Operator.EQ, app.getUuid())
+                                                     .addFilter("uuid", Operator.EQ, workflowExecution.getUuid())
+                                                     .build();
+    PageResponse<WorkflowExecution> res = workflowService.listExecutions(pageRequest, true);
+    assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
+
+    graph = res.get(0).getGraph();
+    assertThat(graph.getNodes()).hasSize(2).extracting("y").containsExactly(DEFAULT_INITIAL_Y, DEFAULT_INITIAL_Y);
+    assertThat(graph.getNodes())
+        .hasSize(2)
+        .extracting("x")
+        .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH);
+    assertThat(graph.getLinks()).hasSize(1);
+  }
+
+  /**
    * Should trigger complex workflow.
    *
    * @throws InterruptedException the interrupted exception
