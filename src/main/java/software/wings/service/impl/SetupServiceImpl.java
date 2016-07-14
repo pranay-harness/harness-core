@@ -5,9 +5,6 @@ import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -30,9 +27,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SetupServiceImpl implements SetupService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private HostService hostService;
-  @Inject private MainConfiguration configuration;
 
   @Override
   public Setup getApplicationSetupStatus(Application application) {
@@ -73,8 +68,8 @@ public class SetupServiceImpl implements SetupService {
     if (hosts.size() == 0) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
-          .withDisplayText("Please add at least one host to environment")
-          .withUrl(getBaseUrl() + String.format("#/app/%s/env/%s", environment.getAppId(), environment.getUuid()))
+          .withDisplayText("Please add at least one host to environment : " + environment.getName())
+          .withUrl(String.format("/#/app/%s/env/%s", environment.getAppId(), environment.getUuid()))
           .build();
     }
     return null;
@@ -85,7 +80,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
           .withDisplayText("Please configure at least one service.")
-          .withUrl(getBaseUrl() + String.format("#/app/%s/services", app.getUuid()))
+          .withUrl(String.format("#/app/%s/services", app.getUuid()))
           .build();
     }
 
@@ -93,7 +88,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Please configure at least one environment")
-          .withUrl(getBaseUrl() + String.format("#/app/%s/environments", app.getUuid()))
+          .withUrl(String.format("#/app/%s/environments", app.getUuid()))
           .build();
     } else {
       Optional<SetupAction> setupAction = app.getEnvironments()
@@ -106,13 +101,5 @@ public class SetupServiceImpl implements SetupService {
       }
     }
     return null;
-  }
-
-  private String getBaseUrl() {
-    String baseURl = configuration.getPortal().getUrl().trim();
-    if (baseURl.charAt(baseURl.length() - 1) != '/') {
-      baseURl += "/";
-    }
-    return baseURl;
   }
 }
