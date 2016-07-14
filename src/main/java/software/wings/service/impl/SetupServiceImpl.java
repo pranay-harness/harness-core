@@ -80,7 +80,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
           .withDisplayText("Please configure at least one service.")
-          .withUrl(String.format("#/app/%s/services", app.getUuid()))
+          .withUrl(String.format("/#/app/%s/services", app.getUuid()))
           .build();
     }
 
@@ -88,7 +88,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
           .withDisplayText("Please configure at least one environment")
-          .withUrl(String.format("#/app/%s/environments", app.getUuid()))
+          .withUrl(String.format("/#/app/%s/environments", app.getUuid()))
           .build();
     } else {
       Optional<SetupAction> setupAction = app.getEnvironments()

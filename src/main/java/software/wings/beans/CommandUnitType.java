@@ -36,8 +36,18 @@ public enum CommandUnitType implements CommandUnitDescriptor {
    */
   COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class),
 
+  /**
+   * Setup env command unit type.
+   */
   SETUP_ENV(SetupEnvCommandUnit.class),
-  TAIL_LOG(TailLogCommandUnit.class);
+  /**
+   * Tail log command unit type.
+   */
+  TAIL_LOG(TailLogCommandUnit.class),
+  /**
+   * Process check command unit type.
+   */
+  PROCESS_CHECK(ProcessCheckCommandUnit.class);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
