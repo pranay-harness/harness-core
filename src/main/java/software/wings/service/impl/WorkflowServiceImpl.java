@@ -20,6 +20,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -84,7 +85,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -108,6 +108,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
+  @Inject private Injector injector;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -585,8 +586,10 @@ public class WorkflowServiceImpl implements WorkflowService {
       node.setType(instance.getStateType());
       node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
       if (instance.getStateExecutionData() != null) {
-        node.setExecutionSummary(instance.getStateExecutionData().getExecutionSummary());
-        node.setExecutionDetails(instance.getStateExecutionData().getExecutionDetails());
+        StateExecutionData executionData = instance.getStateExecutionData();
+        injector.injectMembers(executionData);
+        node.setExecutionSummary(executionData.getExecutionSummary());
+        node.setExecutionDetails(executionData.getExecutionDetails());
       }
       if ((StateType.REPEAT.name().equals(instance.getStateType())
               || StateType.FORK.name().equals(instance.getStateType()))

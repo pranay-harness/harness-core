@@ -1,7 +1,12 @@
 package software.wings.api;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
+import com.google.inject.Inject;
+
+import software.wings.beans.CountsByStatuses;
+import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -23,6 +28,8 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String artifactId;
   private String artifactName;
   private int totalCommandUnits;
+
+  @Inject private ActivityService activityService;
 
   /**
    * Getter for property 'hostName'.
@@ -226,14 +233,30 @@ public class CommandStateExecutionData extends StateExecutionData {
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
     data.put("total", anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
+    if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
+      CountsByStatuses countsByStatuses = new CountsByStatuses();
+      activityService.getCommandUnits(appId, activityId).stream().forEach(commandUnit -> {
+        switch (commandUnit.getExecutionResult()) {
+          case SUCCESS:
+            countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
+            break;
+          case FAILURE:
+            countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
+            break;
+        }
+      });
+      if (getStatus() == ExecutionStatus.RUNNING
+          && (countsByStatuses.getFailed() + countsByStatuses.getSuccess()) < totalCommandUnits) {
+        countsByStatuses.setInprogress(1);
+      }
+      data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
+    }
     return data;
   }
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "total",
-        anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
     putNotNull(
         executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     // putNotNull(executionDetails, "hostId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());

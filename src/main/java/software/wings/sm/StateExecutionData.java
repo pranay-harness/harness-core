@@ -152,9 +152,8 @@ public class StateExecutionData {
     putNotNull(executionDetails, "errorMsg",
         anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Caused By").build());
     putNotNull(
-        executionDetails, "startTs", anExecutionDataValue().withValue(errorMsg).withDisplayName("Started At").build());
-    putNotNull(
-        executionDetails, "endTs", anExecutionDataValue().withValue(errorMsg).withDisplayName("Ended At").build());
+        executionDetails, "startTs", anExecutionDataValue().withValue(startTs).withDisplayName("Started At").build());
+    putNotNull(executionDetails, "endTs", anExecutionDataValue().withValue(endTs).withDisplayName("Ended At").build());
 
     return executionDetails;
   }
