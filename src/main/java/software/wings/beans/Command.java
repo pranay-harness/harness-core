@@ -39,6 +39,9 @@ public class Command extends CommandUnit {
     super(CommandUnitType.COMMAND);
   }
 
+  @Override
+  public void setup(CommandExecutionContext context) {}
+
   /**
    * Gets reference id.
    *

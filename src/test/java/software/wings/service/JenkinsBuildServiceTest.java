@@ -8,7 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
-import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.service.impl.JenkinsBuildServiceImpl.APP_ID;
 import static software.wings.service.impl.JenkinsBuildServiceImpl.ARTIFACT_SOURCE_NAME;

@@ -29,6 +29,8 @@ public class Release extends Base {
 
   private List<ArtifactSource> artifactSources = Lists.newArrayList();
 
+  private List<BreakdownByEnvironments> breakdownByEnvironments;
+
   private Status status = Status.ACTIVE;
 
   /**
@@ -139,6 +141,14 @@ public class Release extends Base {
     this.services = services;
   }
 
+  public List<BreakdownByEnvironments> getBreakdownByEnvironments() {
+    return breakdownByEnvironments;
+  }
+
+  public void setBreakdownByEnvironments(List<BreakdownByEnvironments> breakdownByEnvironments) {
+    this.breakdownByEnvironments = breakdownByEnvironments;
+  }
+
   /**
    * Gets the.
    *
@@ -206,13 +216,151 @@ public class Release extends Base {
   }
 
   /**
-   * The Class ReleaseBuilder.
+   * Created by peeyushaggarwal on 7/13/16.
    */
-  public static final class ReleaseBuilder {
+  public static class BreakdownByEnvironments {
+    private String envId;
+    private String envName;
+    private int total;
+    private CountsByStatuses breakdown;
+
+    /**
+     * Getter for property 'envId'.
+     *
+     * @return Value for property 'envId'.
+     */
+    public String getEnvId() {
+      return envId;
+    }
+
+    /**
+     * Setter for property 'envId'.
+     *
+     * @param envId Value to set for property 'envId'.
+     */
+    public void setEnvId(String envId) {
+      this.envId = envId;
+    }
+
+    /**
+     * Getter for property 'envName'.
+     *
+     * @return Value for property 'envName'.
+     */
+    public String getEnvName() {
+      return envName;
+    }
+
+    /**
+     * Setter for property 'envName'.
+     *
+     * @param envName Value to set for property 'envName'.
+     */
+    public void setEnvName(String envName) {
+      this.envName = envName;
+    }
+
+    /**
+     * Getter for property 'total'.
+     *
+     * @return Value for property 'total'.
+     */
+    public int getTotal() {
+      return total;
+    }
+
+    /**
+     * Setter for property 'total'.
+     *
+     * @param total Value to set for property 'total'.
+     */
+    public void setTotal(int total) {
+      this.total = total;
+    }
+
+    /**
+     * Getter for property 'breakdown'.
+     *
+     * @return Value for property 'breakdown'.
+     */
+    public CountsByStatuses getBreakdown() {
+      return breakdown;
+    }
+
+    /**
+     * Setter for property 'breakdown'.
+     *
+     * @param breakdown Value to set for property 'breakdown'.
+     */
+    public void setBreakdown(CountsByStatuses breakdown) {
+      this.breakdown = breakdown;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("envId", envId)
+          .add("envName", envName)
+          .add("total", total)
+          .add("breakdown", breakdown)
+          .toString();
+    }
+
+    public static final class Builder {
+      private String envId;
+      private String envName;
+      private int total;
+      private CountsByStatuses breakdown;
+
+      private Builder() {}
+
+      public static Builder aBreakdownByEnvironments() {
+        return new Builder();
+      }
+
+      public Builder withEnvId(String envId) {
+        this.envId = envId;
+        return this;
+      }
+
+      public Builder withEnvName(String envName) {
+        this.envName = envName;
+        return this;
+      }
+
+      public Builder withTotal(int total) {
+        this.total = total;
+        return this;
+      }
+
+      public Builder withBreakdown(CountsByStatuses breakdown) {
+        this.breakdown = breakdown;
+        return this;
+      }
+
+      public Builder but() {
+        return aBreakdownByEnvironments().withEnvId(envId).withEnvName(envName).withTotal(total).withBreakdown(
+            breakdown);
+      }
+
+      public BreakdownByEnvironments build() {
+        BreakdownByEnvironments breakdownByEnvironments = new BreakdownByEnvironments();
+        breakdownByEnvironments.setEnvId(envId);
+        breakdownByEnvironments.setEnvName(envName);
+        breakdownByEnvironments.setTotal(total);
+        breakdownByEnvironments.setBreakdown(breakdown);
+        return breakdownByEnvironments;
+      }
+    }
+  }
+
+  public static final class Builder {
     private String releaseName;
     private String description;
     private Long targetDate;
+    private Set<Service> services;
     private List<ArtifactSource> artifactSources = Lists.newArrayList();
+    private List<BreakdownByEnvironments> breakdownByEnvironments;
     private Status status = Status.ACTIVE;
     private String uuid;
     private String appId;
@@ -222,160 +370,90 @@ public class Release extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private ReleaseBuilder() {}
+    private Builder() {}
 
-    /**
-     * A release.
-     *
-     * @return the release builder
-     */
-    public static ReleaseBuilder aRelease() {
-      return new ReleaseBuilder();
+    public static Builder aRelease() {
+      return new Builder();
     }
 
-    /**
-     * With release name.
-     *
-     * @param releaseName the release name
-     * @return the release builder
-     */
-    public ReleaseBuilder withReleaseName(String releaseName) {
+    public Builder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
-    /**
-     * With description.
-     *
-     * @param description the description
-     * @return the release builder
-     */
-    public ReleaseBuilder withDescription(String description) {
+    public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
-    /**
-     * With target date.
-     *
-     * @param targetDate the target date
-     * @return the release builder
-     */
-    public ReleaseBuilder withTargetDate(Long targetDate) {
+    public Builder withTargetDate(Long targetDate) {
       this.targetDate = targetDate;
       return this;
     }
 
-    /**
-     * With artifact sources.
-     *
-     * @param artifactSources the artifact sources
-     * @return the release builder
-     */
-    public ReleaseBuilder withArtifactSources(List<ArtifactSource> artifactSources) {
+    public Builder withServices(Set<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    public Builder withArtifactSources(List<ArtifactSource> artifactSources) {
       this.artifactSources = artifactSources;
       return this;
     }
 
-    /**
-     * With status.
-     *
-     * @param status the status
-     * @return the release builder
-     */
-    public ReleaseBuilder withStatus(Status status) {
+    public Builder withBreakdownByEnvironments(List<BreakdownByEnvironments> breakdownByEnvironments) {
+      this.breakdownByEnvironments = breakdownByEnvironments;
+      return this;
+    }
+
+    public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the release builder
-     */
-    public ReleaseBuilder withUuid(String uuid) {
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the release builder
-     */
-    public ReleaseBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the release builder
-     */
-    public ReleaseBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the release builder
-     */
-    public ReleaseBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the release builder
-     */
-    public ReleaseBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the release builder
-     */
-    public ReleaseBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the release builder
-     */
-    public ReleaseBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the release builder
-     */
-    public ReleaseBuilder but() {
+    public Builder but() {
       return aRelease()
           .withReleaseName(releaseName)
           .withDescription(description)
           .withTargetDate(targetDate)
+          .withServices(services)
           .withArtifactSources(artifactSources)
+          .withBreakdownByEnvironments(breakdownByEnvironments)
           .withStatus(status)
           .withUuid(uuid)
           .withAppId(appId)
@@ -386,17 +464,14 @@ public class Release extends Base {
           .withActive(active);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the release
-     */
     public Release build() {
       Release release = new Release();
       release.setReleaseName(releaseName);
       release.setDescription(description);
       release.setTargetDate(targetDate);
+      release.setServices(services);
       release.setArtifactSources(artifactSources);
+      release.setBreakdownByEnvironments(breakdownByEnvironments);
       release.setStatus(status);
       release.setUuid(uuid);
       release.setAppId(appId);

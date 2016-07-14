@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
+import static software.wings.beans.CopyAppContainerCommandUnit.Builder.aCopyAppContainerCommandUnit;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
 import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
+import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -147,7 +149,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
     executor.init(config);
     String fileName = getUuid();
-    ExecutionResult execute = executor.execute(String.format("touch %s && rm %s", fileName, fileName));
+    ExecutionResult execute = executor.execute(
+        anExecCommandUnit().withCommand(String.format("touch %s && rm %s", fileName, fileName)).build());
     assertThat(execute).isEqualTo(SUCCESS);
   }
 
@@ -157,7 +160,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Test
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(config);
-    ExecutionResult execute = executor.execute(String.format("rm %s", "FILE_DOES_NOT_EXIST"));
+    ExecutionResult execute =
+        executor.execute(anExecCommandUnit().withCommand(String.format("rm %s", "FILE_DOES_NOT_EXIST")).build());
     assertThat(execute).isEqualTo(FAILURE);
   }
 
@@ -180,7 +184,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   public void shouldThrowExceptionForSessionTimeout() {
     config.setSshSessionTimeout(1); // 1ms
     executor.init(config);
-    assertThatThrownBy(() -> executor.execute("ls -lh"))
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommand("ls -lh").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(SSH_SESSION_TIMEOUT.getCode());
   }
@@ -207,6 +211,10 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(config);
     String fileName = "mvim";
-    ExecutionResult result = executor.transferFile(fileId, "./" + fileName, CONFIGS);
+    ExecutionResult result = executor.transferFile(aCopyAppContainerCommandUnit()
+                                                       .withFileId(fileId)
+                                                       .withDestinationFilePath("./" + fileName)
+                                                       .withFileBucket(CONFIGS)
+                                                       .build());
   }
 }

@@ -4,6 +4,7 @@ import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
 
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -12,6 +13,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
+@Attributes(title = "Copy Artifact")
 public class CopyArtifactCommandUnit extends CopyCommandUnit {
   @SchemaIgnore private String artifactId;
 

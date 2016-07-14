@@ -1,15 +1,16 @@
 package software.wings.service;
 
+import static com.google.common.collect.Sets.newHashSet;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 
@@ -19,7 +20,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
-import software.wings.beans.Release.ReleaseBuilder;
+import software.wings.beans.Release.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ReleaseService;
@@ -32,9 +33,14 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */
+@RealMongo
 public class ReleaseServiceTest extends WingsBaseTest {
-  private static final ReleaseBuilder releaseBuilder =
-      aRelease().withAppId(APP_ID).withReleaseName("REL1").withDescription("RELEASE 1");
+  private static final Builder releaseBuilder =
+      aRelease()
+          .withAppId(APP_ID)
+          .withReleaseName("REL1")
+          .withDescription("RELEASE 1")
+          .withServices(newHashSet(aService().withUuid(SERVICE_ID).withAppId(APP_ID).build()));
 
   private static final JenkinsArtifactSource artifactSource =
       aJenkinsArtifactSource()
@@ -59,13 +65,7 @@ public class ReleaseServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).build());
-    wingsRule.getDatastore().save(anAppContainer().withUuid("UUID").withAppId(APP_ID).build());
-    wingsRule.getDatastore().save(
-        aService()
-            .withUuid("SERVICE_ID")
-            .withAppId(APP_ID)
-            .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").withAppId(APP_ID).build())
-            .build());
+    wingsRule.getDatastore().save(aService().withUuid(SERVICE_ID).withAppId(APP_ID).withAppId(APP_ID).build());
   }
 
   /**
@@ -148,7 +148,6 @@ public class ReleaseServiceTest extends WingsBaseTest {
   /**
    * Should add artifact source.
    */
-  @RealMongo
   @Test
   public void shouldAddArtifactSource() {
     Release release =
@@ -163,7 +162,6 @@ public class ReleaseServiceTest extends WingsBaseTest {
   /**
    * Should delete artifact source.
    */
-  @RealMongo
   @Test
   public void shouldDeleteArtifactSource() {
     Release release =

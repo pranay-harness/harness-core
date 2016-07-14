@@ -173,7 +173,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).execute(EXEC_CMD);
+    verify(sshPwdAuthExecutor).execute(EXEC_COMMAND_UNIT);
   }
 
   /**
@@ -191,6 +191,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).transferFile(FILE_ID, FILE_PATH, ARTIFACTS);
+    verify(sshPwdAuthExecutor).transferFile(commandUnit);
   }
 }

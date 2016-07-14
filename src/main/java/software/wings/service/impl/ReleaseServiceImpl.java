@@ -1,31 +1,50 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
+import static java.util.stream.StreamSupport.stream;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ErrorCodes.DUPLICATE_ARTIFACTSOURCE_NAMES;
+import static software.wings.beans.Release.BreakdownByEnvironments.Builder.aBreakdownByEnvironments;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ArtifactSource;
+import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
+import software.wings.beans.Release.BreakdownByEnvironments;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
+import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.validation.Create;
 import software.wings.utils.validation.Update;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
@@ -41,6 +60,12 @@ public class ReleaseServiceImpl implements ReleaseService {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject private SettingsService settingsService;
+
+  @Inject private ServiceInstanceService serviceInstanceService;
+
+  @Inject private ServiceTemplateService serviceTemplateService;
+
+  @Inject private EnvironmentService environmentService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ReleaseService#list(software.wings.dl.PageRequest)
@@ -71,6 +96,10 @@ public class ReleaseServiceImpl implements ReleaseService {
   @Override
   @ValidationGroups(Create.class)
   public Release create(Release release) {
+    List<BreakdownByEnvironments> breakdownByEnvironments = getReleaseBreakdownByEnvironments(release);
+
+    release.setBreakdownByEnvironments(breakdownByEnvironments);
+
     String id = wingsPersistence.save(release);
     return get(id, release.getAppId());
   }
@@ -94,8 +123,39 @@ public class ReleaseServiceImpl implements ReleaseService {
     setUnset(updateOperations, "targetDate", release.getTargetDate());
     setUnset(updateOperations, "services", release.getServices());
 
+    List<BreakdownByEnvironments> breakdownByEnvironments = getReleaseBreakdownByEnvironments(release);
+
+    release.setBreakdownByEnvironments(breakdownByEnvironments);
+
+    Iterable<InstanceCountByEnv> instanceCountByEnvs = serviceInstanceService.getCountsByEnvReleaseAndTemplate(
+        release.getAppId(), release, getServiceTemplatesForRelease(release));
+
+    stream(instanceCountByEnvs.spliterator(), false).forEach(instanceCountByEnv -> {
+      breakdownByEnvironments.stream()
+          .filter(breakdownByEnvironment
+              -> StringUtils.equals(breakdownByEnvironment.getEnvId(), instanceCountByEnv.getEnvId()))
+          .forEach(breakdownByEnvironment -> {
+            breakdownByEnvironment.getBreakdown().setSuccess(instanceCountByEnv.getCount());
+          });
+    });
+
+    setUnset(updateOperations, "breakdownByEnvironments", release.getBreakdownByEnvironments());
+
     wingsPersistence.update(query, updateOperations);
     return get(release.getUuid(), release.getAppId());
+  }
+
+  @Override
+  public void addSuccessCount(String appId, String releaseId, String envId, int count) {
+    wingsPersistence.update(wingsPersistence.createQuery(Release.class)
+                                .field(ID_KEY)
+                                .equal(releaseId)
+                                .field("appId")
+                                .equal(appId)
+                                .field("breakdownByEnvironments.envId")
+                                .equal(envId),
+        wingsPersistence.createUpdateOperations(Release.class)
+            .inc("breakdownByEnvironments.$.breakdown.success", count));
   }
 
   /* (non-Javadoc)
@@ -186,5 +246,73 @@ public class ReleaseServiceImpl implements ReleaseService {
         }
       }
     }
+  }
+
+  private Set<ServiceTemplate> getServiceTemplatesForRelease(Release release) {
+    Map<String, List<ServiceTemplate>> serviceTemplatesByEnv =
+        release.getServices()
+            .parallelStream()
+            .flatMap(service
+                -> (Stream<ServiceTemplate>) serviceTemplateService
+                       .list(aPageRequest()
+                                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, release.getAppId()).build())
+                                 .aPageRequest()
+                                 .addFilter(aSearchFilter()
+                                                .withField("service", Operator.EQ,
+                                                    wingsPersistence.getDatastore().getKey(service))
+                                                .build())
+                                 .addFieldsIncluded("name", "envId")
+                                 .<ServiceTemplate>build())
+                       .getResponse()
+                       .stream())
+            .collect(groupingBy(ServiceTemplate::getEnvId));
+
+    return serviceTemplatesByEnv.values()
+        .stream()
+        .flatMap(serviceTemplates1 -> serviceTemplates1.stream())
+        .collect(toSet());
+  }
+
+  private List<BreakdownByEnvironments> getReleaseBreakdownByEnvironments(Release release) {
+    Map<String, List<ServiceTemplate>> serviceTemplatesByEnv =
+        release.getServices()
+            .parallelStream()
+            .flatMap(service
+                -> (Stream<ServiceTemplate>) serviceTemplateService
+                       .list(aPageRequest()
+                                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, release.getAppId()).build())
+                                 .aPageRequest()
+                                 .addFilter(aSearchFilter()
+                                                .withField("service", Operator.EQ,
+                                                    wingsPersistence.getDatastore().getKey(service))
+                                                .build())
+                                 .addFieldsIncluded("name", "envId")
+                                 .<ServiceTemplate>build())
+                       .getResponse()
+                       .stream())
+            .collect(groupingBy(ServiceTemplate::getEnvId));
+
+    Set<ServiceTemplate> serviceTemplates = serviceTemplatesByEnv.values()
+                                                .stream()
+                                                .flatMap(serviceTemplates1 -> serviceTemplates1.stream())
+                                                .collect(toSet());
+
+    Iterable<InstanceCountByEnv> instanceCountByEnv =
+        serviceInstanceService.getCountsByEnv(release.getAppId(), serviceTemplates);
+
+    stream(instanceCountByEnv.spliterator(), false).forEach(System.out::println);
+    Map<String, Integer> countsByEnv = stream(instanceCountByEnv.spliterator(), false)
+                                           .collect(toMap(InstanceCountByEnv::getEnvId, InstanceCountByEnv::getCount));
+
+    return serviceTemplatesByEnv.entrySet()
+        .parallelStream()
+        .map(entry
+            -> aBreakdownByEnvironments()
+                   .withEnvId(entry.getKey())
+                   .withEnvName(environmentService.get(release.getAppId(), entry.getKey(), false).getName())
+                   .withTotal(countsByEnv.get(entry.getKey()))
+                   .withBreakdown(aCountsByStatuses().build())
+                   .build())
+        .collect(toList());
   }
 }

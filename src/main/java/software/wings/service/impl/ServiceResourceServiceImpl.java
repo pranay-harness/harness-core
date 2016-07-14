@@ -178,7 +178,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             command)) {
       throw new WingsException(DUPLICATE_COMMAND_NAMES, "commandName", command.getName());
     }
-
     return get(appId, serviceId);
   }
 

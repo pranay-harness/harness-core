@@ -88,7 +88,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                         .withLogLine(format("Begin execution of command %s:%s", commandUnit.getName(),
                             commandUnit.getCommandUnitType()))
                         .build());
+
     executionResult = executeByCommandType(executor, commandUnit, op);
+
     logService.save(aLog()
                         .withAppId(host.getAppId())
                         .withActivityId(activityId)
@@ -105,12 +107,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {
     ExecutionResult executionResult;
     if (op.equals(SupportedOp.EXEC)) {
-      AbstractExecCommandUnit execCommandUnit = (AbstractExecCommandUnit) commandUnit;
-      executionResult = executor.execute(execCommandUnit.getCommand());
+      executionResult = executor.execute((AbstractExecCommandUnit) commandUnit);
     } else {
-      CopyCommandUnit copyCommandUnit = (CopyCommandUnit) commandUnit;
-      executionResult = executor.transferFile(
-          copyCommandUnit.getFileId(), copyCommandUnit.getDestinationFilePath(), copyCommandUnit.getFileBucket());
+      executionResult = executor.transferFile((CopyCommandUnit) commandUnit);
     }
     return executionResult;
   }

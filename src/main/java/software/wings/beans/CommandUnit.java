@@ -4,6 +4,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -21,20 +22,20 @@ import java.util.Objects;
   @Type(value = Command.class, name = "COMMAND")
   , @Type(value = ExecCommandUnit.class, name = "EXEC"),
       @Type(value = CopyArtifactCommandUnit.class, name = "COPY_ARTIFACT"),
-      @Type(value = CopyAppContainerCommandUnit.class, name = "COPY_CONTAINER")
+      @Type(value = CopyAppContainerCommandUnit.class, name = "COPY_CONTAINER"),
+      @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
-  @SchemaIgnore private boolean artifactNeeded;
+  @SchemaIgnore private boolean artifactNeeded = false;
+  @SchemaIgnore private boolean processCommandOutput = false;
 
   /**
    * Instantiates a new Command unit.
    */
-  public CommandUnit(){}
-
-  ;
+  public CommandUnit() {}
 
   /**
    * Instantiates a new command unit.
@@ -46,11 +47,29 @@ public abstract class CommandUnit {
   }
 
   /**
+   * Process command output command unit execution result.
+   *
+   * @param line the line
+   * @return the command unit execution result
+   */
+  public CommandUnitExecutionResult processCommandOutput(String line) {
+    CommandUnitExecutionResult aContinue = CommandUnitExecutionResult.CONTINUE;
+    aContinue.setExecutionResult(ExecutionResult.RUNNING);
+    return aContinue;
+  }
+
+  /**
    * Sets .
    *
    * @param context the context
    */
-  public void setup(CommandExecutionContext context) {}
+  public abstract void setup(CommandExecutionContext context);
+
+  @SchemaIgnore
+  @JsonIgnore
+  public int getCommandExecutionTimeout() {
+    return 10 * 60 * 1000;
+  }
 
   /**
    * Gets command unit type.
@@ -125,9 +144,27 @@ public abstract class CommandUnit {
    *
    * @param artifactNeeded the artifact needed
    */
-  @SchemaIgnore
   public void setArtifactNeeded(boolean artifactNeeded) {
     this.artifactNeeded = artifactNeeded;
+  }
+
+  /**
+   * Is read command output boolean.
+   *
+   * @return the boolean
+   */
+  @SchemaIgnore
+  public boolean isProcessCommandOutput() {
+    return processCommandOutput;
+  }
+
+  /**
+   * Sets read command output.
+   *
+   * @param processCommandOutput the read command output
+   */
+  public void setProcessCommandOutput(boolean processCommandOutput) {
+    this.processCommandOutput = processCommandOutput;
   }
 
   @Override
@@ -137,7 +174,41 @@ public abstract class CommandUnit {
         .add("commandUnitType", commandUnitType)
         .add("executionResult", executionResult)
         .add("artifactNeeded", artifactNeeded)
+        .add("processCommandOutput", processCommandOutput)
         .toString();
+  }
+
+  /**
+   * The enum Command unit execution result.
+   */
+  public enum CommandUnitExecutionResult {
+    /**
+     * Stop command unit execution result.
+     */
+    STOP, /**
+           * Continue command unit execution result.
+           */
+    CONTINUE;
+
+    private ExecutionResult executionResult = ExecutionResult.SUCCESS;
+
+    /**
+     * Gets execution result.
+     *
+     * @return the execution result
+     */
+    public ExecutionResult getExecutionResult() {
+      return executionResult;
+    }
+
+    /**
+     * Sets execution result.
+     *
+     * @param executionResult the execution result
+     */
+    public void setExecutionResult(ExecutionResult executionResult) {
+      this.executionResult = executionResult;
+    }
   }
 
   /**
@@ -147,12 +218,14 @@ public abstract class CommandUnit {
     /**
      * Success execution result.
      */
-    SUCCESS, /**
-              * Failure execution result.
-              */
-    FAILURE, /**
-              * Running execution result.
-              */
+    SUCCESS,
+    /**
+     * Failure execution result.
+     */
+    FAILURE,
+    /**
+     * Running execution result.
+     */
     RUNNING;
 
     /**

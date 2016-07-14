@@ -11,7 +11,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
-import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 
@@ -25,7 +25,7 @@ import org.junit.rules.Verifier;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.Release;
-import software.wings.beans.Release.ReleaseBuilder;
+import software.wings.beans.Release.Builder;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
@@ -70,12 +70,12 @@ public class ReleaseResourceTest extends WingsBaseTest {
   /**
    * The constant releaseBuilder.
    */
-  public static final ReleaseBuilder releaseBuilder = aRelease()
-                                                          .withReleaseName("REL1")
-                                                          .withAppId(APP_ID)
-                                                          .withUuid(RELEASE_ID)
-                                                          .withDescription("RELEASE 1")
-                                                          .withTargetDate(System.currentTimeMillis() + 1000);
+  public static final Builder releaseBuilder = aRelease()
+                                                   .withReleaseName("REL1")
+                                                   .withAppId(APP_ID)
+                                                   .withUuid(RELEASE_ID)
+                                                   .withDescription("RELEASE 1")
+                                                   .withTargetDate(System.currentTimeMillis() + 1000);
 
   /**
    * The Collector.
