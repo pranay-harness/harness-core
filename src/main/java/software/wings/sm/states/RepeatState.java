@@ -161,8 +161,7 @@ public class RepeatState extends State {
     if (repeatElements == null || repeatElements.size() == 0) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage(
-          "No repeat elements found for the repeatElementExpression:" + repeatElementExpression);
+      executionResponse.setErrorMessage("Expression: " + repeatElementExpression + ". no repeat elements found");
       return executionResponse;
     }
     if (repeatTransitionStateName == null) {

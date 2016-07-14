@@ -150,7 +150,7 @@ public class StateExecutionData {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
 
     putNotNull(executionDetails, "errorMsg",
-        anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Caused By").build());
+        anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Message").build());
     putNotNull(
         executionDetails, "startTs", anExecutionDataValue().withValue(startTs).withDisplayName("Started At").build());
     putNotNull(executionDetails, "endTs", anExecutionDataValue().withValue(endTs).withDisplayName("Ended At").build());
