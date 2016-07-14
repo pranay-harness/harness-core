@@ -414,7 +414,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(workflowExecution, null, null, null, workflowExecution.getWorkflowType() == WorkflowType.SIMPLE);
+      populateGraph(
+          workflowExecution, null, null, null, false, (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE));
     }
     return res;
   }
@@ -446,6 +447,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
       String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested) {
+    populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested, false);
+  }
+
+  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
+      String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested, boolean isSimpleLinear) {
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }
@@ -454,12 +460,12 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
     if (instances != null && instances.size() > 0) {
-      if (detailsRequested && instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
+      if ((detailsRequested || isSimpleLinear) && instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
           && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
                  || StateType.FORK.name().equals(instances.get(0).getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
         expandedGroupIds = Lists.newArrayList(instances.get(0).getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false, isSimpleLinear);
         return;
       }
     }
@@ -497,7 +503,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    workflowExecution.setGraph(generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds));
+    workflowExecution.setGraph(
+        generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
   }
 
   private void collectChildrenIds(
@@ -550,8 +557,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     return wingsPersistence.executeGetListQuery(query);
   }
 
-  private Graph generateGraph(
-      Map<String, StateExecutionInstance> instanceIdMap, String initialStateName, List<String> expandedGroupIds) {
+  private Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
+      List<String> expandedGroupIds, boolean isSimpleLinear) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -602,11 +609,35 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
-    extrapolateDimension(originNode);
     Graph graph = new Graph();
-    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    if (isSimpleLinear) {
+      paintSimpleLinearGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    } else {
+      extrapolateDimension(originNode);
+      paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    }
     logger.debug("graph generated: {}", graph);
     return graph;
+  }
+
+  private void paintSimpleLinearGraph(Node originNode, Graph graph, int x, int y) {
+    if (originNode == null || originNode.getGroup() == null || originNode.getGroup().getElements() == null) {
+      return;
+    }
+    for (Node node : originNode.getGroup().getElements()) {
+      if (node.getNext() == null) {
+        node.setType("COMMAND");
+      } else {
+        node.getNext().setName(node.getName());
+        node = node.getNext();
+      }
+
+      node.setX(x);
+      node.setY(y);
+
+      graph.getNodes().add(node);
+      x += DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    }
   }
 
   private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
@@ -676,7 +707,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                           .withId(UUIDGenerator.getUuid())
                           .withFrom(priorElement.getId())
                           .withTo(node.getId())
-                          .withType("success")
+                          .withType("element")
                           .build());
       }
       priorElement = node;
@@ -711,7 +742,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                         .withId(UUIDGenerator.getUuid())
                         .withFrom(node.getId())
                         .withTo(next.getId())
-                        .withType(node.getType())
+                        .withType(node.getStatus())
                         .build());
       ;
     }
