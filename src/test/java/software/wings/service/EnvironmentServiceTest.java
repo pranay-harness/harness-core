@@ -37,6 +37,7 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -210,7 +211,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
     spyEnvService.createDefaultEnvironments(APP_ID);
     verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
-    assertThat(asList("PROD", "UAT", "QA", "DEV"))
+    assertThat(asList(Constants.PROD_ENV, Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV))
         .isEqualTo(environmentArgumentCaptor.getAllValues().stream().map(Environment::getName).collect(toList()));
   }
 }

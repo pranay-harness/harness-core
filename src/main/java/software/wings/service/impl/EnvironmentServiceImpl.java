@@ -22,6 +22,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.WorkflowType;
+import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -258,8 +259,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName("Production").withEnvironmentType(PROD).build());
-    asList("User Acceptance", "Quality Assurance", "Development")
+    save(anEnvironment().withAppId(appId).withName(Constants.PROD_ENV).withEnvironmentType(PROD).build());
+    asList(Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV)
         .forEach(name -> save(anEnvironment().withAppId(appId).withName(name).withEnvironmentType(OTHER).build()));
   }
 

@@ -66,4 +66,9 @@ public interface Constants {
    * The constant SUMMARY_PAYLOAD_LIMIT.
    */
   int SUMMARY_PAYLOAD_LIMIT = 1024;
+
+  String PROD_ENV = "Production";
+  String UAT_ENV = "User Acceptance";
+  String QA_ENV = "Quality Assurance";
+  String DEV_ENV = "Development";
 }
