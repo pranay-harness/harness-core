@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -211,7 +210,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
     spyEnvService.createDefaultEnvironments(APP_ID);
     verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
-    assertThat(asList(Constants.PROD_ENV, Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV))
-        .isEqualTo(environmentArgumentCaptor.getAllValues().stream().map(Environment::getName).collect(toList()));
+    assertThat(environmentArgumentCaptor.getAllValues())
+        .extracting(Environment::getName)
+        .containsExactly(Constants.PROD_ENV, Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV);
   }
 }

@@ -1,8 +1,14 @@
 package software.wings.sm;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
+import com.google.common.collect.Maps;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 
-import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Represents state machine execution data.
@@ -111,28 +117,10 @@ public class StateExecutionData {
    *
    * @return the execution summary
    */
-  public Object getExecutionSummary() {
-    return fillExecutionData();
-  }
-
-  public Object getExecutionSummaryWithData() {
-    return fillExecutionData();
-  }
-  /**
-   * Gets execution details.
-   *
-   * @return the execution details
-   */
-  public Object getExecutionDetails() {
-    return fillExecutionData();
-  }
-
-  private LinkedHashMap<String, Object> fillExecutionData() {
-    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-    putNotNull(orderedMap, "errorMsg", errorMsg);
-    putNotNull(orderedMap, "startTs", startTs);
-    putNotNull(orderedMap, "endTs", endTs);
-    putNotNull(orderedMap, "total", 1);
+  @JsonProperty("executionSummary")
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionData = Maps.newLinkedHashMap();
+    executionData.put("total", anExecutionDataValue().withDisplayName("Total").withValue(1).build());
     CountsByStatuses breakDown = new CountsByStatuses();
     switch (status) {
       case FAILED:
@@ -151,9 +139,27 @@ public class StateExecutionData {
         breakDown.setSuccess(1);
         break;
     }
-    putNotNull(orderedMap, "breakdown", breakDown);
-    return orderedMap;
+    executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(1).build());
+    return executionData;
   }
+
+  public void setExecutionSummary(Map<String, ExecutionDataValue> ignored) {}
+
+  @JsonProperty("executionDetails")
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+
+    putNotNull(executionDetails, "errorMsg",
+        anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Caused By").build());
+    putNotNull(
+        executionDetails, "startTs", anExecutionDataValue().withValue(errorMsg).withDisplayName("Started At").build());
+    putNotNull(
+        executionDetails, "endTs", anExecutionDataValue().withValue(errorMsg).withDisplayName("Ended At").build());
+
+    return executionDetails;
+  }
+
+  public void setExecutionDetails(Map<String, ExecutionDataValue> ignored) {}
 
   /**
    * Put not null.
@@ -162,8 +168,8 @@ public class StateExecutionData {
    * @param name       the name
    * @param value      the value
    */
-  protected void putNotNull(LinkedHashMap<String, Object> orderedMap, String name, Object value) {
-    if (value != null) {
+  protected void putNotNull(Map<String, ExecutionDataValue> orderedMap, String name, ExecutionDataValue value) {
+    if (value != null && value.getValue() != null) {
       orderedMap.put(name, value);
     }
   }

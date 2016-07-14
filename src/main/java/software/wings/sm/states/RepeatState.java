@@ -4,10 +4,15 @@
 
 package software.wings.sm.states;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
+import com.google.common.base.Joiner;
+
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
@@ -28,7 +33,6 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -400,28 +404,17 @@ public class RepeatState extends State {
      * {@inheritDoc}
      */
     @Override
-    public Object getExecutionSummary() {
-      LinkedHashMap<String, Object> execData = fillExecutionData();
-      execData.putAll((Map<String, Object>) super.getExecutionSummary());
-      return execData;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object getExecutionDetails() {
-      LinkedHashMap<String, Object> execData = fillExecutionData();
-      execData.putAll((Map<String, Object>) super.getExecutionSummary());
-      return execData;
-    }
-
-    private LinkedHashMap<String, Object> fillExecutionData() {
-      LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-      putNotNull(orderedMap, "repeatElements",
-          repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList()).toString());
-      putNotNull(orderedMap, "executionStrategy", executionStrategy);
-      return orderedMap;
+    public Map<String, ExecutionDataValue> getExecutionDetails() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+      putNotNull(executionDetails, "repeatElements",
+          anExecutionDataValue()
+              .withValue(Joiner.on(", ").join(
+                  repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())))
+              .withDisplayName("Repeating Over")
+              .build());
+      putNotNull(executionDetails, "executionStrategy",
+          anExecutionDataValue().withValue(executionStrategy).withDisplayName("Execution Strategy").build());
+      return executionDetails;
     }
 
     /**

@@ -4,17 +4,17 @@
 
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import com.google.common.base.MoreObjects;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -192,31 +192,20 @@ public class HttpStateExecutionData extends StateExecutionData {
   }
 
   @Override
-  public Object getExecutionSummary() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    if (httpResponseBody != null && httpResponseBody.length() > Constants.SUMMARY_PAYLOAD_LIMIT) {
-      execData.put("httpResponseBody", httpResponseBody.substring(0, Constants.SUMMARY_PAYLOAD_LIMIT));
-    }
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
-
-  @Override
-  public Object getExecutionDetails() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
-
-  private LinkedHashMap<String, Object> fillExecutionData() {
-    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-    putNotNull(orderedMap, "httpUrl", httpUrl);
-    putNotNull(orderedMap, "httpMethod", httpMethod);
-    putNotNull(orderedMap, "httpResponseCode", httpResponseCode);
-    putNotNull(orderedMap, "httpResponseBody", httpResponseBody);
-    putNotNull(orderedMap, "assertionStatement", assertionStatement);
-    putNotNull(orderedMap, "assertionStatus", assertionStatus);
-    return orderedMap;
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "httpUrl", anExecutionDataValue().withValue(httpUrl).withDisplayName("Url").build());
+    putNotNull(
+        executionDetails, "httpMethod", anExecutionDataValue().withValue(httpMethod).withDisplayName("Method").build());
+    putNotNull(executionDetails, "httpResponseCode",
+        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
+    putNotNull(executionDetails, "httpResponseBody",
+        anExecutionDataValue().withValue(httpResponseBody).withDisplayName("Response Body").build());
+    putNotNull(executionDetails, "assertionStatement",
+        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+    putNotNull(executionDetails, "assertionStatus",
+        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+    return executionDetails;
   }
 
   /**
