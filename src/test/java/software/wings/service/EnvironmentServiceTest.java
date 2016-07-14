@@ -210,7 +210,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     doReturn(anEnvironment().build()).when(spyEnvService).save(any(Environment.class));
     spyEnvService.createDefaultEnvironments(APP_ID);
     verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
-    assertThat(asList("PROD", "UAT", "QA", "DEV"))
+    assertThat(asList("Production", "User Acceptance", "Quality Assurance", "Development"))
         .isEqualTo(environmentArgumentCaptor.getAllValues().stream().map(Environment::getName).collect(toList()));
   }
 }
