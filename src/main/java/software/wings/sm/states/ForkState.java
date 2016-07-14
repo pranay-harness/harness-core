@@ -1,7 +1,12 @@
 package software.wings.sm.states;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
+import com.google.common.base.Joiner;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ExecutionDataValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -16,7 +21,6 @@ import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -181,26 +185,11 @@ public class ForkState extends State {
      * {@inheritDoc}
      */
     @Override
-    public Object getExecutionSummary() {
-      LinkedHashMap<String, Object> execData = fillExecutionData();
-      execData.putAll((Map<String, Object>) super.getExecutionSummary());
-      return execData;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Object getExecutionDetails() {
-      LinkedHashMap<String, Object> execData = fillExecutionData();
-      execData.putAll((Map<String, Object>) super.getExecutionSummary());
-      return execData;
-    }
-
-    private LinkedHashMap<String, Object> fillExecutionData() {
-      LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-      putNotNull(orderedMap, "forkStateNames", forkStateNames.toString());
-      return orderedMap;
+    public Map<String, ExecutionDataValue> getExecutionDetails() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+      putNotNull(executionDetails, "forkStateNames",
+          anExecutionDataValue().withValue(Joiner.on(", ").join(forkStateNames)).withDisplayName("Forking to").build());
+      return executionDetails;
     }
   }
 }

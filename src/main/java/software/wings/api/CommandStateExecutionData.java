@@ -1,9 +1,11 @@
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
-import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 6/17/16.
@@ -221,27 +223,28 @@ public class CommandStateExecutionData extends StateExecutionData {
   }
 
   @Override
-  public Object getExecutionSummary() {
-    LinkedHashMap<String, Object> data = (LinkedHashMap<String, Object>) super.getExecutionSummary();
-    commandExecutionData(data);
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> data = super.getExecutionSummary();
+    data.put("total", anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
     return data;
   }
 
   @Override
-  public Object getExecutionDetails() {
-    LinkedHashMap<String, Object> data = (LinkedHashMap<String, Object>) super.getExecutionSummary();
-    commandExecutionData(data);
-    return data;
-  }
-
-  private void commandExecutionData(LinkedHashMap<String, Object> data) {
-    data.put("total", totalCommandUnits);
-    data.put("activityId", activityId);
-    data.put("hostId", hostId);
-    data.put("hostName", hostName);
-    data.put("templateName", templateName);
-    data.put("templateId", templateId);
-    data.put("commandName", commandName);
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "total",
+        anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
+    putNotNull(
+        executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
+    // putNotNull(executionDetails, "hostId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
+    putNotNull(
+        executionDetails, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
+    putNotNull(executionDetails, "templateName",
+        anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
+    // putNotNull(executionDetails, "templateId", templateId);
+    putNotNull(executionDetails, "commandName",
+        anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
+    return executionDetails;
   }
 
   public String getAppId() {

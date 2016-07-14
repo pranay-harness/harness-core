@@ -4,9 +4,10 @@
 
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import software.wings.sm.StateExecutionData;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -74,22 +75,10 @@ public class WaitStateExecutionData extends StateExecutionData {
   }
 
   @Override
-  public Object getExecutionSummary() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
-
-  @Override
-  public Object getExecutionDetails() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
-
-  private LinkedHashMap<String, Object> fillExecutionData() {
-    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-    putNotNull(orderedMap, "duration", duration);
-    return orderedMap;
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(executionDetails, "duration",
+        anExecutionDataValue().withValue(duration).withDisplayName("Duration (In Seconds)").build());
+    return executionDetails;
   }
 }

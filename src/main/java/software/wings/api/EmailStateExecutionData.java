@@ -1,13 +1,13 @@
 package software.wings.api;
 
+import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 // TODO: Auto-generated Javadoc
@@ -110,29 +110,17 @@ public class EmailStateExecutionData extends StateExecutionData {
   }
 
   @Override
-  public Object getExecutionSummary() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    if (body != null && body.length() > Constants.SUMMARY_PAYLOAD_LIMIT) {
-      execData.put("body", body.substring(0, Constants.SUMMARY_PAYLOAD_LIMIT));
-    }
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
+  public Map<String, ExecutionDataValue> getExecutionDetails() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    putNotNull(
+        executionDetails, "toAddress", anExecutionDataValue().withValue(toAddress).withDisplayName("To").build());
+    putNotNull(
+        executionDetails, "ccAddress", anExecutionDataValue().withValue(ccAddress).withDisplayName("CC").build());
+    putNotNull(
+        executionDetails, "subject", anExecutionDataValue().withValue(subject).withDisplayName("Subject").build());
+    putNotNull(executionDetails, "body", anExecutionDataValue().withValue(body).withDisplayName("Body").build());
 
-  @Override
-  public Object getExecutionDetails() {
-    LinkedHashMap<String, Object> execData = fillExecutionData();
-    execData.putAll((Map<String, Object>) super.getExecutionSummary());
-    return execData;
-  }
-
-  private LinkedHashMap<String, Object> fillExecutionData() {
-    LinkedHashMap<String, Object> orderedMap = new LinkedHashMap<>();
-    putNotNull(orderedMap, "toAddress", toAddress);
-    putNotNull(orderedMap, "ccAddress", ccAddress);
-    putNotNull(orderedMap, "subject", subject);
-    putNotNull(orderedMap, "body", body);
-    return orderedMap;
+    return executionDetails;
   }
 
   /* (non-Javadoc)
