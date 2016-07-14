@@ -4,6 +4,7 @@
 
 package software.wings.sm.states;
 
+import static org.apache.commons.lang.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.Joiner;
@@ -14,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
@@ -409,6 +411,22 @@ public class RepeatState extends State {
           anExecutionDataValue()
               .withValue(Joiner.on(", ").join(
                   repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())))
+              .withDisplayName("Repeating Over")
+              .build());
+      putNotNull(executionDetails, "executionStrategy",
+          anExecutionDataValue().withValue(executionStrategy).withDisplayName("Execution Strategy").build());
+      return executionDetails;
+    }
+
+    @Override
+    public Map<String, ExecutionDataValue> getExecutionSummary() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+      putNotNull(executionDetails, "repeatElements",
+          anExecutionDataValue()
+              .withValue(
+                  abbreviate(Joiner.on(", ").join(
+                                 repeatElements.stream().map(ContextElement::getName).collect(Collectors.toList())),
+                      Constants.SUMMARY_PAYLOAD_LIMIT))
               .withDisplayName("Repeating Over")
               .build());
       putNotNull(executionDetails, "executionStrategy",

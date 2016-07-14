@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.Joiner;
@@ -7,6 +8,7 @@ import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -189,6 +191,17 @@ public class ForkState extends State {
       Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
       putNotNull(executionDetails, "forkStateNames",
           anExecutionDataValue().withValue(Joiner.on(", ").join(forkStateNames)).withDisplayName("Forking to").build());
+      return executionDetails;
+    }
+
+    @Override
+    public Map<String, ExecutionDataValue> getExecutionSummary() {
+      Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+      putNotNull(executionDetails, "forkStateNames",
+          anExecutionDataValue()
+              .withValue(abbreviate(Joiner.on(", ").join(forkStateNames), Constants.SUMMARY_PAYLOAD_LIMIT))
+              .withDisplayName("Forking to")
+              .build());
       return executionDetails;
     }
   }

@@ -4,12 +4,14 @@
 
 package software.wings.api;
 
+import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
 
 import com.google.common.base.MoreObjects;
 
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+import software.wings.common.Constants;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.XmlUtils;
@@ -189,6 +191,26 @@ public class HttpStateExecutionData extends StateExecutionData {
       document = XmlUtils.parse(httpResponseBody);
     }
     return document;
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(executionDetails, "httpUrl", anExecutionDataValue().withValue(httpUrl).withDisplayName("Url").build());
+    putNotNull(
+        executionDetails, "httpMethod", anExecutionDataValue().withValue(httpMethod).withDisplayName("Method").build());
+    putNotNull(executionDetails, "httpResponseCode",
+        anExecutionDataValue().withValue(httpResponseCode).withDisplayName("Response Code").build());
+    putNotNull(executionDetails, "httpResponseBody",
+        anExecutionDataValue()
+            .withValue(abbreviate(httpResponseBody, Constants.SUMMARY_PAYLOAD_LIMIT))
+            .withDisplayName("Response Body")
+            .build());
+    putNotNull(executionDetails, "assertionStatement",
+        anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
+    putNotNull(executionDetails, "assertionStatus",
+        anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+    return executionDetails;
   }
 
   @Override

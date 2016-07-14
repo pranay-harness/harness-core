@@ -18,6 +18,8 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.SimpleWorkflowParam;
@@ -77,6 +79,8 @@ public class CommandState extends State {
    * The constant STAGING_PATH.
    */
   public static final String STAGING_PATH = "STAGING_PATH";
+
+  private static final Logger logger = LoggerFactory.getLogger(CommandState.class);
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
@@ -247,6 +251,7 @@ public class CommandState extends State {
               commandExecutionContextBuilder.withActivityId(finalActivityId).build();
           executionResult = serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
         } catch (Exception e) {
+          logger.warn("Exception: ", e);
           executionResult = ExecutionResult.FAILURE;
           errorMessage = e.getMessage();
         }
@@ -321,7 +326,10 @@ public class CommandState extends State {
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     updateWorkflowExecutionStats(executionStatus, context);
 
-    return anExecutionResponse().withExecutionStatus(executionStatus).build();
+    return anExecutionResponse()
+        .withExecutionStatus(executionStatus)
+        .withErrorMessage(executionResultData.getErrorMessage())
+        .build();
   }
 
   /**

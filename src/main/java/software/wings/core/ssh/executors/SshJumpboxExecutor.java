@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.LogService;
@@ -28,7 +29,7 @@ public class SshJumpboxExecutor extends AbstractSshExecutor {
    * software.wings.core.ssh.executors.AbstractSshExecutor#getSession(software.wings.core.ssh.executors.SshSessionConfig)
    */
   @Override
-  public Session getSession(SshSessionConfig config) {
+  public Session getSession(SshSessionConfig config) throws JSchException {
     return SshSessionFactory.getSSHSessionWithJumpbox(config);
   }
 }

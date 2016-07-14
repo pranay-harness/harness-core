@@ -251,14 +251,15 @@ public class CommandStateExecutionData extends StateExecutionData {
       }
       data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
     }
+    putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
+    putNotNull(data, "templateName", anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
+    putNotNull(data, "commandName", anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
+
     return data;
   }
 
-  @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(
-        executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     // putNotNull(executionDetails, "hostId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     putNotNull(
         executionDetails, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
@@ -267,6 +268,8 @@ public class CommandStateExecutionData extends StateExecutionData {
     // putNotNull(executionDetails, "templateId", templateId);
     putNotNull(executionDetails, "commandName",
         anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
+    putNotNull(
+        executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     return executionDetails;
   }
 

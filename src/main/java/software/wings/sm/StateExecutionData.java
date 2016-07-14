@@ -140,6 +140,8 @@ public class StateExecutionData {
         break;
     }
     executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
+    putNotNull(
+        executionData, "errorMsg", anExecutionDataValue().withValue(errorMsg).withDisplayName("Error Message").build());
     return executionData;
   }
 

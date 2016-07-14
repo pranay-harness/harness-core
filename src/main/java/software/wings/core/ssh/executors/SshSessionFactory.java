@@ -22,24 +22,21 @@ public class SshSessionFactory {
    * @param config the config
    * @return the SSH session with jumpbox
    */
-  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) {
+  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) throws JSchException {
     Session session = null;
-    try {
-      Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
-      int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
-      logger.info("portforwarding port " + forwardingPort);
+    Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
+    int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
+    logger.info("portforwarding port " + forwardingPort);
 
-      SshSessionConfig newConfig = aSshSessionConfig()
-                                       .withUserName(config.getUserName())
-                                       .withPassword(config.getPassword())
-                                       .withKey(config.getKey())
-                                       .withHost("127.0.0.1")
-                                       .withPort(forwardingPort)
-                                       .build();
-      session = getSSHSession(newConfig);
-    } catch (JSchException e) {
-      e.printStackTrace();
-    }
+    SshSessionConfig newConfig = aSshSessionConfig()
+                                     .withUserName(config.getUserName())
+                                     .withPassword(config.getPassword())
+                                     .withKey(config.getKey())
+                                     .withHost("127.0.0.1")
+                                     .withPort(forwardingPort)
+                                     .build();
+    session = getSSHSession(newConfig);
+
     return session;
   }
 

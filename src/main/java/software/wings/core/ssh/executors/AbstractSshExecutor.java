@@ -133,7 +133,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.info(config.getSshConnectionTimeout() + " ##### " + config.getSshSessionTimeout());
     } catch (JSchException ex) {
       logger.error("Failed to initialize executor " + ex);
-      throw new WingsException(normalizeError(ex), ex.getCause());
+      throw new WingsException(normalizeError(ex));
     } catch (IOException ex) {
       ex.printStackTrace();
     }
@@ -304,7 +304,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     String message = jschexception.getMessage();
     Throwable cause = jschexception.getCause();
 
-    ErrorCodes errorConst = null;
+    ErrorCodes errorConst = UNKNOWN_ERROR;
 
     if (cause != null) { // TODO: Refactor use enums, maybe ?
       if (cause instanceof NoRouteToHostException) {
@@ -319,8 +319,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         errorConst = SOCKET_CONNECTION_ERROR;
       } else if (cause instanceof FileNotFoundException) {
         errorConst = INVALID_KEYPATH;
-      } else {
-        errorConst = UNKNOWN_ERROR;
       }
     } else {
       if (message.startsWith("invalid privatekey")) {

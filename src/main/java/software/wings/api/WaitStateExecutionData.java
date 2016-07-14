@@ -75,6 +75,14 @@ public class WaitStateExecutionData extends StateExecutionData {
   }
 
   @Override
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(executionDetails, "duration",
+        anExecutionDataValue().withValue(duration).withDisplayName("Duration (In Seconds)").build());
+    return executionDetails;
+  }
+
+  @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "duration",

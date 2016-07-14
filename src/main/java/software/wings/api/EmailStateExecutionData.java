@@ -1,6 +1,8 @@
 package software.wings.api;
 
+import static org.apache.commons.lang.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+import static software.wings.common.Constants.SUMMARY_PAYLOAD_LIMIT;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -107,6 +109,20 @@ public class EmailStateExecutionData extends StateExecutionData {
     EmailStateExecutionData that = (EmailStateExecutionData) o;
     return Objects.equal(toAddress, that.toAddress) && Objects.equal(ccAddress, that.ccAddress)
         && Objects.equal(subject, that.subject) && Objects.equal(body, that.body);
+  }
+
+  @Override
+  public Map<String, ExecutionDataValue> getExecutionSummary() {
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
+    putNotNull(
+        executionDetails, "toAddress", anExecutionDataValue().withValue(toAddress).withDisplayName("To").build());
+    putNotNull(
+        executionDetails, "ccAddress", anExecutionDataValue().withValue(ccAddress).withDisplayName("CC").build());
+    putNotNull(
+        executionDetails, "subject", anExecutionDataValue().withValue(subject).withDisplayName("Subject").build());
+    putNotNull(executionDetails, "body",
+        anExecutionDataValue().withValue(abbreviate(body, SUMMARY_PAYLOAD_LIMIT)).withDisplayName("Body").build());
+    return executionDetails;
   }
 
   @Override
