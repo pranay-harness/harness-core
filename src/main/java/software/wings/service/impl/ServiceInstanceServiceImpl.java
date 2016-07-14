@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
@@ -7,10 +8,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import com.mongodb.DuplicateKeyException;
+import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Host;
+import software.wings.beans.InstanceCountByEnv;
+import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -19,6 +23,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
 
 import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -55,6 +60,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public ServiceInstance update(ServiceInstance serviceInstance) {
+    ServiceInstance oldServiceInstance =
+        get(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getUuid());
     Builder<String, Object> builder =
         ImmutableMap.<String, Object>builder().put("lastDeployedOn", serviceInstance.getLastDeployedOn());
     if (serviceInstance.getArtifact() != null) {
@@ -151,5 +158,36 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         .equal(templateId)
         .asList()
         .forEach(serviceInstance -> delete(appId, envId, serviceInstance.getUuid()));
+  }
+
+  @Override
+  public Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
+      String appId, Release release, Set<ServiceTemplate> serviceTemplates) {
+    return ()
+               -> wingsPersistence.getDatastore()
+                      .createAggregation(ServiceInstance.class)
+                      .match(wingsPersistence.createQuery(ServiceInstance.class)
+                                 .field("serviceTemplate")
+                                 .in(serviceTemplates)
+                                 .field("appId")
+                                 .equal(appId)
+                                 .field("release")
+                                 .equal(wingsPersistence.getDatastore().getKey(release)))
+                      .group("envId", grouping("count", new Accumulator("$sum", 1)))
+                      .out(InstanceCountByEnv.class);
+  }
+
+  @Override
+  public Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates) {
+    return ()
+               -> wingsPersistence.getDatastore()
+                      .createAggregation(ServiceInstance.class)
+                      .match(wingsPersistence.createQuery(ServiceInstance.class)
+                                 .field("serviceTemplate")
+                                 .in(serviceTemplates)
+                                 .field("appId")
+                                 .equal(appId))
+                      .group("envId", grouping("count", new Accumulator("$sum", 1)))
+                      .out(InstanceCountByEnv.class);
   }
 }

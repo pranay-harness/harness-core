@@ -21,7 +21,7 @@ import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultDa
 import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
-import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -57,6 +57,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -135,6 +136,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private WorkflowService workflowService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
+  @Mock private ReleaseService releaseService;
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
   /**
@@ -224,7 +226,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(waitNotifyEngine).notify(ACTIVITY_ID, anExecutionResultData().withResult(ExecutionResult.SUCCESS).build());
 
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
-        activityService, settingsService, workflowService);
+        activityService, settingsService, workflowService, releaseService);
   }
 
   /**
@@ -297,6 +299,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService).update(any(ServiceInstance.class));
 
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
-        serviceCommandExecutorService, settingsService, workflowService);
+        serviceCommandExecutorService, settingsService, workflowService, releaseService);
   }
 }

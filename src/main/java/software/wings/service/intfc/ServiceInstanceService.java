@@ -2,12 +2,15 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Host;
+import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.beans.InstanceCountByEnv;
 
 import java.util.List;
+import java.util.Set;
 
 // TODO: Auto-generated Javadoc
 
@@ -83,4 +86,9 @@ public interface ServiceInstanceService {
    * @param templateId the template id
    */
   void deleteByServiceTemplate(String appId, String envId, String templateId);
+
+  Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
+      String appId, Release release, Set<ServiceTemplate> serviceTemplates);
+
+  Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates);
 }

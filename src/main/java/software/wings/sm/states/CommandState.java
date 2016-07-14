@@ -8,7 +8,7 @@ import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.Release.ReleaseBuilder.aRelease;
+import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
@@ -28,12 +29,14 @@ import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.Environment;
+import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -88,6 +91,8 @@ public class CommandState extends State {
   @Inject @Transient private transient EnvironmentService environmentService;
 
   @Inject @Transient private transient WorkflowService workflowService;
+
+  @Inject @Transient private ReleaseService releaseService;
 
   @Inject @Transient private transient ExecutorService executorService;
 
@@ -235,7 +240,7 @@ public class CommandState extends State {
 
       String finalActivityId = activityId;
       executorService.execute(() -> {
-        ExecutionResult executionResult;
+        ExecutionResult executionResult = ExecutionResult.SUCCESS;
         String errorMessage = null;
         try {
           CommandExecutionContext commandExecutionContext =
@@ -301,8 +306,13 @@ public class CommandState extends State {
     if (executionResultData.getResult().equals(SUCCESS)) {
       serviceInstance.setLastDeployedOn(currentTimeMillis());
       if (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId())) {
+        Release oldRelease = serviceInstance.getRelease();
         serviceInstance.setRelease(aRelease().withUuid(activity.getReleaseId()).build());
         serviceInstance.setArtifact(anArtifact().withUuid(activity.getArtifactId()).build());
+
+        if (oldRelease == null || !StringUtils.equals(oldRelease.getUuid(), activity.getReleaseId())) {
+          releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);
+        }
       }
       serviceInstanceService.update(serviceInstance);
     }
