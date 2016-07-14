@@ -505,6 +505,18 @@ public class WorkflowServiceImpl implements WorkflowService {
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     workflowExecution.setGraph(
         generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
+    if (pausedNodesFound(workflowExecution)) {
+      workflowExecution.setStatus(ExecutionStatus.PAUSED);
+    }
+  }
+
+  private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
+    PageRequest<StateExecutionInstance> req = PageRequest.Builder.aPageRequest()
+                                                  .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                  .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+                                                  .addFilter("status", Operator.EQ, ExecutionStatus.PAUSED)
+                                                  .build();
+    return wingsPersistence.get(StateExecutionInstance.class, req) != null;
   }
 
   private void collectChildrenIds(

@@ -1380,10 +1380,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     Thread.sleep(5000);
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
-    assertThat(execution)
-        .isNotNull()
-        .extracting("uuid", "status")
-        .containsExactly(executionId, ExecutionStatus.RUNNING);
+    assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
     graph = execution.getGraph();
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
@@ -1506,10 +1503,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     Thread.sleep(5000);
 
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
-    assertThat(execution)
-        .isNotNull()
-        .extracting("uuid", "status")
-        .containsExactly(executionId, ExecutionStatus.RUNNING);
+    assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
     graph = execution.getGraph();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
