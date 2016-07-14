@@ -35,10 +35,9 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
-import software.wings.beans.Release.ReleaseBuilder;
+import software.wings.beans.Release.Builder;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.ServiceInstance.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -63,12 +62,12 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
 
   @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
 
-  private Builder builder =
+  private ServiceInstance.Builder builder =
       aServiceInstance()
           .withHost(aHost().withUuid(HOST_ID).build())
           .withServiceTemplate(
               aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build())
-          .withRelease(ReleaseBuilder.aRelease().withUuid(RELEASE_ID).build())
+          .withRelease(Builder.aRelease().withUuid(RELEASE_ID).build())
           .withArtifact(software.wings.beans.Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build())
           .withAppId(APP_ID)
           .withEnvId(ENV_ID);

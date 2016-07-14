@@ -49,6 +49,8 @@ public interface ReleaseService {
    */
   Release update(@Valid Release release);
 
+  void addSuccessCount(String appId, String releaseId, String envId, int count);
+
   /**
    * Adds the artifact source.
    *
