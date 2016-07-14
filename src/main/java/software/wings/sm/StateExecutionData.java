@@ -139,7 +139,7 @@ public class StateExecutionData {
         breakDown.setSuccess(1);
         break;
     }
-    executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(1).build());
+    executionData.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(breakDown).build());
     return executionData;
   }
 
