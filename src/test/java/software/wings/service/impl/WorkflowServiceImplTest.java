@@ -950,7 +950,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .hasSize(2)
         .extracting("x")
         .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH);
-    assertThat(graph.getLinks()).hasSize(1);
   }
 
   /**
