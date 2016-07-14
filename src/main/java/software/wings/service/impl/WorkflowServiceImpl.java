@@ -7,6 +7,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Ascii.toUpperCase;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
@@ -646,6 +647,8 @@ public class WorkflowServiceImpl implements WorkflowService {
         node.getNext().setName(node.getName());
         node = node.getNext();
       }
+
+      node.setName(substringBefore(node.getName(), ":"));
 
       node.setX(x);
       node.setY(y);

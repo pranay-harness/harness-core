@@ -300,7 +300,6 @@ public class ReleaseServiceImpl implements ReleaseService {
     Iterable<InstanceCountByEnv> instanceCountByEnv =
         serviceInstanceService.getCountsByEnv(release.getAppId(), serviceTemplates);
 
-    stream(instanceCountByEnv.spliterator(), false).forEach(System.out::println);
     Map<String, Integer> countsByEnv = stream(instanceCountByEnv.spliterator(), false)
                                            .collect(toMap(InstanceCountByEnv::getEnvId, InstanceCountByEnv::getCount));
 
@@ -310,7 +309,7 @@ public class ReleaseServiceImpl implements ReleaseService {
             -> aBreakdownByEnvironments()
                    .withEnvId(entry.getKey())
                    .withEnvName(environmentService.get(release.getAppId(), entry.getKey(), false).getName())
-                   .withTotal(countsByEnv.get(entry.getKey()))
+                   .withTotal(countsByEnv.getOrDefault(entry.getKey(), 0))
                    .withBreakdown(aCountsByStatuses().build())
                    .build())
         .collect(toList());
