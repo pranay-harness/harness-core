@@ -257,8 +257,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    putNotNull(executionDetails, "total",
-        anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
     putNotNull(
         executionDetails, "activityId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     // putNotNull(executionDetails, "hostId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
