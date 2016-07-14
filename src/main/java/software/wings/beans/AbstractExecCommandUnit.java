@@ -1,16 +1,17 @@
 package software.wings.beans;
 
-import org.hibernate.validator.constraints.NotEmpty;
+import com.github.reinert.jjschema.SchemaIgnore;
 
 /**
  * Created by anubhaw on 7/12/16.
  */
-public class AbstractExecCommandUnit extends CommandUnit {
-  @NotEmpty private String command;
+public abstract class AbstractExecCommandUnit extends CommandUnit {
+  @SchemaIgnore private String command;
   public AbstractExecCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
   }
 
+  @SchemaIgnore
   public String getCommand() {
     return command;
   }

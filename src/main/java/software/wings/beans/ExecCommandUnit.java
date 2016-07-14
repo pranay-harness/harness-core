@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.CommandUnitType.EXEC;
 
+import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.nio.file.Paths;
@@ -14,7 +15,10 @@ import java.nio.file.Paths;
  * Created by anubhaw on 5/25/16.
  */
 public class ExecCommandUnit extends AbstractExecCommandUnit {
-  @NotEmpty private String commandPath;
+  @Attributes(title = "Execution Directory", description = "Relative to ${RuntimePath}")
+  @NotEmpty
+  private String commandPath;
+  @Attributes(title = "Command") @NotEmpty private String commandString;
 
   /**
    * Instantiates a new exec command unit.
@@ -28,7 +32,7 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
             .toString();
-    this.setCommand(format("cd %s && set -m; %s", commandPath, getCommand()));
+    super.setCommand(format("cd %s && set -m; %s", commandPath, getCommand()));
   }
 
   /**
@@ -47,6 +51,14 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
    */
   public void setCommandPath(String commandPath) {
     this.commandPath = commandPath;
+  }
+
+  public String getCommandString() {
+    return commandString;
+  }
+
+  public void setCommandString(String commandString) {
+    this.commandString = commandString;
   }
 
   public static final class Builder {

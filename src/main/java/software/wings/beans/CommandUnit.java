@@ -4,6 +4,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -62,7 +63,13 @@ public abstract class CommandUnit {
    *
    * @param context the context
    */
-  public void setup(CommandExecutionContext context) {}
+  public abstract void setup(CommandExecutionContext context);
+
+  @SchemaIgnore
+  @JsonIgnore
+  public int getCommandExecutionTimeout() {
+    return 10 * 60 * 1000;
+  }
 
   /**
    * Gets command unit type.

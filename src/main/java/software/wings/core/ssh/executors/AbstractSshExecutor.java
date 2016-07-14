@@ -130,6 +130,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       ((ChannelExec) channel).setErrStream(System.err, true);
       outputStream = channel.getOutputStream();
       inputStream = channel.getInputStream();
+      logger.info(config.getSshConnectionTimeout() + " ##### " + config.getSshSessionTimeout());
     } catch (JSchException ex) {
       logger.error("Failed to initialize executor " + ex);
       throw new WingsException(normalizeError(ex), ex.getCause());
