@@ -15,7 +15,6 @@ import software.wings.stencils.EnumData;
 /**
  * Created by anubhaw on 6/10/16.
  */
-@Attributes(title = "App Container")
 public class CopyAppContainerCommandUnit extends CopyCommandUnit {
   @Inject @Transient private transient AppContainerService appContainerService;
 
