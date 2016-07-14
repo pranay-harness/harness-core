@@ -40,6 +40,7 @@ import software.wings.stencils.DataProvider;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -257,8 +258,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName("PROD").withEnvironmentType(PROD).build());
-    asList("UAT", "QA", "DEV")
+    save(anEnvironment().withAppId(appId).withName("Production").withEnvironmentType(PROD).build());
+    asList("User Acceptance", "Quality Assurance", "Development")
         .forEach(name -> save(anEnvironment().withAppId(appId).withName(name).withEnvironmentType(OTHER).build()));
   }
 
