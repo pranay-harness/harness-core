@@ -143,7 +143,7 @@ public class Command extends CommandUnit {
   /**
    * {@inheritDoc}
    */
-
+  @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
     return commandUnits.stream().filter(CommandUnit::isArtifactNeeded).findFirst().isPresent();
