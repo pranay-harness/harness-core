@@ -96,7 +96,7 @@ public class SetupServiceImpl implements SetupService {
                                            .map(this ::fetchIncompleteMandatoryEnvironmentAction)
                                            .filter(Objects::nonNull)
                                            .collect(Collectors.toList());
-      if (setupActions.size() < app.getEnvironments().size()) {
+      if (setupActions.size() == app.getEnvironments().size()) {
         return setupActions.get(0);
       }
     }
