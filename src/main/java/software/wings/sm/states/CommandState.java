@@ -218,6 +218,7 @@ public class CommandState extends State {
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
               .withAppId(appId)
+              .withServiceInstance(serviceInstance)
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)

@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
-import static software.wings.beans.CopyAppContainerCommandUnit.Builder.aCopyAppContainerCommandUnit;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
 import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
@@ -25,6 +24,7 @@ import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ScpCommandUnit;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
 import software.wings.rules.Integration;
@@ -211,7 +211,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(config);
     String fileName = "mvim";
-    ExecutionResult result = executor.transferFile(aCopyAppContainerCommandUnit()
+    ExecutionResult result = executor.transferFile(ScpCommandUnit.Builder.aScpCommandUnit()
                                                        .withFileId(fileId)
                                                        .withDestinationFilePath("./" + fileName)
                                                        .withFileBucket(CONFIGS)

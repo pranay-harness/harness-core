@@ -23,18 +23,17 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Exec command unit type.
    */
-  EXEC(ExecCommandUnit.class), /**
-                                * Command command unit type.
-                                */
-  COMMAND(Command.class), /**
-                           * Copy artifact command unit type.
-                           */
-  COPY_ARTIFACT(CopyArtifactCommandUnit.class),
+  EXEC(ExecCommandUnit.class),
 
   /**
-   * Copy platform command unit type.
+   * Scp command unit type.
    */
-  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class),
+  SCP(ScpCommandUnit.class),
+
+  /**
+   * Command command unit type.
+   */
+  COMMAND(Command.class),
 
   /**
    * Setup env command unit type.
@@ -47,7 +46,17 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Process check command unit type.
    */
-  PROCESS_CHECK(ProcessCheckCommandUnit.class);
+  PROCESS_CHECK(ProcessCheckCommandUnit.class),
+
+  /**
+   * Copy artifact command unit type.
+   */
+  COPY_ARTIFACT(CopyArtifactCommandUnit.class),
+
+  /**
+   * Copy platform command unit type.
+   */
+  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

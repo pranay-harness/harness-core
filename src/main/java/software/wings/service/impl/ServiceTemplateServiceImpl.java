@@ -104,9 +104,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts) {
-    hosts.addAll(template.getHosts());
-    List<Host> uniqueHosts = hosts.stream().collect(toSet()).stream().collect(toList());
-    return updateTemplateAndServiceInstance(template, uniqueHosts);
+    List<Host> allHosts =
+        Stream.concat(hosts.stream(), template.getHosts().stream()).distinct().collect(Collectors.toList());
+    return updateTemplateAndServiceInstance(template, allHosts);
   }
 
   /* (non-Javadoc)
@@ -228,12 +228,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (tags.size() == 0) {
       return new ArrayList<>();
     }
-    return tags.stream()
-        .map(this ::getTemplatesByMappedTags)
-        .flatMap(List::stream)
-        .collect(Collectors.toSet())
-        .stream()
-        .collect(toList());
+    return tags.stream().map(this ::getTemplatesByMappedTags).flatMap(List::stream).distinct().collect(toList());
   }
 
   @Override

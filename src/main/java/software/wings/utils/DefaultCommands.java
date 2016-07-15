@@ -2,9 +2,8 @@ package software.wings.utils;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.CommandUnitType.COMMAND;
-import static software.wings.beans.CommandUnitType.COPY_APP_CONTAINER;
-import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.CommandUnitType.SCP;
 import static software.wings.beans.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -123,7 +122,8 @@ public class DefaultCommands {
                 .withY(200)
                 .withId(nodes.get(3))
                 .withName("Copy App Server")
-                .withType(COPY_APP_CONTAINER.name())
+                .withType(SCP.name())
+                .addProperty("fileCategory", "Application Server")
                 .build(),
             aNode()
                 .withX(650)
@@ -140,7 +140,8 @@ public class DefaultCommands {
                 .withY(200)
                 .withId(nodes.get(5))
                 .withName("Copy Artifact")
-                .withType(COPY_ARTIFACT.name())
+                .withType(SCP.name())
+                .addProperty("fileCategory", "Artifacts")
                 .build(),
             aNode()
                 .withX(950)
