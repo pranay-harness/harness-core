@@ -159,7 +159,7 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldUpdateHost() {
     Host host = builder.withUuid(HOST_ID).build();
     when(wingsPersistence.saveAndGet(eq(Host.class), eq(host))).thenReturn(host);
-    Host savedHost = hostService.update(host);
+    Host savedHost = hostService.update(ENV_ID, host);
     assertThat(savedHost).isNotNull();
     assertThat(savedHost).isInstanceOf(Host.class);
   }

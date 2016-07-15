@@ -68,8 +68,8 @@ public class SetupServiceImpl implements SetupService {
     if (hosts.size() == 0) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
-          .withDisplayText("Please add at least one host to environment : " + environment.getName())
-          .withUrl(String.format("/#/app/%s/env/%s/details", environment.getAppId(), environment.getUuid()))
+          .withDisplayText("Please add at least one host to any one environment")
+          .withUrl(String.format("/#/app/%s/environments", environment.getAppId(), environment.getUuid()))
           .build();
     }
     return null;

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
@@ -93,18 +94,29 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#update(software.wings.beans.Host)
    */
   @Override
-  public Host update(Host host) {
+  public Host update(String envId, Host host) {
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder()
                                        .put("hostName", host.getHostName())
                                        .put("hostConnAttr", host.getHostConnAttr());
     if (host.getBastionConnAttr() != null) {
       builder.put("bastionConnAttr", host.getBastionConnAttr());
     }
-    if (host.getTags() != null) {
-      builder.put("tags", host.getTags());
-    }
     wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
-    return wingsPersistence.saveAndGet(Host.class, host);
+
+    List<Tag> tags = validateAndFetchTags(host.getAppId(), envId, host.getTags());
+    tags.forEach(tag -> {
+      List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
+      hostsByTags.add(host);
+      tagService.tagHosts(host.getAppId(), envId, tag.getUuid(),
+          hostsByTags.stream().map(Host::getUuid).collect(Collectors.toList())); // TODO: Simplify
+    });
+
+    Host savedHost = wingsPersistence.get(Host.class, host.getUuid());
+
+    List<ServiceTemplate> serviceTemplates =
+        validateAndFetchServiceTemplate(host.getAppId(), envId, host.getServiceTemplates());
+    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, asList(savedHost)));
+    return host;
   }
 
   /* (non-Javadoc)

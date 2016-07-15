@@ -138,7 +138,7 @@ public class HostResource {
     host.setUuid(hostId);
     host.setInfraId(infraId);
     host.setAppId(appId);
-    return new RestResponse<Host>(hostService.update(host));
+    return new RestResponse<Host>(hostService.update(envId, host));
   }
 
   /**

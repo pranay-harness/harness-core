@@ -241,7 +241,6 @@ public class TagServiceImpl implements TagService {
   @Override
   public void tagHosts(String appId, String envId, String tagId, List<String> hostIds) {
     Tag tag = get(appId, envId, tagId);
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     if (hostIds == null || tag == null) {
       return;
@@ -254,6 +253,13 @@ public class TagServiceImpl implements TagService {
         existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());
     List<Host> hostTobeTagged =
         inputHosts.stream().filter(host -> !existingMappedHosts.contains(host)).collect(toList());
+
+    tagHosts(tag, hostToBeUntagged, hostTobeTagged);
+  }
+
+  @Override
+  public void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged) {
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     // Tag
     hostTobeTagged.forEach(host -> {
