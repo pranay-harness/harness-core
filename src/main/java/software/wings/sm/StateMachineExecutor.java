@@ -445,20 +445,11 @@ public class StateMachineExecutor {
         stateExecutionData = new StateExecutionData();
       }
     }
-    stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
-    if (stateExecutionInstance.getEndTs() != null) {
-      stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());
-    }
-    stateExecutionData.setStatus(status);
-    if (errorMsg != null) {
-      stateExecutionData.setErrorMsg(errorMsg);
-    }
 
     stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
 
     UpdateOperations<StateExecutionInstance> ops =
         wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
-    ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
 
     stateExecutionInstance.setStatus(status);
     ops.set("status", stateExecutionInstance.getStatus());
@@ -468,14 +459,25 @@ public class StateMachineExecutor {
       ops.set("endTs", stateExecutionInstance.getEndTs());
     }
 
-    Query<StateExecutionInstance> query =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .field("appId")
-            .equal(stateExecutionInstance.getAppId())
-            .field(ID_KEY)
-            .equal(stateExecutionInstance.getUuid())
-            .field("status")
-            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING));
+    stateExecutionData.setStartTs(stateExecutionInstance.getStartTs());
+    if (stateExecutionInstance.getEndTs() != null) {
+      stateExecutionData.setEndTs(stateExecutionInstance.getEndTs());
+    }
+    stateExecutionData.setStatus(stateExecutionInstance.getStatus());
+    if (errorMsg != null) {
+      stateExecutionData.setErrorMsg(errorMsg);
+    }
+
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field("appId")
+                                              .equal(stateExecutionInstance.getAppId())
+                                              .field(ID_KEY)
+                                              .equal(stateExecutionInstance.getUuid())
+                                              .field("status")
+                                              .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING,
+                                                  ExecutionStatus.RUNNING, ExecutionStatus.PAUSED));
+
+    ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
     UpdateResults updateResult = wingsPersistence.update(query, ops);
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       logger.warn(
@@ -516,12 +518,7 @@ public class StateMachineExecutor {
     }
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
-    try {
-      ExecutionResponse executionResponse = currentState.handleAsyncResponse(context, response);
-      handleExecuteResponse(context, executionResponse);
-    } catch (Exception ex) {
-      handleExecuteResponseException(context, ex);
-    }
+    executorService.execute(new SmExecutionAsyncResumer(context, currentState, response, this));
   }
 
   /**
@@ -535,16 +532,15 @@ public class StateMachineExecutor {
         StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
             workflowExecutionEvent.getAppId(), workflowExecutionEvent.getStateExecutionInstanceId());
 
-        boolean updated = updateEndStatus(
-            stateExecutionInstance, ExecutionStatus.SUCCESS, Lists.newArrayList(ExecutionStatus.PAUSED));
-        if (!updated) {
-          throw new WingsException(ErrorCodes.STATE_PAUSE_FAILED, "stateName", stateExecutionInstance.getStateName());
-        }
         StateMachine sm = wingsPersistence.get(
             StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
+
+        State currentState = sm.getState(stateExecutionInstance.getStateName());
+        injector.injectMembers(currentState);
+
         ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
         injector.injectMembers(context);
-        successTransition(context);
+        executorService.execute(new SmExecutionResumer(context, this));
         break;
       }
 
@@ -602,6 +598,68 @@ public class StateMachineExecutor {
     @Override
     public void run() {
       stateMachineExecutor.startExecution(context);
+    }
+  }
+
+  private static class SmExecutionResumer implements Runnable {
+    private ExecutionContextImpl context;
+    private StateMachineExecutor stateMachineExecutor;
+
+    /**
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param stateMachineExecutor the state machine executor
+     */
+    public SmExecutionResumer(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
+      this.context = context;
+      this.stateMachineExecutor = stateMachineExecutor;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      try {
+        stateMachineExecutor.handleExecuteResponse(context, new ExecutionResponse());
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, ex);
+      }
+    }
+  }
+
+  private static class SmExecutionAsyncResumer implements Runnable {
+    private ExecutionContextImpl context;
+    private StateMachineExecutor stateMachineExecutor;
+    private State state;
+    private Map<String, NotifyResponseData> response;
+
+    /**
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param stateMachineExecutor the state machine executor
+     */
+    public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
+        StateMachineExecutor stateMachineExecutor) {
+      this.context = context;
+      this.state = state;
+      this.response = response;
+      this.stateMachineExecutor = stateMachineExecutor;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      try {
+        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
+        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, ex);
+      }
     }
   }
 }
