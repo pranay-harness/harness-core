@@ -14,6 +14,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
@@ -274,12 +275,16 @@ public class ReleaseServiceImpl implements ReleaseService {
   }
 
   private List<BreakdownByEnvironments> getReleaseBreakdownByEnvironments(Release release) {
-    Map<String, List<ServiceTemplate>> serviceTemplatesByEnv =
-        release.getServices()
-            .parallelStream()
-            .flatMap(service
-                -> (Stream<ServiceTemplate>) serviceTemplateService
-                       .list(aPageRequest()
+    if (isEmpty(release.getServices())) {
+      return Lists.newArrayList();
+    } else {
+      Map<String, List<ServiceTemplate>> serviceTemplatesByEnv =
+          release.getServices()
+              .parallelStream()
+              .flatMap(service
+                  -> (Stream<ServiceTemplate>) serviceTemplateService
+                         .list(
+                             aPageRequest()
                                  .addFilter(aSearchFilter().withField("appId", Operator.EQ, release.getAppId()).build())
                                  .aPageRequest()
                                  .addFilter(aSearchFilter()
@@ -288,30 +293,32 @@ public class ReleaseServiceImpl implements ReleaseService {
                                                 .build())
                                  .addFieldsIncluded("name", "envId")
                                  .<ServiceTemplate>build())
-                       .getResponse()
-                       .stream())
-            .collect(groupingBy(ServiceTemplate::getEnvId));
+                         .getResponse()
+                         .stream())
+              .collect(groupingBy(ServiceTemplate::getEnvId));
 
-    Set<ServiceTemplate> serviceTemplates = serviceTemplatesByEnv.values()
-                                                .stream()
-                                                .flatMap(serviceTemplates1 -> serviceTemplates1.stream())
-                                                .collect(toSet());
+      Set<ServiceTemplate> serviceTemplates = serviceTemplatesByEnv.values()
+                                                  .stream()
+                                                  .flatMap(serviceTemplates1 -> serviceTemplates1.stream())
+                                                  .collect(toSet());
 
-    Iterable<InstanceCountByEnv> instanceCountByEnv =
-        serviceInstanceService.getCountsByEnv(release.getAppId(), serviceTemplates);
+      Iterable<InstanceCountByEnv> instanceCountByEnv =
+          serviceInstanceService.getCountsByEnv(release.getAppId(), serviceTemplates);
 
-    Map<String, Integer> countsByEnv = stream(instanceCountByEnv.spliterator(), false)
-                                           .collect(toMap(InstanceCountByEnv::getEnvId, InstanceCountByEnv::getCount));
+      Map<String, Integer> countsByEnv =
+          stream(instanceCountByEnv.spliterator(), false)
+              .collect(toMap(InstanceCountByEnv::getEnvId, InstanceCountByEnv::getCount));
 
-    return serviceTemplatesByEnv.entrySet()
-        .parallelStream()
-        .map(entry
-            -> aBreakdownByEnvironments()
-                   .withEnvId(entry.getKey())
-                   .withEnvName(environmentService.get(release.getAppId(), entry.getKey(), false).getName())
-                   .withTotal(countsByEnv.getOrDefault(entry.getKey(), 0))
-                   .withBreakdown(aCountsByStatuses().build())
-                   .build())
-        .collect(toList());
+      return serviceTemplatesByEnv.entrySet()
+          .parallelStream()
+          .map(entry
+              -> aBreakdownByEnvironments()
+                     .withEnvId(entry.getKey())
+                     .withEnvName(environmentService.get(release.getAppId(), entry.getKey(), false).getName())
+                     .withTotal(countsByEnv.getOrDefault(entry.getKey(), 0))
+                     .withBreakdown(aCountsByStatuses().build())
+                     .build())
+          .collect(toList());
+    }
   }
 }
