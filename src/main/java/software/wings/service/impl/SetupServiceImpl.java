@@ -16,7 +16,7 @@ import software.wings.service.intfc.SetupService;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -69,7 +69,7 @@ public class SetupServiceImpl implements SetupService {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
           .withDisplayText("Please add at least one host to environment : " + environment.getName())
-          .withUrl(String.format("/#/app/%s/env/%s", environment.getAppId(), environment.getUuid()))
+          .withUrl(String.format("/#/app/%s/env/%s/details", environment.getAppId(), environment.getUuid()))
           .build();
     }
     return null;
@@ -91,13 +91,13 @@ public class SetupServiceImpl implements SetupService {
           .withUrl(String.format("/#/app/%s/environments", app.getUuid()))
           .build();
     } else {
-      Optional<SetupAction> setupAction = app.getEnvironments()
-                                              .stream()
-                                              .map(this ::fetchIncompleteMandatoryEnvironmentAction)
-                                              .filter(Objects::nonNull)
-                                              .findFirst();
-      if (setupAction.isPresent()) {
-        return setupAction.get();
+      List<SetupAction> setupActions = app.getEnvironments()
+                                           .stream()
+                                           .map(this ::fetchIncompleteMandatoryEnvironmentAction)
+                                           .filter(Objects::nonNull)
+                                           .collect(Collectors.toList());
+      if (setupActions.size() < app.getEnvironments().size()) {
+        return setupActions.get(0);
       }
     }
     return null;

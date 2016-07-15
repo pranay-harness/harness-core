@@ -632,7 +632,11 @@ public class DataGenUtil extends WingsBaseTest {
   private void addHostsToEnv(Environment env) {
     if (envAttr == null) {
       envAttr = wingsPersistence.saveAndGet(SettingAttribute.class,
-          aSettingAttribute().withAppId(env.getAppId()).withValue(new BastionConnectionAttributes()).build());
+          aSettingAttribute()
+              .withAppId(env.getAppId())
+              .withName("JumpBox")
+              .withValue(new BastionConnectionAttributes())
+              .build());
     }
 
     WebTarget target = client.target(format(API_BASE + "/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
