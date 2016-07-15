@@ -86,6 +86,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -751,10 +752,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     Node next = node.getNext();
     if (next != null) {
-      if (group == null) {
+      if (group == null || next.getGroup() == null) {
         paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
       } else {
-        paintGraph(next, graph, node.getWidth(), y);
+        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
       }
       graph.addLink(Link.Builder.aLink()
                         .withId(UUIDGenerator.getUuid())
@@ -775,6 +776,11 @@ public class WorkflowServiceImpl implements WorkflowService {
         group.setWidth(node.getWidth());
       }
       group.setHeight(group.getHeight() + node.getHeight() + DEFAULT_ARROW_HEIGHT);
+    }
+
+    // reduce one arrow height
+    if (!group.getElements().isEmpty()) {
+      group.setHeight(group.getHeight() - DEFAULT_ARROW_HEIGHT);
     }
   }
 
