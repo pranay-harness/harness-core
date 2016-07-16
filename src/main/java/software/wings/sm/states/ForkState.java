@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.base.Joiner;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
@@ -36,7 +37,7 @@ import java.util.Map;
 public class ForkState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ForkState.class);
 
-  private List<String> forkStateNames = new ArrayList<>();
+  @SchemaIgnore private List<String> forkStateNames = new ArrayList<>();
 
   /**
    * Instantiates a new fork state.
@@ -118,6 +119,7 @@ public class ForkState extends State {
    *
    * @return the fork state names
    */
+  @SchemaIgnore
   public List<String> getForkStateNames() {
     return forkStateNames;
   }
@@ -127,6 +129,7 @@ public class ForkState extends State {
    *
    * @param forkStateNames the fork state names
    */
+  @SchemaIgnore
   public void setForkStateNames(List<String> forkStateNames) {
     this.forkStateNames = forkStateNames;
   }

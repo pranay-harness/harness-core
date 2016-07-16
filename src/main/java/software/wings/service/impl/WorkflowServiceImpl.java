@@ -780,7 +780,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     // reduce one arrow height
     if (!group.getElements().isEmpty()) {
-      group.setHeight(group.getHeight() - DEFAULT_ARROW_HEIGHT);
+      group.setHeight(group.getHeight() - DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING);
     }
   }
 

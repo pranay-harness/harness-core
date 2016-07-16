@@ -6,6 +6,7 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
+import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Release;
@@ -13,12 +14,15 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup;
 import software.wings.beans.SetupAction;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.WorkflowService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +40,8 @@ import javax.validation.executable.ValidateOnExecution;
 public class SetupServiceImpl implements SetupService {
   @Inject private HostService hostService;
   @Inject private ReleaseService releaseService;
+  @Inject private ArtifactService artifactService;
+  @Inject private WorkflowService workflowService;
 
   @Override
   public Setup getApplicationSetupStatus(Application application) {
@@ -46,7 +52,10 @@ public class SetupServiceImpl implements SetupService {
       setup.getActions().add(mandatoryAction);
     } else {
       setup.setSetupStatus(COMPLETE);
-      setup.getActions().add(nextAction(application));
+      SetupAction nextSetupAction = nextAction(application);
+      if (nextSetupAction != null) {
+        setup.getActions().add(nextSetupAction);
+      }
     }
     return setup;
   }
@@ -57,7 +66,31 @@ public class SetupServiceImpl implements SetupService {
    */
   private SetupAction nextAction(Application application) {
     SetupAction releaseSetupAction = getReleaseSetupAction(application);
-    return releaseSetupAction;
+    if (releaseSetupAction != null) {
+      return releaseSetupAction;
+    } else {
+      return getDeploymentSetupAction(application);
+    }
+  }
+
+  private SetupAction getDeploymentSetupAction(Application application) {
+    PageRequest<WorkflowExecution> req =
+        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
+    PageResponse<WorkflowExecution> res = workflowService.listExecutions(req, false);
+    if (res != null && !res.isEmpty()) {
+      return null;
+    }
+    for (Environment env : application.getEnvironments()) {
+      List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
+      if (hosts != null && !hosts.isEmpty()) {
+        return SetupAction.Builder.aSetupAction()
+            .withCode("NO_RELEASE_FOUND")
+            .withDisplayText("Setup complete: you can try a simple deployment.")
+            .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
+            .build();
+      }
+    }
+    return null;
   }
 
   /**
@@ -71,9 +104,38 @@ public class SetupServiceImpl implements SetupService {
     if (res == null || res.isEmpty()) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_RELEASE_FOUND")
-          .withDisplayText("Please add a release and build source and deploy.")
+          .withDisplayText("Setup complete: now you can create a release and deployment.")
           .withUrl(String.format("/#/app/%s/releases", application.getUuid()))
           .build();
+    }
+
+    Release rel = findReleaseWithSource(res.getResponse());
+    if (rel == null) {
+      return SetupAction.Builder.aSetupAction()
+          .withCode("NO_ARTIFACT_SOURCE_FOUND")
+          .withDisplayText("Setup complete: Please add a build source.")
+          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), res.get(0).getUuid()))
+          .build();
+    }
+
+    PageRequest<Artifact> pageReques =
+        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
+    PageResponse<Artifact> artRes = artifactService.list(pageReques);
+    if (artRes == null || artRes.isEmpty()) {
+      return SetupAction.Builder.aSetupAction()
+          .withCode("NO_ARTIFACT_FOUND")
+          .withDisplayText("Setup complete: Please add an artifact for the release.")
+          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
+          .build();
+    }
+    return null;
+  }
+
+  private Release findReleaseWithSource(List<Release> list) {
+    for (Release rel : list) {
+      if (rel != null && rel.getArtifactSources() != null && !rel.getArtifactSources().isEmpty()) {
+        return rel;
+      }
     }
     return null;
   }
@@ -103,7 +165,7 @@ public class SetupServiceImpl implements SetupService {
     if (hosts.size() == 0) {
       return aSetupAction()
           .withCode("NO_HOST_CONFIGURED")
-          .withDisplayText("Setup Incomplete: Please add at least one host to the environment.")
+          .withDisplayText("Setup required: Please add at least one host to the environment.")
           .withUrl(String.format("/#/app/%s/env/%s/detail", environment.getAppId(), environment.getUuid()))
           .build();
     }
@@ -114,7 +176,7 @@ public class SetupServiceImpl implements SetupService {
     if (app.getServices() == null || app.getServices().size() == 0) {
       return aSetupAction()
           .withCode("SERVICE_NOT_CONFIGURED")
-          .withDisplayText("Setup Incomplete: Please configure at least one service.")
+          .withDisplayText("Setup required: Please configure at least one service.")
           .withUrl(String.format("/#/app/%s/services", app.getUuid()))
           .build();
     }
@@ -122,7 +184,7 @@ public class SetupServiceImpl implements SetupService {
     if ((app.getEnvironments() == null || app.getEnvironments().size() == 0)) {
       return aSetupAction()
           .withCode("ENVIRONMENT_NOT_CONFIGURED")
-          .withDisplayText("Setup Incomplete: Please configure at least one environment.")
+          .withDisplayText("Setup required: Please configure at least one environment.")
           .withUrl(String.format("/#/app/%s/environments", app.getUuid()))
           .build();
     } else {
