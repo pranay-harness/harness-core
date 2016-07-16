@@ -2,12 +2,17 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.service.intfc.ServiceTemplateService;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -19,6 +24,8 @@ public class ScpCommandUnit extends CopyCommandUnit {
   private String fileCategory;
 
   @Attributes(title = "Destination path", description = "Relative to ${RuntimePath}") private String relativeFilePath;
+
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
   /**
    * The enum Scp file category.
@@ -80,8 +87,18 @@ public class ScpCommandUnit extends CopyCommandUnit {
         setDestinationFilePath(constructPath(context.getRuntimePath(), relativeFilePath, artifactFile.getName()));
         break;
       case "Configurations":
-        throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "Scp configuration not supported by server yet");
+        ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
+        Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
+            serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
+        List<ConfigFile> configFiles = computedConfigFiles.get(context.getServiceInstance().getHost().getUuid());
+        if (configFiles != null && configFiles.size() != 0) {
+          ConfigFile configFile = configFiles.get(0); // TODO: Support list of config files
+          setFileBucket(FileBucket.CONFIGS);
+          setFileId(configFile.getFileUuid());
+          setDestinationFilePath(
+              constructPath(context.getRuntimePath(), configFile.getRelativePath(), configFile.getName()));
+        }
+        break;
       case "Application Stack":
         AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
         setFileBucket(FileBucket.PLATFORMS);

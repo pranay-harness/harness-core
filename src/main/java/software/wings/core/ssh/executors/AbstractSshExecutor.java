@@ -18,6 +18,8 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.utils.Misc.quietSleep;
 
+import com.google.common.base.Strings;
+
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
@@ -338,6 +340,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public ExecutionResult transferFile(CopyCommandUnit copyCommand) {
+    if (Strings.isNullOrEmpty(copyCommand.getFileId())) {
+      saveExecutionLog("No config file found to scp.");
+      return ExecutionResult.SUCCESS;
+    }
+
     ExecutionResult executionResult = FAILURE;
     String gridFsFileId = copyCommand.getFileId();
     FileBucket gridFsBucket = copyCommand.getFileBucket();
