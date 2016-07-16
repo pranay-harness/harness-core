@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Strings;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -71,7 +72,7 @@ public class ScpCommandUnit extends CopyCommandUnit {
   @Override
   public void setup(CommandExecutionContext context) {
     switch (fileCategory) {
-      case "Artifacts":
+      case "Application Artifacts":
         setFileBucket(FileBucket.ARTIFACTS);
         ArtifactFile artifactFile =
             context.getArtifact().getArtifactFiles().get(0); // TODO: support list of artifact files
@@ -81,7 +82,7 @@ public class ScpCommandUnit extends CopyCommandUnit {
       case "Configurations":
         throw new WingsException(
             ErrorCodes.INVALID_REQUEST, "message", "Scp configuration not supported by server yet");
-      case "Application Server":
+      case "Application Stack":
         AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
         setFileBucket(FileBucket.PLATFORMS);
         setFileId(appContainer.getFileUuid());
@@ -94,7 +95,8 @@ public class ScpCommandUnit extends CopyCommandUnit {
   }
 
   private String constructPath(String absolutePath, String relativePath, String filename) {
-    return absolutePath + relativePath + "/" + filename;
+    return absolutePath.trim() + (Strings.isNullOrEmpty(relativePath) ? "/" : "/" + relativePath.trim() + "/")
+        + filename.trim(); // TODO:: handle error cases
   }
 
   /**

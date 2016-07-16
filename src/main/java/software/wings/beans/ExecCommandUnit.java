@@ -30,9 +30,9 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
   @Override
   public void setup(CommandExecutionContext context) {
     commandPath =
-        Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + commandPath)
+        Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + "/" + commandPath)
             .toString();
-    super.setCommand(format("cd %s && set -m; %s", commandPath, getCommand()));
+    setCommand(format("cd %s && set -m; %s", commandPath, commandString.trim()));
   }
 
   /**
