@@ -65,7 +65,7 @@ public class SplunkStateExecutionData extends StateExecutionData {
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
-    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionSummary();
     putNotNull(executionDetails, "query", anExecutionDataValue().withDisplayName("Query").withValue(query).build());
     putNotNull(executionDetails, "response",
         anExecutionDataValue()
