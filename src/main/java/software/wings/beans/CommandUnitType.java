@@ -23,40 +23,40 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Exec command unit type.
    */
-  EXEC(ExecCommandUnit.class),
+  EXEC(ExecCommandUnit.class, "Exec"),
 
   /**
    * Scp command unit type.
    */
-  SCP(ScpCommandUnit.class),
+  SCP(ScpCommandUnit.class, "Scp"),
 
   /**
    * Command command unit type.
    */
-  COMMAND(Command.class),
+  COMMAND(Command.class, "Command"),
 
   /**
    * Setup env command unit type.
    */
-  SETUP_ENV(SetupEnvCommandUnit.class),
+  SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env"),
   /**
    * Tail log command unit type.
    */
-  TAIL_LOG(TailLogCommandUnit.class),
+  TAIL_LOG(TailLogCommandUnit.class, "Tail Log"),
   /**
    * Process check command unit type.
    */
-  PROCESS_CHECK(ProcessCheckCommandUnit.class),
+  PROCESS_CHECK(ProcessCheckCommandUnit.class, "Process Check"),
 
   /**
    * Copy artifact command unit type.
    */
-  COPY_ARTIFACT(CopyArtifactCommandUnit.class),
+  COPY_ARTIFACT(CopyArtifactCommandUnit.class, "Scp Artifact"),
 
   /**
    * Copy platform command unit type.
    */
-  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class);
+  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class, "Scp App Stack");
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
@@ -65,14 +65,17 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   private JsonNode jsonSchema;
 
   @JsonIgnore private Class<? extends CommandUnit> commandUnitClass;
+  @JsonIgnore private String name;
 
   /**
    * Instantiates a new command unit type.
    *
    * @param commandUnitClass the command unit class
+   * @param name
    */
-  CommandUnitType(Class<? extends CommandUnit> commandUnitClass) {
+  CommandUnitType(Class<? extends CommandUnit> commandUnitClass, String name) {
     this.commandUnitClass = commandUnitClass;
+    this.name = name;
     try {
       uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
@@ -88,7 +91,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
 
   @Override
   public String getName() {
-    return name();
+    return name;
   }
 
   @Override

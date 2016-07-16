@@ -62,7 +62,7 @@ public class LogServiceImpl implements LogService {
                   .equal(appId)
                   .order("-lastUpdatedAt")
                   .get();
-    return log != null ? log.getExecutionResult() : RUNNING;
+    return log != null && log.getExecutionResult() != null ? log.getExecutionResult() : RUNNING;
   }
 
   @Override
