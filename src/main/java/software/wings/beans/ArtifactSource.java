@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -29,8 +30,10 @@ public abstract class ArtifactSource {
 
   @NotNull private ArtifactType artifactType;
 
+  @Transient private Artifact lastArtifact;
+
   /**
-   * Instantiates a new artifact source.
+   * Instantiates a new lastArtifact source.
    *
    * @param sourceType the source type
    */
@@ -98,6 +101,14 @@ public abstract class ArtifactSource {
    * @return the services
    */
   public abstract Set<Service> getServices();
+
+  public Artifact getLastArtifact() {
+    return lastArtifact;
+  }
+
+  public void setLastArtifact(Artifact lastArtifact) {
+    this.lastArtifact = lastArtifact;
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Object#equals(java.lang.Object)

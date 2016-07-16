@@ -15,7 +15,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 @JsonSubTypes({
   @Type(JenkinsConfig.class)
   , @Type(SmtpConfig.class), @Type(HostConnectionAttributes.class), @Type(BastionConnectionAttributes.class),
-      @Type(StringValue.class)
+      @Type(StringValue.class), @Type(SplunkConfig.class)
 })
 public abstract class SettingValue {
   @JsonTypeId private SettingVariableTypes type;
@@ -72,6 +72,8 @@ public abstract class SettingValue {
     /**
      * String setting variable types.
      */
-    STRING
+    STRING,
+
+    SPLUNK
   }
 }

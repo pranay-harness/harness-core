@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static java.lang.System.currentTimeMillis;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
@@ -12,6 +13,7 @@ import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -36,6 +38,8 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.common.cache.ResponseCodeCache;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
@@ -218,6 +222,7 @@ public class CommandState extends State {
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
               .withAppId(appId)
+              .withServiceInstance(serviceInstance)
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
@@ -252,8 +257,20 @@ public class CommandState extends State {
           executionResult = serviceCommandExecutorService.execute(serviceInstance, command, commandExecutionContext);
         } catch (Exception e) {
           logger.warn("Exception: ", e);
+          if (e instanceof WingsException) {
+            WingsException ex = (WingsException) e;
+            errorMessage =
+                Joiner.on(",").join(ex.getResponseMessageList()
+                                        .stream()
+                                        .map(responseMessage
+                                            -> ResponseCodeCache.getInstance()
+                                                   .getResponseMessage(responseMessage.getCode(), ex.getParams())
+                                                   .getMessage())
+                                        .collect(toList()));
+          } else {
+            errorMessage = e.getMessage();
+          }
           executionResult = ExecutionResult.FAILURE;
-          errorMessage = e.getMessage();
         }
         waitNotifyEngine.notify(finalActivityId,
             anExecutionResultData().withResult(executionResult).withErrorMessage(errorMessage).build());

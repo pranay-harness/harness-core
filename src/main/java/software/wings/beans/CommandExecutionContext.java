@@ -9,6 +9,7 @@ import java.util.Objects;
  */
 public class CommandExecutionContext {
   private Artifact artifact;
+  private ServiceInstance serviceInstance;
   private String appId;
   private String activityId;
   private String runtimePath;
@@ -124,39 +125,6 @@ public class CommandExecutionContext {
     this.executionCredential = executionCredential;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(artifact, appId, activityId, runtimePath, stagingPath, backupPath, executionCredential);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final CommandExecutionContext other = (CommandExecutionContext) obj;
-    return Objects.equals(this.artifact, other.artifact) && Objects.equals(this.appId, other.appId)
-        && Objects.equals(this.activityId, other.activityId) && Objects.equals(this.runtimePath, other.runtimePath)
-        && Objects.equals(this.stagingPath, other.stagingPath) && Objects.equals(this.backupPath, other.backupPath)
-        && Objects.equals(this.executionCredential, other.executionCredential);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("artifact", artifact)
-        .add("appId", appId)
-        .add("activityId", activityId)
-        .add("runtimePath", runtimePath)
-        .add("stagingPath", stagingPath)
-        .add("backupPath", backupPath)
-        .add("executionCredential", executionCredential)
-        .toString();
-  }
-
   /**
    * Gets app id.
    *
@@ -176,10 +144,65 @@ public class CommandExecutionContext {
   }
 
   /**
+   * Gets service instance.
+   *
+   * @return the service instance
+   */
+  public ServiceInstance getServiceInstance() {
+    return serviceInstance;
+  }
+
+  /**
+   * Sets service instance.
+   *
+   * @param serviceInstance the service instance
+   */
+  public void setServiceInstance(ServiceInstance serviceInstance) {
+    this.serviceInstance = serviceInstance;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+        artifact, serviceInstance, appId, activityId, runtimePath, stagingPath, backupPath, executionCredential);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CommandExecutionContext other = (CommandExecutionContext) obj;
+    return Objects.equals(this.artifact, other.artifact) && Objects.equals(this.serviceInstance, other.serviceInstance)
+        && Objects.equals(this.appId, other.appId) && Objects.equals(this.activityId, other.activityId)
+        && Objects.equals(this.runtimePath, other.runtimePath) && Objects.equals(this.stagingPath, other.stagingPath)
+        && Objects.equals(this.backupPath, other.backupPath)
+        && Objects.equals(this.executionCredential, other.executionCredential);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("artifact", artifact)
+        .add("serviceInstance", serviceInstance)
+        .add("appId", appId)
+        .add("activityId", activityId)
+        .add("runtimePath", runtimePath)
+        .add("stagingPath", stagingPath)
+        .add("backupPath", backupPath)
+        .add("executionCredential", executionCredential)
+        .toString();
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private Artifact artifact;
+    private ServiceInstance serviceInstance;
     private String appId;
     private String activityId;
     private String runtimePath;
@@ -206,6 +229,17 @@ public class CommandExecutionContext {
      */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
+      return this;
+    }
+
+    /**
+     * With service instance builder.
+     *
+     * @param serviceInstance the service instance
+     * @return the builder
+     */
+    public Builder withServiceInstance(ServiceInstance serviceInstance) {
+      this.serviceInstance = serviceInstance;
       return this;
     }
 
@@ -283,6 +317,7 @@ public class CommandExecutionContext {
     public Builder but() {
       return aCommandExecutionContext()
           .withArtifact(artifact)
+          .withServiceInstance(serviceInstance)
           .withAppId(appId)
           .withActivityId(activityId)
           .withRuntimePath(runtimePath)
@@ -299,6 +334,7 @@ public class CommandExecutionContext {
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setArtifact(artifact);
+      commandExecutionContext.setServiceInstance(serviceInstance);
       commandExecutionContext.setAppId(appId);
       commandExecutionContext.setActivityId(activityId);
       commandExecutionContext.setRuntimePath(runtimePath);

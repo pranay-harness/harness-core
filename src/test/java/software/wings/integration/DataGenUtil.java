@@ -27,6 +27,7 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
+import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
@@ -502,6 +503,18 @@ public class DataGenUtil extends WingsBaseTest {
                                                                            .build())
                                                             .build(),
                                               APPLICATION_JSON),
+        new GenericType<RestResponse<SettingAttribute>>() {});
+    getRequestWithAuthHeader(target).post(
+        Entity.entity(aSettingAttribute()
+                          .withName("Splunk")
+                          .withValue(aSplunkConfig()
+                                         .withHost("ec2-50-16-106-255.compute-1.amazonaws.com")
+                                         .withPort(8089)
+                                         .withPassword("W!ngs@Splunk")
+                                         .withUsername("admin")
+                                         .build())
+                          .build(),
+            APPLICATION_JSON),
         new GenericType<RestResponse<SettingAttribute>>() {});
   }
 

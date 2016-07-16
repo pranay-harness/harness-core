@@ -3,8 +3,6 @@ package software.wings.service;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.BastionConnectionAttributesBuilder.aBastionConnectionAttributes;
-import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
-import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -30,12 +28,14 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.CommandUnitType;
 import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.ScpCommandUnit;
 import software.wings.beans.SettingAttribute;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshJumpboxExecutor;
@@ -182,8 +182,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCopyCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
-    CopyCommandUnit commandUnit = aCopyArtifactCommandUnit()
-                                      .withCommandUnitType(COPY_ARTIFACT)
+    CopyCommandUnit commandUnit = ScpCommandUnit.Builder.aScpCommandUnit()
+                                      .withCommandUnitType(CommandUnitType.SCP)
                                       .withFileId(FILE_ID)
                                       .withFileBucket(ARTIFACTS)
                                       .withDestinationFilePath(FILE_PATH)

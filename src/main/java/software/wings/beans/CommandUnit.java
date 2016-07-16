@@ -20,9 +20,7 @@ import java.util.Objects;
 @JsonTypeInfo(use = Id.NAME, property = "commandUnitType")
 @JsonSubTypes({
   @Type(value = Command.class, name = "COMMAND")
-  , @Type(value = ExecCommandUnit.class, name = "EXEC"),
-      @Type(value = CopyArtifactCommandUnit.class, name = "COPY_ARTIFACT"),
-      @Type(value = CopyAppContainerCommandUnit.class, name = "COPY_CONTAINER"),
+  , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
       @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV")
 })
 public abstract class CommandUnit {

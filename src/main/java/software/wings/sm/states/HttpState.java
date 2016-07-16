@@ -1,7 +1,6 @@
 package software.wings.sm.states;
 
 import static com.google.common.base.Ascii.toUpperCase;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.MoreObjects;
@@ -11,8 +10,19 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +34,10 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 // TODO: Auto-generated Javadoc
@@ -83,32 +97,59 @@ public class HttpState extends State {
     executionData.setHttpMethod(method);
     executionData.setAssertionStatement(assertion);
 
-    Request request = null;
+    SSLContextBuilder builder = new SSLContextBuilder();
+    try {
+      builder.loadTrustMaterial((x509Certificates, s) -> true);
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyStoreException e) {
+      e.printStackTrace();
+    }
+    SSLConnectionSocketFactory sslsf = null;
+    try {
+      sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyManagementException e) {
+      e.printStackTrace();
+    }
+
+    RequestConfig.Builder requestBuilder = RequestConfig.custom();
+    requestBuilder = requestBuilder.setConnectTimeout(2000);
+    requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
+
+    CloseableHttpClient httpclient =
+        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
+
+    HttpUriRequest httpUriRequest = null;
+
     switch (toUpperCase(method)) {
       case "GET": {
-        request = Request.Get(evaluatedUrl);
+        httpUriRequest = new HttpGet(evaluatedUrl);
         break;
       }
       case "POST": {
-        request = Request.Post(evaluatedUrl);
+        HttpPost post = new HttpPost(evaluatedUrl);
         if (evaluatedBody != null) {
-          request.bodyByteArray(evaluatedBody.getBytes(UTF_8));
+          post.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
         }
+        httpUriRequest = post;
         break;
       }
       case "PUT": {
-        request = Request.Put(evaluatedUrl);
+        HttpPut put = new HttpPut(evaluatedUrl);
         if (evaluatedBody != null) {
-          request.bodyByteArray(evaluatedBody.getBytes(UTF_8));
+          put.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
         }
+        httpUriRequest = put;
         break;
       }
       case "DELETE": {
-        request = Request.Delete(evaluatedUrl);
+        httpUriRequest = new HttpDelete(evaluatedUrl);
         break;
       }
       case "HEAD": {
-        request = Request.Head(evaluatedUrl);
+        httpUriRequest = new HttpHead(evaluatedUrl);
         break;
       }
     }
@@ -118,19 +159,19 @@ public class HttpState extends State {
         List<String> headerPair = HEADER_SPLITTER.splitToList(header);
 
         if (headerPair.size() == 2) {
-          request.addHeader(headerPair.get(0), headerPair.get(1));
+          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
         }
       }
     }
 
     try {
-      HttpResponse httpResponse =
-          request.connectTimeout(2000).socketTimeout(socketTimeoutMillis).execute().returnResponse();
+      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
       executionData.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
       HttpEntity entity = httpResponse.getEntity();
       executionData.setHttpResponseBody(
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
+      logger.error("Exception: ", e);
       executionData.setHttpResponseCode(500);
       executionData.setHttpResponseBody(getMessage(e));
     }

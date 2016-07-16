@@ -2,9 +2,8 @@ package software.wings.utils;
 
 import static java.util.Arrays.asList;
 import static software.wings.beans.CommandUnitType.COMMAND;
-import static software.wings.beans.CommandUnitType.COPY_APP_CONTAINER;
-import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.CommandUnitType.SCP;
 import static software.wings.beans.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -13,6 +12,7 @@ import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import software.wings.beans.Graph;
+import software.wings.beans.ScpCommandUnit.ScpFileCategory;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,8 +48,8 @@ public class DefaultCommands {
                 .withId(nodes.get(1))
                 .withType(EXEC.name())
                 .withName("Start Service")
-                .addProperty("commandPath", "")
-                .addProperty("command", "./tomcat/bin/startup.sh")
+                .addProperty("commandPath", "tomcat/bin")
+                .addProperty("commandString", "./startup.sh")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -77,8 +77,8 @@ public class DefaultCommands {
                 .withId(nodes.get(1))
                 .withType(EXEC.name())
                 .withName("Stop Service")
-                .addProperty("commandPath", "")
-                .addProperty("command", "[[ -f ./tomcat/bin/shutdown.sh ]] && ./tomcat/bin/shutdown.sh  || true")
+                .addProperty("commandPath", "tomcat/bin")
+                .addProperty("commandString", "[[ -f ./shutdown.sh ]] && ./shutdown.sh  || true")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -107,23 +107,24 @@ public class DefaultCommands {
                 .withX(200)
                 .withY(200)
                 .withId(nodes.get(1))
-                .withName("STOP")
-                .withType(COMMAND.name())
-                .addProperty("referenceId", "STOP")
+                .withName("Setup Runtime Paths")
+                .withType(SETUP_ENV.name())
                 .build(),
             aNode()
                 .withX(350)
                 .withY(200)
                 .withId(nodes.get(2))
-                .withName("Setup Runtime Paths")
-                .withType(SETUP_ENV.name())
+                .withName("STOP")
+                .withType(COMMAND.name())
+                .addProperty("referenceId", "STOP")
                 .build(),
             aNode()
                 .withX(500)
                 .withY(200)
                 .withId(nodes.get(3))
-                .withName("Copy App Server")
-                .withType(COPY_APP_CONTAINER.name())
+                .withName("Copy App Stack")
+                .withType(SCP.name())
+                .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK.getName())
                 .build(),
             aNode()
                 .withX(650)
@@ -132,7 +133,7 @@ public class DefaultCommands {
                 .withName("Expand App Server")
                 .withType(EXEC.name())
                 .addProperty("commandPath", "")
-                .addProperty("command",
+                .addProperty("commandString",
                     "rm -rf tomcat && tar -xvzf apache-tomcat-7.0.70.tar.gz && mv apache-tomcat-7.0.70 tomcat")
                 .build(),
             aNode()
@@ -140,7 +141,9 @@ public class DefaultCommands {
                 .withY(200)
                 .withId(nodes.get(5))
                 .withName("Copy Artifact")
-                .withType(COPY_ARTIFACT.name())
+                .withType(SCP.name())
+                .addProperty("fileCategory", ScpFileCategory.ARTIFACTS.getName())
+                .addProperty("relativeFilePath", "tomcat/webapps")
                 .build(),
             aNode()
                 .withX(950)

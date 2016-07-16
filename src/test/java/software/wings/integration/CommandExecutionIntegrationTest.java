@@ -7,9 +7,8 @@ import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.CommandUnitType.COPY_ARTIFACT;
 import static software.wings.beans.CommandUnitType.EXEC;
-import static software.wings.beans.CopyArtifactCommandUnit.Builder.aCopyArtifactCommandUnit;
+import static software.wings.beans.CommandUnitType.SCP;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -40,6 +39,7 @@ import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
+import software.wings.beans.ScpCommandUnit;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -61,7 +61,7 @@ import javax.inject.Inject;
 @Integration
 @Ignore
 public class CommandExecutionIntegrationTest extends WingsBaseTest {
-  private static final String HOST_NAME = "192.168.1.106";
+  private static final String HOST_NAME = "192.168.1.53";
   private static final String USER = "ssh_user";
   private static final String PASSWORD = "Wings@123";
   private static final SettingAttribute HOST_CONN_ATTR_PWD =
@@ -124,7 +124,11 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
                   .withCommand("chmod +x ./bin/*")
                   .build(),
               anExecCommandUnit().withName("Exec").withCommandUnitType(EXEC).withCommand("./bin/stop.sh").build(),
-              aCopyArtifactCommandUnit().withName("Copy_ARTIFACT").withCommandUnitType(COPY_ARTIFACT).build(),
+              ScpCommandUnit.Builder.aScpCommandUnit()
+                  .withName("Copy_ARTIFACT")
+                  .withCommandUnitType(SCP)
+                  .withFileCategory("Artifact")
+                  .build(),
               anExecCommandUnit().withName("EXEC").withCommandUnitType(EXEC).withCommand("./bin/start.sh").build())
           .build();
 
