@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
@@ -21,9 +23,18 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
+import software.wings.beans.Artifact;
+import software.wings.beans.JenkinsArtifactSource;
+import software.wings.beans.Release;
 import software.wings.beans.Setup;
+import software.wings.beans.WorkflowExecution;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SetupService;
+import software.wings.service.intfc.WorkflowService;
 
 import javax.inject.Inject;
 
@@ -32,6 +43,9 @@ import javax.inject.Inject;
  */
 public class SetupServiceImplTest extends WingsBaseTest {
   @Mock private HostService hostService;
+  @Mock private ReleaseService releaseService;
+  @Mock private ArtifactService artifactService;
+  @Mock private WorkflowService workflowService;
   @Mock private MainConfiguration configuration;
 
   @Inject @InjectMocks private SetupService setupService;
@@ -61,6 +75,37 @@ public class SetupServiceImplTest extends WingsBaseTest {
                                   .build();
     when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(aHost().build()));
     Setup setupStatus = setupService.getApplicationSetupStatus(application);
+    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
+    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
+    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_RELEASE_FOUND");
+
+    Release rel = Release.Builder.aRelease().build();
+    PageResponse<Release> res = new PageResponse();
+    res.setResponse(asList(rel));
+    when(releaseService.list(any(PageRequest.class))).thenReturn(res);
+    setupStatus = setupService.getApplicationSetupStatus(application);
+    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
+    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
+    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_ARTIFACT_SOURCE_FOUND");
+
+    rel.setArtifactSources(asList(new JenkinsArtifactSource()));
+    setupStatus = setupService.getApplicationSetupStatus(application);
+    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
+    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
+    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_ARTIFACT_FOUND");
+
+    PageResponse<Artifact> artRes = new PageResponse<>();
+    artRes.setResponse(asList(new Artifact()));
+    when(artifactService.list(any(PageRequest.class))).thenReturn(artRes);
+    setupStatus = setupService.getApplicationSetupStatus(application);
+    assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
+    assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
+    assertThat(setupStatus.getActions().get(0).getCode()).isEqualTo("NO_DEPLOYMENT_FOUND");
+
+    PageResponse<WorkflowExecution> execRes = new PageResponse<>();
+    execRes.setResponse(asList(new WorkflowExecution()));
+    when(workflowService.listExecutions(any(PageRequest.class), anyBoolean())).thenReturn(execRes);
+    setupStatus = setupService.getApplicationSetupStatus(application);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
     assertThat(setupStatus.getActions()).isEmpty();
   }

@@ -74,8 +74,10 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction getDeploymentSetupAction(Application application) {
-    PageRequest<WorkflowExecution> req =
-        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
+    PageRequest<WorkflowExecution> req = PageRequest.Builder.aPageRequest()
+                                             .addFilter("appId", Operator.EQ, application.getUuid())
+                                             .withLimit("1")
+                                             .build();
     PageResponse<WorkflowExecution> res = workflowService.listExecutions(req, false);
     if (res != null && !res.isEmpty()) {
       return null;
@@ -84,8 +86,9 @@ public class SetupServiceImpl implements SetupService {
       List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
-            .withCode("NO_RELEASE_FOUND")
-            .withDisplayText("Setup complete: you can try a simple deployment.")
+            .withCode("NO_DEPLOYMENT_FOUND")
+            .withDisplayText(
+                "Setup complete: you can try a simple deployment after artifact is downloaded and turns into READY state.")
             .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
             .build();
       }
@@ -118,8 +121,10 @@ public class SetupServiceImpl implements SetupService {
           .build();
     }
 
-    PageRequest<Artifact> pageReques =
-        PageRequest.Builder.aPageRequest().addFilter("appId", Operator.EQ, application.getUuid()).build();
+    PageRequest<Artifact> pageReques = PageRequest.Builder.aPageRequest()
+                                           .addFilter("appId", Operator.EQ, application.getUuid())
+                                           .withLimit("1")
+                                           .build();
     PageResponse<Artifact> artRes = artifactService.list(pageReques);
     if (artRes == null || artRes.isEmpty()) {
       return SetupAction.Builder.aSetupAction()
