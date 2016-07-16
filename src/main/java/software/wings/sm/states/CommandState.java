@@ -102,7 +102,7 @@ public class CommandState extends State {
 
   @Inject @Transient private ReleaseService releaseService;
 
-  @Inject @Transient private transient ExecutorService executorService;
+  @Inject @Transient @SchemaIgnore private transient ExecutorService executorService;
 
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
 
