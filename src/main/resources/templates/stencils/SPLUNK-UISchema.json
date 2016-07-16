@@ -1,1 +1,9 @@
-{}
+{
+  "ui:order": ["query", "assertion"],
+  "query": {
+    "ui:widget": "textarea"
+  },
+  "assertion": {
+    "ui:widget": "textarea"
+  }
+}

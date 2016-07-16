@@ -23,6 +23,7 @@ import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.utils.JsonUtils;
@@ -67,8 +68,9 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, ORCHESTRATION_STENCILS), // SPLUNK(ORCHESTRATION_STENCILS),
-                                                 // APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, ORCHESTRATION_STENCILS),
+
+  SPLUNK(SplunkState.class, ORCHESTRATION_STENCILS), // APP_DYNAMICS(ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
