@@ -11,6 +11,7 @@ import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
 import static software.wings.beans.ErrorCodes.DUPLICATE_ARTIFACTSOURCE_NAMES;
 import static software.wings.beans.Release.BreakdownByEnvironments.Builder.aBreakdownByEnvironments;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
@@ -22,18 +23,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Artifact;
 import software.wings.beans.ArtifactSource;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.BreakdownByEnvironments;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -68,14 +71,35 @@ public class ReleaseServiceImpl implements ReleaseService {
 
   @Inject private EnvironmentService environmentService;
 
+  @Inject private ArtifactService artifactService;
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ReleaseService#list(software.wings.dl.PageRequest)
    */
   @Override
   public PageResponse<Release> list(PageRequest<Release> req) {
-    req.addFilter("active", true, Operator.EQ);
+    req.addFilter("active", true, EQ);
     PageResponse<Release> releases = wingsPersistence.query(Release.class, req);
     releases.forEach(release -> populateJenkinsSettingName(release.getArtifactSources()));
+    releases.forEach(release
+        -> release.getArtifactSources().parallelStream().forEach(artifactSource
+            -> artifactSource.setLastArtifact(
+                (Artifact) artifactService
+                    .list(aPageRequest()
+                              .withLimit("1")
+                              .addOrder("lastUpdatedAt", OrderType.DESC)
+                              .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
+                              .addFilter(aSearchFilter()
+                                             .withField("release", EQ, wingsPersistence.getDatastore().getKey(release))
+                                             .build())
+                              .addFilter(aSearchFilter()
+                                             .withField("artifactSourceName", EQ, artifactSource.getSourceName())
+                                             .build())
+                              .<Artifact>build())
+                    .getResponse()
+                    .stream()
+                    .findFirst()
+                    .orElse(null))));
     return releases;
   }
 
@@ -255,15 +279,15 @@ public class ReleaseServiceImpl implements ReleaseService {
             .parallelStream()
             .flatMap(service
                 -> (Stream<ServiceTemplate>) serviceTemplateService
-                       .list(aPageRequest()
-                                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, release.getAppId()).build())
-                                 .aPageRequest()
-                                 .addFilter(aSearchFilter()
-                                                .withField("service", Operator.EQ,
-                                                    wingsPersistence.getDatastore().getKey(service))
-                                                .build())
-                                 .addFieldsIncluded("name", "envId")
-                                 .<ServiceTemplate>build())
+                       .list(
+                           aPageRequest()
+                               .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
+                               .aPageRequest()
+                               .addFilter(aSearchFilter()
+                                              .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
+                                              .build())
+                               .addFieldsIncluded("name", "envId")
+                               .<ServiceTemplate>build())
                        .getResponse()
                        .stream())
             .collect(groupingBy(ServiceTemplate::getEnvId));
@@ -283,16 +307,15 @@ public class ReleaseServiceImpl implements ReleaseService {
               .parallelStream()
               .flatMap(service
                   -> (Stream<ServiceTemplate>) serviceTemplateService
-                         .list(
-                             aPageRequest()
-                                 .addFilter(aSearchFilter().withField("appId", Operator.EQ, release.getAppId()).build())
-                                 .aPageRequest()
-                                 .addFilter(aSearchFilter()
-                                                .withField("service", Operator.EQ,
-                                                    wingsPersistence.getDatastore().getKey(service))
-                                                .build())
-                                 .addFieldsIncluded("name", "envId")
-                                 .<ServiceTemplate>build())
+                         .list(aPageRequest()
+                                   .addFilter(aSearchFilter().withField("appId", EQ, release.getAppId()).build())
+                                   .aPageRequest()
+                                   .addFilter(
+                                       aSearchFilter()
+                                           .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
+                                           .build())
+                                   .addFieldsIncluded("name", "envId")
+                                   .<ServiceTemplate>build())
                          .getResponse()
                          .stream())
               .collect(groupingBy(ServiceTemplate::getEnvId));
