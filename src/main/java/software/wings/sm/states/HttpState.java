@@ -78,6 +78,7 @@ public class HttpState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    String errorMessage = null;
     String evaluatedUrl = context.renderExpression(url);
     logger.info("evaluatedUrl: {}", evaluatedUrl);
     String evaluatedBody = body;
@@ -172,6 +173,7 @@ public class HttpState extends State {
           entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
     } catch (IOException e) {
       logger.error("Exception: ", e);
+      errorMessage = getMessage(e);
       executionData.setHttpResponseCode(500);
       executionData.setHttpResponseBody(getMessage(e));
     }
@@ -181,6 +183,7 @@ public class HttpState extends State {
       status = (boolean) context.evaluateExpression(assertion, executionData);
       logger.info("assertion status: {}", status);
     } catch (Exception e) {
+      errorMessage = getMessage(e);
       logger.error("Error in httpStateAssertion", e);
       status = false;
     }
@@ -191,6 +194,7 @@ public class HttpState extends State {
 
     executionData.setAssertionStatus(executionStatus.name());
     response.setStateExecutionData(executionData);
+    response.setErrorMessage(errorMessage);
     return response;
   }
 
