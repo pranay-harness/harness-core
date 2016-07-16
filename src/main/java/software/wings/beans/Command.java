@@ -22,7 +22,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
-@Attributes(title = "COMMAND")
+@Attributes(title = "Command")
 public class Command extends CommandUnit {
   @EnumData(expandIntoMultipleEntries = true, enumDataProvider = ServiceResourceServiceImpl.class)
   @Attributes(title = "Name")

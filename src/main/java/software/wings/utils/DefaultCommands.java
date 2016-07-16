@@ -40,7 +40,7 @@ public class DefaultCommands {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"));
 
     return aGraph()
-        .withGraphName("START")
+        .withGraphName("Start")
         .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withX(400)
@@ -69,7 +69,7 @@ public class DefaultCommands {
     List<String> nodes = asList(graphIdGenerator("node"), graphIdGenerator("node"));
 
     return aGraph()
-        .withGraphName("STOP")
+        .withGraphName("Stop")
         .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withX(400)
@@ -101,7 +101,7 @@ public class DefaultCommands {
         graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"), graphIdGenerator("link"));
 
     return aGraph()
-        .withGraphName("INSTALL")
+        .withGraphName("Install")
         .addNodes(aNode().withX(50).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
             aNode()
                 .withX(200)
@@ -114,9 +114,9 @@ public class DefaultCommands {
                 .withX(350)
                 .withY(200)
                 .withId(nodes.get(2))
-                .withName("STOP")
+                .withName("Stop")
                 .withType(COMMAND.name())
-                .addProperty("referenceId", "STOP")
+                .addProperty("referenceId", "Stop")
                 .build(),
             aNode()
                 .withX(500)
@@ -149,9 +149,9 @@ public class DefaultCommands {
                 .withX(950)
                 .withY(200)
                 .withId(nodes.get(6))
-                .withName("START")
+                .withName("Start")
                 .withType(COMMAND.name())
-                .addProperty("referenceId", "START")
+                .addProperty("referenceId", "Start")
                 .build())
         .addLinks(
             aLink().withFrom(nodes.get(0)).withTo(nodes.get(1)).withType(SUCCESS.name()).withId(linkes.get(0)).build(),

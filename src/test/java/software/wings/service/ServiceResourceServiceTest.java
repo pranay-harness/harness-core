@@ -160,7 +160,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(spyServiceResourceService, times(3)).addCommand(eq(APP_ID), eq(SERVICE_ID), graphArgumentCaptor.capture());
     List<Graph> allValues = graphArgumentCaptor.getAllValues();
     assertThat(
-        allValues.stream().filter(graph -> asList("START", "STOP", "INSTALL").contains(graph.getGraphName())).count())
+        allValues.stream().filter(graph -> asList("Start", "Stop", "Install").contains(graph.getGraphName())).count())
         .isEqualTo(3);
   }
 
