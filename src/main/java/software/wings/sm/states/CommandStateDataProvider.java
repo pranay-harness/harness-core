@@ -14,6 +14,6 @@ import java.util.Map;
 public class CommandStateDataProvider implements DataProvider {
   @Override
   public Map<String, String> getData(String appId, String... params) {
-    return ImmutableMap.of("START", "START", "STOP", "STOP", "INSTALL", "INSTALL", "", "Command");
+    return ImmutableMap.of("Start", "Start", "Stop", "Stop", "Install", "Install", "", "Command");
   }
 }

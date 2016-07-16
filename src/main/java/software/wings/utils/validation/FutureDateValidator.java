@@ -1,5 +1,6 @@
 package software.wings.utils.validation;
 
+import java.util.Calendar;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
@@ -20,6 +21,15 @@ public class FutureDateValidator implements ConstraintValidator<FutureDate, Long
    */
   @Override
   public boolean isValid(Long value, ConstraintValidatorContext context) {
-    return value == null || value.longValue() > System.currentTimeMillis();
+    return value == null || value.longValue() >= getDateInMillis();
+  }
+
+  public static long getDateInMillis() {
+    Calendar c = Calendar.getInstance();
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    c.set(Calendar.SECOND, 0);
+    return c.getTimeInMillis();
   }
 }
