@@ -3,8 +3,6 @@ package software.wings.beans;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/25/16.
  */

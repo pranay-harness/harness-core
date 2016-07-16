@@ -11,6 +11,15 @@ xxxxxxxx
   adminConnectors:
     - type: http
       port: 9091
+  requestLog:
+      timeZone: UTC
+      appenders:
+        - type: file
+          currentLogFilename: access.log
+          threshold: ALL
+          archive: true
+          archivedLogFilenamePattern: access.%d.log.gz
+          archivedFileCount: 14
 logging:
   appenders:
     - type: console

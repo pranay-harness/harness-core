@@ -12,8 +12,6 @@ import software.wings.sm.ContextElementType;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class HostElement.
  *

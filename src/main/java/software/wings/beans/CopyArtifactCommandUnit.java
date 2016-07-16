@@ -7,8 +7,6 @@ import com.google.common.base.MoreObjects;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */

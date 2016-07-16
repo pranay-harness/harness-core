@@ -7,8 +7,6 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ArtifactFile.
  */

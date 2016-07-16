@@ -14,8 +14,6 @@ import software.wings.notification.EmailNotificationListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */

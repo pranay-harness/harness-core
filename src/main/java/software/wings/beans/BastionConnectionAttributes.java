@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/17/16.
  */

@@ -14,8 +14,6 @@ import software.wings.utils.JsonUtils;
 import java.net.URL;
 import java.util.HashMap;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 6/2/16.
  */

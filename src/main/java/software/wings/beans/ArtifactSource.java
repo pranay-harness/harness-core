@@ -11,8 +11,6 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ArtifactSource bean class.
  *

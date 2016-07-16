@@ -10,8 +10,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class WingsTimestamp.
  *

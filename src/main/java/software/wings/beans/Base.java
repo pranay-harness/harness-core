@@ -16,8 +16,6 @@ import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Base class is used to extend all the bean classes that requires persistence. The base class
  * includes common fields such as uuid, createdBy, create timestamp, updatedBy and update timestamp.

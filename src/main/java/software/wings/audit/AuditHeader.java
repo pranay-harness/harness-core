@@ -8,8 +8,6 @@ import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HttpAuditHeader bean class.
  *
