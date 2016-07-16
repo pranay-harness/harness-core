@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -8,6 +9,7 @@ import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
@@ -42,7 +44,13 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public PageResponse<AppContainer> list(PageRequest<AppContainer> request) {
-    return wingsPersistence.query(AppContainer.class, request);
+    PageRequest<AppContainer> req =
+        aPageRequest()
+            .withLimit(request.getLimit())
+            .withOffset(request.getOffset())
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, Base.GLOBAL_APP_ID).build())
+            .build(); // FIXME
+    return wingsPersistence.query(AppContainer.class, req);
   }
 
   /**
@@ -50,6 +58,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public AppContainer get(String appId, String platformId) {
+    appId = GLOBAL_APP_ID; // FIXME
     return wingsPersistence.get(AppContainer.class, appId, platformId);
   }
 
@@ -58,6 +67,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public String save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
+    appContainer.setAppId(GLOBAL_APP_ID); // FIXME
     String fileId = fileService.saveFile(appContainer, in, fileBucket);
     appContainer.setFileUuid(fileId);
     return wingsPersistence.save(appContainer);
@@ -83,6 +93,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public void delete(String appId, String appContainerId) {
+    appId = GLOBAL_APP_ID; // FIXME
     ensureAppContainerNotInUse(appContainerId);
     // safe to delete
     AppContainer appContainer = wingsPersistence.get(AppContainer.class, appContainerId);
@@ -121,8 +132,9 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
 
   @Override
   public Map<String, String> getData(String appId, String... params) {
+    final String globalAppId = GLOBAL_APP_ID; // FIXME
     return (Map<String, String>) list(
-        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build()).build())
+        aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, globalAppId).build()).build())
         .getResponse()
         .stream()
         .collect(toMap(AppContainer::getUuid, AppContainer::getName));

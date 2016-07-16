@@ -14,7 +14,7 @@ import java.util.Objects;
  * Created by anubhaw on 7/14/16.
  */
 public class ScpCommandUnit extends CopyCommandUnit {
-  @Attributes(title = "Artifacts", enums = {"Application Stack", "Application Artifacts", "Configurations"})
+  @Attributes(title = "Artifact Type", enums = {"Application Stack", "Application Artifacts", "Configurations"})
   /* Use enum data and and ScpFileCategory */
   private String fileCategory;
 
