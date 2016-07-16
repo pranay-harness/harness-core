@@ -50,7 +50,7 @@ public class Mailer {
       email.setSslSmtpPort(Integer.toString(smtpConfig.getPort()));
     }
 
-    email.setFrom(smtpConfig.getFromAddress());
+    email.setFrom(smtpConfig.getFromAddress(), "Wings Software");
 
     for (String to : emailData.getTo()) {
       email.addTo(to);
