@@ -26,7 +26,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Scp command unit type.
    */
-  SCP(ScpCommandUnit.class, "Scp"),
+  SCP(ScpCommandUnit.class, "SCP"),
 
   /**
    * Command command unit type.
@@ -44,17 +44,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Process check command unit type.
    */
-  PROCESS_CHECK(ProcessCheckCommandUnit.class, "Process Check"),
-
-  /**
-   * Copy artifact command unit type.
-   */
-  COPY_ARTIFACT(CopyArtifactCommandUnit.class, "Scp Artifact"),
-
-  /**
-   * Copy platform command unit type.
-   */
-  COPY_APP_CONTAINER(CopyAppContainerCommandUnit.class, "Scp App Stack");
+  PROCESS_CHECK(ProcessCheckCommandUnit.class, "Process Check");
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
