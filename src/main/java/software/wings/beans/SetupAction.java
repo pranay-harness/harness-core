@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import software.wings.beans.ResponseMessage.ResponseTypeEnum;
+
 import java.util.Objects;
 
 /**
@@ -11,6 +13,7 @@ public class SetupAction {
   private String displayText;
   private String code;
   private String url;
+  private ResponseTypeEnum errorType;
 
   /**
    * Gets display text.
@@ -64,6 +67,14 @@ public class SetupAction {
    */
   public void setUrl(String url) {
     this.url = url;
+  }
+
+  public ResponseTypeEnum getErrorType() {
+    return errorType;
+  }
+
+  public void setErrorType(ResponseTypeEnum errorType) {
+    this.errorType = errorType;
   }
 
   @Override
