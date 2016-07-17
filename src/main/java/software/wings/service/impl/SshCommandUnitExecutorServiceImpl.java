@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
+import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
@@ -78,7 +79,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId, commandUnit);
     SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
     executor.init(sshSessionConfig);
-    ExecutionResult executionResult;
     logService.save(aLog()
                         .withAppId(host.getAppId())
                         .withHostName(host.getHostName())
@@ -89,19 +89,34 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                             commandUnit.getCommandUnitType()))
                         .build());
 
-    executionResult = executeByCommandType(executor, commandUnit, op);
+    ExecutionResult executionResult = FAILURE;
+    try {
+      executionResult = executeByCommandType(executor, commandUnit, op);
+      logService.save(aLog()
+                          .withAppId(host.getAppId())
+                          .withActivityId(activityId)
+                          .withHostName(host.getHostName())
+                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                          .withLogLine("Command execution finished with status " + executionResult)
+                          .withCommandUnitName(commandUnit.getName())
+                          .withExecutionResult(executionResult)
+                          .build());
+      commandUnit.setExecutionResult(executionResult);
+      return executionResult;
 
-    logService.save(aLog()
-                        .withAppId(host.getAppId())
-                        .withActivityId(activityId)
-                        .withHostName(host.getHostName())
-                        .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                        .withLogLine("Command execution finished with status " + executionResult)
-                        .withCommandUnitName(commandUnit.getName())
-                        .withExecutionResult(executionResult)
-                        .build());
-    commandUnit.setExecutionResult(executionResult);
-    return executionResult;
+    } catch (Exception ex) {
+      logger.error("Command execution failed with error " + ex);
+      logService.save(aLog()
+                          .withAppId(host.getAppId())
+                          .withActivityId(activityId)
+                          .withHostName(host.getHostName())
+                          .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                          .withLogLine("Command execution finished with status " + executionResult)
+                          .withCommandUnitName(commandUnit.getName())
+                          .withExecutionResult(executionResult)
+                          .build());
+      throw ex;
+    }
   }
 
   private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {

@@ -70,7 +70,9 @@ public class MailerTest extends WingsBaseTest {
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("test");
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
-    assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
+    assertThat(greenMail.getReceivedMessages()[0].getFrom())
+        .extracting(Address::toString)
+        .containsExactly("Wings Software <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -102,7 +104,9 @@ public class MailerTest extends WingsBaseTest {
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).contains("Content-Type: text/html;");
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test");
-    assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
+    assertThat(greenMail.getReceivedMessages()[0].getFrom())
+        .extracting(Address::toString)
+        .containsExactly("Wings Software <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com");
@@ -135,7 +139,9 @@ public class MailerTest extends WingsBaseTest {
 
     assertThat(GreenMailUtil.getBody(greenMail.getReceivedMessages()[0])).isEqualTo("hello test");
     assertThat(greenMail.getReceivedMessages()[0].getSubject()).isEqualTo("test you are invited");
-    assertThat(greenMail.getReceivedMessages()[0].getFrom()).extracting(Address::toString).containsExactly(EMAIL);
+    assertThat(greenMail.getReceivedMessages()[0].getFrom())
+        .extracting(Address::toString)
+        .containsExactly("Wings Software <" + EMAIL + ">");
     assertThat(greenMail.getReceivedMessages()[0].getAllRecipients())
         .extracting(Address::toString)
         .containsExactly("recieve@email.com", "recieve2@email.com");
