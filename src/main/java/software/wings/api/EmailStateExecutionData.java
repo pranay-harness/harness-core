@@ -167,8 +167,8 @@ public class EmailStateExecutionData extends StateExecutionData {
     private String subject;
     private String body;
     private String stateName;
-    private long startTs;
-    private long endTs;
+    private Long startTs;
+    private Long endTs;
     private ExecutionStatus status;
 
     private Builder() {}
@@ -243,7 +243,7 @@ public class EmailStateExecutionData extends StateExecutionData {
      * @param startTs the start ts
      * @return the builder
      */
-    public Builder withStartTs(long startTs) {
+    public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
@@ -254,7 +254,7 @@ public class EmailStateExecutionData extends StateExecutionData {
      * @param endTs the end ts
      * @return the builder
      */
-    public Builder withEndTs(long endTs) {
+    public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }

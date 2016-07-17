@@ -381,6 +381,8 @@ public class StateMachineExecutor {
     cloned.setContextElementType(null);
     cloned.setContextTransition(false);
     cloned.setStatus(ExecutionStatus.NEW);
+    cloned.setStartTs(null);
+    cloned.setEndTs(null);
     return cloned;
   }
 
