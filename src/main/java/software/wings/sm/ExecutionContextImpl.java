@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // TODO: Auto-generated Javadoc
 
@@ -32,6 +33,8 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
+
+  private static Pattern nameWindCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
 
   /**
    * Instantiates a new execution context impl.
@@ -178,17 +181,17 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   private String renderExpression(String expression, Map<String, Object> context) {
-    return evaluator.merge(expression, context, stateExecutionInstance.getStateName());
+    return evaluator.merge(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
   }
 
   private Object evaluateExpression(String expression, Map<String, Object> context) {
-    expression = normalizeExpression(expression, context, stateExecutionInstance.getStateName());
+    expression = normalizeExpression(expression, context, normalizeStateName(stateExecutionInstance.getStateName()));
     return evaluator.evaluate(expression, context);
   }
 
   private Map<String, Object> prepareContext(StateExecutionData stateExecutionData) {
     Map<String, Object> context = prepareContext();
-    context.put(getStateExecutionInstance().getStateName(), stateExecutionData);
+    context.put(normalizeStateName(getStateExecutionInstance().getStateName()), stateExecutionData);
     return context;
   }
 
@@ -197,6 +200,10 @@ public class ExecutionContextImpl implements ExecutionContext {
     return prepareContext(context);
   }
 
+  private String normalizeStateName(String name) {
+    Matcher matcher = nameWindCharPattern.matcher(name);
+    return matcher.replaceAll("__");
+  }
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
     context.putAll(stateExecutionInstance.getStateExecutionMap());

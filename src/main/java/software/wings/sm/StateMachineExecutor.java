@@ -231,8 +231,7 @@ public class StateMachineExecutor {
     }
   }
 
-  private StateExecutionInstance handleExecuteResponse(
-      ExecutionContextImpl context, ExecutionResponse executionResponse) {
+  StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState = sm.getState(stateExecutionInstance.getStateName());
@@ -274,7 +273,7 @@ public class StateMachineExecutor {
     return stateExecutionInstance;
   }
 
-  private StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception exception) {
+  StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception exception) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
     State currentState = sm.getState(stateExecutionInstance.getStateName());
