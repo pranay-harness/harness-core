@@ -13,3 +13,4 @@ dependency-reduced-pom.xml
 plugins
 wingsui
 access.log
+access*gz

@@ -111,7 +111,7 @@ public class ActivityResource {
    */
   @GET
   @Path("{activityId}/units")
-  public RestResponse<List<CommandUnit>> listLogs(
+  public RestResponse<List<CommandUnit>> getActivityCommandUnits(
       @QueryParam("appId") String appId, @PathParam("activityId") String activityId) {
     return new RestResponse<>(activityService.getCommandUnits(appId, activityId));
   }
