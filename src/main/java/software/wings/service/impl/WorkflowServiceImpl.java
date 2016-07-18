@@ -4,7 +4,6 @@
 
 package software.wings.service.impl;
 
-import static com.google.common.base.Ascii.toUpperCase;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -57,7 +56,6 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionEvent;
@@ -108,7 +106,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private EnvironmentService environmentService;
   @Inject private StaticConfiguration staticConfiguration;
   @Inject private StencilPostProcessor stencilPostProcessor;
-  @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
   @Inject private Injector injector;
 
@@ -624,7 +621,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         "generateNodeHierarchy invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
         instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
-    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
+    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
 
     Graph graph = new Graph();
     if (isSimpleLinear) {
@@ -660,11 +657,16 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
-      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node) {
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
+      StateExecutionData elementStateExecutionData) {
     logger.debug("generateNodeHierarchy requested- node: {}", node);
-    if (parentIdElementsMap.get(node.getId()) != null) {
-      StateExecutionInstance instance = instanceIdMap.get(node.getId());
+    StateExecutionInstance instance = instanceIdMap.get(node.getId());
 
+    if (elementStateExecutionData != null && elementStateExecutionData.getStartTs() == null) {
+      elementStateExecutionData.setStartTs(instance.getStartTs());
+    }
+
+    if (parentIdElementsMap.get(node.getId()) != null) {
       Group group = new Group();
       group.setId(node.getId() + "-group");
       logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
@@ -688,15 +690,21 @@ public class WorkflowServiceImpl implements WorkflowService {
           Node elementNode =
               Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
           group.getElements().add(elementNode);
-          elementNode.setStatus(ExecutionStatus.QUEUED.name());
           logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
           Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+          StateExecutionData executionData = new StateExecutionData();
           if (elementRepeatNode != null) {
-            elementNode.setStatus(toUpperCase(elementRepeatNode.getStatus()));
             elementNode.setNext(elementRepeatNode);
             logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
-            generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode);
+            generateNodeHierarchy(
+                instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
           }
+          if (executionData.getStatus() == null) {
+            executionData.setStatus(ExecutionStatus.QUEUED);
+          }
+          elementNode.setStatus(executionData.getStatus().name());
+          elementNode.setExecutionSummary(executionData.getExecutionSummary());
+          elementNode.setExecutionDetails(executionData.getExecutionDetails());
         }
       }
     }
@@ -705,7 +713,17 @@ public class WorkflowServiceImpl implements WorkflowService {
       Node nextNode = prevInstanceIdMap.get(node.getId());
       logger.debug("generateNodeHierarchy nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
-      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode);
+      generateNodeHierarchy(
+          instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode, elementStateExecutionData);
+    } else {
+      if (elementStateExecutionData != null) {
+        StateExecutionData executionData = instance.getStateExecutionData();
+        if (executionData != null) {
+          elementStateExecutionData.setStatus(executionData.getStatus());
+          elementStateExecutionData.setEndTs(executionData.getEndTs());
+          elementStateExecutionData.setErrorMsg(executionData.getErrorMsg());
+        }
+      }
     }
   }
 
