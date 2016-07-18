@@ -20,6 +20,7 @@ import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.CopyCommandUnit;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -29,9 +30,15 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.core.ssh.executors.SshSessionConfig.Builder;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -44,6 +51,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
+  @Inject ExecutorService executorService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Log service.
@@ -76,9 +84,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   }
 
   private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
-    SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId, commandUnit);
-    SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
-    executor.init(sshSessionConfig);
     logService.save(aLog()
                         .withAppId(host.getAppId())
                         .withHostName(host.getHostName())
@@ -90,8 +95,21 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                         .build());
 
     ExecutionResult executionResult = FAILURE;
+
     try {
-      executionResult = executeByCommandType(executor, commandUnit, op);
+      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId, commandUnit);
+      SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
+      executor.init(sshSessionConfig);
+
+      Future<ExecutionResult> executionResultFuture =
+          executorService.submit(() -> executeByCommandType(executor, commandUnit, op));
+      try {
+        executionResult = executionResultFuture.get(
+            commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
+      }
+
       logService.save(aLog()
                           .withAppId(host.getAppId())
                           .withActivityId(activityId)
