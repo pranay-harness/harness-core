@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
+import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
 import static software.wings.beans.ErrorCodes.INVALID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_KEYPATH;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
@@ -120,8 +122,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    */
   @Override
   public void init(@Valid SshSessionConfig config) {
-    if (null == config.getExecutionId() || config.getExecutionId().length() == 0) {
-      throw new WingsException(UNKNOWN_ERROR, new Throwable("INVALID_EXECUTION_ID"));
+    if (Strings.isNullOrEmpty(config.getExecutionId())) {
+      throw new WingsException(INVALID_EXECUTION_ID);
     }
 
     this.config = config;
@@ -137,7 +139,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.error("Failed to initialize executor " + ex);
       throw new WingsException(normalizeError(ex));
     } catch (IOException ex) {
-      ex.printStackTrace();
+      throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS);
     }
   }
 

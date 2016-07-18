@@ -90,8 +90,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                         .withActivityId(activityId)
                         .withLogLevel(INFO)
                         .withCommandUnitName(commandUnit.getName())
-                        .withLogLine(format("Begin execution of command %s:%s", commandUnit.getName(),
-                            commandUnit.getCommandUnitType()))
+                        .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
                         .build());
 
     ExecutionResult executionResult = FAILURE;
@@ -107,6 +106,16 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         executionResult = executionResultFuture.get(
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
       } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        logService.save(aLog()
+                            .withAppId(host.getAppId())
+                            .withActivityId(activityId)
+                            .withHostName(host.getHostName())
+                            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                            .withLogLine("Command execution timed out ")
+                            .withCommandUnitName(commandUnit.getName())
+                            .withExecutionResult(executionResult)
+                            .build());
+
         throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
       }
 
