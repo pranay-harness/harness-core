@@ -1005,8 +1005,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         aGraph()
             .addNodes(aNode().withId("n0").withName("ORIGIN").build())
             .addNodes(aNode()
-                          .withId("RepeatByServices")
-                          .withName("RepeatByServices")
+                          .withId("Repeat By Services")
+                          .withName("Repeat By Services")
                           .withType(StateType.REPEAT.name())
                           .addProperty("repeatElementExpression", "${services()}")
                           .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
@@ -1036,9 +1036,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                           .withType(StateType.WAIT.name())
                           .addProperty("duration", 1)
                           .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("RepeatByServices").withType("success").build())
+            .addLinks(aLink().withId("l0").withFrom("n0").withTo("Repeat By Services").withType("success").build())
             .addLinks(
-                aLink().withId("l1").withFrom("RepeatByServices").withTo("svcRepeatWait").withType("repeat").build())
+                aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
             .addLinks(
                 aLink().withId("l2").withFrom("svcRepeatWait").withTo("RepeatByInstances").withType("success").build())
             .addLinks(
@@ -1087,7 +1087,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
+        .containsExactly("Repeat By Services", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
@@ -1111,7 +1111,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
+        .containsExactly("Repeat By Services", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
@@ -1141,7 +1141,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", true);
+        .containsExactly("Repeat By Services", "REPEAT", "SUCCESS", true);
     assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
@@ -1166,7 +1166,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getLinks()).isEmpty();
     assertThat(graph.getNodes().get(0))
         .extracting("name", "type", "status", "expanded")
-        .containsExactly("RepeatByServices", "REPEAT", "SUCCESS", false);
+        .containsExactly("Repeat By Services", "REPEAT", "SUCCESS", false);
   }
 
   /**
