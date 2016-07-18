@@ -21,7 +21,7 @@ public class ProcessCheckCommandUnit extends AbstractExecCommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    setCommand(String.format("pgrep -f '%s'" + expression.trim()));
+    setCommand(String.format("pgrep -f '%s'", expression.trim()));
   }
 
   @Override
