@@ -18,8 +18,6 @@ import software.wings.utils.ResourceTestRule;
 
 import javax.ws.rs.core.GenericType;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class AppResourceTest.
  */

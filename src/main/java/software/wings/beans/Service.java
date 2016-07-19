@@ -14,8 +14,6 @@ import software.wings.beans.ArtifactSource.ArtifactType;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Component bean class.
  *

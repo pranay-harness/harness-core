@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class JenkinsArtifactSource.
  */

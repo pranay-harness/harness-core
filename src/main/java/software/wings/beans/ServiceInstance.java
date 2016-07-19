@@ -15,8 +15,6 @@ import org.mongodb.morphia.annotations.Reference;
 import java.util.Objects;
 import java.util.Optional;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ServiceInstance.
  */

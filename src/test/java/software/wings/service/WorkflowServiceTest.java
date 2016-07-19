@@ -45,8 +45,6 @@ import java.util.Map;
 import java.util.Random;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class WorkflowServiceTest.
  *

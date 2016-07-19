@@ -11,8 +11,6 @@ import com.openpojo.validation.rule.Rule;
 import java.util.LinkedList;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/19/16.
  */

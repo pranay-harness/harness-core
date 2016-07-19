@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * This is meant to cleanup notifyResponse objects that have already been used to callback waiting
  * instances, or have expired.

@@ -47,8 +47,6 @@ import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */

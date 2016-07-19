@@ -6,8 +6,6 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.SettingValue;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */

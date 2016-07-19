@@ -42,8 +42,6 @@ import javax.validation.ConstraintViolationException;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.UriInfo;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/4/16.
  */

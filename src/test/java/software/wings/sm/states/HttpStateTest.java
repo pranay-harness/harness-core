@@ -26,8 +26,6 @@ import software.wings.sm.StateExecutionInstance;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class HttpStateTest.
  *

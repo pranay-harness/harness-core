@@ -14,8 +14,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import javax.inject.Singleton;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class YamlUtils.
  *

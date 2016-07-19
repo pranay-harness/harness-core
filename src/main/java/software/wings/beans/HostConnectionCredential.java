@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/31/16.
  */

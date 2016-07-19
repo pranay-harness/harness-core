@@ -104,8 +104,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/6/16.
  */

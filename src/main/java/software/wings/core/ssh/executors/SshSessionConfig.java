@@ -7,8 +7,6 @@ import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 2/8/16.
  */

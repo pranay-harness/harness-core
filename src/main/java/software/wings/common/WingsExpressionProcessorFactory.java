@@ -17,8 +17,6 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * A factory for creating WingsExpressionProcessor objects.
  */

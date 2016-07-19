@@ -4,8 +4,6 @@ import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Host;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Interface CommandUnitExecutorService.
  */

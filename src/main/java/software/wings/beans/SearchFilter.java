@@ -4,8 +4,6 @@ import com.google.common.base.MoreObjects;
 
 import java.util.Arrays;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * SearchFilter bean class.
  *

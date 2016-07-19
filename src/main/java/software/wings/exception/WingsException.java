@@ -9,8 +9,6 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The generic exception class for the Wings Application.
  *

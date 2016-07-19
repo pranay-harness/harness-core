@@ -7,8 +7,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ForceQueuePolicy based on https://github.com/AndroidDeveloperLB/ListViewVariants
  * /blob/master/app/src/main

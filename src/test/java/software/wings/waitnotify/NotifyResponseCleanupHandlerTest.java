@@ -19,8 +19,6 @@ import software.wings.sm.ExecutionStatus;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Test for checking notify cleanup handler.
  *

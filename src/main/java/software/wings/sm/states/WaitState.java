@@ -20,8 +20,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * dummy implementation for wait state.
  *

@@ -10,8 +10,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents State Machine Instance.
  *

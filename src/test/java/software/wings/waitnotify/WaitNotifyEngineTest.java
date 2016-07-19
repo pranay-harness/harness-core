@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class WaitNotifyEngineTest.
  */

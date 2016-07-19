@@ -16,8 +16,6 @@ import org.apache.commons.mail.SimpleEmail;
 import java.io.IOException;
 import java.io.StringWriter;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */

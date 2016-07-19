@@ -7,8 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class Validator.
  */

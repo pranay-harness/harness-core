@@ -7,8 +7,6 @@ import software.wings.service.intfc.LogService;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 2/5/16.
  */

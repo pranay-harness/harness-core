@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ResponseMessage.
  */

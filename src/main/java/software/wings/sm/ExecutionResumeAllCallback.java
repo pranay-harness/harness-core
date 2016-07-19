@@ -7,8 +7,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Callback method for handling notify callback from wait notify engine.
  *

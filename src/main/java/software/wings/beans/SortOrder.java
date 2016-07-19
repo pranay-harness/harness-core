@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * SortOrder bean class.
  *

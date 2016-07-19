@@ -7,8 +7,6 @@ package software.wings.service;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class StaticMap.
  *

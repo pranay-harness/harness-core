@@ -9,8 +9,6 @@ import software.wings.sm.StateType;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * A Env state to pause state machine execution.
  *

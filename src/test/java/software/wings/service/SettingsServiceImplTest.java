@@ -36,8 +36,6 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/23/16.
  */

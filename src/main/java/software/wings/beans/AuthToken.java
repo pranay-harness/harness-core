@@ -7,8 +7,6 @@ import org.mongodb.morphia.annotations.Reference;
 
 import javax.validation.constraints.NotNull;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/14/16.
  */

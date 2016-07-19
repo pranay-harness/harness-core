@@ -3,8 +3,6 @@ package software.wings.health;
 import com.codahale.metrics.health.HealthCheck;
 import software.wings.app.MainConfiguration;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HealthCheck class for the Wings Application.
  *

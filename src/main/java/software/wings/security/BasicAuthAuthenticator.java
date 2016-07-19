@@ -18,8 +18,6 @@ import software.wings.exception.WingsException;
 
 import javax.inject.Singleton;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/10/16.
  */

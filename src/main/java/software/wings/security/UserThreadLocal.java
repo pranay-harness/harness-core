@@ -2,8 +2,6 @@ package software.wings.security;
 
 import software.wings.beans.User;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/20/16.
  */

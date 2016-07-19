@@ -35,8 +35,6 @@ import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ArtifactServiceImpl.
  */

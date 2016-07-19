@@ -9,8 +9,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/16/16.
  */

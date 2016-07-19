@@ -4,8 +4,6 @@ import software.wings.beans.Role;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/28/16.
  */

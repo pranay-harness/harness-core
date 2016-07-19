@@ -6,8 +6,6 @@ import software.wings.core.queue.AbstractQueueListener;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/24/16.
  *

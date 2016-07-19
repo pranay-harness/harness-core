@@ -25,7 +25,6 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-// TODO: Auto-generated Javadoc
 /**
  * The Class WingsPersistenceTest.
  */

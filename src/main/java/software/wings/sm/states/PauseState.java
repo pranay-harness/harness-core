@@ -9,8 +9,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * A Pause state to pause state machine execution.
  *

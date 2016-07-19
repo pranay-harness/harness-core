@@ -14,8 +14,6 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/12/16.
  */

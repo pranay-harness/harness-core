@@ -8,8 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents which waiter is waiting on which correlation Ids and callback to execute when done.
  *

@@ -10,8 +10,6 @@ import software.wings.utils.JsonUtils;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Test case.
  *
