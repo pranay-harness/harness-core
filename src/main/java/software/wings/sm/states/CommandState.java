@@ -215,9 +215,9 @@ public class CommandState extends State {
                                              .withCommandType(command.getCommandUnitType().name())
                                              .withHostName(serviceInstance.getHost().getHostName());
 
-      String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH);
-      String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH);
-      String stagingPath = getEvaluatedSettingValue(context, appId, envId, STAGING_PATH);
+      String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
+      String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
+      String stagingPath = getEvaluatedSettingValue(context, appId, envId, STAGING_PATH).replace(" ", "\\ ");
 
       CommandExecutionContext.Builder commandExecutionContextBuilder =
           aCommandExecutionContext()
