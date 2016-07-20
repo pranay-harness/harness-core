@@ -2,8 +2,6 @@ package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Interface defining StateMachine execution callback.
  *

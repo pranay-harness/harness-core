@@ -8,8 +8,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/13/16.
  */

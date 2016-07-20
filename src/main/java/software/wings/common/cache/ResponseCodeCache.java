@@ -12,8 +12,6 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.Properties;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ResponseCodeCache.
  */

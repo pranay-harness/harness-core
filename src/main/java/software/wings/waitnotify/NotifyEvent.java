@@ -8,8 +8,6 @@ import software.wings.core.queue.Queuable;
 import java.util.Date;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */

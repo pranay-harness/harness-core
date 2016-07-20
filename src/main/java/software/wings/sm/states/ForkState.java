@@ -27,8 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Describes a ForkState by which we can fork execution to multiple threads in state machine.
  *

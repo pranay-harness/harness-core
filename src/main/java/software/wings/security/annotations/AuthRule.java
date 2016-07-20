@@ -8,8 +8,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import javax.ws.rs.NameBinding;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/10/16.
  */

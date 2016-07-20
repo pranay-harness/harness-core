@@ -2,8 +2,6 @@ package software.wings.utils;
 
 import java.io.File;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class MD5Digest.
  */

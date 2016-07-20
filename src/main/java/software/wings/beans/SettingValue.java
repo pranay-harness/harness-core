@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/16/16.
  */

@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Embedded;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/17/16.
  */

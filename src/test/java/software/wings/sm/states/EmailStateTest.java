@@ -27,8 +27,6 @@ import software.wings.sm.StateExecutionInstance;
 import java.io.IOException;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class EmailStateTest.
  *

@@ -3,8 +3,6 @@ package software.wings.utils;
 import java.security.SecureRandom;
 import java.util.Random;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class CryptoUtil.
  */

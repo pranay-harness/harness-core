@@ -3,8 +3,6 @@ package software.wings.common.thread;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ScalingQueue based on https://github.com/AndroidDeveloperLB/ListViewVariants/blob
  * /master/app/src/main /java/lb/listviewvariants/utils/async_task_thread_pool/ScalingQueue.java

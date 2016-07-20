@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.rules.WingsRule;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/28/16.
  */

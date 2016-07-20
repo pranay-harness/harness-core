@@ -32,8 +32,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/23/16.
  */

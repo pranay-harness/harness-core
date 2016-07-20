@@ -6,8 +6,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ThreadPoolExecutor based on https://github.com/AndroidDeveloperLB/ListViewVariants
  * /blob/master/app/src/main /java/lb/listviewvariants/utils/async_task_thread_pool

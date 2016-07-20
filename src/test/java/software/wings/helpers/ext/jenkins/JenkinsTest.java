@@ -17,8 +17,6 @@ import java.net.URISyntaxException;
 import java.util.List;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class JenkinsTest.
  */

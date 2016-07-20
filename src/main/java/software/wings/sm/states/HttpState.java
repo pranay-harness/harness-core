@@ -40,8 +40,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Http state which makes a call to http service.
  *

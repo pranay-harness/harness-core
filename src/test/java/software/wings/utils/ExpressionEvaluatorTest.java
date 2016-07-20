@@ -14,8 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ExpressionEvaluatorTest.
  *

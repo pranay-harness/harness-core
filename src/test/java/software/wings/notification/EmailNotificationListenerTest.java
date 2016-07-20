@@ -12,8 +12,6 @@ import software.wings.WingsBaseTest;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.NotificationService;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */

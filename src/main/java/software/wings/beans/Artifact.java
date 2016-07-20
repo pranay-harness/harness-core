@@ -28,8 +28,6 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.validation.Payload;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Artifact bean class.
  *

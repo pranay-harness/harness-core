@@ -15,8 +15,6 @@ import software.wings.utils.JsonUtilsTest.Base.BaseType;
 
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class JsonUtilsTest.
  *

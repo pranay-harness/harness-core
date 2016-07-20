@@ -8,8 +8,6 @@ import software.wings.dl.PageResponse;
 
 import javax.validation.Valid;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ReleaseService.
  *

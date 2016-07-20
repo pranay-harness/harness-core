@@ -8,8 +8,6 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Application Service.
  *

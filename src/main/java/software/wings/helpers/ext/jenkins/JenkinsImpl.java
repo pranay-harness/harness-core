@@ -27,8 +27,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.regex.Pattern;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class JenkinsImpl.
  */

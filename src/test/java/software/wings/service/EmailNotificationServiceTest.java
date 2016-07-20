@@ -25,8 +25,6 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.SettingsService;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/25/16.
  */

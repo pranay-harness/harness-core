@@ -78,8 +78,6 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExpressionProcessorFactory;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Guice Module for initializing all beans.
  *

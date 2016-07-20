@@ -29,8 +29,6 @@ import java.util.concurrent.ExecutorService;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Class responsible for executing state machine.
  *

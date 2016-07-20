@@ -33,8 +33,6 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/11/16.
  */

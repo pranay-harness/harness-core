@@ -28,8 +28,6 @@ import software.wings.service.intfc.ReleaseService;
 import java.util.List;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */

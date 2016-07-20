@@ -5,8 +5,6 @@ import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents a state object.
  *

@@ -9,8 +9,6 @@ import java.io.OutputStream;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HttpServletResponseCopier that creates a copy of the http response payload. Based on
  * https://github.com/ukwa/interject/blob/master/interject-servlet-filter

@@ -6,8 +6,6 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;
 import javax.ws.rs.container.ContainerResponseFilter;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/20/16.
  */

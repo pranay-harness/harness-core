@@ -20,8 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class HostExpressionProcessor.
  *

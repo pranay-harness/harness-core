@@ -5,8 +5,6 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Plugin interface for adding state.
  *

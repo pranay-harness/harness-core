@@ -10,8 +10,6 @@ import software.wings.service.intfc.AuditService;
 
 import javax.inject.Singleton;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * AuditHelper uses threadlocal to stitch both request and response pay-load with the common http
  * header entries.

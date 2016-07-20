@@ -41,8 +41,6 @@ import java.util.Map;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class CatalogResourceTest.
  *

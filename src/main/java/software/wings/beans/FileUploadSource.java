@@ -6,8 +6,6 @@ import org.mongodb.morphia.annotations.Reference;
 
 import java.util.Set;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class FileUploadSource.
  */

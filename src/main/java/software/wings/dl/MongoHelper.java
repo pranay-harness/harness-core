@@ -20,8 +20,6 @@ import software.wings.exception.WingsException;
 import java.util.Arrays;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class MongoHelper.
  */

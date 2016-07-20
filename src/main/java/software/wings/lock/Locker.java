@@ -1,7 +1,5 @@
 package software.wings.lock;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Locker interface to acquire and release locks.
  *

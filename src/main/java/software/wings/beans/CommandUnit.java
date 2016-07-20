@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-// TODO: Auto-generated Javadoc
-
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

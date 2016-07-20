@@ -5,8 +5,6 @@ import software.wings.WingsBaseTest;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class PersistentLockerTest.
  */

@@ -34,8 +34,6 @@ import software.wings.service.intfc.JenkinsBuildService;
 import java.io.IOException;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/13/16.
  */

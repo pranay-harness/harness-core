@@ -26,8 +26,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * PageRequest bean class.
  *

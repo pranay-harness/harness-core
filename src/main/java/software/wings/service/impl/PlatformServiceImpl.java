@@ -11,8 +11,6 @@ import software.wings.service.intfc.PlatformService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class PlatformServiceImpl.
  */

@@ -18,8 +18,6 @@ import software.wings.service.intfc.SettingsService;
 import java.io.IOException;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/23/16.
  */

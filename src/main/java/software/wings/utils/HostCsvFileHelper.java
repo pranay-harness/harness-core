@@ -32,8 +32,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/15/16.
  */

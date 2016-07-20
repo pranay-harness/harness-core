@@ -4,8 +4,6 @@
 
 package software.wings.sm;
 
-// TODO: Auto-generated Javadoc
-
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import org.apache.commons.lang3.StringUtils;

@@ -15,8 +15,6 @@ import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class DeploymentServiceImpl.
  */

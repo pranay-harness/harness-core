@@ -5,8 +5,6 @@ import com.google.inject.Inject;
 import com.mongodb.client.gridfs.GridFSBucket;
 import software.wings.service.intfc.FileService.FileBucket;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
