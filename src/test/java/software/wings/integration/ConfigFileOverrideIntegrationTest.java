@@ -361,6 +361,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                    .withAppId(template.getAppId())
                                    .withEnvId(template.getEnvId())
                                    .withName(fileName)
+                                   .withFileName(fileName)
                                    .withTemplateId(template.getUuid())
                                    .withEntityId(entityId)
                                    .withEntityType(entityType)

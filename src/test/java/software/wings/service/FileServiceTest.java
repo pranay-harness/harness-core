@@ -78,8 +78,8 @@ public class FileServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveBaseFile() throws Exception {
-    assertThat(fileService.saveFile(
-                   anExtendedFile().withName("dummy.txt").build(), new FileInputStream(tempFile), FileBucket.ARTIFACTS))
+    assertThat(fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
+                   new FileInputStream(tempFile), FileBucket.ARTIFACTS))
         .isNotNull();
   }
 

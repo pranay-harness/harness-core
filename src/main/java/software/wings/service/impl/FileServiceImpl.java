@@ -137,7 +137,7 @@ public class FileServiceImpl implements FileService {
   public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
     GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
     String fileId = fileBucketHelper.getOrCreateFileBucket(bucket)
-                        .uploadFromStream(baseFile.getName(), inputStream, gridFSOptions)
+                        .uploadFromStream(baseFile.getFileName(), inputStream, gridFSOptions)
                         .toHexString();
     GridFSFile gridFsFile = getGridFsFile(fileId, bucket);
     verifyFileIntegrity(baseFile, gridFsFile);

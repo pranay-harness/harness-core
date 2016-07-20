@@ -1,7 +1,8 @@
 package software.wings.beans;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -84,7 +85,7 @@ public class ScpCommandUnit extends CopyCommandUnit {
         ArtifactFile artifactFile =
             context.getArtifact().getArtifactFiles().get(0); // TODO: support list of artifact files
         setFileId(artifactFile.getFileUuid());
-        setDestinationFilePath(constructPath(context.getRuntimePath(), relativeFilePath, artifactFile.getName()));
+        setDestinationDirectoryPath(constructPath(context.getRuntimePath(), relativeFilePath));
         break;
       case "Configurations":
         ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
@@ -95,15 +96,14 @@ public class ScpCommandUnit extends CopyCommandUnit {
           ConfigFile configFile = configFiles.get(0); // TODO: Support list of config files
           setFileBucket(FileBucket.CONFIGS);
           setFileId(configFile.getFileUuid());
-          setDestinationFilePath(
-              constructPath(context.getRuntimePath(), configFile.getRelativePath(), configFile.getName()));
+          setDestinationDirectoryPath(constructPath(context.getRuntimePath(), configFile.getRelativePath()));
         }
         break;
       case "Application Stack":
         AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
         setFileBucket(FileBucket.PLATFORMS);
         setFileId(appContainer.getFileUuid());
-        setDestinationFilePath(constructPath(context.getRuntimePath(), relativeFilePath, appContainer.getName()));
+        setDestinationDirectoryPath(constructPath(context.getRuntimePath(), relativeFilePath));
         break;
       default:
         throw new WingsException(
@@ -111,9 +111,9 @@ public class ScpCommandUnit extends CopyCommandUnit {
     }
   }
 
-  private String constructPath(String absolutePath, String relativePath, String filename) {
-    return absolutePath.trim() + (Strings.isNullOrEmpty(relativePath) ? "/" : "/" + relativePath.trim() + "/")
-        + filename.trim(); // TODO:: handle error cases
+  private String constructPath(String absolutePath, String relativePath) {
+    return isNullOrEmpty(relativePath) ? absolutePath.trim()
+                                       : absolutePath.trim() + "/" + relativePath.trim(); // TODO:: handle error cases
   }
 
   /**
@@ -351,7 +351,7 @@ public class ScpCommandUnit extends CopyCommandUnit {
       scpCommandUnit.setRelativeFilePath(relativeFilePath);
       scpCommandUnit.setFileId(fileId);
       scpCommandUnit.setFileBucket(fileBucket);
-      scpCommandUnit.setDestinationFilePath(destinationFilePath);
+      scpCommandUnit.setDestinationDirectoryPath(destinationFilePath);
       scpCommandUnit.setName(name);
       scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setExecutionResult(executionResult);

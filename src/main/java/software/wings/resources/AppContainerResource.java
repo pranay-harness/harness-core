@@ -90,16 +90,16 @@ public class AppContainerResource {
    */
   @POST
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> uploadPlatform(@QueryParam("appId") String appId,
+  public RestResponse<AppContainer> uploadPlatform(@QueryParam("appId") String appId,
       @FormDataParam("sourceType") SourceType sourceType, @FormDataParam("url") String urlString,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
+    appContainer.setFileName(fileDetail.getFileName());
     setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
-    String fileId = appContainerService.save(appContainer, uploadedInputStream, PLATFORMS);
-    return new RestResponse<>(fileId);
+    return new RestResponse<>(appContainerService.save(appContainer, uploadedInputStream, PLATFORMS));
   }
 
   /**
@@ -117,16 +117,17 @@ public class AppContainerResource {
   @PUT
   @Path("{appContainerId}")
   @Consumes(MULTIPART_FORM_DATA)
-  public RestResponse<String> updatePlatform(@QueryParam("appId") String appId,
+  public RestResponse<AppContainer> updatePlatform(@QueryParam("appId") String appId,
       @PathParam("appContainerId") String appContainerId, @FormDataParam("sourceType") SourceType sourceType,
       @FormDataParam("url") String urlString, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam AppContainer appContainer) {
     appContainer.setAppId(appId);
+    appContainer.setUuid(appContainerId);
+    appContainer.setFileName(fileDetail.getFileName());
     setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
-    String fileId = appContainerService.update(appContainerId, appContainer, uploadedInputStream, PLATFORMS);
-    return new RestResponse<>(fileId);
+    return new RestResponse<>(appContainerService.update(appContainer, uploadedInputStream, PLATFORMS));
   }
 
   private void setSourceForAppContainer(

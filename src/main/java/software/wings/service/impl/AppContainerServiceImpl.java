@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.ImmutableMap.*;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;
@@ -66,26 +67,30 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    * {@inheritDoc}
    */
   @Override
-  public String save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
+  public AppContainer save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     appContainer.setAppId(GLOBAL_APP_ID); // FIXME
     String fileId = fileService.saveFile(appContainer, in, fileBucket);
     appContainer.setFileUuid(fileId);
-    return wingsPersistence.save(appContainer);
+    return wingsPersistence.saveAndGet(AppContainer.class, appContainer);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public String update(String platformId, AppContainer appContainer, InputStream in, FileBucket fileBucket) {
-    AppContainer storedAppContainer = wingsPersistence.get(AppContainer.class, platformId);
+  public AppContainer update(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
+    AppContainer storedAppContainer =
+        wingsPersistence.get(AppContainer.class, appContainer.getAppId(), appContainer.getUuid());
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
       String fileId = fileService.saveFile(appContainer, in, fileBucket);
       appContainer.setFileUuid(fileId);
     }
     appContainer.setAppId(storedAppContainer.getAppId());
     appContainer.setUuid(storedAppContainer.getUuid());
-    return wingsPersistence.save(appContainer);
+    wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
+        of("name", appContainer.getName(), "description", appContainer.getDescription(), "version",
+            appContainer.getVersion(), "source", appContainer.getSource()));
+    return get(appContainer.getAppId(), appContainer.getUuid());
   }
 
   /**
@@ -96,7 +101,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
     appId = GLOBAL_APP_ID; // FIXME
     ensureAppContainerNotInUse(appContainerId);
     // safe to delete
-    AppContainer appContainer = wingsPersistence.get(AppContainer.class, appContainerId);
+    AppContainer appContainer = wingsPersistence.get(AppContainer.class, appId, appContainerId);
     wingsPersistence.delete(AppContainer.class, appContainerId);
     fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
   }

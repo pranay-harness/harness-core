@@ -350,7 +350,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     ExecutionResult executionResult = FAILURE;
     String gridFsFileId = copyCommand.getFileId();
     FileBucket gridFsBucket = copyCommand.getFileBucket();
-    String remoteFilePath = copyCommand.getDestinationFilePath();
+    GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
+    String fileName = fileMetaData.getFilename().replace(" ", "\\ ");
+    String remoteFilePath = copyCommand.getDestinationDirectoryPath() + "/" + fileName;
 
     try {
       String command = "scp -t " + remoteFilePath;
@@ -371,14 +373,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } else {
         saveExecutionLog(format("Connection to %s established", config.getHost()));
       }
-      GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
 
       // send "C0644 filesize filename", where filename should not include '/'
       long filesize = fileMetaData.getLength();
-      String fileName = fileMetaData.getFilename();
-      if (fileName.lastIndexOf('/') > 0) {
-        fileName += fileName.substring(fileName.lastIndexOf('/') + 1);
-      }
       command = "C0644 " + filesize + " " + fileName + "\n";
 
       out.write(command.getBytes(UTF_8));
