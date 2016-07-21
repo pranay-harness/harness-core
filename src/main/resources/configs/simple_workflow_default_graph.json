@@ -2,19 +2,12 @@
   "graphName": "MAIN",
   "nodes": [
     {
-      "id": "ORIGIN",
-      "name": "ORIGIN",
-      "type": "ORIGIN",
-      "x": 200,
-      "y": 50,
-      "properties": {}
-    },
-    {
       "id": "n1",
       "name": "RepeatByInstances",
       "type": "REPEAT",
       "x": 200,
       "y": 50,
+      "origin":true,
       "properties": {
         "repeatElementExpression": "${instances()}",
         "executionStrategyExpression":"${SIMPLE_WORKFLOW_REPEAT_STRATEGY}"
@@ -33,12 +26,6 @@
     }
   ],
   "links": [
-    {
-      "id": "l1",
-      "from": "ORIGIN",
-      "to": "n1",
-      "type": "success"
-    },
     {
       "id": "l2",
       "from": "n1",

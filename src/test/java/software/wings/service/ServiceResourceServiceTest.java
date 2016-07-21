@@ -20,9 +20,7 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.MorphiaMatcher.sameQueryAs;
@@ -219,18 +217,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
              eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
         .thenReturn(true);
 
-    Graph commandGraph =
-        aGraph()
-            .withGraphName("START")
-            .addNodes(aNode().withId(ORIGIN_STATE).withType(ORIGIN_STATE).build(),
-                aNode()
-                    .withId("1")
-                    .withType("EXEC")
-                    .addProperty("commandPath", "/home/xxx/tomcat")
-                    .addProperty("command", "bin/startup.sh")
-                    .build())
-            .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
-            .build();
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("command", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
@@ -254,18 +250,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
              eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
         .thenReturn(true);
 
-    Graph commandGraph =
-        aGraph()
-            .withGraphName("START")
-            .addNodes(aNode().withId(ORIGIN_STATE).withType(ORIGIN_STATE).build(),
-                aNode()
-                    .withId("1")
-                    .withType("EXEC")
-                    .addProperty("commandPath", "/home/xxx/tomcat")
-                    .addProperty("commandString", "bin/startup.sh")
-                    .build())
-            .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
-            .build();
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("commandString", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     Command expectedCommand = aCommand().withGraph(commandGraph).build();
     expectedCommand.transformGraph();
@@ -298,18 +292,16 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
              eq(Service.class), eq(APP_ID), eq(SERVICE_ID), any(Query.class), eq("commands"), any(Command.class)))
         .thenReturn(false);
 
-    Graph commandGraph =
-        aGraph()
-            .withGraphName("START")
-            .addNodes(aNode().withId(ORIGIN_STATE).withType(ORIGIN_STATE).build(),
-                aNode()
-                    .withId("1")
-                    .withType("EXEC")
-                    .addProperty("commandPath", "/home/xxx/tomcat")
-                    .addProperty("command", "bin/startup.sh")
-                    .build())
-            .addLinks(aLink().withFrom(ORIGIN_STATE).withTo("1").withType("ANY").withId("linkid").build())
-            .build();
+    Graph commandGraph = aGraph()
+                             .withGraphName("START")
+                             .addNodes(aNode()
+                                           .withId("1")
+                                           .withOrigin(true)
+                                           .withType("EXEC")
+                                           .addProperty("commandPath", "/home/xxx/tomcat")
+                                           .addProperty("command", "bin/startup.sh")
+                                           .build())
+                             .build();
 
     assertThatExceptionOfType(WingsException.class).isThrownBy(() -> srs.addCommand(APP_ID, SERVICE_ID, commandGraph));
 

@@ -43,6 +43,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 // TODO: Auto-generated Javadoc
@@ -267,8 +268,14 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   private Graph createInitialGraph() {
     return aGraph()
-        .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
-        .addNodes(aNode().withId("n1").withName("BUILD").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+        .addNodes(aNode()
+                      .withId("n1")
+                      .withName("BUILD")
+                      .withX(200)
+                      .withY(50)
+                      .withType(StateType.BUILD.name())
+                      .withOrigin(true)
+                      .build())
         .addNodes(aNode()
                       .withId("n2")
                       .withName("IT")
@@ -293,7 +300,6 @@ public class WorkflowServiceTest extends WingsBaseTest {
                       .withType(StateType.ENV_STATE.name())
                       .addProperty("envId", "34567")
                       .build())
-        .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
         .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
         .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
         .addLinks(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build())
@@ -386,31 +392,33 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   private Orchestration createOrchestration() {
-    Graph graph =
-        aGraph()
-            .addNodes(
-                aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
-            .addNodes(
-                aNode().withId("n1").withName("stop").withX(200).withY(50).withType(StateType.ENV_STATE.name()).build())
-            .addNodes(aNode()
-                          .withId("n2")
-                          .withName("wait")
-                          .withX(250)
-                          .withY(50)
-                          .withType(StateType.WAIT.name())
-                          .addProperty("duration", 1l)
-                          .build())
-            .addNodes(aNode()
-                          .withId("n3")
-                          .withName("start")
-                          .withX(300)
-                          .withY(50)
-                          .withType(StateType.ENV_STATE.name())
-                          .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
-            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-            .build();
+    Graph graph = aGraph()
+                      .addNodes(aNode()
+                                    .withId("n1")
+                                    .withName("stop")
+                                    .withX(200)
+                                    .withY(50)
+                                    .withType(StateType.ENV_STATE.name())
+                                    .withOrigin(true)
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n2")
+                                    .withName("wait")
+                                    .withX(250)
+                                    .withY(50)
+                                    .withType(StateType.WAIT.name())
+                                    .addProperty("duration", 1l)
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n3")
+                                    .withName("start")
+                                    .withX(300)
+                                    .withY(50)
+                                    .withType(StateType.ENV_STATE.name())
+                                    .build())
+                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+                      .build();
 
     Orchestration orchestration = anOrchestration()
                                       .withAppId(appId)

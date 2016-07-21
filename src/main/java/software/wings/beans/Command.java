@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -106,11 +107,6 @@ public class Command extends CommandUnit {
     Iterator<Node> pipelineIterator = graph.getLinearGraphIterator();
     while (pipelineIterator.hasNext()) {
       Node node = pipelineIterator.next();
-
-      if (node.isOrigin()) {
-        continue;
-      }
-
       CommandUnitType type = CommandUnitType.valueOf(node.getType().toUpperCase());
 
       CommandUnit commandUnit = type.newInstance("");
