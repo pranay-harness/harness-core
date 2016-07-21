@@ -31,11 +31,6 @@ import java.util.Optional;
  */
 public class Graph {
   /**
-   * The constant ORIGIN_STATE.
-   */
-  public static final String ORIGIN_STATE = "ORIGIN";
-
-  /**
    * The Default initial x.
    */
   public static final int DEFAULT_INITIAL_X = 10;
