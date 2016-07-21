@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.LogService;
 
@@ -29,7 +30,11 @@ public class SshPwdAuthExecutor extends AbstractSshExecutor {
    * software.wings.core.ssh.executors.AbstractSshExecutor#getSession(software.wings.core.ssh.executors.SshSessionConfig)
    */
   @Override
-  public Session getSession(SshSessionConfig config) throws JSchException {
-    return SshSessionFactory.getSSHSession(config);
+  public Session getSession(SshSessionConfig config) {
+    try {
+      return SshSessionFactory.getSSHSession(config);
+    } catch (JSchException jschEx) {
+      throw new WingsException(normalizeError(jschEx));
+    }
   }
 }

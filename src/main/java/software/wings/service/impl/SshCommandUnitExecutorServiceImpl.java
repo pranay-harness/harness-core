@@ -19,12 +19,13 @@ import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.ScpCommandUnit;
+import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -79,6 +80,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } else {
       return execute(host, commandUnit, activityId, SupportedOp.SCP);
     }
+  }
+
+  @Override
+  public void clenup(String activityId, Host host) {
+    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
   }
 
   private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
@@ -149,7 +155,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     if (op.equals(SupportedOp.EXEC)) {
       executionResult = executor.execute((AbstractExecCommandUnit) commandUnit);
     } else {
-      executionResult = executor.transferFile((CopyCommandUnit) commandUnit);
+      executionResult = executor.transferFiles((ScpCommandUnit) commandUnit);
     }
     return executionResult;
   }

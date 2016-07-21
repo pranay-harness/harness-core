@@ -52,7 +52,14 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
    */
   @Override
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
-    return executeCommand(serviceInstance, command, context);
+    try {
+      ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
+      commandUnitExecutorService.clenup(context.getActivityId(), serviceInstance.getHost());
+      return executionResult;
+    } catch (Exception ex) {
+      commandUnitExecutorService.clenup(context.getActivityId(), serviceInstance.getHost());
+      throw ex;
+    }
   }
 
   private ExecutionResult executeCommand(

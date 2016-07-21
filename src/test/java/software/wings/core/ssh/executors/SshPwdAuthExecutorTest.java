@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
@@ -178,7 +179,6 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for session timeout.
    */
   @Test
-  @Ignore
   public void shouldThrowExceptionForSessionTimeout() {
     config.setSshSessionTimeout(1); // 1ms
     executor.init(config);
@@ -209,10 +209,13 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(config);
     String fileName = "mvim";
-    ExecutionResult result = executor.transferFile(ScpCommandUnit.Builder.aScpCommandUnit()
-                                                       .withFileId(fileId)
-                                                       .withDestinationFilePath("./" + fileName)
-                                                       .withFileBucket(CONFIGS)
-                                                       .build());
+    ExecutionResult result = executor.transferFiles(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                        .withFileIds(asList(fileId))
+                                                        .withDestinationDirectoryPath("./" + fileName)
+                                                        .withFileBucket(CONFIGS)
+                                                        .build());
   }
+
+  @Test
+  public void shouldConcatPaths() {}
 }

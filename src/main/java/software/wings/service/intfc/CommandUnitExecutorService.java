@@ -17,4 +17,12 @@ public interface CommandUnitExecutorService {
    * @return the execution result
    */
   ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId);
+
+  /**
+   * Clenup any resource blocked execution optimization
+   *
+   * @param activityId the activity id
+   * @param host       the host
+   */
+  void clenup(String activityId, Host host);
 }

@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
@@ -34,6 +35,7 @@ import software.wings.beans.CommandUnit.CommandUnitExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ScpCommandUnit;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -48,6 +50,10 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -58,50 +64,20 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
-  /**
-   * The constant DEFAULT_SUDO_PROMPT_PATTERN.
-   */
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
-  /**
-   * The constant LINE_BREAK_PATTERN.
-   */
   public static final String LINE_BREAK_PATTERN = "\\R+";
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
-  /**
-   * The Logger.
-   */
-  protected final Logger logger = LoggerFactory.getLogger(getClass());
-  /**
-   * The Session.
-   */
-  protected Session session;
-  /**
-   * The Channel.
-   */
-  protected Channel channel;
-  /**
-   * The Config.
-   */
+  private static ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+  private Channel channel;
   protected SshSessionConfig config;
-  /**
-   * The Output stream.
-   */
   protected OutputStream outputStream;
-  /**
-   * The Input stream.
-   */
   protected InputStream inputStream;
-  /**
-   * The Log service.
-   */
   protected LogService logService;
-  /**
-   * The File service.
-   */
   protected FileService fileService;
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
+  protected static final Logger logger = LoggerFactory.getLogger(AbstractSshExecutor.class);
 
   /**
    * Instantiates a new abstract ssh executor.
@@ -126,7 +102,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
     this.config = config;
     try {
-      session = getSession(config);
+      Session session = getCachedSession(config);
       channel = session.openChannel("exec");
       ((ChannelExec) channel).setPty(true);
       ((ChannelExec) channel).setErrStream(System.err, true);
@@ -156,7 +132,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       saveExecutionLog(format("Execution started for command %s ...", command));
 
       int totalBytesRead = 0;
-      byte[] byteBuffer = new byte[1024]; // FIXME: Improve stream reading/writing logic
+      byte[] byteBuffer = new byte[1024];
       String text = "";
 
       while (true) {
@@ -205,7 +181,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       }
       return executionResult;
     } finally {
-      destroy();
+      if (!channel.isClosed()) {
+        logger.info("Disconnect channel if still open post execution command");
+        channel.disconnect();
+      }
     }
   }
 
@@ -261,20 +240,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.core.ssh.executors.SshExecutor#destroy()
-   */
-  @Override
-  public void destroy() {
-    logger.info("Disconnecting ssh session");
-    if (null != channel) {
-      channel.disconnect();
-    }
-    if (null != session) {
-      session.disconnect();
-    }
-  }
-
-  /* (non-Javadoc)
    * @see software.wings.core.ssh.executors.SshExecutor#abort()
    */
   @Override
@@ -284,6 +249,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       outputStream.flush();
     } catch (IOException ex) {
       logger.error("Abort command failed " + ex);
+      throw new WingsException(UNKNOWN_ERROR, "message", ex.getMessage());
     }
   }
 
@@ -292,9 +258,47 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    *
    * @param config the config
    * @return the session
-   * @throws JSchException the j sch exception
+   * @throws JSchException the jsch exception
    */
-  public abstract Session getSession(SshSessionConfig config) throws JSchException;
+  public abstract Session getSession(SshSessionConfig config);
+
+  public synchronized Session getCachedSession(SshSessionConfig config) {
+    String key = config.getExecutionId() + "~" + config.getHost().trim();
+    logger.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());
+
+    Session cahcedSession = sessions.computeIfAbsent(key, s -> {
+      logger.info("No session found. Create new session for executionId : {}, hostName: {}", config.getExecutionId(),
+          config.getHost());
+      return getSession(this.config);
+    });
+
+    // Unnecessary but required test before session reuse.
+    // test channel. http://stackoverflow.com/questions/16127200/jsch-how-to-keep-the-session-alive-and-up
+    try {
+      ChannelExec testChannel = (ChannelExec) cahcedSession.openChannel("exec");
+      testChannel.setCommand("true");
+      testChannel.connect();
+      testChannel.disconnect();
+      logger.info("Session connection test successful");
+    } catch (Throwable throwable) {
+      logger.error("Session connection test failed. Reopen new session");
+      cahcedSession = sessions.merge(key, cahcedSession, (session1, session2) -> getSession(this.config));
+    }
+    return cahcedSession;
+  }
+
+  public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
+    logger.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
+    String key = executionId + "~" + hostName.trim();
+    Session session = sessions.remove(key);
+    if (session != null && session.isConnected()) {
+      logger.info("Found cached session. disconnecting the session");
+      session.disconnect();
+      logger.info("Session disconnected successfully");
+    } else {
+      logger.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
+    }
+  }
 
   /**
    * Normalize error.
@@ -339,32 +343,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   @Override
-  public ExecutionResult transferFile(CopyCommandUnit copyCommand) {
-    if (Strings.isNullOrEmpty(copyCommand.getFileId())) {
+  public ExecutionResult transferFiles(ScpCommandUnit cmdUnit) {
+    if (cmdUnit.getFileIds().size() == 0) {
       saveExecutionLog("No config file found to scp.");
-      return ExecutionResult.SUCCESS;
+      return SUCCESS;
     }
-
-    ExecutionResult executionResult = FAILURE;
-    String gridFsFileId = copyCommand.getFileId();
-    FileBucket gridFsBucket = copyCommand.getFileBucket();
-    GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
-    String fileName = fileMetaData.getFilename().replace(" ", "\\ ");
-    String remoteFilePath = copyCommand.getDestinationDirectoryPath() + "/" + fileName;
-
     try {
-      String command = "scp -t " + remoteFilePath;
-      Channel channel = session.openChannel("exec");
+      String command = "scp -r -t " + cmdUnit.getDestinationDirectoryPath();
       ((ChannelExec) channel).setCommand(command);
-
-      // get I/O streams for remote scp
-      OutputStream out = channel.getOutputStream();
-      InputStream in = channel.getInputStream();
 
       saveExecutionLog(format("Connecting to %s ....", config.getHost()));
       channel.connect();
 
-      if (checkAck(in) != 0) {
+      if (checkAck(inputStream) != 0) {
         logger.error("SCP connection initiation failed");
         saveExecutionLog("SCP connection initiation failed");
         return FAILURE;
@@ -372,41 +363,56 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         saveExecutionLog(format("Connection to %s established", config.getHost()));
       }
 
-      // send "C0644 filesize filename", where filename should not include '/'
-      long filesize = fileMetaData.getLength();
-      command = "C0644 " + filesize + " " + fileName + "\n";
-
-      out.write(command.getBytes(UTF_8));
-      out.flush();
-      if (checkAck(in) != 0) {
-        saveExecutionLog("SCP connection initiation failed");
-        return executionResult;
+      for (String fileId : cmdUnit.getFileIds()) {
+        if (transferOneFile(fileId, cmdUnit.getFileBucket()) != SUCCESS) {
+          return FAILURE;
+        }
       }
-      saveExecutionLog("Begin file transfer");
-      fileService.downloadToStream(gridFsFileId, out, gridFsBucket);
-      out.write(new byte[1], 0, 1);
-      out.flush();
-
-      if (checkAck(in) != 0) {
-        saveExecutionLog("File transfer failed");
-        logger.error("File transfer failed");
-        return executionResult;
-      }
-      executionResult = SUCCESS;
-      saveExecutionLog("File successfully transferred");
-      out.close();
+      outputStream.close();
       channel.disconnect();
-      session.disconnect();
     } catch (IOException | JSchException ex) {
       if (ex instanceof FileNotFoundException) {
-        logger.error("file [" + gridFsFileId + "] could not be found");
+        logger.error("file [" + cmdUnit.getFileIds() + "] could not be found");
         saveExecutionLog("File not found");
       } else {
         logger.error("Command execution failed with error ", ex);
         saveExecutionLog("Command execution failed with error " + normalizeError((JSchException) ex));
       }
+      return FAILURE;
+    } finally {
+      if (!channel.isClosed()) {
+        logger.info("Disconnect channel if still open post scp command");
+        channel.disconnect();
+      }
+    }
+    return SUCCESS;
+  }
+
+  private ExecutionResult transferOneFile(String gridFsFileId, FileBucket gridFsBucket) throws IOException {
+    ExecutionResult executionResult = FAILURE;
+    GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
+
+    // send "C0644 filesize filename", where filename should not include '/'
+    String command = "C0644 " + fileMetaData.getLength() + " " + fileMetaData.getFilename() + "ab\n";
+
+    outputStream.write(command.getBytes(UTF_8));
+    outputStream.flush();
+    if (checkAck(inputStream) != 0) {
+      saveExecutionLog("SCP connection initiation failed");
       return executionResult;
     }
+    saveExecutionLog("Begin file transfer");
+    fileService.downloadToStream(gridFsFileId, outputStream, gridFsBucket);
+    outputStream.write(new byte[1], 0, 1);
+    outputStream.flush();
+
+    if (checkAck(inputStream) != 0) {
+      saveExecutionLog("File transfer failed");
+      logger.error("File transfer failed");
+      return executionResult;
+    }
+    executionResult = SUCCESS;
+    saveExecutionLog("File successfully transferred");
     return executionResult;
   }
 

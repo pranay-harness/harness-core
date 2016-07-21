@@ -29,7 +29,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.CommandUnitType;
-import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
@@ -45,6 +44,7 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 
+import java.util.Arrays;
 import javax.inject.Inject;
 
 /**
@@ -180,15 +180,15 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCopyCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).withHostConnectionCredential(CREDENTIAL).build();
-    CopyCommandUnit commandUnit = ScpCommandUnit.Builder.aScpCommandUnit()
-                                      .withCommandUnitType(CommandUnitType.SCP)
-                                      .withFileId(FILE_ID)
-                                      .withFileBucket(ARTIFACTS)
-                                      .withDestinationFilePath(FILE_PATH)
-                                      .build();
+    ScpCommandUnit commandUnit = ScpCommandUnit.Builder.aScpCommandUnit()
+                                     .withCommandUnitType(CommandUnitType.SCP)
+                                     .withFileIds(Arrays.asList(FILE_ID))
+                                     .withFileBucket(ARTIFACTS)
+                                     .withDestinationDirectoryPath(FILE_PATH)
+                                     .build();
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).transferFile(commandUnit);
+    verify(sshPwdAuthExecutor).transferFiles(commandUnit);
   }
 }
