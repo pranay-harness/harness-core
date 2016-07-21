@@ -8,7 +8,6 @@ import static software.wings.beans.CommandUnitType.SETUP_ENV;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Graph.ORIGIN_STATE;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import software.wings.beans.Graph;
@@ -41,21 +40,15 @@ public class DefaultCommands {
 
     return aGraph()
         .withGraphName("Start")
-        .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
-            aNode()
-                .withX(400)
-                .withY(200)
-                .withId(nodes.get(1))
-                .withType(EXEC.name())
-                .withName("Start Service")
-                .addProperty("commandPath", "tomcat/bin")
-                .addProperty("commandString", "./startup.sh")
-                .build())
-        .addLinks(aLink()
-                      .withFrom(nodes.get(0))
-                      .withTo(nodes.get(1))
-                      .withType(SUCCESS.name())
-                      .withId(graphIdGenerator("link"))
+        .addNodes(aNode()
+                      .withOrigin(true)
+                      .withX(400)
+                      .withY(200)
+                      .withId(nodes.get(1))
+                      .withType(EXEC.name())
+                      .withName("Start Service")
+                      .addProperty("commandPath", "tomcat/bin")
+                      .addProperty("commandString", "./startup.sh")
                       .build())
         .build();
   }
@@ -70,21 +63,15 @@ public class DefaultCommands {
 
     return aGraph()
         .withGraphName("Stop")
-        .addNodes(aNode().withX(200).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
-            aNode()
-                .withX(400)
-                .withY(200)
-                .withId(nodes.get(1))
-                .withType(EXEC.name())
-                .withName("Stop Service")
-                .addProperty("commandPath", "tomcat/bin")
-                .addProperty("commandString", "[[ -f ./shutdown.sh ]] && ./shutdown.sh  || true")
-                .build())
-        .addLinks(aLink()
-                      .withFrom(nodes.get(0))
-                      .withTo(nodes.get(1))
-                      .withType(SUCCESS.name())
-                      .withId(graphIdGenerator("link"))
+        .addNodes(aNode()
+                      .withOrigin(true)
+                      .withX(400)
+                      .withY(200)
+                      .withId(nodes.get(1))
+                      .withType(EXEC.name())
+                      .withName("Stop Service")
+                      .addProperty("commandPath", "tomcat/bin")
+                      .addProperty("commandString", "[[ -f ./shutdown.sh ]] && ./shutdown.sh  || true")
                       .build())
         .build();
   }
@@ -102,14 +89,14 @@ public class DefaultCommands {
 
     return aGraph()
         .withGraphName("Install")
-        .addNodes(aNode().withX(50).withY(200).withId(nodes.get(0)).withType(ORIGIN_STATE).build(),
-            aNode()
-                .withX(200)
-                .withY(200)
-                .withId(nodes.get(1))
-                .withName("Setup Runtime Paths")
-                .withType(SETUP_ENV.name())
-                .build(),
+        .addNodes(aNode()
+                      .withOrigin(true)
+                      .withX(200)
+                      .withY(200)
+                      .withId(nodes.get(1))
+                      .withName("Setup Runtime Paths")
+                      .withType(SETUP_ENV.name())
+                      .build(),
             aNode()
                 .withX(350)
                 .withY(200)
@@ -154,7 +141,6 @@ public class DefaultCommands {
                 .addProperty("referenceId", "Start")
                 .build())
         .addLinks(
-            aLink().withFrom(nodes.get(0)).withTo(nodes.get(1)).withType(SUCCESS.name()).withId(linkes.get(0)).build(),
             aLink().withFrom(nodes.get(1)).withTo(nodes.get(2)).withType(SUCCESS.name()).withId(linkes.get(1)).build(),
             aLink().withFrom(nodes.get(2)).withTo(nodes.get(3)).withType(SUCCESS.name()).withId(linkes.get(2)).build(),
             aLink().withFrom(nodes.get(3)).withTo(nodes.get(4)).withType(SUCCESS.name()).withId(linkes.get(3)).build(),
