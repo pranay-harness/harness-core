@@ -3,8 +3,6 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class FileMetadata.
  */

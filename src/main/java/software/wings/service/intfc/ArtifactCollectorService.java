@@ -6,8 +6,6 @@ import software.wings.beans.ArtifactSource;
 import java.util.List;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/11/16.
  */

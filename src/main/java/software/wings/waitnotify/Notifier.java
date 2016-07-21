@@ -18,8 +18,6 @@ import software.wings.lock.PersistentLocker;
 import java.util.List;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
  *

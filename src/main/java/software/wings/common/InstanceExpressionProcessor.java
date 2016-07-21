@@ -47,8 +47,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class InstanceExpressionProcessor.
  *

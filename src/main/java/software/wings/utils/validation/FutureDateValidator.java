@@ -4,8 +4,6 @@ import java.util.Calendar;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/4/16.
  */

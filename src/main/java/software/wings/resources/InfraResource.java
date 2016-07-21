@@ -24,8 +24,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class InfraResource.
  */

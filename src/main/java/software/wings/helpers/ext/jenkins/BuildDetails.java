@@ -3,8 +3,6 @@ package software.wings.helpers.ext.jenkins;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/12/16.
  */

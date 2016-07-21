@@ -2,8 +2,6 @@ package software.wings.utils;
 
 import com.openpojo.validation.test.Tester;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/18/16.
  */

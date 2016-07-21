@@ -12,8 +12,6 @@ import software.wings.utils.validation.FutureDate;
 import java.util.List;
 import java.util.Set;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Release bean class.
  *

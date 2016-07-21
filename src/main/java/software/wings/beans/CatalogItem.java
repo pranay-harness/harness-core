@@ -6,8 +6,6 @@ package software.wings.beans;
 
 import java.util.Comparator;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class CatalogItem.
  *

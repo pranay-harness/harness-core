@@ -26,8 +26,6 @@ import java.util.List;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
@@ -60,6 +58,8 @@ public class LogServiceImpl implements LogService {
                   .equal(activityId)
                   .field("appId")
                   .equal(appId)
+                  .field("commandUnitName")
+                  .equal(name)
                   .order("-lastUpdatedAt")
                   .get();
     return log != null && log.getExecutionResult() != null ? log.getExecutionResult() : RUNNING;

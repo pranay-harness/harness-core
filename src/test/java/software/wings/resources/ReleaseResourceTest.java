@@ -41,8 +41,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/1/16.
  */

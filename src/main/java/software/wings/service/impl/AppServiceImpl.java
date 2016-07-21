@@ -33,8 +33,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Application Service Implementation class.
  *

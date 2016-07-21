@@ -9,8 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Persistent Locker implementation using Mongo DB.
  *

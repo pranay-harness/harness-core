@@ -8,8 +8,6 @@ import com.mongodb.MongoClient;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HealthCheck class for the MongoDB.
  *

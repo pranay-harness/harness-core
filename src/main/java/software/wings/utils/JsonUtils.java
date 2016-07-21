@@ -34,8 +34,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Set;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class JsonUtils.
  */

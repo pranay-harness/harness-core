@@ -66,8 +66,6 @@ import software.wings.service.intfc.ServiceTemplateService;
 import java.util.ArrayList;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/4/16.
  */

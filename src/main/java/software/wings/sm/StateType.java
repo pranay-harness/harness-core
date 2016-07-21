@@ -34,8 +34,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents type of state.
  *

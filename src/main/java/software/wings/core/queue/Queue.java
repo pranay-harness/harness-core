@@ -5,8 +5,6 @@ package software.wings.core.queue;
  */
 import java.util.Date;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Interface Queue.
  *

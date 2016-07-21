@@ -35,8 +35,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/4/16.
  */

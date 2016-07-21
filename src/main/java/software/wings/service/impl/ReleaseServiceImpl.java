@@ -53,8 +53,6 @@ import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class ReleaseServiceImpl.
  */

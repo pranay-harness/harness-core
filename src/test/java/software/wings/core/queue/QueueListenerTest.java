@@ -24,8 +24,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */

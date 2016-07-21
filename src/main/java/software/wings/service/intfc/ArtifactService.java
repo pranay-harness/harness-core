@@ -9,8 +9,6 @@ import java.io.File;
 import java.util.List;
 import javax.validation.Valid;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Interface ArtifactService.
  */

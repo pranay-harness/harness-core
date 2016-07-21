@@ -2,8 +2,6 @@ package software.wings.sm;
 
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Interface for all RepeatElements.
  *

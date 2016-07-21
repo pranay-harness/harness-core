@@ -8,8 +8,6 @@ import static software.wings.security.PermissionAttr.Resource.ANY;
 import static software.wings.security.PermissionAttr.Resource.APP;
 import static software.wings.security.PermissionAttr.Resource.PLATFORM;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/10/16.
  */

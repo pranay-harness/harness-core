@@ -7,8 +7,6 @@ import org.mongodb.morphia.annotations.Entity;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/13/16.
  */

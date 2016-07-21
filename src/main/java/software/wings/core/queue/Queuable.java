@@ -10,8 +10,6 @@ import software.wings.common.UUIDGenerator;
 
 import java.util.Date;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 4/11/16.
  */

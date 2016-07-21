@@ -6,8 +6,6 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HttpAuditService.
  *

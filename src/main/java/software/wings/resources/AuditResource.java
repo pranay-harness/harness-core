@@ -17,8 +17,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class AuditResource.
  */

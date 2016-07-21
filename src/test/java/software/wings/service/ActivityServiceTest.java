@@ -37,8 +37,6 @@ import software.wings.service.intfc.ServiceResourceService;
 
 import java.util.List;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */

@@ -11,8 +11,6 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Application bean class.
  *

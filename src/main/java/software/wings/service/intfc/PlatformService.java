@@ -4,8 +4,6 @@ import software.wings.beans.AppContainer;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * PlatformService.
  *

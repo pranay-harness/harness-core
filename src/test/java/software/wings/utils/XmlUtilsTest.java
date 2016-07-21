@@ -13,8 +13,6 @@ import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class XmlUtilsTest.
  *

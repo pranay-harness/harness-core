@@ -7,8 +7,6 @@ import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.InputStream;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/4/16.
  */

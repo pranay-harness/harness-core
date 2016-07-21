@@ -7,8 +7,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * This is a common threadpool for the entire application.
  *

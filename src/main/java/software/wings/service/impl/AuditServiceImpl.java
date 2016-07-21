@@ -20,8 +20,6 @@ import software.wings.service.intfc.FileService;
 import java.io.ByteArrayInputStream;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Audit Service Implementation class.
  *

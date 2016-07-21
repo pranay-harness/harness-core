@@ -11,8 +11,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 4/14/16.
  */

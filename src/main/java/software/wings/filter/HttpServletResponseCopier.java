@@ -7,8 +7,6 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * HttpServletResponseCopier based on https://github.com/ukwa/interject/blob/master
  * /interject-servlet-filter/src/main /java/uk/bl/wa/interject/filter/HttpServletResponseCopier.java

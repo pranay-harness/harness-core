@@ -22,8 +22,6 @@ import java.io.IOException;
 import javax.mail.Address;
 import javax.mail.MessagingException;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/20/16.
  */

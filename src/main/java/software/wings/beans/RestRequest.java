@@ -5,8 +5,6 @@ import com.google.common.base.MoreObjects;
 import java.util.HashMap;
 import java.util.Map;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class RestRequest.
  *

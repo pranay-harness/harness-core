@@ -22,8 +22,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 5/26/16.
  */

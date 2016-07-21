@@ -25,8 +25,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.Provider;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * AuditRequestFilter preserves the rest endpoint header and payload.
  *

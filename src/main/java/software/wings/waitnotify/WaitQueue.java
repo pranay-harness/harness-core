@@ -8,8 +8,6 @@ import software.wings.beans.Base;
 
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents WaitQueue.
  *

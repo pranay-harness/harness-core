@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents transition between states.
  *

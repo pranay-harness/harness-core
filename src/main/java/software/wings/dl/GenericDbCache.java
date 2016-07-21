@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/18/16.
  */

@@ -19,8 +19,6 @@ import software.wings.dl.WingsPersistence;
 import java.util.Arrays;
 import javax.inject.Inject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
  *

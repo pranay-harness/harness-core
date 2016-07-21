@@ -28,8 +28,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * ArtifactResource.
  *

@@ -8,8 +8,6 @@ import com.jcraft.jsch.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 2/8/16.
  */

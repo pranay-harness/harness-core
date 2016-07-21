@@ -21,8 +21,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * The Class XmlUtils.
  *

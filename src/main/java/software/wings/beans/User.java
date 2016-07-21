@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Objects;
 import javax.security.auth.Subject;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * User bean class.
  *

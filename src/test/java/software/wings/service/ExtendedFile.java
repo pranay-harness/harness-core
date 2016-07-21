@@ -5,8 +5,6 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
 import software.wings.beans.User;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by peeyushaggarwal on 5/17/16.
  */

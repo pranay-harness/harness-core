@@ -6,8 +6,6 @@ import software.wings.beans.Base;
 import java.util.Map;
 import java.util.Objects;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Represents errors thrown by callback of wait instance.
  *

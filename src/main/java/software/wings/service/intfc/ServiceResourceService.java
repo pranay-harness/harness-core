@@ -15,8 +15,6 @@ import software.wings.utils.validation.Update;
 import java.util.List;
 import javax.validation.Valid;
 
-// TODO: Auto-generated Javadoc
-
 /**
  * Created by anubhaw on 3/28/16.
  */
