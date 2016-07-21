@@ -26,6 +26,8 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -756,14 +758,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
-    String uuid2 = serviceInstanceService.save(builder.withHost(host2).build()).getUuid();
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
+    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    List<String> serviceInstanceIds = new ArrayList<>();
-    serviceInstanceIds.add(uuid1);
-    serviceInstanceIds.add(uuid2);
-    executionArgs.setServiceInstanceIds(serviceInstanceIds);
+    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
     executionArgs.setExecutionStrategy(ExecutionStrategy.SERIAL);
     executionArgs.setCommandName("START");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
@@ -873,14 +872,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
-    String uuid2 = serviceInstanceService.save(builder.withHost(host2).build()).getUuid();
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
+    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    List<String> serviceInstanceIds = new ArrayList<>();
-    serviceInstanceIds.add(uuid1);
-    serviceInstanceIds.add(uuid2);
-    executionArgs.setServiceInstanceIds(serviceInstanceIds);
+    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
     executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     executionArgs.setCommandName("STOP");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);

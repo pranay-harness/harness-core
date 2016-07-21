@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Artifact;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
@@ -45,6 +46,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.ServiceInstance;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
@@ -923,7 +925,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    stdParams.setArtifactIds(executionArgs.getArtifactIds());
+    if (executionArgs.getArtifacts() != null) {
+      stdParams.setArtifactIds(
+          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+    }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
@@ -1058,10 +1063,10 @@ public class WorkflowServiceImpl implements WorkflowService {
         logger.error("serviceId is null for a simple execution");
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
       }
-      if (executionArgs.getServiceInstanceIds() == null || executionArgs.getServiceInstanceIds().size() == 0) {
-        logger.error("serviceInstanceIds is empty for a simple execution");
+      if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
+        logger.error("serviceInstances are empty for a simple execution");
         throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "serviceInstanceIds is empty for a simple execution");
+            ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
       }
 
       return triggerSimpleExecution(appId, envId, executionArgs, workflowExecutionUpdate);
@@ -1094,19 +1099,25 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setTotal(executionArgs.getServiceInstanceIds().size());
+    workflowExecution.setTotal(executionArgs.getServiceInstances().size());
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    stdParams.setArtifactIds(executionArgs.getArtifactIds());
+    if (executionArgs.getArtifacts() != null) {
+      stdParams.setArtifactIds(
+          executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
+    }
     stdParams.setExecutionCredential(executionArgs.getExecutionCredential());
 
     SimpleWorkflowParam simpleOrchestrationParams = new SimpleWorkflowParam();
     simpleOrchestrationParams.setServiceId(executionArgs.getServiceId());
-    simpleOrchestrationParams.setInstanceIds(executionArgs.getServiceInstanceIds());
+    if (executionArgs.getServiceInstances() != null) {
+      simpleOrchestrationParams.setInstanceIds(
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(Collectors.toList()));
+    }
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
     return triggerExecution(
