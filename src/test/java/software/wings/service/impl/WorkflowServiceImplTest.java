@@ -26,6 +26,8 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
+import com.google.common.collect.Lists;
+
 import org.junit.Test;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -692,9 +694,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
     assertThat(workflow.getGraph()).isNotNull();
     assertThat(workflow.getGraph().getNodes()).isNotNull();
-    assertThat(workflow.getGraph().getNodes().size()).isEqualTo(3);
+    assertThat(workflow.getGraph().getNodes().size()).isEqualTo(2);
     assertThat(workflow.getGraph().getLinks()).isNotNull();
-    assertThat(workflow.getGraph().getLinks().size()).isEqualTo(2);
+    assertThat(workflow.getGraph().getLinks().size()).isEqualTo(1);
   }
 
   /**
@@ -711,9 +713,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).build())
             .addNodes(aNode()
                           .withId("n1")
+                          .withOrigin(true)
                           .withName("RepeatByInstances")
                           .withX(200)
                           .withY(50)
@@ -733,7 +735,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                     .addProperty("body",
                         "service:${service.name}, serviceTemplate:${serviceTemplate.name}, host:${host.name}, instance:${instance.name}")
                     .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
             .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
             .build();
 
@@ -757,14 +758,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
-    String uuid2 = serviceInstanceService.save(builder.withHost(host2).build()).getUuid();
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
+    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    List<String> serviceInstanceIds = new ArrayList<>();
-    serviceInstanceIds.add(uuid1);
-    serviceInstanceIds.add(uuid2);
-    executionArgs.setServiceInstanceIds(serviceInstanceIds);
+    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
     executionArgs.setExecutionStrategy(ExecutionStrategy.SERIAL);
     executionArgs.setCommandName("START");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
@@ -833,9 +831,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Graph graph = aGraph()
-                      .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).build())
                       .addNodes(aNode()
                                     .withId("n1")
+                                    .withOrigin(true)
                                     .withName("RepeatByInstances")
                                     .withX(200)
                                     .withY(50)
@@ -851,7 +849,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                     .withType(StateType.COMMAND.name())
                                     .addProperty("commandName", "${SIMPLE_WORKFLOW_COMMAND_NAME}")
                                     .build())
-                      .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
                       .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
                       .build();
 
@@ -875,14 +872,11 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     software.wings.beans.ServiceInstance.Builder builder =
         aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
 
-    String uuid1 = serviceInstanceService.save(builder.withHost(host1).build()).getUuid();
-    String uuid2 = serviceInstanceService.save(builder.withHost(host2).build()).getUuid();
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
+    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
 
     ExecutionArgs executionArgs = new ExecutionArgs();
-    List<String> serviceInstanceIds = new ArrayList<>();
-    serviceInstanceIds.add(uuid1);
-    serviceInstanceIds.add(uuid2);
-    executionArgs.setServiceInstanceIds(serviceInstanceIds);
+    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
     executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     executionArgs.setCommandName("STOP");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
@@ -1003,9 +997,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(aNode().withId("n0").withName("ORIGIN").build())
             .addNodes(aNode()
                           .withId("Repeat By Services")
+                          .withOrigin(true)
                           .withName("Repeat By Services")
                           .withType(StateType.REPEAT.name())
                           .addProperty("repeatElementExpression", "${services()}")
@@ -1036,7 +1030,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                           .withType(StateType.WAIT.name())
                           .addProperty("duration", 1)
                           .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("Repeat By Services").withType("success").build())
             .addLinks(
                 aLink().withId("l1").withFrom("Repeat By Services").withTo("svcRepeatWait").withType("repeat").build())
             .addLinks(
@@ -1271,8 +1264,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    */
   private Graph createInitialGraph() {
     return aGraph()
-        .addNodes(aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
-        .addNodes(aNode().withId("n1").withName("BUILD").withX(200).withY(50).withType(StateType.BUILD.name()).build())
+        .addNodes(aNode()
+                      .withId("n1")
+                      .withOrigin(true)
+                      .withName("BUILD")
+                      .withX(200)
+                      .withY(50)
+                      .withType(StateType.BUILD.name())
+                      .build())
         .addNodes(aNode()
                       .withId("n2")
                       .withName("IT")
@@ -1297,7 +1296,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                       .withType(StateType.ENV_STATE.name())
                       .addProperty("envId", "34567")
                       .build())
-        .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
         .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
         .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
         .addLinks(aLink().withId("l3").withFrom("n3").withTo("n4").withType("success").build())
@@ -1390,30 +1388,27 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   }
 
   private Orchestration createExecutableOrchestration(Environment env) {
-    Graph graph =
-        aGraph()
-            .addNodes(
-                aNode().withId("n0").withName("ORIGIN").withX(200).withY(50).withType(StateType.BUILD.name()).build())
-            .addNodes(aNode()
-                          .withId("n1")
-                          .withName("wait")
-                          .withX(200)
-                          .withY(50)
-                          .withType(StateType.WAIT.name())
-                          .addProperty("duration", 1l)
-                          .build())
-            .addNodes(aNode()
-                          .withId("n2")
-                          .withName("email")
-                          .withX(250)
-                          .withY(50)
-                          .withType(StateType.EMAIL.name())
-                          .addProperty("toAddress", "a@b.com")
-                          .addProperty("subject", "testing")
-                          .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
-            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-            .build();
+    Graph graph = aGraph()
+                      .addNodes(aNode()
+                                    .withId("n1")
+                                    .withName("wait")
+                                    .withX(200)
+                                    .withY(50)
+                                    .withType(StateType.WAIT.name())
+                                    .addProperty("duration", 1l)
+                                    .withOrigin(true)
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n2")
+                                    .withName("email")
+                                    .withX(250)
+                                    .withY(50)
+                                    .withType(StateType.EMAIL.name())
+                                    .addProperty("toAddress", "a@b.com")
+                                    .addProperty("subject", "testing")
+                                    .build())
+                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+                      .build();
 
     Orchestration orchestration = anOrchestration()
                                       .withAppId(appId)
@@ -1461,9 +1456,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
     Graph graph = aGraph()
-                      .addNodes(aNode().withId("n0").withName("ORIGIN").build())
                       .addNodes(aNode()
                                     .withId("wait1")
+                                    .withOrigin(true)
                                     .withName("wait1")
                                     .withType(StateType.WAIT.name())
                                     .addProperty("duration", 1)
@@ -1480,7 +1475,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                     .withType(StateType.WAIT.name())
                                     .addProperty("duration", 1)
                                     .build())
-                      .addLinks(aLink().withId("l0").withFrom("n0").withTo("wait1").withType("success").build())
                       .addLinks(aLink().withId("l1").withFrom("wait1").withTo("pause1").withType("success").build())
                       .addLinks(aLink().withId("l2").withFrom("pause1").withTo("wait2").withType("success").build())
                       .build();
@@ -1572,9 +1566,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     Graph graph =
         aGraph()
-            .addNodes(aNode().withId("n0").withName("ORIGIN").build())
             .addNodes(aNode()
                           .withId("RepeatByServices")
+                          .withOrigin(true)
                           .withName("RepeatByServices")
                           .withType(StateType.REPEAT.name())
                           .addProperty("repeatElementExpression", "${services()}")
@@ -1592,7 +1586,6 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                           .withType(StateType.WAIT.name())
                           .addProperty("duration", 2)
                           .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("RepeatByServices").withType("success").build())
             .addLinks(aLink().withId("l1").withFrom("RepeatByServices").withTo("wait1").withType("repeat").build())
             .addLinks(aLink().withId("l2").withFrom("wait1").withTo("wait2").withType("success").build())
             .build();

@@ -96,14 +96,19 @@ public class StateMachine extends Base {
   }
 
   private void transform(Map<String, StateTypeDescriptor> stencilMap) {
-    String originStateId = null;
+    String originStateName = null;
     for (Node node : graph.getNodes()) {
-      if (node.isOrigin()) {
-        originStateId = node.getId();
-        continue;
-      }
       if (node.getType() == null || stencilMap.get(node.getType()) == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unknown stencil type");
+      }
+
+      if (node.isOrigin()) {
+        if (originStateName != null) {
+          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message",
+              "Duplicate origin state: " + originStateName + " and " + node.getName());
+        }
+
+        originStateName = node.getName();
       }
 
       StateTypeDescriptor stateTypeDesc = stencilMap.get(node.getType());
@@ -120,7 +125,7 @@ public class StateMachine extends Base {
       addState(state);
     }
 
-    if (originStateId == null) {
+    if (originStateName == null) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Origin state missing");
     }
 
@@ -132,11 +137,6 @@ public class StateMachine extends Base {
         for (Link link : graph.getLinks()) {
           Node nodeFrom = nodeIdMap.get(link.getFrom());
           Node nodeTo = nodeIdMap.get(link.getTo());
-
-          if (nodeFrom.isOrigin()) {
-            setInitialStateName(nodeTo.getName());
-            continue;
-          }
 
           State stateFrom = statesMap.get(nodeFrom.getName());
           State stateTo = statesMap.get(nodeTo.getName());
@@ -153,6 +153,7 @@ public class StateMachine extends Base {
               aTransition().withFromState(stateFrom).withTransitionType(transitionType).withToState(stateTo).build());
         }
       }
+      setInitialStateName(originStateName);
       validate();
       addRepeatersBasedOnStateRequiredContextElement();
       clearCache();

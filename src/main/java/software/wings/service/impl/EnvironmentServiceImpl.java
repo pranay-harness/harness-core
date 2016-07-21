@@ -142,16 +142,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withGraph(
                 aGraph()
-                    .addNodes(aNode().withId("n0").withName("ORIGIN").withType("ORIGIN").withX(50).withY(50).build(),
-                        aNode()
-                            .withId("n1")
-                            .withName("Repeat by Services")
-                            .withType(StateType.REPEAT.name())
-                            .withX(250)
-                            .withY(50)
-                            .addProperty("executionStrategy", "PARALLEL")
-                            .addProperty("repeatElementExpression", "${services}")
-                            .build(),
+                    .addNodes(aNode()
+                                  .withId("n1")
+                                  .withOrigin(true)
+                                  .withName("Repeat by Services")
+                                  .withType(StateType.REPEAT.name())
+                                  .withX(250)
+                                  .withY(50)
+                                  .addProperty("executionStrategy", "PARALLEL")
+                                  .addProperty("repeatElementExpression", "${services}")
+                                  .build(),
                         aNode()
                             .withId("n2")
                             .withName("Repeat by Phases")
@@ -195,12 +195,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                             .withY(50)
                             .addProperty("commandName", "START")
                             .build())
-                    .addLinks(aLink()
-                                  .withId("l0")
-                                  .withType(TransitionType.SUCCESS.name())
-                                  .withFrom("n0")
-                                  .withTo("n1")
-                                  .build(),
+                    .addLinks(
                         aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
                         aLink().withId("l2").withType(TransitionType.REPEAT.name()).withFrom("n2").withTo("n3").build(),
                         aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build(),

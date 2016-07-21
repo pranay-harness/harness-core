@@ -96,6 +96,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -224,13 +225,17 @@ public class DataGenUtil extends WingsBaseTest {
   private Pipeline addPipeline(Application application, List<Service> services, List<Environment> environments,
       Map<String, String> envWorkflowMap) {
     int x = 80;
-    software.wings.beans.Graph.Builder graphBuilder =
-        aGraph().addNodes(aNode().withId("n0").withName("ORIGIN").withX(x).withY(80).withType("ORIGIN").build());
+    software.wings.beans.Graph.Builder graphBuilder = aGraph();
 
     x += 200;
-    graphBuilder
-        .addNodes(aNode().withId("n1").withName("build").withX(x).withY(80).withType(StateType.BUILD.name()).build())
-        .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build());
+    graphBuilder.addNodes(aNode()
+                              .withId("n1")
+                              .withOrigin(true)
+                              .withName("build")
+                              .withX(x)
+                              .withY(80)
+                              .withType(StateType.BUILD.name())
+                              .build());
 
     String fromNode = "n1";
     for (Environment env : environments) {
@@ -269,30 +274,33 @@ public class DataGenUtil extends WingsBaseTest {
 
   private Map<String, String> addOrchestrationAndPipeline(
       Application application, List<Service> services, List<Environment> environments) {
-    Graph graph =
-        aGraph()
-            .addNodes(aNode().withId("n0").withName("ORIGIN").withX(50).withY(80).withType("ORIGIN").build())
-            .addNodes(
-                aNode().withId("n1").withName("stop").withX(200).withY(80).withType(StateType.ENV_STATE.name()).build())
-            .addNodes(aNode()
-                          .withId("n2")
-                          .withName("wait")
-                          .withX(360)
-                          .withY(80)
-                          .withType(StateType.WAIT.name())
-                          .addProperty("duration", 5000l)
-                          .build())
-            .addNodes(aNode()
-                          .withId("n3")
-                          .withName("start")
-                          .withX(530)
-                          .withY(80)
-                          .withType(StateType.ENV_STATE.name())
-                          .build())
-            .addLinks(aLink().withId("l0").withFrom("n0").withTo("n1").withType("success").build())
-            .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
-            .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-            .build();
+    Graph graph = aGraph()
+                      .addNodes(aNode()
+                                    .withId("n1")
+                                    .withOrigin(true)
+                                    .withName("stop")
+                                    .withX(200)
+                                    .withY(80)
+                                    .withType(StateType.ENV_STATE.name())
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n2")
+                                    .withName("wait")
+                                    .withX(360)
+                                    .withY(80)
+                                    .withType(StateType.WAIT.name())
+                                    .addProperty("duration", 5000l)
+                                    .build())
+                      .addNodes(aNode()
+                                    .withId("n3")
+                                    .withName("start")
+                                    .withX(530)
+                                    .withY(80)
+                                    .withType(StateType.ENV_STATE.name())
+                                    .build())
+                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("success").build())
+                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
+                      .build();
 
     Map<String, String> envWorkflowMap = new HashMap<>();
     environments.forEach(env -> {

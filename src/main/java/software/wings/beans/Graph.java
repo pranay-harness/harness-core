@@ -31,11 +31,6 @@ import java.util.Optional;
  */
 public class Graph {
   /**
-   * The constant ORIGIN_STATE.
-   */
-  public static final String ORIGIN_STATE = "ORIGIN";
-
-  /**
    * The Default initial x.
    */
   public static final int DEFAULT_INITIAL_X = 10;
@@ -398,6 +393,7 @@ public class Graph {
     private Object executionDetails;
     private String detailsReference;
     private boolean expanded;
+    private boolean origin;
 
     private Map<String, Object> properties = new HashMap<>();
 
@@ -679,9 +675,12 @@ public class Graph {
      *
      * @return the boolean
      */
-    @JsonIgnore
     public boolean isOrigin() {
-      return Graph.ORIGIN_STATE.equals(getName()) || Graph.ORIGIN_STATE.equals(getType());
+      return origin;
+    }
+
+    public void setOrigin(boolean origin) {
+      this.origin = origin;
     }
 
     /*
@@ -776,6 +775,7 @@ public class Graph {
       private int y;
       private int width;
       private int height;
+      private boolean origin;
       private Map<String, Object> properties = new HashMap<>();
 
       private Builder() {}
@@ -901,6 +901,17 @@ public class Graph {
       }
 
       /**
+       * With origin.
+       *
+       * @param origin the origin
+       * @return the builder
+       */
+      public Builder withOrigin(boolean origin) {
+        this.origin = origin;
+        return this;
+      }
+
+      /**
        * But.
        *
        * @return the builder
@@ -925,6 +936,7 @@ public class Graph {
         node.setWidth(width);
         node.setHeight(height);
         node.setProperties(properties);
+        node.setOrigin(origin);
         return node;
       }
     }

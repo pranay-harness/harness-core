@@ -17,9 +17,9 @@ public class ExecutionArgs {
   private String commandName;
   private ExecutionStrategy executionStrategy;
   private String releaseId;
-  private List<String> artifactIds;
+  private List<Artifact> artifacts;
   private String orchestrationId;
-  private List<String> serviceInstanceIds;
+  private List<ServiceInstance> serviceInstances;
   private ExecutionCredential executionCredential;
 
   /**
@@ -76,22 +76,12 @@ public class ExecutionArgs {
     this.releaseId = releaseId;
   }
 
-  /**
-   * Gets artifact ids.
-   *
-   * @return the artifact ids
-   */
-  public List<String> getArtifactIds() {
-    return artifactIds;
+  public List<Artifact> getArtifacts() {
+    return artifacts;
   }
 
-  /**
-   * Sets artifact ids.
-   *
-   * @param artifactIds the artifact ids
-   */
-  public void setArtifactIds(List<String> artifactIds) {
-    this.artifactIds = artifactIds;
+  public void setArtifacts(List<Artifact> artifacts) {
+    this.artifacts = artifacts;
   }
 
   /**
@@ -166,21 +156,11 @@ public class ExecutionArgs {
     this.executionStrategy = executionStrategy;
   }
 
-  /**
-   * Gets service instance ids.
-   *
-   * @return the service instance ids
-   */
-  public List<String> getServiceInstanceIds() {
-    return serviceInstanceIds;
+  public List<ServiceInstance> getServiceInstances() {
+    return serviceInstances;
   }
 
-  /**
-   * Sets service instance ids.
-   *
-   * @param serviceInstanceIds the service instance ids
-   */
-  public void setServiceInstanceIds(List<String> serviceInstanceIds) {
-    this.serviceInstanceIds = serviceInstanceIds;
+  public void setServiceInstances(List<ServiceInstance> serviceInstances) {
+    this.serviceInstances = serviceInstances;
   }
 }
