@@ -92,6 +92,15 @@ public class MongoHelper {
       }
     }
 
+    List<String> fieldsIncluded = req.getFieldsIncluded();
+    List<String> fieldsExcluded = req.getFieldsExcluded();
+
+    if (fieldsIncluded != null && !fieldsIncluded.isEmpty()) {
+      query.retrievedFields(true, fieldsIncluded.toArray(new String[] {}));
+    } else if (fieldsExcluded != null && !fieldsExcluded.isEmpty()) {
+      query.retrievedFields(false, fieldsExcluded.toArray(new String[] {}));
+    }
+
     return query;
   }
 

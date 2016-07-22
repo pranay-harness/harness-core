@@ -55,8 +55,10 @@ public class PageRequest<T> {
   private int pageSize = DEFAULT_PAGE_SIZE;
   private List<SearchFilter> filters = new ArrayList<>();
   private List<SortOrder> orders = new ArrayList<>();
-  private List<String> fieldsIncluded = new ArrayList<>();
-  private List<String> fieldsExcluded = new ArrayList<>();
+
+  @QueryParam("fieldsIncluded") private List<String> fieldsIncluded = new ArrayList<>();
+
+  @QueryParam("fieldsExcluded") private List<String> fieldsExcluded = new ArrayList<>();
   @JsonIgnore @Context private UriInfo uriInfo;
 
   @JsonIgnore private boolean isOr = false;
