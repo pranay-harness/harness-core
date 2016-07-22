@@ -96,7 +96,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -183,9 +182,11 @@ public class DataGenUtil extends WingsBaseTest {
     Map<String, List<Service>> services = new HashMap<>();
     Map<String, List<Environment>> appEnvs = new HashMap<>();
 
+    containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
+
     for (Application application : apps) {
-      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
-      services.put(application.getUuid(), addServices(application.getUuid(), containers.get(application.getUuid())));
+      //      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
+      services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));

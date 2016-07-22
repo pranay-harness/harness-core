@@ -9,7 +9,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 public abstract class CopyCommandUnit extends CommandUnit {
   private String fileId;
   private FileBucket fileBucket;
-  private String destinationFilePath;
+  private String destinationDirectoryPath;
 
   /**
    * Instantiates a new copy command unit.
@@ -64,16 +64,16 @@ public abstract class CopyCommandUnit extends CommandUnit {
    * @return the destination file path
    */
   @SchemaIgnore
-  public String getDestinationFilePath() {
-    return destinationFilePath;
+  public String getDestinationDirectoryPath() {
+    return destinationDirectoryPath;
   }
 
   /**
    * Sets destination file path.
    *
-   * @param destinationFilePath the destination file path
+   * @param destinationDirectoryPath the destination file path
    */
-  public void setDestinationFilePath(String destinationFilePath) {
-    this.destinationFilePath = destinationFilePath;
+  public void setDestinationDirectoryPath(String destinationDirectoryPath) {
+    this.destinationDirectoryPath = destinationDirectoryPath;
   }
 }

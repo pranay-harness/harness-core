@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.util.Objects;
 
@@ -11,8 +12,9 @@ import java.util.Objects;
  * Created by anubhaw on 4/13/16.
  */
 public class BaseFile extends Base {
+  @NotEmpty @FormDataParam("name") private String name;
   private String fileUuid;
-  @FormDataParam("name") private String name;
+  @NotEmpty private String fileName;
   private String mimeType;
   private long size;
   private ChecksumType checksumType = ChecksumType.MD5;
@@ -144,17 +146,29 @@ public class BaseFile extends Base {
     this.checksum = checksum;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#hashCode()
+  /**
+   * Gets file name.
+   *
+   * @return the file name
    */
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(fileUuid, name, mimeType, size, checksumType, checksum);
+  public String getFileName() {
+    return fileName;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#equals(java.lang.Object)
+  /**
+   * Sets file name.
+   *
+   * @param fileName the file name
    */
+  public void setFileName(String fileName) {
+    this.fileName = fileName;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(fileUuid, name, fileName, mimeType, size, checksumType, checksum);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -168,18 +182,17 @@ public class BaseFile extends Base {
     }
     final BaseFile other = (BaseFile) obj;
     return Objects.equals(this.fileUuid, other.fileUuid) && Objects.equals(this.name, other.name)
-        && Objects.equals(this.mimeType, other.mimeType) && Objects.equals(this.size, other.size)
-        && Objects.equals(this.checksumType, other.checksumType) && Objects.equals(this.checksum, other.checksum);
+        && Objects.equals(this.fileName, other.fileName) && Objects.equals(this.mimeType, other.mimeType)
+        && Objects.equals(this.size, other.size) && Objects.equals(this.checksumType, other.checksumType)
+        && Objects.equals(this.checksum, other.checksum);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.Base#toString()
-   */
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("fileUuid", fileUuid)
         .add("name", name)
+        .add("fileName", fileName)
         .add("mimeType", mimeType)
         .add("size", size)
         .add("checksumType", checksumType)

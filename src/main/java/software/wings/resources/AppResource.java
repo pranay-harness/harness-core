@@ -53,7 +53,7 @@ public class AppResource {
    * List.
    *
    * @param pageRequest the page request
-   * @param overview     the summary
+   * @param overview    the summary
    * @return the rest response
    */
   @GET

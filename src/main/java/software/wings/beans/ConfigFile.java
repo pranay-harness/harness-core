@@ -211,8 +211,9 @@ public class ConfigFile extends BaseFile {
     private String entityId;
     private String relativePath;
     private String overridePath;
-    private String fileUuid;
     private String name;
+    private String fileUuid;
+    private String fileName;
     private String mimeType;
     private long size;
     private ChecksumType checksumType = ChecksumType.MD5;
@@ -303,6 +304,17 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /**
      * With file uuid builder.
      *
      * @param fileUuid the file uuid
@@ -314,13 +326,13 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With name builder.
+     * With file name builder.
      *
-     * @param name the name
+     * @param fileName the file name
      * @return the builder
      */
-    public Builder withName(String name) {
-      this.name = name;
+    public Builder withFileName(String fileName) {
+      this.fileName = fileName;
       return this;
     }
 
@@ -458,8 +470,9 @@ public class ConfigFile extends BaseFile {
           .withEntityId(entityId)
           .withRelativePath(relativePath)
           .withOverridePath(overridePath)
-          .withFileUuid(fileUuid)
           .withName(name)
+          .withFileUuid(fileUuid)
+          .withFileName(fileName)
           .withMimeType(mimeType)
           .withSize(size)
           .withChecksumType(checksumType)
@@ -486,8 +499,9 @@ public class ConfigFile extends BaseFile {
       configFile.setEntityId(entityId);
       configFile.setRelativePath(relativePath);
       configFile.setOverridePath(overridePath);
-      configFile.setFileUuid(fileUuid);
       configFile.setName(name);
+      configFile.setFileUuid(fileUuid);
+      configFile.setFileName(fileName);
       configFile.setMimeType(mimeType);
       configFile.setSize(size);
       configFile.setChecksumType(checksumType);

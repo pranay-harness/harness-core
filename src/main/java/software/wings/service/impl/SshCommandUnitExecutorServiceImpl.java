@@ -19,12 +19,13 @@ import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.ScpCommandUnit;
+import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.core.ssh.executors.SshExecutorFactory;
@@ -49,12 +50,12 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  @Inject ExecutorService executorService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Log service.
    */
   protected LogService logService;
+  @Inject ExecutorService executorService;
   private SshExecutorFactory sshExecutorFactory;
 
   /**
@@ -81,6 +82,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
   }
 
+  @Override
+  public void clenup(String activityId, Host host) {
+    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
+  }
+
   private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
     logService.save(aLog()
                         .withAppId(host.getAppId())
@@ -88,8 +94,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                         .withActivityId(activityId)
                         .withLogLevel(INFO)
                         .withCommandUnitName(commandUnit.getName())
-                        .withLogLine(format("Begin execution of command %s:%s", commandUnit.getName(),
-                            commandUnit.getCommandUnitType()))
+                        .withLogLine(format("Begin execution of command: %s", commandUnit.getName()))
                         .build());
 
     ExecutionResult executionResult = FAILURE;
@@ -105,6 +110,16 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         executionResult = executionResultFuture.get(
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
       } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        logService.save(aLog()
+                            .withAppId(host.getAppId())
+                            .withActivityId(activityId)
+                            .withHostName(host.getHostName())
+                            .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                            .withLogLine("Command execution timed out ")
+                            .withCommandUnitName(commandUnit.getName())
+                            .withExecutionResult(executionResult)
+                            .build());
+
         throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
       }
 
@@ -140,7 +155,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     if (op.equals(SupportedOp.EXEC)) {
       executionResult = executor.execute((AbstractExecCommandUnit) commandUnit);
     } else {
-      executionResult = executor.transferFile((CopyCommandUnit) commandUnit);
+      executionResult = executor.transferFiles((ScpCommandUnit) commandUnit);
     }
     return executionResult;
   }

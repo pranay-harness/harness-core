@@ -87,6 +87,7 @@ public class ConfigResource {
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
     configFile.setAppId(appId);
     configFile.setEnvId(envId);
+    configFile.setFileName(fileDetail.getFileName());
     String fileId = configService.save(configFile, uploadedInputStream);
     return new RestResponse<>(fileId);
   }
@@ -121,6 +122,7 @@ public class ConfigResource {
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setUuid(configId);
+    configFile.setFileName(fileDetail.getFileName());
     configService.update(configFile, uploadedInputStream);
     return new RestResponse();
   }

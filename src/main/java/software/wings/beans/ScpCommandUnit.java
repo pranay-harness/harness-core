@@ -1,7 +1,8 @@
 package software.wings.beans;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -11,6 +12,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,14 +20,191 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 7/14/16.
  */
-public class ScpCommandUnit extends CopyCommandUnit {
+public class ScpCommandUnit extends CommandUnit {
   @Attributes(title = "Artifact Type", enums = {"Application Stack", "Application Artifacts", "Configurations"})
-  /* Use enum data and and ScpFileCategory */
-  private String fileCategory;
+  /* Use enum data and and ScpFileCategory */ private String fileCategory;
 
   @Attributes(title = "Destination path", description = "Relative to ${RuntimePath}") private String relativeFilePath;
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
+
+  @SchemaIgnore private List<String> fileIds = new ArrayList<>();
+  @SchemaIgnore private FileBucket fileBucket;
+  @SchemaIgnore private String destinationDirectoryPath;
+
+  /**
+   * Instantiates a new Scp command unit.
+   */
+  public ScpCommandUnit() {
+    super(CommandUnitType.SCP);
+  }
+
+  @Override
+  public void setup(CommandExecutionContext context) {
+    destinationDirectoryPath = constructPath(context.getRuntimePath(), relativeFilePath);
+    switch (fileCategory) {
+      case "Application Artifacts":
+        fileBucket = FileBucket.ARTIFACTS;
+        context.getArtifact().getArtifactFiles().forEach(artifactFile -> fileIds.add(artifactFile.getFileUuid()));
+        break;
+      case "Configurations":
+        fileBucket = FileBucket.CONFIGS;
+
+        ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
+        Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
+            serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
+        List<ConfigFile> configFiles = computedConfigFiles.get(context.getServiceInstance().getHost().getUuid());
+
+        if (configFiles != null) {
+          configFiles.forEach(configFile -> fileIds.add(configFile.getFileUuid()));
+        }
+        break;
+      case "Application Stack":
+        setFileBucket(FileBucket.PLATFORMS);
+        AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
+        fileIds.add(appContainer.getFileUuid());
+        break;
+      default:
+        throw new WingsException(
+            ErrorCodes.INVALID_REQUEST, "message", "Unsupported file category for scp command unit");
+    }
+  }
+
+  private String constructPath(String absolutePath, String relativePath) {
+    return isNullOrEmpty(relativePath) ? absolutePath.trim()
+                                       : absolutePath.trim() + "/" + relativePath.trim(); // TODO:: handle error cases
+  }
+
+  @SchemaIgnore
+  @Override
+  public boolean isArtifactNeeded() {
+    return fileCategory.contains("Artifacts");
+  }
+
+  /**
+   * Gets file category.
+   *
+   * @return the file category
+   */
+  @SchemaIgnore
+  public String getFileCategory() {
+    return fileCategory;
+  }
+
+  /**
+   * Sets file category.
+   *
+   * @param fileCategory the file category
+   */
+  public void setFileCategory(String fileCategory) {
+    this.fileCategory = fileCategory;
+  }
+
+  /**
+   * Gets relative file path.
+   *
+   * @return the relative file path
+   */
+  public String getRelativeFilePath() {
+    return relativeFilePath;
+  }
+
+  /**
+   * Sets relative file path.
+   *
+   * @param relativeFilePath the relative file path
+   */
+  public void setRelativeFilePath(String relativeFilePath) {
+    this.relativeFilePath = relativeFilePath;
+  }
+
+  /**
+   * Gets file ids.
+   *
+   * @return the file ids
+   */
+  @SchemaIgnore
+  public List<String> getFileIds() {
+    return fileIds;
+  }
+
+  /**
+   * Sets file ids.
+   *
+   * @param fileIds the file ids
+   */
+  public void setFileIds(List<String> fileIds) {
+    this.fileIds = fileIds;
+  }
+
+  /**
+   * Gets file bucket.
+   *
+   * @return the file bucket
+   */
+  @SchemaIgnore
+  public FileBucket getFileBucket() {
+    return fileBucket;
+  }
+
+  /**
+   * Sets file bucket.
+   *
+   * @param fileBucket the file bucket
+   */
+  public void setFileBucket(FileBucket fileBucket) {
+    this.fileBucket = fileBucket;
+  }
+
+  /**
+   * Gets destination directory path.
+   *
+   * @return the destination directory path
+   */
+  @SchemaIgnore
+  public String getDestinationDirectoryPath() {
+    return destinationDirectoryPath;
+  }
+
+  /**
+   * Sets destination directory path.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   */
+  public void setDestinationDirectoryPath(String destinationDirectoryPath) {
+    this.destinationDirectoryPath = destinationDirectoryPath;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fileCategory, relativeFilePath, fileIds, fileBucket, destinationDirectoryPath);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ScpCommandUnit other = (ScpCommandUnit) obj;
+    return Objects.equals(this.fileCategory, other.fileCategory)
+        && Objects.equals(this.relativeFilePath, other.relativeFilePath) && Objects.equals(this.fileIds, other.fileIds)
+        && Objects.equals(this.fileBucket, other.fileBucket)
+        && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("fileCategory", fileCategory)
+        .add("relativeFilePath", relativeFilePath)
+        .add("fileIds", fileIds)
+        .add("fileBucket", fileBucket)
+        .add("destinationDirectoryPath", destinationDirectoryPath)
+        .toString();
+  }
 
   /**
    * The enum Scp file category.
@@ -34,14 +213,12 @@ public class ScpCommandUnit extends CopyCommandUnit {
     /**
      * Artifacts scp file category.
      */
-    ARTIFACTS("Application Artifacts"),
-    /**
-     * The Application stack.
-     */
-    APPLICATION_STACK("Application Stack"),
-    /**
-     * Configurations scp file category.
-     */
+    ARTIFACTS("Application Artifacts"), /**
+                                         * The Application stack.
+                                         */
+    APPLICATION_STACK("Application Stack"), /**
+                                             * Configurations scp file category.
+                                             */
     CONFIGURATIONS("Configurations");
 
     private String name;
@@ -70,130 +247,15 @@ public class ScpCommandUnit extends CopyCommandUnit {
   }
 
   /**
-   * Instantiates a new Scp command unit.
-   */
-  public ScpCommandUnit() {
-    super(CommandUnitType.SCP);
-  }
-
-  @Override
-  public void setup(CommandExecutionContext context) {
-    switch (fileCategory) {
-      case "Application Artifacts":
-        setFileBucket(FileBucket.ARTIFACTS);
-        ArtifactFile artifactFile =
-            context.getArtifact().getArtifactFiles().get(0); // TODO: support list of artifact files
-        setFileId(artifactFile.getFileUuid());
-        setDestinationFilePath(constructPath(context.getRuntimePath(), relativeFilePath, artifactFile.getName()));
-        break;
-      case "Configurations":
-        ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
-        Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
-            serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
-        List<ConfigFile> configFiles = computedConfigFiles.get(context.getServiceInstance().getHost().getUuid());
-        if (configFiles != null && configFiles.size() != 0) {
-          ConfigFile configFile = configFiles.get(0); // TODO: Support list of config files
-          setFileBucket(FileBucket.CONFIGS);
-          setFileId(configFile.getFileUuid());
-          setDestinationFilePath(
-              constructPath(context.getRuntimePath(), configFile.getRelativePath(), configFile.getName()));
-        }
-        break;
-      case "Application Stack":
-        AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
-        setFileBucket(FileBucket.PLATFORMS);
-        setFileId(appContainer.getFileUuid());
-        setDestinationFilePath(constructPath(context.getRuntimePath(), relativeFilePath, appContainer.getName()));
-        break;
-      default:
-        throw new WingsException(
-            ErrorCodes.INVALID_REQUEST, "message", "Unsupported file category for scp command unit");
-    }
-  }
-
-  private String constructPath(String absolutePath, String relativePath, String filename) {
-    return absolutePath.trim() + (Strings.isNullOrEmpty(relativePath) ? "/" : "/" + relativePath.trim() + "/")
-        + filename.trim(); // TODO:: handle error cases
-  }
-
-  /**
-   * Gets file category.
-   *
-   * @return the file category
-   */
-  public String getFileCategory() {
-    return fileCategory;
-  }
-
-  /**
-   * Sets file category.
-   *
-   * @param fileCategory the file category
-   */
-  public void setFileCategory(String fileCategory) {
-    this.fileCategory = fileCategory;
-  }
-
-  @SchemaIgnore
-  @Override
-  public boolean isArtifactNeeded() {
-    return fileCategory.contains("Artifacts");
-  }
-
-  /**
-   * Gets relative file path.
-   *
-   * @return the relative file path
-   */
-  public String getRelativeFilePath() {
-    return relativeFilePath;
-  }
-
-  /**
-   * Sets relative file path.
-   *
-   * @param relativeFilePath the relative file path
-   */
-  public void setRelativeFilePath(String relativeFilePath) {
-    this.relativeFilePath = relativeFilePath;
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(fileCategory, relativeFilePath);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    final ScpCommandUnit other = (ScpCommandUnit) obj;
-    return Objects.equals(this.fileCategory, other.fileCategory)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("fileCategory", fileCategory)
-        .add("relativeFilePath", relativeFilePath)
-        .toString();
-  }
-
-  /**
    * The type Builder.
    */
   public static final class Builder {
     /* Use enum data and and ScpFileCategory */
     private String fileCategory;
     private String relativeFilePath;
-    private String fileId;
+    private List<String> fileIds;
     private FileBucket fileBucket;
-    private String destinationFilePath;
+    private String destinationDirectoryPath;
     private String name;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
@@ -234,13 +296,13 @@ public class ScpCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With file id builder.
+     * With file ids builder.
      *
-     * @param fileId the file id
+     * @param fileIds the file ids
      * @return the builder
      */
-    public Builder withFileId(String fileId) {
-      this.fileId = fileId;
+    public Builder withFileIds(List<String> fileIds) {
+      this.fileIds = fileIds;
       return this;
     }
 
@@ -256,13 +318,13 @@ public class ScpCommandUnit extends CopyCommandUnit {
     }
 
     /**
-     * With destination file path builder.
+     * With destination directory path builder.
      *
-     * @param destinationFilePath the destination file path
+     * @param destinationDirectoryPath the destination directory path
      * @return the builder
      */
-    public Builder withDestinationFilePath(String destinationFilePath) {
-      this.destinationFilePath = destinationFilePath;
+    public Builder withDestinationDirectoryPath(String destinationDirectoryPath) {
+      this.destinationDirectoryPath = destinationDirectoryPath;
       return this;
     }
 
@@ -330,9 +392,9 @@ public class ScpCommandUnit extends CopyCommandUnit {
       return aScpCommandUnit()
           .withFileCategory(fileCategory)
           .withRelativeFilePath(relativeFilePath)
-          .withFileId(fileId)
+          .withFileIds(fileIds)
           .withFileBucket(fileBucket)
-          .withDestinationFilePath(destinationFilePath)
+          .withDestinationDirectoryPath(destinationDirectoryPath)
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
@@ -349,9 +411,9 @@ public class ScpCommandUnit extends CopyCommandUnit {
       ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
       scpCommandUnit.setFileCategory(fileCategory);
       scpCommandUnit.setRelativeFilePath(relativeFilePath);
-      scpCommandUnit.setFileId(fileId);
+      scpCommandUnit.setFileIds(fileIds);
       scpCommandUnit.setFileBucket(fileBucket);
-      scpCommandUnit.setDestinationFilePath(destinationFilePath);
+      scpCommandUnit.setDestinationDirectoryPath(destinationDirectoryPath);
       scpCommandUnit.setName(name);
       scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setExecutionResult(executionResult);

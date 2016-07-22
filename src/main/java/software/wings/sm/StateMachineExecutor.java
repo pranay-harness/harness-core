@@ -26,7 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
 import javax.inject.Inject;
 
 /**
@@ -182,6 +181,7 @@ public class StateMachineExecutor {
     injector.injectMembers(context);
     startExecution(context);
   }
+
   /**
    * Start execution.
    *
@@ -401,6 +401,7 @@ public class StateMachineExecutor {
       List<ExecutionStatus> existingExecutionStatus) {
     return updateStatus(stateExecutionInstance, null, null, status, existingExecutionStatus);
   }
+
   private boolean updateStatus(StateExecutionInstance stateExecutionInstance, String tsField, Long tsValue,
       ExecutionStatus status, List<ExecutionStatus> existingExecutionStatus) {
     stateExecutionInstance.setStatus(status);

@@ -11,11 +11,12 @@ import software.wings.beans.User;
 @Ignore
 public class ExtendedFile extends BaseFile {
   /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
-    private String fileUuid;
     private String name;
+    private String fileUuid;
+    private String fileName;
     private String mimeType;
     private long size;
     private ChecksumType checksumType = ChecksumType.MD5;
@@ -31,7 +32,7 @@ public class ExtendedFile extends BaseFile {
     private Builder() {}
 
     /**
-     * An extended file.
+     * An extended file builder.
      *
      * @return the builder
      */
@@ -40,18 +41,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With file uuid.
-     *
-     * @param fileUuid the file uuid
-     * @return the builder
-     */
-    public Builder withFileUuid(String fileUuid) {
-      this.fileUuid = fileUuid;
-      return this;
-    }
-
-    /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
      * @return the builder
@@ -62,7 +52,29 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With mime type.
+     * With file uuid builder.
+     *
+     * @param fileUuid the file uuid
+     * @return the builder
+     */
+    public Builder withFileUuid(String fileUuid) {
+      this.fileUuid = fileUuid;
+      return this;
+    }
+
+    /**
+     * With file name builder.
+     *
+     * @param fileName the file name
+     * @return the builder
+     */
+    public Builder withFileName(String fileName) {
+      this.fileName = fileName;
+      return this;
+    }
+
+    /**
+     * With mime type builder.
      *
      * @param mimeType the mime type
      * @return the builder
@@ -73,7 +85,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With size.
+     * With size builder.
      *
      * @param size the size
      * @return the builder
@@ -84,7 +96,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With checksum type.
+     * With checksum type builder.
      *
      * @param checksumType the checksum type
      * @return the builder
@@ -95,7 +107,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With checksum.
+     * With checksum builder.
      *
      * @param checksum the checksum
      * @return the builder
@@ -106,7 +118,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
      * @return the builder
@@ -117,7 +129,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
      * @return the builder
@@ -128,7 +140,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
      * @return the builder
@@ -139,7 +151,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
      * @return the builder
@@ -150,7 +162,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
      * @return the builder
@@ -161,7 +173,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
      * @return the builder
@@ -172,7 +184,7 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
      * @return the builder
@@ -183,14 +195,15 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return anExtendedFile()
-          .withFileUuid(fileUuid)
           .withName(name)
+          .withFileUuid(fileUuid)
+          .withFileName(fileName)
           .withMimeType(mimeType)
           .withSize(size)
           .withChecksumType(checksumType)
@@ -205,14 +218,15 @@ public class ExtendedFile extends BaseFile {
     }
 
     /**
-     * Builds the.
+     * Build extended file.
      *
      * @return the extended file
      */
     public ExtendedFile build() {
       ExtendedFile extendedFile = new ExtendedFile();
-      extendedFile.setFileUuid(fileUuid);
       extendedFile.setName(name);
+      extendedFile.setFileUuid(fileUuid);
+      extendedFile.setFileName(fileName);
       extendedFile.setMimeType(mimeType);
       extendedFile.setSize(size);
       extendedFile.setChecksumType(checksumType);

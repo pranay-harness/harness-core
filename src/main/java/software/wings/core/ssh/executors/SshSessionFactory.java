@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSch;
@@ -69,7 +70,7 @@ public class SshSessionFactory {
   }
 
   private static String getSessionType(SshSessionConfig config) {
-    return config.getKey() != null && config.getKey().length() > 0 ? "KEY" : "PASSWORD";
+    return isNullOrEmpty(config.getKey()) ? "PASSWORD" : "KEY";
   }
 
   /**

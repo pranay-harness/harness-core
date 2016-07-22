@@ -19,7 +19,9 @@ import java.util.Objects;
 @JsonSubTypes({
   @Type(value = Command.class, name = "COMMAND")
   , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
-      @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV")
+      @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
+      @Type(value = ProcessCheckCommandUnit.class, name = "PROCESS_CHECK"),
+      @Type(value = TailLogCommandUnit.class, name = "TAIL_LOG")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;
@@ -214,14 +216,12 @@ public abstract class CommandUnit {
     /**
      * Success execution result.
      */
-    SUCCESS,
-    /**
-     * Failure execution result.
-     */
-    FAILURE,
-    /**
-     * Running execution result.
-     */
+    SUCCESS, /**
+              * Failure execution result.
+              */
+    FAILURE, /**
+              * Running execution result.
+              */
     RUNNING;
 
     /**
