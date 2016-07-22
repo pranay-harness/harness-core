@@ -23,7 +23,6 @@ import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());

@@ -40,9 +40,8 @@ public interface HostService {
   /**
    * Update.
    *
-   *
    * @param envId
-   * @param host the host
+   * @param host  the host
    * @return the host
    */
   @ValidationGroups(Update.class) public Host update(String envId, @Valid Host host);

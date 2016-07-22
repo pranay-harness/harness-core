@@ -49,19 +49,6 @@ public class Setup {
     this.actions = actions;
   }
 
-  /**
-   * The enum Setup status.
-   */
-  public enum SetupStatus {
-    /**
-     * Complete setup status.
-     */
-    COMPLETE, /**
-               * Incomplete setup status.
-               */
-    INCOMPLETE
-  }
-
   @Override
   public int hashCode() {
     return Objects.hash(setupStatus, actions);
@@ -82,6 +69,19 @@ public class Setup {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this).add("setupStatus", setupStatus).add("actions", actions).toString();
+  }
+
+  /**
+   * The enum Setup status.
+   */
+  public enum SetupStatus {
+    /**
+     * Complete setup status.
+     */
+    COMPLETE, /**
+               * Incomplete setup status.
+               */
+    INCOMPLETE
   }
 
   /**

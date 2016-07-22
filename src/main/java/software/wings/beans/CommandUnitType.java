@@ -36,14 +36,12 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Setup env command unit type.
    */
-  SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env"),
-  /**
-   * Tail log command unit type.
-   */
-  TAIL_LOG(TailLogCommandUnit.class, "Tail Log"),
-  /**
-   * Process check command unit type.
-   */
+  SETUP_ENV(SetupEnvCommandUnit.class, "Setup Env"), /**
+                                                      * Tail log command unit type.
+                                                      */
+  TAIL_LOG(TailLogCommandUnit.class, "Tail Log"), /**
+                                                   * Process check command unit type.
+                                                   */
   PROCESS_CHECK(ProcessCheckCommandUnit.class, "Process Check");
 
   private static final String stencilsPath = "/templates/commandstencils/";

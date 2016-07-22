@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
@@ -33,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.CommandUnit.CommandUnitExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.CopyCommandUnit;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ScpCommandUnit;
 import software.wings.exception.WingsException;
@@ -50,8 +48,6 @@ import java.net.NoRouteToHostException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
@@ -66,18 +62,18 @@ import javax.validation.executable.ValidateOnExecution;
 public abstract class AbstractSshExecutor implements SshExecutor {
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
   public static final String LINE_BREAK_PATTERN = "\\R+";
+  protected static final Logger logger = LoggerFactory.getLogger(AbstractSshExecutor.class);
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   private static ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
-  private Channel channel;
   protected SshSessionConfig config;
   protected OutputStream outputStream;
   protected InputStream inputStream;
   protected LogService logService;
   protected FileService fileService;
+  private Channel channel;
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
   private Pattern lineBreakPattern = Pattern.compile(LINE_BREAK_PATTERN);
-  protected static final Logger logger = LoggerFactory.getLogger(AbstractSshExecutor.class);
 
   /**
    * Instantiates a new abstract ssh executor.
@@ -89,6 +85,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   public AbstractSshExecutor(FileService fileService, LogService logService) {
     this.logService = logService;
     this.fileService = fileService;
+  }
+
+  public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
+    logger.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
+    String key = executionId + "~" + hostName.trim();
+    Session session = sessions.remove(key);
+    if (session != null && session.isConnected()) {
+      logger.info("Found cached session. disconnecting the session");
+      session.disconnect();
+      logger.info("Session disconnected successfully");
+    } else {
+      logger.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
+    }
   }
 
   /* (non-Javadoc)
@@ -285,19 +294,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       cahcedSession = sessions.merge(key, cahcedSession, (session1, session2) -> getSession(this.config));
     }
     return cahcedSession;
-  }
-
-  public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
-    logger.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
-    String key = executionId + "~" + hostName.trim();
-    Session session = sessions.remove(key);
-    if (session != null && session.isConnected()) {
-      logger.info("Found cached session. disconnecting the session");
-      session.disconnect();
-      logger.info("Session disconnected successfully");
-    } else {
-      logger.info("No cached session found for executionId : {}, hostName: {} ", executionId, hostName);
-    }
   }
 
   /**

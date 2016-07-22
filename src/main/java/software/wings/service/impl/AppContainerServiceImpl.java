@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static com.google.common.collect.ImmutableMap.*;
+import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;

@@ -50,12 +50,12 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
-  @Inject ExecutorService executorService;
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Log service.
    */
   protected LogService logService;
+  @Inject ExecutorService executorService;
   private SshExecutorFactory sshExecutorFactory;
 
   /**
