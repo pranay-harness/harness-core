@@ -76,10 +76,20 @@ public class ExecutionArgs {
     this.releaseId = releaseId;
   }
 
+  /**
+   * Gets artifacts.
+   *
+   * @return the artifacts
+   */
   public List<Artifact> getArtifacts() {
     return artifacts;
   }
 
+  /**
+   * Sets artifacts.
+   *
+   * @param artifacts the artifacts
+   */
   public void setArtifacts(List<Artifact> artifacts) {
     this.artifacts = artifacts;
   }
@@ -156,10 +166,20 @@ public class ExecutionArgs {
     this.executionStrategy = executionStrategy;
   }
 
+  /**
+   * Gets service instances.
+   *
+   * @return the service instances
+   */
   public List<ServiceInstance> getServiceInstances() {
     return serviceInstances;
   }
 
+  /**
+   * Sets service instances.
+   *
+   * @param serviceInstances the service instances
+   */
   public void setServiceInstances(List<ServiceInstance> serviceInstances) {
     this.serviceInstances = serviceInstances;
   }

@@ -69,8 +69,9 @@ public class EnvironmentResource {
   /**
    * List.
    *
-   * @param appId the app id
-   * @param envId the env id
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param status the status
    * @return the rest response
    */
   @GET

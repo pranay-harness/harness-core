@@ -69,6 +69,9 @@ public enum StateType implements StateTypeDescriptor {
    */
   HTTP(HttpState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS),
 
+  /**
+   * Splunk state type.
+   */
   SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS,
       ORCHESTRATION_STENCILS), // APP_DYNAMICS(ORCHESTRATION_STENCILS),
 
@@ -120,9 +123,9 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Instantiates a new state type.
    *
-   * @param stateClass the state class
+   * @param stateClass   the state class
    * @param displayOrder display order
-   * @param scopes     the scopes
+   * @param scopes       the scopes
    */
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       StateTypeScope... scopes) {

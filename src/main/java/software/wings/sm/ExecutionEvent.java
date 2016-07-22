@@ -59,10 +59,20 @@ public class ExecutionEvent extends Base {
     this.envId = envId;
   }
 
+  /**
+   * Gets execution uuid.
+   *
+   * @return the execution uuid
+   */
   public String getExecutionUuid() {
     return executionUuid;
   }
 
+  /**
+   * Sets execution uuid.
+   *
+   * @param executionUuid the execution uuid
+   */
   public void setExecutionUuid(String executionUuid) {
     this.executionUuid = executionUuid;
   }

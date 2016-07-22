@@ -20,6 +20,7 @@ public class SshSessionFactory {
    *
    * @param config the config
    * @return the SSH session with jumpbox
+   * @throws JSchException the j sch exception
    */
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) throws JSchException {
     Session session = null;
@@ -48,7 +49,7 @@ public class SshSessionFactory {
    */
   public static Session getSSHSession(SshSessionConfig config) throws JSchException {
     JSch jsch = new JSch();
-    //    JSch.setLogger(new MyLogger());
+    //    JSch.setLogger(new jschLogger());
 
     Session session = null;
     if ("KEY_AUTH".equals(getSessionType(config))) {
@@ -65,6 +66,7 @@ public class SshSessionFactory {
     session.setConfig("StrictHostKeyChecking", "no");
     session.setUserInfo(new SshUserInfo(config.getPassword()));
     session.setTimeout(config.getSshSessionTimeout());
+    session.setServerAliveInterval(10 * 1000); // Send noop packet every 10 sec
     session.connect(config.getSshConnectionTimeout());
     return session;
   }
@@ -74,9 +76,9 @@ public class SshSessionFactory {
   }
 
   /**
-   * The Class MyLogger.
+   * The Class jschLogger.
    */
-  public static class MyLogger implements com.jcraft.jsch.Logger {
+  public static class jschLogger implements com.jcraft.jsch.Logger {
     /**
      * The Name.
      */

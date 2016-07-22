@@ -464,6 +464,14 @@ public class PageRequest<T> {
       return this;
     }
 
+    /**
+     * Add filter builder.
+     *
+     * @param fieldName   the field name
+     * @param op          the op
+     * @param fieldValues the field values
+     * @return the builder
+     */
     public Builder addFilter(String fieldName, Operator op, Object... fieldValues) {
       this.filters.add(SearchFilter.Builder.aSearchFilter().withField(fieldName, op, fieldValues).build());
       return this;
@@ -480,6 +488,13 @@ public class PageRequest<T> {
       return this;
     }
 
+    /**
+     * Add order builder.
+     *
+     * @param fieldName the field name
+     * @param orderType the order type
+     * @return the builder
+     */
     public Builder addOrder(String fieldName, OrderType orderType) {
       this.orders.add(SortOrder.Builder.aSortOrder().withField(fieldName, orderType).build());
       return this;

@@ -216,6 +216,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                                                         .build());
   }
 
+  /**
+   * Should concat paths.
+   */
   @Test
   public void shouldConcatPaths() {}
 }

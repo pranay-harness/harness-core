@@ -111,7 +111,7 @@ public class DefaultCommands {
                 .withId(nodes.get(3))
                 .withName("Copy App Stack")
                 .withType(SCP.name())
-                .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK.getName())
+                .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
                 .build(),
             aNode()
                 .withX(650)
@@ -129,7 +129,7 @@ public class DefaultCommands {
                 .withId(nodes.get(5))
                 .withName("Copy Artifact")
                 .withType(SCP.name())
-                .addProperty("fileCategory", ScpFileCategory.ARTIFACTS.getName())
+                .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
                 .addProperty("relativeFilePath", "tomcat/webapps")
                 .build(),
             aNode()

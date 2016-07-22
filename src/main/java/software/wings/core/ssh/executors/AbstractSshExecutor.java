@@ -60,16 +60,40 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
+  /**
+   * The constant DEFAULT_SUDO_PROMPT_PATTERN.
+   */
   public static final String DEFAULT_SUDO_PROMPT_PATTERN = "^\\[sudo\\] password for .+: .*";
+  /**
+   * The constant LINE_BREAK_PATTERN.
+   */
   public static final String LINE_BREAK_PATTERN = "\\R+";
+  /**
+   * The constant logger.
+   */
   protected static final Logger logger = LoggerFactory.getLogger(AbstractSshExecutor.class);
   private static final int MAX_BYTES_READ_PER_CHANNEL =
       1024 * 1024 * 1024; // TODO: Read from config. 1 GB per channel for now.
   private static ConcurrentMap<String, Session> sessions = new ConcurrentHashMap<>();
+  /**
+   * The Config.
+   */
   protected SshSessionConfig config;
+  /**
+   * The Output stream.
+   */
   protected OutputStream outputStream;
+  /**
+   * The Input stream.
+   */
   protected InputStream inputStream;
+  /**
+   * The Log service.
+   */
   protected LogService logService;
+  /**
+   * The File service.
+   */
   protected FileService fileService;
   private Channel channel;
   private Pattern sudoPasswordPromptPattern = Pattern.compile(DEFAULT_SUDO_PROMPT_PATTERN);
@@ -87,6 +111,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     this.fileService = fileService;
   }
 
+  /**
+   * Evict and disconnect cached session.
+   *
+   * @param executionId the execution id
+   * @param hostName    the host name
+   */
   public static void evictAndDisconnectCachedSession(String executionId, String hostName) {
     logger.info("Clean up session for executionId : {}, hostName: {} ", executionId, hostName);
     String key = executionId + "~" + hostName.trim();
@@ -271,6 +301,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    */
   public abstract Session getSession(SshSessionConfig config);
 
+  /**
+   * Gets cached session.
+   *
+   * @param config the config
+   * @return the cached session
+   */
   public synchronized Session getCachedSession(SshSessionConfig config) {
     String key = config.getExecutionId() + "~" + config.getHost().trim();
     logger.info("Fetch session for executionId : {}, hostName: {} ", config.getExecutionId(), config.getHost());

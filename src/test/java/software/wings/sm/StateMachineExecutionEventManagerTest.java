@@ -22,6 +22,8 @@ import javax.inject.Inject;
  */
 
 /**
+ * The type State machine execution event manager test.
+ *
  * @author Rishi
  */
 public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
@@ -30,6 +32,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
 
+  /**
+   * Should throw invalid argument for null state execution instance.
+   */
   @Test
   public void shouldThrowInvalidArgumentForNullStateExecutionInstance() {
     Application app =
@@ -55,6 +60,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw invalid argument for invalid state execution instance.
+   */
   @Test
   public void shouldThrowInvalidArgumentForInvalidStateExecutionInstance() {
     Application app =
@@ -81,6 +89,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw state not for resume.
+   */
   @Test
   public void shouldThrowStateNotForResume() {
     Application app =
@@ -107,6 +118,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw state not for retry.
+   */
   @Test
   public void shouldThrowStateNotForRetry() {
     Application app =
@@ -133,6 +147,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw state not for pause.
+   */
   @Test
   public void shouldThrowStateNotForPause() {
     Application app =
@@ -160,6 +177,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw state not for abort.
+   */
   @Test
   public void shouldThrowStateNotForAbort() {
     Application app =
@@ -187,6 +207,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw abort all already.
+   */
   @Test
   public void shouldThrowAbortAllAlready() {
     Application app =
@@ -217,6 +240,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should throw pause all already.
+   */
   @Test
   public void shouldThrowPauseAllAlready() {
     Application app =
@@ -247,6 +273,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should pause all clear previous resume all.
+   */
   @Test
   public void shouldPauseAllClearPreviousResumeAll() {
     Application app =
@@ -281,6 +310,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(ExecutionEvent.class, resumeAll.getAppId(), resumeAll.getUuid())).isNull();
   }
 
+  /**
+   * Should throw resume all already.
+   */
   @Test
   public void shouldThrowResumeAllAlready() {
     Application app =
@@ -303,6 +335,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * Should resume all clear prev pause all.
+   */
   @Test
   public void shouldResumeAllClearPrevPauseAll() {
     Application app =
@@ -331,6 +366,9 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
     assertThat(wingsPersistence.get(ExecutionEvent.class, pauseAll.getAppId(), pauseAll.getUuid())).isNull();
   }
 
+  /**
+   * Should throw resume all already 2.
+   */
   @Test
   public void shouldThrowResumeAllAlready2() {
     Application app =

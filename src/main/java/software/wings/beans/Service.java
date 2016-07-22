@@ -179,10 +179,20 @@ public class Service extends Base {
     this.lastProdDeploymentActivity = lastProdDeploymentActivity;
   }
 
+  /**
+   * Gets setup.
+   *
+   * @return the setup
+   */
   public Setup getSetup() {
     return setup;
   }
 
+  /**
+   * Sets setup.
+   *
+   * @param setup the setup
+   */
   public void setSetup(Setup setup) {
     this.setup = setup;
   }

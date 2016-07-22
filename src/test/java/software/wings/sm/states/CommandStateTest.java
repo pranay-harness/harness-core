@@ -248,7 +248,7 @@ public class CommandStateTest extends WingsBaseTest {
     Command command =
         aCommand()
             .addCommandUnits(
-                ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS.getName()).build())
+                ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
             .build();
 
     WorkflowStandardParams workflowStandardParams =

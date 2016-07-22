@@ -122,10 +122,20 @@ public class Application extends Base {
     this.setup = setup;
   }
 
+  /**
+   * Gets recent executions.
+   *
+   * @return the recent executions
+   */
   public List<WorkflowExecution> getRecentExecutions() {
     return recentExecutions;
   }
 
+  /**
+   * Sets recent executions.
+   *
+   * @param recentExecutions the recent executions
+   */
   public void setRecentExecutions(List<WorkflowExecution> recentExecutions) {
     this.recentExecutions = recentExecutions;
   }

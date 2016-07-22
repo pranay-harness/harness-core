@@ -43,30 +43,60 @@ public class ExecutionDataValue {
     this.value = value;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String displayName;
     private Object value;
 
     private Builder() {}
 
+    /**
+     * An execution data value builder.
+     *
+     * @return the builder
+     */
     public static Builder anExecutionDataValue() {
       return new Builder();
     }
 
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
     public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
+    /**
+     * With value builder.
+     *
+     * @param value the value
+     * @return the builder
+     */
     public Builder withValue(Object value) {
       this.value = value;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anExecutionDataValue().withDisplayName(displayName).withValue(value);
     }
 
+    /**
+     * Build execution data value.
+     *
+     * @return the execution data value
+     */
     public ExecutionDataValue build() {
       ExecutionDataValue executionDataValue = new ExecutionDataValue();
       executionDataValue.setDisplayName(displayName);

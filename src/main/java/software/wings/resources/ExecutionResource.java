@@ -153,10 +153,10 @@ public class ExecutionResource {
   /**
    * Update execution details rest response.
    *
-   * @param appId                  the app id
-   * @param envId                  the env id
-   * @param workflowExecutionId    the workflow execution id
-   * @param workflowExecutionEvent the workflow execution event
+   * @param appId               the app id
+   * @param envId               the env id
+   * @param workflowExecutionId the workflow execution id
+   * @param executionEvent      the execution event
    * @return the rest response
    */
   @PUT

@@ -25,8 +25,9 @@ public interface AppService {
   /**
    * List.
    *
-   * @param req      the req
-   * @param overview the summary
+   * @param req                the req
+   * @param overview           the summary
+   * @param numberOfExecutions the number of executions
    * @return the page response
    */
   PageResponse<Application> list(PageRequest<Application> req, boolean overview, int numberOfExecutions);
@@ -68,5 +69,12 @@ public interface AppService {
    */
   void addService(Service service);
 
+  /**
+   * Get application.
+   *
+   * @param appId  the app id
+   * @param status the status
+   * @return the application
+   */
   Application get(String appId, SetupStatus status);
 }

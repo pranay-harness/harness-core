@@ -70,6 +70,7 @@ public class ServiceResource {
    *
    * @param appId     the app id
    * @param serviceId the service id
+   * @param status    the status
    * @return the rest response
    */
   @GET

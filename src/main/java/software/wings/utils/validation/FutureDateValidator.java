@@ -8,6 +8,11 @@ import javax.validation.ConstraintValidatorContext;
  * Created by peeyushaggarwal on 5/4/16.
  */
 public class FutureDateValidator implements ConstraintValidator<FutureDate, Long> {
+  /**
+   * Gets date in millis.
+   *
+   * @return the date in millis
+   */
   public static long getDateInMillis() {
     Calendar c = Calendar.getInstance();
     c.set(Calendar.HOUR_OF_DAY, 0);

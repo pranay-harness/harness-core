@@ -72,6 +72,14 @@ public class ActivityServiceImpl implements ActivityService {
     return commandUnits;
   }
 
+  /**
+   * Gets flatten command unit list.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @param command   the command
+   * @return the flatten command unit list
+   */
   List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
     Command executableCommand = command;
     if (command.getReferenceId() != null) {

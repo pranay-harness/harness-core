@@ -69,10 +69,20 @@ public class SetupAction {
     this.url = url;
   }
 
+  /**
+   * Gets error type.
+   *
+   * @return the error type
+   */
   public ResponseTypeEnum getErrorType() {
     return errorType;
   }
 
+  /**
+   * Sets error type.
+   *
+   * @param errorType the error type
+   */
   public void setErrorType(ResponseTypeEnum errorType) {
     this.errorType = errorType;
   }

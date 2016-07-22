@@ -6,6 +6,9 @@ import static java.lang.String.format;
  * Created by anubhaw on 7/12/16.
  */
 public class SetupEnvCommandUnit extends AbstractExecCommandUnit {
+  /**
+   * Instantiates a new Setup env command unit.
+   */
   public SetupEnvCommandUnit() {
     super(CommandUnitType.SETUP_ENV);
   }

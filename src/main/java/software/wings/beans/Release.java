@@ -139,10 +139,20 @@ public class Release extends Base {
     this.services = services;
   }
 
+  /**
+   * Gets breakdown by environments.
+   *
+   * @return the breakdown by environments
+   */
   public List<BreakdownByEnvironments> getBreakdownByEnvironments() {
     return breakdownByEnvironments;
   }
 
+  /**
+   * Sets breakdown by environments.
+   *
+   * @param breakdownByEnvironments the breakdown by environments
+   */
   public void setBreakdownByEnvironments(List<BreakdownByEnvironments> breakdownByEnvironments) {
     this.breakdownByEnvironments = breakdownByEnvironments;
   }
@@ -304,6 +314,9 @@ public class Release extends Base {
           .toString();
     }
 
+    /**
+     * The type Builder.
+     */
     public static final class Builder {
       private String envId;
       private String envName;
@@ -312,35 +325,74 @@ public class Release extends Base {
 
       private Builder() {}
 
+      /**
+       * A breakdown by environments builder.
+       *
+       * @return the builder
+       */
       public static Builder aBreakdownByEnvironments() {
         return new Builder();
       }
 
+      /**
+       * With env id builder.
+       *
+       * @param envId the env id
+       * @return the builder
+       */
       public Builder withEnvId(String envId) {
         this.envId = envId;
         return this;
       }
 
+      /**
+       * With env name builder.
+       *
+       * @param envName the env name
+       * @return the builder
+       */
       public Builder withEnvName(String envName) {
         this.envName = envName;
         return this;
       }
 
+      /**
+       * With total builder.
+       *
+       * @param total the total
+       * @return the builder
+       */
       public Builder withTotal(int total) {
         this.total = total;
         return this;
       }
 
+      /**
+       * With breakdown builder.
+       *
+       * @param breakdown the breakdown
+       * @return the builder
+       */
       public Builder withBreakdown(CountsByStatuses breakdown) {
         this.breakdown = breakdown;
         return this;
       }
 
+      /**
+       * But builder.
+       *
+       * @return the builder
+       */
       public Builder but() {
         return aBreakdownByEnvironments().withEnvId(envId).withEnvName(envName).withTotal(total).withBreakdown(
             breakdown);
       }
 
+      /**
+       * Build breakdown by environments.
+       *
+       * @return the breakdown by environments
+       */
       public BreakdownByEnvironments build() {
         BreakdownByEnvironments breakdownByEnvironments = new BreakdownByEnvironments();
         breakdownByEnvironments.setEnvId(envId);
@@ -352,6 +404,9 @@ public class Release extends Base {
     }
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String releaseName;
     private String description;
@@ -370,80 +425,174 @@ public class Release extends Base {
 
     private Builder() {}
 
+    /**
+     * A release builder.
+     *
+     * @return the builder
+     */
     public static Builder aRelease() {
       return new Builder();
     }
 
+    /**
+     * With release name builder.
+     *
+     * @param releaseName the release name
+     * @return the builder
+     */
     public Builder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With target date builder.
+     *
+     * @param targetDate the target date
+     * @return the builder
+     */
     public Builder withTargetDate(Long targetDate) {
       this.targetDate = targetDate;
       return this;
     }
 
+    /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(Set<Service> services) {
       this.services = services;
       return this;
     }
 
+    /**
+     * With artifact sources builder.
+     *
+     * @param artifactSources the artifact sources
+     * @return the builder
+     */
     public Builder withArtifactSources(List<ArtifactSource> artifactSources) {
       this.artifactSources = artifactSources;
       return this;
     }
 
+    /**
+     * With breakdown by environments builder.
+     *
+     * @param breakdownByEnvironments the breakdown by environments
+     * @return the builder
+     */
     public Builder withBreakdownByEnvironments(List<BreakdownByEnvironments> breakdownByEnvironments) {
       this.breakdownByEnvironments = breakdownByEnvironments;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aRelease()
           .withReleaseName(releaseName)
@@ -462,6 +611,11 @@ public class Release extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build release.
+     *
+     * @return the release
+     */
     public Release build() {
       Release release = new Release();
       release.setReleaseName(releaseName);

@@ -186,6 +186,7 @@ public interface ServiceTemplateService {
    *
    * @param template the template
    * @param hosts    the hosts
+   * @return the service template
    */
   ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts);
 }

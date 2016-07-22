@@ -169,7 +169,8 @@ public class StateMachineExecutor {
   /**
    * Start execution.
    *
-   * @param context the context
+   * @param appId                    the app id
+   * @param stateExecutionInstanceId the state execution instance id
    */
   void startExecution(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
@@ -229,6 +230,13 @@ public class StateMachineExecutor {
     }
   }
 
+  /**
+   * Handle execute response state execution instance.
+   *
+   * @param context           the context
+   * @param executionResponse the execution response
+   * @return the state execution instance
+   */
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -271,6 +279,13 @@ public class StateMachineExecutor {
     return stateExecutionInstance;
   }
 
+  /**
+   * Handle execute response exception state execution instance.
+   *
+   * @param context   the context
+   * @param exception the exception
+   * @return the state execution instance
+   */
   StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, Exception exception) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -639,6 +654,8 @@ public class StateMachineExecutor {
      * Instantiates a new Sm execution dispatcher.
      *
      * @param context              the context
+     * @param state                the state
+     * @param response             the response
      * @param stateMachineExecutor the state machine executor
      */
     public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,

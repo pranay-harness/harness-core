@@ -1673,6 +1673,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .allMatch(n -> "WAIT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()));
   }
 
+  /**
+   * Should throw invalid argument for invalid orchestration id.
+   */
   @Test
   public void shouldThrowInvalidArgumentForInvalidOrchestrationId() {
     Application app =

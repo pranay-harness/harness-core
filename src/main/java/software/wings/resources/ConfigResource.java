@@ -158,6 +158,14 @@ public class ConfigResource {
     return response.build();
   }
 
+  /**
+   * Delete by entity rest response.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @param entityId   the entity id
+   * @return the rest response
+   */
   @DELETE
   @Path("/entity/{entityId}")
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,

@@ -679,6 +679,11 @@ public class Graph {
       return origin;
     }
 
+    /**
+     * Sets origin.
+     *
+     * @param origin the origin
+     */
     public void setOrigin(boolean origin) {
       this.origin = origin;
     }

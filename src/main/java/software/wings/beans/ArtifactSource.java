@@ -100,10 +100,20 @@ public abstract class ArtifactSource {
    */
   public abstract Set<Service> getServices();
 
+  /**
+   * Gets last artifact.
+   *
+   * @return the last artifact
+   */
   public Artifact getLastArtifact() {
     return lastArtifact;
   }
 
+  /**
+   * Sets last artifact.
+   *
+   * @param lastArtifact the last artifact
+   */
   public void setLastArtifact(Artifact lastArtifact) {
     this.lastArtifact = lastArtifact;
   }

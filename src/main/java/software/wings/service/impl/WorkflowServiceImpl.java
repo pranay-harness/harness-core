@@ -99,8 +99,24 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService {
-  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private static final Comparator<Stencil> stencilDefaultSorter = new Comparator<Stencil>() {
 
+    @Override
+    public int compare(Stencil o1, Stencil o2) {
+      int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
+      if (comp != 0) {
+        return comp;
+      } else {
+        comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
+        if (comp != 0) {
+          return comp;
+        } else {
+          return o1.getType().compareTo(o2.getType());
+        }
+      }
+    }
+  };
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
@@ -109,7 +125,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
   @Inject private Injector injector;
-
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
@@ -1227,22 +1242,4 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
   }
-
-  private static final Comparator<Stencil> stencilDefaultSorter = new Comparator<Stencil>() {
-
-    @Override
-    public int compare(Stencil o1, Stencil o2) {
-      int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
-      if (comp != 0) {
-        return comp;
-      } else {
-        comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
-        if (comp != 0) {
-          return comp;
-        } else {
-          return o1.getType().compareTo(o2.getType());
-        }
-      }
-    }
-  };
 }

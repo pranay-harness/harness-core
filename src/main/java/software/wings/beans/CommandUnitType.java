@@ -66,6 +66,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   CommandUnitType(Class<? extends CommandUnit> commandUnitClass, String name) {
     this(commandUnitClass, name, StencilCategory.OTHERS, DEFAULT_DISPLAY_ORDER);
   }
+
   /**
    * Instantiates a new command unit type.
    *
