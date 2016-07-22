@@ -1,4 +1,4 @@
-[![Build Status](http://ec2-54-174-51-35.compute-1.amazonaws.com/buildStatus/icon?job=portal)](http://ec2-54-174-51-35.compute-1.amazonaws.com/job/portal/)
+[![Build Status](http://wingsbuild:0db28aa0f4fc0685df9a216fc7af0ca96254b7c2@ec2-54-174-51-35.compute-1.amazonaws.com/buildStatus/icon?job=portal)](http://wingsbuild:0db28aa0f4fc0685df9a216fc7af0ca96254b7c2@ec2-54-174-51-35.compute-1.amazonaws.com/job/portal/)
 
 Wings Project Setup instructions :
 1) Maven download : https://maven.apache.org/download.cgi 
