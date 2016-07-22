@@ -349,7 +349,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       return SUCCESS;
     }
     try {
-      String command = "scp -r -t " + cmdUnit.getDestinationDirectoryPath();
+      String command = "scp -r -d -t " + cmdUnit.getDestinationDirectoryPath();
       ((ChannelExec) channel).setCommand(command);
 
       saveExecutionLog(format("Connecting to %s ....", config.getHost()));
@@ -393,7 +393,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
 
     // send "C0644 filesize filename", where filename should not include '/'
-    String command = "C0644 " + fileMetaData.getLength() + " " + fileMetaData.getFilename() + "ab\n";
+    String command = "C0644 " + fileMetaData.getLength() + " " + fileMetaData.getFilename() + "\n";
 
     outputStream.write(command.getBytes(UTF_8));
     outputStream.flush();
