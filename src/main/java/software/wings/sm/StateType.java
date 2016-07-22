@@ -26,6 +26,7 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SplunkState;
 import software.wings.sm.states.WaitState;
 import software.wings.stencils.OverridingStencil;
+import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -44,56 +45,57 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, ORCHESTRATION_STENCILS),
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
 
   // STATE_MACHINE(ORCHESTRATION_STENCILS),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, ORCHESTRATION_STENCILS),
+  WAIT(WaitState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS),
 
-  SPLUNK(SplunkState.class, ORCHESTRATION_STENCILS), // APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS,
+      ORCHESTRATION_STENCILS), // APP_DYNAMICS(ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
    */
-  EMAIL(EmailState.class, ORCHESTRATION_STENCILS),
+  EMAIL(EmailState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS),
 
   /**
    * Build state type.
    */
-  BUILD(BuildState.class, PIPELINE_STENCILS),
+  BUILD(BuildState.class, StencilCategory.BUILD, PIPELINE_STENCILS),
 
   /**
    * Env state state type.
    */
-  ENV_STATE(EnvState.class, PIPELINE_STENCILS),
+  ENV_STATE(EnvState.class, StencilCategory.ENVIRONMENTS, PIPELINE_STENCILS),
 
   /**
    * Command state type.
    */
-  COMMAND(CommandState.class, ORCHESTRATION_STENCILS),
+  COMMAND(CommandState.class, StencilCategory.COMMANDS, ORCHESTRATION_STENCILS),
 
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
+  APPROVAL(ApprovalState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
@@ -102,6 +104,8 @@ public enum StateType implements StateTypeDescriptor {
   private Object jsonSchema;
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
+  private StencilCategory stencilCategory;
+  private Integer displayOrder;
 
   /**
    * Instantiates a new state type.
@@ -109,10 +113,24 @@ public enum StateType implements StateTypeDescriptor {
    * @param stateClass the state class
    * @param scopes     the scopes
    */
-  StateType(Class<? extends State> stateClass, StateTypeScope... scopes) {
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, scopes);
+  }
+
+  /**
+   * Instantiates a new state type.
+   *
+   * @param stateClass the state class
+   * @param displayOrder display order
+   * @param scopes     the scopes
+   */
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
+      StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
     this.jsonSchema = loadJsonSchema();
+    this.stencilCategory = stencilCategory;
+    this.displayOrder = displayOrder;
     try {
       this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
@@ -177,5 +195,15 @@ public enum StateType implements StateTypeDescriptor {
 
   private JsonNode loadJsonSchema() {
     return JsonUtils.jsonSchema(stateClass);
+  }
+
+  @Override
+  public StencilCategory getStencilCategory() {
+    return stencilCategory;
+  }
+
+  @Override
+  public Integer getDisplayOrder() {
+    return displayOrder;
   }
 }

@@ -42,48 +42,6 @@ public class ScpCommandUnit extends CommandUnit {
   @SchemaIgnore private String destinationDirectoryPath;
 
   /**
-   * The enum Scp file category.
-   */
-  public enum ScpFileCategory {
-    /**
-     * Artifacts scp file category.
-     */
-    ARTIFACTS("Application Artifacts"),
-    /**
-     * The Application stack.
-     */
-    APPLICATION_STACK("Application Stack"),
-    /**
-     * Configurations scp file category.
-     */
-    CONFIGURATIONS("Configurations");
-
-    private String name;
-
-    ScpFileCategory(String name) {
-      this.name = name;
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-  }
-
-  /**
    * Instantiates a new Scp command unit.
    */
   public ScpCommandUnit() {
@@ -254,6 +212,46 @@ public class ScpCommandUnit extends CommandUnit {
         .add("fileBucket", fileBucket)
         .add("destinationDirectoryPath", destinationDirectoryPath)
         .toString();
+  }
+
+  /**
+   * The enum Scp file category.
+   */
+  public enum ScpFileCategory {
+    /**
+     * Artifacts scp file category.
+     */
+    ARTIFACTS("Application Artifacts"), /**
+                                         * The Application stack.
+                                         */
+    APPLICATION_STACK("Application Stack"), /**
+                                             * Configurations scp file category.
+                                             */
+    CONFIGURATIONS("Configurations");
+
+    private String name;
+
+    ScpFileCategory(String name) {
+      this.name = name;
+    }
+
+    /**
+     * Gets name.
+     *
+     * @return the name
+     */
+    public String getName() {
+      return name;
+    }
+
+    /**
+     * Sets name.
+     *
+     * @param name the name
+     */
+    public void setName(String name) {
+      this.name = name;
+    }
   }
 
   /**

@@ -7,6 +7,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
  */
 public abstract class AbstractExecCommandUnit extends CommandUnit {
   @SchemaIgnore private String command;
+
   public AbstractExecCommandUnit(CommandUnitType commandUnitType) {
     super(commandUnitType);
   }

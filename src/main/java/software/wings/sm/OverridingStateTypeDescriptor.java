@@ -3,6 +3,7 @@ package software.wings.sm;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.stencils.OverridingStencil;
+import software.wings.stencils.StencilCategory;
 
 import java.util.List;
 import java.util.Optional;
@@ -121,5 +122,15 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
   @Override
   public State newInstance(String id) {
     return stateTypeDescriptor.newInstance(id);
+  }
+
+  @Override
+  public StencilCategory getStencilCategory() {
+    return stateTypeDescriptor == null ? null : stateTypeDescriptor.getStencilCategory();
+  }
+
+  @Override
+  public Integer getDisplayOrder() {
+    return stateTypeDescriptor == null ? DEFAULT_DISPLAY_ORDER : stateTypeDescriptor.getDisplayOrder();
   }
 }

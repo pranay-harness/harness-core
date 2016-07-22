@@ -234,42 +234,33 @@ public enum ErrorCodes {
   /**
    * Duplicate host names error codes.
    */
-  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"),
-  /**
-   * State not for resume error codes.
-   */
-  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"),
-  /**
-   * State not for abort error codes.
-   */
-  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"),
-  /**
-   * State abort failed error codes.
-   */
-  STATE_ABORT_FAILED("STATE_ABORT_FAILED"),
-  /**
-   * State pause failed error codes.
-   */
-  STATE_PAUSE_FAILED("STATE_PAUSE_FAILED"),
-  /**
-   * State not for pause error codes.
-   */
-  STATE_NOT_FOR_PAUSE("STATE_NOT_FOR_PAUSE"),
-  /**
-   * State not for retry error codes.
-   */
-  STATE_NOT_FOR_RETRY("STATE_NOT_FOR_RETRY"),
-  /**
-   * Pause all already error codes.
-   */
-  PAUSE_ALL_ALREADY("PAUSE_ALL_ALREADY"),
-  /**
-   * Resume all already error codes.
-   */
-  RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"),
-  /**
-   * Abort all already error codes.
-   */
+  DUPLICATE_HOST_NAMES("DUPLICATE_HOST_NAMES"), /**
+                                                 * State not for resume error codes.
+                                                 */
+  STATE_NOT_FOR_RESUME("STATE_NOT_FOR_RESUME"), /**
+                                                 * State not for abort error codes.
+                                                 */
+  STATE_NOT_FOR_ABORT("STATE_NOT_FOR_ABORT"), /**
+                                               * State abort failed error codes.
+                                               */
+  STATE_ABORT_FAILED("STATE_ABORT_FAILED"), /**
+                                             * State pause failed error codes.
+                                             */
+  STATE_PAUSE_FAILED("STATE_PAUSE_FAILED"), /**
+                                             * State not for pause error codes.
+                                             */
+  STATE_NOT_FOR_PAUSE("STATE_NOT_FOR_PAUSE"), /**
+                                               * State not for retry error codes.
+                                               */
+  STATE_NOT_FOR_RETRY("STATE_NOT_FOR_RETRY"), /**
+                                               * Pause all already error codes.
+                                               */
+  PAUSE_ALL_ALREADY("PAUSE_ALL_ALREADY"), /**
+                                           * Resume all already error codes.
+                                           */
+  RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"), /**
+                                             * Abort all already error codes.
+                                             */
   ABORT_ALL_ALREADY("ABORT_ALL_ALREADY");
 
   /**

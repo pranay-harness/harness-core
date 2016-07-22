@@ -26,13 +26,12 @@ import java.util.regex.Pattern;
  * @author Rishi
  */
 public class ExecutionContextImpl implements ExecutionContext {
+  private static Pattern nameWindCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
-
-  private static Pattern nameWindCharPattern = Pattern.compile("[-|+|*|/|\\\\| |&|$|\"|'|\\.|\\|]");
 
   /**
    * Instantiates a new execution context impl.
@@ -202,6 +201,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     Matcher matcher = nameWindCharPattern.matcher(name);
     return matcher.replaceAll("__");
   }
+
   private Map<String, Object> prepareContext(Map<String, Object> context) {
     // add state execution data
     context.putAll(stateExecutionInstance.getStateExecutionMap());

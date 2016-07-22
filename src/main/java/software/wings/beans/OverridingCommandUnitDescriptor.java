@@ -3,6 +3,7 @@ package software.wings.beans;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.stencils.OverridingStencil;
+import software.wings.stencils.StencilCategory;
 
 import java.util.Optional;
 
@@ -78,5 +79,15 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
   @Override
   public void setOverridingName(String overridingName) {
     this.overridingName = Optional.ofNullable(overridingName);
+  }
+
+  @Override
+  public StencilCategory getStencilCategory() {
+    return commandUnitDescriptor == null ? null : commandUnitDescriptor.getStencilCategory();
+  }
+
+  @Override
+  public Integer getDisplayOrder() {
+    return commandUnitDescriptor == null ? DEFAULT_DISPLAY_ORDER : commandUnitDescriptor.getDisplayOrder();
   }
 }

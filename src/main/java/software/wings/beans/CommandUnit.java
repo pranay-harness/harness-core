@@ -216,14 +216,12 @@ public abstract class CommandUnit {
     /**
      * Success execution result.
      */
-    SUCCESS,
-    /**
-     * Failure execution result.
-     */
-    FAILURE,
-    /**
-     * Running execution result.
-     */
+    SUCCESS, /**
+              * Failure execution result.
+              */
+    FAILURE, /**
+              * Running execution result.
+              */
     RUNNING;
 
     /**

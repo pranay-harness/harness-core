@@ -15,7 +15,6 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -215,7 +214,7 @@ public interface WorkflowService {
    * Trigger execution event
    *
    * @param executionEvent the workflow execution event
-   * @return  execution event
+   * @return execution event
    */
   ExecutionEvent triggerExecutionEvent(@Valid ExecutionEvent executionEvent);
 
