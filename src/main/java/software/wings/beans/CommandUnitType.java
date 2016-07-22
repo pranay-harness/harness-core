@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import software.wings.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
+import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
@@ -55,6 +56,9 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   @JsonIgnore private Class<? extends CommandUnit> commandUnitClass;
   @JsonIgnore private String name;
 
+  private StencilCategory stencilCategory;
+  private Integer displayOrder;
+
   /**
    * Instantiates a new command unit type.
    *
@@ -62,8 +66,20 @@ public enum CommandUnitType implements CommandUnitDescriptor {
    * @param name
    */
   CommandUnitType(Class<? extends CommandUnit> commandUnitClass, String name) {
+    this(commandUnitClass, name, StencilCategory.OTHERS, DEFAULT_DISPLAY_ORDER);
+  }
+  /**
+   * Instantiates a new command unit type.
+   *
+   * @param commandUnitClass the command unit class
+   * @param name
+   */
+  CommandUnitType(Class<? extends CommandUnit> commandUnitClass, String name, StencilCategory stencilCategory,
+      Integer displayOrder) {
     this.commandUnitClass = commandUnitClass;
     this.name = name;
+    this.stencilCategory = stencilCategory;
+    this.displayOrder = displayOrder;
     try {
       uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
@@ -120,5 +136,15 @@ public enum CommandUnitType implements CommandUnitDescriptor {
     } catch (Exception exception) {
       throw new WingsException("Error in initializing CommandUnitType-" + file, exception);
     }
+  }
+
+  @Override
+  public StencilCategory getStencilCategory() {
+    return stencilCategory;
+  }
+
+  @Override
+  public Integer getDisplayOrder() {
+    return displayOrder;
   }
 }

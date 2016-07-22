@@ -24,6 +24,13 @@ public interface Stencil<T> {
   @JsonIgnore Class<?> getTypeClass();
 
   /**
+   * Gets type.
+   *
+   * @return the type
+   */
+  StencilCategory getStencilCategory();
+
+  /**
    * Gets json schema.
    *
    * @return the json schema
@@ -52,10 +59,19 @@ public interface Stencil<T> {
   @JsonIgnore OverridingStencil getOverridingStencil();
 
   /**
+   * Gets type.
+   *
+   * @return the type
+   */
+  Integer getDisplayOrder();
+
+  /**
    * New instance.
    *
    * @param id the id
    * @return the state
    */
   @JsonIgnore T newInstance(String id);
+
+  int DEFAULT_DISPLAY_ORDER = 3;
 }

@@ -80,6 +80,8 @@ import software.wings.stencils.StencilPostProcessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -159,15 +161,18 @@ public class WorkflowServiceImpl implements WorkflowService {
     Map<StateTypeScope, List<Stencil>> mapByScope = stencilsMap.entrySet().stream().collect(toMap(Entry::getKey,
         stateTypeScopeListEntry -> stencilPostProcessor.postProcess(stateTypeScopeListEntry.getValue(), appId)));
 
+    Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
     if (ArrayUtils.isEmpty(stateTypeScopes)) {
-      return new HashMap<>(mapByScope);
+      maps.putAll(mapByScope);
     } else {
-      Map<StateTypeScope, List<Stencil>> maps = new HashMap<>();
       for (StateTypeScope scope : stateTypeScopes) {
         maps.put(scope, mapByScope.get(scope));
       }
-      return maps;
     }
+
+    maps.values().forEach(list -> { Collections.sort(list, stencilDefaultSorter); });
+
+    return maps;
   }
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> loadStateTypes() {
@@ -1223,4 +1228,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
   }
+
+  private static final Comparator<Stencil> stencilDefaultSorter = new Comparator<Stencil>() {
+
+    @Override
+    public int compare(Stencil o1, Stencil o2) {
+      int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
+      if (comp != 0) {
+        return comp;
+      } else {
+        comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
+        if (comp != 0) {
+          return comp;
+        } else {
+          return o1.getType().compareTo(o2.getType());
+        }
+      }
+    }
+  };
 }
