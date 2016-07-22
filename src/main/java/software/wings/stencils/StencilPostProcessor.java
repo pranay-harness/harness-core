@@ -1,5 +1,6 @@
 package software.wings.stencils;
 
+import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 
@@ -14,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.utils.JsonUtils;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -44,15 +44,17 @@ public class StencilPostProcessor {
   }
 
   private <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, String... args) {
-    if (Arrays.stream(t.getTypeClass().getDeclaredFields())
-            .filter(field -> field.getAnnotation(EnumData.class) != null || field.getAnnotation(Expand.class) != null)
+    if (stream(t.getTypeClass().getDeclaredFields())
+            .filter(this ::hasStencilPostProcessAnnotation)
             .findFirst()
             .isPresent()) {
-      return Arrays.stream(t.getTypeClass().getDeclaredFields())
-          .filter(field -> field.getAnnotation(EnumData.class) != null || field.getAnnotation(Expand.class) != null)
+      return stream(t.getTypeClass().getDeclaredFields())
+          .filter(this ::hasStencilPostProcessAnnotation)
           .flatMap(field -> {
             EnumData enumData = field.getAnnotation(EnumData.class);
             Expand expand = field.getAnnotation(Expand.class);
+            DefaultValue defaultValue = field.getAnnotation(DefaultValue.class);
+
             T stencil = t;
             if (enumData != null) {
               DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
@@ -73,11 +75,36 @@ public class StencilPostProcessor {
                 return expandBasedOnData(stencil, data, field);
               }
             }
+
+            if (defaultValue != null) {
+              stencil = (T) addDefaultValueToStencil(stencil, field, defaultValue.value());
+            }
             return Stream.of(stencil);
           });
     } else {
       return Stream.of(t.getOverridingStencil());
     }
+  }
+
+  private boolean hasStencilPostProcessAnnotation(Field field) {
+    return field.getAnnotation(EnumData.class) != null || field.getAnnotation(Expand.class) != null
+        || field.getAnnotation(DefaultValue.class) != null;
+  }
+
+  private <T extends Stencil> Stencil addDefaultValueToStencil(T stencil, Field field, String value) {
+    try {
+      if (value != null) {
+        JsonNode jsonSchema = stencil.getJsonSchema();
+        ObjectNode jsonSchemaField = ((ObjectNode) jsonSchema.get("properties").get(field.getName()));
+        jsonSchemaField.set("default", JsonUtils.asTree(value));
+        OverridingStencil overridingStencil = stencil.getOverridingStencil();
+        overridingStencil.setOverridingJsonSchema(jsonSchema);
+        return overridingStencil;
+      }
+    } catch (Exception e) {
+      logger.warn("Unable to set default value for stencil {}:field {} with value {}", stencil, field.getName(), value);
+    }
+    return stencil;
   }
 
   private <T extends Stencil> Stream<Stencil> expandBasedOnEnumData(T t, Map<String, String> data, Field field) {
