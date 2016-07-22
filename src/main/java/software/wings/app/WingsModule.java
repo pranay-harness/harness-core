@@ -23,7 +23,6 @@ import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
-import software.wings.service.impl.DeploymentServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.FileServiceImpl;
@@ -55,7 +54,6 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.DeploymentService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HistoryService;
@@ -105,7 +103,6 @@ public class WingsModule extends AbstractModule {
     bind(AppService.class).to(AppServiceImpl.class);
     bind(ArtifactService.class).to(ArtifactServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
-    bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(FileService.class).to(FileServiceImpl.class);
     bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(PlatformService.class).to(PlatformServiceImpl.class);
@@ -143,6 +140,5 @@ public class WingsModule extends AbstractModule {
         .to(JenkinsArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
-    install(new FactoryModuleBuilder().build(DeploymentServiceImpl.DeploymentExecutor.Factory.class));
   }
 }
