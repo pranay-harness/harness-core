@@ -40,6 +40,7 @@ import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -125,7 +126,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
               ScpCommandUnit.Builder.aScpCommandUnit()
                   .withName("Copy_ARTIFACT")
                   .withCommandUnitType(SCP)
-                  .withFileCategory("Artifact")
+                  .withFileCategory(ScpFileCategory.ARTIFACTS)
                   .build(),
               anExecCommandUnit().withName("EXEC").withCommandUnitType(EXEC).withCommand("./bin/start.sh").build())
           .build();
