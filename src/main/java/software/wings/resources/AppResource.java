@@ -52,8 +52,9 @@ public class AppResource {
   /**
    * List.
    *
-   * @param pageRequest the page request
-   * @param overview    the summary
+   * @param pageRequest        the page request
+   * @param overview           the summary
+   * @param numberOfExecutions the number of executions
    * @return the rest response
    */
   @GET
@@ -91,7 +92,8 @@ public class AppResource {
   /**
    * Gets the.
    *
-   * @param appId the app id
+   * @param appId  the app id
+   * @param status the status
    * @return the rest response
    */
   @GET

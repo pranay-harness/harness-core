@@ -26,6 +26,12 @@ public class StateMachineExecutionEventManager {
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
+  /**
+   * Register execution event execution event.
+   *
+   * @param executionEvent the execution event
+   * @return the execution event
+   */
   public ExecutionEvent registerExecutionEvent(ExecutionEvent executionEvent) {
     boolean inlineHandle = false;
     if (executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE
@@ -142,6 +148,8 @@ public class StateMachineExecutionEventManager {
   /**
    * Check for event workflow execution event.
    *
+   * @param appId         the app id
+   * @param executionUuid the execution uuid
    * @return the workflow execution event
    */
   public ExecutionEvent checkForExecutionEvent(String appId, String executionUuid) {

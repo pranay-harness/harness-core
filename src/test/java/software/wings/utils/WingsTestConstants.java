@@ -9,6 +9,9 @@ public class WingsTestConstants {
    */
   public static final String APP_ID = "APP_ID";
 
+  /**
+   * The constant APP_CONTAINER_ID.
+   */
   public static final String APP_CONTAINER_ID = "APP_CONTAINER_ID";
 
   /**

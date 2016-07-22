@@ -55,6 +55,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    * The Log service.
    */
   protected LogService logService;
+  /**
+   * The Executor service.
+   */
   @Inject ExecutorService executorService;
   private SshExecutorFactory sshExecutorFactory;
 

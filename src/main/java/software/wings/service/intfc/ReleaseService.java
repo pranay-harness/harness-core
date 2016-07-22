@@ -47,6 +47,14 @@ public interface ReleaseService {
    */
   Release update(@Valid Release release);
 
+  /**
+   * Add success count.
+   *
+   * @param appId     the app id
+   * @param releaseId the release id
+   * @param envId     the env id
+   * @param count     the count
+   */
   void addSuccessCount(String appId, String releaseId, String envId, int count);
 
   /**

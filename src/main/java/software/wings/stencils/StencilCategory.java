@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.stencils;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
@@ -9,18 +10,36 @@ import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
- * @author Rishi
+ * The enum Stencil category.
  *
+ * @author Rishi
  */
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum StencilCategory {
-  COMMONS,
-  COMMANDS,
-  CONTROLS,
-  ENVIRONMENTS,
-  BUILD(null, 0),
-  SCRIPTS,
-  VERIFICATIONS,
+  /**
+   * Commons stencil category.
+   */
+  COMMONS, /**
+            * Commands stencil category.
+            */
+  COMMANDS, /**
+             * Controls stencil category.
+             */
+  CONTROLS, /**
+             * Environments stencil category.
+             */
+  ENVIRONMENTS, /**
+                 * Build stencil category.
+                 */
+  BUILD(null, 0), /**
+                   * Scripts stencil category.
+                   */
+  SCRIPTS, /**
+            * Verifications stencil category.
+            */
+  VERIFICATIONS, /**
+                  * Others stencil category.
+                  */
   OTHERS;
 
   private String displayName;
@@ -45,14 +64,29 @@ public enum StencilCategory {
     this.displayOrder = displayOrder;
   }
 
+  /**
+   * Gets display name.
+   *
+   * @return the display name
+   */
   public String getDisplayName() {
     return displayName;
   }
 
+  /**
+   * Gets display order.
+   *
+   * @return the display order
+   */
   public Integer getDisplayOrder() {
     return displayOrder;
   }
 
+  /**
+   * Gets name.
+   *
+   * @return the name
+   */
   public String getName() {
     return name();
   }

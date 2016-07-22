@@ -11,18 +11,38 @@ public class InstanceCountByEnv {
   @Id private String envId;
   private int count;
 
+  /**
+   * Gets env id.
+   *
+   * @return the env id
+   */
   public String getEnvId() {
     return envId;
   }
 
+  /**
+   * Sets env id.
+   *
+   * @param envId the env id
+   */
   public void setEnvId(String envId) {
     this.envId = envId;
   }
 
+  /**
+   * Gets count.
+   *
+   * @return the count
+   */
   public int getCount() {
     return count;
   }
 
+  /**
+   * Sets count.
+   *
+   * @param count the count
+   */
   public void setCount(int count) {
     this.count = count;
   }

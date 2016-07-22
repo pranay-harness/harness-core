@@ -72,6 +72,9 @@ public abstract class SettingValue {
      */
     STRING,
 
+    /**
+     * Splunk setting variable types.
+     */
     SPLUNK
   }
 }

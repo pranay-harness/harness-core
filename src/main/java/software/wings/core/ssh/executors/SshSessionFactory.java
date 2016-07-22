@@ -20,6 +20,7 @@ public class SshSessionFactory {
    *
    * @param config the config
    * @return the SSH session with jumpbox
+   * @throws JSchException the j sch exception
    */
   public static Session getSSHSessionWithJumpbox(SshSessionConfig config) throws JSchException {
     Session session = null;

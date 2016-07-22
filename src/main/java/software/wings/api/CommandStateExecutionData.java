@@ -273,14 +273,27 @@ public class CommandStateExecutionData extends StateExecutionData {
     return executionDetails;
   }
 
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
   public String getAppId() {
     return appId;
   }
 
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String stateName;
     private String appId;
@@ -302,95 +315,207 @@ public class CommandStateExecutionData extends StateExecutionData {
 
     private Builder() {}
 
+    /**
+     * A command state execution data builder.
+     *
+     * @return the builder
+     */
     public static Builder aCommandStateExecutionData() {
       return new Builder();
     }
 
+    /**
+     * With state name builder.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With start ts builder.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With end ts builder.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With host id builder.
+     *
+     * @param hostId the host id
+     * @return the builder
+     */
     public Builder withHostId(String hostId) {
       this.hostId = hostId;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With command name builder.
+     *
+     * @param commandName the command name
+     * @return the builder
+     */
     public Builder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
     }
 
+    /**
+     * With error msg builder.
+     *
+     * @param errorMsg the error msg
+     * @return the builder
+     */
     public Builder withErrorMsg(String errorMsg) {
       this.errorMsg = errorMsg;
       return this;
     }
 
+    /**
+     * With service name builder.
+     *
+     * @param serviceName the service name
+     * @return the builder
+     */
     public Builder withServiceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With template name builder.
+     *
+     * @param templateName the template name
+     * @return the builder
+     */
     public Builder withTemplateName(String templateName) {
       this.templateName = templateName;
       return this;
     }
 
+    /**
+     * With template id builder.
+     *
+     * @param templateId the template id
+     * @return the builder
+     */
     public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
+    /**
+     * With activity id builder.
+     *
+     * @param activityId the activity id
+     * @return the builder
+     */
     public Builder withActivityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
+    /**
+     * With artifact id builder.
+     *
+     * @param artifactId the artifact id
+     * @return the builder
+     */
     public Builder withArtifactId(String artifactId) {
       this.artifactId = artifactId;
       return this;
     }
 
+    /**
+     * With artifact name builder.
+     *
+     * @param artifactName the artifact name
+     * @return the builder
+     */
     public Builder withArtifactName(String artifactName) {
       this.artifactName = artifactName;
       return this;
     }
 
+    /**
+     * With total command units builder.
+     *
+     * @param totalCommandUnits the total command units
+     * @return the builder
+     */
     public Builder withTotalCommandUnits(int totalCommandUnits) {
       this.totalCommandUnits = totalCommandUnits;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aCommandStateExecutionData()
           .withStateName(stateName)
@@ -412,6 +537,11 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withTotalCommandUnits(totalCommandUnits);
     }
 
+    /**
+     * Build command state execution data.
+     *
+     * @return the command state execution data
+     */
     public CommandStateExecutionData build() {
       CommandStateExecutionData commandStateExecutionData = new CommandStateExecutionData();
       commandStateExecutionData.setStateName(stateName);

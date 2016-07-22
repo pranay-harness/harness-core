@@ -63,6 +63,11 @@ public abstract class CommandUnit {
    */
   public abstract void setup(CommandExecutionContext context);
 
+  /**
+   * Gets command execution timeout.
+   *
+   * @return the command execution timeout
+   */
   @SchemaIgnore
   @JsonIgnore
   public int getCommandExecutionTimeout() {

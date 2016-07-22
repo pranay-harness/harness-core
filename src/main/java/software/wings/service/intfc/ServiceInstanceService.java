@@ -85,8 +85,23 @@ public interface ServiceInstanceService {
    */
   void deleteByServiceTemplate(String appId, String envId, String templateId);
 
+  /**
+   * Gets counts by env release and template.
+   *
+   * @param appId            the app id
+   * @param release          the release
+   * @param serviceTemplates the service templates
+   * @return the counts by env release and template
+   */
   Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
       String appId, Release release, Set<ServiceTemplate> serviceTemplates);
 
+  /**
+   * Gets counts by env.
+   *
+   * @param appId            the app id
+   * @param serviceTemplates the service templates
+   * @return the counts by env
+   */
   Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates);
 }

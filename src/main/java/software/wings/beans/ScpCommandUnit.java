@@ -271,60 +271,130 @@ public class ScpCommandUnit extends CommandUnit {
 
     private Builder() {}
 
+    /**
+     * A scp command unit builder.
+     *
+     * @return the builder
+     */
     public static Builder aScpCommandUnit() {
       return new Builder();
     }
 
+    /**
+     * With file category builder.
+     *
+     * @param fileCategory the file category
+     * @return the builder
+     */
     public Builder withFileCategory(ScpFileCategory fileCategory) {
       this.fileCategory = fileCategory;
       return this;
     }
 
+    /**
+     * With relative file path builder.
+     *
+     * @param relativeFilePath the relative file path
+     * @return the builder
+     */
     public Builder withRelativeFilePath(String relativeFilePath) {
       this.relativeFilePath = relativeFilePath;
       return this;
     }
 
+    /**
+     * With file ids builder.
+     *
+     * @param fileIds the file ids
+     * @return the builder
+     */
     public Builder withFileIds(List<String> fileIds) {
       this.fileIds = fileIds;
       return this;
     }
 
+    /**
+     * With file bucket builder.
+     *
+     * @param fileBucket the file bucket
+     * @return the builder
+     */
     public Builder withFileBucket(FileBucket fileBucket) {
       this.fileBucket = fileBucket;
       return this;
     }
 
+    /**
+     * With destination directory path builder.
+     *
+     * @param destinationDirectoryPath the destination directory path
+     * @return the builder
+     */
     public Builder withDestinationDirectoryPath(String destinationDirectoryPath) {
       this.destinationDirectoryPath = destinationDirectoryPath;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With command unit type builder.
+     *
+     * @param commandUnitType the command unit type
+     * @return the builder
+     */
     public Builder withCommandUnitType(CommandUnitType commandUnitType) {
       this.commandUnitType = commandUnitType;
       return this;
     }
 
+    /**
+     * With execution result builder.
+     *
+     * @param executionResult the execution result
+     * @return the builder
+     */
     public Builder withExecutionResult(ExecutionResult executionResult) {
       this.executionResult = executionResult;
       return this;
     }
 
+    /**
+     * With artifact needed builder.
+     *
+     * @param artifactNeeded the artifact needed
+     * @return the builder
+     */
     public Builder withArtifactNeeded(boolean artifactNeeded) {
       this.artifactNeeded = artifactNeeded;
       return this;
     }
 
+    /**
+     * With process command output builder.
+     *
+     * @param processCommandOutput the process command output
+     * @return the builder
+     */
     public Builder withProcessCommandOutput(boolean processCommandOutput) {
       this.processCommandOutput = processCommandOutput;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aScpCommandUnit()
           .withFileCategory(fileCategory)
@@ -339,6 +409,11 @@ public class ScpCommandUnit extends CommandUnit {
           .withProcessCommandOutput(processCommandOutput);
     }
 
+    /**
+     * Build scp command unit.
+     *
+     * @return the scp command unit
+     */
     public ScpCommandUnit build() {
       ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
       scpCommandUnit.setFileCategory(fileCategory);
@@ -355,6 +430,9 @@ public class ScpCommandUnit extends CommandUnit {
     }
   }
 
+  /**
+   * The type Scp command data provider.
+   */
   public static class ScpCommandDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {

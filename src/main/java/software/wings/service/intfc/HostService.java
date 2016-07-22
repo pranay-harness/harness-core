@@ -40,7 +40,7 @@ public interface HostService {
   /**
    * Update.
    *
-   * @param envId
+   * @param envId the env id
    * @param host  the host
    * @return the host
    */

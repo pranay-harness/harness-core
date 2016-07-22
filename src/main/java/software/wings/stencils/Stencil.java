@@ -10,6 +10,11 @@ import com.fasterxml.jackson.databind.JsonNode;
  */
 public interface Stencil<T> {
   /**
+   * The constant DEFAULT_DISPLAY_ORDER.
+   */
+  int DEFAULT_DISPLAY_ORDER = 3;
+
+  /**
    * Gets type.
    *
    * @return the type
@@ -72,6 +77,4 @@ public interface Stencil<T> {
    * @return the state
    */
   @JsonIgnore T newInstance(String id);
-
-  int DEFAULT_DISPLAY_ORDER = 3;
 }

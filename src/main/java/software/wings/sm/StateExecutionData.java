@@ -145,8 +145,18 @@ public class StateExecutionData {
     return executionData;
   }
 
+  /**
+   * Sets execution summary.
+   *
+   * @param ignored the ignored
+   */
   public void setExecutionSummary(Map<String, ExecutionDataValue> ignored) {}
 
+  /**
+   * Gets execution details.
+   *
+   * @return the execution details
+   */
   @JsonProperty("executionDetails")
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
@@ -160,6 +170,11 @@ public class StateExecutionData {
     return executionDetails;
   }
 
+  /**
+   * Sets execution details.
+   *
+   * @param ignored the ignored
+   */
   public void setExecutionDetails(Map<String, ExecutionDataValue> ignored) {}
 
   /**
