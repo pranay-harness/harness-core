@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.common.UUIDGenerator;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -38,7 +38,7 @@ public class PauseStateTest extends WingsBaseTest {
 
   @Inject private Injector injector;
 
-  @Mock private NotificationService<EmailState> emailNotificationService;
+  @Mock private EmailNotificationService<EmailState> emailNotificationService;
 
   @InjectMocks private PauseState pauseState = new PauseState(stateName);
 

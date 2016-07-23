@@ -29,7 +29,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
    */
   @Inject ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private NotificationService<EmailData> emailNotificationService;
+  @Inject private EmailNotificationService<EmailData> emailNotificationService;
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
 

@@ -47,7 +47,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
@@ -62,7 +62,7 @@ import javax.inject.Inject;
 public class UserServiceTest extends WingsBaseTest {
   private final User.Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
-  @Mock private NotificationService<EmailData> emailDataNotificationService;
+  @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;

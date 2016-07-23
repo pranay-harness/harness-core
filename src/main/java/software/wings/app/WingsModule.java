@@ -33,6 +33,7 @@ import software.wings.service.impl.InfraServiceImpl;
 import software.wings.service.impl.JenkinsArtifactCollectorServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
+import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.impl.PlatformServiceImpl;
 import software.wings.service.impl.ReleaseServiceImpl;
 import software.wings.service.impl.RoleServiceImpl;
@@ -56,6 +57,7 @@ import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DeploymentService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HistoryService;
@@ -128,14 +130,15 @@ public class WingsModule extends AbstractModule {
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(CommandUnitExecutorService.class).to(SshCommandUnitExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
-    bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+    bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
-    bind(new TypeLiteral<NotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
+    bind(new TypeLiteral<EmailNotificationService<EmailData>>() {}).to(EmailNotificationServiceImpl.class);
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(LogService.class).to(LogServiceImpl.class);
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(HistoryService.class).to(HistoryServiceImpl.class);
     bind(SetupService.class).to(SetupServiceImpl.class);
+    bind(NotificationService.class).to(NotificationServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

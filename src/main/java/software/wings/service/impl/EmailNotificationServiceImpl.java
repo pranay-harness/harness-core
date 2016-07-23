@@ -12,7 +12,7 @@ import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 5/23/16.
  */
-public class EmailNotificationServiceImpl implements NotificationService<EmailData> {
+public class EmailNotificationServiceImpl implements EmailNotificationService<EmailData> {
   @Inject private Mailer mailer;
 
   @Inject private SettingsService settingsService;
@@ -29,7 +29,7 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   @Inject private Queue<EmailData> emailEventQueue;
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.NotificationService#send(java.util.List, java.util.List, java.lang.String,
+   * @see software.wings.service.intfc.EmailNotificationService#send(java.util.List, java.util.List, java.lang.String,
    * java.lang.Object)
    */
   @Override
@@ -39,7 +39,7 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.NotificationService#send(java.util.List, java.util.List, java.lang.String,
+   * @see software.wings.service.intfc.EmailNotificationService#send(java.util.List, java.util.List, java.lang.String,
    * java.lang.String)
    */
   @Override
@@ -49,7 +49,7 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.NotificationService#send(java.lang.Object)
+   * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)
    */
   @Override
   public void send(EmailData emailData) throws EmailException, TemplateException, IOException {
@@ -59,8 +59,8 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.NotificationService#sendAsync(java.util.List, java.util.List, java.lang.String,
-   * java.lang.String)
+   * @see software.wings.service.intfc.EmailNotificationService#sendAsync(java.util.List, java.util.List,
+   * java.lang.String, java.lang.String)
    */
   @Override
   public void sendAsync(List<String> to, List<String> cc, String subject, String body) {
@@ -69,8 +69,8 @@ public class EmailNotificationServiceImpl implements NotificationService<EmailDa
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.NotificationService#sendAsync(java.util.List, java.util.List, java.lang.String,
-   * java.lang.Object)
+   * @see software.wings.service.intfc.EmailNotificationService#sendAsync(java.util.List, java.util.List,
+   * java.lang.String, java.lang.Object)
    */
   @Override
   public void sendAsync(List<String> to, List<String> cc, String templateName, Object templateModel) {

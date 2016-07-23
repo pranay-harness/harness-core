@@ -22,7 +22,7 @@ import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SettingsService;
 
 /**
@@ -59,7 +59,7 @@ public class EmailNotificationServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(queue, mailer, settingsService);
     }
   };
-  @InjectMocks @Inject private NotificationService<EmailData> emailDataNotificationService;
+  @InjectMocks @Inject private EmailNotificationService<EmailData> emailDataNotificationService;
 
   /**
    * Setup mocks.

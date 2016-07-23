@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 
 /**
  * Created by peeyushaggarwal on 5/24/16.
@@ -12,7 +12,7 @@ import software.wings.service.intfc.NotificationService;
  * @see EmailNotificationEvent
  */
 public class EmailNotificationListener extends AbstractQueueListener<EmailData> {
-  @Inject private NotificationService<EmailData> emailNotificationService;
+  @Inject private EmailNotificationService<EmailData> emailNotificationService;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)

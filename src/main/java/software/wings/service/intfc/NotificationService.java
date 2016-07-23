@@ -1,72 +1,29 @@
 package software.wings.service.intfc;
 
-import freemarker.template.TemplateException;
-import org.apache.commons.mail.EmailException;
+import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Notification;
+import software.wings.beans.NotificationAction;
+import software.wings.dl.PageRequest;
+import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+import software.wings.utils.validation.Update;
 
-import java.io.IOException;
-import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
- * Created by peeyushaggarwal on 5/23/16.
- *
- * @param <T> the generic type
+ * Created by anubhaw on 7/22/16.
  */
-public interface NotificationService<T> {
-  /**
-   * Send.
-   *
-   * @param to            the to
-   * @param cc            the cc
-   * @param templateName  the template name
-   * @param templateModel the template model
-   * @throws EmailException    the email exception
-   * @throws TemplateException the template exception
-   * @throws IOException       Signals that an I/O exception has occurred.
-   */
-  void send(List<String> to, List<String> cc, String templateName, Object templateModel)
-      throws EmailException, TemplateException, IOException;
+public interface NotificationService {
+  PageResponse<Notification> list(PageRequest<Notification> pageRequest);
 
-  /**
-   * Send.
-   *
-   * @param to      the to
-   * @param cc      the cc
-   * @param subject the subject
-   * @param body    the body
-   * @throws EmailException    the email exception
-   * @throws TemplateException the template exception
-   * @throws IOException       Signals that an I/O exception has occurred.
-   */
-  void send(List<String> to, List<String> cc, String subject, String body)
-      throws EmailException, TemplateException, IOException;
+  @ValidationGroups(Create.class) Notification save(Notification notification);
 
-  /**
-   * Send async.
-   *
-   * @param to      the to
-   * @param cc      the cc
-   * @param subject the subject
-   * @param body    the body
-   */
-  void sendAsync(List<String> to, List<String> cc, String subject, String body);
+  Notification get(@NotEmpty String appId, @NotEmpty String notificationId);
 
-  /**
-   * Send.
-   *
-   * @param emailData the email data
-   * @throws EmailException    the email exception
-   * @throws TemplateException the template exception
-   * @throws IOException       Signals that an I/O exception has occurred.
-   */
-  void send(T emailData) throws EmailException, TemplateException, IOException;
+  @ValidationGroups(Update.class) Notification update(@Valid Notification notification);
 
-  /**
-   * Send async.
-   *
-   * @param to            the to
-   * @param cc            the cc
-   * @param templateName  the template name
-   * @param templateModel the template model
-   */
-  void sendAsync(List<String> to, List<String> cc, String templateName, Object templateModel);
+  Notification act(
+      @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationAction notificationAction);
 }
