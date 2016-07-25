@@ -7,6 +7,7 @@ import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
+import software.wings.beans.Artifact.Status;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Release;
@@ -27,6 +28,7 @@ import software.wings.service.intfc.WorkflowService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -86,8 +88,7 @@ public class SetupServiceImpl implements SetupService {
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
-            .withDisplayText(
-                "Setup complete: you can try a simple deployment after artifact is downloaded and turns into READY state.")
+            .withDisplayText("Setup complete: you can try a simple deployment.")
             .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
             .build();
       }
@@ -129,6 +130,13 @@ public class SetupServiceImpl implements SetupService {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_ARTIFACT_FOUND")
           .withDisplayText("Setup complete: Please add an artifact for the release.")
+          .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
+          .build();
+    }
+    if (artRes.getTotal() == 1 && artRes.get(0).getStatus() == Status.QUEUED) {
+      return SetupAction.Builder.aSetupAction()
+          .withCode("NO_ARTIFACT_FOUND")
+          .withDisplayText("Setup complete: Please wait for the artifact to finish downloading.")
           .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
           .build();
     }
