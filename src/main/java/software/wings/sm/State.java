@@ -1,8 +1,10 @@
 package software.wings.sm;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import software.wings.beans.ExecutionArgumentType;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -102,6 +104,10 @@ public abstract class State {
    * @param context the context
    */
   public abstract void handleAbortEvent(ExecutionContext context);
+
+  public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
+    return null;
+  }
 
   /* (non-Javadoc)
    * @see java.lang.Object#toString()

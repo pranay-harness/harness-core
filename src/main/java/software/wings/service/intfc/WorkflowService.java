@@ -4,6 +4,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -15,6 +16,7 @@ import software.wings.stencils.Stencil;
 
 import java.util.List;
 import java.util.Map;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -244,4 +246,6 @@ public interface WorkflowService {
    * @param inc                 the inc
    */
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
+
+  RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 }

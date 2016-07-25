@@ -4,6 +4,7 @@ import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
+import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -15,6 +16,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -170,5 +172,13 @@ public class ExecutionResource {
     executionEvent.setExecutionUuid(workflowExecutionId);
 
     return new RestResponse<>(workflowService.triggerExecutionEvent(executionEvent));
+  }
+
+  @POST
+  @Path("required-args")
+  @Produces("application/json")
+  public RestResponse<RequiredExecutionArgs> requiredArgs(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
+    return new RestResponse<>(workflowService.getRequiredExecutionArgs(appId, envId, executionArgs));
   }
 }
