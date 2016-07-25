@@ -9,7 +9,6 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Notification;
-import software.wings.beans.NotificationAction;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -19,7 +18,6 @@ import software.wings.service.intfc.NotificationService;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -58,13 +56,5 @@ public class NotificationResource {
     notification.setAppId(appId);
     notification.setUuid(notificationId);
     return new RestResponse<>(notificationService.update(notification));
-  }
-
-  @PUT
-  @Path("{notificationId}/action/{notificationAction}")
-  public RestResponse<Notification> action(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
-      @QueryParam("notificationId") String notificationId,
-      @QueryParam("notificationAction") NotificationAction notificationAction) {
-    return new RestResponse<>(notificationService.act(appId, notificationId, notificationAction));
   }
 }

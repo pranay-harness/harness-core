@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toList;
@@ -14,14 +15,17 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ConfigFile.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.NotificationAction.Builder.aNotificationAction;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
@@ -57,11 +61,14 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
+import software.wings.beans.ApprovalNotification;
 import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.ChangeNotification;
 import software.wings.beans.ConfigFile.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FailureNotification;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -74,6 +81,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -183,6 +191,7 @@ public class DataGenUtil extends WingsBaseTest {
     Map<String, List<Environment>> appEnvs = new HashMap<>();
 
     containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
+    addNotifications(GLOBAL_APP_ID);
 
     for (Application application : apps) {
       //      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
@@ -191,7 +200,51 @@ public class DataGenUtil extends WingsBaseTest {
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addOrchestrationAndPipeline(services, appEnvs, application);
+      addNotifications(application.getUuid());
     }
+  }
+
+  private void addNotifications(String appId) {
+    String detailsUrl = "api/notification/%s/details?appId=%s";
+    String actionUrl = "api/notification/%s?appId=%s&action=%s";
+
+    String uuid = UUIDGenerator.getUuid();
+    ChangeNotification changeNotification = aChangeNotification()
+                                                .withUuid(uuid)
+                                                .withAppId(appId)
+                                                .withChangeDate(currentTimeMillis())
+                                                .withDetailsUrl(format(detailsUrl, uuid, appId))
+                                                .build();
+    wingsPersistence.save(changeNotification);
+    changeNotification.setDisplayText();
+    uuid = UUIDGenerator.getUuid();
+    ApprovalNotification approvalNotification =
+        ApprovalNotification.Builder.anApprovalNotification()
+            .withUuid(uuid)
+            .withAppId(appId)
+            .withDetailsUrl(format(detailsUrl, uuid, appId))
+            .withEntityName("Final_Build_05_02_08_16_9_15pm")
+            .withEntityTitle("Artifact")
+            .withNotificationActions(asList(
+                aNotificationAction().withName("APPROVE").withUrl(format(actionUrl, uuid, appId, "APPROVE")).build(),
+                aNotificationAction().withName("REJECT").withUrl(format(actionUrl, uuid, appId, "REJECT")).build()))
+            .build();
+    approvalNotification.setDisplayText();
+    wingsPersistence.save(approvalNotification);
+    uuid = UUIDGenerator.getUuid();
+    FailureNotification failureNotification =
+        aFailureNotification()
+            .withUuid(uuid)
+            .withAppId(appId)
+            .withDetailsUrl(format(detailsUrl, uuid, appId))
+            .withEntityName("workflow_ui_svr_2:04_12_2016.")
+            .withNotificationActions(asList(aNotificationAction()
+                                                .withName("SEE DETAILS")
+                                                .withUrl(format(actionUrl, uuid, appId, "DETAILS"))
+                                                .build()))
+            .build();
+    failureNotification.setDisplayText();
+    wingsPersistence.save(failureNotification);
   }
 
   private void addOrchestrationAndPipeline(
@@ -363,7 +416,7 @@ public class DataGenUtil extends WingsBaseTest {
 
         List<String> hostIds = hosts.stream().map(Host::getUuid).collect(toList());
 
-        WebTarget target = client.target(String.format("%s/service-templates/%s/map-hosts?appId=%s&envId=%s", API_BASE,
+        WebTarget target = client.target(format("%s/service-templates/%s/map-hosts?appId=%s&envId=%s", API_BASE,
             template.getUuid(), template.getAppId(), template.getEnvId()));
         getRequestWithAuthHeader(target).put(Entity.entity(hostIds, APPLICATION_JSON));
       });
