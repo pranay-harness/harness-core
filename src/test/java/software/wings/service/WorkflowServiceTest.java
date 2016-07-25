@@ -664,9 +664,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(required).isNotNull();
     assertThat(required.getRequiredExecutionTypes())
         .isNotNull()
-        .hasSize(4)
-        .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD,
-            ExecutionArgumentType.SERVICE);
+        .hasSize(3)
+        .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
   }
 
   @Test
