@@ -41,7 +41,7 @@ public class AuditHelper {
   public AuditHeader create(AuditHeader header) {
     try {
       header = auditService.create(header);
-      logger.info("Saving auditHeader to thread local");
+      logger.debug("Saving auditHeader to thread local");
       auditThreadLocal.set(header);
       return header;
     } catch (RuntimeException exception) {

@@ -281,7 +281,12 @@ public class PageRequest<T> {
       //  filter.setDataType(map.getFirst(key + "[dataType]"));
       //}
       if (map.containsKey(key + "[value]")) {
-        filter.setFieldValues(map.getFirst(key + "[value]"));
+        if (Arrays.asList(Long.TYPE, Integer.TYPE, Short.TYPE)
+                .contains(mappedClass.getMappedField(filter.getFieldName()).getType())) {
+          filter.setFieldValues(Long.parseLong(map.getFirst(key + "[value]")));
+        } else {
+          filter.setFieldValues(map.getFirst(key + "[value]"));
+        }
       }
       filters.add(filter);
     }
