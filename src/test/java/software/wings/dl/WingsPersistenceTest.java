@@ -158,6 +158,31 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  @Test
+  public void shouldWorkWithQueryWithNumberValues() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put("search[0][field]", Lists.newArrayList("createdAt"));
+    queryParams.put("search[0][op]", Lists.newArrayList("GT"));
+    queryParams.put("search[0][value]", Lists.newArrayList("10"));
+
+    queryParams.put("sort[0][field]", Lists.newArrayList("fieldA"));
+    queryParams.put("sort[0][direction]", Lists.newArrayList("DESC"));
+
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    req.setLimit("2");
+    req.setOffset("1");
+    req.setUriInfo(uriInfo);
+
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+
+    assertThat(res).isNotNull().hasSize(2);
+    assertThat(res.getResponse()).extracting(TestEntity::getFieldA).containsExactly("fieldA15", "fieldA14");
+  }
+
   /**
    * Should update map
    */

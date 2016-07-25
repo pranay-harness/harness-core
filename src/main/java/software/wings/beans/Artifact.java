@@ -1,10 +1,8 @@
 package software.wings.beans;
 
-import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -21,8 +19,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import javax.validation.Constraint;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -46,6 +44,8 @@ public class Artifact extends Base {
   @Indexed @NotEmpty private String displayName;
 
   @Indexed @NotEmpty(groups = Create.class) private String revision;
+
+  @Reference(idOnly = true) private List<Service> services;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 
@@ -177,14 +177,52 @@ public class Artifact extends Base {
     this.artifactFiles = artifactFiles;
   }
 
-  /**
-   * Gets sevices.
-   *
-   * @return the sevices
-   */
-  @JsonProperty("services")
-  public Set<Service> getSevices() {
-    return artifactFiles.stream().flatMap(artifactFile -> artifactFile.getServices().stream()).collect(toSet());
+  public List<Service> getServices() {
+    return services;
+  }
+
+  public void setServices(List<Service> services) {
+    this.services = services;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(release, artifactSourceName, metadata, displayName, revision, services, artifactFiles, status);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final Artifact other = (Artifact) obj;
+    return Objects.equals(this.release, other.release)
+        && Objects.equals(this.artifactSourceName, other.artifactSourceName)
+        && Objects.equals(this.metadata, other.metadata) && Objects.equals(this.displayName, other.displayName)
+        && Objects.equals(this.revision, other.revision) && Objects.equals(this.services, other.services)
+        && Objects.equals(this.artifactFiles, other.artifactFiles) && Objects.equals(this.status, other.status);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("release", release)
+        .add("artifactSourceName", artifactSourceName)
+        .add("metadata", metadata)
+        .add("displayName", displayName)
+        .add("revision", revision)
+        .add("services", services)
+        .add("artifactFiles", artifactFiles)
+        .add("status", status)
+        .add("sourceType", getSourceType())
+        .toString();
   }
 
   /**
@@ -204,51 +242,6 @@ public class Artifact extends Base {
       }
     }
     return null;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o)
-      return true;
-    if (o == null || getClass() != o.getClass())
-      return false;
-    if (!super.equals(o))
-      return false;
-    Artifact artifact = (Artifact) o;
-    return Objects.equal(release, artifact.release) && Objects.equal(artifactSourceName, artifact.artifactSourceName)
-        && Objects.equal(metadata, artifact.metadata) && Objects.equal(displayName, artifact.displayName)
-        && Objects.equal(revision, artifact.revision) && Objects.equal(artifactFiles, artifact.artifactFiles)
-        && status == artifact.status;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(
-        super.hashCode(), release, artifactSourceName, metadata, displayName, revision, artifactFiles, status);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("release", release)
-        .add("artifactSourceName", artifactSourceName)
-        .add("metadata", metadata)
-        .add("displayName", displayName)
-        .add("revision", revision)
-        .add("artifactFiles", artifactFiles)
-        .add("status", status)
-        .add("sevices", getSevices())
-        .add("sourceType", getSourceType())
-        .toString();
   }
 
   /**
@@ -330,236 +323,139 @@ public class Artifact extends Base {
     }
   }
 
-  /**
-   * The Class Builder.
-   */
   public static final class Builder {
     private Release release;
     private String artifactSourceName;
     private Map<String, String> metadata = Maps.newHashMap();
-    private String displayName;
-    private String revision;
-    private List<ArtifactFile> artifactFiles = Lists.newArrayList();
-    private Status status;
     private String uuid;
+    private String displayName;
     private String appId;
+    private String revision;
     private User createdBy;
     private long createdAt;
+    private List<Service> services;
+    private List<ArtifactFile> artifactFiles = Lists.newArrayList();
     private User lastUpdatedBy;
     private long lastUpdatedAt;
+    private Status status;
     private boolean active = true;
 
-    /**
-     * Do not instantiate Builder.
-     */
     private Builder() {}
 
-    /**
-     * An artifact.
-     *
-     * @return the builder
-     */
     public static Builder anArtifact() {
       return new Builder();
     }
 
-    /**
-     * With release.
-     *
-     * @param release the release
-     * @return the builder
-     */
     public Builder withRelease(Release release) {
       this.release = release;
       return this;
     }
 
-    /**
-     * With artifact source name.
-     *
-     * @param artifactSourceName the artifact source name
-     * @return the builder
-     */
     public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
-    /**
-     * With metadata.
-     *
-     * @param metadata the metadata
-     * @return the builder
-     */
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
-    /**
-     * With display name.
-     *
-     * @param displayName the display name
-     * @return the builder
-     */
-    public Builder withDisplayName(String displayName) {
-      this.displayName = displayName;
-      return this;
-    }
-
-    /**
-     * With revision.
-     *
-     * @param revision the revision
-     * @return the builder
-     */
-    public Builder withRevision(String revision) {
-      this.revision = revision;
-      return this;
-    }
-
-    /**
-     * With artifact files.
-     *
-     * @param artifactFiles the artifact files
-     * @return the builder
-     */
-    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
-      this.artifactFiles = artifactFiles;
-      return this;
-    }
-
-    /**
-     * With status.
-     *
-     * @param status the status
-     * @return the builder
-     */
-    public Builder withStatus(Status status) {
-      this.status = status;
-      return this;
-    }
-
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withDisplayName(String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withRevision(String revision) {
+      this.revision = revision;
+      return this;
+    }
+
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withServices(List<Service> services) {
+      this.services = services;
+      return this;
+    }
+
+    public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
+      this.artifactFiles = artifactFiles;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the builder
-     */
+    public Builder withStatus(Status status) {
+      this.status = status;
+      return this;
+    }
+
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return anArtifact()
           .withRelease(release)
           .withArtifactSourceName(artifactSourceName)
           .withMetadata(metadata)
-          .withDisplayName(displayName)
-          .withRevision(revision)
-          .withArtifactFiles(artifactFiles)
-          .withStatus(status)
           .withUuid(uuid)
+          .withDisplayName(displayName)
           .withAppId(appId)
+          .withRevision(revision)
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
+          .withServices(services)
+          .withArtifactFiles(artifactFiles)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
+          .withStatus(status)
           .withActive(active);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the artifact
-     */
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setRelease(release);
       artifact.setArtifactSourceName(artifactSourceName);
       artifact.setMetadata(metadata);
-      artifact.setDisplayName(displayName);
-      artifact.setRevision(revision);
-      artifact.setArtifactFiles(artifactFiles);
-      artifact.setStatus(status);
       artifact.setUuid(uuid);
+      artifact.setDisplayName(displayName);
       artifact.setAppId(appId);
+      artifact.setRevision(revision);
       artifact.setCreatedBy(createdBy);
       artifact.setCreatedAt(createdAt);
+      artifact.setServices(services);
+      artifact.setArtifactFiles(artifactFiles);
       artifact.setLastUpdatedBy(lastUpdatedBy);
       artifact.setLastUpdatedAt(lastUpdatedAt);
+      artifact.setStatus(status);
       artifact.setActive(active);
       return artifact;
     }

@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.reset;
@@ -127,8 +126,8 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
     assertThat(jenkinsArtifactCollectorService.collect(
                    JENKINS_ARTIFACT_SOURCE, ImmutableMap.of(JenkinsArtifactCollectorServiceImpl.BUILD_NO, "50")))
         .isNotNull()
-        .extracting(ArtifactFile::getServices, ArtifactFile::getFileUuid)
-        .containsExactly(tuple(Lists.newArrayList(SERVICE), FILE_ID));
+        .extracting(ArtifactFile::getFileUuid)
+        .containsExactly(FILE_ID);
     verify(jenkinsFactory).create(anyString(), anyString(), anyString());
     verify(jenkins).downloadArtifact(anyString(), anyString(), anyString());
     verify(fileService)

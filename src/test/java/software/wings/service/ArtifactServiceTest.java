@@ -1,7 +1,9 @@
 package software.wings.service;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.hibernate.validator.internal.util.CollectionHelper.asSet;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -9,6 +11,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.ArtifactPathServiceEntry.Builder.anArtifactPathServiceEntry;
 import static software.wings.beans.JenkinsArtifactSource.Builder.aJenkinsArtifactSource;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
@@ -50,14 +53,16 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @InjectMocks @Inject private ArtifactService artifactService;
 
-  private Builder builder = anArtifact()
-                                .withAppId(APP_ID)
-                                .withRelease(aRelease().withUuid(RELEASE_ID).build())
-                                .withArtifactSourceName("ARTIFACT_SOURCE")
-                                .withRevision("1.0")
-                                .withDisplayName("DISPLAY_NAME")
-                                .withCreatedAt(System.currentTimeMillis())
-                                .withCreatedBy(anUser().withUuid("USER_ID").build());
+  private Builder builder =
+      anArtifact()
+          .withAppId(APP_ID)
+          .withRelease(aRelease().withUuid(RELEASE_ID).build())
+          .withArtifactSourceName("ARTIFACT_SOURCE")
+          .withRevision("1.0")
+          .withDisplayName("DISPLAY_NAME")
+          .withCreatedAt(System.currentTimeMillis())
+          .withCreatedBy(anUser().withUuid("USER_ID").build())
+          .withServices(Lists.newArrayList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()));
 
   /**
    * test setup.
@@ -65,13 +70,22 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Before
   public void setUp() {
     wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).build());
+    wingsRule.getDatastore().save(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build());
     wingsRule.getDatastore().save(
         aRelease()
             .withUuid(RELEASE_ID)
             .withAppId(APP_ID)
-            .withArtifactSources(Lists.newArrayList(aJenkinsArtifactSource().withSourceName("ARTIFACT_SOURCE").build()))
+            .withServices(asSet(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()))
+            .withArtifactSources(Lists.newArrayList(
+                aJenkinsArtifactSource()
+                    .withSourceName("ARTIFACT_SOURCE")
+                    .withArtifactPathServices(
+                        asList(anArtifactPathServiceEntry()
+                                   .withArtifactPathRegex("*")
+                                   .withServices(asList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()))
+                                   .build()))
+                    .build()))
             .build());
-    wingsRule.getDatastore().save(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build());
   }
 
   /**
@@ -152,12 +166,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     try {
       Artifact savedArtifact = artifactService.create(builder.but().build());
       ArtifactFile artifactFile =
-          anArtifactFile()
-              .withAppId(APP_ID)
-              .withName("test-artifact.war")
-              .withUuid("TEST_FILE_ID")
-              .withServices(Lists.newArrayList(aService().withAppId(APP_ID).withUuid(SERVICE_ID).build()))
-              .build();
+          anArtifactFile().withAppId(APP_ID).withName("test-artifact.war").withUuid("TEST_FILE_ID").build();
       wingsRule.getDatastore().save(artifactFile);
       savedArtifact.setArtifactFiles(Lists.newArrayList(artifactFile));
       savedArtifact.setStatus(Status.READY);

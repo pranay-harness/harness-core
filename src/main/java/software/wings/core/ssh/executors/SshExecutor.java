@@ -35,11 +35,6 @@ public interface SshExecutor {
   ExecutionResult transferFiles(ScpCommandUnit scpCommandUnit);
 
   /**
-   * Abort.
-   */
-  void abort();
-
-  /**
    * The Enum ExecutorType.
    */
   enum ExecutorType {

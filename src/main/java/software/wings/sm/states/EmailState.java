@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.helpers.ext.mail.EmailData;
-import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -41,7 +41,7 @@ public class EmailState extends State {
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Ignore delivery failure?") private Boolean ignoreDeliveryFailure = true;
 
-  @Transient @Inject private NotificationService<EmailData> emailNotificationService;
+  @Transient @Inject private EmailNotificationService<EmailData> emailNotificationService;
 
   /**
    * Instantiates a new email state.
