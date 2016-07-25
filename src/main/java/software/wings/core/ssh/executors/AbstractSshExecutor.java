@@ -29,10 +29,9 @@ import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.AbstractExecCommandUnit;
-import software.wings.beans.CommandUnit.CommandUnitExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.ScpCommandUnit;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
@@ -137,8 +136,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @see software.wings.core.ssh.executors.SshExecutor#execute(java.lang.String)
    */
   @Override
-  public ExecutionResult execute(AbstractExecCommandUnit execCommand) {
-    String command = execCommand.getCommand();
+  public ExecutionResult execute(ExecCommandUnit execCommand) {
+    String command = execCommand.getCommandString();
     ExecutionResult executionResult = FAILURE;
     Channel channel = null;
     try {
@@ -171,14 +170,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           text += dataReadFromTheStream;
           text = processStreamData(text, false, outputStream);
 
-          if (execCommand
-                  .isProcessCommandOutput()) { // Let commandUnit process the stdout data and decide to continue or not
-            CommandUnitExecutionResult commandUnitExecutionResult =
-                execCommand.processCommandOutput(dataReadFromTheStream);
-            if (commandUnitExecutionResult != CommandUnitExecutionResult.CONTINUE) {
-              return commandUnitExecutionResult.getExecutionResult();
+          /*if (execCommand.isProcessCommandOutput()) { // Let commandUnit process the stdout data and decide to
+          continue or not CommandUnitExecutionResult commandUnitExecutionResult =
+          execCommand.processCommandOutput(dataReadFromTheStream); if (commandUnitExecutionResult !=
+          CommandUnitExecutionResult.CONTINUE) { return commandUnitExecutionResult.getExecutionResult();
             }
-          }
+          }*/
         }
 
         if (text.length() > 0) {

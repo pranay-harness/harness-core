@@ -105,30 +105,34 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
           .addCommandUnits(anExecCommandUnit()
                                .withName("Delete start and stop script")
                                .withCommandUnitType(EXEC)
-                               .withCommand("rm -f ./bin/*")
+                               .withCommandString("rm -f ./bin/*")
                                .build(),
               anExecCommandUnit()
                   .withName("Create service startup file")
                   .withCommandUnitType(EXEC)
-                  .withCommand("mkdir -p bin && echo 'sh service && echo \"service started\" ' > ./bin/start.sh")
+                  .withCommandString("mkdir -p bin && echo 'sh service && echo \"service started\" ' > ./bin/start.sh")
                   .build(),
               anExecCommandUnit()
                   .withName("Create stop file")
                   .withCommandUnitType(EXEC)
-                  .withCommand("echo 'echo \"service successfully stopped\"'  > ./bin/stop.sh")
+                  .withCommandString("echo 'echo \"service successfully stopped\"'  > ./bin/stop.sh")
                   .build(),
               anExecCommandUnit()
                   .withName("Makr start/stop script executable")
                   .withCommandUnitType(EXEC)
-                  .withCommand("chmod +x ./bin/*")
+                  .withCommandString("chmod +x ./bin/*")
                   .build(),
-              anExecCommandUnit().withName("Exec").withCommandUnitType(EXEC).withCommand("./bin/stop.sh").build(),
+              anExecCommandUnit().withName("Exec").withCommandUnitType(EXEC).withCommandString("./bin/stop.sh").build(),
               ScpCommandUnit.Builder.aScpCommandUnit()
                   .withName("Copy_ARTIFACT")
                   .withCommandUnitType(SCP)
                   .withFileCategory(ScpFileCategory.ARTIFACTS)
                   .build(),
-              anExecCommandUnit().withName("EXEC").withCommandUnitType(EXEC).withCommand("./bin/start.sh").build())
+              anExecCommandUnit()
+                  .withName("EXEC")
+                  .withCommandUnitType(EXEC)
+                  .withCommandString("./bin/start.sh")
+                  .build())
           .build();
 
   /**
@@ -160,7 +164,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldCaptureFailedExecutionCommandUnit() {
-    ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommand("INVALID_COMMAND");
+    ((ExecCommandUnit) command.getCommandUnits().get(6)).setCommandString("INVALID_COMMAND");
     ExecutionResult executionResult = serviceCommandExecutorService.execute(SERVICE_INSTANCE, command, context);
     for (int i = 0; i < command.getCommandUnits().size() - 1; i++) {
       assertThat(command.getCommandUnits().get(i).getExecutionResult()).isEqualTo(SUCCESS);

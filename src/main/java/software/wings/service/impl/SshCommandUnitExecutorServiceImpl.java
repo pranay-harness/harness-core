@@ -15,11 +15,11 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.CommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -78,7 +78,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    */
   @Override
   public ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId) {
-    if (commandUnit instanceof AbstractExecCommandUnit) {
+    if (commandUnit instanceof ExecCommandUnit) {
       return execute(host, commandUnit, activityId, SupportedOp.EXEC);
     } else {
       return execute(host, commandUnit, activityId, SupportedOp.SCP);
@@ -156,7 +156,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {
     ExecutionResult executionResult;
     if (op.equals(SupportedOp.EXEC)) {
-      executionResult = executor.execute((AbstractExecCommandUnit) commandUnit);
+      executionResult = executor.execute((ExecCommandUnit) commandUnit);
     } else {
       executionResult = executor.transferFiles((ScpCommandUnit) commandUnit);
     }

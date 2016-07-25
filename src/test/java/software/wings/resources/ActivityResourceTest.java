@@ -178,7 +178,7 @@ public class ActivityResourceTest {
         .thenReturn(asList(anExecCommandUnit()
                                .withName(COMMAND_UNIT_NAME)
                                .withCommandUnitType(EXEC)
-                               .withCommand("./bin/start.sh")
+                               .withCommandString("./bin/start.sh")
                                .build()));
 
     RestResponse<List<ExecCommandUnit>> restResponse =

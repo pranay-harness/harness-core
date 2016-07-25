@@ -76,7 +76,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       aCommand().withName("START").addCommandUnits(anExecCommandUnit()
                                                        .withCommandUnitType(CommandUnitType.EXEC)
                                                        .withCommandPath("/home/xxx/tomcat")
-                                                       .withCommand("bin/startup.sh")
+                                                       .withCommandString("bin/startup.sh")
                                                        .build());
   private static final Builder builder = aService()
                                              .withUuid(SERVICE_ID)

@@ -7,7 +7,7 @@ import com.github.reinert.jjschema.Attributes;
 /**
  * Created by anubhaw on 7/14/16.
  */
-public class ProcessCheckCommandUnit extends AbstractExecCommandUnit {
+public class ProcessCheckCommandUnit extends ExecCommandUnit {
   @Attributes(title = "Expression", description = "ex. catalina.base=/path/, tomcat ... ")
   private String expression = "abc";
 
@@ -15,13 +15,13 @@ public class ProcessCheckCommandUnit extends AbstractExecCommandUnit {
    * Instantiates a new Process check command unit.
    */
   public ProcessCheckCommandUnit() {
-    super(CommandUnitType.PROCESS_CHECK);
-    setProcessCommandOutput(true);
+    super();
+    setCommandUnitType(CommandUnitType.PROCESS_CHECK);
   }
 
   @Override
   public void setup(CommandExecutionContext context) {
-    setCommand(String.format("pgrep -f '%s'", expression.trim()));
+    setCommandString(String.format("pgrep -f '%s'", expression.trim()));
   }
 
   @Override

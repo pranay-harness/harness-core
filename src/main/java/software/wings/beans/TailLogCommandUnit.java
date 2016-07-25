@@ -10,7 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 /**
  * Created by anubhaw on 7/13/16.
  */
-public class TailLogCommandUnit extends AbstractExecCommandUnit {
+public class TailLogCommandUnit extends ExecCommandUnit {
   @Attributes(title = "File path") private String filePath;
   @Attributes(title = "Search text") private String searchString;
   @Attributes(title = "Timeout duration (default 30 seconds)", description = "Timeout in seconds")
@@ -20,14 +20,14 @@ public class TailLogCommandUnit extends AbstractExecCommandUnit {
    * Instantiates a new Tail log command unit.
    */
   public TailLogCommandUnit() {
-    super(TAIL_LOG);
-    this.setProcessCommandOutput(true);
+    super();
+    setCommandUnitType(TAIL_LOG);
   }
 
   @Override
   public void setup(CommandExecutionContext context) {
     filePath = context.getRuntimePath() + "/" + filePath;
-    setCommand(String.format("tail -f -n +1 %s | grep '%s'", filePath, searchString));
+    setCommandString(String.format("tail -f -n +1 %s | grep '%s'", filePath, searchString));
   }
 
   @Override

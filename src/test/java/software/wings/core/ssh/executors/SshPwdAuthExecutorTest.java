@@ -149,7 +149,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     executor.init(config);
     String fileName = getUuid();
     ExecutionResult execute = executor.execute(
-        anExecCommandUnit().withCommand(String.format("touch %s && rm %s", fileName, fileName)).build());
+        anExecCommandUnit().withCommandString(String.format("touch %s && rm %s", fileName, fileName)).build());
     assertThat(execute).isEqualTo(SUCCESS);
   }
 
@@ -160,7 +160,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   public void shouldReturnFailureForFailedCommandExecution() {
     executor.init(config);
     ExecutionResult execute =
-        executor.execute(anExecCommandUnit().withCommand(String.format("rm %s", "FILE_DOES_NOT_EXIST")).build());
+        executor.execute(anExecCommandUnit().withCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST")).build());
     assertThat(execute).isEqualTo(FAILURE);
   }
 
@@ -182,7 +182,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   public void shouldThrowExceptionForSessionTimeout() {
     config.setSshSessionTimeout(1); // 1ms
     executor.init(config);
-    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommand("ls -lh").build()))
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls -lh").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(SSH_SESSION_TIMEOUT.getCode());
   }

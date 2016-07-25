@@ -1,7 +1,7 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.beans.AbstractExecCommandUnit;
 import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.ScpCommandUnit;
 
 import javax.validation.Valid;
@@ -24,7 +24,7 @@ public interface SshExecutor {
    * @param execCommandUnit the exec command unit
    * @return the execution result
    */
-  ExecutionResult execute(@NotNull AbstractExecCommandUnit execCommandUnit);
+  ExecutionResult execute(@NotNull ExecCommandUnit execCommandUnit);
 
   /**
    * Transfer file execution result.

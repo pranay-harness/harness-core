@@ -267,7 +267,6 @@ public class ScpCommandUnit extends CommandUnit {
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded = false;
-    private boolean processCommandOutput = false;
 
     private Builder() {}
 
@@ -380,17 +379,6 @@ public class ScpCommandUnit extends CommandUnit {
     }
 
     /**
-     * With process command output builder.
-     *
-     * @param processCommandOutput the process command output
-     * @return the builder
-     */
-    public Builder withProcessCommandOutput(boolean processCommandOutput) {
-      this.processCommandOutput = processCommandOutput;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -405,8 +393,7 @@ public class ScpCommandUnit extends CommandUnit {
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded)
-          .withProcessCommandOutput(processCommandOutput);
+          .withArtifactNeeded(artifactNeeded);
     }
 
     /**
@@ -425,7 +412,6 @@ public class ScpCommandUnit extends CommandUnit {
       scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setExecutionResult(executionResult);
       scpCommandUnit.setArtifactNeeded(artifactNeeded);
-      scpCommandUnit.setProcessCommandOutput(processCommandOutput);
       return scpCommandUnit;
     }
   }
