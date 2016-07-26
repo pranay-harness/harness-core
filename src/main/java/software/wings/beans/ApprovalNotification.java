@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 public class ApprovalNotification extends Notification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
+  private String releaseId;
 
   /**
    * The enum Approval stage.
@@ -74,11 +75,30 @@ public class ApprovalNotification extends Notification {
   }
 
   /**
+   * Gets release id.
+   *
+   * @return the release id
+   */
+  public String getReleaseId() {
+    return releaseId;
+  }
+
+  /**
+   * Sets release id.
+   *
+   * @param releaseId the release id
+   */
+  public void setReleaseId(String releaseId) {
+    this.releaseId = releaseId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String entityName;
     private ApprovalStage stage = PENDING;
+    private String releaseId;
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
@@ -121,6 +141,17 @@ public class ApprovalNotification extends Notification {
      */
     public Builder withStage(ApprovalStage stage) {
       this.stage = stage;
+      return this;
+    }
+
+    /**
+     * With release id builder.
+     *
+     * @param releaseId the release id
+     * @return the builder
+     */
+    public Builder withReleaseId(String releaseId) {
+      this.releaseId = releaseId;
       return this;
     }
 
@@ -254,6 +285,7 @@ public class ApprovalNotification extends Notification {
       return anApprovalNotification()
           .withEntityName(entityName)
           .withStage(stage)
+          .withReleaseId(releaseId)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
@@ -276,6 +308,7 @@ public class ApprovalNotification extends Notification {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setEntityName(entityName);
       approvalNotification.setStage(stage);
+      approvalNotification.setReleaseId(releaseId);
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);

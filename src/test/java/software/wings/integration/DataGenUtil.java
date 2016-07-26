@@ -220,6 +220,7 @@ public class DataGenUtil extends WingsBaseTest {
                               .withEntityId("artifactId")
                               .withEntityType(NotificationEntityType.ARTIFACT)
                               .withEntityName("Final_Build_05_02_08_16_9_15pm")
+                              .withReleaseId("releaseId")
                               .build());
     wingsPersistence.save(aFailureNotification()
                               .withAppId(appId)
