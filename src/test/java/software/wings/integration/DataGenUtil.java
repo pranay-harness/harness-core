@@ -193,12 +193,12 @@ public class DataGenUtil extends WingsBaseTest {
     containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
 
     for (Application application : apps) {
-      //      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
+      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-      //      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-      //      addActivitiesAndLogs(application, services.get(application.getUuid()),
-      //      appEnvs.get(application.getUuid())); addOrchestrationAndPipeline(services, appEnvs, application);
+      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+      addOrchestrationAndPipeline(services, appEnvs, application);
       addNotifications(application);
     }
   }
@@ -223,10 +223,11 @@ public class DataGenUtil extends WingsBaseTest {
                               .build());
     wingsPersistence.save(aFailureNotification()
                               .withAppId(appId)
-                              .withEntityId("releaseId")
-                              .withEntityType(NotificationEntityType.RELEASE)
+                              .withEntityId("executionId")
+                              .withEntityType(NotificationEntityType.WORKFLOW)
                               .withEnvironmentId(envId)
                               .withEntityName("workflow_ui_svr_2:04_12_2016")
+                              .withExecutionId("executionId")
                               .build());
   }
 

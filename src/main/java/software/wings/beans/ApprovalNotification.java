@@ -2,11 +2,13 @@ package software.wings.beans;
 
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
 /**
  * Created by anubhaw on 7/25/16.
  */
 public class ApprovalNotification extends Notification {
-  private String entityName;
+  @NotEmpty private String entityName;
 
   /**
    * Instantiates a new Approval notification.

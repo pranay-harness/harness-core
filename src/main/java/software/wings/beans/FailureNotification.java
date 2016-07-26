@@ -1,10 +1,13 @@
 package software.wings.beans;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Created by anubhaw on 7/25/16.
  */
 public class FailureNotification extends Notification {
-  private String entityName;
+  @NotNull private String entityName;
+  @NotNull private String executionId;
 
   /**
    * Instantiates a new Failure notification.
@@ -32,10 +35,29 @@ public class FailureNotification extends Notification {
   }
 
   /**
+   * Gets execution id.
+   *
+   * @return the execution id
+   */
+  public String getExecutionId() {
+    return executionId;
+  }
+
+  /**
+   * Sets execution id.
+   *
+   * @param executionId the execution id
+   */
+  public void setExecutionId(String executionId) {
+    this.executionId = executionId;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String entityName;
+    private String executionId;
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
@@ -67,6 +89,17 @@ public class FailureNotification extends Notification {
      */
     public Builder withEntityName(String entityName) {
       this.entityName = entityName;
+      return this;
+    }
+
+    /**
+     * With execution id builder.
+     *
+     * @param executionId the execution id
+     * @return the builder
+     */
+    public Builder withExecutionId(String executionId) {
+      this.executionId = executionId;
       return this;
     }
 
@@ -199,6 +232,7 @@ public class FailureNotification extends Notification {
     public Builder but() {
       return aFailureNotification()
           .withEntityName(entityName)
+          .withExecutionId(executionId)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
@@ -220,6 +254,7 @@ public class FailureNotification extends Notification {
     public FailureNotification build() {
       FailureNotification failureNotification = new FailureNotification();
       failureNotification.setEntityName(entityName);
+      failureNotification.setExecutionId(executionId);
       failureNotification.setEnvironmentId(environmentId);
       failureNotification.setEntityId(entityId);
       failureNotification.setEntityType(entityType);

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 import javax.validation.constraints.NotNull;
@@ -10,8 +11,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "notifications")
 public abstract class Notification extends Base {
   private String environmentId;
-  private String entityId;
-  private NotificationEntityType entityType;
+  @NotEmpty private String entityId;
+  @NotNull private NotificationEntityType entityType;
   @NotNull private NotificationType notificationType;
 
   /**
