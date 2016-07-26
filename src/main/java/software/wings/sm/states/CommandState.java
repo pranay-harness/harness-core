@@ -7,8 +7,8 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
+import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;

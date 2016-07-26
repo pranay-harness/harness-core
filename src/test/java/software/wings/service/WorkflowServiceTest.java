@@ -56,7 +56,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 /**
@@ -526,6 +525,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains("REPEAT", "FORK");
   }
 
+  /**
+   * Required execution args for simple workflow install.
+   */
   @Test
   public void requiredExecutionArgsForSimpleWorkflowInstall() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -555,6 +557,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
   }
 
+  /**
+   * Required execution args for simple workflow start.
+   */
   @Test
   public void requiredExecutionArgsForSimpleWorkflowStart() {
     ExecutionArgs executionArgs = new ExecutionArgs();
@@ -584,6 +589,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
   }
 
+  /**
+   * Required execution args for orchestrated workflow.
+   */
   @Test
   public void requiredExecutionArgsForOrchestratedWorkflow() {
     env = getEnvironment();
@@ -621,6 +629,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertThat(required.getRequiredExecutionTypes()).isNotNull().isEmpty();
   }
 
+  /**
+   * Required execution args for orchestrated workflow with command.
+   */
   @Test
   public void requiredExecutionArgsForOrchestratedWorkflowWithCommand() {
     env = getEnvironment();
@@ -668,6 +679,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
   }
 
+  /**
+   * Required execution args for orchestrated workflow with repeat.
+   */
   @Test
   public void requiredExecutionArgsForOrchestratedWorkflowWithRepeat() {
     env = getEnvironment();

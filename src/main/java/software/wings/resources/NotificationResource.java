@@ -35,6 +35,13 @@ import javax.ws.rs.QueryParam;
 public class NotificationResource {
   @Inject private NotificationService notificationService;
 
+  /**
+   * List rest response.
+   *
+   * @param appId       the app id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<Notification>> list(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @BeanParam PageRequest<Notification> pageRequest) {
@@ -42,6 +49,13 @@ public class NotificationResource {
     return new RestResponse<>(notificationService.list(pageRequest));
   }
 
+  /**
+   * Get rest response.
+   *
+   * @param appId          the app id
+   * @param notificationId the notification id
+   * @return the rest response
+   */
   @GET
   @Path("{notificationId}")
   public RestResponse<Notification> get(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
@@ -49,6 +63,14 @@ public class NotificationResource {
     return new RestResponse<>(notificationService.get(appId, notificationId));
   }
 
+  /**
+   * Update rest response.
+   *
+   * @param appId          the app id
+   * @param notificationId the notification id
+   * @param notification   the notification
+   * @return the rest response
+   */
   @PUT
   @Path("{notificationId}")
   public RestResponse<Notification> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,

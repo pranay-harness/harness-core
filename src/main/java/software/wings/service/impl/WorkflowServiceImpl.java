@@ -99,7 +99,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -129,6 +128,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   };
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  /**
+   * The Expression processor factory.
+   */
+  @Inject ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
@@ -138,11 +141,9 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
   @Inject private Injector injector;
   @Inject private ServiceResourceService serviceResourceService;
-
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
-  @Inject ExpressionProcessorFactory expressionProcessorFactory;
   /**
    * {@inheritDoc}
    */

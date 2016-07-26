@@ -177,10 +177,20 @@ public class Artifact extends Base {
     this.artifactFiles = artifactFiles;
   }
 
+  /**
+   * Gets services.
+   *
+   * @return the services
+   */
   public List<Service> getServices() {
     return services;
   }
 
+  /**
+   * Sets services.
+   *
+   * @param services the services
+   */
   public void setServices(List<Service> services) {
     this.services = services;
   }
@@ -323,6 +333,9 @@ public class Artifact extends Base {
     }
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private Release release;
     private String artifactSourceName;
@@ -342,85 +355,185 @@ public class Artifact extends Base {
 
     private Builder() {}
 
+    /**
+     * An artifact builder.
+     *
+     * @return the builder
+     */
     public static Builder anArtifact() {
       return new Builder();
     }
 
+    /**
+     * With release builder.
+     *
+     * @param release the release
+     * @return the builder
+     */
     public Builder withRelease(Release release) {
       this.release = release;
       return this;
     }
 
+    /**
+     * With artifact source name builder.
+     *
+     * @param artifactSourceName the artifact source name
+     * @return the builder
+     */
     public Builder withArtifactSourceName(String artifactSourceName) {
       this.artifactSourceName = artifactSourceName;
       return this;
     }
 
+    /**
+     * With metadata builder.
+     *
+     * @param metadata the metadata
+     * @return the builder
+     */
     public Builder withMetadata(Map<String, String> metadata) {
       this.metadata = metadata;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With display name builder.
+     *
+     * @param displayName the display name
+     * @return the builder
+     */
     public Builder withDisplayName(String displayName) {
       this.displayName = displayName;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With revision builder.
+     *
+     * @param revision the revision
+     * @return the builder
+     */
     public Builder withRevision(String revision) {
       this.revision = revision;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With services builder.
+     *
+     * @param services the services
+     * @return the builder
+     */
     public Builder withServices(List<Service> services) {
       this.services = services;
       return this;
     }
 
+    /**
+     * With artifact files builder.
+     *
+     * @param artifactFiles the artifact files
+     * @return the builder
+     */
     public Builder withArtifactFiles(List<ArtifactFile> artifactFiles) {
       this.artifactFiles = artifactFiles;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(Status status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anArtifact()
           .withRelease(release)
@@ -440,6 +553,11 @@ public class Artifact extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build artifact.
+     *
+     * @return the artifact
+     */
     public Artifact build() {
       Artifact artifact = new Artifact();
       artifact.setRelease(release);

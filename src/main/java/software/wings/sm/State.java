@@ -105,6 +105,11 @@ public abstract class State {
    */
   public abstract void handleAbortEvent(ExecutionContext context);
 
+  /**
+   * Gets required execution argument types.
+   *
+   * @return the required execution argument types
+   */
   public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
     return null;
   }

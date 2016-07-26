@@ -6,8 +6,6 @@ import java.util.List;
  * Created by anubhaw on 7/25/16.
  */
 public class ChangeNotification extends Notification {
-  private long changeDate;
-
   /**
    * Instantiates a new Change notification.
    */
@@ -16,37 +14,12 @@ public class ChangeNotification extends Notification {
   }
 
   /**
-   * Gets change date.
-   *
-   * @return the change date
-   */
-  public long getChangeDate() {
-    return changeDate;
-  }
-
-  /**
-   * Sets change date.
-   *
-   * @param changeDate the change date
-   */
-  public void setChangeDate(long changeDate) {
-    this.changeDate = changeDate;
-  }
-
-  @Override
-  public void setDisplayText() {
-    this.displayText = String.format("There's a <a href=%s>change</a> scheduled for %s", detailsUrl,
-        changeDate); // TODO: extract out in some template
-  }
-
-  /**
    * The type Builder.
    */
   public static final class Builder {
-    private long changeDate;
-    private String detailsUrl;
+    protected String displayText;
+    protected String detailsUrl;
     private NotificationType notificationType;
-    private boolean actionable;
     private List<NotificationAction> notificationActions;
     private String uuid;
     private String appId;
@@ -68,13 +41,13 @@ public class ChangeNotification extends Notification {
     }
 
     /**
-     * With change date builder.
+     * With display text builder.
      *
-     * @param changeDate the change date
+     * @param displayText the display text
      * @return the builder
      */
-    public Builder withChangeDate(long changeDate) {
-      this.changeDate = changeDate;
+    public Builder withDisplayText(String displayText) {
+      this.displayText = displayText;
       return this;
     }
 
@@ -97,17 +70,6 @@ public class ChangeNotification extends Notification {
      */
     public Builder withNotificationType(NotificationType notificationType) {
       this.notificationType = notificationType;
-      return this;
-    }
-
-    /**
-     * With actionable builder.
-     *
-     * @param actionable the actionable
-     * @return the builder
-     */
-    public Builder withActionable(boolean actionable) {
-      this.actionable = actionable;
       return this;
     }
 
@@ -200,16 +162,35 @@ public class ChangeNotification extends Notification {
     }
 
     /**
+     * But builder.
+     *
+     * @return the builder
+     */
+    public Builder but() {
+      return aChangeNotification()
+          .withDisplayText(displayText)
+          .withDetailsUrl(detailsUrl)
+          .withNotificationType(notificationType)
+          .withNotificationActions(notificationActions)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withActive(active);
+    }
+
+    /**
      * Build change notification.
      *
      * @return the change notification
      */
     public ChangeNotification build() {
       ChangeNotification changeNotification = new ChangeNotification();
-      changeNotification.setChangeDate(changeDate);
+      changeNotification.setDisplayText(displayText);
       changeNotification.setDetailsUrl(detailsUrl);
       changeNotification.setNotificationType(notificationType);
-      changeNotification.setActionable(actionable);
       changeNotification.setNotificationActions(notificationActions);
       changeNotification.setUuid(uuid);
       changeNotification.setAppId(appId);

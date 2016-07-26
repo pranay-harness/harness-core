@@ -11,6 +11,9 @@ import javax.inject.Inject;
 public class NotificationServiceTest {
   @Inject private NotificationService notificationService;
 
+  /**
+   * Should create notification.
+   */
   @Test
   public void shouldCreateNotification() {}
 }

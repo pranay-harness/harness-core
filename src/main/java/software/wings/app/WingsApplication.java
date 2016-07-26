@@ -124,10 +124,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     registerScheduledJobs(injector);
 
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-    System.out.println(configuration.getCorsDomains());
     cors.setInitParameters(ImmutableMap.of("allowedOrigins", configuration.getCorsDomains(), "allowedHeaders",
         "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
-        "OPTIONS,GET,PUT,POST,DELETE,HEAD"));
+        "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
     environment.servlets()
         .addFilter("AuditResponseFilter", injector.getInstance(AuditResponseFilter.class))
