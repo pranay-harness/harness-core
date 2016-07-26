@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.collect.CollectEvent.Builder.aCollectEvent;
@@ -69,6 +70,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     Validator.equalCheck(application.getUuid(), release.getAppId());
 
     artifact.setRelease(release);
+    artifact.setServices(newArrayList(release.get(artifact.getArtifactSourceName()).getServices()));
     artifact.setStatus(Status.QUEUED);
     String key = wingsPersistence.save(artifact);
 
@@ -125,31 +127,16 @@ public class ArtifactServiceImpl implements ArtifactService {
   public File download(String appId, String artifactId, String serviceId) {
     Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
     if (artifact == null || artifact.getStatus() != Status.READY || isEmpty(artifact.getArtifactFiles())
-        || !artifact.getArtifactFiles()
+        || !artifact.getServices()
                 .stream()
-                .filter(artifactFile
-                    -> artifactFile.getServices()
-                           .stream()
-                           .map(Service::getUuid)
-                           .filter(id -> id.equals(serviceId))
-                           .findFirst()
-                           .isPresent())
+                .map(Service::getUuid)
+                .filter(id -> id.equals(serviceId))
                 .findFirst()
                 .isPresent()) {
       return null;
     }
 
-    ArtifactFile artifactFile = artifact.getArtifactFiles()
-                                    .stream()
-                                    .filter(artifactFile1
-                                        -> artifactFile1.getServices()
-                                               .stream()
-                                               .map(Service::getUuid)
-                                               .filter(id -> id.equals(serviceId))
-                                               .findFirst()
-                                               .isPresent())
-                                    .findFirst()
-                                    .get();
+    ArtifactFile artifactFile = artifact.getArtifactFiles().get(0);
 
     File tempDir = Files.createTempDir();
     String fileName = Optional.ofNullable(artifactFile.getName()).orElse(DEFAULT_ARTIFACT_FILE_NAME);

@@ -18,24 +18,6 @@ public abstract class Notification extends Base {
   private List<NotificationAction> notificationActions;
 
   /**
-   * The enum Notification type.
-   */
-  public enum NotificationType {
-    /**
-     * Approval notification type.
-     */
-    APPROVAL,
-    /**
-     * Change notification type.
-     */
-    CHANGE,
-    /**
-     * Failure notification type.
-     */
-    FAILURE
-  }
-
-  /**
    * Instantiates a new Notification.
    */
   public Notification() {}
@@ -139,5 +121,21 @@ public abstract class Notification extends Base {
    */
   public void setNotificationActions(List<NotificationAction> notificationActions) {
     this.notificationActions = notificationActions;
+  }
+
+  /**
+   * The enum Notification type.
+   */
+  public enum NotificationType {
+    /**
+     * Approval notification type.
+     */
+    APPROVAL, /**
+               * Change notification type.
+               */
+    CHANGE, /**
+             * Failure notification type.
+             */
+    FAILURE
   }
 }

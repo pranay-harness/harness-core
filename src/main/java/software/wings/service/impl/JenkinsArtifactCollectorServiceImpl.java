@@ -68,7 +68,6 @@ public class JenkinsArtifactCollectorServiceImpl implements ArtifactCollectorSer
         ArtifactFile artifactFile = new ArtifactFile();
         artifactFile.setFileUuid(uuid);
         artifactFile.setName(fileInfo.getKey());
-        artifactFile.setServices(Lists.newArrayList(jenkinsArtifactSource.getServices()));
         artifactFiles.add(artifactFile);
       }
       return artifactFiles;

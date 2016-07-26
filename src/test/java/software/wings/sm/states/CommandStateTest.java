@@ -14,7 +14,6 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
@@ -241,8 +240,8 @@ public class CommandStateTest extends WingsBaseTest {
   public void executeWithArtifact() throws Exception {
     Artifact artifact = anArtifact()
                             .withUuid(ARTIFACT_ID)
-                            .withArtifactFiles(asList(anArtifactFile().withServices(asList(SERVICE)).build()))
                             .withRelease(aRelease().withUuid(RELEASE_ID).build())
+                            .withServices(asList(SERVICE))
                             .build();
 
     Command command =

@@ -1,77 +1,16 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
-
-import org.mongodb.morphia.annotations.Reference;
-
-import java.util.List;
-
 /**
  * The Class ArtifactFile.
  */
 public class ArtifactFile extends BaseFile {
-  @Reference(idOnly = true) private List<Service> services;
-
   /**
-   * Gets services.
-   *
-   * @return the services
-   */
-  public List<Service> getServices() {
-    return services;
-  }
-
-  /**
-   * Sets services.
-   *
-   * @param services the services
-   */
-  public void setServices(List<Service> services) {
-    this.services = services;
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#equals(java.lang.Object)
-   */
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    if (!super.equals(o)) {
-      return false;
-    }
-    ArtifactFile that = (ArtifactFile) o;
-    return Objects.equal(services, that.services);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#hashCode()
-   */
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(super.hashCode(), services);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#toString()
-   */
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("services", services).toString();
-  }
-
-  /**
-   * The Class Builder.
+   * The type Builder.
    */
   public static final class Builder {
-    private List<Service> services;
-    private String fileUuid;
     private String name;
+    private String fileUuid;
+    private String fileName;
     private String mimeType;
     private long size;
     private ChecksumType checksumType = ChecksumType.MD5;
@@ -87,7 +26,7 @@ public class ArtifactFile extends BaseFile {
     private Builder() {}
 
     /**
-     * An artifact file.
+     * An artifact file builder.
      *
      * @return the builder
      */
@@ -96,29 +35,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With services.
-     *
-     * @param services the services
-     * @return the builder
-     */
-    public Builder withServices(List<Service> services) {
-      this.services = services;
-      return this;
-    }
-
-    /**
-     * With file uuid.
-     *
-     * @param fileUuid the file uuid
-     * @return the builder
-     */
-    public Builder withFileUuid(String fileUuid) {
-      this.fileUuid = fileUuid;
-      return this;
-    }
-
-    /**
-     * With name.
+     * With name builder.
      *
      * @param name the name
      * @return the builder
@@ -129,7 +46,29 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With mime type.
+     * With file uuid builder.
+     *
+     * @param fileUuid the file uuid
+     * @return the builder
+     */
+    public Builder withFileUuid(String fileUuid) {
+      this.fileUuid = fileUuid;
+      return this;
+    }
+
+    /**
+     * With file name builder.
+     *
+     * @param fileName the file name
+     * @return the builder
+     */
+    public Builder withFileName(String fileName) {
+      this.fileName = fileName;
+      return this;
+    }
+
+    /**
+     * With mime type builder.
      *
      * @param mimeType the mime type
      * @return the builder
@@ -140,7 +79,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With size.
+     * With size builder.
      *
      * @param size the size
      * @return the builder
@@ -151,7 +90,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With checksum type.
+     * With checksum type builder.
      *
      * @param checksumType the checksum type
      * @return the builder
@@ -162,7 +101,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With checksum.
+     * With checksum builder.
      *
      * @param checksum the checksum
      * @return the builder
@@ -173,7 +112,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With uuid.
+     * With uuid builder.
      *
      * @param uuid the uuid
      * @return the builder
@@ -184,7 +123,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With app id.
+     * With app id builder.
      *
      * @param appId the app id
      * @return the builder
@@ -195,7 +134,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With created by.
+     * With created by builder.
      *
      * @param createdBy the created by
      * @return the builder
@@ -206,7 +145,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With created at.
+     * With created at builder.
      *
      * @param createdAt the created at
      * @return the builder
@@ -217,7 +156,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With last updated by.
+     * With last updated by builder.
      *
      * @param lastUpdatedBy the last updated by
      * @return the builder
@@ -228,7 +167,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With last updated at.
+     * With last updated at builder.
      *
      * @param lastUpdatedAt the last updated at
      * @return the builder
@@ -239,7 +178,7 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * With active.
+     * With active builder.
      *
      * @param active the active
      * @return the builder
@@ -250,15 +189,15 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * But.
+     * But builder.
      *
      * @return the builder
      */
     public Builder but() {
       return anArtifactFile()
-          .withServices(services)
-          .withFileUuid(fileUuid)
           .withName(name)
+          .withFileUuid(fileUuid)
+          .withFileName(fileName)
           .withMimeType(mimeType)
           .withSize(size)
           .withChecksumType(checksumType)
@@ -273,15 +212,15 @@ public class ArtifactFile extends BaseFile {
     }
 
     /**
-     * Builds the.
+     * Build artifact file.
      *
      * @return the artifact file
      */
     public ArtifactFile build() {
       ArtifactFile artifactFile = new ArtifactFile();
-      artifactFile.setServices(services);
-      artifactFile.setFileUuid(fileUuid);
       artifactFile.setName(name);
+      artifactFile.setFileUuid(fileUuid);
+      artifactFile.setFileName(fileName);
       artifactFile.setMimeType(mimeType);
       artifactFile.setSize(size);
       artifactFile.setChecksumType(checksumType);

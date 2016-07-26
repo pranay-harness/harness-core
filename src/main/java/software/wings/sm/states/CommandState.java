@@ -14,6 +14,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -33,6 +34,7 @@ import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -63,6 +65,7 @@ import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -400,6 +403,12 @@ public class CommandState extends State {
       // ignore
     }
     return settingValue;
+  }
+
+  @Override
+  public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
+    return Lists.newArrayList(ExecutionArgumentType.SERVICE, ExecutionArgumentType.SSH_USER,
+        ExecutionArgumentType.SSH_PASSWORD, ExecutionArgumentType.ARTIFACTS);
   }
 
   /**

@@ -250,6 +250,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     public StencilCategory getStencilCategory() {
       return StencilCategory.OTHERS;
     }
+
     @Override
     public Integer getDisplayOrder() {
       return DEFAULT_DISPLAY_ORDER;
@@ -332,6 +333,7 @@ public class StencilPostProcessorTest extends WingsBaseTest {
     public StencilCategory getStencilCategory() {
       return stencilType == null ? null : stencilType.getStencilCategory();
     }
+
     @Override
     public Integer getDisplayOrder() {
       return stencilType == null ? DEFAULT_DISPLAY_ORDER : stencilType.getDisplayOrder();

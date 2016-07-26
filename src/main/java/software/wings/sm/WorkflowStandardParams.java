@@ -260,7 +260,7 @@ public class WorkflowStandardParams implements ContextElement {
     return getArtifacts()
         .stream()
         .filter(artifact
-            -> artifact.getSevices()
+            -> artifact.getServices()
                    .stream()
                    .filter(service1 -> StringUtils.equals(service1.getUuid(), service.getUuid()))
                    .findFirst()

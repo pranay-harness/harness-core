@@ -4,6 +4,7 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.PageRequest;
@@ -244,4 +245,14 @@ public interface WorkflowService {
    * @param inc                 the inc
    */
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
+
+  /**
+   * Gets required execution args.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the required execution args
+   */
+  RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 }

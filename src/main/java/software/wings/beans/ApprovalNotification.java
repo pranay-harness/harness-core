@@ -33,6 +33,11 @@ public class ApprovalNotification extends Notification {
 
     private Builder() {}
 
+    /**
+     * An approval notification builder.
+     *
+     * @return the builder
+     */
     public static Builder anApprovalNotification() {
       return new Builder();
     }
@@ -42,56 +47,121 @@ public class ApprovalNotification extends Notification {
       return this;
     }
 
+    /**
+     * With details url builder.
+     *
+     * @param detailsUrl the details url
+     * @return the builder
+     */
     public Builder withDetailsUrl(String detailsUrl) {
       this.detailsUrl = detailsUrl;
       return this;
     }
 
+    /**
+     * With notification type builder.
+     *
+     * @param notificationType the notification type
+     * @return the builder
+     */
     public Builder withNotificationType(NotificationType notificationType) {
       this.notificationType = notificationType;
       return this;
     }
 
+    /**
+     * With notification actions builder.
+     *
+     * @param notificationActions the notification actions
+     * @return the builder
+     */
     public Builder withNotificationActions(List<NotificationAction> notificationActions) {
       this.notificationActions = notificationActions;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anApprovalNotification()
           .withDisplayText(displayText)
@@ -107,6 +177,11 @@ public class ApprovalNotification extends Notification {
           .withActive(active);
     }
 
+    /**
+     * Build approval notification.
+     *
+     * @return the approval notification
+     */
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setDisplayText(displayText);

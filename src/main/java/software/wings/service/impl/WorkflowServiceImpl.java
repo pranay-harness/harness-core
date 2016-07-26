@@ -34,8 +34,10 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
+import software.wings.beans.Command;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Group;
@@ -44,6 +46,7 @@ import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
+import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceInstance;
@@ -58,10 +61,15 @@ import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.ExpressionProcessor;
+import software.wings.sm.ExpressionProcessorFactory;
+import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -72,7 +80,9 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.sm.states.CommandState;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
+import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -87,6 +97,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -117,6 +128,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
   };
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  /**
+   * The Expression processor factory.
+   */
+  @Inject ExpressionProcessorFactory expressionProcessorFactory;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private StateMachineExecutor stateMachineExecutor;
   @Inject private PluginManager pluginManager;
@@ -125,6 +140,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
   @Inject private Injector injector;
+  @Inject private ServiceResourceService serviceResourceService;
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
@@ -1241,5 +1257,124 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return stateMachineExecutionEventManager.registerExecutionEvent(executionEvent);
+  }
+
+  @Override
+  public RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs) {
+    if (executionArgs.getWorkflowType() == null) {
+      logger.error("workflowType is null");
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowType is null");
+    }
+
+    RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
+
+    if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      logger.debug("Received an orchestrated execution request");
+      if (executionArgs.getOrchestrationId() == null) {
+        logger.error("orchestrationId is null for an orchestrated execution");
+        throw new WingsException(
+            ErrorCodes.INVALID_REQUEST, "message", "orchestrationId is null for an orchestrated execution");
+      }
+
+      Orchestration orchestration =
+          wingsPersistence.get(Orchestration.class, appId, executionArgs.getOrchestrationId());
+      if (orchestration == null) {
+        logger.error("Invalid orchestrationId");
+        throw new WingsException(
+            ErrorCodes.INVALID_REQUEST, "message", "Invalid orchestrationId: " + executionArgs.getOrchestrationId());
+      }
+
+      StateMachine stateMachine = readLatest(appId, executionArgs.getOrchestrationId(), null);
+      if (stateMachine == null) {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
+      }
+      extrapolateRequiredExecutionArgs(
+          stateMachine, stateMachine.getInitialState(), requiredExecutionArgs, new HashSet<>());
+
+    } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
+      logger.debug("Received an simple execution request");
+      if (executionArgs.getServiceId() == null) {
+        logger.error("serviceId is null for a simple execution");
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "serviceId is null for a simple execution");
+      }
+      if (executionArgs.getServiceInstances() == null || executionArgs.getServiceInstances().size() == 0) {
+        logger.error("serviceInstances are empty for a simple execution");
+        throw new WingsException(
+            ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
+      }
+      if (executionArgs.getCommandName() == null) {
+        logger.error("commandName is null for a simple execution");
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "commandName is null for a simple execution");
+      }
+      Command command =
+          serviceResourceService.getCommandByName(appId, executionArgs.getServiceId(), executionArgs.getCommandName());
+      if (command.isArtifactNeeded()) {
+        requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.ARTIFACTS);
+      }
+      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
+      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+    }
+
+    return requiredExecutionArgs;
+  }
+
+  private void extrapolateRequiredExecutionArgs(StateMachine stateMachine, State state,
+      RequiredExecutionArgs requiredExecutionArgs, Set<ExecutionArgumentType> argsInContext) {
+    if (state == null) {
+      return;
+    }
+    if (state instanceof RepeatState) {
+      ExpressionProcessor processor =
+          expressionProcessorFactory.getExpressionProcessor(((RepeatState) state).getRepeatElementExpression(), null);
+      if (processor != null) {
+        Set<ExecutionArgumentType> repeatArgsInContext = new HashSet<>(argsInContext);
+        addArgsTypeFromContextElement(repeatArgsInContext, processor.getContextElementType());
+        State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
+        extrapolateRequiredExecutionArgs(stateMachine, repeat, requiredExecutionArgs, repeatArgsInContext);
+      }
+    }
+
+    if (state.getRequiredExecutionArgumentTypes() != null) {
+      for (ExecutionArgumentType type : state.getRequiredExecutionArgumentTypes()) {
+        if (!argsInContext.contains(type)) {
+          requiredExecutionArgs.getRequiredExecutionTypes().add(type);
+        }
+      }
+    }
+
+    State success = stateMachine.getSuccessTransition(state.getName());
+    if (success != null) {
+      extrapolateRequiredExecutionArgs(stateMachine, success, requiredExecutionArgs, argsInContext);
+    }
+
+    State failure = stateMachine.getFailureTransition(state.getName());
+    if (failure != null) {
+      extrapolateRequiredExecutionArgs(stateMachine, failure, requiredExecutionArgs, argsInContext);
+    }
+    if (state instanceof CommandState) {
+      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
+      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+    }
+  }
+
+  /**
+   * @param contextElementType
+   * @return
+   */
+  private void addArgsTypeFromContextElement(
+      Set<ExecutionArgumentType> argsInContext, ContextElementType contextElementType) {
+    if (contextElementType == null) {
+      return;
+    }
+    switch (contextElementType) {
+      case SERVICE: {
+        argsInContext.add(ExecutionArgumentType.SERVICE);
+        return;
+      }
+      case INSTANCE: {
+        argsInContext.add(ExecutionArgumentType.SERVICE);
+        return;
+      }
+    }
   }
 }
