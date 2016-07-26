@@ -1,14 +1,34 @@
 package software.wings.beans;
 
+import static software.wings.beans.ApprovalNotification.ApprovalStage.PENDING;
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
 
 import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 7/25/16.
  */
 public class ApprovalNotification extends Notification {
   @NotEmpty private String entityName;
+  @NotNull private ApprovalStage stage = PENDING;
+
+  /**
+   * The enum Approval stage.
+   */
+  public enum ApprovalStage {
+    /**
+     * Pending approval stage.
+     */
+    PENDING, /**
+              * Accepted approval stage.
+              */
+    ACCEPTED, /**
+               * Rejected approval stage.
+               */
+    REJECTED
+  }
 
   /**
    * Instantiates a new Approval notification.
@@ -36,10 +56,29 @@ public class ApprovalNotification extends Notification {
   }
 
   /**
+   * Gets stage.
+   *
+   * @return the stage
+   */
+  public ApprovalStage getStage() {
+    return stage;
+  }
+
+  /**
+   * Sets stage.
+   *
+   * @param stage the stage
+   */
+  public void setStage(ApprovalStage stage) {
+    this.stage = stage;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String entityName;
+    private ApprovalStage stage = PENDING;
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
@@ -71,6 +110,17 @@ public class ApprovalNotification extends Notification {
      */
     public Builder withEntityName(String entityName) {
       this.entityName = entityName;
+      return this;
+    }
+
+    /**
+     * With stage builder.
+     *
+     * @param stage the stage
+     * @return the builder
+     */
+    public Builder withStage(ApprovalStage stage) {
+      this.stage = stage;
       return this;
     }
 
@@ -203,6 +253,7 @@ public class ApprovalNotification extends Notification {
     public Builder but() {
       return anApprovalNotification()
           .withEntityName(entityName)
+          .withStage(stage)
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
@@ -224,6 +275,7 @@ public class ApprovalNotification extends Notification {
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
       approvalNotification.setEntityName(entityName);
+      approvalNotification.setStage(stage);
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);
