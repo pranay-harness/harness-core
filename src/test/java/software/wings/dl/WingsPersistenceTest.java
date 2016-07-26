@@ -4,10 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.base.MoreObjects;
-
 import org.assertj.core.util.Lists;
 import org.junit.Test;
+import org.mongodb.morphia.annotations.Reference;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.beans.SearchFilter;
@@ -19,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
+
 import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -246,12 +246,39 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(entity);
   }
 
+  @Test
+  public void shouldSaveReferencedObject() {
+    TestEntityB entityB = new TestEntityB();
+    entityB.setFieldB("fieldB1");
+    wingsPersistence.save(entityB);
+
+    log().debug("Done with TestEntityB save");
+    TestEntity entity = new TestEntity();
+    entity.setFieldA("fieldA1");
+    entity.setTestEntityB(entityB);
+    wingsPersistence.save(entity);
+    log().debug("Done with TestEntity save");
+    assertThat(entity)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
+        .hasFieldOrPropertyWithValue("testEntityB", entityB);
+
+    entity = wingsPersistence.get(TestEntity.class, entity.getUuid());
+    assertThat(entity)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("fieldA", "fieldA1")
+        .hasFieldOrPropertyWithValue("testEntityB", entityB);
+    log().debug("Done with TestEntity get");
+  }
+
   /**
    * The Class TestEntity.
    */
   public static class TestEntity extends Base {
     private String fieldA;
     private Map<String, String> mapField;
+
+    @Reference TestEntityB testEntityB;
 
     /**
      * Gets field a.
@@ -289,9 +316,36 @@ public class WingsPersistenceTest extends WingsBaseTest {
       this.mapField = mapField;
     }
 
+    public TestEntityB getTestEntityB() {
+      return testEntityB;
+    }
+
+    public void setTestEntityB(TestEntityB testEntityB) {
+      this.testEntityB = testEntityB;
+    }
+
     @Override
     public String toString() {
-      return MoreObjects.toStringHelper(this).add("fieldA", fieldA).add("mapField", mapField).toString();
+      return "TestEntity [fieldA=" + fieldA + ", mapField=" + mapField + ", testEntityB=" + testEntityB + "]";
+    }
+  }
+  /**
+   * The Class TestEntity.
+   */
+  public static class TestEntityB extends Base {
+    private String fieldB;
+
+    public String getFieldB() {
+      return fieldB;
+    }
+
+    public void setFieldB(String fieldB) {
+      this.fieldB = fieldB;
+    }
+
+    @Override
+    public String toString() {
+      return "TestEntityB [fieldB=" + fieldB + "]";
     }
   }
 }
