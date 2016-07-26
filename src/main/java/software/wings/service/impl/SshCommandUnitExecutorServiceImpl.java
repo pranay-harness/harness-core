@@ -86,7 +86,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   }
 
   @Override
-  public void clenup(String activityId, Host host) {
+  public void cleanup(String activityId, Host host) {
     AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
   }
 

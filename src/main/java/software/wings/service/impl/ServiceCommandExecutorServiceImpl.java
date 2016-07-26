@@ -54,10 +54,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     try {
       ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
-      commandUnitExecutorService.clenup(context.getActivityId(), serviceInstance.getHost());
+      commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       return executionResult;
     } catch (Exception ex) {
-      commandUnitExecutorService.clenup(context.getActivityId(), serviceInstance.getHost());
+      commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       throw ex;
     }
   }
