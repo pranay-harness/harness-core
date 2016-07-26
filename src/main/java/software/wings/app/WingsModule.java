@@ -8,6 +8,7 @@ import com.google.inject.multibindings.MapBinder;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.ArtifactSource.SourceType;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.dl.WingsMongoPersistence;
@@ -136,6 +137,7 @@ public class WingsModule extends AbstractModule {
     bind(HistoryService.class).to(HistoryServiceImpl.class);
     bind(SetupService.class).to(SetupServiceImpl.class);
     bind(NotificationService.class).to(NotificationServiceImpl.class);
+    bind(NotificationMessageResolver.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

@@ -8,9 +8,6 @@ import java.util.List;
  * Created by anubhaw on 7/25/16.
  */
 public class ApprovalNotification extends Notification {
-  private String entityTitle;
-  private String entityName;
-
   /**
    * Instantiates a new Approval notification.
    */
@@ -19,54 +16,11 @@ public class ApprovalNotification extends Notification {
   }
 
   /**
-   * Gets entity title.
-   *
-   * @return the entity title
-   */
-  public String getEntityTitle() {
-    return entityTitle;
-  }
-
-  /**
-   * Sets entity title.
-   *
-   * @param entityTitle the entity title
-   */
-  public void setEntityTitle(String entityTitle) {
-    this.entityTitle = entityTitle;
-  }
-
-  /**
-   * Gets entity name.
-   *
-   * @return the entity name
-   */
-  public String getEntityName() {
-    return entityName;
-  }
-
-  /**
-   * Sets entity name.
-   *
-   * @param entityName the entity name
-   */
-  public void setEntityName(String entityName) {
-    this.entityName = entityName;
-  }
-
-  @Override
-  public void setDisplayText() {
-    this.displayText = String.format("%s <a href=%s>%s</a> is waiting for approval", entityTitle, detailsUrl,
-        entityName); // TODO: extract out in some template
-  }
-
-  /**
    * The type Builder.
    */
   public static final class Builder {
+    protected String displayText;
     protected String detailsUrl;
-    private String entityTitle;
-    private String entityName;
     private NotificationType notificationType;
     private List<NotificationAction> notificationActions;
     private String uuid;
@@ -83,13 +37,8 @@ public class ApprovalNotification extends Notification {
       return new Builder();
     }
 
-    public Builder withEntityTitle(String entityTitle) {
-      this.entityTitle = entityTitle;
-      return this;
-    }
-
-    public Builder withEntityName(String entityName) {
-      this.entityName = entityName;
+    public Builder withDisplayText(String displayText) {
+      this.displayText = displayText;
       return this;
     }
 
@@ -145,8 +94,7 @@ public class ApprovalNotification extends Notification {
 
     public Builder but() {
       return anApprovalNotification()
-          .withEntityTitle(entityTitle)
-          .withEntityName(entityName)
+          .withDisplayText(displayText)
           .withDetailsUrl(detailsUrl)
           .withNotificationType(notificationType)
           .withNotificationActions(notificationActions)
@@ -161,8 +109,7 @@ public class ApprovalNotification extends Notification {
 
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
-      approvalNotification.setEntityTitle(entityTitle);
-      approvalNotification.setEntityName(entityName);
+      approvalNotification.setDisplayText(displayText);
       approvalNotification.setDetailsUrl(detailsUrl);
       approvalNotification.setNotificationType(notificationType);
       approvalNotification.setNotificationActions(notificationActions);

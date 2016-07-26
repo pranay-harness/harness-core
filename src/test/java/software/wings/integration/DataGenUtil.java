@@ -2,7 +2,6 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
-import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toList;
@@ -12,6 +11,7 @@ import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -33,6 +33,9 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.common.NotificationMessageResolver.ARTIFACT_APPROVAL_NOTIFICATION_TEMPLATE;
+import static software.wings.common.NotificationMessageResolver.CHANGE_NOTIFICATION_TEMPLATE;
+import static software.wings.common.NotificationMessageResolver.WORKFLOW_FAILURE_NOTIFICATION_TEMPLATE;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
@@ -61,14 +64,11 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
-import software.wings.beans.ApprovalNotification;
 import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.ChangeNotification;
 import software.wings.beans.ConfigFile.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.FailureNotification;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -81,6 +81,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -140,6 +141,8 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
   @Inject private WorkflowService workflowService;
+  @Inject private NotificationMessageResolver notMsgResolver;
+  private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   /**
    * Generated Data for across the API use.
@@ -209,42 +212,42 @@ public class DataGenUtil extends WingsBaseTest {
     String actionUrl = "api/notification/%s?appId=%s&action=%s";
 
     String uuid = UUIDGenerator.getUuid();
-    ChangeNotification changeNotification = aChangeNotification()
-                                                .withUuid(uuid)
-                                                .withAppId(appId)
-                                                .withChangeDate(currentTimeMillis())
-                                                .withDetailsUrl(format(detailsUrl, uuid, appId))
-                                                .build();
-    wingsPersistence.save(changeNotification);
-    changeNotification.setDisplayText();
-    uuid = UUIDGenerator.getUuid();
-    ApprovalNotification approvalNotification =
-        ApprovalNotification.Builder.anApprovalNotification()
+    wingsPersistence.save(
+        aChangeNotification()
             .withUuid(uuid)
             .withAppId(appId)
             .withDetailsUrl(format(detailsUrl, uuid, appId))
-            .withEntityName("Final_Build_05_02_08_16_9_15pm")
-            .withEntityTitle("Artifact")
+            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(CHANGE_NOTIFICATION_TEMPLATE,
+                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "DATE",
+                    dateFormatter.format(new Date(System.currentTimeMillis())))))
+            .build());
+
+    uuid = UUIDGenerator.getUuid();
+    wingsPersistence.save(
+        anApprovalNotification()
+            .withUuid(uuid)
+            .withAppId(appId)
+            .withDetailsUrl(format(detailsUrl, uuid, appId))
+            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(ARTIFACT_APPROVAL_NOTIFICATION_TEMPLATE,
+                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "NAME", "Final_Build_05_02_08_16_9_15pm")))
             .withNotificationActions(asList(
                 aNotificationAction().withName("APPROVE").withUrl(format(actionUrl, uuid, appId, "APPROVE")).build(),
                 aNotificationAction().withName("REJECT").withUrl(format(actionUrl, uuid, appId, "REJECT")).build()))
-            .build();
-    approvalNotification.setDisplayText();
-    wingsPersistence.save(approvalNotification);
+            .build());
+
     uuid = UUIDGenerator.getUuid();
-    FailureNotification failureNotification =
+    wingsPersistence.save(
         aFailureNotification()
             .withUuid(uuid)
             .withAppId(appId)
             .withDetailsUrl(format(detailsUrl, uuid, appId))
-            .withEntityName("workflow_ui_svr_2:04_12_2016.")
+            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(WORKFLOW_FAILURE_NOTIFICATION_TEMPLATE,
+                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "NAME", "workflow_ui_svr_2:04_12_2016")))
             .withNotificationActions(asList(aNotificationAction()
                                                 .withName("SEE DETAILS")
                                                 .withUrl(format(actionUrl, uuid, appId, "DETAILS"))
                                                 .build()))
-            .build();
-    failureNotification.setDisplayText();
-    wingsPersistence.save(failureNotification);
+            .build());
   }
 
   private void addOrchestrationAndPipeline(

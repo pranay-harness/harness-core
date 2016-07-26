@@ -11,8 +11,8 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "notifications")
 public abstract class Notification extends Base {
-  @NotEmpty protected String displayText;
-  @NotEmpty protected String detailsUrl;
+  @NotEmpty private String displayText;
+  @NotEmpty private String detailsUrl;
   @NotNull private NotificationType notificationType;
   @NotNull private boolean actionable;
   private List<NotificationAction> notificationActions;
@@ -20,13 +20,32 @@ public abstract class Notification extends Base {
   /**
    * The enum Notification type.
    */
-  public enum NotificationType { APPROVAL, CHANGE, FAILURE }
+  public enum NotificationType {
+    /**
+     * Approval notification type.
+     */
+    APPROVAL,
+    /**
+     * Change notification type.
+     */
+    CHANGE,
+    /**
+     * Failure notification type.
+     */
+    FAILURE
+  }
 
   /**
    * Instantiates a new Notification.
    */
   public Notification() {}
 
+  /**
+   * Instantiates a new Notification.
+   *
+   * @param notificationType the notification type
+   * @param actionable       the actionable
+   */
   public Notification(NotificationType notificationType, boolean actionable) {
     this.notificationType = notificationType;
     this.actionable = actionable;
@@ -41,7 +60,14 @@ public abstract class Notification extends Base {
     return displayText;
   }
 
-  public abstract void setDisplayText();
+  /**
+   * Sets display text.
+   *
+   * @param displayText the display text
+   */
+  public void setDisplayText(String displayText) {
+    this.displayText = displayText;
+  }
 
   /**
    * Gets details url.
@@ -97,10 +123,20 @@ public abstract class Notification extends Base {
     this.actionable = actionable;
   }
 
+  /**
+   * Gets notification actions.
+   *
+   * @return the notification actions
+   */
   public List<NotificationAction> getNotificationActions() {
     return notificationActions;
   }
 
+  /**
+   * Sets notification actions.
+   *
+   * @param notificationActions the notification actions
+   */
   public void setNotificationActions(List<NotificationAction> notificationActions) {
     this.notificationActions = notificationActions;
   }
