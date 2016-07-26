@@ -11,22 +11,29 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "notifications")
 public abstract class Notification extends Base {
+  /**
+   * The Display text.
+   */
   @NotEmpty protected String displayText;
+  /**
+   * The Details url.
+   */
   @NotEmpty protected String detailsUrl;
   @NotNull private NotificationType notificationType;
   @NotNull private boolean actionable;
   private List<NotificationAction> notificationActions;
 
   /**
-   * The enum Notification type.
-   */
-  public enum NotificationType { APPROVAL, CHANGE, FAILURE }
-
-  /**
    * Instantiates a new Notification.
    */
   public Notification() {}
 
+  /**
+   * Instantiates a new Notification.
+   *
+   * @param notificationType the notification type
+   * @param actionable       the actionable
+   */
   public Notification(NotificationType notificationType, boolean actionable) {
     this.notificationType = notificationType;
     this.actionable = actionable;
@@ -41,6 +48,9 @@ public abstract class Notification extends Base {
     return displayText;
   }
 
+  /**
+   * Sets display text.
+   */
   public abstract void setDisplayText();
 
   /**
@@ -97,11 +107,37 @@ public abstract class Notification extends Base {
     this.actionable = actionable;
   }
 
+  /**
+   * Gets notification actions.
+   *
+   * @return the notification actions
+   */
   public List<NotificationAction> getNotificationActions() {
     return notificationActions;
   }
 
+  /**
+   * Sets notification actions.
+   *
+   * @param notificationActions the notification actions
+   */
   public void setNotificationActions(List<NotificationAction> notificationActions) {
     this.notificationActions = notificationActions;
+  }
+
+  /**
+   * The enum Notification type.
+   */
+  public enum NotificationType {
+    /**
+     * Approval notification type.
+     */
+    APPROVAL, /**
+               * Change notification type.
+               */
+    CHANGE, /**
+             * Failure notification type.
+             */
+    FAILURE
   }
 }

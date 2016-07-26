@@ -158,6 +158,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  /**
+   * Should work with query with number values.
+   */
   @Test
   public void shouldWorkWithQueryWithNumberValues() {
     UriInfo uriInfo = mock(UriInfo.class);

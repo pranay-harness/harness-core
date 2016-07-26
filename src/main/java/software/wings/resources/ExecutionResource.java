@@ -16,7 +16,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -174,6 +173,14 @@ public class ExecutionResource {
     return new RestResponse<>(workflowService.triggerExecutionEvent(executionEvent));
   }
 
+  /**
+   * Required args rest response.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param executionArgs the execution args
+   * @return the rest response
+   */
   @POST
   @Path("required-args")
   @Produces("application/json")
