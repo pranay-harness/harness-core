@@ -13,7 +13,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -25,12 +27,14 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.Notification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
@@ -66,6 +70,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private AppContainerService appContainerService;
   @Mock private WorkflowService workflowService;
+  @Mock private NotificationService notificationService;
 
   /**
    * Sets up.
@@ -89,6 +94,8 @@ public class AppServiceTest extends WingsBaseTest {
     Application app = anApplication().withName("AppA").withDescription("Description1").build();
     Application savedApp = anApplication().withUuid(APP_ID).withName("AppA").withDescription("Description1").build();
     when(wingsPersistence.saveAndGet(eq(Application.class), any(Application.class))).thenReturn(savedApp);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(savedApp);
+    when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
     appService.save(app);
     verify(wingsPersistence).saveAndGet(Application.class, app);
     verify(settingsService).createDefaultSettings(APP_ID);
@@ -105,9 +112,15 @@ public class AppServiceTest extends WingsBaseTest {
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
     when(workflowService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    PageResponse<Notification> notificationPageResponse = new PageResponse<>();
+    notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     PageResponse<Application> applications = appService.list(pageRequest, true, 5);
     assertThat(applications).containsAll(asList(application));
     assertThat(application.getRecentExecutions()).isNotNull();
+    assertThat(application.getNotifications())
+        .hasSize(1)
+        .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
   }
 
   /**
@@ -129,9 +142,15 @@ public class AppServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetApplication() {
+    PageResponse<Notification> notificationPageResponse = new PageResponse<>();
+    notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
-    appService.get(APP_ID);
+    Application application = appService.get(APP_ID);
     verify(wingsPersistence).get(Application.class, APP_ID);
+    assertThat(application.getNotifications())
+        .hasSize(1)
+        .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
   }
 
   /**

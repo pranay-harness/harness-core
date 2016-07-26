@@ -31,6 +31,7 @@ public class Application extends Base {
 
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
+  @Transient private List<Notification> notifications;
 
   /**
    * Gets name.
@@ -138,6 +139,24 @@ public class Application extends Base {
    */
   public void setRecentExecutions(List<WorkflowExecution> recentExecutions) {
     this.recentExecutions = recentExecutions;
+  }
+
+  /**
+   * Gets notifications.
+   *
+   * @return the notifications
+   */
+  public List<Notification> getNotifications() {
+    return notifications;
+  }
+
+  /**
+   * Sets notifications.
+   *
+   * @param notifications the notifications
+   */
+  public void setNotifications(List<Notification> notifications) {
+    this.notifications = notifications;
   }
 
   @Override

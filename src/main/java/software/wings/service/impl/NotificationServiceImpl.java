@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Notification;
-import software.wings.beans.NotificationAction;
+import software.wings.beans.Notification.NotificationAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

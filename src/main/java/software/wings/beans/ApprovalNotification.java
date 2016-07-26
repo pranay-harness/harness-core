@@ -2,27 +2,46 @@ package software.wings.beans;
 
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
 
-import java.util.List;
-
 /**
  * Created by anubhaw on 7/25/16.
  */
 public class ApprovalNotification extends Notification {
+  private String entityName;
+
   /**
    * Instantiates a new Approval notification.
    */
   public ApprovalNotification() {
-    super(APPROVAL, true);
+    super(APPROVAL);
+  }
+
+  /**
+   * Gets entity name.
+   *
+   * @return the entity name
+   */
+  public String getEntityName() {
+    return entityName;
+  }
+
+  /**
+   * Sets entity name.
+   *
+   * @param entityName the entity name
+   */
+  public void setEntityName(String entityName) {
+    this.entityName = entityName;
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    protected String displayText;
-    protected String detailsUrl;
+    private String entityName;
+    private String environmentId;
+    private String entityId;
+    private NotificationEntityType entityType;
     private NotificationType notificationType;
-    private List<NotificationAction> notificationActions;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -42,19 +61,47 @@ public class ApprovalNotification extends Notification {
       return new Builder();
     }
 
-    public Builder withDisplayText(String displayText) {
-      this.displayText = displayText;
+    /**
+     * With entity name builder.
+     *
+     * @param entityName the entity name
+     * @return the builder
+     */
+    public Builder withEntityName(String entityName) {
+      this.entityName = entityName;
       return this;
     }
 
     /**
-     * With details url builder.
+     * With environment id builder.
      *
-     * @param detailsUrl the details url
+     * @param environmentId the environment id
      * @return the builder
      */
-    public Builder withDetailsUrl(String detailsUrl) {
-      this.detailsUrl = detailsUrl;
+    public Builder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
+    }
+
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
+    public Builder withEntityType(NotificationEntityType entityType) {
+      this.entityType = entityType;
       return this;
     }
 
@@ -66,17 +113,6 @@ public class ApprovalNotification extends Notification {
      */
     public Builder withNotificationType(NotificationType notificationType) {
       this.notificationType = notificationType;
-      return this;
-    }
-
-    /**
-     * With notification actions builder.
-     *
-     * @param notificationActions the notification actions
-     * @return the builder
-     */
-    public Builder withNotificationActions(List<NotificationAction> notificationActions) {
-      this.notificationActions = notificationActions;
       return this;
     }
 
@@ -164,10 +200,11 @@ public class ApprovalNotification extends Notification {
      */
     public Builder but() {
       return anApprovalNotification()
-          .withDisplayText(displayText)
-          .withDetailsUrl(detailsUrl)
+          .withEntityName(entityName)
+          .withEnvironmentId(environmentId)
+          .withEntityId(entityId)
+          .withEntityType(entityType)
           .withNotificationType(notificationType)
-          .withNotificationActions(notificationActions)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -184,10 +221,11 @@ public class ApprovalNotification extends Notification {
      */
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
-      approvalNotification.setDisplayText(displayText);
-      approvalNotification.setDetailsUrl(detailsUrl);
+      approvalNotification.setEntityName(entityName);
+      approvalNotification.setEnvironmentId(environmentId);
+      approvalNotification.setEntityId(entityId);
+      approvalNotification.setEntityType(entityType);
       approvalNotification.setNotificationType(notificationType);
-      approvalNotification.setNotificationActions(notificationActions);
       approvalNotification.setUuid(uuid);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);

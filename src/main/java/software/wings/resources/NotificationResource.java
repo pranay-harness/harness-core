@@ -3,12 +3,14 @@ package software.wings.resources;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Notification;
+import software.wings.beans.Notification.NotificationAction;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -18,7 +20,7 @@ import software.wings.service.intfc.NotificationService;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -43,9 +45,11 @@ public class NotificationResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Notification>> list(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
-      @BeanParam PageRequest<Notification> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
+  public RestResponse<PageResponse<Notification>> list(
+      @QueryParam("appId") String appId, @BeanParam PageRequest<Notification> pageRequest) {
+    if (!Strings.isNullOrEmpty(appId)) {
+      pageRequest.addFilter("appId", appId, EQ);
+    }
     return new RestResponse<>(notificationService.list(pageRequest));
   }
 
@@ -68,15 +72,13 @@ public class NotificationResource {
    *
    * @param appId          the app id
    * @param notificationId the notification id
-   * @param notification   the notification
    * @return the rest response
    */
-  @PUT
-  @Path("{notificationId}")
-  public RestResponse<Notification> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
-      @QueryParam("notificationId") String notificationId, Notification notification) {
-    notification.setAppId(appId);
-    notification.setUuid(notificationId);
-    return new RestResponse<>(notificationService.update(notification));
+  @POST
+  @Path("{notificationId}/action/{action}")
+  public RestResponse<Notification> act(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @QueryParam("notificationId") String notificationId,
+      @QueryParam("action") NotificationAction notificationAction) {
+    return new RestResponse<>(notificationService.act(appId, notificationId, notificationAction));
   }
 }

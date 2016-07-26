@@ -12,6 +12,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -23,11 +24,13 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -49,6 +52,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ExecutorService executorService;
   @Inject private SetupService setupService;
   @Inject private WorkflowService workflowService;
+  @Inject private NotificationService notificationService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -59,7 +63,7 @@ public class AppServiceImpl implements AppService {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
     settingsService.createDefaultSettings(application.getUuid());
     environmentService.createDefaultEnvironments(application.getUuid());
-    return application;
+    return get(application.getUuid());
   }
 
   /* (non-Javadoc)
@@ -80,9 +84,16 @@ public class AppServiceImpl implements AppService {
                         .build(),
                     false)
                 .getResponse());
+        application.setNotifications(getApplicationNotifications(application.getUuid()));
       });
     }
     return response;
+  }
+
+  private List<Notification> getApplicationNotifications(String appId) {
+    return notificationService
+        .list(aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build()).build())
+        .getResponse();
   }
 
   /* (non-Javadoc)
@@ -94,6 +105,7 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
     }
+    application.setNotifications(getApplicationNotifications(application.getUuid()));
     return application;
   }
 
