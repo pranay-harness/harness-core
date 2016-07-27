@@ -63,7 +63,9 @@ public class Graph {
   /**
    * The Default group padding.
    */
-  public static final int DEFAULT_GROUP_PADDING = 10;
+  public static final int DEFAULT_GROUP_PADDING = 17;
+
+  public static final int DEFAULT_ELEMENT_PADDING = 8;
 
   private static final String GROUP_TYPE = "group";
 

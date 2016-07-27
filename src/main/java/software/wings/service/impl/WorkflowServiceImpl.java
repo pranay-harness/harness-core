@@ -11,6 +11,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
+import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
 import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
@@ -38,7 +39,6 @@ import software.wings.beans.Command;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgumentType;
-import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Group;
 import software.wings.beans.Graph.Link;
@@ -99,6 +99,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -763,26 +764,22 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void paintGraph(Group group, Graph graph, int x, int y) {
-    group.setX(x - DEFAULT_GROUP_PADDING);
+    group.setX(x);
     group.setY(y);
-    group.setWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING);
+    // group.setWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING);
     graph.addNode(group);
 
     y += DEFAULT_GROUP_PADDING;
     Node priorElement = null;
     for (Node node : group.getElements()) {
-      paintGraph(node, graph, x, y);
+      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);
       y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
-
-      if (group.getExecutionStrategy() == ExecutionStrategy.SERIAL && priorElement != null) {
-        graph.addLink(Link.Builder.aLink()
-                          .withId(UUIDGenerator.getUuid())
-                          .withFrom(priorElement.getId())
-                          .withTo(node.getId())
-                          .withType("element")
-                          .build());
-      }
       priorElement = node;
+    }
+    if (priorElement == null) {
+      group.setHeight(0);
+    } else {
+      group.setHeight(priorElement.getY() - group.getY());
     }
   }
 
@@ -793,20 +790,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     Group group = node.getGroup();
     if (group != null) {
-      paintGraph(group, graph, x, y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT);
-      graph.addLink(Link.Builder.aLink()
-                        .withId(UUIDGenerator.getUuid())
-                        .withFrom(node.getId())
-                        .withTo(group.getId())
-                        .withType("repeat")
-                        .build());
-      ;
+      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT);
     }
 
     Node next = node.getNext();
     if (next != null) {
       if (group == null || next.getGroup() == null) {
-        paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+        if (node.getType().equals("ELEMENT")) {
+          paintGraph(next, graph, x + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+        } else {
+          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+        }
       } else {
         paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
       }
@@ -816,7 +810,6 @@ public class WorkflowServiceImpl implements WorkflowService {
                         .withTo(next.getId())
                         .withType(node.getStatus())
                         .build());
-      ;
     }
   }
 

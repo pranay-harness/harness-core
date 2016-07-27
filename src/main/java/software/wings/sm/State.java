@@ -110,6 +110,7 @@ public abstract class State {
    *
    * @return the required execution argument types
    */
+  @SchemaIgnore
   public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
     return null;
   }

@@ -8,14 +8,15 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
+import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
 import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
+import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Host.Builder.aHost;
@@ -84,6 +85,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 /**
@@ -804,17 +806,17 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .containsExactly("SUCCESS", null, "SUCCESS", "SUCCESS", "SUCCESS", "SUCCESS");
 
     int col1 = DEFAULT_INITIAL_X;
-    int col2 = DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
-    assertThat(graph.getNodes())
-        .extracting("x")
-        .containsExactly(col1, col1 - DEFAULT_GROUP_PADDING, col1, col2, col1, col2);
+    int col2 = col1 + DEFAULT_GROUP_PADDING;
+    int col3 = col2 + DEFAULT_ELEMENT_PADDING;
+    int col4 = col3 + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;
-    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
-    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
     assertThat(graph.getNodes())
         .extracting("y")
-        .containsExactly(row1, row2 - DEFAULT_GROUP_PADDING, row2, row2, row3, row3);
+        .containsExactly(row1, row1 + DEFAULT_NODE_HEIGHT, row2, row2, row3, row3);
   }
 
   /**
@@ -918,17 +920,17 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .containsExactly("FAILED", null, "FAILED", "FAILED", "FAILED", "FAILED");
 
     int col1 = DEFAULT_INITIAL_X;
-    int col2 = DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
-    assertThat(graph.getNodes())
-        .extracting("x")
-        .containsExactly(col1, col1 - DEFAULT_GROUP_PADDING, col1, col2, col1, col2);
+    int col2 = col1 + DEFAULT_GROUP_PADDING;
+    int col3 = col2 + DEFAULT_ELEMENT_PADDING;
+    int col4 = col3 + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;
-    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
-    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
     assertThat(graph.getNodes())
         .extracting("y")
-        .containsExactly(row1, row2 - DEFAULT_GROUP_PADDING, row2, row2, row3, row3);
+        .containsExactly(row1, row1 + DEFAULT_NODE_HEIGHT, row2, row2, row3, row3);
 
     PageRequest<WorkflowExecution> pageRequest = PageRequest.Builder.aPageRequest()
                                                      .addFilter("appId", Operator.EQ, app.getUuid())
