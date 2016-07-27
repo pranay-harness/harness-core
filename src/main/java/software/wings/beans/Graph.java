@@ -43,12 +43,13 @@ public class Graph {
   /**
    * The Default node width.
    */
-  public static final int DEFAULT_NODE_WIDTH = 75;
+  public static final int DEFAULT_NODE_WIDTH = 50;
 
+  public static final int DEFAULT_ELEMENT_NODE_WIDTH = 105;
   /**
    * The Default node height.
    */
-  public static final int DEFAULT_NODE_HEIGHT = 50;
+  public static final int DEFAULT_NODE_HEIGHT = 40;
 
   /**
    * The Default arrow width.
@@ -58,7 +59,7 @@ public class Graph {
   /**
    * The Default arrow height.
    */
-  public static final int DEFAULT_ARROW_HEIGHT = 50;
+  public static final int DEFAULT_ARROW_HEIGHT = 40;
 
   /**
    * The Default group padding.

@@ -130,7 +130,7 @@ public abstract class State {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     return executionResponse;
   }

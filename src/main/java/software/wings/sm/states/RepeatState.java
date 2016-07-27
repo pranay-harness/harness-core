@@ -78,7 +78,7 @@ public class RepeatState extends State {
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Object status : response.values()) {
       executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
@@ -104,7 +104,7 @@ public class RepeatState extends State {
       repeatStateExecutionData.setRepeatElementIndex(repeatElementIndex);
       ContextElement repeatElement = repeatElements.get(repeatElementIndex);
 
-      StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+      StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
       List<String> correlationIds = new ArrayList<>();
       processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
 

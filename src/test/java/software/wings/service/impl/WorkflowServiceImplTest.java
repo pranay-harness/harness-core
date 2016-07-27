@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
+import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
 import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
 import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
@@ -808,7 +809,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     int col1 = DEFAULT_INITIAL_X;
     int col2 = col1 + DEFAULT_GROUP_PADDING;
     int col3 = col2 + DEFAULT_ELEMENT_PADDING;
-    int col4 = col3 + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    int col4 = col3 + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
     assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;
@@ -922,7 +923,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     int col1 = DEFAULT_INITIAL_X;
     int col2 = col1 + DEFAULT_GROUP_PADDING;
     int col3 = col2 + DEFAULT_ELEMENT_PADDING;
-    int col4 = col3 + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+    int col4 = col3 + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
     assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;

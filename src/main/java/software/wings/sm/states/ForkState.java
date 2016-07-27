@@ -101,7 +101,7 @@ public class ForkState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContextImpl context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     for (Object status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
@@ -110,7 +110,8 @@ public class ForkState extends State {
       }
     }
     logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",
-        context.getStateExecutionInstance().getUuid(), getName(), executionResponse.getExecutionStatus());
+        ((ExecutionContextImpl) context).getStateExecutionInstance().getUuid(), getName(),
+        executionResponse.getExecutionStatus());
     return executionResponse;
   }
 

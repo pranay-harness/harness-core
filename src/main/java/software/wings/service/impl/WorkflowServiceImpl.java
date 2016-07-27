@@ -6,22 +6,12 @@ package software.wings.service.impl;
 
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
-import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
-import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
-import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
-import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.Lists;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -40,9 +30,6 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.Graph;
-import software.wings.beans.Graph.Group;
-import software.wings.beans.Graph.Link;
-import software.wings.beans.Graph.Node;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
@@ -54,7 +41,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -64,26 +50,19 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.ExpressionProcessorFactory;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.StateMachineExecutionEventManager;
+import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.CommandState;
-import software.wings.sm.states.ForkState.ForkStateExecutionData;
-import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 
@@ -97,7 +76,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -140,8 +118,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StaticConfiguration staticConfiguration;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
-  @Inject private Injector injector;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
+  @Inject private GraphRenderer graphRenderer;
+
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
 
@@ -540,7 +520,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
     workflowExecution.setGraph(
-        generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
+        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
@@ -603,254 +583,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return wingsPersistence.executeGetListQuery(query);
-  }
-
-  private Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, boolean isSimpleLinear) {
-    logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
-        instanceIdMap, initialStateName, expandedGroupIds);
-    Node originNode = null;
-    Map<String, Node> nodeIdMap = new HashMap<>();
-    Map<String, Node> prevInstanceIdMap = new HashMap<>();
-    Map<String, Map<String, Node>> parentIdElementsMap = new HashMap<>();
-
-    for (StateExecutionInstance instance : instanceIdMap.values()) {
-      Node node = new Node();
-      node.setId(instance.getUuid());
-      node.setName(instance.getStateName());
-      node.setType(instance.getStateType());
-      node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
-      if (instance.getStateExecutionData() != null) {
-        StateExecutionData executionData = instance.getStateExecutionData();
-        injector.injectMembers(executionData);
-        node.setExecutionSummary(executionData.getExecutionSummary());
-        node.setExecutionDetails(executionData.getExecutionDetails());
-      }
-      if ((StateType.REPEAT.name().equals(instance.getStateType())
-              || StateType.FORK.name().equals(instance.getStateType()))
-          && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
-        node.setExpanded(false);
-      } else {
-        node.setExpanded(true);
-      }
-
-      if (node.getName().equals(initialStateName)) {
-        originNode = node;
-      }
-
-      if (instance.getParentInstanceId() != null && instance.isContextTransition()) {
-        Map<String, Node> elementsMap = parentIdElementsMap.get(instance.getParentInstanceId());
-        if (elementsMap == null) {
-          elementsMap = new HashMap<>();
-          parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
-        }
-        elementsMap.put(instance.getContextElementName(), node);
-      }
-
-      if (instance.getPrevInstanceId() != null) {
-        prevInstanceIdMap.put(instance.getPrevInstanceId(), node);
-      }
-
-      nodeIdMap.put(node.getId(), node);
-    }
-    logger.debug(
-        "generateNodeHierarchy invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
-        instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
-
-    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
-
-    Graph graph = new Graph();
-    if (isSimpleLinear) {
-      paintSimpleLinearGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    } else {
-      extrapolateDimension(originNode);
-      paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    }
-    logger.debug("graph generated: {}", graph);
-    return graph;
-  }
-
-  private void paintSimpleLinearGraph(Node originNode, Graph graph, int x, int y) {
-    if (originNode == null || originNode.getGroup() == null || originNode.getGroup().getElements() == null) {
-      return;
-    }
-    for (Node node : originNode.getGroup().getElements()) {
-      if (node.getNext() == null) {
-        node.setType("COMMAND");
-      } else {
-        node.getNext().setName(node.getName());
-        node = node.getNext();
-      }
-
-      node.setName(substringBefore(node.getName(), ":"));
-
-      node.setX(x);
-      node.setY(y);
-
-      graph.getNodes().add(node);
-      x += DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
-    }
-  }
-
-  private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
-      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      StateExecutionData elementStateExecutionData) {
-    logger.debug("generateNodeHierarchy requested- node: {}", node);
-    StateExecutionInstance instance = instanceIdMap.get(node.getId());
-
-    if (elementStateExecutionData != null && elementStateExecutionData.getStartTs() == null) {
-      elementStateExecutionData.setStartTs(instance.getStartTs());
-    }
-
-    if (parentIdElementsMap.get(node.getId()) != null) {
-      Group group = new Group();
-      group.setId(node.getId() + "-group");
-      logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
-      node.setGroup(group);
-
-      List<String> elements = null;
-      StateExecutionData sed = instance.getStateExecutionData();
-      if (sed != null && sed instanceof ForkStateExecutionData) {
-        elements = ((ForkStateExecutionData) sed).getElements();
-      } else if (sed != null && sed instanceof RepeatStateExecutionData) {
-        elements = ((RepeatStateExecutionData) sed)
-                       .getRepeatElements()
-                       .stream()
-                       .map(ContextElement::getName)
-                       .collect(Collectors.toList());
-        group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
-      }
-      logger.debug("generateNodeHierarchy processing group - node: {}", elements);
-      if (elements != null) {
-        for (String element : elements) {
-          Node elementNode =
-              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
-          group.getElements().add(elementNode);
-          logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
-          Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
-          StateExecutionData executionData = new StateExecutionData();
-          if (elementRepeatNode != null) {
-            elementNode.setNext(elementRepeatNode);
-            logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
-            generateNodeHierarchy(
-                instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
-          }
-          if (executionData.getStatus() == null) {
-            executionData.setStatus(ExecutionStatus.QUEUED);
-          }
-          elementNode.setStatus(executionData.getStatus().name());
-          elementNode.setExecutionSummary(executionData.getExecutionSummary());
-          elementNode.setExecutionDetails(executionData.getExecutionDetails());
-        }
-      }
-    }
-
-    if (prevInstanceIdMap.get(node.getId()) != null) {
-      Node nextNode = prevInstanceIdMap.get(node.getId());
-      logger.debug("generateNodeHierarchy nextNode attached - nextNode: {}, node: {}", nextNode, node);
-      node.setNext(nextNode);
-      generateNodeHierarchy(
-          instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode, elementStateExecutionData);
-    } else {
-      if (elementStateExecutionData != null) {
-        StateExecutionData executionData = instance.getStateExecutionData();
-        if (executionData != null) {
-          elementStateExecutionData.setStatus(executionData.getStatus());
-          elementStateExecutionData.setEndTs(executionData.getEndTs());
-          elementStateExecutionData.setErrorMsg(executionData.getErrorMsg());
-        }
-      }
-    }
-  }
-
-  private void paintGraph(Group group, Graph graph, int x, int y) {
-    group.setX(x);
-    group.setY(y);
-    // group.setWidth(DEFAULT_NODE_WIDTH + 2 * DEFAULT_GROUP_PADDING);
-    graph.addNode(group);
-
-    y += DEFAULT_GROUP_PADDING;
-    Node priorElement = null;
-    for (Node node : group.getElements()) {
-      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);
-      y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
-      priorElement = node;
-    }
-    if (priorElement == null) {
-      group.setHeight(0);
-    } else {
-      group.setHeight(priorElement.getY() - group.getY());
-    }
-  }
-
-  private void paintGraph(Node node, Graph graph, int x, int y) {
-    node.setX(x);
-    node.setY(y);
-    graph.addNode(node);
-
-    Group group = node.getGroup();
-    if (group != null) {
-      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT);
-    }
-
-    Node next = node.getNext();
-    if (next != null) {
-      if (group == null || next.getGroup() == null) {
-        if (node.getType().equals("ELEMENT")) {
-          paintGraph(next, graph, x + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
-        } else {
-          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
-        }
-      } else {
-        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
-      }
-      graph.addLink(Link.Builder.aLink()
-                        .withId(UUIDGenerator.getUuid())
-                        .withFrom(node.getId())
-                        .withTo(next.getId())
-                        .withType(node.getStatus())
-                        .build());
-    }
-  }
-
-  private void extrapolateDimension(Group group) {
-    group.setWidth(2 * DEFAULT_GROUP_PADDING);
-    group.setHeight(2 * DEFAULT_GROUP_PADDING);
-    for (Node node : group.getElements()) {
-      extrapolateDimension(node);
-      if (group.getWidth() < node.getWidth()) {
-        group.setWidth(node.getWidth());
-      }
-      group.setHeight(group.getHeight() + node.getHeight() + DEFAULT_ARROW_HEIGHT);
-    }
-
-    // reduce one arrow height
-    if (!group.getElements().isEmpty()) {
-      group.setHeight(group.getHeight() - DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING);
-    }
-  }
-
-  private void extrapolateDimension(Node node) {
-    node.setWidth(DEFAULT_NODE_WIDTH);
-    node.setHeight(DEFAULT_NODE_HEIGHT);
-
-    Group group = node.getGroup();
-    if (group != null) {
-      extrapolateDimension(group);
-      if (node.getWidth() < group.getWidth()) {
-        node.setWidth(group.getWidth());
-      }
-      node.setHeight(node.getHeight() + group.getHeight() + DEFAULT_ARROW_HEIGHT);
-    }
-
-    Node next = node.getNext();
-    if (next != null) {
-      extrapolateDimension(next);
-      if (node.getHeight() < next.getHeight()) {
-        node.setHeight(next.getHeight());
-      }
-      node.setWidth(node.getWidth() + next.getWidth() + DEFAULT_ARROW_WIDTH);
-    }
   }
 
   /**
@@ -1259,8 +991,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "workflowType is null");
     }
 
-    RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-
     if (executionArgs.getWorkflowType() == WorkflowType.ORCHESTRATION) {
       logger.debug("Received an orchestrated execution request");
       if (executionArgs.getOrchestrationId() == null) {
@@ -1281,8 +1011,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
-      extrapolateRequiredExecutionArgs(
-          stateMachine, stateMachine.getInitialState(), requiredExecutionArgs, new HashSet<>());
+      return stateMachineExecutionSimulator.getRequiredExecutionArgs(stateMachine);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");
@@ -1301,73 +1030,16 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       Command command =
           serviceResourceService.getCommandByName(appId, executionArgs.getServiceId(), executionArgs.getCommandName());
+
+      RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (command.isArtifactNeeded()) {
         requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.ARTIFACTS);
       }
       requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
       requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+      return requiredExecutionArgs;
     }
 
-    return requiredExecutionArgs;
-  }
-
-  private void extrapolateRequiredExecutionArgs(StateMachine stateMachine, State state,
-      RequiredExecutionArgs requiredExecutionArgs, Set<ExecutionArgumentType> argsInContext) {
-    if (state == null) {
-      return;
-    }
-    if (state instanceof RepeatState) {
-      ExpressionProcessor processor =
-          expressionProcessorFactory.getExpressionProcessor(((RepeatState) state).getRepeatElementExpression(), null);
-      if (processor != null) {
-        Set<ExecutionArgumentType> repeatArgsInContext = new HashSet<>(argsInContext);
-        addArgsTypeFromContextElement(repeatArgsInContext, processor.getContextElementType());
-        State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
-        extrapolateRequiredExecutionArgs(stateMachine, repeat, requiredExecutionArgs, repeatArgsInContext);
-      }
-    }
-
-    if (state.getRequiredExecutionArgumentTypes() != null) {
-      for (ExecutionArgumentType type : state.getRequiredExecutionArgumentTypes()) {
-        if (!argsInContext.contains(type)) {
-          requiredExecutionArgs.getRequiredExecutionTypes().add(type);
-        }
-      }
-    }
-
-    State success = stateMachine.getSuccessTransition(state.getName());
-    if (success != null) {
-      extrapolateRequiredExecutionArgs(stateMachine, success, requiredExecutionArgs, argsInContext);
-    }
-
-    State failure = stateMachine.getFailureTransition(state.getName());
-    if (failure != null) {
-      extrapolateRequiredExecutionArgs(stateMachine, failure, requiredExecutionArgs, argsInContext);
-    }
-    if (state instanceof CommandState) {
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
-    }
-  }
-
-  /**
-   * @param contextElementType
-   * @return
-   */
-  private void addArgsTypeFromContextElement(
-      Set<ExecutionArgumentType> argsInContext, ContextElementType contextElementType) {
-    if (contextElementType == null) {
-      return;
-    }
-    switch (contextElementType) {
-      case SERVICE: {
-        argsInContext.add(ExecutionArgumentType.SERVICE);
-        return;
-      }
-      case INSTANCE: {
-        argsInContext.add(ExecutionArgumentType.SERVICE);
-        return;
-      }
-    }
+    return null;
   }
 }
