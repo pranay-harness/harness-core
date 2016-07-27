@@ -6,6 +6,7 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
+import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
 import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
 import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
@@ -220,7 +221,7 @@ public class GraphRenderer {
     if (priorElement == null) {
       group.setHeight(0);
     } else {
-      group.setHeight(priorElement.getY() - group.getY());
+      group.setHeight(priorElement.getY() + DEFAULT_NODE_HEIGHT / 2 - group.getY());
     }
   }
 
@@ -238,7 +239,7 @@ public class GraphRenderer {
     if (next != null) {
       if (group == null || next.getGroup() == null) {
         if (node.getType().equals("ELEMENT")) {
-          paintGraph(next, graph, x + DEFAULT_GROUP_PADDING + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
         } else {
           paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
         }
