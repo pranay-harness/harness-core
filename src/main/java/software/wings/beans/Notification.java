@@ -3,7 +3,6 @@ package software.wings.beans;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -11,11 +10,10 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "notifications")
 public abstract class Notification extends Base {
-  @NotEmpty private String displayText;
-  @NotEmpty private String detailsUrl;
+  private String environmentId;
+  @NotEmpty private String entityId;
+  @NotNull private NotificationEntityType entityType;
   @NotNull private NotificationType notificationType;
-  @NotNull private boolean actionable;
-  private List<NotificationAction> notificationActions;
 
   /**
    * Instantiates a new Notification.
@@ -26,101 +24,41 @@ public abstract class Notification extends Base {
    * Instantiates a new Notification.
    *
    * @param notificationType the notification type
-   * @param actionable       the actionable
    */
-  public Notification(NotificationType notificationType, boolean actionable) {
+  public Notification(NotificationType notificationType) {
     this.notificationType = notificationType;
-    this.actionable = actionable;
   }
 
-  /**
-   * Gets display text.
-   *
-   * @return the display text
-   */
-  public String getDisplayText() {
-    return displayText;
+  public String getEnvironmentId() {
+    return environmentId;
   }
 
-  /**
-   * Sets display text.
-   *
-   * @param displayText the display text
-   */
-  public void setDisplayText(String displayText) {
-    this.displayText = displayText;
+  public void setEnvironmentId(String environmentId) {
+    this.environmentId = environmentId;
   }
 
-  /**
-   * Gets details url.
-   *
-   * @return the details url
-   */
-  public String getDetailsUrl() {
-    return detailsUrl;
+  public String getEntityId() {
+    return entityId;
   }
 
-  /**
-   * Sets details url.
-   *
-   * @param detailsUrl the details url
-   */
-  public void setDetailsUrl(String detailsUrl) {
-    this.detailsUrl = detailsUrl;
+  public void setEntityId(String entityId) {
+    this.entityId = entityId;
   }
 
-  /**
-   * Gets notification type.
-   *
-   * @return the notification type
-   */
+  public NotificationEntityType getEntityType() {
+    return entityType;
+  }
+
+  public void setEntityType(NotificationEntityType entityType) {
+    this.entityType = entityType;
+  }
+
   public NotificationType getNotificationType() {
     return notificationType;
   }
 
-  /**
-   * Sets notification type.
-   *
-   * @param notificationType the notification type
-   */
   public void setNotificationType(NotificationType notificationType) {
     this.notificationType = notificationType;
-  }
-
-  /**
-   * Is actionable boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isActionable() {
-    return actionable;
-  }
-
-  /**
-   * Sets actionable.
-   *
-   * @param actionable the actionable
-   */
-  public void setActionable(boolean actionable) {
-    this.actionable = actionable;
-  }
-
-  /**
-   * Gets notification actions.
-   *
-   * @return the notification actions
-   */
-  public List<NotificationAction> getNotificationActions() {
-    return notificationActions;
-  }
-
-  /**
-   * Sets notification actions.
-   *
-   * @param notificationActions the notification actions
-   */
-  public void setNotificationActions(List<NotificationAction> notificationActions) {
-    this.notificationActions = notificationActions;
   }
 
   /**
@@ -136,6 +74,12 @@ public abstract class Notification extends Base {
     CHANGE, /**
              * Failure notification type.
              */
-    FAILURE
+    FAILURE,
+
+    INFORMATION
   }
+
+  public enum NotificationEntityType { ARTIFACT, RELEASE, WORKFLOW, DEPLOYMENT }
+
+  public enum NotificationAction { ACCEPT, REJECT, RESUME }
 }

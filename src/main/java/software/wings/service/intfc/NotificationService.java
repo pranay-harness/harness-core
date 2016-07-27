@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Notification;
-import software.wings.beans.NotificationAction;
+import software.wings.beans.Notification.NotificationAction;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;

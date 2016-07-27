@@ -1,28 +1,108 @@
 package software.wings.beans;
 
+import static software.wings.beans.ApprovalNotification.ApprovalStage.PENDING;
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
 
-import java.util.List;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 7/25/16.
  */
 public class ApprovalNotification extends Notification {
+  @NotEmpty private String entityName;
+  @NotNull private ApprovalStage stage = PENDING;
+  private String releaseId;
+
+  /**
+   * The enum Approval stage.
+   */
+  public enum ApprovalStage {
+    /**
+     * Pending approval stage.
+     */
+    PENDING, /**
+              * Accepted approval stage.
+              */
+    ACCEPTED, /**
+               * Rejected approval stage.
+               */
+    REJECTED
+  }
+
   /**
    * Instantiates a new Approval notification.
    */
   public ApprovalNotification() {
-    super(APPROVAL, true);
+    super(APPROVAL);
+  }
+
+  /**
+   * Gets entity name.
+   *
+   * @return the entity name
+   */
+  public String getEntityName() {
+    return entityName;
+  }
+
+  /**
+   * Sets entity name.
+   *
+   * @param entityName the entity name
+   */
+  public void setEntityName(String entityName) {
+    this.entityName = entityName;
+  }
+
+  /**
+   * Gets stage.
+   *
+   * @return the stage
+   */
+  public ApprovalStage getStage() {
+    return stage;
+  }
+
+  /**
+   * Sets stage.
+   *
+   * @param stage the stage
+   */
+  public void setStage(ApprovalStage stage) {
+    this.stage = stage;
+  }
+
+  /**
+   * Gets release id.
+   *
+   * @return the release id
+   */
+  public String getReleaseId() {
+    return releaseId;
+  }
+
+  /**
+   * Sets release id.
+   *
+   * @param releaseId the release id
+   */
+  public void setReleaseId(String releaseId) {
+    this.releaseId = releaseId;
   }
 
   /**
    * The type Builder.
    */
   public static final class Builder {
-    protected String displayText;
-    protected String detailsUrl;
+    private String entityName;
+    private ApprovalStage stage = PENDING;
+    private String releaseId;
+    private String environmentId;
+    private String entityId;
+    private NotificationEntityType entityType;
     private NotificationType notificationType;
-    private List<NotificationAction> notificationActions;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -42,19 +122,69 @@ public class ApprovalNotification extends Notification {
       return new Builder();
     }
 
-    public Builder withDisplayText(String displayText) {
-      this.displayText = displayText;
+    /**
+     * With entity name builder.
+     *
+     * @param entityName the entity name
+     * @return the builder
+     */
+    public Builder withEntityName(String entityName) {
+      this.entityName = entityName;
       return this;
     }
 
     /**
-     * With details url builder.
+     * With stage builder.
      *
-     * @param detailsUrl the details url
+     * @param stage the stage
      * @return the builder
      */
-    public Builder withDetailsUrl(String detailsUrl) {
-      this.detailsUrl = detailsUrl;
+    public Builder withStage(ApprovalStage stage) {
+      this.stage = stage;
+      return this;
+    }
+
+    /**
+     * With release id builder.
+     *
+     * @param releaseId the release id
+     * @return the builder
+     */
+    public Builder withReleaseId(String releaseId) {
+      this.releaseId = releaseId;
+      return this;
+    }
+
+    /**
+     * With environment id builder.
+     *
+     * @param environmentId the environment id
+     * @return the builder
+     */
+    public Builder withEnvironmentId(String environmentId) {
+      this.environmentId = environmentId;
+      return this;
+    }
+
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
+    public Builder withEntityId(String entityId) {
+      this.entityId = entityId;
+      return this;
+    }
+
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
+    public Builder withEntityType(NotificationEntityType entityType) {
+      this.entityType = entityType;
       return this;
     }
 
@@ -66,17 +196,6 @@ public class ApprovalNotification extends Notification {
      */
     public Builder withNotificationType(NotificationType notificationType) {
       this.notificationType = notificationType;
-      return this;
-    }
-
-    /**
-     * With notification actions builder.
-     *
-     * @param notificationActions the notification actions
-     * @return the builder
-     */
-    public Builder withNotificationActions(List<NotificationAction> notificationActions) {
-      this.notificationActions = notificationActions;
       return this;
     }
 
@@ -164,10 +283,13 @@ public class ApprovalNotification extends Notification {
      */
     public Builder but() {
       return anApprovalNotification()
-          .withDisplayText(displayText)
-          .withDetailsUrl(detailsUrl)
+          .withEntityName(entityName)
+          .withStage(stage)
+          .withReleaseId(releaseId)
+          .withEnvironmentId(environmentId)
+          .withEntityId(entityId)
+          .withEntityType(entityType)
           .withNotificationType(notificationType)
-          .withNotificationActions(notificationActions)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -184,10 +306,13 @@ public class ApprovalNotification extends Notification {
      */
     public ApprovalNotification build() {
       ApprovalNotification approvalNotification = new ApprovalNotification();
-      approvalNotification.setDisplayText(displayText);
-      approvalNotification.setDetailsUrl(detailsUrl);
+      approvalNotification.setEntityName(entityName);
+      approvalNotification.setStage(stage);
+      approvalNotification.setReleaseId(releaseId);
+      approvalNotification.setEnvironmentId(environmentId);
+      approvalNotification.setEntityId(entityId);
+      approvalNotification.setEntityType(entityType);
       approvalNotification.setNotificationType(notificationType);
-      approvalNotification.setNotificationActions(notificationActions);
       approvalNotification.setUuid(uuid);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);

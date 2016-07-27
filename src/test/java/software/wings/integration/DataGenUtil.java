@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toList;
@@ -25,7 +26,6 @@ import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.NotificationAction.Builder.aNotificationAction;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
@@ -33,9 +33,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.common.NotificationMessageResolver.ARTIFACT_APPROVAL_NOTIFICATION_TEMPLATE;
-import static software.wings.common.NotificationMessageResolver.CHANGE_NOTIFICATION_TEMPLATE;
-import static software.wings.common.NotificationMessageResolver.WORKFLOW_FAILURE_NOTIFICATION_TEMPLATE;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
@@ -72,6 +69,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
+import software.wings.beans.Notification.NotificationEntityType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
@@ -82,7 +80,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver;
-import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -194,60 +191,45 @@ public class DataGenUtil extends WingsBaseTest {
     Map<String, List<Environment>> appEnvs = new HashMap<>();
 
     containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
-    addNotifications(GLOBAL_APP_ID);
 
     for (Application application : apps) {
-      //      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
+      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
       services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
       appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
       addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
       addOrchestrationAndPipeline(services, appEnvs, application);
-      addNotifications(application.getUuid());
+      addNotifications(application);
     }
   }
 
-  private void addNotifications(String appId) {
-    String detailsUrl = "api/notification/%s/details?appId=%s";
-    String actionUrl = "api/notification/%s?appId=%s&action=%s";
+  private void addNotifications(Application application) {
+    String appId = application.getUuid();
+    String envId = application.getEnvironments().get(0).getUuid();
 
-    String uuid = UUIDGenerator.getUuid();
-    wingsPersistence.save(
-        aChangeNotification()
-            .withUuid(uuid)
-            .withAppId(appId)
-            .withDetailsUrl(format(detailsUrl, uuid, appId))
-            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(CHANGE_NOTIFICATION_TEMPLATE,
-                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "DATE",
-                    dateFormatter.format(new Date(System.currentTimeMillis())))))
-            .build());
-
-    uuid = UUIDGenerator.getUuid();
-    wingsPersistence.save(
-        anApprovalNotification()
-            .withUuid(uuid)
-            .withAppId(appId)
-            .withDetailsUrl(format(detailsUrl, uuid, appId))
-            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(ARTIFACT_APPROVAL_NOTIFICATION_TEMPLATE,
-                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "NAME", "Final_Build_05_02_08_16_9_15pm")))
-            .withNotificationActions(asList(
-                aNotificationAction().withName("APPROVE").withUrl(format(actionUrl, uuid, appId, "APPROVE")).build(),
-                aNotificationAction().withName("REJECT").withUrl(format(actionUrl, uuid, appId, "REJECT")).build()))
-            .build());
-
-    uuid = UUIDGenerator.getUuid();
-    wingsPersistence.save(
-        aFailureNotification()
-            .withUuid(uuid)
-            .withAppId(appId)
-            .withDetailsUrl(format(detailsUrl, uuid, appId))
-            .withDisplayText(notMsgResolver.getDecoratedNotificationMessage(WORKFLOW_FAILURE_NOTIFICATION_TEMPLATE,
-                ImmutableMap.of("URL", format(detailsUrl, uuid, appId), "NAME", "workflow_ui_svr_2:04_12_2016")))
-            .withNotificationActions(asList(aNotificationAction()
-                                                .withName("SEE DETAILS")
-                                                .withUrl(format(actionUrl, uuid, appId, "DETAILS"))
-                                                .build()))
-            .build());
+    wingsPersistence.save(aChangeNotification()
+                              .withAppId(appId)
+                              .withEnvironmentId(envId)
+                              .withEntityId("pipelineId")
+                              .withEntityType(NotificationEntityType.DEPLOYMENT)
+                              .withScheduledOn(currentTimeMillis())
+                              .build());
+    wingsPersistence.save(anApprovalNotification()
+                              .withAppId(appId)
+                              .withEnvironmentId(envId)
+                              .withEntityId("artifactId")
+                              .withEntityType(NotificationEntityType.ARTIFACT)
+                              .withEntityName("Final_Build_05_02_08_16_9_15pm")
+                              .withReleaseId("releaseId")
+                              .build());
+    wingsPersistence.save(aFailureNotification()
+                              .withAppId(appId)
+                              .withEntityId("executionId")
+                              .withEntityType(NotificationEntityType.WORKFLOW)
+                              .withEnvironmentId(envId)
+                              .withEntityName("workflow_ui_svr_2:04_12_2016")
+                              .withExecutionId("executionId")
+                              .build());
   }
 
   private void addOrchestrationAndPipeline(
