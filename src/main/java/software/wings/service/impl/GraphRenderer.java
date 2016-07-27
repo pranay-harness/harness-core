@@ -256,19 +256,12 @@ public class GraphRenderer {
   }
 
   private void extrapolateDimension(Group group) {
-    group.setWidth(2 * DEFAULT_GROUP_PADDING);
-    group.setHeight(2 * DEFAULT_GROUP_PADDING);
     for (Node node : group.getElements()) {
       extrapolateDimension(node);
       if (group.getWidth() < node.getWidth()) {
         group.setWidth(node.getWidth());
       }
       group.setHeight(group.getHeight() + node.getHeight() + DEFAULT_ARROW_HEIGHT);
-    }
-
-    // reduce one arrow height
-    if (!group.getElements().isEmpty()) {
-      group.setHeight(group.getHeight() - DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING);
     }
   }
 
@@ -282,7 +275,7 @@ public class GraphRenderer {
       if (node.getWidth() < group.getWidth()) {
         node.setWidth(group.getWidth());
       }
-      node.setHeight(node.getHeight() + group.getHeight() + DEFAULT_ARROW_HEIGHT);
+      node.setHeight(node.getHeight() + group.getHeight());
     }
 
     Node next = node.getNext();
