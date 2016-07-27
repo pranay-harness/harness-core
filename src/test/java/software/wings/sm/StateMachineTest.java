@@ -759,7 +759,7 @@ public class StateMachineTest extends WingsBaseTest {
      */
     @Override
     public ExecutionResponse handleAsyncResponse(
-        ExecutionContextImpl context, Map<String, NotifyResponseData> responseMap) {
+        ExecutionContext context, Map<String, NotifyResponseData> responseMap) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       for (Object response : responseMap.values()) {
         if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
