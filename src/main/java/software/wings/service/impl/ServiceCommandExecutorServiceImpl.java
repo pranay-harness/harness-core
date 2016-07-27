@@ -1,17 +1,17 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.CommandUnitType.COMMAND;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
 
 import com.google.inject.Injector;
 
-import software.wings.beans.Command;
-import software.wings.beans.CommandExecutionContext;
-import software.wings.beans.CommandUnit;
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SSHExecutionCredential;
@@ -48,7 +48,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceCommandExecutorService#execute(software.wings.beans.ServiceInstance,
-   * software.wings.beans.Command)
+   * software.wings.beans.command.Command)
    */
   @Override
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
@@ -60,6 +60,31 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       throw ex;
     }
+  }
+
+  private void prepareCommand(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
+    Command executableCommand = command;
+    if (command.getReferenceId() != null) {
+      executableCommand = serviceResourceService.getCommandByName(serviceInstance.getAppId(),
+          serviceInstance.getServiceTemplate().getService().getUuid(), command.getReferenceId());
+      if (executableCommand == null) {
+        throw new WingsException(COMMAND_DOES_NOT_EXIST);
+      }
+    }
+    List<CommandUnit> commandUnits = executableCommand.getCommandUnits();
+    executableCommand.setExecutionResult(SUCCESS);
+
+    for (CommandUnit commandUnit : commandUnits) {
+      ExecutionResult executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
+          ? executeCommand(serviceInstance, (Command) commandUnit, context)
+          : executeCommandUnit(serviceInstance, context, commandUnit);
+      commandUnit.setExecutionResult(executionResult);
+      if (executionResult.equals(FAILURE)) {
+        executableCommand.setExecutionResult(FAILURE);
+        break;
+      }
+    }
+    // return executableCommand.getExecutionResult();
   }
 
   private ExecutionResult executeCommand(

@@ -1,8 +1,9 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.ExecCommandUnit;
-import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -32,7 +33,9 @@ public interface SshExecutor {
    * @param scpCommandUnit the copy command unit
    * @return the execution result
    */
-  ExecutionResult transferFiles(ScpCommandUnit scpCommandUnit);
+  ExecutionResult execute(ScpCommandUnit scpCommandUnit);
+
+  ExecutionResult execute(InitCommandUnit initCommandUnit);
 
   /**
    * The Enum ExecutorType.

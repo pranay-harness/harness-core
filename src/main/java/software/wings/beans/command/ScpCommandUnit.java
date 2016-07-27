@@ -1,11 +1,11 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.CONFIGURATIONS;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.CONFIGURATIONS;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -13,12 +13,16 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.AppContainer;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.ServiceTemplate;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.EnumData;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +54,8 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    destinationDirectoryPath = constructPath(context.getRuntimePath(), relativeFilePath);
+    destinationDirectoryPath =
+        new File(context.getRuntimePath().trim(), nullToEmpty(relativeFilePath).trim()).getAbsolutePath();
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
@@ -76,11 +81,6 @@ public class ScpCommandUnit extends CommandUnit {
       default:
         throw new WingsException(INVALID_REQUEST, "message", "Unsupported file category for scp command unit");
     }
-  }
-
-  private String constructPath(String absolutePath, String relativePath) {
-    return isNullOrEmpty(relativePath) ? absolutePath.trim()
-                                       : absolutePath.trim() + "/" + relativePath.trim(); // TODO:: handle error cases
   }
 
   @SchemaIgnore

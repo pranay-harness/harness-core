@@ -1,7 +1,7 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.github.reinert.jjschema.Attributes;
 import org.hibernate.validator.constraints.NotEmpty;

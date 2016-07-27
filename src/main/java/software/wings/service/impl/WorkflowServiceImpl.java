@@ -25,7 +25,6 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
-import software.wings.beans.Command;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
@@ -42,6 +41,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.command.Command;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -83,7 +83,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 

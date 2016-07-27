@@ -3,12 +3,12 @@ package software.wings.service;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.BastionConnectionAttributesBuilder.aBastionConnectionAttributes;
-import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
@@ -28,14 +28,14 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.beans.CommandUnitType;
-import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.ScpCommandUnit;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshJumpboxExecutor;
 import software.wings.core.ssh.executors.SshPubKeyAuthExecutor;
@@ -189,6 +189,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).transferFiles(commandUnit);
+    verify(sshPwdAuthExecutor).execute(commandUnit);
   }
 }

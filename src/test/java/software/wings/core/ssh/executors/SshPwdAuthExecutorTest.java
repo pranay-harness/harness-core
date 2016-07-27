@@ -3,15 +3,15 @@ package software.wings.core.ssh.executors;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
 import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
-import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
@@ -23,9 +23,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
 import software.wings.rules.Integration;
@@ -209,11 +209,11 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(config);
     String fileName = "mvim";
-    ExecutionResult result = executor.transferFiles(ScpCommandUnit.Builder.aScpCommandUnit()
-                                                        .withFileIds(asList(fileId))
-                                                        .withDestinationDirectoryPath("./" + fileName)
-                                                        .withFileBucket(CONFIGS)
-                                                        .build());
+    ExecutionResult result = executor.execute(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                  .withFileIds(asList(fileId))
+                                                  .withDestinationDirectoryPath("./" + fileName)
+                                                  .withFileBucket(CONFIGS)
+                                                  .build());
   }
 
   /**

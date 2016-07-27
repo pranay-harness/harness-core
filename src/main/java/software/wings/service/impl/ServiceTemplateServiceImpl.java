@@ -353,7 +353,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ConfigFile> envComputedConfigFiles = overrideConfigFiles(serviceConfigFiles, envConfigFiles);
 
     // flatten tag hierarchy and [tag -> tag] overrides
-    logger.info("Flatten Tag hierarchy and apply config overrides");
+    logger.info("Flatten Tag hierarchy and getInfo config overrides");
     List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
 
     // env->tag override

@@ -27,7 +27,7 @@ public class SshJumpBoxExecutorTest {
     //    //        executor.execute("ls && whoami");
     //    String fileName = "mvim";
     //    SshExecutor.ExecutionResult result =
-    //        executor.transferFiles("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
+    //        executor.execute("/Users/anubhaw/Downloads/" + fileName, "./" + fileName);
     //    System.out.println(result);
   }
 }

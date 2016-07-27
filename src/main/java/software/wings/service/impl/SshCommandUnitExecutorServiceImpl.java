@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
-import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.Log.Builder.aLog;
@@ -16,15 +16,15 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.CommandUnit;
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.ExecCommandUnit;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
@@ -158,7 +158,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     if (op.equals(SupportedOp.EXEC)) {
       executionResult = executor.execute((ExecCommandUnit) commandUnit);
     } else {
-      executionResult = executor.transferFiles((ScpCommandUnit) commandUnit);
+      executionResult = executor.execute((ScpCommandUnit) commandUnit);
     }
     return executionResult;
   }

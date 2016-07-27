@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 /**
  * Created by anubhaw on 7/12/16.

@@ -1,8 +1,11 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.google.common.base.Strings;
 
 import com.github.reinert.jjschema.Attributes;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnitType;
+import software.wings.beans.command.ExecCommandUnit;
 
 /**
  * Created by anubhaw on 7/14/16.

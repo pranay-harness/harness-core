@@ -1,15 +1,15 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.CommandUnitType.COMMAND;
+import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
-import software.wings.beans.Command;
-import software.wings.beans.CommandUnit;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;

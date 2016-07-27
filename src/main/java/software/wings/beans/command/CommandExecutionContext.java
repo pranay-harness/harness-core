@@ -1,6 +1,10 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
+
+import software.wings.beans.Artifact;
+import software.wings.beans.ExecutionCredential;
+import software.wings.beans.ServiceInstance;
 
 import java.util.Objects;
 

@@ -1,6 +1,6 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
-import static software.wings.beans.CommandUnitType.TAIL_LOG;
+import static software.wings.beans.command.CommandUnitType.TAIL_LOG;
 
 import com.google.common.base.Strings;
 

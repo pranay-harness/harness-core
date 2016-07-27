@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -15,8 +16,8 @@ public class SshSessionConfig {
   @NotEmpty private ExecutorType executorType;
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
-  private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
-  private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
+  private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
+  private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
   @NotEmpty private String host;
   private Integer port = 22;
@@ -376,8 +377,8 @@ public class SshSessionConfig {
     private ExecutorType executorType;
     private String executionId;
     private String commandUnitName;
-    private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
-    private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
+    private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
+    private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
     private Integer retryInterval;
     private String host;
     private Integer port = 22;

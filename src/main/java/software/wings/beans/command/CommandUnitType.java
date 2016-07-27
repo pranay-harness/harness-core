@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import static org.joor.Reflect.on;
 

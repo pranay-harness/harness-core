@@ -3,12 +3,12 @@ package software.wings.service.impl;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static software.wings.beans.CommandUnit.ExecutionResult.RUNNING;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.RUNNING;
 import static software.wings.utils.FileUtils.createTempDirPath;
 
 import com.google.inject.Inject;
 
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.Log;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;

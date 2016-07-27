@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.CommandUnit;
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.Host;
 
 /**

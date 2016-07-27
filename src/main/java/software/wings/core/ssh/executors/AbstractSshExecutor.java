@@ -1,9 +1,8 @@
 package software.wings.core.ssh.executors;
 
 import static java.lang.String.format;
+import static java.lang.System.out;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static software.wings.beans.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
@@ -18,6 +17,8 @@ import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
 import static software.wings.beans.ErrorCodes.UNREACHABLE_HOST;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.utils.Misc.quietSleep;
 
 import com.google.common.base.Strings;
@@ -27,15 +28,18 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import org.apache.commons.jexl3.JxltEngine.Exception;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.ExecCommandUnit;
-import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitCommandUnit;
+import software.wings.beans.command.ScpCommandUnit;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LogService;
 
 import java.io.FileNotFoundException;
@@ -138,6 +142,41 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   @Override
   public ExecutionResult execute(ExecCommandUnit execCommand) {
     String command = execCommand.getCommandString();
+    return executeCommandString(execCommand.getCommandString());
+  }
+
+  @Override
+  public ExecutionResult execute(ScpCommandUnit copyCommand) {
+    if (Strings.isNullOrEmpty(copyCommand.getFileIds().get(0))) {
+      saveExecutionLog("No config file found to scp.");
+      return ExecutionResult.SUCCESS;
+    }
+    return copyCommand.getFileIds()
+               .stream()
+               .filter(fileId -> scpGridFsFile(copyCommand, fileId) != SUCCESS)
+               .findFirst()
+               .isPresent()
+        ? FAILURE
+        : SUCCESS;
+  }
+
+  @Override
+  public ExecutionResult execute(InitCommandUnit initCommand) {
+    ExecutionResult result = executeCommandString(initCommand.getPreInitCommand());
+    result = result == SUCCESS
+        ? scpOneFile(initCommand.getLauncherFileInfo().getKey(), initCommand.getLauncherFileInfo().getValue())
+        : result;
+    result = result == SUCCESS ? initCommand.getUnitFilesInfo()
+                                     .stream()
+                                     .map(providerPair -> scpOneFile(providerPair.getKey(), providerPair.getValue()))
+                                     .filter(executionResult -> executionResult == FAILURE)
+                                     .findFirst()
+                                     .orElse(SUCCESS)
+                               : result;
+    return result;
+  }
+
+  private ExecutionResult executeCommandString(String command) {
     ExecutionResult executionResult = FAILURE;
     Channel channel = null;
     try {
@@ -339,25 +378,23 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return errorConst;
   }
 
-  @Override
-  public ExecutionResult transferFiles(ScpCommandUnit copyCommand) {
-    if (Strings.isNullOrEmpty(copyCommand.getFileIds().get(0))) {
-      saveExecutionLog("No config file found to scp.");
-      return ExecutionResult.SUCCESS;
-    }
-    return copyCommand.getFileIds()
-               .stream()
-               .filter(fileId -> scpOneFile(copyCommand, fileId) != SUCCESS)
-               .findFirst()
-               .isPresent()
-        ? FAILURE
-        : SUCCESS;
+  private ExecutionResult scpGridFsFile(ScpCommandUnit copyCommand, String gridFsFileId) {
+    return scpOneFile(copyCommand.getDestinationDirectoryPath(), new FileProvider() {
+      @Override
+      public Pair<String, Long> getInfo() throws Exception {
+        GridFSFile gridFSFile = fileService.getGridFsFile(gridFsFileId, copyCommand.getFileBucket());
+        return ImmutablePair.of(gridFSFile.getFilename(), gridFSFile.getLength());
+      }
+
+      @Override
+      public void downloadToStream(OutputStream outputStream) throws Exception {
+        fileService.downloadToStream(gridFsFileId, out, copyCommand.getFileBucket());
+      }
+    });
   }
 
-  private ExecutionResult scpOneFile(ScpCommandUnit copyCommand, String gridFsFileId) {
+  private ExecutionResult scpOneFile(String remoteFilePath, FileProvider fileProvider) {
     ExecutionResult executionResult = FAILURE;
-    FileBucket gridFsBucket = copyCommand.getFileBucket();
-    String remoteFilePath = copyCommand.getDestinationDirectoryPath();
 
     try {
       String command = "scp -r -d -t " + remoteFilePath;
@@ -379,10 +416,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         saveExecutionLog(format("Connection to %s established", config.getHost()));
       }
 
-      GridFSFile fileMetaData = fileService.getGridFsFile(gridFsFileId, gridFsBucket);
+      Pair<String, Long> fileInfo = fileProvider.getInfo();
 
       // send "C0644 filesize filename", where filename should not include '/'
-      command = "C0644 " + fileMetaData.getLength() + " " + fileMetaData.getFilename() + "\n";
+      command = "C0644 " + fileInfo.getValue() + " " + fileInfo.getKey() + "\n";
 
       out.write(command.getBytes(UTF_8));
       out.flush();
@@ -391,7 +428,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         return executionResult;
       }
       saveExecutionLog("Begin file transfer");
-      fileService.downloadToStream(gridFsFileId, out, gridFsBucket);
+      fileProvider.downloadToStream(out);
       out.write(new byte[1], 0, 1);
       out.flush();
 
@@ -406,7 +443,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       channel.disconnect();
     } catch (IOException | JSchException ex) {
       if (ex instanceof FileNotFoundException) {
-        logger.error("file [" + gridFsFileId + "] could not be found");
+        logger.error("file could not be found");
         saveExecutionLog("File not found");
       } else if (ex instanceof JSchException) {
         logger.error("Command execution failed with error ", ex);
@@ -454,5 +491,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       logger.error(sb.toString());
       return 0;
     }
+  }
+
+  public interface FileProvider {
+    Pair<String, Long> getInfo() throws Exception;
+
+    void downloadToStream(OutputStream outputStream) throws Exception;
   }
 }

@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.Log;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
