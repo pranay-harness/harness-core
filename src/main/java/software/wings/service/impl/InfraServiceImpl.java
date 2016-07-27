@@ -63,6 +63,11 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
+  public String getEnvByInfraId(String appId, String infraId) {
+    return null;
+  }
+
+  @Override
   public void delete(String appId, String envId, String infraId) {
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Infra.class)
                                                   .field("appId")

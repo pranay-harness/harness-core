@@ -13,18 +13,22 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.NotificationService;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.executable.ValidateOnExecution;
 
 /**
  * Created by anubhaw on 7/22/16.
  */
+@Singleton
+@ValidateOnExecution
 public class NotificationServiceImpl implements NotificationService {
   @Inject private WingsPersistence wingsPersistence;
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
-  public PageResponse<Notification> list(@Valid PageRequest<Notification> pageRequest) {
+  public PageResponse<Notification> list(PageRequest<Notification> pageRequest) {
     return wingsPersistence.query(Notification.class, pageRequest);
   }
 
@@ -47,5 +51,11 @@ public class NotificationServiceImpl implements NotificationService {
   public Notification act(
       @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationAction notificationAction) {
     throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Action operation not supported");
+  }
+
+  @Override
+  public void sendNotificationAsync(@Valid Notification notification) {
+    save(notification); // block for persistence
+    // TODO: async broadcast
   }
 }

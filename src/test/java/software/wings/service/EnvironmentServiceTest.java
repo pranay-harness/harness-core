@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
+import software.wings.beans.Notification;
 import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -44,6 +45,7 @@ import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.WorkflowService;
@@ -68,6 +70,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private TagService tagService;
   @Mock private WorkflowService workflowService;
+  @Mock private NotificationService notificationService;
 
   @Inject @InjectMocks private EnvironmentService environmentService;
 
@@ -131,8 +134,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldGetEnvironment() {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
-    when(serviceTemplateService.list(any(PageRequest.class))).thenReturn(new PageResponse<ServiceTemplate>());
-    when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<Orchestration>());
+    when(serviceTemplateService.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(workflowService.listOrchestration(any(PageRequest.class))).thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
@@ -155,6 +158,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(tagService).createDefaultRootTagForEnvironment(savedEnvironment);
     verify(serviceTemplateService).createDefaultTemplatesByEnv(savedEnvironment);
     verify(workflowService).createWorkflow(eq(Orchestration.class), any(Orchestration.class));
+    verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
   /**
@@ -181,9 +185,13 @@ public class EnvironmentServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteEnvironment() {
+    when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID)).thenReturn(anEnvironment().withName("PROD").build());
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     environmentService.delete(APP_ID, ENV_ID);
-    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, tagService, infraService);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceTemplateService, tagService, infraService);
+    inOrder.verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
     inOrder.verify(wingsPersistence).delete(any(Query.class));
+    inOrder.verify(notificationService).sendNotificationAsync(any());
     inOrder.verify(serviceTemplateService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(tagService).deleteByEnv(APP_ID, ENV_ID);
     inOrder.verify(infraService).deleteByEnv(APP_ID, ENV_ID);

@@ -9,7 +9,12 @@ import static software.wings.beans.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
+import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
 import static software.wings.utils.DefaultCommands.getStartCommandGraph;
 import static software.wings.utils.DefaultCommands.getStopCommandGraph;
@@ -30,6 +35,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
@@ -60,6 +66,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private SetupService setupService;
+  @Inject private NotificationService notificationService;
 
   /**
    * {@inheritDoc}
@@ -83,6 +90,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     savedService = addDefaultCommands(savedService);
     appService.addService(savedService);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(savedService.getAppId())
+            .withNotificationType(INFORMATION)
+            .withDisplayText(getDecoratedNotificationMessage(ENTITY_CREATE_NOTIFICATION,
+                ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName())))
+            .build());
     return savedService;
   }
 
@@ -124,9 +138,21 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public void delete(String appId, String serviceId) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    if (service == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Service doesn't exist");
+    }
+
     boolean deleted = wingsPersistence.delete(Service.class, serviceId);
     if (deleted) {
       executorService.submit(() -> {
+        notificationService.sendNotificationAsync(
+            anInformationNotification()
+                .withAppId(service.getAppId())
+                .withNotificationType(INFORMATION)
+                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
+                    ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName())))
+                .build());
         serviceTemplateService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
       });

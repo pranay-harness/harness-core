@@ -32,6 +32,7 @@ public class Application extends Base {
   @Transient private Setup setup;
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
+  @Transient private long nextDeploymentOn;
 
   /**
    * Gets name.
@@ -159,6 +160,24 @@ public class Application extends Base {
     this.notifications = notifications;
   }
 
+  /**
+   * Gets next deployment on.
+   *
+   * @return the next deployment on
+   */
+  public long getNextDeploymentOn() {
+    return nextDeploymentOn;
+  }
+
+  /**
+   * Sets next deployment on.
+   *
+   * @param nextDeploymentOn the next deployment on
+   */
+  public void setNextDeploymentOn(long nextDeploymentOn) {
+    this.nextDeploymentOn = nextDeploymentOn;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode() + Objects.hash(name, description, services, environments);
@@ -198,6 +217,10 @@ public class Application extends Base {
     private String description;
     private List<Service> services = new ArrayList<>();
     private List<Environment> environments = new ArrayList<>();
+    private Setup setup;
+    private List<WorkflowExecution> recentExecutions;
+    private List<Notification> notifications;
+    private long nextDeploymentOn;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -258,6 +281,50 @@ public class Application extends Base {
      */
     public Builder withEnvironments(List<Environment> environments) {
       this.environments = environments;
+      return this;
+    }
+
+    /**
+     * With setup builder.
+     *
+     * @param setup the setup
+     * @return the builder
+     */
+    public Builder withSetup(Setup setup) {
+      this.setup = setup;
+      return this;
+    }
+
+    /**
+     * With recent executions builder.
+     *
+     * @param recentExecutions the recent executions
+     * @return the builder
+     */
+    public Builder withRecentExecutions(List<WorkflowExecution> recentExecutions) {
+      this.recentExecutions = recentExecutions;
+      return this;
+    }
+
+    /**
+     * With notifications builder.
+     *
+     * @param notifications the notifications
+     * @return the builder
+     */
+    public Builder withNotifications(List<Notification> notifications) {
+      this.notifications = notifications;
+      return this;
+    }
+
+    /**
+     * With next deployment on builder.
+     *
+     * @param nextDeploymentOn the next deployment on
+     * @return the builder
+     */
+    public Builder withNextDeploymentOn(long nextDeploymentOn) {
+      this.nextDeploymentOn = nextDeploymentOn;
       return this;
     }
 
@@ -349,6 +416,10 @@ public class Application extends Base {
           .withDescription(description)
           .withServices(services)
           .withEnvironments(environments)
+          .withSetup(setup)
+          .withRecentExecutions(recentExecutions)
+          .withNotifications(notifications)
+          .withNextDeploymentOn(nextDeploymentOn)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -369,6 +440,10 @@ public class Application extends Base {
       application.setDescription(description);
       application.setServices(services);
       application.setEnvironments(environments);
+      application.setSetup(setup);
+      application.setRecentExecutions(recentExecutions);
+      application.setNotifications(notifications);
+      application.setNextDeploymentOn(nextDeploymentOn);
       application.setUuid(uuid);
       application.setAppId(appId);
       application.setCreatedBy(createdBy);

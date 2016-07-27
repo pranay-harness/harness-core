@@ -6,20 +6,19 @@ import software.wings.exception.WingsException;
 
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.inject.Singleton;
 
 /**
  * Created by anubhaw on 7/25/16.
  */
-@Singleton
 public class NotificationMessageResolver {
-  private Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
+  private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
 
-  public static final String CHANGE_NOTIFICATION_TEMPLATE = "There's a <a href=${URL}>change</a> scheduled for ${DATE}";
-  public static final String WORKFLOW_FAILURE_NOTIFICATION_TEMPLATE =
-      "There are failures in the orchestrated workflow, <a href=${URL}>${NAME}</a>";
-  public static final String ARTIFACT_APPROVAL_NOTIFICATION_TEMPLATE =
-      "Artifact <a href=${URL}>${NAME}</a> is waiting for approval";
+  public static final String ENTITY_CREATE_NOTIFICATION = "A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.";
+  public static final String ENTITY_DELETE_NOTIFICATION = "${ENTITY_TYPE} ${ENTITY_NAME} is deleted.";
+  public static final String ADD_HOST_NOTIFICATION = "${COUNT} new hosts added in ${ENV_NAME} environment.";
+  public static final String HOST_DELETE_NOTIFICATION = "A host {HOST_NAME} deleted from ${ENV_NAME} environment.";
+  public static final String DEPLOYMENT_COMPLETED_NOTIFICATION =
+      "{DATE} : Deployment {NAME} completed on ${HOST_COUNT} in {ENV_NAME} environment.";
 
   /**
    * Gets decorated notification message.
@@ -28,7 +27,7 @@ public class NotificationMessageResolver {
    * @param params       the params
    * @return the decorated notification message
    */
-  public String getDecoratedNotificationMessage(String templateText, Map<String, String> params) {
+  public static String getDecoratedNotificationMessage(String templateText, Map<String, String> params) {
     if (templateText == null) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Template text can not be null");
     }
@@ -37,7 +36,7 @@ public class NotificationMessageResolver {
     return templateText;
   }
 
-  private void validate(String templateText) {
+  private static void validate(String templateText) {
     if (placeHolderPattern.matcher(templateText).find()) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "message", "Incomplete placeholder replacement.");
     }
