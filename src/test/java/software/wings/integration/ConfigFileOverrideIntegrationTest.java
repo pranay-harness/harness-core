@@ -388,7 +388,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                         .build();
     //    int numOfHostsImported =
     //        hostService.importHosts(baseHost, new BoundedInputStream(new
-    //        FileInputStream(createHostsFile(testFolder.newFile("host.csv"), 10))));
+    //        FileInputStream(createHostsFile(sshRoot.newFile("host.csv"), 10))));
     List<String> hostNames = new ArrayList<>();
     for (int i = 1; i <= 10; i++) {
       hostNames.add(String.format("host%s.app.com", i));

@@ -12,6 +12,8 @@
     <logger name="org.mongodb.driver" level="ERROR"/>
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.mongodb.morphia" level="ERROR"/>
+    <logger name="org.apache.sshd" level="INFO"/>
+
 
 
     <root level="DEBUG">

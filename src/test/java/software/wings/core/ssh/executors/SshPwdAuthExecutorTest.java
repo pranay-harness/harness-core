@@ -3,14 +3,14 @@ package software.wings.core.ssh.executors;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_PORT;
 import static software.wings.beans.ErrorCodes.SOCKET_CONNECTION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.SSH_SESSION_TIMEOUT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_HOST;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
@@ -23,12 +23,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.exception.WingsException;
-import software.wings.rules.Integration;
+import software.wings.rules.RealMongo;
+import software.wings.rules.SshRule;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.LogService;
 
@@ -63,19 +64,15 @@ import javax.inject.Inject;
 18. su app user
 */
 
-@Integration
-@Ignore
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
-  private final String HOST = "192.168.1.106";
-  private final Integer PORT = 22;
-  private final String USER = "ssh_user";
-  private final String PASSWORD = "Wings@123";
-  private final String EXECUTION_ID = "EXECUTION_ID";
+  private final String HOST = "localhost";
   /**
    * The Test folder.
    */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
-  private SshSessionConfig config;
+  @Rule public TemporaryFolder sshRoot = new TemporaryFolder();
+  @Rule public SshRule sshRule = new SshRule(sshRoot);
+  private SshSessionConfig.Builder configBuilder;
   private SshExecutor executor;
   @Inject private FileService fileService;
   @Inject private LogService logService;
@@ -88,16 +85,16 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     executor = new SshPwdAuthExecutor(fileService, logService);
-    config = aSshSessionConfig()
-                 .withAppId("APP_ID")
-                 .withExecutionId(getUuid())
-                 .withExecutorType(ExecutorType.PASSWORD_AUTH)
-                 .withHost(HOST)
-                 .withPort(PORT)
-                 .withUserName(USER)
-                 .withPassword(PASSWORD)
-                 .withSshConnectionTimeout(5000)
-                 .build();
+    configBuilder = aSshSessionConfig()
+                        .withAppId("APP_ID")
+                        .withExecutionId(getUuid())
+                        .withExecutorType(ExecutorType.PASSWORD_AUTH)
+                        .withHost(HOST)
+                        .withPort(sshRule.getPort())
+                        .withUserName(sshRule.getUsername())
+                        .withPassword(sshRule.getPassword())
+                        .withSshConnectionTimeout(5000)
+                        .withCommandUnitName("test");
   }
 
   /**
@@ -105,7 +102,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldConnectToRemoteHost() {
-    executor.init(config);
+    executor.init(configBuilder.build());
   }
 
   /**
@@ -113,8 +110,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidHost() {
-    config.setHost("INVALID_HOST");
-    assertThatThrownBy(() -> executor.init(config))
+    executor.init(configBuilder.but().withHost("INVALID_HOST").build());
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(UNKNOWN_HOST.getCode());
   }
@@ -124,8 +121,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowUnknownHostExceptionForInvalidPort() {
-    config.setPort(3333);
-    assertThatThrownBy(() -> executor.init(config))
+    executor.init(configBuilder.but().withPort(3333).build());
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_PORT.getCode());
   }
@@ -135,8 +132,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForInvalidCredential() {
-    config.setPassword("INVALID_PASSWORD");
-    Assertions.assertThatThrownBy(() -> executor.init(config))
+    executor.init(configBuilder.but().withPassword("INVALID_PASSWORD").build());
+    Assertions.assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls").build()))
         .isInstanceOf(WingsException.class)
         .hasMessageContaining(INVALID_CREDENTIAL.getCode());
   }
@@ -146,7 +143,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
-    executor.init(config);
+    SshSessionConfig sshSessionConfig = configBuilder.but().build();
+
+    executor.init(sshSessionConfig);
     String fileName = getUuid();
     ExecutionResult execute = executor.execute(
         anExecCommandUnit().withCommandString(String.format("touch %s && rm %s", fileName, fileName)).build());
@@ -158,7 +157,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnFailureForFailedCommandExecution() {
-    executor.init(config);
+    executor.init(configBuilder.build());
     ExecutionResult execute =
         executor.execute(anExecCommandUnit().withCommandString(String.format("rm %s", "FILE_DOES_NOT_EXIST")).build());
     assertThat(execute).isEqualTo(FAILURE);
@@ -169,8 +168,8 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForConnectionTimeout() {
-    config.setSshConnectionTimeout(1); // 1ms
-    assertThatThrownBy(() -> executor.init(config))
+    executor.init(configBuilder.but().withSshConnectionTimeout(1).build());
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(SOCKET_CONNECTION_TIMEOUT.getCode());
   }
@@ -178,13 +177,21 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   /**
    * Should throw exception for session timeout.
    */
+  @Ignore
   @Test
   public void shouldThrowExceptionForSessionTimeout() {
-    config.setSshSessionTimeout(1); // 1ms
-    executor.init(config);
-    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls -lh").build()))
+    executor.init(configBuilder.but().withSshSessionTimeout(1).build());
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("sleep 10").build()))
         .isInstanceOf(WingsException.class)
         .hasMessage(SSH_SESSION_TIMEOUT.getCode());
+  }
+
+  @Test
+  public void shouldThrowExceptionForConnectTimeout() {
+    executor.init(configBuilder.but().withHost("host1.app.com").withPort(22).withSocketConnectTimeout(2000).build());
+    assertThatThrownBy(() -> executor.execute(anExecCommandUnit().withCommandString("ls").build()))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(SOCKET_CONNECTION_TIMEOUT.getCode());
   }
 
   /**
@@ -192,6 +199,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    *
    * @throws IOException Signals that an I/O exception has occurred.
    */
+  @RealMongo
   @Test
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();
@@ -199,26 +207,24 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     out.write("ANY_TEXT");
     out.close();
 
+    String fileName = "mvim";
     ConfigFile appConfigFile = aConfigFile()
                                    .withName("FILE_NAME")
                                    .withTemplateId("TEMPLATE_ID")
                                    .withEntityId("ENTITY_ID")
                                    .withRelativePath("/configs/")
+                                   .withFileName("text.txt")
                                    .build();
     FileInputStream fileInputStream = new FileInputStream(file);
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
-    executor.init(config);
-    String fileName = "mvim";
+    executor.init(configBuilder.but().build());
+
     ExecutionResult result = executor.execute(ScpCommandUnit.Builder.aScpCommandUnit()
                                                   .withFileIds(asList(fileId))
-                                                  .withDestinationDirectoryPath("./" + fileName)
+                                                  .withDestinationDirectoryPath("/" + fileName)
                                                   .withFileBucket(CONFIGS)
                                                   .build());
-  }
 
-  /**
-   * Should concat paths.
-   */
-  @Test
-  public void shouldConcatPaths() {}
+    assertThat(file).hasSameContentAs(new File(sshRoot.getRoot(), fileName));
+  }
 }

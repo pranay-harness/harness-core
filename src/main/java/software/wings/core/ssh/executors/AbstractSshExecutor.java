@@ -1,7 +1,6 @@
 package software.wings.core.ssh.executors;
 
 import static java.lang.String.format;
-import static java.lang.System.out;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
@@ -141,7 +140,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    */
   @Override
   public ExecutionResult execute(ExecCommandUnit execCommand) {
-    String command = execCommand.getCommandString();
     return executeCommandString(execCommand.getCommandString());
   }
 
@@ -388,7 +386,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
       @Override
       public void downloadToStream(OutputStream outputStream) throws Exception {
-        fileService.downloadToStream(gridFsFileId, out, copyCommand.getFileBucket());
+        fileService.downloadToStream(gridFsFileId, outputStream, copyCommand.getFileBucket());
       }
     });
   }
@@ -397,7 +395,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     ExecutionResult executionResult = FAILURE;
 
     try {
-      String command = "scp -r -d -t " + remoteFilePath;
+      String command = "scp -t " + remoteFilePath;
       Channel channel = getCachedSession(config).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 

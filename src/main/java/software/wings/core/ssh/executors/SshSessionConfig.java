@@ -16,6 +16,7 @@ public class SshSessionConfig {
   @NotEmpty private ExecutorType executorType;
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
+  private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(5);
   private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
   private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
@@ -317,11 +318,19 @@ public class SshSessionConfig {
     this.commandUnitName = commandUnitName;
   }
 
+  public Integer getSocketConnectTimeout() {
+    return socketConnectTimeout;
+  }
+
+  public void setSocketConnectTimeout(Integer socketConnectTimeout) {
+    this.socketConnectTimeout = socketConnectTimeout;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(appId, executorType, executionId, commandUnitName, sshConnectionTimeout, sshSessionTimeout,
-        retryInterval, host, port, userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword,
-        bastionHostConfig);
+    return Objects.hash(appId, executorType, executionId, commandUnitName, socketConnectTimeout, sshConnectionTimeout,
+        sshSessionTimeout, retryInterval, host, port, userName, password, key, keyPassphrase, sudoAppName,
+        sudoAppPassword, bastionHostConfig);
   }
 
   @Override
@@ -336,6 +345,7 @@ public class SshSessionConfig {
     return Objects.equals(this.appId, other.appId) && Objects.equals(this.executorType, other.executorType)
         && Objects.equals(this.executionId, other.executionId)
         && Objects.equals(this.commandUnitName, other.commandUnitName)
+        && Objects.equals(this.socketConnectTimeout, other.socketConnectTimeout)
         && Objects.equals(this.sshConnectionTimeout, other.sshConnectionTimeout)
         && Objects.equals(this.sshSessionTimeout, other.sshSessionTimeout)
         && Objects.equals(this.retryInterval, other.retryInterval) && Objects.equals(this.host, other.host)
@@ -354,6 +364,7 @@ public class SshSessionConfig {
         .add("executorType", executorType)
         .add("executionId", executionId)
         .add("commandUnitName", commandUnitName)
+        .add("socketConnectTimeout", socketConnectTimeout)
         .add("sshConnectionTimeout", sshConnectionTimeout)
         .add("sshSessionTimeout", sshSessionTimeout)
         .add("retryInterval", retryInterval)
@@ -369,14 +380,12 @@ public class SshSessionConfig {
         .toString();
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String appId;
     private ExecutorType executorType;
     private String executionId;
     private String commandUnitName;
+    private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(5);
     private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
     private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
     private Integer retryInterval;
@@ -392,202 +401,102 @@ public class SshSessionConfig {
 
     private Builder() {}
 
-    /**
-     * A ssh session config builder.
-     *
-     * @return the builder
-     */
     public static Builder aSshSessionConfig() {
       return new Builder();
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With executor type builder.
-     *
-     * @param executorType the executor type
-     * @return the builder
-     */
     public Builder withExecutorType(ExecutorType executorType) {
       this.executorType = executorType;
       return this;
     }
 
-    /**
-     * With execution id builder.
-     *
-     * @param executionId the execution id
-     * @return the builder
-     */
     public Builder withExecutionId(String executionId) {
       this.executionId = executionId;
       return this;
     }
 
-    /**
-     * With command unit name builder.
-     *
-     * @param commandUnitName the command unit name
-     * @return the builder
-     */
     public Builder withCommandUnitName(String commandUnitName) {
       this.commandUnitName = commandUnitName;
       return this;
     }
 
-    /**
-     * With ssh connection timeout builder.
-     *
-     * @param sshConnectionTimeout the ssh connection timeout
-     * @return the builder
-     */
+    public Builder withSocketConnectTimeout(Integer socketConnectTimeout) {
+      this.socketConnectTimeout = socketConnectTimeout;
+      return this;
+    }
+
     public Builder withSshConnectionTimeout(Integer sshConnectionTimeout) {
       this.sshConnectionTimeout = sshConnectionTimeout;
       return this;
     }
 
-    /**
-     * With ssh session timeout builder.
-     *
-     * @param sshSessionTimeout the ssh session timeout
-     * @return the builder
-     */
     public Builder withSshSessionTimeout(Integer sshSessionTimeout) {
       this.sshSessionTimeout = sshSessionTimeout;
       return this;
     }
 
-    /**
-     * With retry interval builder.
-     *
-     * @param retryInterval the retry interval
-     * @return the builder
-     */
     public Builder withRetryInterval(Integer retryInterval) {
       this.retryInterval = retryInterval;
       return this;
     }
 
-    /**
-     * With host builder.
-     *
-     * @param host the host
-     * @return the builder
-     */
     public Builder withHost(String host) {
       this.host = host;
       return this;
     }
 
-    /**
-     * With port builder.
-     *
-     * @param port the port
-     * @return the builder
-     */
     public Builder withPort(Integer port) {
       this.port = port;
       return this;
     }
 
-    /**
-     * With user name builder.
-     *
-     * @param userName the user name
-     * @return the builder
-     */
     public Builder withUserName(String userName) {
       this.userName = userName;
       return this;
     }
 
-    /**
-     * With password builder.
-     *
-     * @param password the password
-     * @return the builder
-     */
     public Builder withPassword(String password) {
       this.password = password;
       return this;
     }
 
-    /**
-     * With key builder.
-     *
-     * @param key the key
-     * @return the builder
-     */
     public Builder withKey(String key) {
       this.key = key;
       return this;
     }
 
-    /**
-     * With key passphrase builder.
-     *
-     * @param keyPassphrase the key passphrase
-     * @return the builder
-     */
     public Builder withKeyPassphrase(String keyPassphrase) {
       this.keyPassphrase = keyPassphrase;
       return this;
     }
 
-    /**
-     * With sudo app name builder.
-     *
-     * @param sudoAppName the sudo app name
-     * @return the builder
-     */
     public Builder withSudoAppName(String sudoAppName) {
       this.sudoAppName = sudoAppName;
       return this;
     }
 
-    /**
-     * With sudo app password builder.
-     *
-     * @param sudoAppPassword the sudo app password
-     * @return the builder
-     */
     public Builder withSudoAppPassword(String sudoAppPassword) {
       this.sudoAppPassword = sudoAppPassword;
       return this;
     }
 
-    /**
-     * With bastion host config builder.
-     *
-     * @param bastionHostConfig the bastion host config
-     * @return the builder
-     */
     public Builder withBastionHostConfig(SshSessionConfig bastionHostConfig) {
       this.bastionHostConfig = bastionHostConfig;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aSshSessionConfig()
           .withAppId(appId)
           .withExecutorType(executorType)
           .withExecutionId(executionId)
           .withCommandUnitName(commandUnitName)
+          .withSocketConnectTimeout(socketConnectTimeout)
           .withSshConnectionTimeout(sshConnectionTimeout)
           .withSshSessionTimeout(sshSessionTimeout)
           .withRetryInterval(retryInterval)
@@ -602,17 +511,13 @@ public class SshSessionConfig {
           .withBastionHostConfig(bastionHostConfig);
     }
 
-    /**
-     * Build ssh session config.
-     *
-     * @return the ssh session config
-     */
     public SshSessionConfig build() {
       SshSessionConfig sshSessionConfig = new SshSessionConfig();
       sshSessionConfig.setAppId(appId);
       sshSessionConfig.setExecutorType(executorType);
       sshSessionConfig.setExecutionId(executionId);
       sshSessionConfig.setCommandUnitName(commandUnitName);
+      sshSessionConfig.setSocketConnectTimeout(socketConnectTimeout);
       sshSessionConfig.setSshConnectionTimeout(sshConnectionTimeout);
       sshSessionConfig.setSshSessionTimeout(sshSessionTimeout);
       sshSessionConfig.setRetryInterval(retryInterval);
