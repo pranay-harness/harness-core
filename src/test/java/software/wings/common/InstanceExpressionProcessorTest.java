@@ -46,6 +46,7 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -93,10 +94,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
@@ -167,10 +165,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
@@ -220,10 +215,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
@@ -276,10 +268,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
@@ -442,10 +431,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(
         Environment.class, Environment.Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
     InstanceElement i1 = InstanceElement.Builder.anInstanceElement().withUuid(UUIDGenerator.getUuid()).build();

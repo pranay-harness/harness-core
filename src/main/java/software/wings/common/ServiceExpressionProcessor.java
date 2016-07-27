@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.inject.Inject;
 
 /**
@@ -127,7 +128,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    String appId = context.getStateExecutionInstance().getAppId();
+    String appId = context.getApp().getUuid();
 
     List<Service> services = null;
 

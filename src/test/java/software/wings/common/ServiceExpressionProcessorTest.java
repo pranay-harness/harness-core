@@ -15,13 +15,13 @@ import com.google.common.collect.Lists;
 
 import org.junit.Test;
 import software.wings.api.ServiceElement;
+import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
 
@@ -41,10 +41,8 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
         aService().withName("B1234").build(), aService().withName("C1234").build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
@@ -79,10 +77,8 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
         aService().withName("B1234").build(), aService().withName("C1234").build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
     PageResponse<Service> res = new PageResponse<Service>();
@@ -111,10 +107,8 @@ public class ServiceExpressionProcessorTest {
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
@@ -137,10 +131,8 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
         aService().withName("B1234").build(), aService().withName("C1234").build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
     PageResponse<Service> res = new PageResponse<Service>();
@@ -171,10 +163,8 @@ public class ServiceExpressionProcessorTest {
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
+    when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
     ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);

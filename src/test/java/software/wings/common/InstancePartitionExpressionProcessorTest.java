@@ -33,9 +33,9 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;
+
 import javax.inject.Inject;
 
 /**
@@ -82,10 +82,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     String appId = app.getUuid();
     Environment env = wingsPersistence.saveAndGet(Environment.class, anEnvironment().withAppId(app.getUuid()).build());
 
-    StateExecutionInstance stateExecutionInstance =
-        StateExecutionInstance.Builder.aStateExecutionInstance().withAppId(appId).build();
     ExecutionContextImpl context = mock(ExecutionContextImpl.class);
-    when(context.getStateExecutionInstance()).thenReturn(stateExecutionInstance);
     when(context.getApp()).thenReturn(app);
     when(context.getEnv()).thenReturn(env);
 
