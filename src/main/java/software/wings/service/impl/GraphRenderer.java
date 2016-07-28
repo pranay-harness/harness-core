@@ -211,7 +211,7 @@ public class GraphRenderer {
     group.setY(y);
     graph.addNode(group);
 
-    y += DEFAULT_GROUP_PADDING;
+    y += DEFAULT_ARROW_HEIGHT;
     Node priorElement = null;
     for (Node node : group.getElements()) {
       paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);

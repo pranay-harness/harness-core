@@ -813,8 +813,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;
-    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_GROUP_PADDING;
-    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT;
+    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT;
     assertThat(graph.getNodes())
         .extracting("y")
         .containsExactly(row1, row1 + DEFAULT_NODE_HEIGHT, row2, row2, row3, row3);
@@ -927,8 +927,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes()).extracting("x").containsExactly(col1, col2, col3, col4, col3, col4);
 
     int row1 = DEFAULT_INITIAL_Y;
-    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_GROUP_PADDING;
-    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT + DEFAULT_GROUP_PADDING;
+    int row2 = DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT;
+    int row3 = DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT;
     assertThat(graph.getNodes())
         .extracting("y")
         .containsExactly(row1, row1 + DEFAULT_NODE_HEIGHT, row2, row2, row3, row3);
