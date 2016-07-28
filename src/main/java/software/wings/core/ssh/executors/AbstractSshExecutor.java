@@ -206,13 +206,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
           text += dataReadFromTheStream;
           text = processStreamData(text, false, outputStream);
-
-          /*if (execCommand.isProcessCommandOutput()) { // Let commandUnit process the stdout data and decide to
-          continue or not CommandUnitExecutionResult commandUnitExecutionResult =
-          execCommand.processCommandOutput(dataReadFromTheStream); if (commandUnitExecutionResult !=
-          CommandUnitExecutionResult.CONTINUE) { return commandUnitExecutionResult.getExecutionResult();
-            }
-          }*/
         }
 
         if (text.length() > 0) {
@@ -393,10 +386,10 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   private ExecutionResult scpOneFile(String remoteFilePath, FileProvider fileProvider) {
     ExecutionResult executionResult = FAILURE;
-
+    Channel channel = null;
     try {
       String command = "scp -t " + remoteFilePath;
-      Channel channel = getCachedSession(config).openChannel("exec");
+      channel = getCachedSession(config).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 
       // get I/O streams for remote scp
@@ -450,6 +443,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         throw new WingsException(ERROR_IN_GETTING_CHANNEL_STREAMS);
       }
       return executionResult;
+    } finally {
+      if (channel != null && !channel.isClosed()) {
+        logger.info("Disconnect channel if still open post execution command");
+        channel.disconnect();
+      }
     }
     return executionResult;
   }

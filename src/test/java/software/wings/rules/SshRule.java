@@ -22,7 +22,7 @@ import java.security.Security;
 public class SshRule implements MethodRule {
   private SshServer sshd;
   private TemporaryFolder temporaryFolder;
-  private String username = "ssh_user";
+  private String username = System.getProperty("user.name");
   private String password = "Wings@123";
   private Path keyPath;
 
