@@ -4,8 +4,13 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.Builder.aHost;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
+import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
@@ -16,6 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -27,8 +33,10 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
@@ -56,6 +64,8 @@ public class HostServiceImpl implements HostService {
   @Inject private InfraService infraService;
   @Inject private SettingsService settingsService;
   @Inject private TagService tagService;
+  @Inject private NotificationService notificationService;
+  @Inject private EnvironmentService environmentService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -210,16 +220,29 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#delete(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public void delete(String appId, String infraId, String hostId) {
+  public void delete(String appId, String infraId, String envId, String hostId) {
     Host host = get(appId, infraId, hostId);
-    delete(host);
+    if (delete(host)) {
+      Environment environment = environmentService.get(host.getAppId(), envId, false);
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(host.getAppId())
+              .withNotificationType(INFORMATION)
+              .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
+                  ImmutableMap.of("HOST_NAME", host.getHostName(), "ENV_NAME", environment.getName())))
+              .build());
+    }
   }
 
-  private void delete(Host host) {
+  private boolean delete(Host host) {
     if (host != null) {
-      wingsPersistence.delete(host);
-      serviceTemplateService.deleteHostFromTemplates(host);
+      boolean delete = wingsPersistence.delete(host);
+      if (delete) {
+        serviceTemplateService.deleteHostFromTemplates(host);
+      }
+      return delete;
     }
+    return false;
   }
 
   @Override
@@ -271,6 +294,18 @@ public class HostServiceImpl implements HostService {
       }
     });
     serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedHosts));
+
+    int countOfNewHostsAdded = hostNames.size() - duplicateHostNames.size();
+    if (countOfNewHostsAdded > 0) {
+      Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(baseHost.getAppId())
+              .withNotificationType(INFORMATION)
+              .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
+                  ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
+              .build());
+    }
 
     return aResponseMessage()
         .withErrorType(WARN)

@@ -53,7 +53,7 @@ public interface HostService {
    * @param infraId the infra id
    * @param hostId  the host id
    */
-  void delete(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
+  void delete(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Delete by infra.

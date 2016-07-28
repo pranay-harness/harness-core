@@ -153,7 +153,7 @@ public class HostResource {
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
     infraId = infraService.getInfraIdByEnvId(appId, envId);
-    hostService.delete(appId, infraId, hostId);
+    hostService.delete(appId, infraId, envId, hostId);
     return new RestResponse();
   }
 

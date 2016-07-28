@@ -48,10 +48,6 @@ import javax.inject.Inject;
  */
 public class AppServiceTest extends WingsBaseTest {
   /**
-   * The App service.
-   */
-  @Inject @InjectMocks AppService appService;
-  /**
    * The Query.
    */
   @Mock Query<Application> query;
@@ -71,6 +67,11 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private AppContainerService appContainerService;
   @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
+
+  /**
+   * The App service.
+   */
+  @Inject @InjectMocks AppService appService;
 
   /**
    * Sets up.
@@ -99,6 +100,7 @@ public class AppServiceTest extends WingsBaseTest {
     appService.save(app);
     verify(wingsPersistence).saveAndGet(Application.class, app);
     verify(settingsService).createDefaultSettings(APP_ID);
+    verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
   /**
@@ -173,9 +175,13 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    when(wingsPersistence.get(Application.class, APP_ID))
+        .thenReturn(anApplication().withUuid(APP_ID).withName("APP_NAME").build());
     appService.delete(APP_ID);
-    InOrder inOrder = inOrder(wingsPersistence, serviceResourceService, environmentService, appContainerService);
+    InOrder inOrder =
+        inOrder(wingsPersistence, notificationService, serviceResourceService, environmentService, appContainerService);
     inOrder.verify(wingsPersistence).delete(Application.class, APP_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceResourceService).deleteByAppId(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(appContainerService).deleteByAppId(APP_ID);

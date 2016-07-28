@@ -59,4 +59,11 @@ public interface NotificationService {
    */
   Notification act(
       @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationAction notificationAction);
+
+  /**
+   * Send notification async.
+   *
+   * @param notification the notification
+   */
+  @ValidationGroups(Create.class) void sendNotificationAsync(@Valid Notification notification);
 }

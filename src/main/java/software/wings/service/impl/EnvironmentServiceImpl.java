@@ -10,8 +10,11 @@ import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -23,6 +26,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -30,6 +34,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.TagService;
@@ -60,6 +65,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private SetupService setupService;
+  @Inject private NotificationService notificationService;
 
   /**
    * {@inheritDoc}
@@ -129,92 +135,93 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    * {@inheritDoc}
    */
   @Override
-  public Environment save(Environment env) {
-    env = wingsPersistence.saveAndGet(Environment.class, env);
-    appService.addEnvironment(env);
-    infraService.createDefaultInfraForEnvironment(env.getAppId(), env.getUuid()); // FIXME: stopgap for Alpha
-    tagService.createDefaultRootTagForEnvironment(env);
-    serviceTemplateService.createDefaultTemplatesByEnv(env);
-    workflowService.createWorkflow(Orchestration.class,
-        anOrchestration()
-            .withName("Canary Deployment")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withGraph(
-                aGraph()
-                    .addNodes(aNode()
-                                  .withId("n1")
-                                  .withOrigin(true)
-                                  .withName("Repeat by Services")
-                                  .withType(StateType.REPEAT.name())
-                                  .withX(250)
-                                  .withY(50)
-                                  .addProperty("executionStrategy", "PARALLEL")
-                                  .addProperty("repeatElementExpression", "${services}")
-                                  .build(),
-                        aNode()
-                            .withId("n2")
-                            .withName("Repeat by Phases")
-                            .withType(StateType.REPEAT.name())
-                            .withX(450)
-                            .withY(50)
-                            .addProperty("executionStrategy", "SERIAL")
-                            .addProperty(
-                                "repeatElementExpression", "${phases.withPercentages(\"10%\",\"20%\",\"30%\",\"40%\")}")
-                            .build(),
-                        aNode()
-                            .withId("n3")
-                            .withName("Repeat by Instances")
-                            .withType(StateType.REPEAT.name())
-                            .withX(650)
-                            .withY(50)
-                            .addProperty("executionStrategy", "PARALLEL")
-                            .addProperty("repeatElementExpression", "${instances}")
-                            .build(),
-                        aNode()
-                            .withId("n4")
-                            .withName("Stop Instance")
-                            .withType(StateType.COMMAND.name())
-                            .withX(850)
-                            .withY(50)
-                            .addProperty("commandName", "STOP")
-                            .build(),
-                        aNode()
-                            .withId("n5")
-                            .withName("Install on Instance")
-                            .withType(StateType.COMMAND.name())
-                            .withX(1050)
-                            .withY(50)
-                            .addProperty("commandName", "INSTALL")
-                            .build(),
-                        aNode()
-                            .withId("n6")
-                            .withName("Start Instance")
-                            .withType(StateType.COMMAND.name())
-                            .withX(1250)
-                            .withY(50)
-                            .addProperty("commandName", "START")
-                            .build())
-                    .addLinks(
-                        aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
-                        aLink().withId("l2").withType(TransitionType.REPEAT.name()).withFrom("n2").withTo("n3").build(),
-                        aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build(),
-                        aLink()
-                            .withId("l4")
-                            .withType(TransitionType.SUCCESS.name())
-                            .withFrom("n4")
-                            .withTo("n5")
-                            .build(),
-                        aLink()
-                            .withId("l5")
-                            .withType(TransitionType.SUCCESS.name())
-                            .withFrom("n5")
-                            .withTo("n6")
-                            .build())
-                    .build())
-            .withEnvironment(env)
-            .withAppId(env.getAppId())
+  public Environment save(Environment environment) {
+    environment = wingsPersistence.saveAndGet(Environment.class, environment);
+    appService.addEnvironment(environment);
+    infraService.createDefaultInfraForEnvironment(
+        environment.getAppId(), environment.getUuid()); // FIXME: stopgap for Alpha
+    tagService.createDefaultRootTagForEnvironment(environment);
+    serviceTemplateService.createDefaultTemplatesByEnv(environment);
+    workflowService.createWorkflow(Orchestration.class, getDefaultCanaryDeploymentObject(environment));
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(environment.getAppId())
+            .withNotificationType(INFORMATION)
+            .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
+                ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
             .build());
-    return env;
+    return environment;
+  }
+
+  private Orchestration getDefaultCanaryDeploymentObject(Environment env) {
+    return anOrchestration()
+        .withName("Canary Deployment")
+        .withWorkflowType(WorkflowType.ORCHESTRATION)
+        .withGraph(
+            aGraph()
+                .addNodes(aNode()
+                              .withId("n1")
+                              .withOrigin(true)
+                              .withName("Repeat by Services")
+                              .withType(StateType.REPEAT.name())
+                              .withX(250)
+                              .withY(50)
+                              .addProperty("executionStrategy", "PARALLEL")
+                              .addProperty("repeatElementExpression", "${services}")
+                              .build(),
+                    aNode()
+                        .withId("n2")
+                        .withName("Repeat by Phases")
+                        .withType(StateType.REPEAT.name())
+                        .withX(450)
+                        .withY(50)
+                        .addProperty("executionStrategy", "SERIAL")
+                        .addProperty(
+                            "repeatElementExpression", "${phases.withPercentages(\"10%\",\"20%\",\"30%\",\"40%\")}")
+                        .build(),
+                    aNode()
+                        .withId("n3")
+                        .withName("Repeat by Instances")
+                        .withType(StateType.REPEAT.name())
+                        .withX(650)
+                        .withY(50)
+                        .addProperty("executionStrategy", "PARALLEL")
+                        .addProperty("repeatElementExpression", "${instances}")
+                        .build(),
+                    aNode()
+                        .withId("n4")
+                        .withName("Stop Instance")
+                        .withType(StateType.COMMAND.name())
+                        .withX(850)
+                        .withY(50)
+                        .addProperty("commandName", "STOP")
+                        .build(),
+                    aNode()
+                        .withId("n5")
+                        .withName("Install on Instance")
+                        .withType(StateType.COMMAND.name())
+                        .withX(1050)
+                        .withY(50)
+                        .addProperty("commandName", "INSTALL")
+                        .build(),
+                    aNode()
+                        .withId("n6")
+                        .withName("Start Instance")
+                        .withType(StateType.COMMAND.name())
+                        .withX(1250)
+                        .withY(50)
+                        .addProperty("commandName", "START")
+                        .build())
+                .addLinks(
+                    aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
+                    aLink().withId("l2").withType(TransitionType.REPEAT.name()).withFrom("n2").withTo("n3").build(),
+                    aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build(),
+                    aLink().withId("l4").withType(TransitionType.SUCCESS.name()).withFrom("n4").withTo("n5").build(),
+                    aLink().withId("l5").withType(TransitionType.SUCCESS.name()).withFrom("n5").withTo("n6").build())
+                .build())
+        .withEnvironment(env)
+        .withAppId(env.getAppId())
+        .build();
   }
 
   /**
@@ -233,13 +240,27 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public void delete(String appId, String envId) {
-    wingsPersistence.delete(
+    Environment environment = wingsPersistence.get(Environment.class, appId, envId);
+    if (environment == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Environment doesn't exist");
+    }
+    boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(Environment.class).field("appId").equal(appId).field(ID_KEY).equal(envId));
-    executorService.submit(() -> {
-      serviceTemplateService.deleteByEnv(appId, envId);
-      tagService.deleteByEnv(appId, envId);
-      infraService.deleteByEnv(appId, envId);
-    });
+
+    if (deleted) {
+      executorService.submit(() -> {
+        notificationService.sendNotificationAsync(
+            anInformationNotification()
+                .withAppId(environment.getAppId())
+                .withNotificationType(INFORMATION)
+                .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION,
+                    ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
+                .build());
+        serviceTemplateService.deleteByEnv(appId, envId);
+        tagService.deleteByEnv(appId, envId);
+        infraService.deleteByEnv(appId, envId);
+      });
+    }
   }
 
   @Override

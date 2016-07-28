@@ -2,10 +2,16 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
+import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
+import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+
+import com.google.common.collect.ImmutableMap;
 
 import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
@@ -17,6 +23,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -63,6 +70,13 @@ public class AppServiceImpl implements AppService {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
     settingsService.createDefaultSettings(application.getUuid());
     environmentService.createDefaultEnvironments(application.getUuid());
+    notificationService.sendNotificationAsync(
+        anInformationNotification()
+            .withAppId(application.getUuid())
+            .withNotificationType(INFORMATION)
+            .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
+                ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+            .build());
     return get(application.getUuid());
   }
 
@@ -127,9 +141,21 @@ public class AppServiceImpl implements AppService {
    */
   @Override
   public void delete(String appId) {
+    Application application = wingsPersistence.get(Application.class, appId);
+    if (application == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
+    }
+
     boolean deleted = wingsPersistence.delete(Application.class, appId);
     if (deleted) {
       executorService.submit(() -> {
+        notificationService.sendNotificationAsync(
+            anInformationNotification()
+                .withAppId(application.getUuid())
+                .withNotificationType(INFORMATION)
+                .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
+                    ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
+                .build());
         serviceResourceService.deleteByAppId(appId);
         environmentService.deleteByApp(appId);
         appContainerService.deleteByAppId(appId);

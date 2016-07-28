@@ -49,6 +49,7 @@ import software.wings.beans.Command;
 import software.wings.beans.CommandUnitType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
+import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
@@ -60,6 +61,7 @@ import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -84,9 +86,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                              .withArtifactType(JAR)
                                              .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
 
-  @Inject @Named("primaryDatastore") private Datastore datastore;
-  @Mock private WingsPersistence wingsPersistence;
-  @Mock private ConfigService configService;
   /**
    * The Verifier.
    */
@@ -97,9 +96,17 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(configService, wingsPersistence);
     }
   };
+
   @Mock private ServiceTemplateService serviceTemplateService;
+
+  @Inject @Named("primaryDatastore") private Datastore datastore;
+
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private ConfigService configService;
   @Mock private AppService appService;
   @Mock private ActivityService activityService;
+  @Mock private NotificationService notificationService;
+
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
@@ -154,6 +161,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(appService).addService(savedService);
     verify(serviceTemplateService).createDefaultTemplatesByService(savedService);
     verify(spyServiceResourceService, times(3)).addCommand(eq(APP_ID), eq(SERVICE_ID), graphArgumentCaptor.capture());
+    verify(notificationService).sendNotificationAsync(any(Notification.class));
     List<Graph> allValues = graphArgumentCaptor.getAllValues();
     assertThat(
         allValues.stream().filter(graph -> asList("Start", "Stop", "Install").contains(graph.getGraphName())).count())
@@ -200,8 +208,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldDeleteService() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
     srs.delete(APP_ID, SERVICE_ID);
-    InOrder inOrder = inOrder(wingsPersistence, serviceTemplateService, configService);
+    InOrder inOrder = inOrder(wingsPersistence, notificationService, serviceTemplateService, configService);
+    inOrder.verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
+    inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, SERVICE_ID, DEFAULT_TEMPLATE_ID);
   }
