@@ -1,6 +1,7 @@
 package software.wings.dl;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.mongodb.morphia.Datastore;
@@ -13,12 +14,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.exception.WingsException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The Class MongoHelper.
@@ -83,13 +83,10 @@ public class MongoHelper {
     }
 
     if (req.getOrders() != null) {
-      for (SortOrder o : req.getOrders()) {
-        if (o.getOrderType() == OrderType.DESC) {
-          query.order("-" + o.getFieldName());
-        } else {
-          query.order(o.getFieldName());
-        }
-      }
+      query.order(req.getOrders()
+                      .stream()
+                      .map(so -> (DESC.equals(so.getOrderType())) ? "-" + so.getFieldName() : so.getFieldName())
+                      .collect(Collectors.joining(", ")));
     }
 
     List<String> fieldsIncluded = req.getFieldsIncluded();
