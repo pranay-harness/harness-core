@@ -10,8 +10,10 @@ ${envVariable}=${envVariables[envVariable]}
 export ${envVariable}
 </#list>
 
-<#if workingDirectory?has_content>
-cd ${workingDirectory}
-</#if>
+$WINGS_SCRIPT_WORKING_DIRECTORY=$1
+shift
+$WINGS_SCRIPT_NAME=$1
+shift
 
-$WINGS_SCRIPT_DIR/$1
+cd $SCRIPT_WORKING_DIRECTORY
+$WINGS_SCRIPT_DIR/$SCRIPT_NAME "$@"

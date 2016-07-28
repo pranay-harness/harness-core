@@ -165,7 +165,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                               .withCommandUnitName(commandUnit.getName())
                               .withExecutionResult(executionResult)
                               .build());
-          throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+
+          throw new WingsException(ErrorCodes.UNKNOWN_ERROR, "", e);
         }
       }
 
@@ -214,6 +215,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       } catch (IOException e) {
         e.printStackTrace();
       } catch (TemplateException e) {
+        e.printStackTrace();
+      }
+      try {
+        executor.scpFiles(initCommandUnit.getExecutionStagingDir(), initCommandUnit.getCommandUnitFiles());
+      } catch (IOException e) {
         e.printStackTrace();
       }
     }

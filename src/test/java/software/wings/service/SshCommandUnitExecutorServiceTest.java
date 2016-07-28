@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
 import com.google.common.collect.Lists;
+import com.google.common.io.CharStreams;
 
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -57,6 +58,8 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import javax.inject.Inject;
 
 /**
@@ -213,10 +216,14 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldExecuteInitCommand() {
+  public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
     InitCommandUnit commandUnit = anInitCommandUnit().withName("Init").build();
-    commandUnit.setCommand(aCommand().withCommandUnits(asList(commandUnit)).build());
+    commandUnit.setCommand(
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build());
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
@@ -228,23 +235,46 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         new File(System.getProperty("java.io.tmpdir"), "wingslauncherACTIVITY_ID.sh").getAbsolutePath();
     verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedLauncherScript));
     assertThat(new File(expectedLauncherScript))
-        .hasContent("#!/bin/sh\n"
-            + "\n"
-            + "set -x\n"
-            + "# set session\n"
-            + "set -m\n"
-            + "\n"
-            + "# Set Environment Variables.\n"
-            + "BACKUP_PATH=/tmp/backup\n"
-            + "export BACKUP_PATH\n"
-            + "RUNTIME_PATH=/tmp/runtime\n"
-            + "export RUNTIME_PATH\n"
-            + "WINGS_SCRIPT_DIR=/tmp/staging/ACTIVITY_ID\n"
-            + "export WINGS_SCRIPT_DIR\n"
-            + "STAGING_PATH=/tmp/staging\n"
-            + "export STAGING_PATH\n"
-            + "\n"
-            + "\n"
-            + "$WINGS_SCRIPT_DIR/$1");
+        .hasContent(
+            CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
+
+    String expectedExecCommandUnitScript =
+        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID.sh").getAbsolutePath();
+    verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+
+    assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+  }
+
+  @Test
+  public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+    InitCommandUnit commandUnit = anInitCommandUnit().withName("Init").build();
+    commandUnit.setCommand(
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build(),
+                aCommand()
+                    .withName("start1")
+                    .withCommandUnits(asList(anExecCommandUnit()
+                                                 .withName("startscript")
+                                                 .withCommandString("start.sh")
+                                                 .withCommandPath("/home/tomcat")
+                                                 .build()))
+                    .build()))
+            .build());
+
+    when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
+
+    String expectedExecCommandUnitScript =
+        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID.sh").getAbsolutePath();
+    String expectedSubExecCommandUnitScript =
+        new File(System.getProperty("java.io.tmpdir"), "start1startscriptACTIVITY_ID.sh").getAbsolutePath();
+
+    verify(sshPwdAuthExecutor)
+        .scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
+
+    assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+    assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
   }
 }
