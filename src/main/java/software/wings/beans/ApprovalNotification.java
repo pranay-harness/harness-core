@@ -1,14 +1,22 @@
 package software.wings.beans;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.ApprovalNotification.ApprovalStage.APPROVED;
 import static software.wings.beans.ApprovalNotification.ApprovalStage.PENDING;
+import static software.wings.beans.ApprovalNotification.ApprovalStage.REJECTED;
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
 import static software.wings.beans.NotificationAction.Builder.aNotificationAction;
 import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
 import static software.wings.beans.NotificationAction.NotificationActionType.REJECT;
 
-import org.hibernate.validator.constraints.NotEmpty;
+import com.google.common.collect.ImmutableMap;
 
+import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.NotificationAction.NotificationActionType;
+import software.wings.dl.WingsPersistence;
+
+import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -18,9 +26,12 @@ public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
   private String releaseId;
+  @Inject @Transient private transient WingsPersistence wingsPersistence;
 
   @Override
-  public boolean performAction() {
+  public boolean performAction(NotificationActionType actionType) {
+    wingsPersistence.updateFields(ApprovalNotification.class, getUuid(),
+        ImmutableMap.of("stage", actionType.equals(APPROVE) ? APPROVED : REJECTED));
     return true;
   }
 
@@ -34,7 +45,7 @@ public class ApprovalNotification extends ActionableNotification {
     PENDING, /**
               * Accepted approval stage.
               */
-    ACCEPTED, /**
+    APPROVED, /**
                * Rejected approval stage.
                */
     REJECTED

@@ -26,6 +26,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -83,7 +84,7 @@ public class NotificationResource {
   @POST
   @Path("{notificationId}/action/{type}")
   public RestResponse<Notification> act(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
-      @QueryParam("notificationId") String notificationId, @QueryParam("type") NotificationActionType actionType) {
+      @PathParam("notificationId") String notificationId, @PathParam("type") NotificationActionType actionType) {
     return new RestResponse<>(notificationService.act(appId, notificationId, actionType));
   }
 }

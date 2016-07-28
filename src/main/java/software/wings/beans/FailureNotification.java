@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import software.wings.beans.NotificationAction.NotificationActionType;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -53,7 +55,7 @@ public class FailureNotification extends ActionableNotification {
   }
 
   @Override
-  public boolean performAction() {
+  public boolean performAction(NotificationActionType actionType) {
     return true;
   }
 

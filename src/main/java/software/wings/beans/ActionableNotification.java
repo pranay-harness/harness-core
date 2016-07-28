@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import software.wings.beans.NotificationAction.NotificationActionType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +25,9 @@ public abstract class ActionableNotification extends Notification {
    * Perform action boolean.
    *
    * @return the boolean
+   * @param actionType
    */
-  public abstract boolean performAction();
+  public abstract boolean performAction(NotificationActionType actionType);
 
   /**
    * Instantiates a new Actionable notification.

@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.inject.Injector;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -29,6 +30,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class NotificationServiceImpl implements NotificationService {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private Injector injector;
+
   private Logger logger = LoggerFactory.getLogger(getClass());
 
   @Override
@@ -69,7 +72,8 @@ public class NotificationServiceImpl implements NotificationService {
              .isPresent()) {
       throw new WingsException(INVALID_REQUEST, "message", "Action not supported for NotificationType");
     }
-    boolean actionCompleted = actionableNotification.performAction();
+    injector.injectMembers(actionableNotification);
+    boolean actionCompleted = actionableNotification.performAction(actionType);
     if (actionCompleted) {
       markNotificationCompleted(appId, notificationId);
     }
@@ -77,7 +81,7 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   public void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId) {
-    wingsPersistence.updateFields(Notification.class, notificationId, ImmutableMap.of("completed", true));
+    wingsPersistence.updateFields(Notification.class, notificationId, ImmutableMap.of("complete", true));
   }
 
   @Override
