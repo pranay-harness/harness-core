@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Notification;
-import software.wings.beans.Notification.NotificationAction;
+import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
@@ -49,16 +49,7 @@ public interface NotificationService {
    */
   @ValidationGroups(Update.class) Notification update(@Valid Notification notification);
 
-  /**
-   * Act notification.
-   *
-   * @param appId              the app id
-   * @param notificationId     the notification id
-   * @param notificationAction the notification action
-   * @return the notification
-   */
-  Notification act(
-      @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationAction notificationAction);
+  Notification act(@NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType);
 
   /**
    * Send notification async.

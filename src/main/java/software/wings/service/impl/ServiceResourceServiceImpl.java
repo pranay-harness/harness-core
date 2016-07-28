@@ -10,7 +10,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
@@ -93,7 +92,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(savedService.getAppId())
-            .withNotificationType(INFORMATION)
             .withDisplayText(getDecoratedNotificationMessage(ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", savedService.getName())))
             .build());
@@ -149,7 +147,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(service.getAppId())
-                .withNotificationType(INFORMATION)
                 .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName())))
                 .build());

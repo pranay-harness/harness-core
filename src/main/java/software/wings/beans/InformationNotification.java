@@ -10,7 +10,7 @@ public class InformationNotification extends Notification {
    * Instantiates a new Information notification.
    */
   public InformationNotification() {
-    super(NotificationType.INFORMATION);
+    super(NotificationType.INFORMATION, true);
   }
 
   /**
@@ -39,7 +39,6 @@ public class InformationNotification extends Notification {
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
-    private NotificationType notificationType;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -100,17 +99,6 @@ public class InformationNotification extends Notification {
      */
     public Builder withEntityType(NotificationEntityType entityType) {
       this.entityType = entityType;
-      return this;
-    }
-
-    /**
-     * With notification type builder.
-     *
-     * @param notificationType the notification type
-     * @return the builder
-     */
-    public Builder withNotificationType(NotificationType notificationType) {
-      this.notificationType = notificationType;
       return this;
     }
 
@@ -202,7 +190,6 @@ public class InformationNotification extends Notification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withNotificationType(notificationType)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -223,7 +210,6 @@ public class InformationNotification extends Notification {
       informationNotification.setEnvironmentId(environmentId);
       informationNotification.setEntityId(entityId);
       informationNotification.setEntityType(entityType);
-      informationNotification.setNotificationType(notificationType);
       informationNotification.setUuid(uuid);
       informationNotification.setAppId(appId);
       informationNotification.setCreatedBy(createdBy);

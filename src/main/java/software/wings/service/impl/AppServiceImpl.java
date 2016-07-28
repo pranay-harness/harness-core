@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
@@ -73,7 +72,6 @@ public class AppServiceImpl implements AppService {
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(application.getUuid())
-            .withNotificationType(INFORMATION)
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
             .build());
@@ -152,7 +150,6 @@ public class AppServiceImpl implements AppService {
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(application.getUuid())
-                .withNotificationType(INFORMATION)
                 .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
                 .build());

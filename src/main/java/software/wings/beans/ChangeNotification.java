@@ -10,7 +10,7 @@ public class ChangeNotification extends Notification {
    * Instantiates a new Change notification.
    */
   public ChangeNotification() {
-    super(NotificationType.CHANGE);
+    super(NotificationType.CHANGE, true);
   }
 
   public long getScheduledOn() {
@@ -21,15 +21,12 @@ public class ChangeNotification extends Notification {
     this.scheduledOn = scheduledOn;
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private long scheduledOn;
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
-    private NotificationType notificationType;
+    private boolean complete = true;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -64,8 +61,8 @@ public class ChangeNotification extends Notification {
       return this;
     }
 
-    public Builder withNotificationType(NotificationType notificationType) {
-      this.notificationType = notificationType;
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
       return this;
     }
 
@@ -110,7 +107,7 @@ public class ChangeNotification extends Notification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withNotificationType(notificationType)
+          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -126,7 +123,7 @@ public class ChangeNotification extends Notification {
       changeNotification.setEnvironmentId(environmentId);
       changeNotification.setEntityId(entityId);
       changeNotification.setEntityType(entityType);
-      changeNotification.setNotificationType(notificationType);
+      changeNotification.setComplete(complete);
       changeNotification.setUuid(uuid);
       changeNotification.setAppId(appId);
       changeNotification.setCreatedBy(createdBy);

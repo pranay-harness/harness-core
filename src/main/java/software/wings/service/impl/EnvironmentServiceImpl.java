@@ -11,7 +11,6 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -146,7 +145,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     notificationService.sendNotificationAsync(
         anInformationNotification()
             .withAppId(environment.getAppId())
-            .withNotificationType(INFORMATION)
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
             .build());
@@ -252,7 +250,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(environment.getAppId())
-                .withNotificationType(INFORMATION)
                 .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
                 .build());

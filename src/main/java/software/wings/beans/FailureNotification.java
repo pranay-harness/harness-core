@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 7/25/16.
  */
-public class FailureNotification extends Notification {
+public class FailureNotification extends ActionableNotification {
   @NotNull private String entityName;
   @NotNull private String executionId;
 
@@ -61,7 +61,7 @@ public class FailureNotification extends Notification {
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
-    private NotificationType notificationType;
+    private boolean complete = true;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -137,13 +137,13 @@ public class FailureNotification extends Notification {
     }
 
     /**
-     * With notification type builder.
+     * With complete builder.
      *
-     * @param notificationType the notification type
+     * @param complete the complete
      * @return the builder
      */
-    public Builder withNotificationType(NotificationType notificationType) {
-      this.notificationType = notificationType;
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
       return this;
     }
 
@@ -236,7 +236,7 @@ public class FailureNotification extends Notification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withNotificationType(notificationType)
+          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -258,7 +258,7 @@ public class FailureNotification extends Notification {
       failureNotification.setEnvironmentId(environmentId);
       failureNotification.setEntityId(entityId);
       failureNotification.setEntityType(entityType);
-      failureNotification.setNotificationType(notificationType);
+      failureNotification.setComplete(complete);
       failureNotification.setUuid(uuid);
       failureNotification.setAppId(appId);
       failureNotification.setCreatedBy(createdBy);

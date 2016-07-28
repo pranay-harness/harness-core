@@ -22,6 +22,7 @@ public abstract class Notification extends Base {
   private String entityId;
   private NotificationEntityType entityType;
   @NotNull private NotificationType notificationType;
+  @NotNull private boolean complete = true;
 
   /**
    * Instantiates a new Notification.
@@ -32,41 +33,92 @@ public abstract class Notification extends Base {
    * Instantiates a new Notification.
    *
    * @param notificationType the notification type
+   * @param complete         the complete
    */
-  public Notification(NotificationType notificationType) {
+  public Notification(NotificationType notificationType, boolean complete) {
     this.notificationType = notificationType;
+    this.complete = complete;
   }
 
+  /**
+   * Gets environment id.
+   *
+   * @return the environment id
+   */
   public String getEnvironmentId() {
     return environmentId;
   }
 
+  /**
+   * Sets environment id.
+   *
+   * @param environmentId the environment id
+   */
   public void setEnvironmentId(String environmentId) {
     this.environmentId = environmentId;
   }
 
+  /**
+   * Gets entity id.
+   *
+   * @return the entity id
+   */
   public String getEntityId() {
     return entityId;
   }
 
+  /**
+   * Sets entity id.
+   *
+   * @param entityId the entity id
+   */
   public void setEntityId(String entityId) {
     this.entityId = entityId;
   }
 
+  /**
+   * Gets entity type.
+   *
+   * @return the entity type
+   */
   public NotificationEntityType getEntityType() {
     return entityType;
   }
 
+  /**
+   * Sets entity type.
+   *
+   * @param entityType the entity type
+   */
   public void setEntityType(NotificationEntityType entityType) {
     this.entityType = entityType;
   }
 
+  /**
+   * Gets notification type.
+   *
+   * @return the notification type
+   */
   public NotificationType getNotificationType() {
     return notificationType;
   }
 
-  public void setNotificationType(NotificationType notificationType) {
-    this.notificationType = notificationType;
+  /**
+   * Is complete boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isComplete() {
+    return complete;
+  }
+
+  /**
+   * Sets complete.
+   *
+   * @param complete the complete
+   */
+  public void setComplete(boolean complete) {
+    this.complete = complete;
   }
 
   /**
@@ -84,10 +136,28 @@ public abstract class Notification extends Base {
              */
     FAILURE,
 
+    /**
+     * Information notification type.
+     */
     INFORMATION
   }
 
-  public enum NotificationEntityType { ARTIFACT, RELEASE, WORKFLOW, DEPLOYMENT }
-
-  public enum NotificationAction { ACCEPT, REJECT, RESUME }
+  /**
+   * The enum Notification entity type.
+   */
+  public enum NotificationEntityType {
+    /**
+     * Artifact notification entity type.
+     */
+    ARTIFACT, /**
+               * Release notification entity type.
+               */
+    RELEASE, /**
+              * Workflow notification entity type.
+              */
+    WORKFLOW, /**
+               * Deployment notification entity type.
+               */
+    DEPLOYMENT
+  }
 }

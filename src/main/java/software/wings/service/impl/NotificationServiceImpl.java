@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Notification;
-import software.wings.beans.Notification.NotificationAction;
+import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -49,7 +49,7 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public Notification act(
-      @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationAction notificationAction) {
+      @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType) {
     throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Action operation not supported");
   }
 

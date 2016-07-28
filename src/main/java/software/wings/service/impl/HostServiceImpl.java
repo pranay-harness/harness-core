@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
-import static software.wings.beans.Notification.NotificationType.INFORMATION;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
@@ -227,7 +226,6 @@ public class HostServiceImpl implements HostService {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(host.getAppId())
-              .withNotificationType(INFORMATION)
               .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
                   ImmutableMap.of("HOST_NAME", host.getHostName(), "ENV_NAME", environment.getName())))
               .build());
@@ -301,7 +299,6 @@ public class HostServiceImpl implements HostService {
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(baseHost.getAppId())
-              .withNotificationType(INFORMATION)
               .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
                   ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
               .build());

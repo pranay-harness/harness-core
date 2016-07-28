@@ -1,19 +1,27 @@
 package software.wings.beans;
 
+import static java.util.Arrays.asList;
 import static software.wings.beans.ApprovalNotification.ApprovalStage.PENDING;
 import static software.wings.beans.Notification.NotificationType.APPROVAL;
+import static software.wings.beans.NotificationAction.Builder.aNotificationAction;
+import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
+import static software.wings.beans.NotificationAction.NotificationActionType.REJECT;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 7/25/16.
  */
-public class ApprovalNotification extends Notification {
+public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
   private String releaseId;
+  private List<NotificationAction> notificationActions =
+      asList(aNotificationAction().withName("Approve").withType(APPROVE).withPrimary(true).build(),
+          aNotificationAction().withName("Reject").withType(REJECT).withPrimary(false).build());
 
   /**
    * The enum Approval stage.
@@ -93,6 +101,15 @@ public class ApprovalNotification extends Notification {
   }
 
   /**
+   * Gets notification actions.
+   *
+   * @return the notification actions
+   */
+  public List<NotificationAction> getNotificationActions() {
+    return notificationActions;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -102,7 +119,7 @@ public class ApprovalNotification extends Notification {
     private String environmentId;
     private String entityId;
     private NotificationEntityType entityType;
-    private NotificationType notificationType;
+    private boolean complete = true;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -189,13 +206,13 @@ public class ApprovalNotification extends Notification {
     }
 
     /**
-     * With notification type builder.
+     * With complete builder.
      *
-     * @param notificationType the notification type
+     * @param complete the complete
      * @return the builder
      */
-    public Builder withNotificationType(NotificationType notificationType) {
-      this.notificationType = notificationType;
+    public Builder withComplete(boolean complete) {
+      this.complete = complete;
       return this;
     }
 
@@ -289,7 +306,7 @@ public class ApprovalNotification extends Notification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withNotificationType(notificationType)
+          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -312,7 +329,7 @@ public class ApprovalNotification extends Notification {
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);
-      approvalNotification.setNotificationType(notificationType);
+      approvalNotification.setComplete(complete);
       approvalNotification.setUuid(uuid);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);
