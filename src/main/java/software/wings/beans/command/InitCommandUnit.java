@@ -42,15 +42,20 @@ public class InitCommandUnit extends CommandUnit {
 
   @Transient @SchemaIgnore private File launcherFile;
 
+  @Transient @SchemaIgnore private String executionStagingDir;
+
   @Override
   public void setup(CommandExecutionContext context) {
     cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
+    activityId = context.getActivityId();
+    executionStagingDir = new File(context.getStagingPath(), activityId).getAbsolutePath();
     preInitCommand = "mkdir -p " + context.getStagingPath() + " && mkdir -p " + context.getBackupPath()
-        + " && mkdir -p " + context.getRuntimePath() + " && rm -rf " + context.getStagingPath() + "/*";
+        + " && mkdir -p " + context.getRuntimePath() + " && mkdir -p " + executionStagingDir + " && mkdir -p "
+        + new File(context.getBackupPath(), activityId).getAbsolutePath();
     envVariables.put("STAGING_PATH", context.getStagingPath());
     envVariables.put("RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("BACKUP_PATH", context.getBackupPath());
-    activityId = context.getActivityId();
+    envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
   }
 
   public String getPreInitCommand() {
@@ -58,7 +63,8 @@ public class InitCommandUnit extends CommandUnit {
   }
 
   public String getLauncherFile() throws IOException, TemplateException {
-    String launcherScript = System.getProperty("java.io.tmpdir") + "/wingslauncher" + activityId + ".sh";
+    String launcherScript =
+        new File(System.getProperty("java.io.tmpdir"), "wingslauncher" + activityId + ".sh").getAbsolutePath();
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
       cfg.getTemplate("execlauncher.ftl").process(of("envVariables", envVariables), fileWriter);
@@ -68,6 +74,10 @@ public class InitCommandUnit extends CommandUnit {
 
   public List<String> getUnitFilesInfo() {
     return Lists.newArrayList();
+  }
+
+  public String getExecutionStagingDir() {
+    return executionStagingDir;
   }
 
   public void setCommand(Command command) {

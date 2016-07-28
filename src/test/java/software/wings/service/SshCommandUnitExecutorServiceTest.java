@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
@@ -55,6 +56,7 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 
+import java.io.File;
 import javax.inject.Inject;
 
 /**
@@ -103,9 +105,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   private CommandExecutionContext commandExecutionContext =
       aCommandExecutionContext()
           .withActivityId(ACTIVITY_ID)
-          .withRuntimePath("/tmp")
-          .withBackupPath("/tmp")
-          .withStagingPath("/tmp")
+          .withRuntimePath("/tmp/runtime")
+          .withBackupPath("/tmp/backup")
+          .withStagingPath("/tmp/staging")
           .withExecutionCredential(
               aSSHExecutionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build())
           .withArtifact(anArtifact()
@@ -218,5 +220,31 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
+    verify(sshPwdAuthExecutor)
+        .executeCommandString(
+            "mkdir -p /tmp/staging && mkdir -p /tmp/backup && mkdir -p /tmp/runtime && mkdir -p /tmp/staging/ACTIVITY_ID && mkdir -p /tmp/backup/ACTIVITY_ID");
+
+    String expectedLauncherScript =
+        new File(System.getProperty("java.io.tmpdir"), "wingslauncherACTIVITY_ID.sh").getAbsolutePath();
+    verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedLauncherScript));
+    assertThat(new File(expectedLauncherScript))
+        .hasContent("#!/bin/sh\n"
+            + "\n"
+            + "set -x\n"
+            + "# set session\n"
+            + "set -m\n"
+            + "\n"
+            + "# Set Environment Variables.\n"
+            + "BACKUP_PATH=/tmp/backup\n"
+            + "export BACKUP_PATH\n"
+            + "RUNTIME_PATH=/tmp/runtime\n"
+            + "export RUNTIME_PATH\n"
+            + "WINGS_SCRIPT_DIR=/tmp/staging/ACTIVITY_ID\n"
+            + "export WINGS_SCRIPT_DIR\n"
+            + "STAGING_PATH=/tmp/staging\n"
+            + "export STAGING_PATH\n"
+            + "\n"
+            + "\n"
+            + "$WINGS_SCRIPT_DIR/$1");
   }
 }

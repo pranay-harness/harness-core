@@ -210,7 +210,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       executionResult = executor.executeCommandString(initCommandUnit.getPreInitCommand());
       try {
         executor.scpFiles(
-            initCommandUnit.getPreInitCommand(), Collections.singletonList(initCommandUnit.getLauncherFile()));
+            initCommandUnit.getExecutionStagingDir(), Collections.singletonList(initCommandUnit.getLauncherFile()));
       } catch (IOException e) {
         e.printStackTrace();
       } catch (TemplateException e) {

@@ -6,7 +6,7 @@ set -m
 
 # Set Environment Variables.
 <#list envVariables?keys as envVariable>
-${envVariable}=${envVariables.get(envVariable)}
+${envVariable}=${envVariables[envVariable]}
 export ${envVariable}
 </#list>
 
