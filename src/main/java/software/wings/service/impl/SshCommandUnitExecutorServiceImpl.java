@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.Log.Builder.aLog;
@@ -13,6 +14,8 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUT
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
+import com.google.common.base.Joiner;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
@@ -24,7 +27,9 @@ import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.InitCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
+import software.wings.common.cache.ResponseCodeCache;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
@@ -34,6 +39,7 @@ import software.wings.core.ssh.executors.SshSessionConfig.Builder;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
+import software.wings.utils.TimeoutManager;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -59,6 +65,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    * The Executor service.
    */
   @Inject ExecutorService executorService;
+
+  @Inject private TimeoutManager timeoutManager;
+
   private SshExecutorFactory sshExecutorFactory;
 
   /**
@@ -112,18 +121,49 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       try {
         executionResult = executionResultFuture.get(
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
-      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+      } catch (InterruptedException | TimeoutException e) {
         logService.save(aLog()
                             .withAppId(host.getAppId())
                             .withActivityId(activityId)
                             .withHostName(host.getHostName())
                             .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
-                            .withLogLine("Command execution timed out ")
+                            .withLogLine("Command execution timed out")
                             .withCommandUnitName(commandUnit.getName())
                             .withExecutionResult(executionResult)
                             .build());
-
         throw new WingsException(ErrorCodes.SOCKET_CONNECTION_TIMEOUT);
+      } catch (ExecutionException e) {
+        if (e.getCause() instanceof WingsException) {
+          WingsException ex = (WingsException) e.getCause();
+          String errorMessage =
+              Joiner.on(",").join(ex.getResponseMessageList()
+                                      .stream()
+                                      .map(responseMessage
+                                          -> ResponseCodeCache.getInstance()
+                                                 .getResponseMessage(responseMessage.getCode(), ex.getParams())
+                                                 .getMessage())
+                                      .collect(toList()));
+          logService.save(aLog()
+                              .withAppId(host.getAppId())
+                              .withActivityId(activityId)
+                              .withHostName(host.getHostName())
+                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                              .withLogLine(errorMessage)
+                              .withExecutionResult(executionResult)
+                              .build());
+          throw(WingsException) e.getCause();
+        } else {
+          logService.save(aLog()
+                              .withAppId(host.getAppId())
+                              .withActivityId(activityId)
+                              .withHostName(host.getHostName())
+                              .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
+                              .withLogLine("Unknown Error " + e.getCause().getMessage())
+                              .withCommandUnitName(commandUnit.getName())
+                              .withExecutionResult(executionResult)
+                              .build());
+          throw new WingsException(ErrorCodes.UNKNOWN_ERROR);
+        }
       }
 
       logService.save(aLog()
@@ -135,6 +175,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .withCommandUnitName(commandUnit.getName())
                           .withExecutionResult(executionResult)
                           .build());
+
       commandUnit.setExecutionResult(executionResult);
       return executionResult;
 
@@ -157,10 +198,13 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     ExecutionResult executionResult;
     if (op.equals(SupportedOp.EXEC)) {
       executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getCommandString());
-    } else {
+    } else if (op.equals(SupportedOp.SCP)) {
       ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
       executionResult = executor.scpGridFsFiles(
           scpCommandUnit.getDestinationDirectoryPath(), scpCommandUnit.getFileBucket(), scpCommandUnit.getFileIds());
+    } else {
+      InitCommandUnit initCommandUnit = (InitCommandUnit) commandUnit;
+      executionResult = executor.executeCommandString(initCommandUnit.getPreInitCommand());
     }
     return executionResult;
   }
