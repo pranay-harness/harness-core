@@ -59,7 +59,7 @@ public class Graph {
   /**
    * The Default arrow height.
    */
-  public static final int DEFAULT_ARROW_HEIGHT = 40;
+  public static final int DEFAULT_ARROW_HEIGHT = 50;
 
   /**
    * The Default group padding.
