@@ -26,7 +26,7 @@ public class Mailer {
    * Instantiates a new mailer.
    */
   public Mailer() {
-    cfg.setTemplateLoader(new ClassTemplateLoader(Mailer.class, "/mailtemplates"));
+    cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/mailtemplates"));
   }
 
   /**

@@ -120,7 +120,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
@@ -132,7 +132,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId(COMMAND_NAME).build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
@@ -145,7 +145,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionForUnknownCommand() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId("NON_EXISTENT_COMMAND").build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, context));

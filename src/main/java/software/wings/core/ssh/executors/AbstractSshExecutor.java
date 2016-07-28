@@ -27,7 +27,7 @@ import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import org.apache.commons.jexl3.JxltEngine.Exception;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -39,6 +39,8 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LogService;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -205,14 +207,38 @@ public abstract class AbstractSshExecutor implements SshExecutor {
             -> scpOneFile(destinationDirectoryPath,
                 new FileProvider() {
                   @Override
-                  public Pair<String, Long> getInfo() throws Exception {
+                  public Pair<String, Long> getInfo() throws IOException {
                     GridFSFile gridFSFile = fileService.getGridFsFile(fileId, fileBucket);
                     return ImmutablePair.of(gridFSFile.getFilename(), gridFSFile.getLength());
                   }
 
                   @Override
-                  public void downloadToStream(OutputStream outputStream) throws Exception {
+                  public void downloadToStream(OutputStream outputStream) throws IOException {
                     fileService.downloadToStream(fileId, outputStream, fileBucket);
+                  }
+                }))
+        .filter(executionResult -> executionResult == ExecutionResult.FAILURE)
+        .findFirst()
+        .orElse(ExecutionResult.SUCCESS);
+  }
+
+  @Override
+  public ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files) {
+    return files.stream()
+        .map(file
+            -> scpOneFile(destinationDirectoryPath,
+                new FileProvider() {
+                  @Override
+                  public Pair<String, Long> getInfo() throws IOException {
+                    File file1 = new File(file);
+                    return ImmutablePair.of(file1.getName(), file1.length());
+                  }
+
+                  @Override
+                  public void downloadToStream(OutputStream outputStream) throws IOException {
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                      IOUtils.copy(fis, outputStream);
+                    }
                   }
                 }))
         .filter(executionResult -> executionResult == ExecutionResult.FAILURE)
@@ -459,8 +485,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   public interface FileProvider {
-    Pair<String, Long> getInfo() throws Exception;
+    Pair<String, Long> getInfo() throws IOException;
 
-    void downloadToStream(OutputStream outputStream) throws Exception;
+    void downloadToStream(OutputStream outputStream) throws IOException;
   }
 }

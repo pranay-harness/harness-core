@@ -21,6 +21,8 @@ public interface SshExecutor {
 
   ExecutionResult scpGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
 
+  ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files);
+
   /**
    * The Enum ExecutorType.
    */

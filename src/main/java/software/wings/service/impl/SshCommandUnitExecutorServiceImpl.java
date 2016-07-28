@@ -15,7 +15,9 @@ import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWOR
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.google.common.base.Joiner;
+import com.google.inject.Injector;
 
+import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
@@ -23,7 +25,8 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.SSHExecutionCredential;
+import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.command.ExecCommandUnit;
@@ -41,6 +44,8 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 import software.wings.utils.TimeoutManager;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -68,6 +73,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   @Inject private TimeoutManager timeoutManager;
 
+  @Inject private Injector injector;
+
   private SshExecutorFactory sshExecutorFactory;
 
   /**
@@ -82,24 +89,17 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     this.logService = logService;
   }
 
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId) {
-    if (commandUnit instanceof ExecCommandUnit) {
-      return execute(host, commandUnit, activityId, SupportedOp.EXEC);
-    } else {
-      return execute(host, commandUnit, activityId, SupportedOp.SCP);
-    }
-  }
-
   @Override
   public void cleanup(String activityId, Host host) {
     AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
   }
 
-  private ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId, SupportedOp op) {
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+    String activityId = context.getActivityId();
     logService.save(aLog()
                         .withAppId(host.getAppId())
                         .withHostName(host.getHostName())
@@ -112,12 +112,15 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     ExecutionResult executionResult = FAILURE;
 
     try {
-      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, activityId, commandUnit);
+      injector.injectMembers(commandUnit);
+      commandUnit.setup(context);
+
+      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
       SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
       executor.init(sshSessionConfig);
 
       Future<ExecutionResult> executionResultFuture =
-          executorService.submit(() -> executeByCommandType(executor, commandUnit, op));
+          executorService.submit(() -> executeByCommandType(executor, commandUnit));
       try {
         executionResult = executionResultFuture.get(
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
@@ -194,41 +197,50 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     }
   }
 
-  private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {
+  private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit) {
     ExecutionResult executionResult;
-    if (op.equals(SupportedOp.EXEC)) {
+    if (commandUnit instanceof ExecCommandUnit) {
       executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getCommandString());
-    } else if (op.equals(SupportedOp.SCP)) {
+    } else if (commandUnit instanceof ScpCommandUnit) {
       ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
       executionResult = executor.scpGridFsFiles(
           scpCommandUnit.getDestinationDirectoryPath(), scpCommandUnit.getFileBucket(), scpCommandUnit.getFileIds());
     } else {
       InitCommandUnit initCommandUnit = (InitCommandUnit) commandUnit;
       executionResult = executor.executeCommandString(initCommandUnit.getPreInitCommand());
+      try {
+        executor.scpFiles(
+            initCommandUnit.getPreInitCommand(), Collections.singletonList(initCommandUnit.getLauncherFile()));
+      } catch (IOException e) {
+        e.printStackTrace();
+      } catch (TemplateException e) {
+        e.printStackTrace();
+      }
     }
     return executionResult;
   }
 
-  private SshSessionConfig getSshSessionConfig(Host host, String executionId, CommandUnit commandUnit) {
+  private SshSessionConfig getSshSessionConfig(Host host, CommandExecutionContext context, CommandUnit commandUnit) {
     ExecutorType executorType = getExecutorType(host);
+
+    SSHExecutionCredential sshExecutionCredential = (SSHExecutionCredential) context.getExecutionCredential();
+
     Builder builder = aSshSessionConfig()
                           .withAppId(host.getAppId())
-                          .withExecutionId(executionId)
+                          .withExecutionId(context.getActivityId())
                           .withExecutorType(executorType)
                           .withHost(host.getHostName())
-                          .withCommandUnitName(commandUnit.getName());
-
-    if (host.getHostConnectionCredential() != null) {
-      HostConnectionCredential credential = host.getHostConnectionCredential();
-      builder.withUserName(credential.getSshUser())
-          .withPassword(credential.getSshPassword())
-          .withSudoAppName(credential.getAppUser())
-          .withSudoAppPassword(credential.getAppUserPassword());
-    }
+                          .withCommandUnitName(commandUnit.getName())
+                          .withUserName(sshExecutionCredential.getSshUser())
+                          .withPassword(sshExecutionCredential.getSshPassword())
+                          .withSudoAppName(sshExecutionCredential.getAppAccount())
+                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
 
     if (executorType.equals(KEY_AUTH)) {
       HostConnectionAttributes hostConnectionAttrs = (HostConnectionAttributes) host.getHostConnAttr().getValue();
-      builder.withKey(hostConnectionAttrs.getKey()).withKeyPassphrase(hostConnectionAttrs.getKeyPassphrase());
+      builder.withKey(hostConnectionAttrs.getKey())
+          .withKeyPassphrase(hostConnectionAttrs.getKeyPassphrase())
+          .withPassword(null);
     }
 
     if (host.getBastionConnAttr() != null) {
@@ -256,22 +268,5 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       }
     }
     return executorType;
-  }
-
-  private enum SupportedOp {
-    /**
-     * Exec supported op.
-     */
-    EXEC,
-
-    /**
-     * Scp supported op.
-     */
-    SCP,
-
-    /**
-     * Init supported op.
-     */
-    INIT
   }
 }

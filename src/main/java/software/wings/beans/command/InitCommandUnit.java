@@ -1,53 +1,77 @@
 package software.wings.beans.command;
 
-import com.google.common.collect.Lists;
+import static com.google.common.collect.ImmutableMap.of;
+import static freemarker.template.Configuration.VERSION_2_3_23;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.inject.Inject;
+
+import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import org.apache.commons.jexl3.JxltEngine.Exception;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import software.wings.core.ssh.executors.AbstractSshExecutor.FileProvider;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.TemplateException;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.service.intfc.ServiceResourceService;
 
 import java.io.File;
-import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
+@Attributes(description = "This command unit creates STATING_PATH, RUNTIME_PATH, BACKUP_PATH on the target host")
 public class InitCommandUnit extends CommandUnit {
-  private Command command;
+  @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
 
-  @SchemaIgnore private String preInitCommand;
+  @Transient @Inject private ServiceResourceService serviceResourceService;
 
-  @SchemaIgnore private File launcherFile;
+  @SchemaIgnore @Transient private Command command;
 
-  // private Pair<String,FileProvider>
+  @SchemaIgnore private String activityId;
+
+  @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
+
+  @Transient @SchemaIgnore private String preInitCommand;
+
+  @Transient @SchemaIgnore private File launcherFile;
 
   @Override
   public void setup(CommandExecutionContext context) {
+    cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     preInitCommand = "mkdir -p " + context.getStagingPath() + " && mkdir -p " + context.getBackupPath()
-        + " && mkdir -p " + context.getRuntimePath();
+        + " && mkdir -p " + context.getRuntimePath() + " && rm -rf " + context.getStagingPath() + "/*";
+    envVariables.put("STAGING_PATH", context.getStagingPath());
+    envVariables.put("RUNTIME_PATH", context.getRuntimePath());
+    envVariables.put("BACKUP_PATH", context.getBackupPath());
+    activityId = context.getActivityId();
   }
 
   public String getPreInitCommand() {
     return preInitCommand;
   }
 
-  public Pair<String, FileProvider> getLauncherFileInfo() {
-    return ImmutablePair.of("", new FileProvider() {
-      @Override
-      public Pair<String, Long> getInfo() throws Exception {
-        return null;
-      }
-
-      @Override
-      public void downloadToStream(OutputStream outputStream) throws Exception {}
-    });
+  public String getLauncherFile() throws IOException, TemplateException {
+    String launcherScript = System.getProperty("java.io.tmpdir") + "/wingslauncher" + activityId + ".sh";
+    try (OutputStreamWriter fileWriter =
+             new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
+      cfg.getTemplate("execlauncher.ftl").process(of("envVariables", envVariables), fileWriter);
+    }
+    return launcherScript;
   }
 
-  public List<Pair<String, FileProvider>> getUnitFilesInfo() {
+  public List<String> getUnitFilesInfo() {
     return Lists.newArrayList();
+  }
+
+  public void setCommand(Command command) {
+    this.command = command;
   }
 
   public static final class Builder {

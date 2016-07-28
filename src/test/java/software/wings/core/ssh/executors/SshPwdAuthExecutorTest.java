@@ -15,6 +15,8 @@ import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
+import com.google.common.io.CharStreams;
+
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -31,7 +33,6 @@ import software.wings.rules.SshRule;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.LogService;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -197,11 +198,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @RealMongo
   @Test
-  public void shouldTransferFile() throws IOException {
+  public void shouldTransferGridFSFile() throws IOException {
     File file = testFolder.newFile();
-    BufferedWriter out = new BufferedWriter(new FileWriter(file));
-    out.write("ANY_TEXT");
-    out.close();
+    CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
 
     ConfigFile appConfigFile = aConfigFile()
                                    .withName("FILE_NAME")
@@ -214,8 +213,20 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(configBuilder.but().build());
 
-    ExecutionResult result = executor.scpGridFsFiles("/", CONFIGS, asList(fileId));
+    assertThat(executor.scpGridFsFiles("/", CONFIGS, asList(fileId))).isEqualTo(SUCCESS);
 
     assertThat(file).hasSameContentAs(new File(sshRoot.getRoot(), "text.txt"));
+  }
+
+  @Test
+  public void shouldTransferFile() throws IOException {
+    File file = testFolder.newFile();
+    CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
+
+    executor.init(configBuilder.but().build());
+
+    assertThat(executor.scpFiles("/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
+
+    assertThat(file).hasSameContentAs(new File(sshRoot.getRoot(), file.getName()));
   }
 }
