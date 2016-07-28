@@ -9,7 +9,6 @@ import static software.wings.beans.NotificationAction.NotificationActionType.REJ
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.List;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -19,9 +18,11 @@ public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;
   private String releaseId;
-  private List<NotificationAction> notificationActions =
-      asList(aNotificationAction().withName("Approve").withType(APPROVE).withPrimary(true).build(),
-          aNotificationAction().withName("Reject").withType(REJECT).withPrimary(false).build());
+
+  @Override
+  public boolean performAction() {
+    return true;
+  }
 
   /**
    * The enum Approval stage.
@@ -43,7 +44,9 @@ public class ApprovalNotification extends ActionableNotification {
    * Instantiates a new Approval notification.
    */
   public ApprovalNotification() {
-    super(APPROVAL);
+    super(APPROVAL,
+        asList(aNotificationAction().withName("Approve").withType(APPROVE).withPrimary(true).build(),
+            aNotificationAction().withName("Reject").withType(REJECT).withPrimary(false).build()));
   }
 
   /**
@@ -98,15 +101,6 @@ public class ApprovalNotification extends ActionableNotification {
    */
   public void setReleaseId(String releaseId) {
     this.releaseId = releaseId;
-  }
-
-  /**
-   * Gets notification actions.
-   *
-   * @return the notification actions
-   */
-  public List<NotificationAction> getNotificationActions() {
-    return notificationActions;
   }
 
   /**

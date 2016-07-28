@@ -1,9 +1,13 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
+
+import com.google.common.collect.ImmutableMap;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCodes;
+import software.wings.beans.ActionableNotification;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.PageRequest;
@@ -44,13 +48,36 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public Notification update(@Valid Notification notification) {
-    throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Update operation not supported");
+    throw new WingsException(INVALID_REQUEST, "message", "Update operation not supported");
   }
 
   @Override
   public Notification act(
       @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType) {
-    throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Action operation not supported");
+    Notification notification = wingsPersistence.get(Notification.class, notificationId);
+    if (notification == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Notification doesn't exist");
+    }
+    if (!(notification instanceof ActionableNotification)) {
+      throw new WingsException(INVALID_REQUEST, "message", "Notification not actionable");
+    }
+    ActionableNotification actionableNotification = (ActionableNotification) notification;
+    if (!actionableNotification.getNotificationActions()
+             .stream()
+             .filter(notificationAction -> notificationAction.getType() == actionType)
+             .findFirst()
+             .isPresent()) {
+      throw new WingsException(INVALID_REQUEST, "message", "Action not supported for NotificationType");
+    }
+    boolean actionCompleted = actionableNotification.performAction();
+    if (actionCompleted) {
+      markNotificationCompleted(appId, notificationId);
+    }
+    return get(notification.getAppId(), notificationId);
+  }
+
+  public void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId) {
+    wingsPersistence.updateFields(Notification.class, notificationId, ImmutableMap.of("completed", true));
   }
 
   @Override

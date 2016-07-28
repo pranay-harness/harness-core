@@ -52,6 +52,11 @@ public class FailureNotification extends ActionableNotification {
     this.executionId = executionId;
   }
 
+  @Override
+  public boolean performAction() {
+    return true;
+  }
+
   /**
    * The type Builder.
    */
