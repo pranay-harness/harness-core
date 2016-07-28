@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -12,6 +13,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
@@ -50,6 +52,7 @@ public class NotificationResource {
     if (!Strings.isNullOrEmpty(appId)) {
       pageRequest.addFilter("appId", appId, EQ);
     }
+    pageRequest.addOrder(aSortOrder().withField("complete", OrderType.ASC).build());
     return new RestResponse<>(notificationService.list(pageRequest));
   }
 
