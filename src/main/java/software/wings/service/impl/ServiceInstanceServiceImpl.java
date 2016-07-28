@@ -2,12 +2,17 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import com.mongodb.DuplicateKeyException;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -21,6 +26,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
 import java.util.Set;
@@ -36,13 +42,28 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ServiceTemplateService serviceTemplateService;
+
+  @Override
+  public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
+    return wingsPersistence.query(ServiceInstance.class, pageRequest);
+  }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceInstanceService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
-    return wingsPersistence.query(ServiceInstance.class, pageRequest);
+  public PageResponse<ServiceInstance> list(
+      PageRequest<ServiceInstance> pageRequest, String appId, String envId, String serviceId) {
+    pageRequest.addFilter("appId", appId, EQ);
+    pageRequest.addFilter("envId", envId, EQ);
+    if (!Strings.isNullOrEmpty(serviceId)) {
+      List<Key<ServiceTemplate>> keyList = serviceTemplateService.getTemplateRefKeysByService(appId, envId, serviceId);
+      if (keyList.size() > 0) {
+        pageRequest.addFilter(aSearchFilter().withField("serviceTemplate", IN, keyList.toArray()).build());
+      }
+    }
+    return list(pageRequest);
   }
 
   /* (non-Javadoc)

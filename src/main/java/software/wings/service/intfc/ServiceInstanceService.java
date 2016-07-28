@@ -17,12 +17,24 @@ import java.util.Set;
  */
 public interface ServiceInstanceService {
   /**
-   * List.
+   * List page response.
    *
    * @param pageRequest the page request
    * @return the page response
    */
   PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest);
+
+  /**
+   * List.
+   *
+   * @param pageRequest the page request
+   * @param appId       the app id
+   * @param envId       the env id
+   * @param serviceId   @return the page response
+   * @return the page response
+   */
+  PageResponse<ServiceInstance> list(
+      PageRequest<ServiceInstance> pageRequest, String appId, String envId, String serviceId);
 
   /**
    * Save.

@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.Key;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
@@ -189,4 +190,6 @@ public interface ServiceTemplateService {
    * @return the service template
    */
   ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts);
+
+  List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String envId, String serviceId);
 }

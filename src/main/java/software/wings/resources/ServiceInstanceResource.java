@@ -1,7 +1,6 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
@@ -47,9 +46,8 @@ public class ServiceInstanceResource {
    */
   @GET
   public RestResponse<PageResponse<ServiceInstance>> list(@ApiParam @QueryParam("appId") String appId,
-      @ApiParam @QueryParam("envId") String envId, @BeanParam PageRequest<ServiceInstance> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("envId", envId, EQ);
-    return new RestResponse<>(instanceService.list(pageRequest));
+      @ApiParam @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
+      @BeanParam PageRequest<ServiceInstance> pageRequest) {
+    return new RestResponse<>(instanceService.list(pageRequest, appId, envId, serviceId));
   }
 }

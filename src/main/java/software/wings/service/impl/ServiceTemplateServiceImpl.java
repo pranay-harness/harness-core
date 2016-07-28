@@ -11,6 +11,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import com.google.common.collect.ImmutableMap;
 
 import org.eclipse.jetty.util.ArrayQueue;
+import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
@@ -105,6 +106,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<Host> allHosts =
         Stream.concat(hosts.stream(), template.getHosts().stream()).distinct().collect(Collectors.toList());
     return updateTemplateAndServiceInstance(template, allHosts);
+  }
+
+  @Override
+  public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String envId, String serviceId) {
+    return wingsPersistence.createQuery(ServiceTemplate.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("service")
+        .equal(serviceId)
+        .asKeyList();
   }
 
   /* (non-Javadoc)
