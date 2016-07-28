@@ -9,7 +9,7 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "history", noClassnameStored = true)
 public class History extends Base {
-  private ActivityType activityType;
+  private EntryType entryType;
   private String entityType;
   private String entityId;
   private String entityName;
@@ -21,17 +21,17 @@ public class History extends Base {
    *
    * @return the activity type
    */
-  public ActivityType getActivityType() {
-    return activityType;
+  public EntryType getEntryType() {
+    return entryType;
   }
 
   /**
    * Sets activity type.
    *
-   * @param activityType the activity type
+   * @param entryType the activity type
    */
-  public void setActivityType(ActivityType activityType) {
-    this.activityType = activityType;
+  public void setEntryType(EntryType entryType) {
+    this.entryType = entryType;
   }
 
   /**
@@ -127,7 +127,7 @@ public class History extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("activityType", activityType)
+        .add("entryType", entryType)
         .add("entityType", entityType)
         .add("entityId", entityId)
         .add("entityName", entityName)
@@ -139,7 +139,7 @@ public class History extends Base {
   /**
    * The enum Activity type.
    */
-  public enum ActivityType {
+  public enum EntryType {
     /**
      * Started activity type.
      */
@@ -168,7 +168,7 @@ public class History extends Base {
    * The type Builder.
    */
   public static final class Builder {
-    private ActivityType activityType;
+    private EntryType entryType;
     private String entityType;
     private String entityId;
     private String entityName;
@@ -196,11 +196,11 @@ public class History extends Base {
     /**
      * With activity type builder.
      *
-     * @param activityType the activity type
+     * @param entryType the activity type
      * @return the builder
      */
-    public Builder withActivityType(ActivityType activityType) {
-      this.activityType = activityType;
+    public Builder withActivityType(EntryType entryType) {
+      this.entryType = entryType;
       return this;
     }
 
@@ -343,7 +343,7 @@ public class History extends Base {
      */
     public Builder but() {
       return aHistory()
-          .withActivityType(activityType)
+          .withActivityType(entryType)
           .withEntityType(entityType)
           .withEntityId(entityId)
           .withEntityName(entityName)
@@ -365,7 +365,7 @@ public class History extends Base {
      */
     public History build() {
       History history = new History();
-      history.setActivityType(activityType);
+      history.setEntryType(entryType);
       history.setEntityType(entityType);
       history.setEntityId(entityId);
       history.setEntityName(entityName);
