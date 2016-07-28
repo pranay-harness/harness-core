@@ -171,7 +171,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).execute(EXEC_COMMAND_UNIT);
+    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getCommandString());
   }
 
   /**
@@ -189,6 +189,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, ACTIVITY_ID);
-    verify(sshPwdAuthExecutor).execute(commandUnit);
+    verify(sshPwdAuthExecutor)
+        .scpGridFsFiles(
+            commandUnit.getDestinationDirectoryPath(), commandUnit.getFileBucket(), commandUnit.getFileIds());
   }
 }

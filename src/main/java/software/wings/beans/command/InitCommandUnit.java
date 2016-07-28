@@ -49,4 +49,29 @@ public class InitCommandUnit extends CommandUnit {
   public List<Pair<String, FileProvider>> getUnitFilesInfo() {
     return Lists.newArrayList();
   }
+
+  public static final class Builder {
+    private String name;
+
+    private Builder() {}
+
+    public static Builder anInitCommandUnit() {
+      return new Builder();
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public Builder but() {
+      return anInitCommandUnit().withName(name);
+    }
+
+    public InitCommandUnit build() {
+      InitCommandUnit initCommandUnit = new InitCommandUnit();
+      initCommandUnit.setName(name);
+      return initCommandUnit;
+    }
+  }
 }

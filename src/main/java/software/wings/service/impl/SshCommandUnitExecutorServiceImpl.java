@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
 import static java.lang.String.format;
-import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.PASSWORD_AUTH;
@@ -16,14 +16,14 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
@@ -156,9 +156,11 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit, SupportedOp op) {
     ExecutionResult executionResult;
     if (op.equals(SupportedOp.EXEC)) {
-      executionResult = executor.execute((ExecCommandUnit) commandUnit);
+      executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getCommandString());
     } else {
-      executionResult = executor.execute((ScpCommandUnit) commandUnit);
+      ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
+      executionResult = executor.scpGridFsFiles(
+          scpCommandUnit.getDestinationDirectoryPath(), scpCommandUnit.getFileBucket(), scpCommandUnit.getFileIds());
     }
     return executionResult;
   }
@@ -216,9 +218,16 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     /**
      * Exec supported op.
      */
-    EXEC, /**
-           * Scp supported op.
-           */
-    SCP
+    EXEC,
+
+    /**
+     * Scp supported op.
+     */
+    SCP,
+
+    /**
+     * Init supported op.
+     */
+    INIT
   }
 }
