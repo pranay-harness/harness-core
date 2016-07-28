@@ -82,6 +82,7 @@ public class ForkState extends State {
       forkStateExecutionData.getElements().add(childStateExecutionInstance.getContextElementName());
     }
 
+    executionResponse.setStateExecutionData(forkStateExecutionData);
     executionResponse.setAsync(true);
     executionResponse.setCorrelationIds(correlationIds);
     return executionResponse;

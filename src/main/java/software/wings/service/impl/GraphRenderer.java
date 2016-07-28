@@ -31,6 +31,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,7 +152,7 @@ public class GraphRenderer {
       logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
       node.setGroup(group);
 
-      List<String> elements = null;
+      Collection<String> elements = null;
       StateExecutionData sed = instance.getStateExecutionData();
       if (sed != null && sed instanceof ForkStateExecutionData) {
         elements = ((ForkStateExecutionData) sed).getElements();
@@ -164,27 +165,28 @@ public class GraphRenderer {
         group.setExecutionStrategy(((RepeatStateExecutionData) sed).getExecutionStrategy());
       }
       logger.debug("generateNodeHierarchy processing group - node: {}", elements);
-      if (elements != null) {
-        for (String element : elements) {
-          Node elementNode =
-              Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
-          group.getElements().add(elementNode);
-          logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
-          Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
-          StateExecutionData executionData = new StateExecutionData();
-          if (elementRepeatNode != null) {
-            elementNode.setNext(elementRepeatNode);
-            logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
-            generateNodeHierarchy(
-                instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
-          }
-          if (executionData.getStatus() == null) {
-            executionData.setStatus(ExecutionStatus.QUEUED);
-          }
-          elementNode.setStatus(executionData.getStatus().name());
-          elementNode.setExecutionSummary(executionData.getExecutionSummary());
-          elementNode.setExecutionDetails(executionData.getExecutionDetails());
+      if (elements == null) {
+        elements = parentIdElementsMap.get(node.getId()).keySet();
+      }
+      for (String element : elements) {
+        Node elementNode =
+            Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
+        group.getElements().add(elementNode);
+        logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
+        Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+        StateExecutionData executionData = new StateExecutionData();
+        if (elementRepeatNode != null) {
+          elementNode.setNext(elementRepeatNode);
+          logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
+          generateNodeHierarchy(
+              instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
         }
+        if (executionData.getStatus() == null) {
+          executionData.setStatus(ExecutionStatus.QUEUED);
+        }
+        elementNode.setStatus(executionData.getStatus().name());
+        elementNode.setExecutionSummary(executionData.getExecutionSummary());
+        elementNode.setExecutionDetails(executionData.getExecutionDetails());
       }
     }
 
