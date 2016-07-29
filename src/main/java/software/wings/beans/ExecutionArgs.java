@@ -209,14 +209,13 @@ public class ExecutionArgs {
     if (serviceInstances == null) {
       serviceInstanceIds = null;
     } else {
-      serviceInstanceIds =
-          serviceInstances.stream().map(serviceInstance -> serviceInstance.getUuid()).collect(Collectors.toList());
+      serviceInstanceIds = serviceInstances.stream().map(ServiceInstance::getUuid).collect(Collectors.toList());
     }
 
     if (artifacts == null) {
       artifactIds = null;
     } else {
-      artifactIds = artifacts.stream().map(artifact -> artifact.getUuid()).collect(Collectors.toList());
+      artifactIds = artifacts.stream().map(Artifact::getUuid).collect(Collectors.toList());
     }
   }
 }
