@@ -475,12 +475,11 @@ public class WorkflowServiceImpl implements WorkflowService {
       expandedGroupIds.add(requestedGroupId);
     }
     List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
-    if (instances != null && instances.size() > 0) {
-      if ((detailsRequested || isSimpleLinear) && instances.size() == 1 && (requestedGroupId == null || nodeOps == null)
-          && (StateType.REPEAT.name().equals(instances.get(0).getStateType())
-                 || StateType.FORK.name().equals(instances.get(0).getStateType()))
-          && (expandedGroupIds == null || !expandedGroupIds.contains(instances.get(0).getUuid()))) {
-        expandedGroupIds = Lists.newArrayList(instances.get(0).getUuid());
+    if (instances != null && instances.size() > 0 && (requestedGroupId == null || nodeOps == null)
+        && (expandedGroupIds == null || expandedGroupIds.isEmpty())) {
+      StateExecutionInstance firstLevelGroup = getFirstLevelGroup(instances);
+      if (firstLevelGroup != null) {
+        expandedGroupIds = Lists.newArrayList(firstLevelGroup.getUuid());
         populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false, isSimpleLinear);
         return;
       }
@@ -524,6 +523,16 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
+  }
+
+  private StateExecutionInstance getFirstLevelGroup(List<StateExecutionInstance> instances) {
+    for (StateExecutionInstance instance : instances) {
+      if (instance.getStateType().equals(StateType.REPEAT.name())
+          || instance.getStateType().equals(StateType.FORK.name())) {
+        return instance;
+      }
+    }
+    return null;
   }
 
   private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
