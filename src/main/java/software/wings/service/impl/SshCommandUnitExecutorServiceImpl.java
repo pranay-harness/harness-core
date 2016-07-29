@@ -201,7 +201,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit) {
     ExecutionResult executionResult;
     if (commandUnit instanceof ExecCommandUnit) {
-      executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getCommandString());
+      executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getPreparedCommand());
     } else if (commandUnit instanceof ScpCommandUnit) {
       ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
       executionResult = executor.scpGridFsFiles(

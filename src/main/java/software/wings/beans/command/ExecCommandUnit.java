@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.nio.file.Paths;
@@ -16,6 +17,8 @@ public class ExecCommandUnit extends CommandUnit {
   @NotEmpty
   private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
+
+  @SchemaIgnore private String preparedCommand;
 
   /**
    * Instantiates a new exec command unit.
@@ -65,6 +68,24 @@ public class ExecCommandUnit extends CommandUnit {
    */
   public void setCommandString(String commandString) {
     this.commandString = commandString;
+  }
+
+  /**
+   * Getter for property 'preparedCommand'.
+   *
+   * @return Value for property 'preparedCommand'.
+   */
+  public String getPreparedCommand() {
+    return preparedCommand;
+  }
+
+  /**
+   * Setter for property 'preparedCommand'.
+   *
+   * @param preparedCommand Value to set for property 'preparedCommand'.
+   */
+  public void setPreparedCommand(String preparedCommand) {
+    this.preparedCommand = preparedCommand;
   }
 
   /**

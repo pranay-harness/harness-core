@@ -42,6 +42,7 @@ import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
@@ -188,10 +189,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteExecCommand() {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
-
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT, commandExecutionContext);
-    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getCommandString());
+    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getPreparedCommand());
   }
 
   /**
@@ -218,20 +218,21 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
     InitCommandUnit commandUnit = new InitCommandUnit();
-    commandUnit.setCommand(
+    Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
                 anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
-            .build());
+            .build();
+    commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
     verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID");
 
-    String expectedLauncherScript =
+    String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "wingslauncherACTIVITY_ID.sh").getAbsolutePath();
-    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(expectedLauncherScript));
-    assertThat(new File(expectedLauncherScript))
+    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
+    assertThat(new File(actualLauncherScript))
         .hasContent(
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
 
@@ -241,13 +242,16 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+    assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
+        .extracting(ExecCommandUnit::getPreparedCommand)
+        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /tmp dolsACTIVITY_ID");
   }
 
   @Test
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
     InitCommandUnit commandUnit = new InitCommandUnit();
-    commandUnit.setCommand(
+    Command command =
         aCommand()
             .withCommandUnits(asList(commandUnit,
                 anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build(),
@@ -259,7 +263,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                                  .withCommandPath("/home/tomcat")
                                                  .build()))
                     .build()))
-            .build());
+            .build();
+    commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
@@ -273,7 +278,15 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
+    assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
+        .extracting(ExecCommandUnit::getPreparedCommand)
+        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /tmp dolsACTIVITY_ID");
+
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
+    assertThat((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
+        .extracting(ExecCommandUnit::getPreparedCommand)
+        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /home/tomcat start1startscriptACTIVITY_ID");
+
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
   }
 }

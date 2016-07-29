@@ -44,6 +44,8 @@ public class InitCommandUnit extends CommandUnit {
 
   @Transient @SchemaIgnore private String executionStagingDir;
 
+  private String launcherScriptFileName;
+
   public InitCommandUnit() {
     setName(INITIALIZE_UNIT);
   }
@@ -58,6 +60,7 @@ public class InitCommandUnit extends CommandUnit {
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
+    launcherScriptFileName = "wingslauncher" + activityId + ".sh";
   }
 
   public String getPreInitCommand() {
@@ -65,8 +68,7 @@ public class InitCommandUnit extends CommandUnit {
   }
 
   public String getLauncherFile() throws IOException, TemplateException {
-    String launcherScript =
-        new File(System.getProperty("java.io.tmpdir"), "wingslauncher" + activityId + ".sh").getAbsolutePath();
+    String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
       cfg.getTemplate("execlauncher.ftl").process(of("envVariables", envVariables), fileWriter);
@@ -86,11 +88,14 @@ public class InitCommandUnit extends CommandUnit {
     List<String> files = Lists.newArrayList();
     for (CommandUnit unit : command.getCommandUnits()) {
       if (unit instanceof ExecCommandUnit) {
-        String commandFile =
-            new File(System.getProperty("java.io.tmpdir"), prefix + unit.getName() + activityId).getAbsolutePath();
+        ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
+        String commandFileName = prefix + unit.getName() + activityId;
+        String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
         try (OutputStreamWriter fileWriter =
                  new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
-          CharStreams.asWriter(fileWriter).append(((ExecCommandUnit) unit).getCommandString()).close();
+          CharStreams.asWriter(fileWriter).append(execCommandUnit.getCommandString()).close();
+          execCommandUnit.setPreparedCommand("$WINGS_SCRIPT_DIR/" + launcherScriptFileName + " "
+              + execCommandUnit.getCommandPath() + " " + commandFileName);
         }
         files.add(commandFile);
       } else if (unit instanceof Command) {
