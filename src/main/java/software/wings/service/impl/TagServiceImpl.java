@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.Tag.Builder.aTag;
 
 import com.google.common.collect.ImmutableMap;
@@ -14,9 +15,11 @@ import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
+import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -124,6 +127,15 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public Tag update(Tag tag) {
+    tag = get(tag.getAppId(), tag.getEnvId(), tag.getUuid());
+    if (tag == null) {
+      throw new WingsException(INVALID_REQUEST, "message", "Tag doesn't exist");
+    }
+
+    if (!tag.getTagType().isModificationAllowed()) {
+      throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
+    }
+
     Builder<String, Object> mapBuilder =
         ImmutableMap.<String, Object>builder().put("name", tag.getName()).put("description", tag.getDescription());
     if (tag.getAutoTaggingRule() != null) {
@@ -169,14 +181,24 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public Tag createDefaultRootTagForEnvironment(Environment env) {
-    return save(null,
+  public void createDefaultRootTagForEnvironment(Environment env) {
+    Tag envTag = save(null,
         aTag()
             .withAppId(env.getAppId())
             .withEnvId(env.getUuid())
             .withName(env.getName())
             .withDescription(env.getName())
             .withRootTag(true)
+            .withTagType(TagType.ENVIRONMENT)
+            .build());
+    save(envTag.getUuid(),
+        aTag()
+            .withAppId(env.getAppId())
+            .withEnvId(env.getUuid())
+            .withParentTagId(envTag.getUuid())
+            .withName("UnTaggedHosts")
+            .withDescription("Hosts with no tags will appear here")
+            .withTagType(TagType.UNTAGGED_HOST)
             .build());
   }
 

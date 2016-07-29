@@ -14,6 +14,7 @@ import org.mongodb.morphia.annotations.Transient;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 3/30/16.
@@ -25,12 +26,46 @@ public class Tag extends Base {
   @NotEmpty private String name;
   private String description;
   private String autoTaggingRule;
+  @NotNull private TagType tagType;
   private boolean rootTag = false;
   private String rootTagId;
   private String parentTagId;
   @NotEmpty private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+
+  /**
+   * The enum Tag type.
+   */
+  public enum TagType {
+    /**
+     * Environment tag type.
+     */
+    ENVIRONMENT(false), // created by default. represent Environment level overrides
+    /**
+     * Untagged host tag type.
+     */
+    UNTAGGED_HOST(false), // created by default. represents all untagged hosts
+    /**
+     * The Tagged host.
+     */
+    TAGGED_HOST(true); // user created. represents tagged hosts by user
+
+    private boolean modificationAllowed;
+
+    TagType(boolean modificationAllowed) {
+      this.modificationAllowed = modificationAllowed;
+    }
+
+    /**
+     * Is modification allowed boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isModificationAllowed() {
+      return modificationAllowed;
+    }
+  }
 
   /**
    * Gets name.
@@ -194,6 +229,24 @@ public class Tag extends Base {
     this.parentTagId = parentTagId;
   }
 
+  /**
+   * Gets tag type.
+   *
+   * @return the tag type
+   */
+  public TagType getTagType() {
+    return tagType;
+  }
+
+  /**
+   * Sets tag type.
+   *
+   * @param tagType the tag type
+   */
+  public void setTagType(TagType tagType) {
+    this.tagType = tagType;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -242,6 +295,7 @@ public class Tag extends Base {
     private String name;
     private String description;
     private String autoTaggingRule;
+    private TagType tagType;
     private boolean rootTag = false;
     private String rootTagId;
     private String parentTagId;
@@ -297,6 +351,17 @@ public class Tag extends Base {
      */
     public Builder withAutoTaggingRule(String autoTaggingRule) {
       this.autoTaggingRule = autoTaggingRule;
+      return this;
+    }
+
+    /**
+     * With tag type builder.
+     *
+     * @param tagType the tag type
+     * @return the builder
+     */
+    public Builder withTagType(TagType tagType) {
+      this.tagType = tagType;
       return this;
     }
 
@@ -453,6 +518,7 @@ public class Tag extends Base {
           .withName(name)
           .withDescription(description)
           .withAutoTaggingRule(autoTaggingRule)
+          .withTagType(tagType)
           .withRootTag(rootTag)
           .withRootTagId(rootTagId)
           .withParentTagId(parentTagId)
@@ -478,6 +544,7 @@ public class Tag extends Base {
       tag.setName(name);
       tag.setDescription(description);
       tag.setAutoTaggingRule(autoTaggingRule);
+      tag.setTagType(tagType);
       tag.setRootTag(rootTag);
       tag.setRootTagId(rootTagId);
       tag.setParentTagId(parentTagId);

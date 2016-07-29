@@ -122,7 +122,7 @@ public interface TagService {
    * @param env the env
    * @return the tag
    */
-  Tag createDefaultRootTagForEnvironment(Environment env);
+  void createDefaultRootTagForEnvironment(Environment env);
 
   /**
    * Flatten tag tree list.
