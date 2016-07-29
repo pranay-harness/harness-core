@@ -19,6 +19,7 @@ import software.wings.utils.Misc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -277,15 +278,12 @@ public class PageRequest<T> {
       if (map.containsKey(key + "[op]")) {
         filter.setOp(Operator.valueOf(map.getFirst(key + "[op]")));
       }
-      // if(map.containsKey(key + "[dataType]")){
-      //  filter.setDataType(map.getFirst(key + "[dataType]"));
-      //}
       if (map.containsKey(key + "[value]")) {
         if (Arrays.asList(Long.TYPE, Integer.TYPE, Short.TYPE)
                 .contains(mappedClass.getMappedField(filter.getFieldName()).getType())) {
           filter.setFieldValues(Long.parseLong(map.getFirst(key + "[value]")));
         } else {
-          filter.setFieldValues(map.getFirst(key + "[value]"));
+          filter.setFieldValues(map.get(key + "[value]").toArray());
         }
       }
       filters.add(filter);
