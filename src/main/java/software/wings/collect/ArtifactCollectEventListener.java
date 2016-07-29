@@ -1,6 +1,8 @@
 package software.wings.collect;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
+import static software.wings.beans.Notification.NotificationEntityType.ARTIFACT;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import software.wings.beans.Release;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.NotificationService;
 
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -29,6 +32,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectEventListener.class);
 
   @Inject private ArtifactService artifactService;
+  @Inject private NotificationService notificationService;
 
   @Inject private Map<String, ArtifactCollectorService> artifactCollectorServiceMap;
 
@@ -55,6 +59,14 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
 
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
+
+      notificationService.sendNotificationAsync(anApprovalNotification()
+                                                    .withAppId(artifact.getAppId())
+                                                    .withEntityId(artifact.getUuid())
+                                                    .withEntityType(ARTIFACT)
+                                                    .withEntityName(artifact.getDisplayName())
+                                                    .withReleaseId(artifact.getRelease().getUuid())
+                                                    .build());
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
