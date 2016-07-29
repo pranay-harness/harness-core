@@ -80,7 +80,7 @@ public class ActivityServiceImpl implements ActivityService {
    * @param command   the command
    * @return the flatten command unit list
    */
-  List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
+  private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
     Command executableCommand = command;
     if (command.getReferenceId() != null) {
       executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());

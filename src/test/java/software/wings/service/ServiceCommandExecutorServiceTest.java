@@ -2,6 +2,8 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Artifact.Builder.anArtifact;
@@ -120,7 +122,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(eq(host), any(CommandUnit.class), eq(context))).thenReturn(SUCCESS);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
@@ -132,7 +134,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId(COMMAND_NAME).build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(eq(host), any(CommandUnit.class), eq(context))).thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);

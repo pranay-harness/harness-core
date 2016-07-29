@@ -227,21 +227,19 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
-    verify(sshPwdAuthExecutor)
-        .executeCommandString(
-            "mkdir -p /tmp/staging && mkdir -p /tmp/backup && mkdir -p /tmp/runtime && mkdir -p /tmp/staging/ACTIVITY_ID && mkdir -p /tmp/backup/ACTIVITY_ID");
+    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID");
 
     String expectedLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "wingslauncherACTIVITY_ID.sh").getAbsolutePath();
-    verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedLauncherScript));
+    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(expectedLauncherScript));
     assertThat(new File(expectedLauncherScript))
         .hasContent(
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
 
     String expectedExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID.sh").getAbsolutePath();
-    verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/staging/ACTIVITY_ID/*.sh");
+        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID").getAbsolutePath();
+    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
   }
@@ -268,15 +266,15 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
 
     String expectedExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID.sh").getAbsolutePath();
+        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID").getAbsolutePath();
     String expectedSubExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "start1startscriptACTIVITY_ID.sh").getAbsolutePath();
+        new File(System.getProperty("java.io.tmpdir"), "start1startscriptACTIVITY_ID").getAbsolutePath();
 
     verify(sshPwdAuthExecutor)
-        .scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
+        .scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/staging/ACTIVITY_ID/*.sh");
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
   }
 }

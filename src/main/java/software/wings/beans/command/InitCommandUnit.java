@@ -47,10 +47,8 @@ public class InitCommandUnit extends CommandUnit {
   public void setup(CommandExecutionContext context) {
     cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     activityId = context.getActivityId();
-    executionStagingDir = new File(context.getStagingPath(), activityId).getAbsolutePath();
-    preInitCommand = "mkdir -p " + context.getStagingPath() + " && mkdir -p " + context.getBackupPath()
-        + " && mkdir -p " + context.getRuntimePath() + " && mkdir -p " + executionStagingDir + " && mkdir -p "
-        + new File(context.getBackupPath(), activityId).getAbsolutePath();
+    executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
+    preInitCommand = "mkdir -p " + executionStagingDir;
     envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
@@ -84,8 +82,7 @@ public class InitCommandUnit extends CommandUnit {
     for (CommandUnit unit : command.getCommandUnits()) {
       if (unit instanceof ExecCommandUnit) {
         String commandFile =
-            new File(System.getProperty("java.io.tmpdir"), prefix + unit.getName() + activityId + ".sh")
-                .getAbsolutePath();
+            new File(System.getProperty("java.io.tmpdir"), prefix + unit.getName() + activityId).getAbsolutePath();
         try (OutputStreamWriter fileWriter =
                  new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
           CharStreams.asWriter(fileWriter).append(((ExecCommandUnit) unit).getCommandString()).close();

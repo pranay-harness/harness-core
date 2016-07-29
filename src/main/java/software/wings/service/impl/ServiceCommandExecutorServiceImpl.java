@@ -47,7 +47,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   @Override
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     try {
-      prepareCommand(serviceInstance, command, command);
+      prepareCommand(serviceInstance, command);
       ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       return executionResult;
@@ -57,7 +57,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
   }
 
-  private void prepareCommand(ServiceInstance serviceInstance, Command command, Command topLevel) {
+  private void prepareCommand(ServiceInstance serviceInstance, Command command) {
     if (isNotEmpty(command.getReferenceId())) {
       Command referedCommand = serviceResourceService.getCommandByName(serviceInstance.getAppId(),
           serviceInstance.getServiceTemplate().getService().getUuid(), command.getReferenceId());
@@ -69,10 +69,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-        prepareCommand(serviceInstance, (Command) commandUnit, topLevel);
-      }
-      if (commandUnit instanceof InitCommandUnit) {
-        ((InitCommandUnit) commandUnit).setCommand(topLevel);
+        prepareCommand(serviceInstance, (Command) commandUnit);
       }
     }
   }
@@ -80,21 +77,22 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   private ExecutionResult executeCommand(
       ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     List<CommandUnit> commandUnits = command.getCommandUnits();
-    command.setExecutionResult(SUCCESS);
-    commandUnits.stream()
-        .filter(commandUnit -> commandUnit instanceof InitCommandUnit)
-        .forEach(commandUnit -> ((InitCommandUnit) commandUnit).setCommand(command));
 
-    for (CommandUnit commandUnit : commandUnits) {
-      ExecutionResult executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
-          ? executeCommand(serviceInstance, (Command) commandUnit, context)
-          : commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context);
-      commandUnit.setExecutionResult(executionResult);
-      if (executionResult.equals(FAILURE)) {
-        command.setExecutionResult(FAILURE);
-        break;
+    InitCommandUnit initCommandUnit = new InitCommandUnit();
+    initCommandUnit.setCommand(command);
+    command.getCommandUnits().add(0, initCommandUnit);
+    ExecutionResult executionResult =
+        commandUnitExecutorService.execute(serviceInstance.getHost(), initCommandUnit, context);
+    if (SUCCESS == executionResult) {
+      for (CommandUnit commandUnit : commandUnits) {
+        executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
+            ? executeCommand(serviceInstance, (Command) commandUnit, context)
+            : commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context);
+        if (FAILURE == executionResult) {
+          break;
+        }
       }
     }
-    return command.getExecutionResult();
+    return executionResult;
   }
 }
