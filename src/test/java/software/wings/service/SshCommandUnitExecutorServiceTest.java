@@ -15,7 +15,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
-import static software.wings.beans.command.InitCommandUnit.Builder.anInitCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.KEY_AUTH;
@@ -218,7 +217,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
-    InitCommandUnit commandUnit = anInitCommandUnit().withName("Init").build();
+    InitCommandUnit commandUnit = new InitCommandUnit();
     commandUnit.setCommand(
         aCommand()
             .withCommandUnits(asList(commandUnit,
@@ -247,7 +246,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
-    InitCommandUnit commandUnit = anInitCommandUnit().withName("Init").build();
+    InitCommandUnit commandUnit = new InitCommandUnit();
     commandUnit.setCommand(
         aCommand()
             .withCommandUnits(asList(commandUnit,

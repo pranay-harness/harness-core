@@ -29,6 +29,7 @@ import java.util.Map;
  */
 @Attributes(description = "This command unit creates STATING_PATH, RUNTIME_PATH, BACKUP_PATH on the target host")
 public class InitCommandUnit extends CommandUnit {
+  public static final String INITIALIZE_UNIT = "Initialize";
   @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
 
   @Transient @Inject private ServiceResourceService serviceResourceService;
@@ -42,6 +43,10 @@ public class InitCommandUnit extends CommandUnit {
   @Transient @SchemaIgnore private String preInitCommand;
 
   @Transient @SchemaIgnore private String executionStagingDir;
+
+  public InitCommandUnit() {
+    setName(INITIALIZE_UNIT);
+  }
 
   @Override
   public void setup(CommandExecutionContext context) {
@@ -101,30 +106,5 @@ public class InitCommandUnit extends CommandUnit {
 
   public void setCommand(Command command) {
     this.command = command;
-  }
-
-  public static final class Builder {
-    private String name;
-
-    private Builder() {}
-
-    public static Builder anInitCommandUnit() {
-      return new Builder();
-    }
-
-    public Builder withName(String name) {
-      this.name = name;
-      return this;
-    }
-
-    public Builder but() {
-      return anInitCommandUnit().withName(name);
-    }
-
-    public InitCommandUnit build() {
-      InitCommandUnit initCommandUnit = new InitCommandUnit();
-      initCommandUnit.setName(name);
-      return initCommandUnit;
-    }
   }
 }
