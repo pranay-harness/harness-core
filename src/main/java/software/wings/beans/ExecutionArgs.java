@@ -4,7 +4,10 @@
 
 package software.wings.beans;
 
+import org.mongodb.morphia.annotations.Transient;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The type Execution args.
@@ -17,10 +20,12 @@ public class ExecutionArgs {
   private String commandName;
   private ExecutionStrategy executionStrategy;
   private String releaseId;
-  private List<Artifact> artifacts;
+  @Transient private List<Artifact> artifacts;
+  private List<String> artifactIds;
   private String orchestrationId;
-  private List<ServiceInstance> serviceInstances;
-  private ExecutionCredential executionCredential;
+  @Transient private List<ServiceInstance> serviceInstances;
+  private List<String> serviceInstanceIds;
+  @Transient private ExecutionCredential executionCredential;
 
   /**
    * Gets service id.
@@ -182,5 +187,36 @@ public class ExecutionArgs {
    */
   public void setServiceInstances(List<ServiceInstance> serviceInstances) {
     this.serviceInstances = serviceInstances;
+  }
+
+  public List<String> getArtifactIds() {
+    return artifactIds;
+  }
+
+  public void setArtifactIds(List<String> artifactIds) {
+    this.artifactIds = artifactIds;
+  }
+
+  public List<String> getServiceInstanceIds() {
+    return serviceInstanceIds;
+  }
+
+  public void setServiceInstanceIds(List<String> serviceInstanceIds) {
+    this.serviceInstanceIds = serviceInstanceIds;
+  }
+
+  public void assignIds() {
+    if (serviceInstances == null) {
+      serviceInstanceIds = null;
+    } else {
+      serviceInstanceIds =
+          serviceInstances.stream().map(serviceInstance -> serviceInstance.getUuid()).collect(Collectors.toList());
+    }
+
+    if (artifacts == null) {
+      artifactIds = null;
+    } else {
+      artifactIds = artifacts.stream().map(artifact -> artifact.getUuid()).collect(Collectors.toList());
+    }
   }
 }

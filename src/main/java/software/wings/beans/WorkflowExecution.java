@@ -33,6 +33,8 @@ public class WorkflowExecution extends Base {
   private int total;
   private CountsByStatuses breakdown = aCountsByStatuses().build();
 
+  private ExecutionArgs executionArgs;
+
   /**
    * Gets name.
    *
@@ -211,5 +213,21 @@ public class WorkflowExecution extends Base {
    */
   public void setBreakdown(CountsByStatuses breakdown) {
     this.breakdown = breakdown;
+  }
+
+  public ExecutionArgs getExecutionArgs() {
+    return executionArgs;
+  }
+
+  public void setExecutionArgs(ExecutionArgs executionArgs) {
+    this.executionArgs = executionArgs;
+  }
+
+  @Override
+  public void onSave() {
+    super.onSave();
+    if (executionArgs != null) {
+      executionArgs.assignIds();
+    }
   }
 }
