@@ -4,6 +4,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.Tag.Builder.aTag;
 
@@ -25,6 +26,7 @@ import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,18 +62,45 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public Tag save(String parentTagId, Tag tag) {
-    if (parentTagId == null || parentTagId.length() == 0) {
-      tag.setRootTag(true);
+    Tag parentTag = wingsPersistence.get(Tag.class, tag.getAppId(), parentTagId);
+    tag.setTagType(TagType.TAGGED_HOST);
+    return saveInternal(parentTag, tag);
+  }
+
+  private Tag saveInternal(Tag parentTag, Tag tag) {
+    if (parentTag == null && !tag.getTagType().equals(TagType.ENVIRONMENT)) {
+      throw new WingsException(INVALID_ARGUMENT, "message", "Parent tag couldn't be found.");
+    } else if (parentTag == null && tag.getTagType().equals(TagType.ENVIRONMENT)) {
       return wingsPersistence.saveAndGet(Tag.class, tag);
     } else {
-      Tag parentTag = wingsPersistence.get(Tag.class, parentTagId);
-      tag.setRootTagId(parentTag.isRootTag() ? parentTagId : parentTag.getRootTagId());
-      tag.setParentTagId(parentTagId);
+      tag.setParentTagId(parentTag.getUuid());
+      tag.setRootTagId(parentTag.getRootTagId());
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
-      wingsPersistence.addToList(Tag.class, parentTagId, "children", tag.getUuid());
+      wingsPersistence.addToList(Tag.class, parentTag.getUuid(), "children", tag.getUuid());
       updateServiceTemplateWithCommandPredecessor(tag);
       return tag;
     }
+  }
+
+  @Override
+  public void createDefaultRootTagForEnvironment(Environment env) {
+    Tag envTag = saveInternal(null,
+        aTag()
+            .withAppId(env.getAppId())
+            .withEnvId(env.getUuid())
+            .withName(env.getName())
+            .withDescription(env.getName())
+            .withTagType(TagType.ENVIRONMENT)
+            .build());
+    saveInternal(envTag,
+        aTag()
+            .withAppId(env.getAppId())
+            .withEnvId(env.getUuid())
+            .withParentTagId(envTag.getUuid())
+            .withName("UnTaggedHosts")
+            .withDescription("Hosts with no tags will appear here")
+            .withTagType(TagType.UNTAGGED_HOST)
+            .build());
   }
 
   private void updateServiceTemplateWithCommandPredecessor(Tag tag) {
@@ -151,7 +180,8 @@ public class TagServiceImpl implements TagService {
   @Override
   public void delete(String appId, String envId, String tagId) {
     Tag tag = get(appId, envId, tagId);
-    if (tag != null && !tag.isRootTag()) {
+    Validator.notNullCheck("Tag", tag);
+    if (tag.getTagType().isModificationAllowed()) {
       cascadingDelete(tag);
     }
   }
@@ -178,28 +208,6 @@ public class TagServiceImpl implements TagService {
         .equal(true)
         .asList()
         .forEach(this ::cascadingDelete);
-  }
-
-  @Override
-  public void createDefaultRootTagForEnvironment(Environment env) {
-    Tag envTag = save(null,
-        aTag()
-            .withAppId(env.getAppId())
-            .withEnvId(env.getUuid())
-            .withName(env.getName())
-            .withDescription(env.getName())
-            .withRootTag(true)
-            .withTagType(TagType.ENVIRONMENT)
-            .build());
-    save(envTag.getUuid(),
-        aTag()
-            .withAppId(env.getAppId())
-            .withEnvId(env.getUuid())
-            .withParentTagId(envTag.getUuid())
-            .withName("UnTaggedHosts")
-            .withDescription("Hosts with no tags will appear here")
-            .withTagType(TagType.UNTAGGED_HOST)
-            .build());
   }
 
   @Override

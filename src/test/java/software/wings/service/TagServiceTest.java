@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.Tag.TagType.ENVIRONMENT;
+import static software.wings.beans.Tag.TagType.TAGGED_HOST;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -33,6 +35,7 @@ import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.Builder;
+import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -113,7 +116,8 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateTag() {
-    Tag tag = getTagBuilder().withUuid(TAG_ID).withDescription("TAG_DESCRIPTION").build();
+    Tag tag = getTagBuilder().withUuid(TAG_ID).withAppId(APP_ID).withDescription("TAG_DESCRIPTION").build();
+    when(query.get()).thenReturn(tag);
     tagService.update(tag);
     verify(wingsPersistence).updateFields(Tag.class, TAG_ID, of("name", TAG_NAME, "description", "TAG_DESCRIPTION"));
   }
@@ -139,8 +143,12 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldNotDeleteRootTag() {
-    Tag tag =
-        getTagBuilder().withUuid("ROOT_TAG_ID").withRootTag(true).withRootTagId(null).withChildren(asList()).build();
+    Tag tag = getTagBuilder()
+                  .withUuid("ROOT_TAG_ID")
+                  .withTagType(TagType.ENVIRONMENT)
+                  .withRootTagId(null)
+                  .withChildren(asList())
+                  .build();
     when(query.get()).thenReturn(tag);
 
     tagService.delete(tag.getAppId(), tag.getEnvId(), tag.getUuid());
@@ -157,7 +165,7 @@ public class TagServiceTest extends WingsBaseTest {
                   .withAppId(APP_ID)
                   .withEnvId(ENV_ID)
                   .withUuid(TAG_ID)
-                  .withRootTag(true)
+                  .withTagType(TagType.ENVIRONMENT)
                   .withRootTagId(null)
                   .withChildren(asList())
                   .build();
@@ -178,9 +186,10 @@ public class TagServiceTest extends WingsBaseTest {
    * Should save root tag.
    */
   @Test
+  @Ignore
   public void shouldSaveRootTag() {
     tagService.save(null, getTagBuilder().build());
-    verify(wingsPersistence).saveAndGet(Tag.class, getTagBuilder().withRootTag(true).build());
+    verify(wingsPersistence).saveAndGet(Tag.class, getTagBuilder().withTagType(TagType.ENVIRONMENT).build());
   }
 
   /**
@@ -188,24 +197,31 @@ public class TagServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveNormalTag() {
-    Tag tagPreSave = getTagBuilder().withParentTagId("PARENT_TAG_ID").withRootTagId("ROOT_TAG_ID").build();
-    Tag tagPostSave =
-        getTagBuilder().withUuid(TAG_ID).withParentTagId("PARENT_TAG_ID").withRootTagId("ROOT_TAG_ID").build();
+    Tag tagPreSave = getTagBuilder()
+                         .withAppId(APP_ID)
+                         .withEnvId(ENV_ID)
+                         .withParentTagId("PARENT_TAG_ID")
+                         .withRootTagId("ROOT_TAG_ID")
+                         .withName(TAG_NAME)
+                         .withTagType(TAGGED_HOST)
+                         .build();
+    Tag tagPostSave = getTagBuilder()
+                          .withAppId(APP_ID)
+                          .withEnvId(ENV_ID)
+                          .withUuid(TAG_ID)
+                          .withParentTagId("PARENT_TAG_ID")
+                          .withRootTagId("ROOT_TAG_ID")
+                          .build();
     Tag parentTag = getTagBuilder()
                         .withUuid("PARENT_TAG_ID")
                         .withParentTagId("ROOT_TAG_ID")
                         .withRootTagId("ROOT_TAG_ID")
-                        .withRootTag(false)
+                        .withTagType(TAGGED_HOST)
                         .withChildren(asList(tagPostSave))
                         .build();
-    Tag rootTag = getTagBuilder()
-                      .withUuid("ROOT_TAG_ID")
-                      .withRootTag(true)
-                      .withRootTagId(null)
-                      .withChildren(asList(parentTag))
-                      .build();
+    Tag rootTag = getTagBuilder().withUuid("ROOT_TAG_ID").withName("ROOT_TAG").withTagType(ENVIRONMENT).build();
 
-    when(wingsPersistence.get(Tag.class, "PARENT_TAG_ID")).thenReturn(parentTag);
+    when(wingsPersistence.get(Tag.class, APP_ID, "PARENT_TAG_ID")).thenReturn(parentTag);
     when(wingsPersistence.saveAndGet(Tag.class, tagPreSave)).thenReturn(tagPostSave);
     when(query.get()).thenReturn(parentTag).thenReturn(rootTag);
     when(serviceTemplateService.getTemplateByMappedTags(asList(parentTag, rootTag)))
@@ -337,7 +353,7 @@ public class TagServiceTest extends WingsBaseTest {
     Tag rootTag = getTagBuilder()
                       .withUuid("ROOT_TAG_ID")
                       .withName("ROOT_TAG")
-                      .withRootTag(false)
+                      .withTagType(ENVIRONMENT)
                       .withChildren(asList(childTag1, childTag2))
                       .build();
     when(query.get()).thenReturn(rootTag);
