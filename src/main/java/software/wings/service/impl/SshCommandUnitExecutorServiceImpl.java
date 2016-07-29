@@ -222,6 +222,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       } catch (IOException e) {
         e.printStackTrace();
       }
+      executor.executeCommandString("chmod 0744 " + initCommandUnit.getExecutionStagingDir() + "/*.sh");
     }
     return executionResult;
   }

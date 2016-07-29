@@ -241,6 +241,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID.sh").getAbsolutePath();
     verify(sshPwdAuthExecutor).scpFiles("/tmp/staging/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/staging/ACTIVITY_ID/*.sh");
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
   }
@@ -276,5 +277,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/staging/ACTIVITY_ID/*.sh");
   }
 }
