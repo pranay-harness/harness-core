@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -22,11 +23,13 @@ import org.junit.rules.Verifier;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ApprovalNotification;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
 import software.wings.beans.ArtifactSource;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.NotificationService;
 
 import java.util.Collections;
 import java.util.Map;
@@ -56,6 +59,8 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
 
   @Mock private ArtifactCollectorService artifactCollectorService;
 
+  @Mock private NotificationService notificationService;
+
   /**
    * The Verifier.
    */
@@ -63,7 +68,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
   public Verifier verifier = new Verifier() {
     @Override
     protected void verify() throws Throwable {
-      verifyNoMoreInteractions(artifactService, collectorServiceMap, artifactCollectorService);
+      verifyNoMoreInteractions(artifactService, collectorServiceMap, artifactCollectorService, notificationService);
     }
   };
 
@@ -130,6 +135,7 @@ public class ArtifactCollectEventListenerTest extends WingsBaseTest {
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.RUNNING);
     verify(artifactService).addArtifactFile(ARTIFACT_ID, APP_ID, Collections.singletonList(ARTIFACT_FILE));
     verify(artifactService).updateStatus(ARTIFACT_ID, APP_ID, Status.READY);
+    verify(notificationService).sendNotificationAsync(any(ApprovalNotification.class));
   }
 
   /**

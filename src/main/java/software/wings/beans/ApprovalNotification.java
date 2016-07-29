@@ -13,8 +13,10 @@ import com.google.common.collect.ImmutableMap;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Artifact.Status;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ArtifactService;
 
 import javax.inject.Inject;
 import javax.validation.constraints.NotNull;
@@ -27,9 +29,14 @@ public class ApprovalNotification extends ActionableNotification {
   @NotNull private ApprovalStage stage = PENDING;
   private String releaseId;
   @Inject @Transient private transient WingsPersistence wingsPersistence;
+  @Inject @Transient private transient ArtifactService artifactService;
 
   @Override
   public boolean performAction(NotificationActionType actionType) {
+    if (NotificationEntityType.ARTIFACT.equals(getEntityType())) {
+      artifactService.updateStatus(
+          getEntityId(), getAppId(), actionType.equals(APPROVE) ? Status.APPROVED : Status.REJECTED);
+    }
     wingsPersistence.updateFields(ApprovalNotification.class, getUuid(),
         ImmutableMap.of("stage", actionType.equals(APPROVE) ? APPROVED : REJECTED));
     return true;
