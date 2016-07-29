@@ -7,7 +7,6 @@ import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.validation.Create;
-import software.wings.utils.validation.Update;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -42,13 +41,13 @@ public interface NotificationService {
   Notification get(@NotEmpty String appId, @NotEmpty String notificationId);
 
   /**
-   * Update notification.
+   * Act notification.
    *
-   * @param notification the notification
+   * @param appId          the app id
+   * @param notificationId the notification id
+   * @param actionType     the action type
    * @return the notification
    */
-  @ValidationGroups(Update.class) Notification update(@Valid Notification notification);
-
   Notification act(@NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType);
 
   /**
@@ -57,4 +56,12 @@ public interface NotificationService {
    * @param notification the notification
    */
   @ValidationGroups(Create.class) void sendNotificationAsync(@Valid Notification notification);
+
+  /**
+   * Mark notification completed.
+   *
+   * @param appId          the app id
+   * @param notificationId the notification id
+   */
+  void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId);
 }

@@ -50,14 +50,9 @@ public class NotificationServiceImpl implements NotificationService {
   }
 
   @Override
-  public Notification update(@Valid Notification notification) {
-    throw new WingsException(INVALID_REQUEST, "message", "Update operation not supported");
-  }
-
-  @Override
   public Notification act(
       @NotEmpty String appId, @NotEmpty String notificationId, @NotNull NotificationActionType actionType) {
-    Notification notification = wingsPersistence.get(Notification.class, notificationId);
+    Notification notification = get(appId, notificationId);
     if (notification == null) {
       throw new WingsException(INVALID_REQUEST, "message", "Notification doesn't exist");
     }
@@ -77,9 +72,10 @@ public class NotificationServiceImpl implements NotificationService {
     if (actionCompleted) {
       markNotificationCompleted(appId, notificationId);
     }
-    return get(notification.getAppId(), notificationId);
+    return get(appId, notificationId);
   }
 
+  @Override
   public void markNotificationCompleted(@NotEmpty String appId, @NotEmpty String notificationId) {
     wingsPersistence.updateFields(Notification.class, notificationId, ImmutableMap.of("complete", true));
   }
