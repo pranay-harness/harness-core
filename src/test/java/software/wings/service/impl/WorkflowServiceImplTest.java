@@ -16,7 +16,6 @@ import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
@@ -941,11 +940,18 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
 
     graph = res.get(0).getGraph();
-    assertThat(graph.getNodes()).hasSize(2).extracting("y").containsExactly(DEFAULT_INITIAL_Y, DEFAULT_INITIAL_Y);
     assertThat(graph.getNodes())
-        .hasSize(2)
+        .hasSize(4)
+        .extracting("y")
+        .containsExactly(DEFAULT_INITIAL_Y, DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT,
+            DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT,
+            DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT);
+    assertThat(graph.getNodes())
+        .hasSize(4)
         .extracting("x")
-        .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH);
+        .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING,
+            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING,
+            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING);
   }
 
   /**

@@ -509,7 +509,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       StateExecutionInstance firstLevelGroup = getFirstLevelGroup(instances);
       if (firstLevelGroup != null) {
         expandedGroupIds = Lists.newArrayList(firstLevelGroup.getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false, isSimpleLinear);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested, isSimpleLinear);
         return;
       }
     }
@@ -547,8 +547,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    workflowExecution.setGraph(
-        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
+    Graph graph =
+        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, detailsRequested);
+    workflowExecution.setGraph(graph);
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
