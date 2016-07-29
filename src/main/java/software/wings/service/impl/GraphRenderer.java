@@ -50,7 +50,7 @@ public class GraphRenderer {
   @Inject private Injector injector;
 
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, boolean isSimpleLinear) {
+      List<String> expandedGroupIds, boolean detailsRequested) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -104,12 +104,12 @@ public class GraphRenderer {
     generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
 
     Graph graph = new Graph();
-    if (isSimpleLinear) {
-      paintSimpleLinearGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    } else {
-      extrapolateDimension(originNode);
-      paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    }
+    //    if (isSimpleLinear) {
+    //      paintSimpleLinearGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    //    } else {
+    extrapolateDimension(originNode);
+    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, detailsRequested, true);
+    //    }
     logger.debug("graph generated: {}", graph);
     return graph;
   }
@@ -208,7 +208,7 @@ public class GraphRenderer {
     }
   }
 
-  private void paintGraph(Group group, Graph graph, int x, int y) {
+  private void paintGraph(Group group, Graph graph, int x, int y, boolean detailsRequested, boolean topLevel) {
     group.setX(x);
     group.setY(y);
     graph.addNode(group);
@@ -216,7 +216,7 @@ public class GraphRenderer {
     y += DEFAULT_ARROW_HEIGHT;
     Node priorElement = null;
     for (Node node : group.getElements()) {
-      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);
+      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y, detailsRequested, false);
       y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
       priorElement = node;
     }
@@ -227,26 +227,30 @@ public class GraphRenderer {
     }
   }
 
-  private void paintGraph(Node node, Graph graph, int x, int y) {
+  private void paintGraph(Node node, Graph graph, int x, int y, boolean detailsRequested, boolean topLevel) {
     node.setX(x);
     node.setY(y);
     graph.addNode(node);
 
+    if (!detailsRequested && !topLevel) {
+      return;
+    }
+
     Group group = node.getGroup();
     if (group != null) {
-      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT);
+      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT, detailsRequested, topLevel);
     }
 
     Node next = node.getNext();
     if (next != null) {
       if (group == null || next.getGroup() == null) {
         if (node.getType().equals("ELEMENT")) {
-          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y, detailsRequested, topLevel);
         } else {
-          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
+          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y, detailsRequested, topLevel);
         }
       } else {
-        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
+        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y, detailsRequested, topLevel);
       }
       graph.addLink(Link.Builder.aLink()
                         .withId(UUIDGenerator.getUuid())

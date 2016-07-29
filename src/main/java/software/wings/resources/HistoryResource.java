@@ -18,6 +18,7 @@ import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -56,5 +57,17 @@ public class HistoryResource {
       @QueryParam("appId") String appId, @BeanParam PageRequest<History> request) {
     request.addFilter("appId", appId, EQ);
     return new RestResponse<>(historyService.list(request));
+  }
+  /**
+   * Details rest response.
+   *
+   * @param appId   the app id
+   * @param request the request
+   * @return the rest response
+   */
+  @GET
+  @Path("{historyId}")
+  public RestResponse<History> get(@QueryParam("appId") String appId, @PathParam("historyId") String historyId) {
+    return new RestResponse<>(historyService.get(appId, historyId));
   }
 }

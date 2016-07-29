@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import org.mongodb.morphia.annotations.Entity;
 
 /**
@@ -9,29 +7,32 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Entity(value = "history", noClassnameStored = true)
 public class History extends Base {
-  private EntryType entryType;
+  private EventType eventType;
   private String entityType;
   private String entityId;
   private String entityName;
   private Base entityOldValue;
   private Base entityNewValue;
 
+  private String title;
+  private String shortDescription;
+
   /**
    * Gets activity type.
    *
    * @return the activity type
    */
-  public EntryType getEntryType() {
-    return entryType;
+  public EventType getEventType() {
+    return eventType;
   }
 
   /**
    * Sets activity type.
    *
-   * @param entryType the activity type
+   * @param eventType the activity type
    */
-  public void setEntryType(EntryType entryType) {
-    this.entryType = entryType;
+  public void setEventType(EventType eventType) {
+    this.eventType = eventType;
   }
 
   /**
@@ -124,56 +125,73 @@ public class History extends Base {
     this.entityNewValue = entityNewValue;
   }
 
+  public String getTitle() {
+    return title;
+  }
+
+  public void setTitle(String title) {
+    this.title = title;
+  }
+
+  public String getShortDescription() {
+    return shortDescription;
+  }
+
+  public void setShortDescription(String shortDescription) {
+    this.shortDescription = shortDescription;
+  }
+
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("entryType", entryType)
-        .add("entityType", entityType)
-        .add("entityId", entityId)
-        .add("entityName", entityName)
-        .add("entityOldValue", entityOldValue)
-        .add("entityNewValue", entityNewValue)
-        .toString();
+    return "History{"
+        + "eventType=" + eventType + ", entityType='" + entityType + '\'' + ", entityId='" + entityId + '\''
+        + ", entityName='" + entityName + '\'' + ", entityOldValue=" + entityOldValue + ", entityNewValue="
+        + entityNewValue + ", title='" + title + '\'' + ", shortDescription='" + shortDescription + '\'' + '}';
   }
 
   /**
    * The enum Activity type.
    */
-  public enum EntryType {
+  public enum EventType {
     /**
      * Started activity type.
      */
-    STARTED, /**
-              * Completed activity type.
-              */
-    COMPLETED, /**
-                * Failed activity type.
-                */
-    FAILED, /**
-             * Edited activity type.
-             */
-    EDITED, /**
-             * Created activity type.
-             */
-    CREATED, /**
-              * Cloned activity type.
-              */
-    CLONED, /**
-             * Deleted activity type.
-             */
+    STARTED,
+    /**
+     * Completed activity type.
+     */
+    COMPLETED,
+    /**
+     * Failed activity type.
+     */
+    FAILED,
+    /**
+     * Changed activity type.
+     */
+    CHANGED,
+    /**
+     * Created activity type.
+     */
+    CREATED,
+    /**
+     * Cloned activity type.
+     */
+    CLONED,
+    /**
+     * Deleted activity type.
+     */
     DELETED
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
-    private EntryType entryType;
+    private EventType eventType;
     private String entityType;
     private String entityId;
     private String entityName;
     private Base entityOldValue;
     private Base entityNewValue;
+    private String title;
+    private String shortDescription;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -184,193 +202,95 @@ public class History extends Base {
 
     private Builder() {}
 
-    /**
-     * A history builder.
-     *
-     * @return the builder
-     */
     public static Builder aHistory() {
       return new Builder();
     }
 
-    /**
-     * With activity type builder.
-     *
-     * @param entryType the activity type
-     * @return the builder
-     */
-    public Builder withActivityType(EntryType entryType) {
-      this.entryType = entryType;
+    public Builder withEventType(EventType eventType) {
+      this.eventType = eventType;
       return this;
     }
 
-    /**
-     * With entity type builder.
-     *
-     * @param entityType the entity type
-     * @return the builder
-     */
     public Builder withEntityType(String entityType) {
       this.entityType = entityType;
       return this;
     }
 
-    /**
-     * With entity id builder.
-     *
-     * @param entityId the entity id
-     * @return the builder
-     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
-    /**
-     * With entity name builder.
-     *
-     * @param entityName the entity name
-     * @return the builder
-     */
     public Builder withEntityName(String entityName) {
       this.entityName = entityName;
       return this;
     }
 
-    /**
-     * With entity old value builder.
-     *
-     * @param entityOldValue the entity old value
-     * @return the builder
-     */
     public Builder withEntityOldValue(Base entityOldValue) {
       this.entityOldValue = entityOldValue;
       return this;
     }
 
-    /**
-     * With entity new value builder.
-     *
-     * @param entityNewValue the entity new value
-     * @return the builder
-     */
     public Builder withEntityNewValue(Base entityNewValue) {
       this.entityNewValue = entityNewValue;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withTitle(String title) {
+      this.title = title;
+      return this;
+    }
+
+    public Builder withShortDescription(String shortDescription) {
+      this.shortDescription = shortDescription;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aHistory()
-          .withActivityType(entryType)
-          .withEntityType(entityType)
-          .withEntityId(entityId)
-          .withEntityName(entityName)
-          .withEntityOldValue(entityOldValue)
-          .withEntityNewValue(entityNewValue)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withActive(active);
-    }
-
-    /**
-     * Build history.
-     *
-     * @return the history
-     */
     public History build() {
       History history = new History();
-      history.setEntryType(entryType);
+      history.setEventType(eventType);
       history.setEntityType(entityType);
       history.setEntityId(entityId);
       history.setEntityName(entityName);
       history.setEntityOldValue(entityOldValue);
       history.setEntityNewValue(entityNewValue);
+      history.setTitle(title);
+      history.setShortDescription(shortDescription);
       history.setUuid(uuid);
       history.setAppId(appId);
       history.setCreatedBy(createdBy);

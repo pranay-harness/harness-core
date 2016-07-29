@@ -30,6 +30,8 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.Graph;
+import software.wings.beans.History;
+import software.wings.beans.History.EventType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
@@ -46,7 +48,10 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HistoryService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElement;
@@ -76,6 +81,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -119,8 +125,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private ArtifactService artifactService;
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
+  @Inject private ExecutorService executorService;
+  @Inject private HistoryService historyService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -457,6 +467,25 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowExecution != null) {
       populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
     }
+    if (workflowExecution.getExecutionArgs() != null) {
+      if (workflowExecution.getExecutionArgs().getServiceInstanceIds() != null) {
+        PageRequest<ServiceInstance> pageRequest =
+            PageRequest.Builder.aPageRequest()
+                .addFilter("appId", Operator.EQ, appId)
+                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getServiceInstanceIds().toArray())
+                .build();
+        workflowExecution.getExecutionArgs().setServiceInstances(
+            serviceInstanceService.list(pageRequest).getResponse());
+      }
+      if (workflowExecution.getExecutionArgs().getArtifactIds() != null) {
+        PageRequest<Artifact> pageRequest =
+            PageRequest.Builder.aPageRequest()
+                .addFilter("appId", Operator.EQ, appId)
+                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIds().toArray())
+                .build();
+        workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
+      }
+    }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
   }
@@ -480,7 +509,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       StateExecutionInstance firstLevelGroup = getFirstLevelGroup(instances);
       if (firstLevelGroup != null) {
         expandedGroupIds = Lists.newArrayList(firstLevelGroup.getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, false, isSimpleLinear);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested, isSimpleLinear);
         return;
       }
     }
@@ -518,8 +547,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    workflowExecution.setGraph(
-        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, isSimpleLinear));
+    Graph graph =
+        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, detailsRequested);
+    workflowExecution.setGraph(graph);
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
@@ -690,6 +720,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotal(1);
     workflowExecution.getBreakdown().setInprogress(1);
+    workflowExecution.setExecutionArgs(executionArgs);
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
@@ -738,6 +769,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     wingsPersistence.update(query, updateOps);
 
+    notifyWorkflowExecution(workflowExecution.getAppId(), workflowExecutionId);
     return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
   }
 
@@ -871,6 +903,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
     workflowExecution.setName(workflow.getName());
     workflowExecution.setWorkflowId(workflow.getUuid());
+    workflowExecution.setExecutionArgs(executionArgs);
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
@@ -1050,5 +1083,38 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
 
     return null;
+  }
+
+  private void notifyWorkflowExecution(String appId, String workflowExecutionId) {
+    executorService.execute(new WorkflowExecutionEntryMaker(appId, workflowExecutionId));
+  }
+
+  private class WorkflowExecutionEntryMaker implements Runnable {
+    private String workflowExecutionId;
+    private String appId;
+
+    /**
+     * @param workflowExecutionId
+     */
+    public WorkflowExecutionEntryMaker(String appId, String workflowExecutionId) {
+      this.appId = appId;
+      this.workflowExecutionId = workflowExecutionId;
+    }
+
+    @Override
+    public void run() {
+      WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+      History history = History.Builder.aHistory()
+                            .withAppId(appId)
+                            .withEventType(EventType.CREATED)
+                            .withEntityType("DEPLOYMENT")
+                            .withEntityId(workflowExecution.getUuid())
+                            .withEntityName(workflowExecution.getName())
+                            .withEntityNewValue(workflowExecution)
+                            .withShortDescription(workflowExecution.getName() + " started")
+                            .withTitle(workflowExecution.getName() + " started")
+                            .build();
+      historyService.create(history);
+    }
   }
 }

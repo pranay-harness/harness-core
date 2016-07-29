@@ -23,4 +23,9 @@ public class HistoryServiceImpl implements HistoryService {
   public PageResponse<History> list(PageRequest<History> request) {
     return wingsPersistence.query(History.class, request);
   }
+
+  @Override
+  public History get(String appId, String historyId) {
+    return wingsPersistence.get(History.class, appId, historyId);
+  }
 }
