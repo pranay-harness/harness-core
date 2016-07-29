@@ -158,6 +158,33 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  // Query will look like search[0][value]=fieldA1&search[0][value]=fieldA2
+  @Test
+  public void shouldTakeQueryParamsWithInOp() {
+    UriInfo uriInfo = mock(UriInfo.class);
+    Map<String, List<String>> queryParams = new HashMap<>();
+    queryParams.put("search[0][field]", Lists.newArrayList("fieldA"));
+    queryParams.put("search[0][op]", Lists.newArrayList("IN"));
+    queryParams.put("search[0][value]", Lists.newArrayList("fieldA11", "fieldA12"));
+
+    queryParams.put("sort[0][field]", Lists.newArrayList("fieldA"));
+    queryParams.put("sort[0][direction]", Lists.newArrayList("DESC"));
+
+    when(uriInfo.getQueryParameters()).thenReturn(new AbstractMultivaluedMap<String, String>(queryParams) {});
+    createEntitiesForPagination();
+
+    PageRequest<TestEntity> req = new PageRequest<>();
+    req.setUriInfo(uriInfo);
+
+    PageResponse<TestEntity> res = wingsPersistence.query(TestEntity.class, req);
+
+    assertThat(res).isNotNull().hasSize(2);
+    assertThat(res.get(0)).isNotNull();
+    assertThat(res.get(0).getFieldA()).isEqualTo("fieldA12");
+    assertThat(res.get(1)).isNotNull();
+    assertThat(res.get(1).getFieldA()).isEqualTo("fieldA11");
+  }
+
   /**
    * Should work with query with number values.
    */
