@@ -244,8 +244,8 @@ public class TagServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field("envId");
     verify(end).equal(ENV_ID);
-    verify(query).field("rootTag");
-    verify(end).equal(true);
+    verify(query).field("tagType");
+    verify(end).equal(ENVIRONMENT);
     verify(query).get();
   }
 
@@ -290,7 +290,7 @@ public class TagServiceTest extends WingsBaseTest {
     when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(host));
 
-    tagService.tagHosts(APP_ID, ENV_ID, TAG_ID, asList(HOST_ID));
+    tagService.tagHosts(tag, asList(host));
 
     verify(hostService).setTags(host, asList(tag));
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(host), asList());
@@ -311,7 +311,7 @@ public class TagServiceTest extends WingsBaseTest {
     when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
-    tagService.tagHosts(APP_ID, ENV_ID, TAG_ID, asList());
+    tagService.tagHosts(tag, asList());
 
     verify(hostService).removeTagFromHost(host, tag);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(host));
@@ -335,7 +335,7 @@ public class TagServiceTest extends WingsBaseTest {
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(existingHost));
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList("NEW_HOST_ID"))).thenReturn(asList(newHost));
 
-    tagService.tagHosts(APP_ID, ENV_ID, TAG_ID, asList("NEW_HOST_ID"));
+    tagService.tagHosts(tag, asList(newHost));
 
     verify(hostService).setTags(newHost, asList(tag));
     verify(hostService).removeTagFromHost(existingHost, tag);
@@ -363,8 +363,8 @@ public class TagServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field("envId");
     verify(end).equal(ENV_ID);
-    verify(query).field("rootTag");
-    verify(end).equal(true);
+    verify(query).field("tagType");
+    verify(end).equal(ENVIRONMENT);
     verify(query).get();
   }
 

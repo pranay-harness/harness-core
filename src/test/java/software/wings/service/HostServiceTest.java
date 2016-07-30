@@ -45,6 +45,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
+import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -166,6 +167,8 @@ public class HostServiceTest extends WingsBaseTest {
   public void shouldUpdateHost() {
     Host host = builder.withUuid(HOST_ID).build();
     when(wingsPersistence.saveAndGet(eq(Host.class), eq(host))).thenReturn(host);
+    when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
+        .thenReturn(aTag().withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
     Host savedHost = hostService.update(ENV_ID, host);
     assertThat(savedHost).isNotNull();
     assertThat(savedHost).isInstanceOf(Host.class);

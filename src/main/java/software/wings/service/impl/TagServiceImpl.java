@@ -74,7 +74,8 @@ public class TagServiceImpl implements TagService {
       return wingsPersistence.saveAndGet(Tag.class, tag);
     } else {
       tag.setParentTagId(parentTag.getUuid());
-      tag.setRootTagId(parentTag.getRootTagId());
+      tag.setRootTagId(
+          parentTag.getTagType().equals(TagType.ENVIRONMENT) ? parentTag.getUuid() : parentTag.getRootTagId());
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
       wingsPersistence.addToList(Tag.class, parentTag.getUuid(), "children", tag.getUuid());
       updateServiceTemplateWithCommandPredecessor(tag);
@@ -204,8 +205,8 @@ public class TagServiceImpl implements TagService {
         .equal(appId)
         .field("envId")
         .equal(envId)
-        .field("rootTag")
-        .equal(true)
+        .field("tagType")
+        .equal(TagType.ENVIRONMENT)
         .asList()
         .forEach(this ::cascadingDelete);
   }
@@ -228,6 +229,18 @@ public class TagServiceImpl implements TagService {
       path = tag.getName().trim() + "/" + path;
     }
     return path;
+  }
+
+  @Override
+  public Tag getDefaultTagForUntaggedHosts(String appId, String envId) {
+    return wingsPersistence.createQuery(Tag.class)
+        .field("appId")
+        .equal(appId)
+        .field("envId")
+        .equal(envId)
+        .field("tagType")
+        .equal(TagType.UNTAGGED_HOST)
+        .get();
   }
 
   private void collectTreeNodes(Tag tag, List<Tag> flattenTree) {
@@ -258,25 +271,14 @@ public class TagServiceImpl implements TagService {
         .equal(appId)
         .field("envId")
         .equal(envId)
-        .field("rootTag")
-        .equal(true)
+        .field("tagType")
+        .equal(TagType.ENVIRONMENT)
         .get();
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.TagService#tagHosts(java.lang.String, java.lang.String, java.util.List)
-   */
   @Override
-  public void tagHosts(String appId, String envId, String tagId, List<String> hostIds) {
-    Tag tag = get(appId, envId, tagId);
-
-    if (hostIds == null || tag == null) {
-      return;
-    }
-
-    List<Host> inputHosts =
-        hostService.getHostsByHostIds(appId, infraService.getInfraIdByEnvId(appId, tag.getEnvId()), hostIds);
-    List<Host> existingMappedHosts = hostService.getHostsByTags(appId, tag.getEnvId(), asList(tag));
+  public void tagHosts(Tag tag, List<Host> inputHosts) {
+    List<Host> existingMappedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
     List<Host> hostToBeUntagged =
         existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());
     List<Host> hostTobeTagged =
@@ -285,8 +287,28 @@ public class TagServiceImpl implements TagService {
     tagHosts(tag, hostToBeUntagged, hostTobeTagged);
   }
 
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.TagService#tagHosts(java.lang.String, java.lang.String, java.util.List)
+   */
   @Override
-  public void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged) {
+  public void tagHostsByApi(String appId, String envId, String tagId, List<String> hostIds) {
+    if (hostIds == null || hostIds.size() == 0) {
+      throw new WingsException(INVALID_ARGUMENT, "message", "No hosts to map");
+    }
+
+    Tag tag = get(appId, envId, tagId);
+    Validator.notNullCheck("Tag", tag);
+
+    if (!tag.getTagType().isModificationAllowed()) {
+      throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
+    }
+
+    List<Host> inputHosts =
+        hostService.getHostsByHostIds(appId, infraService.getInfraIdByEnvId(appId, tag.getEnvId()), hostIds);
+    tagHosts(tag, inputHosts);
+  }
+
+  private void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged) {
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     // Tag

@@ -79,16 +79,16 @@ public interface TagService {
    * @param tagId   the tag id
    * @param hostIds the host ids
    */
-  void tagHosts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, @NotNull List<String> hostIds);
+  void tagHostsByApi(
+      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, @NotNull List<String> hostIds);
 
   /**
    * Tag hosts.
    *
-   * @param tag              the tag
-   * @param hostToBeUntagged the host to be untagged
-   * @param hostTobeTagged   the host tobe tagged
+   * @param tag   the tag
+   * @param hosts the hosts
    */
-  void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged);
+  void tagHosts(@NotNull Tag tag, @NotNull List<Host> hosts);
 
   /**
    * Gets the tags by name.
@@ -141,4 +141,13 @@ public interface TagService {
    * @return the tag hierarchy path string
    */
   String getTagHierarchyPathString(Tag tag);
+
+  /**
+   * Gets default tag for untagged hosts.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the default tag for untagged hosts
+   */
+  Tag getDefaultTagForUntaggedHosts(String appId, String envId);
 }

@@ -194,10 +194,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ2").build());
 
     // Tag hosts
-    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz1.getUuid(),
-        Arrays.asList(hosts.get(0).getUuid(), hosts.get(1).getUuid(), hosts.get(2).getUuid()));
-    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz3.getUuid(),
-        Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
+    tagService.tagHosts(ncOz1, Arrays.asList(hosts.get(0), hosts.get(1), hosts.get(2)));
+    tagService.tagHosts(ncOz3, Arrays.asList(hosts.get(3), hosts.get(4), hosts.get(5)));
 
     template = templateService.save(aServiceTemplate()
                                         .withAppId(app.getUuid())
