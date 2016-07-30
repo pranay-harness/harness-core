@@ -34,7 +34,7 @@ import software.wings.beans.CommandExecutionContext;
 import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.beans.Environment;
-import software.wings.beans.ExecutionArgumentType;
+import software.wings.beans.EntityType;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -406,9 +406,8 @@ public class CommandState extends State {
 
   @Override
   @SchemaIgnore
-  public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
-    return Lists.newArrayList(ExecutionArgumentType.SERVICE, ExecutionArgumentType.SSH_USER,
-        ExecutionArgumentType.SSH_PASSWORD, ExecutionArgumentType.ARTIFACTS);
+  public List<EntityType> getRequiredExecutionArgumentTypes() {
+    return Lists.newArrayList(EntityType.SERVICE, EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.ARTIFACT);
   }
 
   /**

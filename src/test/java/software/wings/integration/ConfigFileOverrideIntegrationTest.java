@@ -3,8 +3,8 @@ package software.wings.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -19,7 +19,7 @@ import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.EntityType;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 
 /**

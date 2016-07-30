@@ -8,7 +8,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "history", noClassnameStored = true)
 public class History extends Base {
   private EventType eventType;
-  private String entityType;
+  private EntityType entityType;
   private String entityId;
   private String entityName;
   private Base entityOldValue;
@@ -40,7 +40,7 @@ public class History extends Base {
    *
    * @return the entity type
    */
-  public String getEntityType() {
+  public EntityType getEntityType() {
     return entityType;
   }
 
@@ -49,7 +49,7 @@ public class History extends Base {
    *
    * @param entityType the entity type
    */
-  public void setEntityType(String entityType) {
+  public void setEntityType(EntityType entityType) {
     this.entityType = entityType;
   }
 
@@ -149,43 +149,9 @@ public class History extends Base {
         + entityNewValue + ", title='" + title + '\'' + ", shortDescription='" + shortDescription + '\'' + '}';
   }
 
-  /**
-   * The enum Activity type.
-   */
-  public enum EventType {
-    /**
-     * Started activity type.
-     */
-    STARTED,
-    /**
-     * Completed activity type.
-     */
-    COMPLETED,
-    /**
-     * Failed activity type.
-     */
-    FAILED,
-    /**
-     * Changed activity type.
-     */
-    CHANGED,
-    /**
-     * Created activity type.
-     */
-    CREATED,
-    /**
-     * Cloned activity type.
-     */
-    CLONED,
-    /**
-     * Deleted activity type.
-     */
-    DELETED
-  }
-
   public static final class Builder {
     private EventType eventType;
-    private String entityType;
+    private EntityType entityType;
     private String entityId;
     private String entityName;
     private Base entityOldValue;
@@ -211,7 +177,7 @@ public class History extends Base {
       return this;
     }
 
-    public Builder withEntityType(String entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }

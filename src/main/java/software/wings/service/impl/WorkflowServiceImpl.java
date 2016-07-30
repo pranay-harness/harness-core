@@ -26,12 +26,12 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
 import software.wings.beans.Command;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.Graph;
 import software.wings.beans.History;
-import software.wings.beans.History.EventType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
@@ -1075,10 +1075,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (command.isArtifactNeeded()) {
-        requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.ARTIFACTS);
+        requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
       }
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
       return requiredExecutionArgs;
     }
 
@@ -1104,10 +1104,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Override
     public void run() {
       WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+      EntityType entityType = EntityType.ORCHESTRATED_DEPLOYMENT;
+      if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
+        entityType = EntityType.SIMPLE_DEPLOYMENT;
+      }
       History history = History.Builder.aHistory()
                             .withAppId(appId)
                             .withEventType(EventType.CREATED)
-                            .withEntityType("DEPLOYMENT")
+                            .withEntityType(entityType)
                             .withEntityId(workflowExecution.getUuid())
                             .withEntityName(workflowExecution.getName())
                             .withEntityNewValue(workflowExecution)

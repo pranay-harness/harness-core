@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ConfigFile.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
@@ -11,7 +11,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.EntityType;
+import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -20,6 +20,7 @@ import software.wings.service.intfc.ConfigService;
 
 import java.io.File;
 import java.io.InputStream;
+
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

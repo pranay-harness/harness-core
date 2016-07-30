@@ -2,7 +2,7 @@ package software.wings.collect;
 
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
-import static software.wings.beans.Notification.NotificationEntityType.ARTIFACT;
+import static software.wings.beans.EntityType.ARTIFACT;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +19,7 @@ import software.wings.service.intfc.NotificationService;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 

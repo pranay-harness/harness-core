@@ -3,7 +3,7 @@
  */
 package software.wings.sm;
 
-import software.wings.beans.ExecutionArgumentType;
+import software.wings.beans.EntityType;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.RepeatState;
@@ -30,7 +30,7 @@ public class StateMachineExecutionSimulator {
   }
 
   private void extrapolateRequiredExecutionArgs(StateMachine stateMachine, State state,
-      RequiredExecutionArgs requiredExecutionArgs, Set<ExecutionArgumentType> argsInContext) {
+      RequiredExecutionArgs requiredExecutionArgs, Set<EntityType> argsInContext) {
     if (state == null) {
       return;
     }
@@ -38,7 +38,7 @@ public class StateMachineExecutionSimulator {
       ExpressionProcessor processor =
           expressionProcessorFactory.getExpressionProcessor(((RepeatState) state).getRepeatElementExpression(), null);
       if (processor != null) {
-        Set<ExecutionArgumentType> repeatArgsInContext = new HashSet<>(argsInContext);
+        Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
         addArgsTypeFromContextElement(repeatArgsInContext, processor.getContextElementType());
         State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
         extrapolateRequiredExecutionArgs(stateMachine, repeat, requiredExecutionArgs, repeatArgsInContext);
@@ -46,9 +46,9 @@ public class StateMachineExecutionSimulator {
     }
 
     if (state.getRequiredExecutionArgumentTypes() != null) {
-      for (ExecutionArgumentType type : state.getRequiredExecutionArgumentTypes()) {
+      for (EntityType type : state.getRequiredExecutionArgumentTypes()) {
         if (!argsInContext.contains(type)) {
-          requiredExecutionArgs.getRequiredExecutionTypes().add(type);
+          requiredExecutionArgs.getEntityTypes().add(type);
         }
       }
     }
@@ -63,8 +63,8 @@ public class StateMachineExecutionSimulator {
       extrapolateRequiredExecutionArgs(stateMachine, failure, requiredExecutionArgs, argsInContext);
     }
     if (state instanceof CommandState) {
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
     }
   }
 
@@ -72,18 +72,17 @@ public class StateMachineExecutionSimulator {
    * @param contextElementType
    * @return
    */
-  private void addArgsTypeFromContextElement(
-      Set<ExecutionArgumentType> argsInContext, ContextElementType contextElementType) {
+  private void addArgsTypeFromContextElement(Set<EntityType> argsInContext, ContextElementType contextElementType) {
     if (contextElementType == null) {
       return;
     }
     switch (contextElementType) {
       case SERVICE: {
-        argsInContext.add(ExecutionArgumentType.SERVICE);
+        argsInContext.add(EntityType.SERVICE);
         return;
       }
       case INSTANCE: {
-        argsInContext.add(ExecutionArgumentType.SERVICE);
+        argsInContext.add(EntityType.SERVICE);
         return;
       }
     }

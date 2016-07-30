@@ -38,7 +38,7 @@ public class InformationNotification extends Notification {
     private String displayText;
     private String environmentId;
     private String entityId;
-    private NotificationEntityType entityType;
+    private EntityType entityType;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -97,7 +97,7 @@ public class InformationNotification extends Notification {
      * @param entityType the entity type
      * @return the builder
      */
-    public Builder withEntityType(NotificationEntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }

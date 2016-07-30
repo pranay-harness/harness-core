@@ -22,7 +22,7 @@ import software.wings.beans.Command;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionArgumentType;
+import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
@@ -56,6 +56,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
 import javax.inject.Inject;
 
 /**
@@ -551,10 +552,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, envId, executionArgs);
     assertThat(required).isNotNull();
-    assertThat(required.getRequiredExecutionTypes())
+    assertThat(required.getEntityTypes())
         .isNotNull()
         .hasSize(3)
-        .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
+        .contains(EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 
   /**
@@ -583,10 +584,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, envId, executionArgs);
     assertThat(required).isNotNull();
-    assertThat(required.getRequiredExecutionTypes())
-        .isNotNull()
-        .hasSize(2)
-        .contains(ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
+    assertThat(required.getEntityTypes()).isNotNull().hasSize(2).contains(EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 
   /**
@@ -626,7 +624,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
     assertThat(required).isNotNull();
-    assertThat(required.getRequiredExecutionTypes()).isNotNull().isEmpty();
+    assertThat(required.getEntityTypes()).isNotNull().isEmpty();
   }
 
   /**
@@ -673,10 +671,10 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
     assertThat(required).isNotNull();
-    assertThat(required.getRequiredExecutionTypes())
+    assertThat(required.getEntityTypes())
         .isNotNull()
         .hasSize(3)
-        .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
+        .contains(EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 
   /**
@@ -737,9 +735,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
 
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
     assertThat(required).isNotNull();
-    assertThat(required.getRequiredExecutionTypes())
+    assertThat(required.getEntityTypes())
         .isNotNull()
         .hasSize(3)
-        .contains(ExecutionArgumentType.ARTIFACTS, ExecutionArgumentType.SSH_USER, ExecutionArgumentType.SSH_PASSWORD);
+        .contains(EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 }
