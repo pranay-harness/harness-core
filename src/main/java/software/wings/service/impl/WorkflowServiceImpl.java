@@ -468,20 +468,22 @@ public class WorkflowServiceImpl implements WorkflowService {
       populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
     }
     if (workflowExecution.getExecutionArgs() != null) {
-      if (workflowExecution.getExecutionArgs().getServiceInstanceIds() != null) {
+      if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
         PageRequest<ServiceInstance> pageRequest =
             PageRequest.Builder.aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
-                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getServiceInstanceIds().toArray())
+                .addFilter("uuid", Operator.IN,
+                    workflowExecution.getExecutionArgs().getServiceInstanceIdNames().keySet().toArray())
                 .build();
         workflowExecution.getExecutionArgs().setServiceInstances(
             serviceInstanceService.list(pageRequest).getResponse());
       }
-      if (workflowExecution.getExecutionArgs().getArtifactIds() != null) {
+      if (workflowExecution.getExecutionArgs().getArtifactIdNames() != null) {
         PageRequest<Artifact> pageRequest =
             PageRequest.Builder.aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
-                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIds().toArray())
+                .addFilter(
+                    "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
                 .build();
         workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
       }
@@ -736,6 +738,48 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, ContextElement... contextElements) {
+    if (workflowExecution.getExecutionArgs() != null) {
+      if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
+        List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
+                                              .getServiceInstances()
+                                              .stream()
+                                              .map(ServiceInstance::getUuid)
+                                              .collect(Collectors.toList());
+        PageRequest<ServiceInstance> pageRequest = PageRequest.Builder.aPageRequest()
+                                                       .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                       .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
+                                                       .build();
+        List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
+
+        if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
+          logger.error("Service instances argument and valid service instance retrieved size not matching");
+          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid service instances");
+        }
+        workflowExecution.getExecutionArgs().setServiceInstanceIdNames(serviceInstances.stream().collect(
+            Collectors.toMap(ServiceInstance::getUuid, ServiceInstance::getDisplayName)));
+      }
+
+      if (workflowExecution.getExecutionArgs().getArtifacts() != null) {
+        List<String> artifactIds = workflowExecution.getExecutionArgs()
+                                       .getArtifacts()
+                                       .stream()
+                                       .map(Artifact::getUuid)
+                                       .collect(Collectors.toList());
+        PageRequest<Artifact> pageRequest = PageRequest.Builder.aPageRequest()
+                                                .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                .addFilter("uuid", Operator.IN, artifactIds.toArray())
+                                                .build();
+        List<Artifact> artifacts = artifactService.list(pageRequest).getResponse();
+
+        if (artifacts == null || artifacts.size() != artifactIds.size()) {
+          logger.error("Artifact argument and valid artifact retrieved size not matching");
+          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact");
+        }
+        workflowExecution.getExecutionArgs().setArtifactIdNames(
+            artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+      }
+    }
+
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
