@@ -312,12 +312,13 @@ public class HostServiceTest extends WingsBaseTest {
   @Test
   public void shouldRemoveTagFromHost() {
     Host host = builder.withUuid(HOST_ID).build();
-    Tag tag = aTag().withUuid(TAG_ID).build();
-    when(updateOperations.removeAll("tags", tag)).thenReturn(updateOperations);
+    Tag tag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
+    Tag defaultTag = aTag().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TAG_ID).build();
+    when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID)).thenReturn(defaultTag);
+    when(updateOperations.set("tags", asList(tag))).thenReturn(updateOperations);
     hostService.removeTagFromHost(host, tag);
-    verify(wingsPersistence).update(host, updateOperations);
     verify(wingsPersistence).createUpdateOperations(Host.class);
-    verify(updateOperations).removeAll("tags", tag);
+    verify(updateOperations).set("tags", asList(defaultTag));
   }
 
   /**

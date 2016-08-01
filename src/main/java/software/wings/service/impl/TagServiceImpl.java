@@ -98,7 +98,7 @@ public class TagServiceImpl implements TagService {
             .withAppId(env.getAppId())
             .withEnvId(env.getUuid())
             .withParentTagId(envTag.getUuid())
-            .withName("UnTaggedHosts")
+            .withName(env.getName() + "-Untagged-Hosts")
             .withDescription("Hosts with no tags will appear here")
             .withTagType(TagType.UNTAGGED_HOST)
             .build());
@@ -292,10 +292,6 @@ public class TagServiceImpl implements TagService {
    */
   @Override
   public void tagHostsByApi(String appId, String envId, String tagId, List<String> hostIds) {
-    if (hostIds == null || hostIds.size() == 0) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "No hosts to map");
-    }
-
     Tag tag = get(appId, envId, tagId);
     Validator.notNullCheck("Tag", tag);
 

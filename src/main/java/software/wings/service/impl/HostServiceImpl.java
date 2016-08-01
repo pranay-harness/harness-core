@@ -180,8 +180,12 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void removeTagFromHost(Host host, Tag tag) {
-    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
-    wingsPersistence.update(host, updateOp);
+    List<Tag> tags = host.getTags();
+    tags.remove(tag);
+    if (tags.size() == 0) {
+      tags.add(tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+    }
+    setTags(host, tags);
   }
 
   @Override
