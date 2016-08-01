@@ -45,6 +45,7 @@ import software.wings.stencils.DataProvider;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.constraints.NotNull;
@@ -160,18 +161,18 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 .addNodes(aNode()
                               .withId("n1")
                               .withOrigin(true)
-                              .withName("Repeat by Services")
+                              .withName("Service:All")
                               .withType(StateType.REPEAT.name())
-                              .withX(250)
+                              .withX(50)
                               .withY(50)
                               .addProperty("executionStrategy", "PARALLEL")
                               .addProperty("repeatElementExpression", "${services}")
                               .build(),
                     aNode()
                         .withId("n2")
-                        .withName("Repeat by Phases")
+                        .withName("Phases:10%,20%,30%,40%")
                         .withType(StateType.REPEAT.name())
-                        .withX(450)
+                        .withX(200)
                         .withY(50)
                         .addProperty("executionStrategy", "SERIAL")
                         .addProperty(
@@ -179,9 +180,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .build(),
                     aNode()
                         .withId("n3")
-                        .withName("Repeat by Instances")
+                        .withName("Instances:All")
                         .withType(StateType.REPEAT.name())
-                        .withX(650)
+                        .withX(350)
                         .withY(50)
                         .addProperty("executionStrategy", "PARALLEL")
                         .addProperty("repeatElementExpression", "${instances}")
@@ -190,7 +191,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n4")
                         .withName("Stop Instance")
                         .withType(StateType.COMMAND.name())
-                        .withX(850)
+                        .withX(500)
                         .withY(50)
                         .addProperty("commandName", "STOP")
                         .build(),
@@ -198,7 +199,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n5")
                         .withName("Install on Instance")
                         .withType(StateType.COMMAND.name())
-                        .withX(1050)
+                        .withX(650)
                         .withY(50)
                         .addProperty("commandName", "INSTALL")
                         .build(),
@@ -206,7 +207,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n6")
                         .withName("Start Instance")
                         .withType(StateType.COMMAND.name())
-                        .withX(1250)
+                        .withX(800)
                         .withY(50)
                         .addProperty("commandName", "START")
                         .build())
