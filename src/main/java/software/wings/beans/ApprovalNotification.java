@@ -33,7 +33,7 @@ public class ApprovalNotification extends ActionableNotification {
 
   @Override
   public boolean performAction(NotificationActionType actionType) {
-    if (NotificationEntityType.ARTIFACT.equals(getEntityType())) {
+    if (EntityType.ARTIFACT.equals(getEntityType())) {
       artifactService.updateStatus(
           getEntityId(), getAppId(), actionType.equals(APPROVE) ? Status.APPROVED : Status.REJECTED);
     }
@@ -130,7 +130,7 @@ public class ApprovalNotification extends ActionableNotification {
     private String releaseId;
     private String environmentId;
     private String entityId;
-    private NotificationEntityType entityType;
+    private EntityType entityType;
     private boolean complete = true;
     private String uuid;
     private String appId;
@@ -212,7 +212,7 @@ public class ApprovalNotification extends ActionableNotification {
      * @param entityType the entity type
      * @return the builder
      */
-    public Builder withEntityType(NotificationEntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }

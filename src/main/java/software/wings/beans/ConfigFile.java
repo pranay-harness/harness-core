@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
+
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
@@ -180,25 +181,6 @@ public class ConfigFile extends BaseFile {
         .add("relativePath", relativePath)
         .add("overridePath", overridePath)
         .toString();
-  }
-
-  /**
-   * The enum Entity type.
-   */
-  public enum EntityType {
-    /**
-     * Service entity type.
-     */
-    SERVICE, /**
-              * Environment entity type.
-              */
-    ENVIRONMENT, /**
-                  * Tag entity type.
-                  */
-    TAG, /**
-          * Host entity type.
-          */
-    HOST
   }
 
   /**

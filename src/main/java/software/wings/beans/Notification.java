@@ -20,7 +20,7 @@ import javax.validation.constraints.NotNull;
 public abstract class Notification extends Base {
   private String environmentId;
   private String entityId;
-  private NotificationEntityType entityType;
+  private EntityType entityType;
   @NotNull private NotificationType notificationType;
   @NotNull private boolean complete = true;
 
@@ -81,7 +81,7 @@ public abstract class Notification extends Base {
    *
    * @return the entity type
    */
-  public NotificationEntityType getEntityType() {
+  public EntityType getEntityType() {
     return entityType;
   }
 
@@ -90,7 +90,7 @@ public abstract class Notification extends Base {
    *
    * @param entityType the entity type
    */
-  public void setEntityType(NotificationEntityType entityType) {
+  public void setEntityType(EntityType entityType) {
     this.entityType = entityType;
   }
 
@@ -140,24 +140,5 @@ public abstract class Notification extends Base {
      * Information notification type.
      */
     INFORMATION
-  }
-
-  /**
-   * The enum Notification entity type.
-   */
-  public enum NotificationEntityType {
-    /**
-     * Artifact notification entity type.
-     */
-    ARTIFACT, /**
-               * Release notification entity type.
-               */
-    RELEASE, /**
-              * Workflow notification entity type.
-              */
-    WORKFLOW, /**
-               * Deployment notification entity type.
-               */
-    DEPLOYMENT
   }
 }

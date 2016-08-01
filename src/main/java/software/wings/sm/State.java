@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import software.wings.beans.ExecutionArgumentType;
+import software.wings.beans.EntityType;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
@@ -111,7 +111,7 @@ public abstract class State {
    * @return the required execution argument types
    */
   @SchemaIgnore
-  public List<ExecutionArgumentType> getRequiredExecutionArgumentTypes() {
+  public List<EntityType> getRequiredExecutionArgumentTypes() {
     return null;
   }
 

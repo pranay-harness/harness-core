@@ -7,7 +7,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Transient;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 /**
  * The type Execution args.
@@ -21,10 +21,10 @@ public class ExecutionArgs {
   private ExecutionStrategy executionStrategy;
   private String releaseId;
   @Transient private List<Artifact> artifacts;
-  private List<String> artifactIds;
+  private Map<String, String> artifactIdNames;
   private String orchestrationId;
   @Transient private List<ServiceInstance> serviceInstances;
-  private List<String> serviceInstanceIds;
+  private Map<String, String> serviceInstanceIdNames;
   @Transient private ExecutionCredential executionCredential;
 
   /**
@@ -189,34 +189,19 @@ public class ExecutionArgs {
     this.serviceInstances = serviceInstances;
   }
 
-  public List<String> getArtifactIds() {
-    return artifactIds;
+  public Map<String, String> getArtifactIdNames() {
+    return artifactIdNames;
   }
 
-  public void setArtifactIds(List<String> artifactIds) {
-    this.artifactIds = artifactIds;
+  public void setArtifactIdNames(Map<String, String> artifactIdNames) {
+    this.artifactIdNames = artifactIdNames;
   }
 
-  public List<String> getServiceInstanceIds() {
-    return serviceInstanceIds;
+  public Map<String, String> getServiceInstanceIdNames() {
+    return serviceInstanceIdNames;
   }
 
-  public void setServiceInstanceIds(List<String> serviceInstanceIds) {
-    this.serviceInstanceIds = serviceInstanceIds;
-  }
-
-  public void assignIds() {
-    if (serviceInstances == null) {
-      serviceInstanceIds = null;
-    } else {
-      serviceInstanceIds =
-          serviceInstances.stream().map(serviceInstance -> serviceInstance.getUuid()).collect(Collectors.toList());
-    }
-
-    if (artifacts == null) {
-      artifactIds = null;
-    } else {
-      artifactIds = artifacts.stream().map(artifact -> artifact.getUuid()).collect(Collectors.toList());
-    }
+  public void setServiceInstanceIdNames(Map<String, String> serviceInstanceIdNames) {
+    this.serviceInstanceIdNames = serviceInstanceIdNames;
   }
 }

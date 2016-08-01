@@ -13,7 +13,7 @@ import java.util.Set;
  * @author Rishi
  */
 public class RequiredExecutionArgs {
-  private Set<ExecutionArgumentType> requiredExecutionTypes = new HashSet<>();
+  private Set<EntityType> entityTypes = new HashSet<>();
   private ExecutionArgs defaultExecutionArgs = new ExecutionArgs();
 
   /**
@@ -21,17 +21,17 @@ public class RequiredExecutionArgs {
    *
    * @return the required execution types
    */
-  public Set<ExecutionArgumentType> getRequiredExecutionTypes() {
-    return requiredExecutionTypes;
+  public Set<EntityType> getEntityTypes() {
+    return entityTypes;
   }
 
   /**
    * Sets required execution types.
    *
-   * @param requiredExecutionTypes the required execution types
+   * @param entityTypes the required execution types
    */
-  public void setRequiredExecutionTypes(Set<ExecutionArgumentType> requiredExecutionTypes) {
-    this.requiredExecutionTypes = requiredExecutionTypes;
+  public void setEntityTypes(Set<EntityType> entityTypes) {
+    this.entityTypes = entityTypes;
   }
 
   /**

@@ -25,7 +25,7 @@ public class ChangeNotification extends Notification {
     private long scheduledOn;
     private String environmentId;
     private String entityId;
-    private NotificationEntityType entityType;
+    private EntityType entityType;
     private boolean complete = true;
     private String uuid;
     private String appId;
@@ -56,7 +56,7 @@ public class ChangeNotification extends Notification {
       return this;
     }
 
-    public Builder withEntityType(NotificationEntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }

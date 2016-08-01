@@ -26,12 +26,12 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
 import software.wings.beans.Command;
+import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionArgumentType;
 import software.wings.beans.Graph;
 import software.wings.beans.History;
-import software.wings.beans.History.EventType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.ReadPref;
@@ -468,20 +468,22 @@ public class WorkflowServiceImpl implements WorkflowService {
       populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
     }
     if (workflowExecution.getExecutionArgs() != null) {
-      if (workflowExecution.getExecutionArgs().getServiceInstanceIds() != null) {
+      if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
         PageRequest<ServiceInstance> pageRequest =
             PageRequest.Builder.aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
-                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getServiceInstanceIds().toArray())
+                .addFilter("uuid", Operator.IN,
+                    workflowExecution.getExecutionArgs().getServiceInstanceIdNames().keySet().toArray())
                 .build();
         workflowExecution.getExecutionArgs().setServiceInstances(
             serviceInstanceService.list(pageRequest).getResponse());
       }
-      if (workflowExecution.getExecutionArgs().getArtifactIds() != null) {
+      if (workflowExecution.getExecutionArgs().getArtifactIdNames() != null) {
         PageRequest<Artifact> pageRequest =
             PageRequest.Builder.aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
-                .addFilter("uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIds().toArray())
+                .addFilter(
+                    "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
                 .build();
         workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
       }
@@ -736,6 +738,48 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, ContextElement... contextElements) {
+    if (workflowExecution.getExecutionArgs() != null) {
+      if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
+        List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
+                                              .getServiceInstances()
+                                              .stream()
+                                              .map(ServiceInstance::getUuid)
+                                              .collect(Collectors.toList());
+        PageRequest<ServiceInstance> pageRequest = PageRequest.Builder.aPageRequest()
+                                                       .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                       .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
+                                                       .build();
+        List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
+
+        if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
+          logger.error("Service instances argument and valid service instance retrieved size not matching");
+          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid service instances");
+        }
+        workflowExecution.getExecutionArgs().setServiceInstanceIdNames(serviceInstances.stream().collect(
+            Collectors.toMap(ServiceInstance::getUuid, ServiceInstance::getDisplayName)));
+      }
+
+      if (workflowExecution.getExecutionArgs().getArtifacts() != null) {
+        List<String> artifactIds = workflowExecution.getExecutionArgs()
+                                       .getArtifacts()
+                                       .stream()
+                                       .map(Artifact::getUuid)
+                                       .collect(Collectors.toList());
+        PageRequest<Artifact> pageRequest = PageRequest.Builder.aPageRequest()
+                                                .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                .addFilter("uuid", Operator.IN, artifactIds.toArray())
+                                                .build();
+        List<Artifact> artifacts = artifactService.list(pageRequest).getResponse();
+
+        if (artifacts == null || artifacts.size() != artifactIds.size()) {
+          logger.error("Artifact argument and valid artifact retrieved size not matching");
+          throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid artifact");
+        }
+        workflowExecution.getExecutionArgs().setArtifactIdNames(
+            artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+      }
+    }
+
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
@@ -1075,10 +1119,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
       if (command.isArtifactNeeded()) {
-        requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.ARTIFACTS);
+        requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
       }
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_USER);
-      requiredExecutionArgs.getRequiredExecutionTypes().add(ExecutionArgumentType.SSH_PASSWORD);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
+      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
       return requiredExecutionArgs;
     }
 
@@ -1104,10 +1148,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Override
     public void run() {
       WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
+      EntityType entityType = EntityType.ORCHESTRATED_DEPLOYMENT;
+      if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
+        entityType = EntityType.SIMPLE_DEPLOYMENT;
+      }
       History history = History.Builder.aHistory()
                             .withAppId(appId)
                             .withEventType(EventType.CREATED)
-                            .withEntityType("DEPLOYMENT")
+                            .withEntityType(entityType)
                             .withEntityId(workflowExecution.getUuid())
                             .withEntityName(workflowExecution.getName())
                             .withEntityNewValue(workflowExecution)

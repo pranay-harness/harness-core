@@ -18,7 +18,7 @@ import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ConfigFile.EntityType.SERVICE;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.Graph.Builder.aGraph;
@@ -64,12 +64,11 @@ import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.ConfigFile.EntityType;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
-import software.wings.beans.Notification.NotificationEntityType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
@@ -102,6 +101,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -211,21 +211,21 @@ public class DataGenUtil extends WingsBaseTest {
                               .withAppId(appId)
                               .withEnvironmentId(envId)
                               .withEntityId("pipelineId")
-                              .withEntityType(NotificationEntityType.DEPLOYMENT)
+                              .withEntityType(EntityType.PIPELINE)
                               .withScheduledOn(currentTimeMillis())
                               .build());
     wingsPersistence.save(anApprovalNotification()
                               .withAppId(appId)
                               .withEnvironmentId(envId)
                               .withEntityId("artifactId")
-                              .withEntityType(NotificationEntityType.ARTIFACT)
+                              .withEntityType(EntityType.ARTIFACT)
                               .withEntityName("Final_Build_05_02_08_16_9_15pm")
                               .withReleaseId("releaseId")
                               .build());
     wingsPersistence.save(aFailureNotification()
                               .withAppId(appId)
                               .withEntityId("executionId")
-                              .withEntityType(NotificationEntityType.WORKFLOW)
+                              .withEntityType(EntityType.WORKFLOW)
                               .withEnvironmentId(envId)
                               .withEntityName("workflow_ui_svr_2:04_12_2016")
                               .withExecutionId("executionId")

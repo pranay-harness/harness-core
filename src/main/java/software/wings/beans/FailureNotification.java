@@ -67,7 +67,7 @@ public class FailureNotification extends ActionableNotification {
     private String executionId;
     private String environmentId;
     private String entityId;
-    private NotificationEntityType entityType;
+    private EntityType entityType;
     private boolean complete = true;
     private String uuid;
     private String appId;
@@ -138,7 +138,7 @@ public class FailureNotification extends ActionableNotification {
      * @param entityType the entity type
      * @return the builder
      */
-    public Builder withEntityType(NotificationEntityType entityType) {
+    public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
