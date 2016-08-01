@@ -7,6 +7,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,7 @@ import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
+import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -397,17 +399,20 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldComputeConfigFilesForHosts() {
-    when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID))
-        .thenReturn(builder.withHosts(asList(aHost().withUuid("HOST_ID_1").build())).build());
+    when(wingsPersistence.get(ServiceTemplate.class, TEMPLATE_ID)).thenReturn(builder.build());
 
     when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_1").withName("PROPERTIES_FILE").build()));
 
-    when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", ENV_ID))
-        .thenReturn(asList(aConfigFile().withUuid("FILE_ID_2").withName("PROPERTIES_FILE").build()));
-
     when(configService.getConfigFilesForEntity(APP_ID, "TEMPLATE_ID", "HOST_ID_1"))
         .thenReturn(asList(aConfigFile().withUuid("FILE_ID_3").withName("PROPERTIES_FILE").build()));
+
+    when(tagService.getRootConfigTag(APP_ID, ENV_ID))
+        .thenReturn(aTag()
+                        .withTagType(TagType.ENVIRONMENT)
+                        .withChildren(asList(aTag().withUuid(TAG_ID).withTagType(TagType.UNTAGGED_HOST).build()))
+                        .build());
+    when(hostService.getHostsByTags(any(), any(), anyList())).thenReturn(asList(aHost().withUuid("HOST_ID_1").build()));
 
     Map<String, List<ConfigFile>> hostConfigFileMapping =
         templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);

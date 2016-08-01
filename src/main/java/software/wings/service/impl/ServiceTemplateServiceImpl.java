@@ -194,7 +194,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, templateId);
     List<Tag> tags = serviceTemplate.getTags();
     pageRequest.addFilter("tags", tags, IN);
-    return wingsPersistence.query(Host.class, pageRequest); // FIXME
+    return hostService.list(pageRequest);
   }
 
   @Override
@@ -341,42 +341,28 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (serviceTemplate == null) {
       return new HashMap<>();
     }
-    /* override order(left to right): Service -> Env -> [Tag Hierarchy] -> Host */
+    /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
 
     List<ConfigFile> serviceConfigFiles =
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
-    List<ConfigFile> envConfigFiles =
-        configService.getConfigFilesForEntity(appId, templateId, serviceTemplate.getEnvId());
-
-    // service -> env overrides
-    logger.info("Apply env config.");
-    List<ConfigFile> envComputedConfigFiles = overrideConfigFiles(serviceConfigFiles, envConfigFiles);
 
     // flatten tag hierarchy and [tag -> tag] overrides
     logger.info("Flatten Tag hierarchy and apply config overrides");
     List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
 
-    // env->tag override
+    // service->tag override
     logger.info("Apply tag override on tags");
     for (Tag tag : leafTagNodes) {
-      tag.setConfigFiles(overrideConfigFiles(envComputedConfigFiles, tag.getConfigFiles()));
+      tag.setConfigFiles(overrideConfigFiles(serviceConfigFiles, tag.getConfigFiles()));
     }
 
-    // Host override
+    // Tag -> Host override
     logger.info("Apply host overrides");
     Map<String, List<ConfigFile>> computedHostConfigs = new HashMap<>();
 
-    // Untagged hosts override: env->host
-    logger.info("Apply host overrides for untagged hosts");
-    for (Host host : serviceTemplate.getHosts()) {
-      List<ConfigFile> configFiles = configService.getConfigFilesForEntity(appId, templateId, host.getUuid());
-      computedHostConfigs.put(host.getUuid(), overrideConfigFiles(envConfigFiles, configFiles));
-    }
-
-    // Tagged hosts
     logger.info("Apply host overrides for tagged hosts");
     for (Tag tag : leafTagNodes) {
-      List<Host> taggedHosts = wingsPersistence.createQuery(Host.class).field("tags").equal(tag.getUuid()).asList();
+      List<Host> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
       for (Host host : taggedHosts) {
         computedHostConfigs.put(host.getUuid(),
             overrideConfigFiles(
@@ -428,13 +414,16 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     queue.add(rootTag);
 
     while (!queue.isEmpty()) {
-      Tag root = queue.poll();
-      leafTagNodes.add(root);
-      for (Tag child : root.getChildren()) {
-        child.getConfigFiles().addAll(configService.getConfigFilesForEntity(
-            serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
-        child.setConfigFiles(overrideConfigFiles(root.getConfigFiles(), child.getConfigFiles()));
-        queue.add(child);
+      Tag parentTag = queue.poll();
+      if (parentTag.getChildren().size() == 0) {
+        leafTagNodes.add(parentTag);
+      } else {
+        for (Tag child : parentTag.getChildren()) {
+          child.getConfigFiles().addAll(configService.getConfigFilesForEntity(
+              serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
+          child.setConfigFiles(overrideConfigFiles(parentTag.getConfigFiles(), child.getConfigFiles()));
+          queue.add(child);
+        }
       }
     }
     return leafTagNodes;
