@@ -161,7 +161,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 .addNodes(aNode()
                               .withId("n1")
                               .withOrigin(true)
-                              .withName("Service:All")
+                              .withName("Services:All")
                               .withType(StateType.REPEAT.name())
                               .withX(50)
                               .withY(50)
