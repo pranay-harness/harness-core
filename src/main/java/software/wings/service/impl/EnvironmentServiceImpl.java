@@ -165,7 +165,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                               .withType(StateType.REPEAT.name())
                               .withX(50)
                               .withY(50)
-                              .addProperty("executionStrategy", "PARALLEL")
+                              .addProperty("executionStrategy", "SERIAL")
                               .addProperty("repeatElementExpression", "${services}")
                               .build(),
                     aNode()
