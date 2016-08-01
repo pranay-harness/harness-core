@@ -150,6 +150,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                               .withAppId(host.getAppId())
                               .withActivityId(activityId)
                               .withHostName(host.getHostName())
+                              .withCommandUnitName(commandUnit.getName())
                               .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                               .withLogLine(errorMessage)
                               .withExecutionResult(executionResult)

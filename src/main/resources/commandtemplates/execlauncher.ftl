@@ -11,6 +11,7 @@ export ${envVariable}
 </#list>
 
 if [  $# -gt 1 ]
+then
   WINGS_SCRIPT_WORKING_DIRECTORY=$1
   cd $WINGS_SCRIPT_WORKING_DIRECTORY
   shift

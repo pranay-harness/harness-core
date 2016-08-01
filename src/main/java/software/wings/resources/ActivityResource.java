@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.inject.Inject;
 
@@ -8,6 +9,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.Activity;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
@@ -97,6 +99,7 @@ public class ActivityResource {
     request.addFilter("appId", appId, EQ);
     request.addFilter("activityId", activityId, EQ);
     request.addFilter("commandUnitName", unitName, EQ);
+    request.addOrder(aSortOrder().withField("createdAt", OrderType.ASC).build());
     return new RestResponse<>(logService.list(request));
   }
 

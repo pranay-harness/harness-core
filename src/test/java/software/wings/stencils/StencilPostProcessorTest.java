@@ -106,6 +106,20 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
 
+  @Test
+  public void shouldSetDefaultValueForTheAccessorMethod() throws Exception {
+    List<Stencil> processedStencils =
+        stencilPostProcessor.postProcess(singletonList(new StencilType(DefaultMethodStencilObject.class)), APP_ID);
+
+    assertThat(processedStencils)
+        .hasSize(1)
+        .extracting(Stencil::getName, Stencil::getJsonSchema, Stencil::getType)
+        .contains(tuple("NAME",
+            JsonUtils.readTree(
+                "{\"type\":\"object\",\"properties\":{\"enumField\":{\"type\":\"string\",\"default\":\"hello\"}}}"),
+            "TYPE"));
+  }
+
   /**
    * The interface Stencil object.
    */
@@ -182,6 +196,32 @@ public class StencilPostProcessorTest extends WingsBaseTest {
      *
      * @return Value for property 'enumField'.
      */
+    public String getEnumField() {
+      return enumField;
+    }
+
+    /**
+     * Setter for property 'enumField'.
+     *
+     * @param enumField Value to set for property 'enumField'.
+     */
+    public void setEnumField(String enumField) {
+      this.enumField = enumField;
+    }
+  }
+
+  /**
+   * The type Enum stencil object.
+   */
+  public static class DefaultMethodStencilObject implements StencilObject {
+    private String enumField;
+
+    /**
+     * Getter for property 'enumField'.
+     *
+     * @return Value for property 'enumField'.
+     */
+    @DefaultValue("hello")
     public String getEnumField() {
       return enumField;
     }

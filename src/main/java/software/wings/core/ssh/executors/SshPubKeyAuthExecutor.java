@@ -32,7 +32,7 @@ public class SshPubKeyAuthExecutor extends AbstractSshExecutor {
     try {
       return SshSessionFactory.getSSHSession(config);
     } catch (JSchException jschEx) {
-      throw new WingsException(normalizeError(jschEx));
+      throw new WingsException(normalizeError(jschEx), normalizeError(jschEx).getCode(), jschEx);
     }
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -85,12 +86,13 @@ public class ActivityServiceImpl implements ActivityService {
    */
   private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
     Command executableCommand = command;
-    if (command.getReferenceId() != null) {
+    if (isNotBlank(command.getReferenceId())) {
       executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());
       if (executableCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
     }
+
     return executableCommand.getCommandUnits()
         .stream()
         .flatMap(commandUnit -> {

@@ -34,6 +34,7 @@ import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -237,14 +238,15 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
 
     String expectedExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID").getAbsolutePath();
+        new File(System.getProperty("java.io.tmpdir"), "wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
+            .getAbsolutePath();
     verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /tmp dolsACTIVITY_ID");
+        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh /tmp wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
   }
 
   @Test
@@ -270,9 +272,11 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
 
     String expectedExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "dolsACTIVITY_ID").getAbsolutePath();
+        new File(System.getProperty("java.io.tmpdir"), "wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
+            .getAbsolutePath();
     String expectedSubExecCommandUnitScript =
-        new File(System.getProperty("java.io.tmpdir"), "start1startscriptACTIVITY_ID").getAbsolutePath();
+        new File(System.getProperty("java.io.tmpdir"), "wings" + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"))
+            .getAbsolutePath();
 
     verify(sshPwdAuthExecutor)
         .scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
@@ -280,12 +284,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /tmp dolsACTIVITY_ID");
+        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh /tmp wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
 
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
     assertThat((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("$WINGS_SCRIPT_DIR/wingslauncherACTIVITY_ID.sh /home/tomcat start1startscriptACTIVITY_ID");
+        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh /home/tomcat wings"
+            + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
   }

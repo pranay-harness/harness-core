@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 
@@ -8,11 +9,13 @@ import com.google.common.collect.Maps;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -30,23 +33,24 @@ import java.util.Map;
 @Attributes(description = "This command unit creates STATING_PATH, RUNTIME_PATH, BACKUP_PATH on the target host")
 public class InitCommandUnit extends CommandUnit {
   public static final String INITIALIZE_UNIT = "Initialize";
-  @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
+  @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
 
-  @Transient @Inject private ServiceResourceService serviceResourceService;
+  @JsonIgnore @Transient @Inject private ServiceResourceService serviceResourceService;
 
-  @SchemaIgnore @Transient private Command command;
+  @JsonIgnore @SchemaIgnore @Transient private Command command;
 
-  @SchemaIgnore private String activityId;
+  @JsonIgnore @SchemaIgnore private String activityId;
 
-  @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
+  @JsonIgnore @Transient @SchemaIgnore private Map<String, String> envVariables = Maps.newHashMap();
 
-  @Transient @SchemaIgnore private String preInitCommand;
+  @JsonIgnore @Transient @SchemaIgnore private String preInitCommand;
 
-  @Transient @SchemaIgnore private String executionStagingDir;
+  @JsonIgnore @Transient @SchemaIgnore private String executionStagingDir;
 
-  private String launcherScriptFileName;
+  @JsonIgnore private String launcherScriptFileName;
 
   public InitCommandUnit() {
+    super(CommandUnitType.EXEC);
     setName(INITIALIZE_UNIT);
   }
 
@@ -67,6 +71,7 @@ public class InitCommandUnit extends CommandUnit {
     return preInitCommand;
   }
 
+  @JsonIgnore
   public String getLauncherFile() throws IOException, TemplateException {
     String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
     try (OutputStreamWriter fileWriter =
@@ -76,6 +81,7 @@ public class InitCommandUnit extends CommandUnit {
     return launcherScript;
   }
 
+  @JsonIgnore
   public List<String> getCommandUnitFiles() throws IOException {
     return createScripts(command);
   }
@@ -89,13 +95,13 @@ public class InitCommandUnit extends CommandUnit {
     for (CommandUnit unit : command.getCommandUnits()) {
       if (unit instanceof ExecCommandUnit) {
         ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
-        String commandFileName = prefix + unit.getName() + activityId;
+        String commandFileName = "wings" + DigestUtils.md5Hex(prefix + unit.getName() + activityId);
         String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
         try (OutputStreamWriter fileWriter =
                  new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
           CharStreams.asWriter(fileWriter).append(execCommandUnit.getCommandString()).close();
-          execCommandUnit.setPreparedCommand("$WINGS_SCRIPT_DIR/" + launcherScriptFileName + " "
-              + execCommandUnit.getCommandPath() + " " + commandFileName);
+          execCommandUnit.setPreparedCommand(executionStagingDir + "/" + launcherScriptFileName + " "
+              + nullToEmpty(execCommandUnit.getCommandPath()) + " " + commandFileName);
         }
         files.add(commandFile);
       } else if (unit instanceof Command) {

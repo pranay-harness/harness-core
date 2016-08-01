@@ -21,7 +21,7 @@ import java.util.Objects;
   , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
       @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
       @Type(value = ProcessCheckCommandUnit.class, name = "PROCESS_CHECK"),
-      @Type(value = TailLogCommandUnit.class, name = "TAIL_LOG")
+      @Type(value = TailLogCommandUnit.class, name = "TAIL_LOG"), @Type(value = InitCommandUnit.class, name = "INIT")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;

@@ -112,7 +112,7 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(commandUnits)
         .hasSize(2)
         .extracting(CommandUnit::getCommandUnitType, CommandUnit::getName)
-        .contains(tuple(null, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME));
+        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME));
   }
 
   /**
