@@ -484,9 +484,24 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
   }
 
+  /**
+   * The interface File provider.
+   */
   public interface FileProvider {
+    /**
+     * Gets info.
+     *
+     * @return the info
+     * @throws IOException the io exception
+     */
     Pair<String, Long> getInfo() throws IOException;
 
+    /**
+     * Download to stream.
+     *
+     * @param outputStream the output stream
+     * @throws IOException the io exception
+     */
     void downloadToStream(OutputStream outputStream) throws IOException;
   }
 }

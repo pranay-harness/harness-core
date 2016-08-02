@@ -39,15 +39,30 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
   private TtyFilterInputStream err;
   private FileSystem root;
 
+  /**
+   * Instantiates a new File system aware process shell.
+   *
+   * @param command the command
+   */
   public FileSystemAwareProcessShell(String... command) {
     this(GenericUtils.isEmpty(command) ? Collections.<String>emptyList() : asList(command));
   }
 
+  /**
+   * Instantiates a new File system aware process shell.
+   *
+   * @param command the command
+   */
   public FileSystemAwareProcessShell(Collection<String> command) {
     this.command = new ArrayList<String>(ValidateUtils.checkNotNullAndNotEmpty(command, "No process shell command(s)"));
     this.cmdValue = GenericUtils.join(command, ' ');
   }
 
+  /**
+   * Sets root.
+   *
+   * @param root the root
+   */
   public void setRoot(FileSystem root) {
     this.root = root;
   }
@@ -104,10 +119,22 @@ public class FileSystemAwareProcessShell extends AbstractLoggingBean implements 
     in = new TtyFilterOutputStream(process.getOutputStream(), err, modes);
   }
 
+  /**
+   * Resolve shell environment map.
+   *
+   * @param env the env
+   * @return the map
+   */
   protected Map<String, String> resolveShellEnvironment(Map<String, String> env) {
     return env;
   }
 
+  /**
+   * Resolve shell tty options map.
+   *
+   * @param modes the modes
+   * @return the map
+   */
   // for some reason these modes provide best results BOTH with Linux SSH client and PUTTY
   protected Map<PtyMode, Integer> resolveShellTtyOptions(Map<PtyMode, Integer> modes) {
     if (PuttyRequestHandler.isPuttyClient(getServerSession())) {

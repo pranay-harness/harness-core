@@ -189,18 +189,38 @@ public class ExecutionArgs {
     this.serviceInstances = serviceInstances;
   }
 
+  /**
+   * Gets artifact id names.
+   *
+   * @return the artifact id names
+   */
   public Map<String, String> getArtifactIdNames() {
     return artifactIdNames;
   }
 
+  /**
+   * Sets artifact id names.
+   *
+   * @param artifactIdNames the artifact id names
+   */
   public void setArtifactIdNames(Map<String, String> artifactIdNames) {
     this.artifactIdNames = artifactIdNames;
   }
 
+  /**
+   * Gets service instance id names.
+   *
+   * @return the service instance id names
+   */
   public Map<String, String> getServiceInstanceIdNames() {
     return serviceInstanceIdNames;
   }
 
+  /**
+   * Sets service instance id names.
+   *
+   * @param serviceInstanceIdNames the service instance id names
+   */
   public void setServiceInstanceIdNames(Map<String, String> serviceInstanceIdNames) {
     this.serviceInstanceIdNames = serviceInstanceIdNames;
   }

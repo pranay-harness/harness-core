@@ -215,6 +215,11 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             commandUnit.getDestinationDirectoryPath(), commandUnit.getFileBucket(), commandUnit.getFileIds());
   }
 
+  /**
+   * Should execute init command.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldExecuteInitCommand() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
@@ -249,6 +254,11 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh '/tmp' wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
   }
 
+  /**
+   * Should execute init command with nested units.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldExecuteInitCommandWithNestedUnits() throws IOException {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();

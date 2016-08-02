@@ -38,6 +38,11 @@ public class SshExecutorFactoryTest extends WingsBaseTest {
    */
   @Inject @InjectMocks private SshExecutorFactory sshExecutorFactory;
 
+  /**
+   * Params object [ ].
+   *
+   * @return the object [ ]
+   */
   public Object[] params() {
     return new Object[][] {{PASSWORD_AUTH, SshPwdAuthExecutor.class, "Password"},
         {KEY_AUTH, SshPubKeyAuthExecutor.class, "Key"}, {BASTION_HOST, SshJumpboxExecutor.class, "BastionHost"}};
@@ -45,6 +50,10 @@ public class SshExecutorFactoryTest extends WingsBaseTest {
 
   /**
    * Should get password based executor.
+   *
+   * @param executorType the executor type
+   * @param klass        the klass
+   * @param name         the name
    */
   @Test
   @Parameters(method = "params")

@@ -1,13 +1,13 @@
 package software.wings.utils;
 
 import static java.util.Arrays.asList;
+import static software.wings.beans.Graph.Builder.aGraph;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
-import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.Link.Builder.aLink;
-import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.sm.TransitionType.SUCCESS;
 
 import software.wings.beans.Graph;

@@ -13,14 +13,27 @@ import java.util.List;
  * Created by peeyushaggarwal on 7/27/16.
  */
 public class FileSystemAwareProcessShellFactory extends ProcessShellFactory {
+  /**
+   * Instantiates a new File system aware process shell factory.
+   */
   public FileSystemAwareProcessShellFactory() {
     this(Collections.<String>emptyList());
   }
 
+  /**
+   * Instantiates a new File system aware process shell factory.
+   *
+   * @param command the command
+   */
   public FileSystemAwareProcessShellFactory(String... command) {
     this(GenericUtils.isEmpty(command) ? Collections.<String>emptyList() : Arrays.asList(command));
   }
 
+  /**
+   * Instantiates a new File system aware process shell factory.
+   *
+   * @param command the command
+   */
   public FileSystemAwareProcessShellFactory(List<String> command) {
     super(command);
   }

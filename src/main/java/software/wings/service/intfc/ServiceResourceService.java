@@ -2,10 +2,10 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.command.Command;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.command.Command;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.stencils.Stencil;

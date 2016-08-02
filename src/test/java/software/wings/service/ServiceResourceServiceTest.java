@@ -16,13 +16,13 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.AppContainerBuilder.anAppContainer;
 import static software.wings.beans.ArtifactSource.ArtifactType.JAR;
 import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
-import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.MorphiaMatcher.sameQueryAs;
 import static software.wings.utils.MorphiaMatcher.sameUpdateOperationsAs;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -45,14 +45,14 @@ import org.mockito.Spy;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Graph;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -85,7 +85,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                                              .withDescription("SERVICE_DESC")
                                              .withArtifactType(JAR)
                                              .withAppContainer(anAppContainer().withUuid("APP_CONTAINER_ID").build());
-
+  @Mock private ServiceTemplateService serviceTemplateService;
+  @Inject @Named("primaryDatastore") private Datastore datastore;
+  @Mock private WingsPersistence wingsPersistence;
+  @Mock private ConfigService configService;
   /**
    * The Verifier.
    */
@@ -96,13 +99,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
       verifyNoMoreInteractions(configService, wingsPersistence);
     }
   };
-
-  @Mock private ServiceTemplateService serviceTemplateService;
-
-  @Inject @Named("primaryDatastore") private Datastore datastore;
-
-  @Mock private WingsPersistence wingsPersistence;
-  @Mock private ConfigService configService;
   @Mock private AppService appService;
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;

@@ -69,7 +69,13 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * The Test folder.
    */
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
+  /**
+   * The Ssh root.
+   */
   @Rule public TemporaryFolder sshRoot = new TemporaryFolder();
+  /**
+   * The Ssh rule.
+   */
   @Rule public SshRule sshRule = new SshRule(sshRoot);
   private SshSessionConfig.Builder configBuilder;
   private SshExecutor executor;
@@ -183,6 +189,9 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
         .hasMessage(SSH_SESSION_TIMEOUT.getCode());
   }
 
+  /**
+   * Should throw exception for connect timeout.
+   */
   @Test
   public void shouldThrowExceptionForConnectTimeout() {
     executor.init(configBuilder.but().withHost("host1.app.com").withPort(22).withSocketConnectTimeout(2000).build());
@@ -218,6 +227,11 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
   }
 
+  /**
+   * Should transfer file.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldTransferFile() throws IOException {
     File file = testFolder.newFile();

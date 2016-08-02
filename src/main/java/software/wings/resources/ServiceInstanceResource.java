@@ -41,6 +41,7 @@ public class ServiceInstanceResource {
    *
    * @param appId       the app id
    * @param envId       the env id
+   * @param serviceId   the service id
    * @param pageRequest the page request
    * @return the rest response
    */

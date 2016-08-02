@@ -45,6 +45,9 @@ public class Graph {
    */
   public static final int DEFAULT_NODE_WIDTH = 50;
 
+  /**
+   * The constant DEFAULT_ELEMENT_NODE_WIDTH.
+   */
   public static final int DEFAULT_ELEMENT_NODE_WIDTH = 105;
   /**
    * The Default node height.
@@ -66,6 +69,9 @@ public class Graph {
    */
   public static final int DEFAULT_GROUP_PADDING = 17;
 
+  /**
+   * The constant DEFAULT_ELEMENT_PADDING.
+   */
   public static final int DEFAULT_ELEMENT_PADDING = 8;
 
   private static final String GROUP_TYPE = "group";

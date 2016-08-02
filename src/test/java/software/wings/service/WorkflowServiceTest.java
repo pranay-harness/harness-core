@@ -18,11 +18,10 @@ import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.command.Command;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Orchestration;
@@ -33,6 +32,7 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.command.Command;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -56,7 +56,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
 import javax.inject.Inject;
 
 /**

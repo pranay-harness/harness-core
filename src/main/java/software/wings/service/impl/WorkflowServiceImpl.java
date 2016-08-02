@@ -1137,7 +1137,10 @@ public class WorkflowServiceImpl implements WorkflowService {
     private String appId;
 
     /**
-     * @param workflowExecutionId
+     * Instantiates a new Workflow execution entry maker.
+     *
+     * @param appId               the app id
+     * @param workflowExecutionId the workflow execution id
      */
     public WorkflowExecutionEntryMaker(String appId, String workflowExecutionId) {
       this.appId = appId;

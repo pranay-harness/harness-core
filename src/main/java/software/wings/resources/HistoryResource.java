@@ -58,11 +58,12 @@ public class HistoryResource {
     request.addFilter("appId", appId, EQ);
     return new RestResponse<>(historyService.list(request));
   }
+
   /**
    * Details rest response.
    *
-   * @param appId   the app id
-   * @param request the request
+   * @param appId     the app id
+   * @param historyId the history id
    * @return the rest response
    */
   @GET

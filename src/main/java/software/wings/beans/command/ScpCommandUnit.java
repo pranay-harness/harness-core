@@ -162,6 +162,11 @@ public class ScpCommandUnit extends CommandUnit {
     this.destinationDirectoryPath = destinationDirectoryPath;
   }
 
+  /**
+   * Sets env variables.
+   *
+   * @param envVariables the env variables
+   */
   public void setEnvVariables(Map<String, String> envVariables) {
     this.envVariables = envVariables;
   }

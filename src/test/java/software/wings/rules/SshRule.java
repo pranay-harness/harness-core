@@ -26,6 +26,11 @@ public class SshRule implements MethodRule {
   private String password = "Wings@123";
   private Path keyPath;
 
+  /**
+   * Instantiates a new Ssh rule.
+   *
+   * @param temporaryFolder the temporary folder
+   */
   public SshRule(TemporaryFolder temporaryFolder) {
     this.temporaryFolder = temporaryFolder;
   }
@@ -45,6 +50,11 @@ public class SshRule implements MethodRule {
     };
   }
 
+  /**
+   * Gets port.
+   *
+   * @return the port
+   */
   public int getPort() {
     return sshd.getPort();
   }

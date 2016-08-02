@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
 import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
@@ -16,7 +17,6 @@ import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
 import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
-import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Host.Builder.aHost;
@@ -85,7 +85,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 
 /**

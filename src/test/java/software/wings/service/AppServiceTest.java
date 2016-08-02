@@ -60,6 +60,10 @@ public class AppServiceTest extends WingsBaseTest {
    * The Update operations.
    */
   @Mock UpdateOperations<Application> updateOperations;
+  /**
+   * The App service.
+   */
+  @Inject @InjectMocks AppService appService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private SettingsService settingsService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -67,11 +71,6 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private AppContainerService appContainerService;
   @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
-
-  /**
-   * The App service.
-   */
-  @Inject @InjectMocks AppService appService;
 
   /**
    * Sets up.

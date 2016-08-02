@@ -17,10 +17,31 @@ public interface SshExecutor {
    */
   void init(@Valid SshSessionConfig config);
 
+  /**
+   * Execute command string execution result.
+   *
+   * @param command the command
+   * @return the execution result
+   */
   ExecutionResult executeCommandString(String command);
 
+  /**
+   * Scp grid fs files execution result.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   * @param fileBucket               the file bucket
+   * @param gridFsFileId             the grid fs file id
+   * @return the execution result
+   */
   ExecutionResult scpGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
 
+  /**
+   * Scp files execution result.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   * @param files                    the files
+   * @return the execution result
+   */
   ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files);
 
   /**

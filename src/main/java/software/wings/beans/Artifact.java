@@ -276,14 +276,12 @@ public class Artifact extends Base {
     READY, /**
             * Aborted status.
             */
-    APPROVED,
-    /**
-     * Rejected status.
-     */
-    REJECTED,
-    /**
-     * Aborted status.
-     */
+    APPROVED, /**
+               * Rejected status.
+               */
+    REJECTED, /**
+               * Aborted status.
+               */
     ABORTED, /**
               * Failed status.
               */

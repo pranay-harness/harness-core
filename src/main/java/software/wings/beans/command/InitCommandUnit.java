@@ -32,6 +32,9 @@ import java.util.Map;
  */
 @Attributes(description = "This command unit creates STATING_PATH, RUNTIME_PATH, BACKUP_PATH on the target host")
 public class InitCommandUnit extends CommandUnit {
+  /**
+   * The constant INITIALIZE_UNIT.
+   */
   public static final String INITIALIZE_UNIT = "Initialize";
   @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
 
@@ -49,6 +52,9 @@ public class InitCommandUnit extends CommandUnit {
 
   @JsonIgnore private String launcherScriptFileName;
 
+  /**
+   * Instantiates a new Init command unit.
+   */
   public InitCommandUnit() {
     super(CommandUnitType.EXEC);
     setName(INITIALIZE_UNIT);
@@ -67,10 +73,22 @@ public class InitCommandUnit extends CommandUnit {
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";
   }
 
+  /**
+   * Gets pre init command.
+   *
+   * @return the pre init command
+   */
   public String getPreInitCommand() {
     return preInitCommand;
   }
 
+  /**
+   * Gets launcher file.
+   *
+   * @return the launcher file
+   * @throws IOException       the io exception
+   * @throws TemplateException the template exception
+   */
   @JsonIgnore
   public String getLauncherFile() throws IOException, TemplateException {
     String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
@@ -81,6 +99,12 @@ public class InitCommandUnit extends CommandUnit {
     return launcherScript;
   }
 
+  /**
+   * Gets command unit files.
+   *
+   * @return the command unit files
+   * @throws IOException the io exception
+   */
   @JsonIgnore
   public List<String> getCommandUnitFiles() throws IOException {
     return createScripts(command);
@@ -115,10 +139,20 @@ public class InitCommandUnit extends CommandUnit {
     return files;
   }
 
+  /**
+   * Gets execution staging dir.
+   *
+   * @return the execution staging dir
+   */
   public String getExecutionStagingDir() {
     return executionStagingDir;
   }
 
+  /**
+   * Sets command.
+   *
+   * @param command the command
+   */
   public void setCommand(Command command) {
     this.command = command;
   }

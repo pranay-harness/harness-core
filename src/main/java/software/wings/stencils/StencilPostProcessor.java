@@ -36,6 +36,25 @@ public class StencilPostProcessor {
 
   @Inject private Injector injector;
 
+  private static String getField(Method method) {
+    try {
+      Class<?> clazz = method.getDeclaringClass();
+      BeanInfo info = Introspector.getBeanInfo(clazz);
+      PropertyDescriptor[] props = info.getPropertyDescriptors();
+      for (PropertyDescriptor pd : props) {
+        if (method.equals(pd.getWriteMethod()) || method.equals(pd.getReadMethod())) {
+          return pd.getName();
+        }
+      }
+    } catch (IntrospectionException e) {
+      e.printStackTrace();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+    return null;
+  }
+
   /**
    * Post process list.
    *
@@ -114,25 +133,6 @@ public class StencilPostProcessor {
     }
 
     return returnValue;
-  }
-
-  private static String getField(Method method) {
-    try {
-      Class<?> clazz = method.getDeclaringClass();
-      BeanInfo info = Introspector.getBeanInfo(clazz);
-      PropertyDescriptor[] props = info.getPropertyDescriptors();
-      for (PropertyDescriptor pd : props) {
-        if (method.equals(pd.getWriteMethod()) || method.equals(pd.getReadMethod())) {
-          return pd.getName();
-        }
-      }
-    } catch (IntrospectionException e) {
-      e.printStackTrace();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
-    return null;
   }
 
   private boolean hasStencilPostProcessAnnotation(Field field) {

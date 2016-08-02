@@ -106,6 +106,11 @@ public class StencilPostProcessorTest extends WingsBaseTest {
             "TYPE"));
   }
 
+  /**
+   * Should set default value for the accessor method.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSetDefaultValueForTheAccessorMethod() throws Exception {
     List<Stencil> processedStencils =

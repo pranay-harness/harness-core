@@ -24,9 +24,11 @@ public interface HistoryService {
   PageResponse<History> list(PageRequest<History> request);
 
   /**
-   * @param appId
-   * @param historyId
-   * @return
+   * Get history.
+   *
+   * @param appId     the app id
+   * @param historyId the history id
+   * @return history
    */
   History get(String appId, String historyId);
 }

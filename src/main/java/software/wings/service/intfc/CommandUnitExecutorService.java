@@ -1,14 +1,22 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.Host;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
-import software.wings.beans.Host;
 
 /**
  * The Interface CommandUnitExecutorService.
  */
 public interface CommandUnitExecutorService {
+  /**
+   * Execute execution result.
+   *
+   * @param host        the host
+   * @param commandUnit the command unit
+   * @param context     the context
+   * @return the execution result
+   */
   ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
 
   /**

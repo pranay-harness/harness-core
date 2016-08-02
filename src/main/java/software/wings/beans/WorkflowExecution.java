@@ -215,10 +215,20 @@ public class WorkflowExecution extends Base {
     this.breakdown = breakdown;
   }
 
+  /**
+   * Gets execution args.
+   *
+   * @return the execution args
+   */
   public ExecutionArgs getExecutionArgs() {
     return executionArgs;
   }
 
+  /**
+   * Sets execution args.
+   *
+   * @param executionArgs the execution args
+   */
   public void setExecutionArgs(ExecutionArgs executionArgs) {
     this.executionArgs = executionArgs;
   }

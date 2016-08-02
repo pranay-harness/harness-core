@@ -12,14 +12,34 @@ import java.util.concurrent.Executor;
  */
 public class FileSystemAwareInvertedShellWrapper extends InvertedShellWrapper implements FileSystemAware {
   private FileSystemAwareProcessShell fileSystemAwareProcessShell;
+
+  /**
+   * Instantiates a new File system aware inverted shell wrapper.
+   *
+   * @param shell the shell
+   */
   public FileSystemAwareInvertedShellWrapper(InvertedShell shell) {
     this(shell, DEFAULT_BUFFER_SIZE);
   }
 
+  /**
+   * Instantiates a new File system aware inverted shell wrapper.
+   *
+   * @param shell      the shell
+   * @param bufferSize the buffer size
+   */
   public FileSystemAwareInvertedShellWrapper(InvertedShell shell, int bufferSize) {
     this(shell, null, true, bufferSize);
   }
 
+  /**
+   * Instantiates a new File system aware inverted shell wrapper.
+   *
+   * @param shell            the shell
+   * @param executor         the executor
+   * @param shutdownExecutor the shutdown executor
+   * @param bufferSize       the buffer size
+   */
   public FileSystemAwareInvertedShellWrapper(
       InvertedShell shell, Executor executor, boolean shutdownExecutor, int bufferSize) {
     super(shell, executor, shutdownExecutor, bufferSize);

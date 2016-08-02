@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.sm;
 
 import software.wings.beans.EntityType;
@@ -10,18 +11,27 @@ import software.wings.sm.states.RepeatState;
 
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * @author Rishi
+ * The type State machine execution simulator.
  *
+ * @author Rishi
  */
 @Singleton
 public class StateMachineExecutionSimulator {
+  /**
+   * The Expression processor factory.
+   */
   @Inject ExpressionProcessorFactory expressionProcessorFactory;
 
+  /**
+   * Gets required execution args.
+   *
+   * @param stateMachine the state machine
+   * @return the required execution args
+   */
   public RequiredExecutionArgs getRequiredExecutionArgs(StateMachine stateMachine) {
     RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
     extrapolateRequiredExecutionArgs(

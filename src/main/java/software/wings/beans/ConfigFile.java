@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
 import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 
