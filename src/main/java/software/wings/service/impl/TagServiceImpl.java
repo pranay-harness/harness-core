@@ -11,7 +11,6 @@ import static software.wings.beans.Tag.Builder.aTag;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
-import org.mongodb.morphia.query.Query;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
@@ -361,10 +360,27 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public List<Tag> getLeafTags(Tag root) {
-    Query<Tag> q = wingsPersistence.createQuery(Tag.class).field("rootTagId").equal(root.getUuid());
-    q.or(wingsPersistence.createQuery(Tag.class).criteria("children").doesNotExist(),
-        wingsPersistence.createQuery(Tag.class).criteria("children").sizeEq(0));
-    return q.asList();
+  public List<Tag> getUserCreatedLeafTags(String appId, String envId) {
+    return getLeafTagInSubTree(getRootConfigTag(appId, envId))
+        .stream()
+        .filter(tag -> tag.getTagType().equals(TagType.TAGGED_HOST))
+        .collect(toList());
+  }
+
+  @Override
+  public List<Tag> getLeafTagInSubTree(Tag tag) {
+    List<Tag> leafTags = new ArrayList<>();
+    getLeafTagInSubTree(tag, leafTags);
+    return leafTags;
+  }
+
+  private void getLeafTagInSubTree(Tag tag, List<Tag> leafTags) {
+    if (tag != null) {
+      if (tag.getChildren() != null && tag.getChildren().size() > 0) {
+        tag.getChildren().forEach(child -> getLeafTagInSubTree(child, leafTags));
+      } else {
+        leafTags.add(tag);
+      }
+    }
   }
 }

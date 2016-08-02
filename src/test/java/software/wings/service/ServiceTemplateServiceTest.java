@@ -308,7 +308,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate template = builder.withUuid(TEMPLATE_ID).build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     when(tagService.get(APP_ID, ENV_ID, TAG_ID)).thenReturn(tag);
-    when(tagService.getLeafTags(tag)).thenReturn(asList(tag));
+    when(tagService.getLeafTagInSubTree(tag)).thenReturn(asList(tag));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
     templateService.updateTags(APP_ID, ENV_ID, TEMPLATE_ID, asList(TAG_ID));
@@ -328,7 +328,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate template = builder.withUuid(TEMPLATE_ID).withTags(asList(tag)).withLeafTags(singleton(tag)).build();
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
-    when(tagService.getLeafTags(tag)).thenReturn(asList(tag));
+    when(tagService.getLeafTagInSubTree(tag)).thenReturn(asList(tag));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
     templateService.updateTags(APP_ID, ENV_ID, TEMPLATE_ID, asList());
@@ -352,8 +352,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     when(tagService.get(APP_ID, ENV_ID, "NEW_TAG_ID")).thenReturn(newTag);
-    when(tagService.getLeafTags(existingTag)).thenReturn(asList(existingTag));
-    when(tagService.getLeafTags(newTag)).thenReturn(asList(newTag));
+    when(tagService.getLeafTagInSubTree(existingTag)).thenReturn(asList(existingTag));
+    when(tagService.getLeafTagInSubTree(newTag)).thenReturn(asList(newTag));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(existingTag))).thenReturn(asList(existingTagHost));
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(newTag))).thenReturn(asList(newTagHost));
 

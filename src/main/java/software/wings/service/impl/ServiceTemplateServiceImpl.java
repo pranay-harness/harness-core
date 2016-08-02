@@ -151,7 +151,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public ServiceTemplate updateTags(String appId, String envId, String serviceTemplateId, List<String> tagIds) {
     List<Tag> newTags = tagIds.stream().map(tagId -> tagService.get(appId, envId, tagId)).collect(toList());
     Set<Tag> newLeafTags =
-        newTags.stream().map(tag -> tagService.getLeafTags(tag)).flatMap(List::stream).collect(toSet());
+        newTags.stream().map(tag -> tagService.getLeafTagInSubTree(tag)).flatMap(List::stream).collect(toSet());
 
     List<Host> newHostsToBeMapped = hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
 

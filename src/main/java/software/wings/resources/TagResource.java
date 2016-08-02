@@ -160,7 +160,7 @@ public class TagResource {
 
   @GET
   @Path("/leaf-tags")
-  public RestResponse<List<Tag>> tagTree(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
-    return new RestResponse<>(tagService.getLeafTags(tagService.getRootConfigTag(appId, envId)));
+  public RestResponse<List<Tag>> leafTags(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(tagService.getUserCreatedLeafTags(appId, envId));
   }
 }

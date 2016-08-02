@@ -106,7 +106,7 @@ public interface TagService {
    * @param root the root
    * @return the leaf tags
    */
-  List<Tag> getLeafTags(@NotNull Tag root);
+  List<Tag> getLeafTagInSubTree(@NotNull Tag root);
 
   /**
    * Delete by env.
@@ -150,4 +150,13 @@ public interface TagService {
    * @return the default tag for untagged hosts
    */
   Tag getDefaultTagForUntaggedHosts(String appId, String envId);
+
+  /**
+   * Gets user created leaf tags.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the user created leaf tags
+   */
+  List<Tag> getUserCreatedLeafTags(String appId, String envId);
 }
