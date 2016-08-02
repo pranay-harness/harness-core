@@ -6,6 +6,7 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.FileUtils.createTempDirPath;
 
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -23,6 +24,7 @@ import software.wings.service.intfc.TagService;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,8 +61,13 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
-    fileService.saveFile(configFile, inputStream, CONFIGS);
-    return wingsPersistence.save(configFile);
+    if (Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
+      fileService.saveFile(configFile, inputStream, CONFIGS);
+      return wingsPersistence.save(configFile);
+    } else {
+      throw new WingsException(
+          INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + configFile.getEntityType());
+    }
   }
 
   /* (non-Javadoc)

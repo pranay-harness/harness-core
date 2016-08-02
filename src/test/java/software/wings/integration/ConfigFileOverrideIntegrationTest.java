@@ -59,7 +59,7 @@ import javax.inject.Inject;
  * ------------------------
  * Service
  * |
- * |....ENV
+ * |....ENV (ROOT_TAG)
  * |    |...NC
  * |    |   |....NC_OZ1---[Host0, Host1, Host2]
  * |    |   |....NC_OZ2
@@ -68,9 +68,10 @@ import javax.inject.Inject;
  * |    |...OR
  * |    |   |...OR_OZ1
  * |    |   |...OR_OZ2
- * |
- * |...Host8
- * |...Host9
+ * |    |
+ * |    |....ENV-UNTAGGED_HOSTS
+ * |    |    |...Host8
+ * |    |    |...Host9
  * |
  */
 @Integration
@@ -125,6 +126,11 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   List<Host> hosts;
 
   /**
+   * The Root env tag.
+   */
+  Tag rootEnvTag;
+
+  /**
    * The Nc.
    */
   Tag nc;
@@ -175,29 +181,27 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     hosts = importAndGetHosts(app.getUuid(), environment.getUuid(), infraId); // FIXME split
 
     // create Tag hierarchy
-    Tag rootTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
+    rootEnvTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
 
-    nc = tagService.save(
-        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC").build());
-    ncOz1 = tagService.save(
-        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ1").build());
-    ncOz2 = tagService.save(
-        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ2").build());
-    ncOz3 = tagService.save(
-        nc.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("NC_OZ3").build());
+    nc = tagService.save(rootEnvTag.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC").build());
+    ncOz1 = tagService.save(nc.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC_OZ1").build());
+    ncOz2 = tagService.save(nc.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC_OZ2").build());
+    ncOz3 = tagService.save(nc.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC_OZ3").build());
 
-    or = tagService.save(
-        rootTag.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR").build());
-    orOz1 = tagService.save(
-        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ1").build());
-    orOz2 = tagService.save(
-        or.getUuid(), aTag().withAppId(rootTag.getAppId()).withEnvId(rootTag.getEnvId()).withName("OR_OZ2").build());
+    or = tagService.save(rootEnvTag.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("OR").build());
+    orOz1 = tagService.save(or.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("OR_OZ1").build());
+    orOz2 = tagService.save(or.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("OR_OZ2").build());
 
     // Tag hosts
-    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz1.getUuid(),
-        Arrays.asList(hosts.get(0).getUuid(), hosts.get(1).getUuid(), hosts.get(2).getUuid()));
-    tagService.tagHosts(app.getUuid(), rootTag.getEnvId(), ncOz3.getUuid(),
-        Arrays.asList(hosts.get(3).getUuid(), hosts.get(4).getUuid(), hosts.get(5).getUuid()));
+    tagService.tagHosts(ncOz1, Arrays.asList(hosts.get(0), hosts.get(1), hosts.get(2)));
+    tagService.tagHosts(ncOz3, Arrays.asList(hosts.get(3), hosts.get(4), hosts.get(5)));
 
     template = templateService.save(aServiceTemplate()
                                         .withAppId(app.getUuid())
@@ -232,23 +236,6 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   }
 
   /**
-   * Should apply env config file override.
-   *
-   * @throws IOException Signals that an I/O exception has occurred.
-   */
-  @Test
-  public void shouldApplyEnvConfigFileOverride() throws IOException {
-    attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
-    attacheConfigFileToEntity(template.getEnvId(), EntityType.ENVIRONMENT);
-
-    Map<String, List<ConfigFile>> hostConfigMapping =
-        templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
-
-    assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
-        .isEqualTo(configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), template.getEnvId()));
-  }
-
-  /**
    * Should apply host configs override for tagged host.
    *
    * @throws IOException Signals that an I/O exception has occurred.
@@ -256,7 +243,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldApplyHostConfigsOverrideForTaggedHost() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
-    attacheConfigFileToEntity(template.getEnvId(), EntityType.ENVIRONMENT);
+    attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.TAG);
     Map<String, List<ConfigFile>> hostConfigMapping =
@@ -274,7 +261,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldApplyHostConfigsOverrideForUntaggedHost() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
-    attacheConfigFileToEntity(template.getEnvId(), EntityType.ENVIRONMENT);
+    attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.TAG);
 
@@ -294,7 +281,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldApplyTagConfigFileOverride() throws IOException {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
-    attacheConfigFileToEntity(template.getEnvId(), EntityType.ENVIRONMENT);
+    attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(hosts.get(8).getUuid(), EntityType.HOST);
 
@@ -316,8 +303,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     // prepare config files
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
 
-    // env
-    attacheConfigFileToEntity(template.getEnvId(), EntityType.ENVIRONMENT);
+    // rootEnvTag
+    attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
 
     // ncOz1
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
@@ -347,7 +334,8 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
             configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), hosts.get(8).getUuid()));
 
     assertThat(hostConfigMapping.get(hosts.get(9).getUuid()))
-        .isEqualTo(configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), template.getEnvId()));
+        .isEqualTo(
+            configService.getConfigFilesForEntity(template.getAppId(), template.getUuid(), rootEnvTag.getUuid()));
   }
 
   private void attacheConfigFileToEntity(String entityId, EntityType entityType) throws IOException {

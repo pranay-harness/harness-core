@@ -111,11 +111,13 @@ public class HostServiceImpl implements HostService {
     wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
 
     List<Tag> tags = validateAndFetchTags(host.getAppId(), envId, host.getTags());
+    if (tags.size() == 0) {
+      tags.add(tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId));
+    }
     tags.forEach(tag -> {
       List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
       hostsByTags.add(host);
-      tagService.tagHosts(host.getAppId(), envId, tag.getUuid(),
-          hostsByTags.stream().map(Host::getUuid).collect(Collectors.toList())); // TODO: Simplify
+      tagService.tagHosts(tag, hostsByTags);
     });
 
     Host savedHost = wingsPersistence.get(Host.class, host.getUuid());
@@ -178,8 +180,12 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void removeTagFromHost(Host host, Tag tag) {
-    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).removeAll("tags", tag);
-    wingsPersistence.update(host, updateOp);
+    List<Tag> tags = host.getTags();
+    tags.remove(tag);
+    if (tags.size() == 0) {
+      tags.add(tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+    }
+    setTags(host, tags);
   }
 
   @Override
@@ -282,6 +288,9 @@ public class HostServiceImpl implements HostService {
         host.setBastionConnAttr(bastionConnAttr);
       }
       List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
+      if (tags.size() == 0) {
+        tags.add(tagService.getDefaultTagForUntaggedHosts(baseHost.getAppId(), envId));
+      }
       host.setTags(tags);
       try {
         Host savedHost = save(host);
