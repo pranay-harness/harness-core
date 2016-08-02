@@ -6,6 +6,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -15,8 +16,9 @@ public class SshSessionConfig {
   @NotEmpty private ExecutorType executorType;
   @NotEmpty private String executionId;
   @NotEmpty private String commandUnitName;
-  private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
-  private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
+  private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(5);
+  private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
+  private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
   private Integer retryInterval;
   @NotEmpty private String host;
   private Integer port = 22;
@@ -316,11 +318,29 @@ public class SshSessionConfig {
     this.commandUnitName = commandUnitName;
   }
 
+  /**
+   * Gets socket connect timeout.
+   *
+   * @return the socket connect timeout
+   */
+  public Integer getSocketConnectTimeout() {
+    return socketConnectTimeout;
+  }
+
+  /**
+   * Sets socket connect timeout.
+   *
+   * @param socketConnectTimeout the socket connect timeout
+   */
+  public void setSocketConnectTimeout(Integer socketConnectTimeout) {
+    this.socketConnectTimeout = socketConnectTimeout;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(appId, executorType, executionId, commandUnitName, sshConnectionTimeout, sshSessionTimeout,
-        retryInterval, host, port, userName, password, key, keyPassphrase, sudoAppName, sudoAppPassword,
-        bastionHostConfig);
+    return Objects.hash(appId, executorType, executionId, commandUnitName, socketConnectTimeout, sshConnectionTimeout,
+        sshSessionTimeout, retryInterval, host, port, userName, password, key, keyPassphrase, sudoAppName,
+        sudoAppPassword, bastionHostConfig);
   }
 
   @Override
@@ -335,6 +355,7 @@ public class SshSessionConfig {
     return Objects.equals(this.appId, other.appId) && Objects.equals(this.executorType, other.executorType)
         && Objects.equals(this.executionId, other.executionId)
         && Objects.equals(this.commandUnitName, other.commandUnitName)
+        && Objects.equals(this.socketConnectTimeout, other.socketConnectTimeout)
         && Objects.equals(this.sshConnectionTimeout, other.sshConnectionTimeout)
         && Objects.equals(this.sshSessionTimeout, other.sshSessionTimeout)
         && Objects.equals(this.retryInterval, other.retryInterval) && Objects.equals(this.host, other.host)
@@ -353,6 +374,7 @@ public class SshSessionConfig {
         .add("executorType", executorType)
         .add("executionId", executionId)
         .add("commandUnitName", commandUnitName)
+        .add("socketConnectTimeout", socketConnectTimeout)
         .add("sshConnectionTimeout", sshConnectionTimeout)
         .add("sshSessionTimeout", sshSessionTimeout)
         .add("retryInterval", retryInterval)
@@ -376,8 +398,9 @@ public class SshSessionConfig {
     private ExecutorType executorType;
     private String executionId;
     private String commandUnitName;
-    private Integer sshConnectionTimeout = 5 * 60 * 1000; // 5 secs
-    private Integer sshSessionTimeout = 10 * 60 * 1000; // 10 minutes
+    private Integer socketConnectTimeout = (int) TimeUnit.SECONDS.toMillis(5);
+    private Integer sshConnectionTimeout = (int) TimeUnit.MINUTES.toMillis(5);
+    private Integer sshSessionTimeout = (int) TimeUnit.MINUTES.toMillis(10);
     private Integer retryInterval;
     private String host;
     private Integer port = 22;
@@ -441,6 +464,17 @@ public class SshSessionConfig {
      */
     public Builder withCommandUnitName(String commandUnitName) {
       this.commandUnitName = commandUnitName;
+      return this;
+    }
+
+    /**
+     * With socket connect timeout builder.
+     *
+     * @param socketConnectTimeout the socket connect timeout
+     * @return the builder
+     */
+    public Builder withSocketConnectTimeout(Integer socketConnectTimeout) {
+      this.socketConnectTimeout = socketConnectTimeout;
       return this;
     }
 
@@ -587,6 +621,7 @@ public class SshSessionConfig {
           .withExecutorType(executorType)
           .withExecutionId(executionId)
           .withCommandUnitName(commandUnitName)
+          .withSocketConnectTimeout(socketConnectTimeout)
           .withSshConnectionTimeout(sshConnectionTimeout)
           .withSshSessionTimeout(sshSessionTimeout)
           .withRetryInterval(retryInterval)
@@ -612,6 +647,7 @@ public class SshSessionConfig {
       sshSessionConfig.setExecutorType(executorType);
       sshSessionConfig.setExecutionId(executionId);
       sshSessionConfig.setCommandUnitName(commandUnitName);
+      sshSessionConfig.setSocketConnectTimeout(socketConnectTimeout);
       sshSessionConfig.setSshConnectionTimeout(sshConnectionTimeout);
       sshSessionConfig.setSshSessionTimeout(sshSessionTimeout);
       sshSessionConfig.setRetryInterval(retryInterval);

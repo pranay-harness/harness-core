@@ -1,22 +1,23 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.CommandUnit;
-import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.Host;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 
 /**
  * The Interface CommandUnitExecutorService.
  */
 public interface CommandUnitExecutorService {
   /**
-   * Execute.
+   * Execute execution result.
    *
    * @param host        the host
    * @param commandUnit the command unit
-   * @param activityId  the activity id
+   * @param context     the context
    * @return the execution result
    */
-  ExecutionResult execute(Host host, CommandUnit commandUnit, String activityId);
+  ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
 
   /**
    * Clenup any resource blocked execution optimization
@@ -24,5 +25,5 @@ public interface CommandUnitExecutorService {
    * @param activityId the activity id
    * @param host       the host
    */
-  void clenup(String activityId, Host host);
+  void cleanup(String activityId, Host host);
 }

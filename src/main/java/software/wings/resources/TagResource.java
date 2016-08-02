@@ -158,6 +158,13 @@ public class TagResource {
     return new RestResponse<>(tagService.flattenTagTree(appId, envId, tagId));
   }
 
+  /**
+   * Tag tree rest response.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the rest response
+   */
   @GET
   @Path("/leaf-tags")
   public RestResponse<List<Tag>> leafTags(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {

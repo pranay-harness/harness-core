@@ -377,7 +377,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
 
     // flatten tag hierarchy and [tag -> tag] overrides
-    logger.info("Flatten Tag hierarchy and apply config overrides");
+    logger.info("Flatten Tag hierarchy and getInfo config overrides");
     List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
 
     // service->tag override

@@ -1,9 +1,9 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.Command;
-import software.wings.beans.CommandExecutionContext;
-import software.wings.beans.CommandUnit.ExecutionResult;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 
 /**
  * Created by anubhaw on 6/2/16.

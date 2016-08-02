@@ -79,6 +79,7 @@ public class NotificationResource {
    *
    * @param appId          the app id
    * @param notificationId the notification id
+   * @param actionType     the action type
    * @return the rest response
    */
   @POST

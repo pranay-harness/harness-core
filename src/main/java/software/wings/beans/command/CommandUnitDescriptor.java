@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import ro.fortsoft.pf4j.ExtensionPoint;

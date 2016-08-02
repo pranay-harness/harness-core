@@ -52,9 +52,17 @@ public class NotificationServiceTest extends WingsBaseTest {
 
   @Spy @InjectMocks private NotificationService spyNotificationService = new NotificationServiceImpl();
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {}
 
+  /**
+   * Should list.
+   */
   @Test
   public void shouldList() {
     PageRequest pageRequest = aPageRequest().addFilter(aSearchFilter().withField("appId", EQ, APP_ID).build()).build();
@@ -62,6 +70,9 @@ public class NotificationServiceTest extends WingsBaseTest {
     verify(wingsPersistence).query(Notification.class, pageRequest);
   }
 
+  /**
+   * Should save.
+   */
   @Test
   public void shouldSave() {
     InformationNotification notification =
@@ -70,6 +81,9 @@ public class NotificationServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Notification.class, notification);
   }
 
+  /**
+   * Should get.
+   */
   @Test
   public void shouldGet() {
     when(wingsPersistence.get(Notification.class, APP_ID, NOTIFICATION_ID))
@@ -81,6 +95,9 @@ public class NotificationServiceTest extends WingsBaseTest {
         .hasFieldOrPropertyWithValue("uuid", NOTIFICATION_ID);
   }
 
+  /**
+   * Should send notification async.
+   */
   @Test
   public void shouldSendNotificationAsync() {
     InformationNotification notification =
@@ -90,12 +107,18 @@ public class NotificationServiceTest extends WingsBaseTest {
     verifyNoMoreInteractions(wingsPersistence, injector);
   }
 
+  /**
+   * Should mark notification completed.
+   */
   @Test
   public void shouldMarkNotificationCompleted() {
     notificationService.markNotificationCompleted(APP_ID, NOTIFICATION_ID);
     verify(wingsPersistence).updateFields(Notification.class, NOTIFICATION_ID, ImmutableMap.of("complete", true));
   }
 
+  /**
+   * Should act.
+   */
   @Test
   public void shouldAct() {
     ApprovalNotification approvalNotification = Mockito.spy(anApprovalNotification()

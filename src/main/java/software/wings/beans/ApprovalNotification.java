@@ -31,6 +31,15 @@ public class ApprovalNotification extends ActionableNotification {
   @Inject @Transient private transient WingsPersistence wingsPersistence;
   @Inject @Transient private transient ArtifactService artifactService;
 
+  /**
+   * Instantiates a new Approval notification.
+   */
+  public ApprovalNotification() {
+    super(APPROVAL,
+        asList(aNotificationAction().withName("Approve").withType(APPROVE).withPrimary(true).build(),
+            aNotificationAction().withName("Reject").withType(REJECT).withPrimary(false).build()));
+  }
+
   @Override
   public boolean performAction(NotificationActionType actionType) {
     if (EntityType.ARTIFACT.equals(getEntityType())) {
@@ -40,31 +49,6 @@ public class ApprovalNotification extends ActionableNotification {
     wingsPersistence.updateFields(ApprovalNotification.class, getUuid(),
         ImmutableMap.of("stage", actionType.equals(APPROVE) ? APPROVED : REJECTED));
     return true;
-  }
-
-  /**
-   * The enum Approval stage.
-   */
-  public enum ApprovalStage {
-    /**
-     * Pending approval stage.
-     */
-    PENDING, /**
-              * Accepted approval stage.
-              */
-    APPROVED, /**
-               * Rejected approval stage.
-               */
-    REJECTED
-  }
-
-  /**
-   * Instantiates a new Approval notification.
-   */
-  public ApprovalNotification() {
-    super(APPROVAL,
-        asList(aNotificationAction().withName("Approve").withType(APPROVE).withPrimary(true).build(),
-            aNotificationAction().withName("Reject").withType(REJECT).withPrimary(false).build()));
   }
 
   /**
@@ -119,6 +103,22 @@ public class ApprovalNotification extends ActionableNotification {
    */
   public void setReleaseId(String releaseId) {
     this.releaseId = releaseId;
+  }
+
+  /**
+   * The enum Approval stage.
+   */
+  public enum ApprovalStage {
+    /**
+     * Pending approval stage.
+     */
+    PENDING, /**
+              * Accepted approval stage.
+              */
+    APPROVED, /**
+               * Rejected approval stage.
+               */
+    REJECTED
   }
 
   /**

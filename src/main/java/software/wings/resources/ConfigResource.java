@@ -20,7 +20,6 @@ import software.wings.service.intfc.ConfigService;
 
 import java.io.File;
 import java.io.InputStream;
-
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;

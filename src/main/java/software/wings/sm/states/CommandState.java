@@ -6,10 +6,10 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.CommandExecutionContext.Builder.aCommandExecutionContext;
-import static software.wings.beans.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
+import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.COMMAND;
 
@@ -29,17 +29,17 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
-import software.wings.beans.Command;
-import software.wings.beans.CommandExecutionContext;
-import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.CommandUnit.ExecutionResult.ExecutionResultData;
-import software.wings.beans.Environment;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
@@ -202,7 +202,8 @@ public class CommandState extends State {
             String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
       }
 
-      executionDataBuilder.withCommandName(command.getName()).withTotalCommandUnits(command.getCommandUnits().size());
+      executionDataBuilder.withCommandName(command.getName())
+          .withTotalCommandUnits(command.getCommandUnits().size() + 1);
 
       Activity.Builder activityBuilder = anActivity()
                                              .withAppId(serviceInstance.getAppId())

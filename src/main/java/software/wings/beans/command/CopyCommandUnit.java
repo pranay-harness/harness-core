@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.service.intfc.FileService.FileBucket;

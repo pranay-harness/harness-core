@@ -9,6 +9,7 @@ import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import software.wings.beans.command.CommandUnitType;
 
 /**
  * Created by peeyushaggarwal on 6/6/16.

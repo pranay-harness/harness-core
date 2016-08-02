@@ -1,11 +1,10 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
-import static software.wings.beans.ScpCommandUnit.ScpFileCategory.CONFIGURATIONS;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
+import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.CONFIGURATIONS;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -13,10 +12,14 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.AppContainer;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.ServiceTemplate;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.ArrayList;
@@ -33,13 +36,14 @@ public class ScpCommandUnit extends CommandUnit {
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
 
-  @Attributes(title = "Destination path", description = "Relative to ${RuntimePath}") private String relativeFilePath;
+  @Attributes(title = "Destination path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
+  @SchemaIgnore private Map<String, String> envVariables;
+
   @SchemaIgnore private List<String> fileIds = new ArrayList<>();
   @SchemaIgnore private FileBucket fileBucket;
-  @SchemaIgnore private String destinationDirectoryPath;
 
   /**
    * Instantiates a new Scp command unit.
@@ -50,7 +54,6 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    destinationDirectoryPath = constructPath(context.getRuntimePath(), relativeFilePath);
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
@@ -78,11 +81,6 @@ public class ScpCommandUnit extends CommandUnit {
     }
   }
 
-  private String constructPath(String absolutePath, String relativePath) {
-    return isNullOrEmpty(relativePath) ? absolutePath.trim()
-                                       : absolutePath.trim() + "/" + relativePath.trim(); // TODO:: handle error cases
-  }
-
   @SchemaIgnore
   @Override
   public boolean isArtifactNeeded() {
@@ -106,24 +104,6 @@ public class ScpCommandUnit extends CommandUnit {
    */
   public void setFileCategory(ScpFileCategory fileCategory) {
     this.fileCategory = fileCategory;
-  }
-
-  /**
-   * Gets relative file path.
-   *
-   * @return the relative file path
-   */
-  public String getRelativeFilePath() {
-    return relativeFilePath;
-  }
-
-  /**
-   * Sets relative file path.
-   *
-   * @param relativeFilePath the relative file path
-   */
-  public void setRelativeFilePath(String relativeFilePath) {
-    this.relativeFilePath = relativeFilePath;
   }
 
   /**
@@ -169,7 +149,6 @@ public class ScpCommandUnit extends CommandUnit {
    *
    * @return the destination directory path
    */
-  @SchemaIgnore
   public String getDestinationDirectoryPath() {
     return destinationDirectoryPath;
   }
@@ -183,9 +162,18 @@ public class ScpCommandUnit extends CommandUnit {
     this.destinationDirectoryPath = destinationDirectoryPath;
   }
 
+  /**
+   * Sets env variables.
+   *
+   * @param envVariables the env variables
+   */
+  public void setEnvVariables(Map<String, String> envVariables) {
+    this.envVariables = envVariables;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(fileCategory, relativeFilePath, fileIds, fileBucket, destinationDirectoryPath);
+    return Objects.hash(fileCategory, fileIds, fileBucket, destinationDirectoryPath);
   }
 
   @Override
@@ -197,8 +185,7 @@ public class ScpCommandUnit extends CommandUnit {
       return false;
     }
     final ScpCommandUnit other = (ScpCommandUnit) obj;
-    return Objects.equals(this.fileCategory, other.fileCategory)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath) && Objects.equals(this.fileIds, other.fileIds)
+    return Objects.equals(this.fileCategory, other.fileCategory) && Objects.equals(this.fileIds, other.fileIds)
         && Objects.equals(this.fileBucket, other.fileBucket)
         && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath);
   }
@@ -207,7 +194,6 @@ public class ScpCommandUnit extends CommandUnit {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("fileCategory", fileCategory)
-        .add("relativeFilePath", relativeFilePath)
         .add("fileIds", fileIds)
         .add("fileBucket", fileBucket)
         .add("destinationDirectoryPath", destinationDirectoryPath)
@@ -259,7 +245,6 @@ public class ScpCommandUnit extends CommandUnit {
    */
   public static final class Builder {
     private ScpFileCategory fileCategory;
-    private String relativeFilePath;
     private List<String> fileIds = new ArrayList<>();
     private FileBucket fileBucket;
     private String destinationDirectoryPath;
@@ -267,7 +252,6 @@ public class ScpCommandUnit extends CommandUnit {
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded = false;
-    private boolean processCommandOutput = false;
 
     private Builder() {}
 
@@ -288,17 +272,6 @@ public class ScpCommandUnit extends CommandUnit {
      */
     public Builder withFileCategory(ScpFileCategory fileCategory) {
       this.fileCategory = fileCategory;
-      return this;
-    }
-
-    /**
-     * With relative file path builder.
-     *
-     * @param relativeFilePath the relative file path
-     * @return the builder
-     */
-    public Builder withRelativeFilePath(String relativeFilePath) {
-      this.relativeFilePath = relativeFilePath;
       return this;
     }
 
@@ -380,17 +353,6 @@ public class ScpCommandUnit extends CommandUnit {
     }
 
     /**
-     * With process command output builder.
-     *
-     * @param processCommandOutput the process command output
-     * @return the builder
-     */
-    public Builder withProcessCommandOutput(boolean processCommandOutput) {
-      this.processCommandOutput = processCommandOutput;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -398,15 +360,13 @@ public class ScpCommandUnit extends CommandUnit {
     public Builder but() {
       return aScpCommandUnit()
           .withFileCategory(fileCategory)
-          .withRelativeFilePath(relativeFilePath)
           .withFileIds(fileIds)
           .withFileBucket(fileBucket)
           .withDestinationDirectoryPath(destinationDirectoryPath)
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded)
-          .withProcessCommandOutput(processCommandOutput);
+          .withArtifactNeeded(artifactNeeded);
     }
 
     /**
@@ -417,7 +377,6 @@ public class ScpCommandUnit extends CommandUnit {
     public ScpCommandUnit build() {
       ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
       scpCommandUnit.setFileCategory(fileCategory);
-      scpCommandUnit.setRelativeFilePath(relativeFilePath);
       scpCommandUnit.setFileIds(fileIds);
       scpCommandUnit.setFileBucket(fileBucket);
       scpCommandUnit.setDestinationDirectoryPath(destinationDirectoryPath);
@@ -425,7 +384,6 @@ public class ScpCommandUnit extends CommandUnit {
       scpCommandUnit.setCommandUnitType(commandUnitType);
       scpCommandUnit.setExecutionResult(executionResult);
       scpCommandUnit.setArtifactNeeded(artifactNeeded);
-      scpCommandUnit.setProcessCommandOutput(processCommandOutput);
       return scpCommandUnit;
     }
   }

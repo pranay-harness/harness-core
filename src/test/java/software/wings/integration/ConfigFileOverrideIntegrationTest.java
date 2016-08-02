@@ -3,8 +3,8 @@ package software.wings.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
+import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -48,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
 import javax.inject.Inject;
 
 /**
@@ -376,7 +375,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                         .build();
     //    int numOfHostsImported =
     //        hostService.importHosts(baseHost, new BoundedInputStream(new
-    //        FileInputStream(createHostsFile(testFolder.newFile("host.csv"), 10))));
+    //        FileInputStream(createHostsFile(sshRoot.newFile("host.csv"), 10))));
     List<String> hostNames = new ArrayList<>();
     for (int i = 1; i <= 10; i++) {
       hostNames.add(String.format("host%s.app.com", i));

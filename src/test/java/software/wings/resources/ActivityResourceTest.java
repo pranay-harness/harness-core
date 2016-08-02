@@ -10,10 +10,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.CommandUnitType.EXEC;
-import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.command.CommandUnitType.EXEC;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
@@ -29,12 +29,12 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Verifier;
 import org.mockito.ArgumentCaptor;
 import software.wings.beans.Activity;
-import software.wings.beans.CommandUnit;
-import software.wings.beans.ExecCommandUnit;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.ExecCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
@@ -178,7 +178,7 @@ public class ActivityResourceTest {
         .thenReturn(asList(anExecCommandUnit()
                                .withName(COMMAND_UNIT_NAME)
                                .withCommandUnitType(EXEC)
-                               .withCommand("./bin/start.sh")
+                               .withCommandString("./bin/start.sh")
                                .build()));
 
     RestResponse<List<ExecCommandUnit>> restResponse =

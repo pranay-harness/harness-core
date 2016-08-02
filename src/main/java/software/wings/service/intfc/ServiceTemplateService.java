@@ -191,5 +191,13 @@ public interface ServiceTemplateService {
    */
   ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts);
 
+  /**
+   * Gets template ref keys by service.
+   *
+   * @param appId     the app id
+   * @param envId     the env id
+   * @param serviceId the service id
+   * @return the template ref keys by service
+   */
   List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String envId, String serviceId);
 }

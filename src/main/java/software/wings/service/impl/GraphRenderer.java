@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -36,19 +37,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**
- * @author Rishi
+ * The type Graph renderer.
  *
+ * @author Rishi
  */
 @Singleton
 public class GraphRenderer {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private Injector injector;
 
+  /**
+   * Generate graph graph.
+   *
+   * @param instanceIdMap    the instance id map
+   * @param initialStateName the initial state name
+   * @param expandedGroupIds the expanded group ids
+   * @param detailsRequested the details requested
+   * @return the graph
+   */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, boolean detailsRequested) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",

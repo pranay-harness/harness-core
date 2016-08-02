@@ -101,7 +101,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -529,9 +528,9 @@ public class DataGenUtil extends WingsBaseTest {
         Entity.entity(aSettingAttribute()
                           .withName("Wings Jenkins")
                           .withValue(aJenkinsConfig()
-                                         .withJenkinsUrl("https://jenkins-wingssoftware.rhcloud.com")
-                                         .withUsername("admin")
-                                         .withPassword("W!ngs")
+                                         .withJenkinsUrl("http://ec2-54-174-51-35.compute-1.amazonaws.com/")
+                                         .withUsername("wingsbuild")
+                                         .withPassword("0db28aa0f4fc0685df9a216fc7af0ca96254b7c2")
                                          .build())
                           .build(),
             APPLICATION_JSON),

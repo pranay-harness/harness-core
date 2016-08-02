@@ -42,11 +42,23 @@ public enum EntityType {
                     */
   SSH_APP_ACCOUNT_PASSOWRD,
 
+  /**
+   * Simple deployment entity type.
+   */
   SIMPLE_DEPLOYMENT,
 
+  /**
+   * Orchestrated deployment entity type.
+   */
   ORCHESTRATED_DEPLOYMENT,
 
+  /**
+   * Pipeline entity type.
+   */
   PIPELINE,
 
+  /**
+   * Workflow entity type.
+   */
   WORKFLOW;
 }

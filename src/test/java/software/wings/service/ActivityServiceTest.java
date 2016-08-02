@@ -1,13 +1,15 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Activity.Status.RUNNING;
-import static software.wings.beans.Command.Builder.aCommand;
-import static software.wings.beans.CommandUnitType.EXEC;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
-import static software.wings.beans.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandUnitType.EXEC;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
+import static software.wings.beans.command.InitCommandUnit.INITIALIZE_UNIT;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
@@ -28,8 +30,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.Command;
-import software.wings.beans.CommandUnit;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
@@ -102,14 +104,15 @@ public class ActivityServiceTest extends WingsBaseTest {
                           .addCommandUnits(anExecCommandUnit()
                                                .withName(COMMAND_UNIT_NAME)
                                                .withCommandUnitType(EXEC)
-                                               .withCommand("./bin/start.sh")
+                                               .withCommandString("./bin/start.sh")
                                                .build())
                           .build();
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
-    assertThat(commandUnits.size()).isEqualTo(1);
-    assertThat(commandUnits.get(0).getCommandUnitType()).isEqualTo(EXEC);
-    assertThat(commandUnits.get(0).getName()).isEqualTo(COMMAND_UNIT_NAME);
+    assertThat(commandUnits)
+        .hasSize(2)
+        .extracting(CommandUnit::getCommandUnitType, CommandUnit::getName)
+        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME));
   }
 
   /**

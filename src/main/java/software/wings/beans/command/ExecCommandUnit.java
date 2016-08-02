@@ -1,10 +1,10 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.lang.String.format;
-import static software.wings.beans.CommandUnitType.EXEC;
+import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import java.nio.file.Paths;
@@ -12,11 +12,13 @@ import java.nio.file.Paths;
 /**
  * Created by anubhaw on 5/25/16.
  */
-public class ExecCommandUnit extends AbstractExecCommandUnit {
+public class ExecCommandUnit extends CommandUnit {
   @Attributes(title = "Execution Directory", description = "Relative to ${RuntimePath}")
   @NotEmpty
   private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
+
+  @SchemaIgnore private String preparedCommand;
 
   /**
    * Instantiates a new exec command unit.
@@ -30,7 +32,6 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
     commandPath =
         Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + "/" + commandPath)
             .toString();
-    setCommand(format("cd %s && set -m; %s", commandPath, commandString.trim()));
   }
 
   /**
@@ -70,17 +71,33 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
   }
 
   /**
+   * Getter for property 'preparedCommand'.
+   *
+   * @return Value for property 'preparedCommand'.
+   */
+  public String getPreparedCommand() {
+    return preparedCommand;
+  }
+
+  /**
+   * Setter for property 'preparedCommand'.
+   *
+   * @param preparedCommand Value to set for property 'preparedCommand'.
+   */
+  public void setPreparedCommand(String preparedCommand) {
+    this.preparedCommand = preparedCommand;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private String commandPath;
     private String commandString;
-    private String command;
     private String name;
     private CommandUnitType commandUnitType;
     private ExecutionResult executionResult;
     private boolean artifactNeeded = false;
-    private boolean processCommandOutput = false;
 
     private Builder() {}
 
@@ -112,17 +129,6 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
      */
     public Builder withCommandString(String commandString) {
       this.commandString = commandString;
-      return this;
-    }
-
-    /**
-     * With command builder.
-     *
-     * @param command the command
-     * @return the builder
-     */
-    public Builder withCommand(String command) {
-      this.command = command;
       return this;
     }
 
@@ -171,17 +177,6 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
     }
 
     /**
-     * With process command output builder.
-     *
-     * @param processCommandOutput the process command output
-     * @return the builder
-     */
-    public Builder withProcessCommandOutput(boolean processCommandOutput) {
-      this.processCommandOutput = processCommandOutput;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -190,12 +185,10 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
       return anExecCommandUnit()
           .withCommandPath(commandPath)
           .withCommandString(commandString)
-          .withCommand(command)
           .withName(name)
           .withCommandUnitType(commandUnitType)
           .withExecutionResult(executionResult)
-          .withArtifactNeeded(artifactNeeded)
-          .withProcessCommandOutput(processCommandOutput);
+          .withArtifactNeeded(artifactNeeded);
     }
 
     /**
@@ -207,12 +200,10 @@ public class ExecCommandUnit extends AbstractExecCommandUnit {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setCommandPath(commandPath);
       execCommandUnit.setCommandString(commandString);
-      execCommandUnit.setCommand(command);
       execCommandUnit.setName(name);
       execCommandUnit.setCommandUnitType(commandUnitType);
       execCommandUnit.setExecutionResult(executionResult);
       execCommandUnit.setArtifactNeeded(artifactNeeded);
-      execCommandUnit.setProcessCommandOutput(processCommandOutput);
       return execCommandUnit;
     }
   }

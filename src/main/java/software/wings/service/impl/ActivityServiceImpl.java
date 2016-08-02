@@ -1,16 +1,19 @@
 package software.wings.service.impl;
 
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.CommandUnitType.COMMAND;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
-import software.wings.beans.Command;
-import software.wings.beans.CommandUnit;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.InitCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -19,8 +22,8 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -66,6 +69,7 @@ public class ActivityServiceImpl implements ActivityService {
     Command command =
         serviceResourceService.getCommandByName(appId, activity.getServiceId(), activity.getCommandName());
     List<CommandUnit> commandUnits = getFlattenCommandUnitList(appId, activity.getServiceId(), command);
+    commandUnits.add(0, new InitCommandUnit());
     commandUnits.forEach(commandUnit -> {
       commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
     });
@@ -80,25 +84,25 @@ public class ActivityServiceImpl implements ActivityService {
    * @param command   the command
    * @return the flatten command unit list
    */
-  List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
+  private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
     Command executableCommand = command;
-    if (command.getReferenceId() != null) {
+    if (isNotBlank(command.getReferenceId())) {
       executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());
       if (executableCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
     }
 
-    List<CommandUnit> commandUnits = new ArrayList<>();
-
-    executableCommand.getCommandUnits().forEach(commandUnit -> {
-      if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-        commandUnits.addAll(getFlattenCommandUnitList(appId, serviceId, (Command) commandUnit));
-      } else {
-        commandUnits.add(commandUnit);
-      }
-    });
-    return commandUnits;
+    return executableCommand.getCommandUnits()
+        .stream()
+        .flatMap(commandUnit -> {
+          if (COMMAND.equals(commandUnit.getCommandUnitType())) {
+            return getFlattenCommandUnitList(appId, serviceId, (Command) commandUnit).stream();
+          } else {
+            return Stream.of(commandUnit);
+          }
+        })
+        .collect(toList());
   }
 
   @Override

@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-
 import javax.inject.Inject;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -158,6 +157,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(res).isNotNull().hasSize(2);
   }
 
+  /**
+   * Should take query params with in op.
+   */
   // Query will look like search[0][value]=fieldA1&search[0][value]=fieldA2
   @Test
   public void shouldTakeQueryParamsWithInOp() {
@@ -276,6 +278,9 @@ public class WingsPersistenceTest extends WingsBaseTest {
     wingsPersistence.save(entity);
   }
 
+  /**
+   * Should save referenced object.
+   */
   @Test
   public void shouldSaveReferencedObject() {
     TestEntityB entityB = new TestEntityB();
@@ -305,10 +310,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
    * The Class TestEntity.
    */
   public static class TestEntity extends Base {
+    /**
+     * The Test entity b.
+     */
+    @Reference TestEntityB testEntityB;
     private String fieldA;
     private Map<String, String> mapField;
-
-    @Reference TestEntityB testEntityB;
 
     /**
      * Gets field a.
@@ -346,10 +353,20 @@ public class WingsPersistenceTest extends WingsBaseTest {
       this.mapField = mapField;
     }
 
+    /**
+     * Gets test entity b.
+     *
+     * @return the test entity b
+     */
     public TestEntityB getTestEntityB() {
       return testEntityB;
     }
 
+    /**
+     * Sets test entity b.
+     *
+     * @param testEntityB the test entity b
+     */
     public void setTestEntityB(TestEntityB testEntityB) {
       this.testEntityB = testEntityB;
     }
@@ -359,16 +376,27 @@ public class WingsPersistenceTest extends WingsBaseTest {
       return "TestEntity [fieldA=" + fieldA + ", mapField=" + mapField + ", testEntityB=" + testEntityB + "]";
     }
   }
+
   /**
    * The Class TestEntity.
    */
   public static class TestEntityB extends Base {
     private String fieldB;
 
+    /**
+     * Gets field b.
+     *
+     * @return the field b
+     */
     public String getFieldB() {
       return fieldB;
     }
 
+    /**
+     * Sets field b.
+     *
+     * @param fieldB the field b
+     */
     public void setFieldB(String fieldB) {
       this.fieldB = fieldB;
     }

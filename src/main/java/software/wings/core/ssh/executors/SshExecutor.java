@@ -1,11 +1,10 @@
 package software.wings.core.ssh.executors;
 
-import software.wings.beans.AbstractExecCommandUnit;
-import software.wings.beans.CommandUnit.ExecutionResult;
-import software.wings.beans.ScpCommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.service.intfc.FileService.FileBucket;
 
+import java.util.List;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 2/4/16.
@@ -19,20 +18,31 @@ public interface SshExecutor {
   void init(@Valid SshSessionConfig config);
 
   /**
-   * Execute execution result.
+   * Execute command string execution result.
    *
-   * @param execCommandUnit the exec command unit
+   * @param command the command
    * @return the execution result
    */
-  ExecutionResult execute(@NotNull AbstractExecCommandUnit execCommandUnit);
+  ExecutionResult executeCommandString(String command);
 
   /**
-   * Transfer file execution result.
+   * Scp grid fs files execution result.
    *
-   * @param scpCommandUnit the copy command unit
+   * @param destinationDirectoryPath the destination directory path
+   * @param fileBucket               the file bucket
+   * @param gridFsFileId             the grid fs file id
    * @return the execution result
    */
-  ExecutionResult transferFiles(ScpCommandUnit scpCommandUnit);
+  ExecutionResult scpGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
+
+  /**
+   * Scp files execution result.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   * @param files                    the files
+   * @return the execution result
+   */
+  ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files);
 
   /**
    * The Enum ExecutorType.

@@ -11,14 +11,28 @@ import java.util.regex.Pattern;
  * Created by anubhaw on 7/25/16.
  */
 public class NotificationMessageResolver {
-  private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
-
+  /**
+   * The constant ENTITY_CREATE_NOTIFICATION.
+   */
   public static final String ENTITY_CREATE_NOTIFICATION = "A new ${ENTITY_TYPE} ${ENTITY_NAME} is created.";
+  /**
+   * The constant ENTITY_DELETE_NOTIFICATION.
+   */
   public static final String ENTITY_DELETE_NOTIFICATION = "${ENTITY_TYPE} ${ENTITY_NAME} is deleted.";
+  /**
+   * The constant ADD_HOST_NOTIFICATION.
+   */
   public static final String ADD_HOST_NOTIFICATION = "${COUNT} new hosts added in ${ENV_NAME} environment.";
+  /**
+   * The constant HOST_DELETE_NOTIFICATION.
+   */
   public static final String HOST_DELETE_NOTIFICATION = "A host {HOST_NAME} deleted from ${ENV_NAME} environment.";
+  /**
+   * The constant DEPLOYMENT_COMPLETED_NOTIFICATION.
+   */
   public static final String DEPLOYMENT_COMPLETED_NOTIFICATION =
       "{DATE} : Deployment {NAME} completed on ${HOST_COUNT} in {ENV_NAME} environment.";
+  private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?\\}");
 
   /**
    * Gets decorated notification message.

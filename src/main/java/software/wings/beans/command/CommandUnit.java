@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 
@@ -21,14 +21,13 @@ import java.util.Objects;
   , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
       @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
       @Type(value = ProcessCheckCommandUnit.class, name = "PROCESS_CHECK"),
-      @Type(value = TailLogCommandUnit.class, name = "TAIL_LOG")
+      @Type(value = TailLogCommandUnit.class, name = "TAIL_LOG"), @Type(value = InitCommandUnit.class, name = "INIT")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
-  @SchemaIgnore private boolean processCommandOutput = false;
 
   /**
    * Instantiates a new Command unit.
@@ -151,25 +150,6 @@ public abstract class CommandUnit {
     this.artifactNeeded = artifactNeeded;
   }
 
-  /**
-   * Is read command output boolean.
-   *
-   * @return the boolean
-   */
-  @SchemaIgnore
-  public boolean isProcessCommandOutput() {
-    return processCommandOutput;
-  }
-
-  /**
-   * Sets read command output.
-   *
-   * @param processCommandOutput the read command output
-   */
-  public void setProcessCommandOutput(boolean processCommandOutput) {
-    this.processCommandOutput = processCommandOutput;
-  }
-
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
@@ -177,7 +157,6 @@ public abstract class CommandUnit {
         .add("commandUnitType", commandUnitType)
         .add("executionResult", executionResult)
         .add("artifactNeeded", artifactNeeded)
-        .add("processCommandOutput", processCommandOutput)
         .toString();
   }
 

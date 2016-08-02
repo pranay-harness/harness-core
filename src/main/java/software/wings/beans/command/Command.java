@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;

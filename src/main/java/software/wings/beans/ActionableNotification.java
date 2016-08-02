@@ -22,14 +22,6 @@ public abstract class ActionableNotification extends Notification {
   }
 
   /**
-   * Perform action boolean.
-   *
-   * @return the boolean
-   * @param actionType
-   */
-  public abstract boolean performAction(NotificationActionType actionType);
-
-  /**
    * Instantiates a new Actionable notification.
    *
    * @param notificationType    the notification type
@@ -41,6 +33,14 @@ public abstract class ActionableNotification extends Notification {
       this.notificationActions = notificationActions;
     }
   }
+
+  /**
+   * Perform action boolean.
+   *
+   * @param actionType the action type
+   * @return the boolean
+   */
+  public abstract boolean performAction(NotificationActionType actionType);
 
   /**
    * Is actionable boolean.
