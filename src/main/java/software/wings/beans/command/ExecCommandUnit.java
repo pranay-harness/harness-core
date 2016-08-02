@@ -1,13 +1,10 @@
 package software.wings.beans.command;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
-
-import java.nio.file.Paths;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -28,10 +25,8 @@ public class ExecCommandUnit extends CommandUnit {
   }
 
   @Override
-  public void setup(CommandExecutionContext context) {
-    commandPath =
-        Paths.get(isNullOrEmpty(commandPath) ? context.getRuntimePath() : context.getRuntimePath() + "/" + commandPath)
-            .toString();
+  public ExecutionResult execute(CommandExecutionContext context) {
+    return context.executeCommandString(preparedCommand);
   }
 
   /**

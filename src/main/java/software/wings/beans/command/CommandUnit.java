@@ -55,12 +55,7 @@ public abstract class CommandUnit {
     return aContinue;
   }
 
-  /**
-   * Sets .
-   *
-   * @param context the context
-   */
-  public abstract void setup(CommandExecutionContext context);
+  public abstract ExecutionResult execute(CommandExecutionContext context);
 
   /**
    * Gets command execution timeout.

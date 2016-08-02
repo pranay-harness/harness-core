@@ -19,10 +19,10 @@ public class ProcessCheckCommandUnit extends ExecCommandUnit {
     setCommandUnitType(CommandUnitType.PROCESS_CHECK);
   }
 
-  @Override
+  /*@Override
   public void setup(CommandExecutionContext context) {
     setCommandString(String.format("pgrep -f '%s'", expression.trim()));
-  }
+  }*/
 
   @Override
   public CommandUnitExecutionResult processCommandOutput(String output) {

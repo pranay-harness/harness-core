@@ -222,7 +222,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.scpGridFsFiles("/", CONFIGS, asList(fileId))).isEqualTo(SUCCESS);
+    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(fileId))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
   }
@@ -239,7 +239,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
 
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.scpFiles("/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
+    assertThat(executor.copyFiles("/", asList(file.getAbsolutePath()))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), file.getName())).hasSameContentAs(file).canRead().canWrite();
   }

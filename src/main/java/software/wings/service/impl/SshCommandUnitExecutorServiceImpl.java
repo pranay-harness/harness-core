@@ -17,7 +17,6 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 import com.google.common.base.Joiner;
 import com.google.inject.Injector;
 
-import freemarker.template.TemplateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
@@ -29,9 +28,7 @@ import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
-import software.wings.beans.command.ExecCommandUnit;
-import software.wings.beans.command.InitCommandUnit;
-import software.wings.beans.command.ScpCommandUnit;
+import software.wings.beans.command.SshCommandExecutionContext;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.core.ssh.executors.AbstractSshExecutor;
 import software.wings.core.ssh.executors.SshExecutor;
@@ -44,8 +41,6 @@ import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.LogService;
 import software.wings.utils.TimeoutManager;
 
-import java.io.IOException;
-import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -112,15 +107,18 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     ExecutionResult executionResult = FAILURE;
 
     try {
-      injector.injectMembers(commandUnit);
-      commandUnit.setup(context);
-
       SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
       SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
       executor.init(sshSessionConfig);
 
+      SshCommandExecutionContext sshCommandExecutionContext = new SshCommandExecutionContext(context);
+      sshCommandExecutionContext.setSshExecutor(executor);
+
+      injector.injectMembers(commandUnit);
+
       Future<ExecutionResult> executionResultFuture =
-          executorService.submit(() -> executeByCommandType(executor, commandUnit));
+          executorService.submit(() -> commandUnit.execute(sshCommandExecutionContext));
+
       try {
         executionResult = executionResultFuture.get(
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
@@ -197,35 +195,6 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .build());
       throw ex;
     }
-  }
-
-  private ExecutionResult executeByCommandType(SshExecutor executor, CommandUnit commandUnit) {
-    ExecutionResult executionResult;
-    if (commandUnit instanceof ExecCommandUnit) {
-      executionResult = executor.executeCommandString(((ExecCommandUnit) commandUnit).getPreparedCommand());
-    } else if (commandUnit instanceof ScpCommandUnit) {
-      ScpCommandUnit scpCommandUnit = (ScpCommandUnit) commandUnit;
-      executionResult = executor.scpGridFsFiles(
-          scpCommandUnit.getDestinationDirectoryPath(), scpCommandUnit.getFileBucket(), scpCommandUnit.getFileIds());
-    } else {
-      InitCommandUnit initCommandUnit = (InitCommandUnit) commandUnit;
-      executionResult = executor.executeCommandString(initCommandUnit.getPreInitCommand());
-      try {
-        executor.scpFiles(
-            initCommandUnit.getExecutionStagingDir(), Collections.singletonList(initCommandUnit.getLauncherFile()));
-      } catch (IOException e) {
-        e.printStackTrace();
-      } catch (TemplateException e) {
-        e.printStackTrace();
-      }
-      try {
-        executor.scpFiles(initCommandUnit.getExecutionStagingDir(), initCommandUnit.getCommandUnitFiles());
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      executor.executeCommandString("chmod 0744 " + initCommandUnit.getExecutionStagingDir() + "/*");
-    }
-    return executionResult;
   }
 
   private SshSessionConfig getSshSessionConfig(Host host, CommandExecutionContext context, CommandUnit commandUnit) {
