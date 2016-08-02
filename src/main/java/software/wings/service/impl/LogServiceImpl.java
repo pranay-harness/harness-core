@@ -60,6 +60,8 @@ public class LogServiceImpl implements LogService {
                   .equal(appId)
                   .field("commandUnitName")
                   .equal(name)
+                  .field("executionResult")
+                  .exists()
                   .order("-lastUpdatedAt")
                   .get();
     return log != null && log.getExecutionResult() != null ? log.getExecutionResult() : RUNNING;

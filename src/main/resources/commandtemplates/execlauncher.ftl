@@ -12,7 +12,7 @@ export ${envVariable}
 
 if [  $# -gt 1 ]
 then
-  WINGS_SCRIPT_WORKING_DIRECTORY=$1
+  eval WINGS_SCRIPT_WORKING_DIRECTORY=$1
   cd $WINGS_SCRIPT_WORKING_DIRECTORY
   shift
 fi

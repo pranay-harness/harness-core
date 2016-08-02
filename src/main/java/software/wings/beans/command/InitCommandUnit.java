@@ -1,8 +1,8 @@
 package software.wings.beans.command;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -97,15 +97,19 @@ public class InitCommandUnit extends CommandUnit {
         ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
         String commandFileName = "wings" + DigestUtils.md5Hex(prefix + unit.getName() + activityId);
         String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
+        String commandDir =
+            isNotBlank(execCommandUnit.getCommandPath()) ? "'" + execCommandUnit.getCommandPath().trim() + "'" : "";
         try (OutputStreamWriter fileWriter =
                  new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
           CharStreams.asWriter(fileWriter).append(execCommandUnit.getCommandString()).close();
-          execCommandUnit.setPreparedCommand(executionStagingDir + "/" + launcherScriptFileName + " "
-              + nullToEmpty(execCommandUnit.getCommandPath()) + " " + commandFileName);
+          execCommandUnit.setPreparedCommand(
+              executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " " + commandFileName);
         }
         files.add(commandFile);
       } else if (unit instanceof Command) {
         files.addAll(createScripts((Command) unit, unit.getName()));
+      } else if (unit instanceof ScpCommandUnit) {
+        ((ScpCommandUnit) unit).setEnvVariables(envVariables);
       }
     }
     return files;

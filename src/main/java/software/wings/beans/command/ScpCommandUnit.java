@@ -1,6 +1,5 @@
 package software.wings.beans.command;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
@@ -20,9 +19,9 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,13 +36,14 @@ public class ScpCommandUnit extends CommandUnit {
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
 
-  @Attributes(title = "Destination path", description = "Relative to ${RuntimePath}") private String relativeFilePath;
+  @Attributes(title = "Destination path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
+  @SchemaIgnore private Map<String, String> envVariables;
+
   @SchemaIgnore private List<String> fileIds = new ArrayList<>();
   @SchemaIgnore private FileBucket fileBucket;
-  @SchemaIgnore private String destinationDirectoryPath;
 
   /**
    * Instantiates a new Scp command unit.
@@ -54,8 +54,6 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Override
   public void setup(CommandExecutionContext context) {
-    destinationDirectoryPath =
-        new File(context.getRuntimePath().trim(), nullToEmpty(relativeFilePath).trim()).getAbsolutePath();
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
@@ -109,24 +107,6 @@ public class ScpCommandUnit extends CommandUnit {
   }
 
   /**
-   * Gets relative file path.
-   *
-   * @return the relative file path
-   */
-  public String getRelativeFilePath() {
-    return relativeFilePath;
-  }
-
-  /**
-   * Sets relative file path.
-   *
-   * @param relativeFilePath the relative file path
-   */
-  public void setRelativeFilePath(String relativeFilePath) {
-    this.relativeFilePath = relativeFilePath;
-  }
-
-  /**
    * Gets file ids.
    *
    * @return the file ids
@@ -169,7 +149,6 @@ public class ScpCommandUnit extends CommandUnit {
    *
    * @return the destination directory path
    */
-  @SchemaIgnore
   public String getDestinationDirectoryPath() {
     return destinationDirectoryPath;
   }
@@ -183,9 +162,13 @@ public class ScpCommandUnit extends CommandUnit {
     this.destinationDirectoryPath = destinationDirectoryPath;
   }
 
+  public void setEnvVariables(Map<String, String> envVariables) {
+    this.envVariables = envVariables;
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(fileCategory, relativeFilePath, fileIds, fileBucket, destinationDirectoryPath);
+    return Objects.hash(fileCategory, fileIds, fileBucket, destinationDirectoryPath);
   }
 
   @Override
@@ -197,8 +180,7 @@ public class ScpCommandUnit extends CommandUnit {
       return false;
     }
     final ScpCommandUnit other = (ScpCommandUnit) obj;
-    return Objects.equals(this.fileCategory, other.fileCategory)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath) && Objects.equals(this.fileIds, other.fileIds)
+    return Objects.equals(this.fileCategory, other.fileCategory) && Objects.equals(this.fileIds, other.fileIds)
         && Objects.equals(this.fileBucket, other.fileBucket)
         && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath);
   }
@@ -207,7 +189,6 @@ public class ScpCommandUnit extends CommandUnit {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("fileCategory", fileCategory)
-        .add("relativeFilePath", relativeFilePath)
         .add("fileIds", fileIds)
         .add("fileBucket", fileBucket)
         .add("destinationDirectoryPath", destinationDirectoryPath)
@@ -259,7 +240,6 @@ public class ScpCommandUnit extends CommandUnit {
    */
   public static final class Builder {
     private ScpFileCategory fileCategory;
-    private String relativeFilePath;
     private List<String> fileIds = new ArrayList<>();
     private FileBucket fileBucket;
     private String destinationDirectoryPath;
@@ -287,17 +267,6 @@ public class ScpCommandUnit extends CommandUnit {
      */
     public Builder withFileCategory(ScpFileCategory fileCategory) {
       this.fileCategory = fileCategory;
-      return this;
-    }
-
-    /**
-     * With relative file path builder.
-     *
-     * @param relativeFilePath the relative file path
-     * @return the builder
-     */
-    public Builder withRelativeFilePath(String relativeFilePath) {
-      this.relativeFilePath = relativeFilePath;
       return this;
     }
 
@@ -386,7 +355,6 @@ public class ScpCommandUnit extends CommandUnit {
     public Builder but() {
       return aScpCommandUnit()
           .withFileCategory(fileCategory)
-          .withRelativeFilePath(relativeFilePath)
           .withFileIds(fileIds)
           .withFileBucket(fileBucket)
           .withDestinationDirectoryPath(destinationDirectoryPath)
@@ -404,7 +372,6 @@ public class ScpCommandUnit extends CommandUnit {
     public ScpCommandUnit build() {
       ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
       scpCommandUnit.setFileCategory(fileCategory);
-      scpCommandUnit.setRelativeFilePath(relativeFilePath);
       scpCommandUnit.setFileIds(fileIds);
       scpCommandUnit.setFileBucket(fileBucket);
       scpCommandUnit.setDestinationDirectoryPath(destinationDirectoryPath);
