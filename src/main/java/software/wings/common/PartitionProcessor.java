@@ -113,7 +113,8 @@ public interface PartitionProcessor {
       int partitionIndex = 1;
       for (int count : finalCounts) {
         if (ind < elements.size()) {
-          List<ContextElement> elementPart = elements.subList(ind, Math.min(ind + count, elements.size()));
+          List<ContextElement> elementPart =
+              new ArrayList<>(elements.subList(ind, Math.min(ind + count, elements.size())));
           ind += count;
           PartitionElement pe = new PartitionElement();
           pe.setPartitionElements(elementPart);

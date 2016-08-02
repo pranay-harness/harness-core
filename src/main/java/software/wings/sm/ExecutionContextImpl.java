@@ -279,4 +279,8 @@ public class ExecutionContextImpl implements ExecutionContext {
   public String getWorkflowExecutionId() {
     return stateExecutionInstance.getExecutionUuid();
   }
+
+  void setStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
+    this.stateExecutionInstance = stateExecutionInstance;
+  }
 }
