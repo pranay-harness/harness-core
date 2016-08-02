@@ -156,4 +156,10 @@ public class TagResource {
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @QueryParam("tagId") String tagId) {
     return new RestResponse<>(tagService.flattenTagTree(appId, envId, tagId));
   }
+
+  @GET
+  @Path("/leaf-tags")
+  public RestResponse<List<Tag>> tagTree(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(tagService.getLeafTags(tagService.getRootConfigTag(appId, envId)));
+  }
 }
