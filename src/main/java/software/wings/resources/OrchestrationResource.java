@@ -8,7 +8,6 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Orchestration;
-import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.WorkflowType;
@@ -140,13 +139,11 @@ public class OrchestrationResource {
    *
    * @param appId           the app id
    * @param orchestrationId the orchestration id
-   * @param pipeline        the pipeline
    * @return the rest response
    */
   @DELETE
   @Path("{orchestrationId}")
-  public RestResponse delete(
-      @QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId, Pipeline pipeline) {
+  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("orchestrationId") String orchestrationId) {
     workflowService.deleteWorkflow(Orchestration.class, appId, orchestrationId);
     return new RestResponse();
   }
