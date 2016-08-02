@@ -10,6 +10,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.stencils.EnumData;
+import software.wings.stencils.Expand;
 import software.wings.utils.MapperUtils;
 
 import java.util.Arrays;
@@ -23,7 +24,8 @@ import javax.validation.constraints.NotNull;
  */
 @Attributes(title = "Command")
 public class Command extends CommandUnit {
-  @EnumData(expandIntoMultipleEntries = true, enumDataProvider = ServiceResourceServiceImpl.class)
+  @Expand(dataProvider = ServiceResourceServiceImpl.class)
+  @EnumData(enumDataProvider = ServiceResourceServiceImpl.class)
   @Attributes(title = "Name")
   private String referenceId;
 

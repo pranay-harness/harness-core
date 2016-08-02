@@ -144,7 +144,9 @@ public class StencilPostProcessorTest extends WingsBaseTest {
    * The type Expand stencil object.
    */
   public static class ExpandStencilObject implements StencilObject {
-    @EnumData(expandIntoMultipleEntries = true, enumDataProvider = TestDataProvider.class) private String expand;
+    @EnumData(enumDataProvider = TestDataProvider.class)
+    @Expand(dataProvider = TestDataProvider.class)
+    private String expand;
 
     /**
      * Getter for property 'expand'.

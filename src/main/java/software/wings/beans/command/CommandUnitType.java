@@ -27,7 +27,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   /**
    * Scp command unit type.
    */
-  SCP(ScpCommandUnit.class, "SCP"),
+  SCP(ScpCommandUnit.class, "Copy"),
 
   /**
    * Command command unit type.
