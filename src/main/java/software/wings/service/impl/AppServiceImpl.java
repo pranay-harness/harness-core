@@ -96,15 +96,19 @@ public class AppServiceImpl implements AppService {
                         .build(),
                     false)
                 .getResponse());
-        application.setNotifications(getApplicationNotifications(application.getUuid()));
+        application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
       });
     }
     return response;
   }
 
-  private List<Notification> getApplicationNotifications(String appId) {
+  private List<Notification> getIncompleteActionableApplicationNotifications(String appId) {
     return notificationService
-        .list(aPageRequest().addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build()).build())
+        .list(aPageRequest()
+                  .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+                  .addFilter(aSearchFilter().withField("complete", Operator.EQ, false).build())
+                  .addFilter(aSearchFilter().withField("actionable", Operator.EQ, true).build())
+                  .build())
         .getResponse();
   }
 
@@ -117,7 +121,7 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Application doesn't exist");
     }
-    application.setNotifications(getApplicationNotifications(application.getUuid()));
+    application.setNotifications(getIncompleteActionableApplicationNotifications(application.getUuid()));
     return application;
   }
 
