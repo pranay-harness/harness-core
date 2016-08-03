@@ -134,7 +134,7 @@ public class SetupServiceImpl implements SetupService {
     }
     if (artRes.getTotal() == 1 && artRes.get(0).getStatus() == Status.QUEUED) {
       return SetupAction.Builder.aSetupAction()
-          .withCode("NO_ARTIFACT_FOUND")
+          .withCode("ARTIFACT_NOT_READY")
           .withDisplayText("Setup complete: Please wait for the artifact to finish downloading.")
           .withUrl(String.format("/#/app/%s/release/%s/detail", application.getUuid(), rel.getUuid()))
           .build();

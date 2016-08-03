@@ -23,6 +23,7 @@ public abstract class Notification extends Base {
   private EntityType entityType;
   @NotNull private NotificationType notificationType;
   @NotNull private boolean complete = true;
+  @NotNull private boolean actionable = false;
 
   /**
    * Instantiates a new Notification.
@@ -33,11 +34,21 @@ public abstract class Notification extends Base {
    * Instantiates a new Notification.
    *
    * @param notificationType the notification type
-   * @param complete         the complete
    */
-  public Notification(NotificationType notificationType, boolean complete) {
+  public Notification(NotificationType notificationType) {
+    this(notificationType, false);
+  }
+
+  /**
+   * Instantiates a new Notification.
+   *
+   * @param notificationType the notification type
+   * @param actionable       the actionable
+   */
+  public Notification(NotificationType notificationType, boolean actionable) {
     this.notificationType = notificationType;
-    this.complete = complete;
+    this.actionable = actionable;
+    this.complete = !actionable; // actionable notification are not complete on creation
   }
 
   /**
@@ -110,6 +121,15 @@ public abstract class Notification extends Base {
    */
   public boolean isComplete() {
     return complete;
+  }
+
+  /**
+   * Is actionable boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isActionable() {
+    return actionable;
   }
 
   /**

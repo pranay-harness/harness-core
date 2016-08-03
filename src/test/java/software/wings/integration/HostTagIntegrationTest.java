@@ -24,7 +24,7 @@ import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.Integration;
+import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -41,8 +41,8 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/1/16.
  */
 
-@Integration
-public class HostTagIntergrationTest extends WingsBaseTest {
+@RealMongo
+public class HostTagIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.
    */

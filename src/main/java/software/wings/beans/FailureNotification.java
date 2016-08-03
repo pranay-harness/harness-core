@@ -68,7 +68,6 @@ public class FailureNotification extends ActionableNotification {
     private String environmentId;
     private String entityId;
     private EntityType entityType;
-    private boolean complete = true;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -140,17 +139,6 @@ public class FailureNotification extends ActionableNotification {
      */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
-      return this;
-    }
-
-    /**
-     * With complete builder.
-     *
-     * @param complete the complete
-     * @return the builder
-     */
-    public Builder withComplete(boolean complete) {
-      this.complete = complete;
       return this;
     }
 
@@ -243,7 +231,6 @@ public class FailureNotification extends ActionableNotification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -265,7 +252,6 @@ public class FailureNotification extends ActionableNotification {
       failureNotification.setEnvironmentId(environmentId);
       failureNotification.setEntityId(entityId);
       failureNotification.setEntityType(entityType);
-      failureNotification.setComplete(complete);
       failureNotification.setUuid(uuid);
       failureNotification.setAppId(appId);
       failureNotification.setCreatedBy(createdBy);

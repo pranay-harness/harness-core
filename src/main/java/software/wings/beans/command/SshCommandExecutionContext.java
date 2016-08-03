@@ -21,17 +21,22 @@ public class SshCommandExecutionContext extends CommandExecutionContext {
 
   @Override
   public ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> fileIds) {
-    return sshExecutor.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
+    return sshExecutor.copyGridFsFiles(evaluateVariable(destinationDirectoryPath), fileBucket, fileIds);
   }
 
   @Override
   public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
-    return sshExecutor.copyFiles(destinationDirectoryPath, files);
+    return sshExecutor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
   }
 
   @Override
   public ExecutionResult executeCommandString(String commandString) {
     return sshExecutor.executeCommandString(commandString);
+  }
+
+  @Override
+  public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
+    return sshExecutor.executeCommandString(commandString, output);
   }
 
   /**

@@ -29,7 +29,7 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
-  @FormDataParam("envId") @DefaultValue(GLOBAL_ENV_ID) private String envId;
+  @FormDataParam("envId") @NotEmpty private String envId;
 
   @FormDataParam("entityType") @NotNull private EntityType entityType;
 

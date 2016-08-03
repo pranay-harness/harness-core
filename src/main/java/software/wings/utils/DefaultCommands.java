@@ -47,7 +47,7 @@ public class DefaultCommands {
                       .withId(nodes.get(1))
                       .withType(EXEC.name())
                       .withName("Start Service")
-                      .addProperty("commandPath", "tomcat/bin")
+                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH/tomcat/bin")
                       .addProperty("commandString", "./startup.sh")
                       .build())
         .build();
@@ -70,7 +70,7 @@ public class DefaultCommands {
                       .withId(nodes.get(1))
                       .withType(EXEC.name())
                       .withName("Stop Service")
-                      .addProperty("commandPath", "tomcat/bin")
+                      .addProperty("commandPath", "$WINGS_RUNTIME_PATH/tomcat/bin")
                       .addProperty("commandString", "[[ -f ./shutdown.sh ]] && ./shutdown.sh  || true")
                       .build())
         .build();
@@ -119,9 +119,9 @@ public class DefaultCommands {
                 .withId(nodes.get(4))
                 .withName("Expand App Server")
                 .withType(EXEC.name())
-                .addProperty("commandPath", "")
+                .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                 .addProperty("commandString",
-                    "rm -rf tomcat && tar -xvzf apache-tomcat-7.0.70.tar.gz && mv apache-tomcat-7.0.70 tomcat")
+                    "rm -rf tomcat\ntar -xvzf apache-tomcat-7.0.70.tar.gz\nmv apache-tomcat-7.0.70 tomcat")
                 .build(),
             aNode()
                 .withX(800)
@@ -130,7 +130,7 @@ public class DefaultCommands {
                 .withName("Copy Artifact")
                 .withType(SCP.name())
                 .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
-                .addProperty("relativeFilePath", "tomcat/webapps")
+                .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH/tomcat/webapps")
                 .build(),
             aNode()
                 .withX(950)

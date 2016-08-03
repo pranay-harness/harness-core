@@ -71,9 +71,15 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#get(java.lang.String)
    */
   @Override
-  public ConfigFile get(String appId, String configId) {
+  public ConfigFile get(String appId, String configId, boolean withOverridePath) {
     ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
-    configFile.setOverridePath(generateOverridePath(configFile));
+    if (configFile == null) {
+      throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
+    }
+
+    if (withOverridePath) {
+      configFile.setOverridePath(generateOverridePath(configFile));
+    }
     return configFile;
   }
 
@@ -93,11 +99,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public File download(String appId, String configId) {
-    ConfigFile configFile = get(appId, configId);
-    if (configFile == null) {
-      throw new WingsException(INVALID_ARGUMENT, "message", "ConfigFile not found");
-    }
-
+    ConfigFile configFile = get(appId, configId, false);
     File file = new File(createTempDirPath(), configFile.getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     return file;

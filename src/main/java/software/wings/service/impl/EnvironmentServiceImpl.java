@@ -269,9 +269,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void createDefaultEnvironments(String appId) {
-    save(anEnvironment().withAppId(appId).withName(Constants.PROD_ENV).withEnvironmentType(PROD).build());
-    asList(Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV)
+    asList(Constants.DEV_ENV, Constants.QA_ENV, Constants.UAT_ENV)
         .forEach(name -> save(anEnvironment().withAppId(appId).withName(name).withEnvironmentType(OTHER).build()));
+    save(anEnvironment().withAppId(appId).withName(Constants.PROD_ENV).withEnvironmentType(PROD).build());
   }
 
   @Override
