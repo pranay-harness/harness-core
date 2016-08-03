@@ -29,7 +29,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.Integration;
+import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -74,7 +74,7 @@ import javax.inject.Inject;
  * |    |    |...Host9
  * |
  */
-@Integration
+@RealMongo
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.
