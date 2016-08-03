@@ -230,7 +230,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(end).equal(APP_ID);
     verify(query).field("infraId");
     verify(end).equal(INFRA_ID);
-    verify(query).field("tags");
+    verify(query).field("configTag");
     verify(end).hasAnyOf(tags);
     assertThat(hosts.get(0)).isInstanceOf(Host.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
