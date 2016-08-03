@@ -211,7 +211,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
     verify(sshPwdAuthExecutor)
-        .scpGridFsFiles(
+        .copyGridFsFiles(
             commandUnit.getDestinationDirectoryPath(), commandUnit.getFileBucket(), commandUnit.getFileIds());
   }
 
@@ -237,7 +237,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "wingslauncherACTIVITY_ID.sh").getAbsolutePath();
-    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
+    verify(sshPwdAuthExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(actualLauncherScript));
     assertThat(new File(actualLauncherScript))
         .hasContent(
             CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedLaunchScript.sh"))));
@@ -245,7 +245,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     String expectedExecCommandUnitScript =
         new File(System.getProperty("java.io.tmpdir"), "wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
             .getAbsolutePath();
-    verify(sshPwdAuthExecutor).scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
+    verify(sshPwdAuthExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
@@ -289,7 +289,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
             .getAbsolutePath();
 
     verify(sshPwdAuthExecutor)
-        .scpFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
+        .copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript, expectedSubExecCommandUnitScript));
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))

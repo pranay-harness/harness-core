@@ -69,45 +69,46 @@ public class StencilPostProcessor {
   }
 
   private <T extends Stencil> Stream<Stencil> processStencil(T t, String appId, String... args) {
-    Stream<Stencil> returnValue;
+    Stencil stencil = t.getOverridingStencil();
+    for (Field field : t.getTypeClass().getDeclaredFields()) {
+      EnumData enumData = field.getAnnotation(EnumData.class);
+      DefaultValue defaultValue = field.getAnnotation(DefaultValue.class);
+      if (enumData != null || defaultValue != null) {
+        if (enumData != null) {
+          DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
+          Map<String, String> data = dataProvider.getData(appId, args);
+          if (!isEmpty(data)) {
+            stencil = addEnumDataToNode(stencil, data, field.getName());
+          }
+        }
+      }
+
+      if (defaultValue != null) {
+        stencil = addDefaultValueToStencil(stencil, field.getName(), defaultValue.value());
+      }
+    }
+
+    Stream<Stencil> returnValue = Stream.of(stencil);
+
     if (stream(t.getTypeClass().getDeclaredFields())
-            .filter(this ::hasStencilPostProcessAnnotation)
+            .filter(field -> field.getAnnotation(Expand.class) != null)
             .findFirst()
             .isPresent()) {
-      returnValue =
-          stream(t.getTypeClass().getDeclaredFields()).filter(this ::hasStencilPostProcessAnnotation).flatMap(field -> {
-            EnumData enumData = field.getAnnotation(EnumData.class);
-            Expand expand = field.getAnnotation(Expand.class);
-            DefaultValue defaultValue = field.getAnnotation(DefaultValue.class);
+      Stencil finalStencil = stencil;
+      returnValue = stream(t.getTypeClass().getDeclaredFields())
+                        .filter(field -> field.getAnnotation(Expand.class) != null)
+                        .flatMap(field -> {
+                          Expand expand = field.getAnnotation(Expand.class);
 
-            T stencil = t;
-            if (enumData != null) {
-              DataProvider dataProvider = injector.getInstance(enumData.enumDataProvider());
-              Map<String, String> data = dataProvider.getData(appId, args);
-              if (!isEmpty(data)) {
-                if (enumData.expandIntoMultipleEntries()) {
-                  return expandBasedOnEnumData(stencil, data, field.getName());
-                } else {
-                  stencil = (T) addEnumDataToNode(stencil, data, field.getName());
-                }
-              }
-            }
+                          Stencil stencilForExpand = finalStencil;
+                          DataProvider dataProvider = injector.getInstance(expand.dataProvider());
+                          Map<String, String> data = dataProvider.getData(appId, args);
+                          if (!isEmpty(data)) {
+                            return expandBasedOnData(stencilForExpand, data, field.getName());
+                          }
 
-            if (expand != null) {
-              DataProvider dataProvider = injector.getInstance(expand.dataProvider());
-              Map<String, String> data = dataProvider.getData(appId, args);
-              if (!isEmpty(data)) {
-                return expandBasedOnData(stencil, data, field.getName());
-              }
-            }
-
-            if (defaultValue != null) {
-              stencil = (T) addDefaultValueToStencil(stencil, field.getName(), defaultValue.value());
-            }
-            return Stream.of(stencil);
-          });
-    } else {
-      returnValue = Stream.of(t.getOverridingStencil());
+                          return Stream.of(stencilForExpand);
+                        });
     }
 
     if (stream(t.getTypeClass().getDeclaredMethods())
@@ -123,7 +124,7 @@ public class StencilPostProcessor {
             if (isNotBlank(fieldName)) {
               List<Stencil> tempStencils =
                   stencils.stream()
-                      .map(stencil -> addDefaultValueToStencil(stencil, fieldName, defaultValue.value()))
+                      .map(stencil1 -> addDefaultValueToStencil(stencil1, fieldName, defaultValue.value()))
                       .collect(toList());
               stencils.clear();
               stencils.addAll(tempStencils);

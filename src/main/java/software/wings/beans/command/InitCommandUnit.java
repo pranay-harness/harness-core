@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class InitCommandUnit extends CommandUnit {
   }
 
   @Override
-  public void setup(CommandExecutionContext context) {
+  public ExecutionResult execute(CommandExecutionContext context) {
     cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
@@ -71,6 +72,22 @@ public class InitCommandUnit extends CommandUnit {
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";
+
+    ExecutionResult executionResult = context.executeCommandString(preInitCommand);
+    try {
+      context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()));
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (TemplateException e) {
+      e.printStackTrace();
+    }
+    try {
+      context.copyFiles(executionStagingDir, getCommandUnitFiles());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    context.executeCommandString("chmod 0744 " + executionStagingDir + "/*");
+    return executionResult;
   }
 
   /**
@@ -89,8 +106,7 @@ public class InitCommandUnit extends CommandUnit {
    * @throws IOException       the io exception
    * @throws TemplateException the template exception
    */
-  @JsonIgnore
-  public String getLauncherFile() throws IOException, TemplateException {
+  private String getLauncherFile() throws IOException, TemplateException {
     String launcherScript = new File(System.getProperty("java.io.tmpdir"), launcherScriptFileName).getAbsolutePath();
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(launcherScript), StandardCharsets.UTF_8)) {
@@ -105,8 +121,7 @@ public class InitCommandUnit extends CommandUnit {
    * @return the command unit files
    * @throws IOException the io exception
    */
-  @JsonIgnore
-  public List<String> getCommandUnitFiles() throws IOException {
+  private List<String> getCommandUnitFiles() throws IOException {
     return createScripts(command);
   }
 

@@ -12,13 +12,6 @@ import java.lang.annotation.Target;
 @Target(value = {ElementType.FIELD})
 public @interface EnumData {
   /**
-   * Expand into multiple entries boolean.
-   *
-   * @return the boolean
-   */
-  boolean expandIntoMultipleEntries() default false;
-
-  /**
    * Enum data provider class.
    *
    * @return the class

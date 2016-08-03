@@ -87,4 +87,31 @@ public class WaitState extends State {
   public void setDuration(long duration) {
     this.duration = duration;
   }
+
+  public static final class Builder {
+    private long duration;
+    private String name;
+
+    private Builder() {}
+
+    public static Builder aWaitState() {
+      return new Builder();
+    }
+
+    public Builder withDuration(long duration) {
+      this.duration = duration;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public WaitState build() {
+      WaitState waitState = new WaitState(name);
+      waitState.setDuration(duration);
+      return waitState;
+    }
+  }
 }

@@ -4,12 +4,17 @@
 
 package software.wings.sm;
 
+import software.wings.beans.command.Command;
 import software.wings.beans.EntityType;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.RequiredExecutionArgs;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.states.CommandState;
 import software.wings.sm.states.RepeatState;
+import software.wings.utils.JsonUtils;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -21,43 +26,59 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class StateMachineExecutionSimulator {
-  /**
-   * The Expression processor factory.
-   */
-  @Inject ExpressionProcessorFactory expressionProcessorFactory;
+  @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ExecutionContextFactory executionContextFactory;
 
-  /**
-   * Gets required execution args.
-   *
-   * @param stateMachine the state machine
-   * @return the required execution args
-   */
-  public RequiredExecutionArgs getRequiredExecutionArgs(StateMachine stateMachine) {
+  public RequiredExecutionArgs getRequiredExecutionArgs(
+      String appId, String envId, StateMachine stateMachine, ExecutionArgs executionArgs) {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    WorkflowStandardParams stdParams = new WorkflowStandardParams();
+    stdParams.setAppId(appId);
+    stdParams.setEnvId(envId);
+    stateExecutionInstance.getContextElements().push(stdParams);
+    ExecutionContextImpl context =
+        (ExecutionContextImpl) executionContextFactory.createExecutionContext(stateExecutionInstance, stateMachine);
+
     RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
     extrapolateRequiredExecutionArgs(
-        stateMachine, stateMachine.getInitialState(), requiredExecutionArgs, new HashSet<>());
+        context, stateMachine, stateMachine.getInitialState(), requiredExecutionArgs, new HashSet<>());
     return requiredExecutionArgs;
   }
 
-  private void extrapolateRequiredExecutionArgs(StateMachine stateMachine, State state,
+  private void extrapolateRequiredExecutionArgs(ExecutionContextImpl context, StateMachine stateMachine, State state,
       RequiredExecutionArgs requiredExecutionArgs, Set<EntityType> argsInContext) {
     if (state == null) {
       return;
     }
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+    stateExecutionInstance.setStateName(state.getName());
+
     if (state instanceof RepeatState) {
-      ExpressionProcessor processor =
-          expressionProcessorFactory.getExpressionProcessor(((RepeatState) state).getRepeatElementExpression(), null);
-      if (processor != null) {
+      String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
+      List<ContextElement> repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
+      State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
+      repeatElements.forEach(repeatElement -> {
+        StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
+        cloned.setStateName(repeat.getName());
+        ExecutionContextImpl childContext =
+            (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
+        childContext.pushContextElement(repeatElement);
         Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
-        addArgsTypeFromContextElement(repeatArgsInContext, processor.getContextElementType());
-        State repeat = stateMachine.getState(((RepeatState) state).getRepeatTransitionStateName());
-        extrapolateRequiredExecutionArgs(stateMachine, repeat, requiredExecutionArgs, repeatArgsInContext);
-      }
+        addArgsTypeFromContextElement(repeatArgsInContext, repeatElement.getElementType());
+        extrapolateRequiredExecutionArgs(
+            childContext, stateMachine, repeat, requiredExecutionArgs, repeatArgsInContext);
+      });
     }
 
     if (state.getRequiredExecutionArgumentTypes() != null) {
       for (EntityType type : state.getRequiredExecutionArgumentTypes()) {
-        if (!argsInContext.contains(type)) {
+        if (argsInContext.contains(type)) {
+          continue;
+        }
+        if (type == EntityType.INSTANCE) {
+          requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
+          requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
+        } else {
           requiredExecutionArgs.getEntityTypes().add(type);
         }
       }
@@ -65,16 +86,20 @@ public class StateMachineExecutionSimulator {
 
     State success = stateMachine.getSuccessTransition(state.getName());
     if (success != null) {
-      extrapolateRequiredExecutionArgs(stateMachine, success, requiredExecutionArgs, argsInContext);
+      extrapolateRequiredExecutionArgs(context, stateMachine, success, requiredExecutionArgs, argsInContext);
     }
 
     State failure = stateMachine.getFailureTransition(state.getName());
     if (failure != null) {
-      extrapolateRequiredExecutionArgs(stateMachine, failure, requiredExecutionArgs, argsInContext);
+      extrapolateRequiredExecutionArgs(context, stateMachine, failure, requiredExecutionArgs, argsInContext);
     }
     if (state instanceof CommandState) {
-      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
-      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
+      ContextElement service = context.getContextElement(ContextElementType.SERVICE);
+      Command command = serviceResourceService.getCommandByName(
+          context.getApp().getUuid(), service.getUuid(), ((CommandState) state).getCommandName());
+      if (command.isArtifactNeeded()) {
+        requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
+      }
     }
   }
 
@@ -96,5 +121,9 @@ public class StateMachineExecutionSimulator {
         return;
       }
     }
+  }
+
+  void setExecutionContextFactory(ExecutionContextFactory executionContextFactory) {
+    this.executionContextFactory = executionContextFactory;
   }
 }

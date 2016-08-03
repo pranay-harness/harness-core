@@ -33,7 +33,7 @@ public interface SshExecutor {
    * @param gridFsFileId             the grid fs file id
    * @return the execution result
    */
-  ExecutionResult scpGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
+  ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
 
   /**
    * Scp files execution result.
@@ -42,7 +42,7 @@ public interface SshExecutor {
    * @param files                    the files
    * @return the execution result
    */
-  ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files);
+  ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files);
 
   /**
    * The Enum ExecutorType.

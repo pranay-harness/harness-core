@@ -7,6 +7,7 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.EnumData;
+import software.wings.stencils.Expand;
 import software.wings.utils.Misc;
 
 /**
@@ -16,7 +17,8 @@ import software.wings.utils.Misc;
  */
 @Attributes(title = "Env")
 public class EnvState extends State {
-  @EnumData(expandIntoMultipleEntries = true, enumDataProvider = EnvironmentServiceImpl.class)
+  @Expand(dataProvider = EnvironmentServiceImpl.class)
+  @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   private String envId;
 
