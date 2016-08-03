@@ -220,6 +220,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(spyEnvService, times(4)).save(environmentArgumentCaptor.capture());
     assertThat(environmentArgumentCaptor.getAllValues())
         .extracting(Environment::getName)
-        .containsExactly(Constants.PROD_ENV, Constants.UAT_ENV, Constants.QA_ENV, Constants.DEV_ENV);
+        .containsExactly(Constants.DEV_ENV, Constants.QA_ENV, Constants.UAT_ENV, Constants.PROD_ENV);
   }
 }
