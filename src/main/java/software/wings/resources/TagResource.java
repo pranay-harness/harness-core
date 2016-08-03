@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Tag;
+import software.wings.beans.Tag.TagType;
 import software.wings.beans.UuidList;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -54,7 +55,7 @@ public class TagResource {
       @QueryParam("flatten") boolean flatten, @BeanParam PageRequest<Tag> request) {
     request.addFilter("appId", appId, EQ);
     request.addFilter("envId", envId, EQ);
-    request.addFilter("rootTag", true, EQ);
+    request.addFilter("tagType", TagType.ENVIRONMENT, EQ);
     return new RestResponse<>(tagService.list(request));
   }
 
@@ -138,7 +139,7 @@ public class TagResource {
   @Path("{tagId}/tag-hosts")
   public RestResponse tagHosts(@QueryParam("appId") String appId, @QueryParam("envId") String envId,
       @PathParam("tagId") String tagId, UuidList uuidList) {
-    tagService.tagHosts(appId, envId, tagId, uuidList.getUuids());
+    tagService.tagHostsByApi(appId, envId, tagId, uuidList.getUuids());
     return new RestResponse();
   }
 
@@ -166,7 +167,7 @@ public class TagResource {
    */
   @GET
   @Path("/leaf-tags")
-  public RestResponse<List<Tag>> tagTree(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
-    return new RestResponse<>(tagService.getLeafTags(tagService.getRootConfigTag(appId, envId)));
+  public RestResponse<List<Tag>> leafTags(@QueryParam("appId") String appId, @QueryParam("envId") String envId) {
+    return new RestResponse<>(tagService.getUserCreatedLeafTags(appId, envId));
   }
 }

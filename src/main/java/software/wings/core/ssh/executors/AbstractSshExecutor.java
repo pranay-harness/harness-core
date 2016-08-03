@@ -200,7 +200,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   @Override
-  public ExecutionResult scpGridFsFiles(
+  public ExecutionResult copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileIds) {
     return gridFsFileIds.stream()
         .map(fileId
@@ -223,7 +223,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
   }
 
   @Override
-  public ExecutionResult scpFiles(String destinationDirectoryPath, List<String> files) {
+  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
     return files.stream()
         .map(file
             -> scpOneFile(destinationDirectoryPath,

@@ -79,16 +79,16 @@ public interface TagService {
    * @param tagId   the tag id
    * @param hostIds the host ids
    */
-  void tagHosts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, @NotNull List<String> hostIds);
+  void tagHostsByApi(
+      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String tagId, @NotNull List<String> hostIds);
 
   /**
    * Tag hosts.
    *
-   * @param tag              the tag
-   * @param hostToBeUntagged the host to be untagged
-   * @param hostTobeTagged   the host tobe tagged
+   * @param tag   the tag
+   * @param hosts the hosts
    */
-  void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged);
+  void tagHosts(@NotNull Tag tag, @NotNull List<Host> hosts);
 
   /**
    * Gets the tags by name.
@@ -106,7 +106,7 @@ public interface TagService {
    * @param root the root
    * @return the leaf tags
    */
-  List<Tag> getLeafTags(@NotNull Tag root);
+  List<Tag> getLeafTagInSubTree(@NotNull Tag root);
 
   /**
    * Delete by env.
@@ -122,7 +122,7 @@ public interface TagService {
    * @param env the env
    * @return the tag
    */
-  Tag createDefaultRootTagForEnvironment(Environment env);
+  void createDefaultRootTagForEnvironment(Environment env);
 
   /**
    * Flatten tag tree list.
@@ -141,4 +141,22 @@ public interface TagService {
    * @return the tag hierarchy path string
    */
   String getTagHierarchyPathString(Tag tag);
+
+  /**
+   * Gets default tag for untagged hosts.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the default tag for untagged hosts
+   */
+  Tag getDefaultTagForUntaggedHosts(String appId, String envId);
+
+  /**
+   * Gets user created leaf tags.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the user created leaf tags
+   */
+  List<Tag> getUserCreatedLeafTags(String appId, String envId);
 }

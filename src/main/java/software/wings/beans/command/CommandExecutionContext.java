@@ -5,7 +5,10 @@ import com.google.common.base.MoreObjects;
 import software.wings.beans.Artifact;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
+import software.wings.service.intfc.FileService.FileBucket;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -20,6 +23,19 @@ public class CommandExecutionContext {
   private String stagingPath;
   private String backupPath;
   private ExecutionCredential executionCredential;
+
+  public CommandExecutionContext() {}
+
+  public CommandExecutionContext(CommandExecutionContext other) {
+    this.artifact = other.artifact;
+    this.serviceInstance = other.serviceInstance;
+    this.appId = other.appId;
+    this.activityId = other.activityId;
+    this.runtimePath = other.runtimePath;
+    this.stagingPath = other.stagingPath;
+    this.backupPath = other.backupPath;
+    this.executionCredential = other.executionCredential;
+  }
 
   /**
    * Gets artifact.
@@ -199,6 +215,18 @@ public class CommandExecutionContext {
         .add("backupPath", backupPath)
         .add("executionCredential", executionCredential)
         .toString();
+  }
+
+  public ExecutionResult executeCommandString(String commandString) {
+    throw new UnsupportedOperationException();
+  }
+
+  public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
+    throw new UnsupportedOperationException();
+  }
+
+  public ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> fileIds) {
+    throw new UnsupportedOperationException();
   }
 
   /**

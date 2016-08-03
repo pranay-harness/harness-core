@@ -53,7 +53,7 @@ public class ScpCommandUnit extends CommandUnit {
   }
 
   @Override
-  public void setup(CommandExecutionContext context) {
+  public ExecutionResult execute(CommandExecutionContext context) {
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
@@ -77,8 +77,9 @@ public class ScpCommandUnit extends CommandUnit {
         fileIds.add(appContainer.getFileUuid());
         break;
       default:
-        throw new WingsException(INVALID_REQUEST, "message", "Unsupported file category for scp command unit");
+        throw new WingsException(INVALID_REQUEST, "message", "Unsupported file category for copy step");
     }
+    return context.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
   }
 
   @SchemaIgnore

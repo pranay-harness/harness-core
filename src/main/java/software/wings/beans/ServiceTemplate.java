@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static software.wings.beans.EntityType.HOST;
+
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -15,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 4/4/16.
@@ -26,12 +29,13 @@ public class ServiceTemplate extends Base {
   private String envId;
   private String name;
   private String description;
+  @NotNull private EntityType mappedBy = HOST;
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
   @Transient private List<Host> taggedHosts = new ArrayList<>();
-  @Transient private List<ConfigFile> configFiles;
+  @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   /**
    * Gets name.
@@ -67,6 +71,24 @@ public class ServiceTemplate extends Base {
    */
   public void setDescription(String description) {
     this.description = description;
+  }
+
+  /**
+   * Gets mapped by.
+   *
+   * @return the mapped by
+   */
+  public EntityType getMappedBy() {
+    return mappedBy;
+  }
+
+  /**
+   * Sets mapped by.
+   *
+   * @param mappedBy the mapped by
+   */
+  public void setMappedBy(EntityType mappedBy) {
+    this.mappedBy = mappedBy;
   }
 
   /**
@@ -197,7 +219,8 @@ public class ServiceTemplate extends Base {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(envId, name, description, service, tags, hosts, leafTags);
+    return 31 * super.hashCode()
+        + Objects.hash(envId, name, description, mappedBy, service, tags, hosts, leafTags, taggedHosts, configFiles);
   }
 
   @Override
@@ -213,9 +236,10 @@ public class ServiceTemplate extends Base {
     }
     final ServiceTemplate other = (ServiceTemplate) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.name, other.name)
-        && Objects.equals(this.description, other.description) && Objects.equals(this.service, other.service)
-        && Objects.equals(this.tags, other.tags) && Objects.equals(this.hosts, other.hosts)
-        && Objects.equals(this.leafTags, other.leafTags);
+        && Objects.equals(this.description, other.description) && Objects.equals(this.mappedBy, other.mappedBy)
+        && Objects.equals(this.service, other.service) && Objects.equals(this.tags, other.tags)
+        && Objects.equals(this.hosts, other.hosts) && Objects.equals(this.leafTags, other.leafTags)
+        && Objects.equals(this.taggedHosts, other.taggedHosts) && Objects.equals(this.configFiles, other.configFiles);
   }
 
   @Override
@@ -224,10 +248,13 @@ public class ServiceTemplate extends Base {
         .add("envId", envId)
         .add("name", name)
         .add("description", description)
+        .add("mappedBy", mappedBy)
         .add("service", service)
         .add("tags", tags)
         .add("hosts", hosts)
         .add("leafTags", leafTags)
+        .add("taggedHosts", taggedHosts)
+        .add("configFiles", configFiles)
         .toString();
   }
 
@@ -238,10 +265,13 @@ public class ServiceTemplate extends Base {
     private String envId;
     private String name;
     private String description;
+    private EntityType mappedBy = HOST;
     private Service service;
     private List<Tag> tags = new ArrayList<>();
     private List<Host> hosts = new ArrayList<>();
-    private Set<Tag> leafTags = new HashSet<Tag>();
+    private Set<Tag> leafTags = new HashSet<>();
+    private List<Host> taggedHosts = new ArrayList<>();
+    private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
     private String appId;
     private User createdBy;
@@ -295,6 +325,17 @@ public class ServiceTemplate extends Base {
     }
 
     /**
+     * With mapped by builder.
+     *
+     * @param mappedBy the mapped by
+     * @return the builder
+     */
+    public Builder withMappedBy(EntityType mappedBy) {
+      this.mappedBy = mappedBy;
+      return this;
+    }
+
+    /**
      * With service builder.
      *
      * @param service the service
@@ -335,6 +376,28 @@ public class ServiceTemplate extends Base {
      */
     public Builder withLeafTags(Set<Tag> leafTags) {
       this.leafTags = leafTags;
+      return this;
+    }
+
+    /**
+     * With tagged hosts builder.
+     *
+     * @param taggedHosts the tagged hosts
+     * @return the builder
+     */
+    public Builder withTaggedHosts(List<Host> taggedHosts) {
+      this.taggedHosts = taggedHosts;
+      return this;
+    }
+
+    /**
+     * With config files builder.
+     *
+     * @param configFiles the config files
+     * @return the builder
+     */
+    public Builder withConfigFiles(List<ConfigFile> configFiles) {
+      this.configFiles = configFiles;
       return this;
     }
 
@@ -425,10 +488,13 @@ public class ServiceTemplate extends Base {
           .withEnvId(envId)
           .withName(name)
           .withDescription(description)
+          .withMappedBy(mappedBy)
           .withService(service)
           .withTags(tags)
           .withHosts(hosts)
           .withLeafTags(leafTags)
+          .withTaggedHosts(taggedHosts)
+          .withConfigFiles(configFiles)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -448,10 +514,13 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setEnvId(envId);
       serviceTemplate.setName(name);
       serviceTemplate.setDescription(description);
+      serviceTemplate.setMappedBy(mappedBy);
       serviceTemplate.setService(service);
       serviceTemplate.setTags(tags);
       serviceTemplate.setHosts(hosts);
       serviceTemplate.setLeafTags(leafTags);
+      serviceTemplate.setTaggedHosts(taggedHosts);
+      serviceTemplate.setConfigFiles(configFiles);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setAppId(appId);
       serviceTemplate.setCreatedBy(createdBy);
