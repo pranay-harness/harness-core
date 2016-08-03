@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
@@ -23,10 +24,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by peeyushaggarwal on 7/26/16.
@@ -87,6 +90,17 @@ public class InitCommandUnit extends CommandUnit {
       e.printStackTrace();
     }
     context.executeCommandString("chmod 0744 " + executionStagingDir + "/*");
+    StringBuffer envVariablesFromHost = new StringBuffer();
+    context.executeCommandString("printenv", envVariablesFromHost);
+    Properties properties = new Properties();
+    try {
+      properties.load(new StringReader(envVariablesFromHost.toString()));
+      context.addEnvVariables(
+          properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    context.addEnvVariables(envVariables);
     return executionResult;
   }
 
@@ -147,8 +161,6 @@ public class InitCommandUnit extends CommandUnit {
         files.add(commandFile);
       } else if (unit instanceof Command) {
         files.addAll(createScripts((Command) unit, unit.getName()));
-      } else if (unit instanceof ScpCommandUnit) {
-        ((ScpCommandUnit) unit).setEnvVariables(envVariables);
       }
     }
     return files;

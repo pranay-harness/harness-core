@@ -138,6 +138,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public ExecutionResult executeCommandString(String command) {
+    return executeCommandString(command, null);
+  }
+
+  @Override
+  public ExecutionResult executeCommandString(String command, StringBuffer output) {
     ExecutionResult executionResult = FAILURE;
     Channel channel = null;
     try {
@@ -149,7 +154,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       saveExecutionLog(format("Connecting to %s ....", config.getHost()));
       channel.connect();
       saveExecutionLog(format("Connection to %s established", config.getHost()));
-      saveExecutionLog(format("Execution started for command %s ...", command));
+      saveExecutionLog(format("Executing command %s ...", command));
 
       int totalBytesRead = 0;
       byte[] byteBuffer = new byte[1024];
@@ -166,6 +171,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
             throw new WingsException(UNKNOWN_ERROR); // TODO: better error reporting
           }
           String dataReadFromTheStream = new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+          if (output != null) {
+            output.append(dataReadFromTheStream);
+          }
 
           text += dataReadFromTheStream;
           text = processStreamData(text, false, outputStream);
@@ -413,7 +421,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         saveExecutionLog("SCP connection initiation failed");
         return executionResult;
       }
-      saveExecutionLog("Begin file transfer");
+      saveExecutionLog("Begin file transfer " + fileInfo.getKey() + " to " + config.getHost() + ":" + remoteFilePath);
       fileProvider.downloadToStream(out);
       out.write(new byte[1], 0, 1);
       out.flush();
