@@ -1,6 +1,9 @@
 package software.wings.beans.command;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Maps;
 
 import software.wings.beans.Artifact;
 import software.wings.beans.ExecutionCredential;
@@ -9,6 +12,8 @@ import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 /**
@@ -23,6 +28,7 @@ public class CommandExecutionContext {
   private String stagingPath;
   private String backupPath;
   private ExecutionCredential executionCredential;
+  private Map<String, String> envVariables = Maps.newHashMap();
 
   public CommandExecutionContext() {}
 
@@ -35,6 +41,7 @@ public class CommandExecutionContext {
     this.stagingPath = other.stagingPath;
     this.backupPath = other.backupPath;
     this.executionCredential = other.executionCredential;
+    this.envVariables = other.envVariables;
   }
 
   /**
@@ -221,12 +228,34 @@ public class CommandExecutionContext {
     throw new UnsupportedOperationException();
   }
 
+  public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
+    throw new UnsupportedOperationException();
+  }
+
   public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
     throw new UnsupportedOperationException();
   }
 
   public ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> fileIds) {
     throw new UnsupportedOperationException();
+  }
+
+  public void addEnvVariables(Map<String, String> envVariables) {
+    for (Entry<String, String> envVariable : envVariables.entrySet()) {
+      this.envVariables.put(envVariable.getKey(), evaluateVariable(envVariable.getValue()));
+    }
+  }
+
+  protected String evaluateVariable(String text) {
+    if (isNotBlank(text)) {
+      for (Entry<String, String> entry : envVariables.entrySet()) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        text = text.replaceAll("\\$\\{" + key + "\\}", value);
+        text = text.replaceAll("\\$" + key, value);
+      }
+    }
+    return text;
   }
 
   /**

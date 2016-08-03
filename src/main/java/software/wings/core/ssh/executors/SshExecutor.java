@@ -25,6 +25,8 @@ public interface SshExecutor {
    */
   ExecutionResult executeCommandString(String command);
 
+  ExecutionResult executeCommandString(String command, StringBuffer output);
+
   /**
    * Scp grid fs files execution result.
    *

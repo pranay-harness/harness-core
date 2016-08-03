@@ -40,8 +40,6 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
-  @SchemaIgnore private Map<String, String> envVariables;
-
   @SchemaIgnore private List<String> fileIds = new ArrayList<>();
   @SchemaIgnore private FileBucket fileBucket;
 
@@ -161,15 +159,6 @@ public class ScpCommandUnit extends CommandUnit {
    */
   public void setDestinationDirectoryPath(String destinationDirectoryPath) {
     this.destinationDirectoryPath = destinationDirectoryPath;
-  }
-
-  /**
-   * Sets env variables.
-   *
-   * @param envVariables the env variables
-   */
-  public void setEnvVariables(Map<String, String> envVariables) {
-    this.envVariables = envVariables;
   }
 
   @Override
