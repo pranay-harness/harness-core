@@ -9,7 +9,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -28,8 +27,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -121,20 +118,11 @@ public class ConfigServiceImpl implements ConfigService {
         return tagService.getTagHierarchyPathString(
             tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
       case HOST:
-        String envName = environmentService.get(configFile.getAppId(), configFile.getEnvId(), false).getName();
-        Set<Tag> tags = serviceTemplate.getLeafTags();
         Host host = hostService.getHostByEnv(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
-        Optional<Tag> firstCommanTag = host.getTags().stream().filter(tags::contains).findFirst();
-
-        if (firstCommanTag.isPresent()) { // host under tag
-          String tagHierarchyPathString = tagService.getTagHierarchyPathString(firstCommanTag.get());
-          return tagHierarchyPathString + "/" + host.getHostName();
-        } else { // host directly mapped
-          return envName + "/" + host.getHostName();
-        }
-
+        String tagHierarchyPathString = tagService.getTagHierarchyPathString(host.getConfigTag());
+        return tagHierarchyPathString + "/" + host.getHostName();
       default:
-        throw new WingsException(UNKNOWN_ERROR, "message", "Unknow entity type encountered");
+        throw new WingsException(UNKNOWN_ERROR, "message", "Unknown entity type encountered");
     }
   }
 

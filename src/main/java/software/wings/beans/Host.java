@@ -42,7 +42,7 @@ public class Host extends Base {
   @Reference(idOnly = true, ignoreMissing = true)
   private SettingAttribute bastionConnAttr;
 
-  @FormDataParam("tags") @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
+  @FormDataParam("configTag") @Reference(idOnly = true, ignoreMissing = true) private Tag configTag;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
@@ -128,21 +128,21 @@ public class Host extends Base {
   }
 
   /**
-   * Gets tags.
+   * Gets config tag.
    *
-   * @return the tags
+   * @return the config tag
    */
-  public List<Tag> getTags() {
-    return tags;
+  public Tag getConfigTag() {
+    return configTag;
   }
 
   /**
-   * Sets tags.
+   * Sets config tag.
    *
-   * @param tags the tags
+   * @param configTag the config tag
    */
-  public void setTags(List<Tag> tags) {
-    this.tags = tags;
+  public void setConfigTag(Tag configTag) {
+    this.configTag = configTag;
   }
 
   /**
@@ -238,7 +238,7 @@ public class Host extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, tags, configFiles,
+        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles,
               hostConnectionCredential, hostNames, serviceTemplates);
   }
 
@@ -256,8 +256,8 @@ public class Host extends Base {
     final Host other = (Host) obj;
     return Objects.equals(this.infraId, other.infraId) && Objects.equals(this.hostName, other.hostName)
         && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
-        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr) && Objects.equals(this.tags, other.tags)
-        && Objects.equals(this.configFiles, other.configFiles)
+        && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
+        && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential)
         && Objects.equals(this.hostNames, other.hostNames)
         && Objects.equals(this.serviceTemplates, other.serviceTemplates);
@@ -271,7 +271,7 @@ public class Host extends Base {
         .add("osType", osType)
         .add("hostConnAttr", hostConnAttr)
         .add("bastionConnAttr", bastionConnAttr)
-        .add("tags", tags)
+        .add("configTag", configTag)
         .add("configFiles", configFiles)
         .add("hostConnectionCredential", hostConnectionCredential)
         .add("hostNames", hostNames)
@@ -288,9 +288,9 @@ public class Host extends Base {
     private String osType;
     private SettingAttribute hostConnAttr;
     private SettingAttribute bastionConnAttr;
-    private List<Tag> tags = new ArrayList<>();
+    private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
-    private HostConnectionCredential hostConnectionCredential; // TODO: remove
+    private HostConnectionCredential hostConnectionCredential;
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
     private String uuid;
@@ -303,207 +303,95 @@ public class Host extends Base {
 
     private Builder() {}
 
-    /**
-     * A host builder.
-     *
-     * @return the builder
-     */
     public static Builder aHost() {
       return new Builder();
     }
 
-    /**
-     * With infra id builder.
-     *
-     * @param infraId the infra id
-     * @return the builder
-     */
     public Builder withInfraId(String infraId) {
       this.infraId = infraId;
       return this;
     }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    /**
-     * With os type builder.
-     *
-     * @param osType the os type
-     * @return the builder
-     */
     public Builder withOsType(String osType) {
       this.osType = osType;
       return this;
     }
 
-    /**
-     * With host conn attr builder.
-     *
-     * @param hostConnAttr the host conn attr
-     * @return the builder
-     */
     public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
       return this;
     }
 
-    /**
-     * With bastion conn attr builder.
-     *
-     * @param bastionConnAttr the bastion conn attr
-     * @return the builder
-     */
     public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
-    /**
-     * With tags builder.
-     *
-     * @param tags the tags
-     * @return the builder
-     */
-    public Builder withTags(List<Tag> tags) {
-      this.tags = tags;
+    public Builder withConfigTag(Tag configTag) {
+      this.configTag = configTag;
       return this;
     }
 
-    /**
-     * With config files builder.
-     *
-     * @param configFiles the config files
-     * @return the builder
-     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
-    /**
-     * With host connection credential builder.
-     *
-     * @param hostConnectionCredential the host connection credential
-     * @return the builder
-     */
     public Builder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
       this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
-    /**
-     * With host names builder.
-     *
-     * @param hostNames the host names
-     * @return the builder
-     */
     public Builder withHostNames(List<String> hostNames) {
       this.hostNames = hostNames;
       return this;
     }
 
-    /**
-     * With service templates builder.
-     *
-     * @param serviceTemplates the service templates
-     * @return the builder
-     */
     public Builder withServiceTemplates(List<ServiceTemplate> serviceTemplates) {
       this.serviceTemplates = serviceTemplates;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aHost()
           .withInfraId(infraId)
@@ -511,7 +399,7 @@ public class Host extends Base {
           .withOsType(osType)
           .withHostConnAttr(hostConnAttr)
           .withBastionConnAttr(bastionConnAttr)
-          .withTags(tags)
+          .withConfigTag(configTag)
           .withConfigFiles(configFiles)
           .withHostConnectionCredential(hostConnectionCredential)
           .withHostNames(hostNames)
@@ -525,11 +413,6 @@ public class Host extends Base {
           .withActive(active);
     }
 
-    /**
-     * Build host.
-     *
-     * @return the host
-     */
     public Host build() {
       Host host = new Host();
       host.setInfraId(infraId);
@@ -537,7 +420,7 @@ public class Host extends Base {
       host.setOsType(osType);
       host.setHostConnAttr(hostConnAttr);
       host.setBastionConnAttr(bastionConnAttr);
-      host.setTags(tags);
+      host.setConfigTag(configTag);
       host.setConfigFiles(configFiles);
       host.setHostConnectionCredential(hostConnectionCredential);
       host.setHostNames(hostNames);

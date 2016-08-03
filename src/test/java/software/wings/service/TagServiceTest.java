@@ -292,7 +292,7 @@ public class TagServiceTest extends WingsBaseTest {
 
     tagService.tagHosts(tag, asList(host));
 
-    verify(hostService).setTags(host, asList(tag));
+    verify(hostService).setTag(host, tag);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(host), asList());
   }
 
@@ -304,7 +304,7 @@ public class TagServiceTest extends WingsBaseTest {
     Tag tag = getTagBuilder().withUuid(TAG_ID).build();
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
-    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).withTags(asList(tag)).build();
+    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid(HOST_ID).withConfigTag(tag).build();
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
@@ -327,7 +327,7 @@ public class TagServiceTest extends WingsBaseTest {
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("NEW_HOST_ID").build();
     Host existingHost =
-        aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("EXISTING_HOST_ID").withTags(asList(tag)).build();
+        aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("EXISTING_HOST_ID").withConfigTag(tag).build();
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
@@ -337,7 +337,7 @@ public class TagServiceTest extends WingsBaseTest {
 
     tagService.tagHosts(tag, asList(newHost));
 
-    verify(hostService).setTags(newHost, asList(tag));
+    verify(hostService).setTag(newHost, tag);
     verify(hostService).removeTagFromHost(existingHost, tag);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(newHost), asList());
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(existingHost));
