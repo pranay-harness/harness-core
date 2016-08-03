@@ -278,9 +278,11 @@ public class PageRequest<T> {
         filter.setOp(Operator.valueOf(map.getFirst(key + "[op]")));
       }
       if (map.containsKey(key + "[value]")) {
-        if (Arrays.asList(Long.TYPE, Integer.TYPE, Short.TYPE)
+        if (Arrays.asList(Long.TYPE, Integer.TYPE, Short.TYPE, Byte.TYPE)
                 .contains(mappedClass.getMappedField(filter.getFieldName()).getType())) {
           filter.setFieldValues(Long.parseLong(map.getFirst(key + "[value]")));
+        } else if (Arrays.asList(Boolean.TYPE).contains(mappedClass.getMappedField(filter.getFieldName()).getType())) {
+          filter.setFieldValues(Boolean.parseBoolean(map.getFirst(key + "[value]")));
         } else {
           filter.setFieldValues(map.get(key + "[value]").toArray());
         }

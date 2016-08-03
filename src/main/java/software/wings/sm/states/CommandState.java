@@ -408,7 +408,7 @@ public class CommandState extends State {
   @Override
   @SchemaIgnore
   public List<EntityType> getRequiredExecutionArgumentTypes() {
-    return Lists.newArrayList(EntityType.SERVICE, EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.ARTIFACT);
+    return Lists.newArrayList(EntityType.SERVICE, EntityType.INSTANCE);
   }
 
   /**
@@ -429,5 +429,32 @@ public class CommandState extends State {
   @SchemaIgnore
   public void setExecutorService(ExecutorService executorService) {
     this.executorService = executorService;
+  }
+
+  public static final class Builder {
+    private String commandName;
+    private String name;
+
+    private Builder() {}
+
+    public static Builder aCommandState() {
+      return new Builder();
+    }
+
+    public Builder withCommandName(String commandName) {
+      this.commandName = commandName;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    public CommandState build() {
+      CommandState commandState = new CommandState(name);
+      commandState.setCommandName(commandName);
+      return commandState;
+    }
   }
 }

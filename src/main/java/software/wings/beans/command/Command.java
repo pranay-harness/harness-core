@@ -41,7 +41,9 @@ public class Command extends CommandUnit {
   }
 
   @Override
-  public void setup(CommandExecutionContext context) {}
+  public ExecutionResult execute(CommandExecutionContext context) {
+    throw new UnsupportedOperationException();
+  }
 
   /**
    * Gets reference id.

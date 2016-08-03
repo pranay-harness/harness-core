@@ -1096,7 +1096,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       if (stateMachine == null) {
         throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Associated state machine not found");
       }
-      return stateMachineExecutionSimulator.getRequiredExecutionArgs(stateMachine);
+      return stateMachineExecutionSimulator.getRequiredExecutionArgs(appId, envId, stateMachine, executionArgs);
 
     } else if (executionArgs.getWorkflowType() == WorkflowType.SIMPLE) {
       logger.debug("Received an simple execution request");

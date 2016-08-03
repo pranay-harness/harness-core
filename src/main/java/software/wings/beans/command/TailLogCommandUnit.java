@@ -24,11 +24,11 @@ public class TailLogCommandUnit extends ExecCommandUnit {
     setCommandUnitType(TAIL_LOG);
   }
 
-  @Override
+  /*@Override
   public void setup(CommandExecutionContext context) {
     filePath = context.getRuntimePath() + "/" + filePath;
     setCommandString(String.format("tail -f -n +1 %s | grep '%s'", filePath, searchString));
-  }
+  }*/
 
   @Override
   public CommandUnitExecutionResult processCommandOutput(String line) {

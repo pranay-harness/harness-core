@@ -667,8 +667,8 @@ public class StateMachine extends Base {
     private String originId;
     private String name;
     private Graph graph;
-    private List<State> states;
-    private List<Transition> transitions;
+    private List<State> states = new ArrayList<>();
+    private List<Transition> transitions = new ArrayList<>();
     private String initialStateName;
     private String uuid;
     private String appId;
@@ -726,24 +726,24 @@ public class StateMachine extends Base {
     }
 
     /**
-     * With states.
+     * Add state.
      *
-     * @param states the states
+     * @param state the state
      * @return the builder
      */
-    public Builder withStates(List<State> states) {
-      this.states = states;
+    public Builder addState(State state) {
+      this.states.add(state);
       return this;
     }
 
     /**
-     * With transitions.
+     * Add transition.
      *
-     * @param transitions the transitions
+     * @param transition the transitions
      * @return the builder
      */
-    public Builder withTransitions(List<Transition> transitions) {
-      this.transitions = transitions;
+    public Builder addTransition(Transition transition) {
+      this.transitions.add(transition);
       return this;
     }
 
