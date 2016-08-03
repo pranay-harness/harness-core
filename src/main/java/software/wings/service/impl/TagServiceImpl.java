@@ -71,6 +71,9 @@ public class TagServiceImpl implements TagService {
       throw new WingsException(INVALID_ARGUMENT, "message", "Parent tag couldn't be found.");
     } else if (parentTag == null && tag.getTagType().equals(TagType.ENVIRONMENT)) {
       return wingsPersistence.saveAndGet(Tag.class, tag);
+    } else if (parentTag.getTagType().equals(TagType.UNTAGGED_HOST)) {
+      throw new WingsException(
+          INVALID_REQUEST, "message", "Environment default tag for untagged hosts can not be extended");
     } else {
       tag.setParentTagId(parentTag.getUuid());
       tag.setRootTagId(
@@ -158,7 +161,7 @@ public class TagServiceImpl implements TagService {
   public Tag update(Tag tag) {
     tag = get(tag.getAppId(), tag.getEnvId(), tag.getUuid());
     if (tag == null) {
-      throw new WingsException(INVALID_REQUEST, "message", "Tag doesn't exist");
+      throw new WingsException(INVALID_ARGUMENT, "args", "Tag doesn't exist");
     }
 
     if (!tag.getTagType().isModificationAllowed()) {
