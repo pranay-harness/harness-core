@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -83,9 +84,12 @@ public class ConfigResource {
       @QueryParam("entityType") EntityType entityType, @QueryParam("envId") String envId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+    configFile.setAppId(appId);
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
-    configFile.setAppId(appId);
+    if (configFile.getEntityType().equals(SERVICE)) {
+      envId = GLOBAL_ENV_ID;
+    }
     configFile.setEnvId(envId);
     configFile.setFileName(fileDetail.getFileName());
     String fileId = configService.save(configFile, uploadedInputStream);
@@ -102,7 +106,7 @@ public class ConfigResource {
   @GET
   @Path("{configId}")
   public RestResponse<ConfigFile> get(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
-    return new RestResponse<>(configService.get(appId, configId));
+    return new RestResponse<>(configService.get(appId, configId, false));
   }
 
   /**
@@ -151,7 +155,7 @@ public class ConfigResource {
   @GET
   @Path("{configId}/download")
   @Encoded
-  public Response exportLogs(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
+  public Response downloadConfig(@QueryParam("appId") String appId, @PathParam("configId") String configId) {
     File configFile = configService.download(appId, configId);
     Response.ResponseBuilder response = Response.ok(configFile, "application/x-unknown");
     response.header("Content-Disposition", "attachment; filename=" + configFile.getName());
