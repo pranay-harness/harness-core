@@ -104,12 +104,12 @@ public interface HostService {
   List<Host> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
 
   /**
-   * Sets tags.
+   * Sets tag.
    *
    * @param host the host
-   * @param tags the tags
+   * @param tag  the tag
    */
-  void setTags(@NotNull Host host, @NotNull List<Tag> tags);
+  void setTag(@NotNull Host host, @NotNull Tag tag);
 
   /**
    * Remove tag from host.

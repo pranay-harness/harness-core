@@ -1,5 +1,7 @@
 {
   "commandString": {
-    "ui:widget": "textarea"
-  }
+    "ui:widget": "textarea",
+    "classNames": "__execCommandTextarea"
+  },
+  "ui:order": ["commandPath", "commandString", "tailFiles", "tailPatterns"]
 }

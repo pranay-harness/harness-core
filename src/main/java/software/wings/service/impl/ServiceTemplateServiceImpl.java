@@ -234,10 +234,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   private void deleteHostsMappedByTags(Host host) {
-    host.getTags()
-        .stream()
-        .map(this ::getTemplatesByLeafTag)
-        .flatMap(List::stream)
+    getTemplatesByLeafTag(host.getConfigTag())
         .forEach(
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }

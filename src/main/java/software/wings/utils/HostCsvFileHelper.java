@@ -28,7 +28,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
@@ -72,7 +71,7 @@ public class HostCsvFileHelper {
                       .withHostName(hostName)
                       .withHostConnAttr(hostConnectionAttrs)
                       .withBastionConnAttr(bastionHostAttrs)
-                      .withTags(tags)
+                      .withConfigTag(tags.get(0))
                       .build());
       }
     } catch (IOException ex) {
@@ -103,9 +102,7 @@ public class HostCsvFileHelper {
         row.add(host.getHostName());
         row.add(host.getHostConnAttr() != null ? host.getHostConnAttr().getName() : null);
         row.add(host.getBastionConnAttr() != null ? host.getBastionConnAttr().getName() : null);
-        row.add(host.getTags() != null
-                ? host.getTags().stream().map(tag -> tag.getName()).collect(Collectors.joining(","))
-                : null);
+        row.add(host.getConfigTag().getName());
         try {
           csvPrinter.printRecord(row);
         } catch (IOException e) {

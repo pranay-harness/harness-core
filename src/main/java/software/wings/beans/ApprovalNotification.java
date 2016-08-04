@@ -131,7 +131,6 @@ public class ApprovalNotification extends ActionableNotification {
     private String environmentId;
     private String entityId;
     private EntityType entityType;
-    private boolean complete = true;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -214,17 +213,6 @@ public class ApprovalNotification extends ActionableNotification {
      */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
-      return this;
-    }
-
-    /**
-     * With complete builder.
-     *
-     * @param complete the complete
-     * @return the builder
-     */
-    public Builder withComplete(boolean complete) {
-      this.complete = complete;
       return this;
     }
 
@@ -318,7 +306,6 @@ public class ApprovalNotification extends ActionableNotification {
           .withEnvironmentId(environmentId)
           .withEntityId(entityId)
           .withEntityType(entityType)
-          .withComplete(complete)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -341,7 +328,6 @@ public class ApprovalNotification extends ActionableNotification {
       approvalNotification.setEnvironmentId(environmentId);
       approvalNotification.setEntityId(entityId);
       approvalNotification.setEntityType(entityType);
-      approvalNotification.setComplete(complete);
       approvalNotification.setUuid(uuid);
       approvalNotification.setAppId(appId);
       approvalNotification.setCreatedBy(createdBy);

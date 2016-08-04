@@ -10,7 +10,7 @@ public class ChangeNotification extends Notification {
    * Instantiates a new Change notification.
    */
   public ChangeNotification() {
-    super(NotificationType.CHANGE, true);
+    super(NotificationType.CHANGE);
   }
 
   /**

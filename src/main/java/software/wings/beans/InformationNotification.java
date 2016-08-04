@@ -10,7 +10,7 @@ public class InformationNotification extends Notification {
    * Instantiates a new Information notification.
    */
   public InformationNotification() {
-    super(NotificationType.INFORMATION, true);
+    super(NotificationType.INFORMATION);
   }
 
   /**

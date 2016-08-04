@@ -4,6 +4,8 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.stencils.DefaultValue;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 7/12/16.
  */
@@ -35,9 +37,21 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
     return super.getCommandString();
   }
 
-  @Attributes(title = "Execution Directory", description = "Relative to ${RuntimePath}")
+  @Attributes(title = "Working Directory")
   @Override
   public String getCommandPath() {
     return super.getCommandPath();
+  }
+
+  @SchemaIgnore
+  @Override
+  public boolean isTailFiles() {
+    return super.isTailFiles();
+  }
+
+  @SchemaIgnore
+  @Override
+  public List<TailFilePatternEntry> getTailPatterns() {
+    return super.getTailPatterns();
   }
 }

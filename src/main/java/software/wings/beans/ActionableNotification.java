@@ -9,7 +9,6 @@ import java.util.List;
  * Created by anubhaw on 7/28/16.
  */
 public abstract class ActionableNotification extends Notification {
-  private boolean actionable = true;
   private List<NotificationAction> notificationActions = new ArrayList<>();
 
   /**
@@ -28,7 +27,7 @@ public abstract class ActionableNotification extends Notification {
    * @param notificationActions the notification actions
    */
   public ActionableNotification(NotificationType notificationType, List<NotificationAction> notificationActions) {
-    super(notificationType, false);
+    super(notificationType, true);
     if (notificationActions != null) {
       this.notificationActions = notificationActions;
     }
@@ -41,15 +40,6 @@ public abstract class ActionableNotification extends Notification {
    * @return the boolean
    */
   public abstract boolean performAction(NotificationActionType actionType);
-
-  /**
-   * Is actionable boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isActionable() {
-    return actionable;
-  }
 
   /**
    * Gets notification actions.

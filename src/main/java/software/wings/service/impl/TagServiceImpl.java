@@ -311,8 +311,7 @@ public class TagServiceImpl implements TagService {
 
     // Tag
     hostTobeTagged.forEach(host -> {
-      List<Tag> tags = removeAnyTagFromSameTagTree(tag, host);
-      hostService.setTags(host, tags);
+      hostService.setTag(host, tag);
       if (serviceTemplates != null) {
         serviceTemplates.forEach(
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(host), asList()));
@@ -327,20 +326,6 @@ public class TagServiceImpl implements TagService {
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
       }
     });
-  }
-
-  private List<Tag> removeAnyTagFromSameTagTree(Tag tag, Host host) {
-    List<Tag> tags = host.getTags();
-    if (tags != null && tags.size() != 0) {
-      for (int i = 0; i < tags.size(); i++) {
-        if (tag.getRootTagId().equals(tags.get(i).getRootTagId())) {
-          tags.remove(i);
-          break;
-        }
-      }
-    }
-    tags.add(tag);
-    return tags;
   }
 
   /* (non-Javadoc)

@@ -28,6 +28,7 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
+import software.wings.beans.Tag.TagType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -102,6 +103,8 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host update(String envId, Host host) {
+    Host savedHost = get(host.getAppId(), host.getInfraId(), host.getUuid());
+
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder()
                                        .put("hostName", host.getHostName())
                                        .put("hostConnAttr", host.getHostConnAttr());
@@ -110,21 +113,27 @@ public class HostServiceImpl implements HostService {
     }
     wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
 
-    List<Tag> tags = validateAndFetchTags(host.getAppId(), envId, host.getTags());
-    if (tags.size() == 0) {
-      tags.add(tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId));
-    }
-    tags.forEach(tag -> {
-      List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
-      hostsByTags.add(host);
-      tagService.tagHosts(tag, hostsByTags);
-    });
+    Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
 
-    Host savedHost = wingsPersistence.get(Host.class, host.getUuid());
+    if (tag != null && tag.equals(savedHost.getConfigTag())) {
+      return wingsPersistence.get(Host.class, host.getAppId(), host.getUuid());
+    }
+
+    // Tag update -> should update host mapped in template
+
+    if (tag == null) {
+      tag = tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId);
+    }
+
+    List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
+    hostsByTags.add(host);
+    tagService.tagHosts(tag, hostsByTags);
 
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(host.getAppId(), envId, host.getServiceTemplates());
-    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, asList(savedHost)));
+    serviceTemplates.forEach(serviceTemplate
+        -> serviceTemplateService.addHosts(
+            serviceTemplate, asList(get(host.getAppId(), host.getInfraId(), host.getUuid()))));
     return host;
   }
 
@@ -167,25 +176,25 @@ public class HostServiceImpl implements HostService {
         .equal(appId)
         .field("infraId")
         .equal(infraId)
-        .field("tags")
+        .field("configTag")
         .hasAnyOf(tags)
         .asList();
   }
 
   @Override
-  public void setTags(Host host, List<Tag> tags) {
-    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("tags", tags);
+  public void setTag(Host host, Tag tag) {
+    if (tag == null) {
+      throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Can not tag host with null tag");
+    }
+    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("configTag", tag);
     wingsPersistence.update(host, updateOp);
   }
 
   @Override
   public void removeTagFromHost(Host host, Tag tag) {
-    List<Tag> tags = host.getTags();
-    tags.remove(tag);
-    if (tags.size() == 0) {
-      tags.add(tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+    if (!host.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)) {
+      setTag(host, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
     }
-    setTags(host, tags);
   }
 
   @Override
@@ -287,11 +296,11 @@ public class HostServiceImpl implements HostService {
       if (bastionConnAttr != null) {
         host.setBastionConnAttr(bastionConnAttr);
       }
-      List<Tag> tags = validateAndFetchTags(baseHost.getAppId(), envId, baseHost.getTags());
-      if (tags.size() == 0) {
-        tags.add(tagService.getDefaultTagForUntaggedHosts(baseHost.getAppId(), envId));
+      Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
+      if (configTag == null) {
+        configTag = tagService.getDefaultTagForUntaggedHosts(baseHost.getAppId(), envId);
       }
-      host.setTags(tags);
+      host.setConfigTag(configTag);
       try {
         Host savedHost = save(host);
         savedHosts.add(savedHost);
@@ -337,20 +346,15 @@ public class HostServiceImpl implements HostService {
     return fetchedServiceTemplate;
   }
 
-  private List<Tag> validateAndFetchTags(String appId, String envId, List<Tag> tags) {
-    List<Tag> fetchedTags = new ArrayList<>();
-    if (tags != null) {
-      tags.forEach(tag -> {
-        if (isValidDbReference(tag)) {
-          Tag fetchedTag = tagService.get(appId, envId, tag.getUuid());
-          if (fetchedTag == null) {
-            throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "tags");
-          }
-          fetchedTags.add(fetchedTag);
-        }
-      });
+  private Tag validateAndFetchTag(String appId, String envId, Tag tag) {
+    Tag fetchedTag = null;
+    if (isValidDbReference(tag)) {
+      fetchedTag = tagService.get(appId, envId, tag.getUuid());
+      if (fetchedTag == null) {
+        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "configTags");
+      }
     }
-    return fetchedTags;
+    return fetchedTag;
   }
 
   private SettingAttribute validateAndFetchBastionHostConnectionReference(
