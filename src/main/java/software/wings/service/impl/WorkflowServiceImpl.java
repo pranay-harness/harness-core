@@ -1112,7 +1112,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
       }
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-      if (executionArgs.getCommandName() != null) {
+      if (StringUtils.isNotBlank(executionArgs.getCommandName())) {
         Command command = serviceResourceService.getCommandByName(
             appId, executionArgs.getServiceId(), executionArgs.getCommandName());
         if (command.isArtifactNeeded()) {
