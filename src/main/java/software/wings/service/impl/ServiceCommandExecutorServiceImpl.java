@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
-import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import software.wings.beans.ServiceInstance;
@@ -48,6 +47,10 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     try {
       prepareCommand(serviceInstance, command);
+      InitCommandUnit initCommandUnit = new InitCommandUnit();
+      initCommandUnit.setCommand(command);
+      command.getCommandUnits().add(0, initCommandUnit);
+
       ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       return executionResult;
@@ -78,21 +81,17 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     List<CommandUnit> commandUnits = command.getCommandUnits();
 
-    InitCommandUnit initCommandUnit = new InitCommandUnit();
-    initCommandUnit.setCommand(command);
-    command.getCommandUnits().add(0, initCommandUnit);
-    ExecutionResult executionResult =
-        commandUnitExecutorService.execute(serviceInstance.getHost(), initCommandUnit, context);
-    if (SUCCESS == executionResult) {
-      for (CommandUnit commandUnit : commandUnits) {
-        executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
-            ? executeCommand(serviceInstance, (Command) commandUnit, context)
-            : commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context);
-        if (FAILURE == executionResult) {
-          break;
-        }
+    ExecutionResult executionResult = ExecutionResult.FAILURE;
+
+    for (CommandUnit commandUnit : commandUnits) {
+      executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
+          ? executeCommand(serviceInstance, (Command) commandUnit, context)
+          : commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context);
+      if (FAILURE == executionResult) {
+        break;
       }
     }
+
     return executionResult;
   }
 }
