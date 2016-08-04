@@ -6,14 +6,18 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
 
+import java.util.List;
+
 /**
  * Created by anubhaw on 5/25/16.
  */
 public class ExecCommandUnit extends CommandUnit {
-  @Attributes(title = "Execution Directory", description = "Relative to ${RuntimePath}")
-  @NotEmpty
-  private String commandPath;
+  @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
+
+  @Attributes(title = "Tail Files?") private boolean tailFiles;
+
+  @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
 
   @SchemaIgnore private String preparedCommand;
 
@@ -81,6 +85,22 @@ public class ExecCommandUnit extends CommandUnit {
    */
   public void setPreparedCommand(String preparedCommand) {
     this.preparedCommand = preparedCommand;
+  }
+
+  public boolean isTailFiles() {
+    return tailFiles;
+  }
+
+  public void setTailFiles(boolean tailFiles) {
+    this.tailFiles = tailFiles;
+  }
+
+  public List<TailFilePatternEntry> getTailPatterns() {
+    return tailPatterns;
+  }
+
+  public void setTailPatterns(List<TailFilePatternEntry> tailPatterns) {
+    this.tailPatterns = tailPatterns;
   }
 
   /**
