@@ -60,6 +60,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.AppContainer;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Base;
@@ -556,6 +557,19 @@ public class DataGenUtil extends WingsBaseTest {
                                          .withPort(8089)
                                          .withPassword("W!ngs@Splunk")
                                          .withUsername("admin")
+                                         .build())
+                          .build(),
+            APPLICATION_JSON),
+        new GenericType<RestResponse<SettingAttribute>>() {});
+
+    getRequestWithAuthHeader(target).post(
+        Entity.entity(aSettingAttribute()
+                          .withName("App Dynamics")
+                          .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
+                                         .withControllerUrl("https://wingssoftware.saas.appdynamics.com/controller")
+                                         .withUsername("testuser")
+                                         .withAccountname("WingsSoftware")
+                                         .withPassword("testuser123")
                                          .build())
                           .build(),
             APPLICATION_JSON),
