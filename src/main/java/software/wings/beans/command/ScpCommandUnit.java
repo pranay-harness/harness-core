@@ -32,11 +32,11 @@ import java.util.stream.Stream;
  * Created by anubhaw on 7/14/16.
  */
 public class ScpCommandUnit extends CommandUnit {
-  @Attributes(title = "File Type")
+  @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
 
-  @Attributes(title = "Destination path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
+  @Attributes(title = "Destination Path") @DefaultValue("$WINGS_RUNTIME_PATH") private String destinationDirectoryPath;
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
