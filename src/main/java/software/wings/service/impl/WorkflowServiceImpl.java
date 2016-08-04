@@ -81,6 +81,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -1109,19 +1110,21 @@ public class WorkflowServiceImpl implements WorkflowService {
         throw new WingsException(
             ErrorCodes.INVALID_REQUEST, "message", "serviceInstances are empty for a simple execution");
       }
-      if (executionArgs.getCommandName() == null) {
-        logger.error("commandName is null for a simple execution");
-        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "commandName is null for a simple execution");
-      }
-      Command command =
-          serviceResourceService.getCommandByName(appId, executionArgs.getServiceId(), executionArgs.getCommandName());
-
       RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
-      if (command.isArtifactNeeded()) {
-        requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
+      if (executionArgs.getCommandName() != null) {
+        Command command = serviceResourceService.getCommandByName(
+            appId, executionArgs.getServiceId(), executionArgs.getCommandName());
+        if (command.isArtifactNeeded()) {
+          requiredExecutionArgs.getEntityTypes().add(EntityType.ARTIFACT);
+        }
       }
-      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_USER);
-      requiredExecutionArgs.getEntityTypes().add(EntityType.SSH_PASSWORD);
+      List<String> serviceInstanceIds =
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(Collectors.toList());
+      Set<EntityType> infraReqEntityTypes =
+          stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(appId, serviceInstanceIds);
+      if (infraReqEntityTypes != null) {
+        requiredExecutionArgs.getEntityTypes().addAll(infraReqEntityTypes);
+      }
       return requiredExecutionArgs;
     }
 

@@ -3,6 +3,7 @@
  */
 package software.wings.sm;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doReturn;
@@ -13,7 +14,10 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Service.Builder.aService;
+import static software.wings.beans.Host.Builder.aHost;
+import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
+import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.sm.StateMachine.Builder.aStateMachine;
 import static software.wings.sm.Transition.Builder.aTransition;
@@ -27,17 +31,22 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.RequiredExecutionArgs;
-import software.wings.beans.Service;
+import software.wings.beans.ServiceInstance;
 import software.wings.beans.command.Command;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import java.util.List;
 import javax.inject.Inject;
 
 /**
@@ -48,6 +57,7 @@ import javax.inject.Inject;
 public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
   @InjectMocks @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceInstanceService serviceInstanceService;
 
   @Test
   public void shouldReturnEmptyArgType() {
@@ -63,19 +73,19 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         aStateMachine()
             .addState(s1)
             .addState(s2)
+            .withInitialStateName(s1.getName())
             .addTransition(
                 aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
             .build();
 
-    Application app = anApplication().withUuid(getUuid()).build();
-    Environment env = anEnvironment().withUuid(getUuid()).build();
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    stateMachineExecutionSimulator.setExecutionContextFactory(new ExecutionContextFactoryTest(app, env, service, null));
 
     ExecutionArgs executionArgs = new ExecutionArgs();
 
-    PageResponse<Service> res = new PageResponse<>();
-    res.setResponse(
-        Lists.newArrayList(aService().withUuid(getUuid()).withAppId(app.getUuid()).withName("service1").build()));
-    when(serviceResourceService.list(anyObject())).thenReturn(res);
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
     assertThat(reqArgs).isNotNull();
@@ -96,25 +106,40 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         aStateMachine()
             .addState(s1)
             .addState(s2)
-            .withInitialStateName("ByInstance")
+            .withInitialStateName(s1.getName())
             .addTransition(
                 aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
             .build();
 
     Application app = anApplication().withName("App1").withUuid(getUuid()).build();
     Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
-    Service service = aService().withUuid(getUuid()).withAppId(app.getUuid()).withName("service1").build();
 
-    stateMachineExecutionSimulator.setExecutionContextFactory(new ExecutionContextFactoryTest(app, service, env));
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    List<InstanceElement> instances =
+        Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build(),
+            anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build());
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
 
     ExecutionArgs executionArgs = new ExecutionArgs();
 
-    PageResponse<Service> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(service));
-    when(serviceResourceService.list(anyObject())).thenReturn(res);
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(false);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "STOP")).thenReturn(cmd);
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(
+                aHost()
+                    .withHostConnAttr(
+                        aSettingAttribute()
+                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                            .build())
+                    .build())
+            .build()));
+    when(serviceInstanceService.list(anyObject())).thenReturn(res);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -139,25 +164,40 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         aStateMachine()
             .addState(s1)
             .addState(s2)
-            .withInitialStateName("ByInstance")
+            .withInitialStateName(s1.getName())
             .addTransition(
                 aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
             .build();
 
     Application app = anApplication().withName("App1").withUuid(getUuid()).build();
     Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
-    Service service = aService().withUuid(getUuid()).withAppId(app.getUuid()).withName("service1").build();
 
-    stateMachineExecutionSimulator.setExecutionContextFactory(new ExecutionContextFactoryTest(app, service, env));
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    List<InstanceElement> instances =
+        Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build(),
+            anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build());
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
 
     ExecutionArgs executionArgs = new ExecutionArgs();
 
-    PageResponse<Service> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(service));
-    when(serviceResourceService.list(anyObject())).thenReturn(res);
     Command cmd = mock(Command.class);
     when(cmd.isArtifactNeeded()).thenReturn(true);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(
+                aHost()
+                    .withHostConnAttr(
+                        aSettingAttribute()
+                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                            .build())
+                    .build())
+            .build()));
+    when(serviceInstanceService.list(anyObject())).thenReturn(res);
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -168,27 +208,164 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.ARTIFACT);
   }
 
-  static class ExecutionContextFactoryTest extends ExecutionContextFactory {
-    private final Application app;
-    private final Service service;
-    private final Environment env;
+  @Test
+  public void shouldReturnSshSUArtifactArgType() {
+    State s1 = aRepeatState()
+                   .withName("ByInstance")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Install")
+                   .withRepeatElementExpression("${instances}")
+                   .build();
+    State s2 = aCommandState().withName("Install").withCommandName("INSTALL").build();
 
-    public ExecutionContextFactoryTest(Application app, Service service, Environment env) {
+    StateMachine sm =
+        aStateMachine()
+            .addState(s1)
+            .addState(s2)
+            .withInitialStateName(s1.getName())
+            .addTransition(
+                aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
+            .build();
+
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    List<InstanceElement> instances =
+        Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build(),
+            anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build());
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    Command cmd = mock(Command.class);
+    when(cmd.isArtifactNeeded()).thenReturn(true);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(
+                aHost()
+                    .withHostConnAttr(
+                        aSettingAttribute()
+                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                            .build())
+                    .build())
+            .build(),
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(aHost()
+                          .withHostConnAttr(aSettingAttribute()
+                                                .withValue(aHostConnectionAttributes()
+                                                               .withAccessType(AccessType.USER_PASSWORD_SU_APP_USER)
+                                                               .build())
+                                                .build())
+                          .build())
+            .build()));
+    when(serviceInstanceService.list(anyObject())).thenReturn(res);
+
+    RequiredExecutionArgs reqArgs =
+        stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
+    assertThat(reqArgs).isNotNull();
+    assertThat(reqArgs.getEntityTypes())
+        .isNotNull()
+        .hasSize(5)
+        .containsExactlyInAnyOrder(EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD,
+            EntityType.SSH_APP_ACCOUNT, EntityType.SSH_APP_ACCOUNT_PASSOWRD);
+  }
+
+  @Test
+  public void shouldReturnSshSUDOArtifactArgType() {
+    State s1 = aRepeatState()
+                   .withName("ByInstance")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Install")
+                   .withRepeatElementExpression("${instances}")
+                   .build();
+    State s2 = aCommandState().withName("Install").withCommandName("INSTALL").build();
+
+    StateMachine sm =
+        aStateMachine()
+            .addState(s1)
+            .addState(s2)
+            .withInitialStateName(s1.getName())
+            .addTransition(
+                aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
+            .build();
+
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    List<InstanceElement> instances =
+        Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build(),
+            anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build());
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
+
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    Command cmd = mock(Command.class);
+    when(cmd.isArtifactNeeded()).thenReturn(true);
+    when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(
+                aHost()
+                    .withHostConnAttr(
+                        aSettingAttribute()
+                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                            .build())
+                    .build())
+            .build(),
+        aServiceInstance()
+            .withUuid(getUuid())
+            .withHost(aHost()
+                          .withHostConnAttr(aSettingAttribute()
+                                                .withValue(aHostConnectionAttributes()
+                                                               .withAccessType(AccessType.USER_PASSWORD_SUDO_APP_USER)
+                                                               .build())
+                                                .build())
+                          .build())
+            .build()));
+    when(serviceInstanceService.list(anyObject())).thenReturn(res);
+
+    RequiredExecutionArgs reqArgs =
+        stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
+    assertThat(reqArgs).isNotNull();
+    assertThat(reqArgs.getEntityTypes())
+        .isNotNull()
+        .hasSize(4)
+        .containsExactlyInAnyOrder(
+            EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.SSH_APP_ACCOUNT);
+  }
+  public static class ExecutionContextFactoryTest extends ExecutionContextFactory {
+    private final Application app;
+    private final Environment env;
+    private final ServiceElement service;
+    private final List<InstanceElement> instances;
+
+    public ExecutionContextFactoryTest(
+        Application app, Environment env, ServiceElement service, List<InstanceElement> instances) {
       this.app = app;
-      this.service = service;
       this.env = env;
+      this.service = service;
+      this.instances = instances;
     }
 
     @Override
     public ExecutionContext createExecutionContext(
         StateExecutionInstance stateExecutionInstance, StateMachine stateMachine) {
       ExecutionContextImpl context = spy(new ExecutionContextImpl(stateExecutionInstance));
-      doReturn(Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("Instance1").build()))
-          .when(context)
-          .evaluateExpression("${instances}");
-      doReturn(aServiceElement().withUuid(service.getUuid()).withName(service.getName()).build())
-          .when(context)
-          .getContextElement(ContextElementType.SERVICE);
+      doReturn(newArrayList(service)).when(context).evaluateExpression("${services}");
+      doReturn(instances).when(context).evaluateExpression("${instances}");
+      doReturn(service).when(context).getContextElement(ContextElementType.SERVICE);
       doReturn(app).when(context).getApp();
       doReturn(env).when(context).getEnv();
       return context;

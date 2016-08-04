@@ -1,19 +1,21 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
-import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.common.UUIDGenerator.getUuid;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_ID;
+
+import com.google.common.collect.Sets;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -27,9 +29,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ExecutionArgs;
-import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
-import software.wings.beans.Host;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.RequiredExecutionArgs;
@@ -37,7 +37,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
 import software.wings.common.UUIDGenerator;
@@ -45,7 +44,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
-import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
@@ -63,7 +61,6 @@ import software.wings.waitnotify.NotifyEventListener;
 
 import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -84,7 +81,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceServiceMock;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceInstanceService serviceInstanceService;
-  @InjectMocks private StateMachineExecutionSimulator stateMachineExecutionSimulator;
+  @Mock private ServiceInstanceService serviceInstanceServiceMock;
+  @Mock private StateMachineExecutionSimulator stateMachineExecutionSimulator;
 
   private Environment env;
   private List<Service> services;
@@ -538,42 +536,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Required execution args for simple workflow install.
-   */
-  @Test
-  public void requiredExecutionArgsForSimpleWorkflowInstall() {
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-
-    String serviceId = UUIDGenerator.getUuid();
-    executionArgs.setServiceId(serviceId);
-
-    String commandName = "Install";
-    executionArgs.setCommandName(commandName);
-
-    Command command = mock(Command.class);
-    when(command.isArtifactNeeded()).thenReturn(true);
-    when(serviceResourceServiceMock.getCommandByName(appId, serviceId, commandName)).thenReturn(command);
-
-    ServiceInstance inst1 = ServiceInstance.Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
-    ServiceInstance inst2 = ServiceInstance.Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
-    executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
-
-    String envId = UUIDGenerator.getUuid();
-
-    RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, envId, executionArgs);
-    assertThat(required).isNotNull();
-    assertThat(required.getEntityTypes())
-        .isNotNull()
-        .hasSize(3)
-        .contains(EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD);
-  }
-
-  /**
    * Required execution args for simple workflow start.
    */
   @Test
   public void requiredExecutionArgsForSimpleWorkflowStart() {
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
 
@@ -583,17 +552,20 @@ public class WorkflowServiceTest extends WingsBaseTest {
     String commandName = "Start";
     executionArgs.setCommandName(commandName);
 
-    Command command = mock(Command.class);
-    when(command.isArtifactNeeded()).thenReturn(false);
-    when(serviceResourceServiceMock.getCommandByName(appId, serviceId, commandName)).thenReturn(command);
-
     ServiceInstance inst1 = ServiceInstance.Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
     ServiceInstance inst2 = ServiceInstance.Builder.aServiceInstance().withUuid(UUIDGenerator.getUuid()).build();
     executionArgs.setServiceInstances(Lists.newArrayList(inst1, inst2));
 
-    String envId = UUIDGenerator.getUuid();
+    when(stateMachineExecutionSimulator.getInfrastructureRequiredEntityType(
+             app.getUuid(), Lists.newArrayList(inst1.getUuid(), inst2.getUuid())))
+        .thenReturn(Sets.newHashSet(EntityType.SSH_USER, EntityType.SSH_PASSWORD));
 
-    RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, envId, executionArgs);
+    Command cmd = mock(Command.class);
+    when(cmd.isArtifactNeeded()).thenReturn(false);
+    when(serviceResourceServiceMock.getCommandByName(app.getUuid(), serviceId, "Start")).thenReturn(cmd);
+
+    RequiredExecutionArgs required =
+        workflowService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);
     assertThat(required).isNotNull();
     assertThat(required.getEntityTypes()).isNotNull().hasSize(2).contains(EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
@@ -633,177 +605,13 @@ public class WorkflowServiceTest extends WingsBaseTest {
     executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
     executionArgs.setOrchestrationId(orchestration.getUuid());
 
+    RequiredExecutionArgs requiredExecutionArgs = new RequiredExecutionArgs();
+    requiredExecutionArgs.setEntityTypes(Sets.newHashSet(EntityType.SSH_USER, EntityType.SSH_PASSWORD));
+
+    when(stateMachineExecutionSimulator.getRequiredExecutionArgs(anyObject(), anyObject(), anyObject(), anyObject()))
+        .thenReturn(requiredExecutionArgs);
+
     RequiredExecutionArgs required = workflowService.getRequiredExecutionArgs(appId, env.getUuid(), executionArgs);
-    assertThat(required).isNotNull();
-    assertThat(required.getEntityTypes()).isNotNull().isEmpty();
-  }
-
-  /**
-   * Required execution args for orchestrated workflow with command.
-   */
-  @Test
-  @RealMongo
-  public void requiredExecutionArgsForOrchestratedWorkflowWithCommand() {
-    Application app =
-        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
-    Service service = serviceResourceService.save(
-        aService().withName("svc").withAppId(app.getUuid()).withCommands(new ArrayList<>()).build());
-
-    Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-    Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withService(service)
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
-
-    software.wings.beans.ServiceInstance.Builder builder =
-        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
-
-    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
-    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
-
-    Graph graph = aGraph()
-                      .addNodes(aNode()
-                                    .withId("n1")
-                                    .withOrigin(true)
-                                    .withName("RepeatByServices")
-                                    .withType(StateType.REPEAT.name())
-                                    .addProperty("repeatElementExpression", "${services()}")
-                                    .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n2")
-                                    .withName("wait")
-                                    .withX(250)
-                                    .withY(50)
-                                    .withType(StateType.WAIT.name())
-                                    .addProperty("duration", 1l)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n3")
-                                    .withName("install")
-                                    .withType(StateType.COMMAND.name())
-                                    .addProperty("commandName", "INSTALL")
-                                    .build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
-                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-                      .build();
-
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
-                                      .withGraph(graph)
-                                      .withServices(getServices())
-                                      .build();
-
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
-
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
-    executionArgs.setOrchestrationId(orchestration.getUuid());
-
-    RequiredExecutionArgs required =
-        workflowService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);
-    assertThat(required).isNotNull();
-    assertThat(required.getEntityTypes())
-        .isNotNull()
-        .hasSize(3)
-        .contains(EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.ARTIFACT);
-  }
-
-  /**
-   * Required execution args for orchestrated workflow with repeat.
-   */
-  @Test
-  @RealMongo
-  public void requiredExecutionArgsForOrchestratedWorkflowWithRepeat() {
-    Application app =
-        wingsPersistence.saveAndGet(Application.class, Application.Builder.anApplication().withName("App1").build());
-    Environment env =
-        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-
-    Service service = serviceResourceService.save(
-        aService().withName("svc").withAppId(app.getUuid()).withCommands(new ArrayList<>()).build());
-
-    Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-    Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
-        aServiceTemplate()
-            .withAppId(app.getUuid())
-            .withEnvId(env.getUuid())
-            .withService(service)
-            .withName("TEMPLATE_NAME")
-            .withDescription("TEMPLATE_DESCRIPTION")
-            .build());
-
-    software.wings.beans.ServiceInstance.Builder builder =
-        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
-
-    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
-    ServiceInstance inst2 = serviceInstanceService.save(builder.withHost(host2).build());
-
-    Graph graph = aGraph()
-                      .addNodes(aNode()
-                                    .withId("n1")
-                                    .withOrigin(true)
-                                    .withName("RepeatByServices")
-                                    .withType(StateType.REPEAT.name())
-                                    .addProperty("repeatElementExpression", "${services()}")
-                                    .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n2")
-                                    .withName("wait")
-                                    .withX(250)
-                                    .withY(50)
-                                    .withType(StateType.WAIT.name())
-                                    .addProperty("duration", 1l)
-                                    .build())
-                      .addNodes(aNode()
-                                    .withId("n3")
-                                    .withName("stop")
-                                    .withType(StateType.COMMAND.name())
-                                    .addProperty("commandName", "STOP")
-                                    .build())
-                      .addLinks(aLink().withId("l1").withFrom("n1").withTo("n2").withType("repeat").build())
-                      .addLinks(aLink().withId("l2").withFrom("n2").withTo("n3").withType("success").build())
-                      .build();
-
-    Orchestration orchestration = anOrchestration()
-                                      .withAppId(app.getUuid())
-                                      .withName("workflow1")
-                                      .withDescription("Sample Workflow")
-                                      .withEnvironment(env)
-                                      .withGraph(graph)
-                                      .withServices(getServices())
-                                      .build();
-
-    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
-    assertThat(orchestration).isNotNull();
-    assertThat(orchestration.getUuid()).isNotNull();
-
-    ExecutionArgs executionArgs = new ExecutionArgs();
-    executionArgs.setWorkflowType(WorkflowType.ORCHESTRATION);
-    executionArgs.setOrchestrationId(orchestration.getUuid());
-
-    RequiredExecutionArgs required =
-        workflowService.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), executionArgs);
-    assertThat(required).isNotNull();
-    assertThat(required.getEntityTypes()).isNotNull().hasSize(2).contains(EntityType.SSH_USER, EntityType.SSH_PASSWORD);
+    assertThat(required).isNotNull().isEqualTo(requiredExecutionArgs);
   }
 }
