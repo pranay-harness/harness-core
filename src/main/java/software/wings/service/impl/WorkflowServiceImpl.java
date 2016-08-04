@@ -727,7 +727,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null) {
+    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
@@ -759,7 +759,8 @@ public class WorkflowServiceImpl implements WorkflowService {
             Collectors.toMap(ServiceInstance::getUuid, ServiceInstance::getDisplayName)));
       }
 
-      if (workflowExecution.getExecutionArgs().getArtifacts() != null) {
+      if (workflowExecution.getExecutionArgs().getArtifacts() != null
+          && !workflowExecution.getExecutionArgs().getArtifacts().isEmpty()) {
         List<String> artifactIds = workflowExecution.getExecutionArgs()
                                        .getArtifacts()
                                        .stream()
@@ -952,7 +953,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
     stdParams.setEnvId(envId);
-    if (executionArgs.getArtifacts() != null) {
+    if (executionArgs.getArtifacts() != null && !executionArgs.getArtifacts().isEmpty()) {
       stdParams.setArtifactIds(
           executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(Collectors.toList()));
     }
