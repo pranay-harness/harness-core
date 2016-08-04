@@ -3,11 +3,9 @@ package software.wings.beans.command;
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -16,7 +14,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.service.intfc.ServiceResourceService;
 
@@ -88,6 +85,8 @@ public class InitCommandUnit extends CommandUnit {
       context.copyFiles(executionStagingDir, getCommandUnitFiles());
     } catch (IOException e) {
       e.printStackTrace();
+    } catch (TemplateException e) {
+      e.printStackTrace();
     }
     context.executeCommandString("chmod 0744 " + executionStagingDir + "/*");
     StringBuffer envVariablesFromHost = new StringBuffer();
@@ -135,32 +134,21 @@ public class InitCommandUnit extends CommandUnit {
    * @return the command unit files
    * @throws IOException the io exception
    */
-  private List<String> getCommandUnitFiles() throws IOException {
+  private List<String> getCommandUnitFiles() throws IOException, TemplateException {
     return createScripts(command);
   }
 
-  private List<String> createScripts(Command command) throws IOException {
+  private List<String> createScripts(Command command) throws IOException, TemplateException {
     return createScripts(command, "");
   }
 
-  private List<String> createScripts(Command command, String prefix) throws IOException {
+  private List<String> createScripts(Command command, String prefix) throws IOException, TemplateException {
     List<String> files = Lists.newArrayList();
     for (CommandUnit unit : command.getCommandUnits()) {
-      if (unit instanceof ExecCommandUnit) {
-        ExecCommandUnit execCommandUnit = (ExecCommandUnit) unit;
-        String commandFileName = "wings" + DigestUtils.md5Hex(prefix + unit.getName() + activityId);
-        String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
-        String commandDir =
-            isNotBlank(execCommandUnit.getCommandPath()) ? "'" + execCommandUnit.getCommandPath().trim() + "'" : "";
-        try (OutputStreamWriter fileWriter =
-                 new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
-          CharStreams.asWriter(fileWriter).append(execCommandUnit.getCommandString()).close();
-          execCommandUnit.setPreparedCommand(
-              executionStagingDir + "/" + launcherScriptFileName + " " + commandDir + " " + commandFileName);
-        }
-        files.add(commandFile);
-      } else if (unit instanceof Command) {
-        files.addAll(createScripts((Command) unit, unit.getName()));
+      if (unit instanceof Command) {
+        files.addAll(createScripts((Command) unit, prefix + unit.getName()));
+      } else {
+        files.addAll(unit.prepare(activityId, executionStagingDir, launcherScriptFileName, prefix));
       }
     }
     return files;

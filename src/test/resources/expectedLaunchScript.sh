@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -x
 # set session
@@ -23,4 +23,4 @@ fi
 WINGS_SCRIPT_NAME=$1
 shift
 
-$WINGS_SCRIPT_DIR/$WINGS_SCRIPT_NAME
+$WINGS_SCRIPT_DIR/$WINGS_SCRIPT_NAME "$@"

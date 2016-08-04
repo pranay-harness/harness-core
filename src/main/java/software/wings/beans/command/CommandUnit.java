@@ -8,8 +8,12 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
+import freemarker.template.TemplateException;
 import software.wings.waitnotify.NotifyResponseData;
 
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -53,6 +57,11 @@ public abstract class CommandUnit {
     CommandUnitExecutionResult aContinue = CommandUnitExecutionResult.CONTINUE;
     aContinue.setExecutionResult(ExecutionResult.RUNNING);
     return aContinue;
+  }
+
+  public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
+      String prefix) throws IOException, TemplateException {
+    return Collections.emptyList();
   }
 
   public abstract ExecutionResult execute(CommandExecutionContext context);
