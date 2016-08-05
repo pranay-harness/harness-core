@@ -2,9 +2,7 @@ package software.wings.beans.command;
 
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
-import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.APPLICATION_STACK;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
-import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.CONFIGURATIONS;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
@@ -13,8 +11,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
-import software.wings.beans.ConfigFile;
-import software.wings.beans.ServiceTemplate;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -56,18 +52,6 @@ public class ScpCommandUnit extends CommandUnit {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
         context.getArtifact().getArtifactFiles().forEach(artifactFile -> fileIds.add(artifactFile.getFileUuid()));
-        break;
-      case CONFIGURATIONS:
-        fileBucket = FileBucket.CONFIGS;
-
-        ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
-        Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
-            serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
-        List<ConfigFile> configFiles = computedConfigFiles.get(context.getServiceInstance().getHost().getUuid());
-
-        if (configFiles != null) {
-          configFiles.forEach(configFile -> fileIds.add(configFile.getFileUuid()));
-        }
         break;
       case APPLICATION_STACK:
         setFileBucket(FileBucket.PLATFORMS);
@@ -200,10 +184,7 @@ public class ScpCommandUnit extends CommandUnit {
     ARTIFACTS("Application Artifacts"), /**
                                          * The Application stack.
                                          */
-    APPLICATION_STACK("Application Stack"), /**
-                                             * Configurations scp file category.
-                                             */
-    CONFIGURATIONS("Configurations");
+    APPLICATION_STACK("Application Stack");
 
     private String name;
 
@@ -384,8 +365,7 @@ public class ScpCommandUnit extends CommandUnit {
   public static class ScpCommandDataProvider implements DataProvider {
     @Override
     public Map<String, String> getData(String appId, String... params) {
-      return Stream.of(APPLICATION_STACK, ARTIFACTS, CONFIGURATIONS)
-          .collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
+      return Stream.of(ScpFileCategory.values()).collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
     }
   }
 }

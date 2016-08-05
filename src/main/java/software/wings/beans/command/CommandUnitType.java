@@ -29,6 +29,8 @@ public enum CommandUnitType implements CommandUnitDescriptor {
    */
   SCP(ScpCommandUnit.class, "Copy", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
 
+  COPY_CONFIGS(CopyConfigCommandUnit.class, "Copy Configs", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
+
   /**
    * Command command unit type.
    */
