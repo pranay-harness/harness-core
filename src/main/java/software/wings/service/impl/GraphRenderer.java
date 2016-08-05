@@ -4,7 +4,6 @@
 
 package software.wings.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
 import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
@@ -17,6 +16,7 @@ import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
 
 import com.google.inject.Injector;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Graph;
@@ -57,10 +57,11 @@ public class GraphRenderer {
    * @param initialStateName the initial state name
    * @param expandedGroupIds the expanded group ids
    * @param detailsRequested the details requested
+   * @param commandName
    * @return the graph
    */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, boolean detailsRequested) {
+      List<String> expandedGroupIds, boolean detailsRequested, String commandName) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -114,35 +115,22 @@ public class GraphRenderer {
     generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
 
     Graph graph = new Graph();
-    //    if (isSimpleLinear) {
-    //      paintSimpleLinearGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    //    } else {
     extrapolateDimension(originNode);
     paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, detailsRequested, true);
-    //    }
+    if (detailsRequested && StringUtils.isNotBlank(commandName)) {
+      replaceCommandNodeName(graph.getNodes(), commandName);
+    }
     logger.debug("graph generated: {}", graph);
     return graph;
   }
 
-  private void paintSimpleLinearGraph(Node originNode, Graph graph, int x, int y) {
-    if (originNode == null || originNode.getGroup() == null || originNode.getGroup().getElements() == null) {
-      return;
-    }
-    for (Node node : originNode.getGroup().getElements()) {
-      if (node.getNext() == null) {
-        node.setType("COMMAND");
-      } else {
-        node.getNext().setName(node.getName());
-        node = node.getNext();
-      }
-
-      node.setName(substringBefore(node.getName(), ":"));
-
-      node.setX(x);
-      node.setY(y);
-
-      graph.getNodes().add(node);
-      x += DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH;
+  private void replaceCommandNodeName(List<Node> nodes, String commandName) {
+    if (nodes != null) {
+      nodes.forEach(node -> {
+        if (StateType.COMMAND.name().equals(node.getType())) {
+          node.setName(commandName);
+        }
+      });
     }
   }
 

@@ -440,8 +440,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(
-          workflowExecution, null, null, null, false, (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE));
+      populateGraph(workflowExecution, null, null, null, false);
     }
     return res;
   }
@@ -494,11 +493,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
       String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested) {
-    populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested, false);
-  }
-
-  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
-      String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested, boolean isSimpleLinear) {
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }
@@ -511,7 +505,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       StateExecutionInstance firstLevelGroup = getFirstLevelGroup(instances);
       if (firstLevelGroup != null) {
         expandedGroupIds = Lists.newArrayList(firstLevelGroup.getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested, isSimpleLinear);
+        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested);
         return;
       }
     }
@@ -549,8 +543,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    Graph graph =
-        graphRenderer.generateGraph(instanceIdMap, sm.getInitialStateName(), expandedGroupIds, detailsRequested);
+    String commandName = null;
+    if (workflowExecution.getExecutionArgs() != null) {
+      commandName = workflowExecution.getExecutionArgs().getCommandName();
+    }
+    Graph graph = graphRenderer.generateGraph(
+        instanceIdMap, sm.getInitialStateName(), expandedGroupIds, detailsRequested, commandName);
     workflowExecution.setGraph(graph);
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
