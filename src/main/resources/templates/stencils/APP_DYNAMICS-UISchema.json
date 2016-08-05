@@ -1,1 +1,9 @@
-{}
+{
+  "ui:order": ["applicationIdentifier", "metricPath", "assertion"],
+  "metricPath": {
+    "ui:widget": "textarea"
+  },
+  "assertion": {
+    "ui:widget": "textarea"
+  }
+}

@@ -142,6 +142,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
         anExecutionDataValue().withValue(assertionStatement).withDisplayName("Assertion").build());
     putNotNull(executionDetails, "assertionStatus",
         anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
+    putNotNull(
+        executionDetails, "response", anExecutionDataValue().withValue(response).withDisplayName("response").build());
     return executionDetails;
   }
 
