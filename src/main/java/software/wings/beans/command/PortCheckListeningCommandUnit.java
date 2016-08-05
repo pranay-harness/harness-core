@@ -6,6 +6,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.template.TemplateException;
 import software.wings.stencils.DataProvider;
+import software.wings.stencils.DefaultValue;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,14 +15,14 @@ import java.util.Map;
 /**
  * Created by peeyushaggarwal on 8/3/16.
  */
-public class PortCheckCommandUnit extends ExecCommandUnit {
+public class PortCheckListeningCommandUnit extends ExecCommandUnit {
   @Attributes(title = "Ensure port", description = "ex. 8080") private int port;
 
   @Attributes(title = "Is Open?") private boolean open;
 
-  public PortCheckCommandUnit() {
+  public PortCheckListeningCommandUnit() {
     super();
-    setCommandUnitType(CommandUnitType.PORT_CHECK);
+    setCommandUnitType(CommandUnitType.PORT_CHECK_LISTENING);
   }
 
   @Override
@@ -71,7 +72,7 @@ public class PortCheckCommandUnit extends ExecCommandUnit {
     this.open = open;
   }
 
-  @SchemaIgnore
+  @DefaultValue("set -x\nnc -v -z -w 5 localhost 8080")
   @Override
   public String getCommandString() {
     return super.getCommandString();

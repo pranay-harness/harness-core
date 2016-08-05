@@ -107,7 +107,7 @@ public interface ServiceResourceService {
    * @param serviceId the service id
    * @return the command stencils
    */
-  List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId);
+  List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName);
 
   /**
    * Delete by app id boolean.

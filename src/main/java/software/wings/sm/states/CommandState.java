@@ -202,8 +202,7 @@ public class CommandState extends State {
             String.format("Unable to find command %s for service %s", actualCommand, service.getName()));
       }
 
-      executionDataBuilder.withCommandName(command.getName())
-          .withTotalCommandUnits(command.getCommandUnits().size() + 1);
+      executionDataBuilder.withCommandName(command.getName());
 
       Activity.Builder activityBuilder = anActivity()
                                              .withAppId(serviceInstance.getAppId())

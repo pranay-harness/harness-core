@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 7/14/16.
  */
-public class ProcessCheckCommandUnit extends ExecCommandUnit {
+public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
   @DefaultValue("tomcat")
   @Attributes(title = "Expression", description = "ex. catalina.base=/path/, tomcat ... ")
   private String expression = "abc";
@@ -19,9 +19,9 @@ public class ProcessCheckCommandUnit extends ExecCommandUnit {
   /**
    * Instantiates a new Process check command unit.
    */
-  public ProcessCheckCommandUnit() {
+  public ProcessCheckStoppedCommandUnit() {
     super();
-    setCommandUnitType(CommandUnitType.PROCESS_CHECK);
+    setCommandUnitType(CommandUnitType.PROCESS_CHECK_STOPPED);
   }
 
   @Override

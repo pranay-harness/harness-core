@@ -184,8 +184,8 @@ public class ServiceResource {
    */
   @GET
   @Path("{serviceId}/commands/stencils")
-  public RestResponse<List<Stencil>> stencils(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
-    return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId));
+  public RestResponse<List<Stencil>> stencils(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
+    return new RestResponse<>(serviceResourceService.getCommandStencils(appId, serviceId, commandName));
   }
 }

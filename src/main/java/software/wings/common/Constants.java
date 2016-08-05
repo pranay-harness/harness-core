@@ -48,7 +48,7 @@ public interface Constants {
   /**
    * The constant SIMPLE_ORCHESTRATION_NAME.
    */
-  String SIMPLE_ORCHESTRATION_NAME = "DefaultSimpleWorkflow";
+  String SIMPLE_ORCHESTRATION_NAME = "Default Adhoc Workflow";
   /**
    * The constant SIMPLE_ORCHESTRATION_DESC.
    */

@@ -24,9 +24,9 @@ import java.util.Objects;
   @Type(value = Command.class, name = "COMMAND")
   , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
       @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
-      @Type(value = ProcessCheckCommandUnit.class, name = "PROCESS_CHECK"),
+      @Type(value = ProcessCheckRunningCommandUnit.class, name = "PROCESS_CHECK"),
       @Type(value = InitCommandUnit.class, name = "INIT"),
-      @Type(value = PortCheckCommandUnit.class, name = "PORT_CHECK")
+      @Type(value = PortCheckListeningCommandUnit.class, name = "PORT_CHECK")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;

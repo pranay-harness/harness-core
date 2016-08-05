@@ -21,6 +21,7 @@ import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.BasicDBObject;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Graph;
 import software.wings.beans.Service;
@@ -262,8 +263,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    * {@inheritDoc}
    */
   @Override
-  public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId) {
-    return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId);
+  public List<Stencil> getCommandStencils(@NotEmpty String appId, @NotEmpty String serviceId, String commandName) {
+    return stencilPostProcessor.postProcess(Arrays.asList(CommandUnitType.values()), appId, serviceId, commandName);
   }
 
   @Override
@@ -272,7 +273,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (isEmpty(service.getCommands())) {
       return emptyMap();
     } else {
-      return service.getCommands().stream().collect(toMap(Command::getName, Command::getName));
+      return service.getCommands()
+          .stream()
+          .filter(command -> !StringUtils.equals(command.getName(), params[1]))
+          .collect(toMap(Command::getName, Command::getName));
     }
   }
 }

@@ -38,8 +38,11 @@ public enum StencilCategory {
             * Verifications stencil category.
             */
   VERIFICATIONS, /**
-                  * Others stencil category.
+                  * Copy stencil category.
                   */
+  COPY, /**
+         * Others stencil category.
+         */
   OTHERS;
 
   private String displayName;

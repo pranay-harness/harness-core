@@ -6,10 +6,12 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 import com.google.inject.Inject;
 
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,7 +29,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String activityId;
   private String artifactId;
   private String artifactName;
-  private int totalCommandUnits;
 
   @Inject private ActivityService activityService;
 
@@ -211,31 +212,14 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.artifactName = artifactName;
   }
 
-  /**
-   * Getter for property 'totalCommandUnits'.
-   *
-   * @return Value for property 'totalCommandUnits'.
-   */
-  public int getTotalCommandUnits() {
-    return totalCommandUnits;
-  }
-
-  /**
-   * Setter for property 'totalCommandUnits'.
-   *
-   * @param totalCommandUnits Value to set for property 'totalCommandUnits'.
-   */
-  public void setTotalCommandUnits(int totalCommandUnits) {
-    this.totalCommandUnits = totalCommandUnits;
-  }
-
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
-    data.put("total", anExecutionDataValue().withDisplayName("Total").withValue(totalCommandUnits).build());
     if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
+      List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
+      data.put("total", anExecutionDataValue().withDisplayName("Total").withValue(commandUnits.size()).build());
       CountsByStatuses countsByStatuses = new CountsByStatuses();
-      activityService.getCommandUnits(appId, activityId).stream().forEach(commandUnit -> {
+      commandUnits.stream().forEach(commandUnit -> {
         switch (commandUnit.getExecutionResult()) {
           case SUCCESS:
             countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
@@ -246,7 +230,7 @@ public class CommandStateExecutionData extends StateExecutionData {
         }
       });
       if (getStatus() == ExecutionStatus.RUNNING
-          && (countsByStatuses.getFailed() + countsByStatuses.getSuccess()) < totalCommandUnits) {
+          && (countsByStatuses.getFailed() + countsByStatuses.getSuccess()) < commandUnits.size()) {
         countsByStatuses.setInprogress(1);
       }
       data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
@@ -311,7 +295,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     private String activityId;
     private String artifactId;
     private String artifactName;
-    private int totalCommandUnits;
 
     private Builder() {}
 
@@ -501,17 +484,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     }
 
     /**
-     * With total command units builder.
-     *
-     * @param totalCommandUnits the total command units
-     * @return the builder
-     */
-    public Builder withTotalCommandUnits(int totalCommandUnits) {
-      this.totalCommandUnits = totalCommandUnits;
-      return this;
-    }
-
-    /**
      * But builder.
      *
      * @return the builder
@@ -533,8 +505,7 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withTemplateId(templateId)
           .withActivityId(activityId)
           .withArtifactId(artifactId)
-          .withArtifactName(artifactName)
-          .withTotalCommandUnits(totalCommandUnits);
+          .withArtifactName(artifactName);
     }
 
     /**
@@ -560,7 +531,6 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setActivityId(activityId);
       commandStateExecutionData.setArtifactId(artifactId);
       commandStateExecutionData.setArtifactName(artifactName);
-      commandStateExecutionData.setTotalCommandUnits(totalCommandUnits);
       return commandStateExecutionData;
     }
   }

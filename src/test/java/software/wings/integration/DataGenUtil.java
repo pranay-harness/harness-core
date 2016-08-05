@@ -151,7 +151,6 @@ public class DataGenUtil extends WingsBaseTest {
     assertThat(NUM_APPS).isBetween(1, 1000);
     assertThat(NUM_APP_CONTAINER_PER_APP).isBetween(1, 1000);
     assertThat(NUM_SERVICES_PER_APP).isBetween(1, 1000);
-    assertThat(NUM_CONFIG_FILE_PER_SERVICE).isBetween(0, 100);
     assertThat(NUM_ENV_PER_APP).isBetween(0, 10);
     assertThat(NUM_TAG_GROUPS_PER_ENV).isBetween(1, 10);
     assertThat(TAG_HIERARCHY_DEPTH).isBetween(1, 10);
