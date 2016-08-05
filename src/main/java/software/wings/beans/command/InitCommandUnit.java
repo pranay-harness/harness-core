@@ -9,7 +9,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -31,7 +30,6 @@ import java.util.Properties;
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
-@Attributes(description = "This command unit creates STATING_PATH, RUNTIME_PATH, BACKUP_PATH on the target host")
 public class InitCommandUnit extends CommandUnit {
   /**
    * The constant INITIALIZE_UNIT.

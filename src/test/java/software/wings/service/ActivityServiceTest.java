@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Activity.Status.RUNNING;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.command.CleanupCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -110,9 +111,9 @@ public class ActivityServiceTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)
-        .hasSize(2)
+        .hasSize(3)
         .extracting(CommandUnit::getCommandUnitType, CommandUnit::getName)
-        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME));
+        .contains(tuple(EXEC, INITIALIZE_UNIT), tuple(EXEC, COMMAND_UNIT_NAME), tuple(EXEC, CLEANUP_UNIT));
   }
 
   /**

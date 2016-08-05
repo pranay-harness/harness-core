@@ -2,8 +2,8 @@
 
 # Start tail.
 <#list tailPatterns as tailPattern>
-touch ${tailPattern.filePath}
-tail -F -n0 ${tailPattern.filePath} | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
+touch "${tailPattern.filePath}"
+tail -F -n0 "${tailPattern.filePath}" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
 </#list>
 
@@ -23,9 +23,9 @@ do
 <#list tailPatterns as tailPattern>
   if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -gt 0 ]
   then
-    if $(kill -0 $pid${tailPattern?index})
+    if $(kill -0 $pid${tailPattern?index} 2>/dev/null)
     then
-      kill -9 $pid${tailPattern?index}
+      kill -9 $pid${tailPattern?index} || true
       TAIL_COUNT=$((TAIL_COUNT - 1))
     fi
   fi
@@ -36,9 +36,9 @@ done
 
 #Kill remaining tails after timeout.
 <#list tailPatterns as tailPattern>
-if $(kill -0 $pid${tailPattern?index})
+if $(kill -0 $pid${tailPattern?index} 2>/dev/null)
 then
-  kill -9 $pid${tailPattern?index}
+  kill -9 $pid${tailPattern?index} || true
 fi
 </#list>
 

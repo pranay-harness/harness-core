@@ -16,9 +16,6 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
   public SetupEnvCommandUnit() {
     super();
     setCommandUnitType(CommandUnitType.SETUP_ENV);
-    setCommandString("mkdir -p $WINGS_RUNTIME_PATH\n"
-        + "mkdir -p $WINGS_BACKUP_PATH\n"
-        + "mkdir -p $WINGS_STAGING_PATH");
   }
 
   @SchemaIgnore
@@ -28,12 +25,9 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
   }
 
   @Attributes(title = "Command")
-  @DefaultValue("mkdir -p $WINGS_RUNTIME_PATH\n"
-      + "mkdir -p $WINGS_BACKUP_PATH\n"
-      + "mkdir -p $WINGS_STAGING_PATH")
+  @DefaultValue("mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
   @Override
-  public String
-  getCommandString() {
+  public String getCommandString() {
     return super.getCommandString();
   }
 

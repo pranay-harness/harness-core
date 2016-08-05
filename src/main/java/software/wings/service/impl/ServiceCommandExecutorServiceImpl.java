@@ -6,6 +6,7 @@ import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
@@ -50,7 +51,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
       InitCommandUnit initCommandUnit = new InitCommandUnit();
       initCommandUnit.setCommand(command);
       command.getCommandUnits().add(0, initCommandUnit);
-
+      command.getCommandUnits().add(new CleanupCommandUnit());
       ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
       commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
       return executionResult;

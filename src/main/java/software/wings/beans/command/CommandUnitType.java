@@ -44,11 +44,11 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   PROCESS_CHECK_RUNNING(ProcessCheckRunningCommandUnit.class, "Process Check Running", StencilCategory.VERIFICATIONS,
       DEFAULT_DISPLAY_ORDER),
 
-  PROCESS_CHECK_STOPPED(ProcessCheckRunningCommandUnit.class, "Process Check Stopped", StencilCategory.VERIFICATIONS,
+  PROCESS_CHECK_STOPPED(ProcessCheckStoppedCommandUnit.class, "Process Check Stopped", StencilCategory.VERIFICATIONS,
       DEFAULT_DISPLAY_ORDER),
 
   PORT_CHECK_CLEARED(
-      PortCheckListeningCommandUnit.class, "Port Check Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
+      PortCheckClearedCommandUnit.class, "Port Check Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
   PORT_CHECK_LISTENING(PortCheckListeningCommandUnit.class, "Port Check Listening", StencilCategory.VERIFICATIONS,
       DEFAULT_DISPLAY_ORDER);

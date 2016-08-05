@@ -391,7 +391,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     ExecutionResult executionResult = FAILURE;
     Channel channel = null;
     try {
-      String command = "scp -r -d -t " + remoteFilePath;
+      Pair<String, Long> fileInfo = fileProvider.getInfo();
+      String command = "scp -r -d -t '" + remoteFilePath + "'";
       channel = getCachedSession(config).openChannel("exec");
       ((ChannelExec) channel).setCommand(command);
 
@@ -409,8 +410,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       } else {
         saveExecutionLog(format("Connection to %s established", config.getHost()));
       }
-
-      Pair<String, Long> fileInfo = fileProvider.getInfo();
 
       // send "C0644 filesize filename", where filename should not include '/'
       command = "C0644 " + fileInfo.getValue() + " " + fileInfo.getKey() + "\n";

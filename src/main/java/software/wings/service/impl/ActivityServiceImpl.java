@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.InitCommandUnit;
@@ -70,9 +71,11 @@ public class ActivityServiceImpl implements ActivityService {
         serviceResourceService.getCommandByName(appId, activity.getServiceId(), activity.getCommandName());
     List<CommandUnit> commandUnits = getFlattenCommandUnitList(appId, activity.getServiceId(), command);
     commandUnits.add(0, new InitCommandUnit());
+    commandUnits.add(new CleanupCommandUnit());
     commandUnits.forEach(commandUnit -> {
       commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
     });
+
     return commandUnits;
   }
 
