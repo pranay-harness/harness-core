@@ -2,6 +2,7 @@
 
 # Start tail.
 <#list tailPatterns as tailPattern>
+touch ${tailPattern.filePath}
 tail -F -n0 ${tailPattern.filePath} | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
 </#list>

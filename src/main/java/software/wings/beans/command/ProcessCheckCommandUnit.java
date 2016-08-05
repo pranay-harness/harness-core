@@ -1,13 +1,18 @@
 package software.wings.beans.command;
 
-import com.google.common.base.Strings;
-
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
+import freemarker.template.TemplateException;
+import software.wings.stencils.DefaultValue;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Created by anubhaw on 7/14/16.
  */
 public class ProcessCheckCommandUnit extends ExecCommandUnit {
+  @DefaultValue("tomcat")
   @Attributes(title = "Expression", description = "ex. catalina.base=/path/, tomcat ... ")
   private String expression = "abc";
 
@@ -19,16 +24,41 @@ public class ProcessCheckCommandUnit extends ExecCommandUnit {
     setCommandUnitType(CommandUnitType.PROCESS_CHECK);
   }
 
-  /*@Override
-  public void setup(CommandExecutionContext context) {
-    setCommandString(String.format("pgrep -f '%s'", expression.trim()));
-  }*/
-
   @Override
-  public CommandUnitExecutionResult processCommandOutput(String output) {
-    CommandUnitExecutionResult stop = CommandUnitExecutionResult.STOP;
-    stop.setExecutionResult(Strings.isNullOrEmpty(output) ? ExecutionResult.FAILURE : ExecutionResult.SUCCESS);
-    return stop;
+  public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
+      String prefix) throws IOException, TemplateException {
+    setCommandString(String.format("pgrep -f '%s'", expression.trim()));
+    return super.prepare(activityId, executionStagingDir, launcherScriptFileName, prefix);
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getCommandPath() {
+    return super.getCommandPath();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getCommandString() {
+    return super.getCommandString();
+  }
+
+  @SchemaIgnore
+  @Override
+  public List<TailFilePatternEntry> getTailPatterns() {
+    return super.getTailPatterns();
+  }
+
+  @SchemaIgnore
+  @Override
+  public boolean isTailFiles() {
+    return super.isTailFiles();
+  }
+
+  @SchemaIgnore
+  @Override
+  public String getPreparedCommand() {
+    return super.getPreparedCommand();
   }
 
   /**

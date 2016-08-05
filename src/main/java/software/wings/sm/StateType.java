@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.exception.WingsException;
+import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BuildState;
 import software.wings.sm.states.CommandState;
@@ -72,8 +73,12 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS,
-      ORCHESTRATION_STENCILS), // APP_DYNAMICS(ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS),
+
+  /**
+   * App dynamics state type.
+   */
+  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
