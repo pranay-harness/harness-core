@@ -25,7 +25,8 @@ import java.util.Objects;
   , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
       @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
       @Type(value = ProcessCheckCommandUnit.class, name = "PROCESS_CHECK"),
-      @Type(value = InitCommandUnit.class, name = "INIT")
+      @Type(value = InitCommandUnit.class, name = "INIT"),
+      @Type(value = PortCheckCommandUnit.class, name = "PORT_CHECK")
 })
 public abstract class CommandUnit {
   @SchemaIgnore private String name;
@@ -45,18 +46,6 @@ public abstract class CommandUnit {
    */
   public CommandUnit(CommandUnitType commandUnitType) {
     this.commandUnitType = commandUnitType;
-  }
-
-  /**
-   * Process command output command unit execution result.
-   *
-   * @param line the line
-   * @return the command unit execution result
-   */
-  public CommandUnitExecutionResult processCommandOutput(String line) {
-    CommandUnitExecutionResult aContinue = CommandUnitExecutionResult.CONTINUE;
-    aContinue.setExecutionResult(ExecutionResult.RUNNING);
-    return aContinue;
   }
 
   public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
