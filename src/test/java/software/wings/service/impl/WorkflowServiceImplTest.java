@@ -1325,30 +1325,30 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test
-  public void shouldUpdateInProgressCount() throws InterruptedException {
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
-    triggerOrchestration(env);
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
-    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
-  }
+  //  @Test
+  //  public void shouldUpdateInProgressCount() throws InterruptedException {
+  //    Environment env = wingsPersistence.saveAndGet(Environment.class,
+  //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
+  //  }
 
   /**
    * Should update success count.
    *
    * @throws InterruptedException the interrupted exception
    */
-  @Test
-  public void shouldUpdateSuccessCount() throws InterruptedException {
-    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
-    triggerOrchestration(env);
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
-    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
-  }
+  //  @Test
+  //  public void shouldUpdateSuccessCount() throws InterruptedException {
+  //    Environment env = wingsPersistence.saveAndGet(Environment.class,
+  //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+  //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
+  //    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
+  //  }
 
   /**
    * Should update failed count.

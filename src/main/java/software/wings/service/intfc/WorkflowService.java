@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.Orchestration;
@@ -255,4 +256,6 @@ public interface WorkflowService {
    * @return the required execution args
    */
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
+
+  CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 }

@@ -10,10 +10,12 @@ import com.google.inject.Inject;
 
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.api.SimpleWorkflowParam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.sm.ContextElementType;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -27,10 +29,12 @@ import java.util.List;
  * @author Rishi
  */
 public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionUpdate.class);
   private String appId;
   private String workflowExecutionId;
 
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowService workflowService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -105,23 +109,13 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", status);
 
-    if (!context.getContextElementList(ContextElementType.PARAM)
-             .stream()
-             .filter(contextElement -> contextElement instanceof SimpleWorkflowParam)
-             .findFirst()
-             .isPresent()) {
-      String breakdownKey = "breakdown.";
-      switch (status) {
-        case SUCCESS:
-          breakdownKey += "success";
-          break;
-        case FAILED:
-        case ERROR:
-          breakdownKey += "failed";
-          break;
+    try {
+      CountsByStatuses breakdown = workflowService.getBreakdown(appId, workflowExecutionId);
+      if (breakdown != null) {
+        updateOps.set("breakdown", breakdown);
       }
-      updateOps.set(breakdownKey, 1);
-      updateOps.set("breakdown.inprogress", 0);
+    } catch (Exception e) {
+      logger.error("Error in breakdown retrieval", e);
     }
     wingsPersistence.update(query, updateOps);
   }

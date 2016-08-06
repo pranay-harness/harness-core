@@ -10,6 +10,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -25,6 +26,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
@@ -441,6 +443,9 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     for (WorkflowExecution workflowExecution : res) {
       populateGraph(workflowExecution, null, null, null, false);
+      if (workflowExecution.getStatus() == ExecutionStatus.RUNNING || workflowExecution.getBreakdown() == null) {
+        workflowExecution.setBreakdown(getBreakdown(workflowExecution));
+      }
     }
     return res;
   }
@@ -469,7 +474,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
         PageRequest<ServiceInstance> pageRequest =
-            PageRequest.Builder.aPageRequest()
+            aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
                 .addFilter("uuid", Operator.IN,
                     workflowExecution.getExecutionArgs().getServiceInstanceIdNames().keySet().toArray())
@@ -479,7 +484,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
       if (workflowExecution.getExecutionArgs().getArtifactIdNames() != null) {
         PageRequest<Artifact> pageRequest =
-            PageRequest.Builder.aPageRequest()
+            aPageRequest()
                 .addFilter("appId", Operator.EQ, appId)
                 .addFilter(
                     "uuid", Operator.IN, workflowExecution.getExecutionArgs().getArtifactIdNames().keySet().toArray())
@@ -488,6 +493,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
+    if (workflowExecution.getStatus() == ExecutionStatus.RUNNING || workflowExecution.getBreakdown() == null) {
+      workflowExecution.setBreakdown(getBreakdown(workflowExecution));
+    }
     return workflowExecution;
   }
 
@@ -566,7 +574,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
-    PageRequest<StateExecutionInstance> req = PageRequest.Builder.aPageRequest()
+    PageRequest<StateExecutionInstance> req = aPageRequest()
                                                   .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
                                                   .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
                                                   .addFilter("status", Operator.EQ, ExecutionStatus.PAUSED)
@@ -718,8 +726,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setName(orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
-    workflowExecution.setTotal(1);
-    workflowExecution.getBreakdown().setInprogress(1);
     workflowExecution.setExecutionArgs(executionArgs);
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
@@ -743,7 +749,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                               .stream()
                                               .map(ServiceInstance::getUuid)
                                               .collect(Collectors.toList());
-        PageRequest<ServiceInstance> pageRequest = PageRequest.Builder.aPageRequest()
+        PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                        .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
                                                        .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
                                                        .build();
@@ -764,7 +770,7 @@ public class WorkflowServiceImpl implements WorkflowService {
                                        .stream()
                                        .map(Artifact::getUuid)
                                        .collect(Collectors.toList());
-        PageRequest<Artifact> pageRequest = PageRequest.Builder.aPageRequest()
+        PageRequest<Artifact> pageRequest = aPageRequest()
                                                 .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
                                                 .addFilter("uuid", Operator.IN, artifactIds.toArray())
                                                 .build();
@@ -1132,6 +1138,26 @@ public class WorkflowServiceImpl implements WorkflowService {
 
   private void notifyWorkflowExecution(String appId, String workflowExecutionId) {
     executorService.execute(new WorkflowExecutionEntryMaker(appId, workflowExecutionId));
+  }
+
+  @Override
+  public CountsByStatuses getBreakdown(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    return getBreakdown(workflowExecution);
+  }
+
+  private CountsByStatuses getBreakdown(WorkflowExecution workflowExecution) {
+    StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecution.getStateMachineId());
+    PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                  .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                  .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+                                                  .addFieldsIncluded("uuid", "stateName", "contextElementType",
+                                                      "contextElementName", "parentInstanceId", "status")
+                                                  .build();
+    PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
+    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+        workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, res.getResponse());
+    return breakdown;
   }
 
   private class WorkflowExecutionEntryMaker implements Runnable {

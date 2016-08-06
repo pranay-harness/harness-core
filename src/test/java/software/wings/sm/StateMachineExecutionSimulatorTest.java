@@ -19,6 +19,7 @@ import static software.wings.beans.HostConnectionAttributes.HostConnectionAttrib
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.Builder.aStateMachine;
 import static software.wings.sm.Transition.Builder.aTransition;
 import static software.wings.sm.states.CommandState.Builder.aCommandState;
@@ -34,6 +35,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -51,7 +53,6 @@ import javax.inject.Inject;
 
 /**
  * @author Rishi
- *
  */
 
 public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
@@ -345,6 +346,228 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(
             EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.SSH_APP_ACCOUNT);
   }
+
+  @Test
+  public void shouldComputeNewExecution() {
+    State s1 = aRepeatState()
+                   .withName("ByInstance")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Install")
+                   .withRepeatElementExpression("${instances}")
+                   .build();
+    State s2 = aCommandState().withName("Install").withCommandName("INSTALL").build();
+
+    StateMachine sm =
+        aStateMachine()
+            .addState(s1)
+            .addState(s2)
+            .withInitialStateName(s1.getName())
+            .addTransition(
+                aTransition().withFromState(s1).withToState(s2).withTransitionType(TransitionType.REPEAT).build())
+            .build();
+
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    List<InstanceElement> instances =
+        Lists.newArrayList(anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build(),
+            anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build());
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
+
+    CountsByStatuses breakdown =
+        stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, null);
+    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(0, 0, 2);
+  }
+
+  @Test
+  public void shouldComputeInprogressEstimate() {
+    State s1 = aRepeatState()
+                   .withName("ByService")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Stop")
+                   .withRepeatElementExpression("${services}")
+                   .build();
+    State s2 = aCommandState().withName("Stop").withCommandName("WAIT").build();
+    State s3 = aRepeatState()
+                   .withName("ByInstance")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Install")
+                   .withRepeatElementExpression("${instances}")
+                   .build();
+    State s4 = aCommandState().withName("Install").withCommandName("INSTALL").build();
+    State s5 = aCommandState().withName("Start").withCommandName("START").build();
+
+    StateMachine sm =
+        aStateMachine()
+            .addState(s1)
+            .addState(s2)
+            .addState(s3)
+            .addState(s4)
+            .addState(s5)
+            .withInitialStateName(s1.getName())
+            .addTransition(
+                aTransition().withFromState(s2).withToState(s3).withTransitionType(TransitionType.SUCCESS).build())
+            .addTransition(
+                aTransition().withFromState(s4).withToState(s5).withTransitionType(TransitionType.SUCCESS).build())
+            .build();
+
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    InstanceElement inst1 = anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build();
+    InstanceElement inst2 = anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build();
+
+    List<InstanceElement> instances = Lists.newArrayList(inst1, inst2);
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
+
+    StateExecutionInstance si1 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s1.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+    StateExecutionInstance si2 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s2.getName())
+                                     .withParentInstanceId(si1.getUuid())
+                                     .withContextElementType(ContextElementType.SERVICE.name())
+                                     .withContextElementName(service.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+    StateExecutionInstance si3 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s3.getName())
+                                     .withParentInstanceId(si1.getUuid())
+                                     .withContextElementType(ContextElementType.SERVICE.name())
+                                     .withContextElementName(service.getName())
+                                     .withStatus(ExecutionStatus.RUNNING)
+                                     .build();
+    StateExecutionInstance si4 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s4.getName())
+                                     .withParentInstanceId(si3.getUuid())
+                                     .withContextElementType(ContextElementType.INSTANCE.name())
+                                     .withContextElementName(inst1.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+
+    List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4);
+    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+        app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
+    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(2, 0, 3);
+  }
+
+  @Test
+  public void shouldComputeInprogressEstimateWithFailedNode() {
+    State s1 = aRepeatState()
+                   .withName("ByService")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("wait")
+                   .withRepeatElementExpression("${services}")
+                   .build();
+    State s2 = aCommandState().withName("wait").withCommandName("WAIT").build();
+    State s3 = aRepeatState()
+                   .withName("ByInstance")
+                   .withExecutionStrategy(ExecutionStrategy.SERIAL)
+                   .withRepeatTransitionStateName("Install")
+                   .withRepeatElementExpression("${instances}")
+                   .build();
+    State s4 = aCommandState().withName("Install").withCommandName("INSTALL").build();
+    State s5 = aCommandState().withName("Start").withCommandName("START").build();
+    State s6 = aCommandState().withName("Failed").withCommandName("START").build();
+
+    StateMachine sm =
+        aStateMachine()
+            .addState(s1)
+            .addState(s2)
+            .addState(s3)
+            .addState(s4)
+            .addState(s5)
+            .addState(s6)
+            .withInitialStateName(s1.getName())
+            .addTransition(
+                aTransition().withFromState(s2).withToState(s3).withTransitionType(TransitionType.SUCCESS).build())
+            .addTransition(
+                aTransition().withFromState(s4).withToState(s5).withTransitionType(TransitionType.SUCCESS).build())
+            .addTransition(
+                aTransition().withFromState(s4).withToState(s6).withTransitionType(TransitionType.FAILURE).build())
+            .build();
+
+    Application app = anApplication().withName("App1").withUuid(getUuid()).build();
+    Environment env = anEnvironment().withName("DEV").withUuid(getUuid()).withAppId(app.getUuid()).build();
+
+    ServiceElement service = aServiceElement().withUuid(getUuid()).withName("service1").build();
+    InstanceElement inst1 = anInstanceElement().withUuid(getUuid()).withDisplayName("instance1").build();
+    InstanceElement inst2 = anInstanceElement().withUuid(getUuid()).withDisplayName("instance2").build();
+
+    List<InstanceElement> instances = Lists.newArrayList(inst1, inst2);
+    stateMachineExecutionSimulator.setExecutionContextFactory(
+        new ExecutionContextFactoryTest(app, env, service, instances));
+
+    StateExecutionInstance si1 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s1.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+    StateExecutionInstance si2 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s2.getName())
+                                     .withParentInstanceId(si1.getUuid())
+                                     .withContextElementType(ContextElementType.SERVICE.name())
+                                     .withContextElementName(service.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+    StateExecutionInstance si3 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s3.getName())
+                                     .withParentInstanceId(si1.getUuid())
+                                     .withContextElementType(ContextElementType.SERVICE.name())
+                                     .withContextElementName(service.getName())
+                                     .withStatus(ExecutionStatus.RUNNING)
+                                     .build();
+    StateExecutionInstance si4 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s4.getName())
+                                     .withParentInstanceId(si3.getUuid())
+                                     .withContextElementType(ContextElementType.INSTANCE.name())
+                                     .withContextElementName(inst1.getName())
+                                     .withStatus(ExecutionStatus.FAILED)
+                                     .build();
+    StateExecutionInstance si6 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s6.getName())
+                                     .withParentInstanceId(si3.getUuid())
+                                     .withContextElementType(ContextElementType.INSTANCE.name())
+                                     .withContextElementName(inst1.getName())
+                                     .withStatus(ExecutionStatus.SUCCESS)
+                                     .build();
+
+    StateExecutionInstance si42 = aStateExecutionInstance()
+                                      .withUuid(getUuid())
+                                      .withStateName(s4.getName())
+                                      .withParentInstanceId(si3.getUuid())
+                                      .withContextElementType(ContextElementType.INSTANCE.name())
+                                      .withContextElementName(inst2.getName())
+                                      .withStatus(ExecutionStatus.SUCCESS)
+                                      .build();
+    StateExecutionInstance si52 = aStateExecutionInstance()
+                                      .withUuid(getUuid())
+                                      .withStateName(s5.getName())
+                                      .withParentInstanceId(si3.getUuid())
+                                      .withContextElementType(ContextElementType.INSTANCE.name())
+                                      .withContextElementName(inst1.getName())
+                                      .withStatus(ExecutionStatus.RUNNING)
+                                      .build();
+
+    List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4, si6, si42, si52);
+    CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
+        app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
+    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(3, 1, 1);
+  }
+
   public static class ExecutionContextFactoryTest extends ExecutionContextFactory {
     private final Application app;
     private final Environment env;
