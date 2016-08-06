@@ -92,7 +92,7 @@ public class AppServiceImpl implements AppService {
                     aPageRequest()
                         .withLimit(Integer.toString(numberOfExecutions))
                         .addFilter(aSearchFilter().withField("appId", Operator.EQ, application.getUuid()).build())
-                        .addOrder(aSortOrder().withField("lastUpdatedAt", OrderType.DESC).build())
+                        .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
                         .build(),
                     false)
                 .getResponse());

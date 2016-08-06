@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Indexed;
 
 import javax.validation.constraints.NotNull;
 
@@ -22,8 +23,8 @@ public abstract class Notification extends Base {
   private String entityId;
   private EntityType entityType;
   @NotNull private NotificationType notificationType;
-  @NotNull private boolean complete = true;
-  @NotNull private boolean actionable = false;
+  @Indexed @NotNull private boolean complete = true;
+  @Indexed @NotNull private boolean actionable = false;
 
   /**
    * Instantiates a new Notification.
