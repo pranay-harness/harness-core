@@ -15,7 +15,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.FAILURE;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
-import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
@@ -102,37 +101,27 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   private Command command =
       aCommand()
           .withName("INSTALL")
-          .addCommandUnits(anExecCommandUnit()
-                               .withName("Delete start and stop script")
-                               .withCommandUnitType(EXEC)
-                               .withCommandString("rm -f ./bin/*")
-                               .build(),
+          .addCommandUnits(
+              anExecCommandUnit().withName("Delete start and stop script").withCommandString("rm -f ./bin/*").build(),
               anExecCommandUnit()
                   .withName("Create service startup file")
-                  .withCommandUnitType(EXEC)
                   .withCommandString("mkdir -p bin && echo 'sh service && echo \"service started\" ' > ./bin/start.sh")
                   .build(),
               anExecCommandUnit()
                   .withName("Create stop file")
-                  .withCommandUnitType(EXEC)
                   .withCommandString("echo 'echo \"service successfully stopped\"'  > ./bin/stop.sh")
                   .build(),
               anExecCommandUnit()
                   .withName("Make start/stop script executable")
-                  .withCommandUnitType(EXEC)
                   .withCommandString("chmod +x ./bin/*")
                   .build(),
-              anExecCommandUnit().withName("Exec").withCommandUnitType(EXEC).withCommandString("./bin/stop.sh").build(),
+              anExecCommandUnit().withName("Exec").withCommandString("./bin/stop.sh").build(),
               ScpCommandUnit.Builder.aScpCommandUnit()
                   .withName("Copy_ARTIFACT")
                   .withCommandUnitType(SCP)
                   .withFileCategory(ScpFileCategory.ARTIFACTS)
                   .build(),
-              anExecCommandUnit()
-                  .withName("EXEC")
-                  .withCommandUnitType(EXEC)
-                  .withCommandString("./bin/start.sh")
-                  .build())
+              anExecCommandUnit().withName("EXEC").withCommandString("./bin/start.sh").build())
           .build();
 
   /**
