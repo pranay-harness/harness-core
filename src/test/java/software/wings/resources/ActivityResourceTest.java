@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -175,11 +174,8 @@ public class ActivityResourceTest {
   @Test
   public void shouldListCommandUnits() {
     when(ACTIVITY_SERVICE.getCommandUnits(APP_ID, ACTIVITY_ID))
-        .thenReturn(asList(anExecCommandUnit()
-                               .withName(COMMAND_UNIT_NAME)
-                               .withCommandUnitType(EXEC)
-                               .withCommandString("./bin/start.sh")
-                               .build()));
+        .thenReturn(
+            asList(anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build()));
 
     RestResponse<List<ExecCommandUnit>> restResponse =
         RESOURCES.client()

@@ -100,14 +100,12 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetActivityCommandUnits() {
     String activityId = wingsPersistence.save(activity);
-    Command command = aCommand()
-                          .withName(COMMAND_NAME)
-                          .addCommandUnits(anExecCommandUnit()
-                                               .withName(COMMAND_UNIT_NAME)
-                                               .withCommandUnitType(EXEC)
-                                               .withCommandString("./bin/start.sh")
-                                               .build())
-                          .build();
+    Command command =
+        aCommand()
+            .withName(COMMAND_NAME)
+            .addCommandUnits(
+                anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("./bin/start.sh").build())
+            .build();
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     List<CommandUnit> commandUnits = activityService.getCommandUnits(APP_ID, activityId);
     assertThat(commandUnits)

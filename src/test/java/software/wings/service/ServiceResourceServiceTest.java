@@ -52,7 +52,6 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
 import software.wings.beans.command.Command;
-import software.wings.beans.command.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -72,12 +71,8 @@ import java.util.List;
  * Created by anubhaw on 5/4/16.
  */
 public class ServiceResourceServiceTest extends WingsBaseTest {
-  private static final Command.Builder commandBuilder =
-      aCommand().withName("START").addCommandUnits(anExecCommandUnit()
-                                                       .withCommandUnitType(CommandUnitType.EXEC)
-                                                       .withCommandPath("/home/xxx/tomcat")
-                                                       .withCommandString("bin/startup.sh")
-                                                       .build());
+  private static final Command.Builder commandBuilder = aCommand().withName("START").addCommandUnits(
+      anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build());
   private static final Builder builder = aService()
                                              .withUuid(SERVICE_ID)
                                              .withAppId(APP_ID)
