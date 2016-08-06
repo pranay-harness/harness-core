@@ -963,7 +963,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="nohup java -Dfile.encoding=UTF-8 -javaagent:$HOME/appdynamics/appagent/javaagent.jar -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000" />
                                 <echo message="cleanup files" />
                                 <sshexec trust="true" failonerror="true"
