@@ -2,6 +2,7 @@
 
 # Start tail.
 <#list tailPatterns as tailPattern>
+export GREP_COLOR="01;32"
 touch "${tailPattern.filePath}"
 tail -F -n0 "${tailPattern.filePath}" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
@@ -13,7 +14,15 @@ shift
 # Run the script
 $WINGS_SCRIPT_DIR/$WINGS_SCRIPT_NAME
 
-echo "Verifing via tailing outputs"
+bold=$(tput bold)
+normal=$(tput sgr0)
+boldgreen='\x1b[1;32m'
+boldred='\x1b[1;31m'
+
+
+echo " "
+echo " "
+echo -e "${r"${bold}"}Starting tail log verification${r"${normal}"}"
 
 #Wait for tail outputs.
 TAIL_TIMEOUT=30
@@ -43,22 +52,43 @@ fi
 </#list>
 
 returnvalue=0
-#Print success outputs.
+
+#Print outputs.
 <#list tailPatterns as tailPattern>
+echo " "
+echo " "
+echo "===================================================================================================="
+printf "Searching file ${r"${bold}"}'${tailPattern.filePath}'${r"${normal}"} for pattern ${r"${boldgreen}"}'${tailPattern.pattern}'${r"${normal}"} ... "
 if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -gt 0 ]
 then
-  echo "<===== Tail file '${tailPattern.filePath}' for pattern '${tailPattern.pattern}' =====> "
+  printf "${r"${boldgreen}"}[Found]${r"${normal}"}\n"
+  echo "===================================================================================================="
+  echo "Output: "
   cat ${executionStagingDir}/tailoutput${executionId}${tailPattern?index}
-fi
-</#list>
-
-#Print failure outputs.
-<#list tailPatterns as tailPattern>
-if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -eq 0 ]
-then
-  echo "<===== Unable to find pattern '${tailPattern.pattern}' in file '${tailPattern.filePath}' =====> "
+else
+  printf "${r"${boldred}"}[Not Found]${r"${normal}"}\n"
   returnvalue=1
 fi
 </#list>
+
+if [ "$returnvalue" -eq 1 ]
+then
+  #Summarize failures
+  echo " "
+  echo " "
+  printf "${r"${bold}"}Unable to following patterns: ${r"${normal}"}\n"
+  <#list tailPatterns as tailPattern>
+  if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -eq 0 ]
+  then
+    echo "File: '${tailPattern.pattern}'"
+    echo "Pattern: '${tailPattern.filePath}'"
+  fi
+</#list>
+fi
+
+echo " "
+echo " "
+echo "${r"${bold}"}Tail log verification finished${r"${normal}"}"
+
 
 exit $returnvalue
