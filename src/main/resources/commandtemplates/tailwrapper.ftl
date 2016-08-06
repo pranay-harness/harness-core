@@ -30,7 +30,7 @@ TAIL_COUNT=${tailPatterns?size}
 while [ "$TAIL_TIMEOUT" -gt 0 -a "$TAIL_COUNT" -gt 0 ]
 do
 <#list tailPatterns as tailPattern>
-  if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -gt 0 ]
+  if [ -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
   then
     if $(kill -0 $pid${tailPattern?index} 2>/dev/null)
     then
@@ -59,7 +59,7 @@ echo " "
 echo " "
 echo "===================================================================================================="
 printf "Searching file ${r"${bold}"}'${tailPattern.filePath}'${r"${normal}"} for pattern ${r"${boldgreen}"}'${tailPattern.pattern}'${r"${normal}"} ... "
-if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -gt 0 ]
+if [ -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
 then
   printf "${r"${boldgreen}"}[Found]${r"${normal}"}\n"
   echo "===================================================================================================="
@@ -78,7 +78,7 @@ then
   echo " "
   printf "${r"${bold}"}Unable to following patterns: ${r"${normal}"}\n"
   <#list tailPatterns as tailPattern>
-  if [ $(wc -l ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} | tr -s " " | cut -d " " -f2) -eq 0 ]
+  if [ ! -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
   then
     echo "File: '${tailPattern.pattern}'"
     echo "Pattern: '${tailPattern.filePath}'"
