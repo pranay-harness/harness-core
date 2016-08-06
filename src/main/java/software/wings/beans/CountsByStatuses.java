@@ -62,6 +62,12 @@ public class CountsByStatuses {
     this.inprogress = inprogress;
   }
 
+  @Override
+  public String toString() {
+    return "CountsByStatuses{"
+        + "success=" + success + ", failed=" + failed + ", inprogress=" + inprogress + '}';
+  }
+
   /**
    * The type Builder.
    */

@@ -4,8 +4,6 @@
 
 package software.wings.beans;
 
-import static software.wings.beans.CountsByStatuses.Builder.aCountsByStatuses;
-
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
@@ -31,7 +29,7 @@ public class WorkflowExecution extends Base {
 
   private String name;
   private int total;
-  private CountsByStatuses breakdown = aCountsByStatuses().build();
+  private CountsByStatuses breakdown;
 
   private ExecutionArgs executionArgs;
 

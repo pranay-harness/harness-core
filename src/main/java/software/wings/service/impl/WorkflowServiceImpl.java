@@ -20,6 +20,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
@@ -443,9 +444,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     for (WorkflowExecution workflowExecution : res) {
       populateGraph(workflowExecution, null, null, null, false);
-      if (workflowExecution.getStatus() == ExecutionStatus.RUNNING || workflowExecution.getBreakdown() == null) {
-        workflowExecution.setBreakdown(getBreakdown(workflowExecution));
-      }
+      refreshBreakdown(workflowExecution);
     }
     return res;
   }
@@ -493,9 +492,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
-    if (workflowExecution.getStatus() == ExecutionStatus.RUNNING || workflowExecution.getBreakdown() == null) {
-      workflowExecution.setBreakdown(getBreakdown(workflowExecution));
-    }
+    refreshBreakdown(workflowExecution);
     return workflowExecution;
   }
 
@@ -1143,10 +1140,19 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public CountsByStatuses getBreakdown(String appId, String workflowExecutionId) {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
-    return getBreakdown(workflowExecution);
+    refreshBreakdown(workflowExecution);
+    return workflowExecution.getBreakdown();
   }
 
-  private CountsByStatuses getBreakdown(WorkflowExecution workflowExecution) {
+  private void refreshBreakdown(WorkflowExecution workflowExecution) {
+    if ((workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+            || workflowExecution.getStatus() == ExecutionStatus.FAILED
+            || workflowExecution.getStatus() == ExecutionStatus.ERROR
+            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)
+        && workflowExecution.getBreakdown() != null) {
+      return;
+    }
+
     StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req = aPageRequest()
                                                   .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
@@ -1157,7 +1163,36 @@ public class WorkflowServiceImpl implements WorkflowService {
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, res.getResponse());
-    return breakdown;
+    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress();
+
+    workflowExecution.setBreakdown(breakdown);
+    workflowExecution.setTotal(total);
+    logger.info("Got the breakdown workflowExecution: {}, status: {}, breakdown: {}", workflowExecution.getUuid(),
+        workflowExecution.getStatus(), breakdown);
+
+    if (workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+        || workflowExecution.getStatus() == ExecutionStatus.FAILED
+        || workflowExecution.getStatus() == ExecutionStatus.ERROR
+        || workflowExecution.getStatus() == ExecutionStatus.ABORTED) {
+      logger.info("Set the breakdown of the completed workflowExecution: {}, status: {}, breakdown: {}",
+          workflowExecution.getUuid(), workflowExecution.getStatus(), breakdown);
+
+      Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                           .field("appId")
+                                           .equal(workflowExecution.getAppId())
+                                           .field(ID_KEY)
+                                           .equal(workflowExecution.getUuid());
+
+      UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class);
+
+      try {
+        updateOps.set("breakdown", breakdown).set("total", total);
+        UpdateResults updated = wingsPersistence.update(query, updateOps);
+        logger.info("Updated : {} row", updated.getWriteResult().getN());
+      } catch (java.lang.Exception e) {
+        logger.error("Error in breakdown retrieval", e);
+      }
+    }
   }
 
   private class WorkflowExecutionEntryMaker implements Runnable {

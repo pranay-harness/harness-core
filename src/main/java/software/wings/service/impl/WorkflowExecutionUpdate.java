@@ -96,6 +96,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
     List<ExecutionStatus> runningStatuses = new ArrayList<>();
     runningStatuses.add(ExecutionStatus.NEW);
+    runningStatuses.add(ExecutionStatus.STARTING);
     runningStatuses.add(ExecutionStatus.RUNNING);
 
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
@@ -108,15 +109,12 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
 
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", status);
+    wingsPersistence.update(query, updateOps);
 
     try {
       CountsByStatuses breakdown = workflowService.getBreakdown(appId, workflowExecutionId);
-      if (breakdown != null) {
-        updateOps.set("breakdown", breakdown);
-      }
     } catch (Exception e) {
-      logger.error("Error in breakdown retrieval", e);
+      logger.error("Error in breakdown refresh", e);
     }
-    wingsPersistence.update(query, updateOps);
   }
 }
