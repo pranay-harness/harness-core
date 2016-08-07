@@ -552,7 +552,7 @@ public class DataGenUtil extends WingsBaseTest {
         Entity.entity(aSettingAttribute()
                           .withName("Splunk")
                           .withValue(aSplunkConfig()
-                                         .withHost("ec2-50-16-106-255.compute-1.amazonaws.com")
+                                         .withHost("ec2-54-172-208-137.compute-1.amazonaws.com")
                                          .withPort(8089)
                                          .withPassword("W!ngs@Splunk")
                                          .withUsername("admin")
