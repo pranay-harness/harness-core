@@ -65,7 +65,7 @@ public class DefaultCommands {
                 .withX(200)
                 .withY(50)
                 .withId(nodes.get(1))
-                .withName("Process Check Running")
+                .withName("Process Running")
                 .withType(PROCESS_CHECK_RUNNING.name())
                 .addProperty("commandString", "set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"")
                 .build(),
@@ -74,7 +74,7 @@ public class DefaultCommands {
                 .withY(50)
                 .withId(nodes.get(2))
                 .withType(PORT_CHECK_LISTENING.name())
-                .withName("Port Check Listening")
+                .withName("Port Listening")
                 .addProperty("commandString", "set -x\nnc -v -z -w 5 localhost 8080")
                 .build())
         .addLinks(aLink()
@@ -115,7 +115,7 @@ public class DefaultCommands {
                 .withX(200)
                 .withY(50)
                 .withId(nodes.get(1))
-                .withName("Process Check Stopped")
+                .withName("Process Stopped")
                 .withType(PROCESS_CHECK_STOPPED.name())
                 .addProperty("commandString",
                     "set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
@@ -125,7 +125,7 @@ public class DefaultCommands {
                 .withY(50)
                 .withId(nodes.get(2))
                 .withType(PORT_CHECK_CLEARED.name())
-                .withName("Port Check Cleared")
+                .withName("Port Cleared")
                 .addProperty("commandString",
                     "set -x\nnc -v -z -w 5 localhost 8080\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
                 .build())

@@ -43,17 +43,17 @@ public enum CommandUnitType implements CommandUnitDescriptor {
       DEFAULT_DISPLAY_ORDER), /**
                                * Process check command unit type.
                                */
-  PROCESS_CHECK_RUNNING(ProcessCheckRunningCommandUnit.class, "Process Check Running", StencilCategory.VERIFICATIONS,
-      DEFAULT_DISPLAY_ORDER),
+  PROCESS_CHECK_RUNNING(
+      ProcessCheckRunningCommandUnit.class, "Process Running", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
-  PROCESS_CHECK_STOPPED(ProcessCheckStoppedCommandUnit.class, "Process Check Stopped", StencilCategory.VERIFICATIONS,
-      DEFAULT_DISPLAY_ORDER),
+  PROCESS_CHECK_STOPPED(
+      ProcessCheckStoppedCommandUnit.class, "Process Stopped", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
   PORT_CHECK_CLEARED(
-      PortCheckClearedCommandUnit.class, "Port Check Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
+      PortCheckClearedCommandUnit.class, "Port Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
-  PORT_CHECK_LISTENING(PortCheckListeningCommandUnit.class, "Port Check Listening", StencilCategory.VERIFICATIONS,
-      DEFAULT_DISPLAY_ORDER);
+  PORT_CHECK_LISTENING(
+      PortCheckListeningCommandUnit.class, "Port Listening", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
