@@ -188,34 +188,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .build(),
                     aNode()
                         .withId("n4")
-                        .withName("Stop Instance")
+                        .withName("Install on Instance")
                         .withType(StateType.COMMAND.name())
                         .withX(500)
                         .withY(50)
-                        .addProperty("commandName", "STOP")
-                        .build(),
-                    aNode()
-                        .withId("n5")
-                        .withName("Install on Instance")
-                        .withType(StateType.COMMAND.name())
-                        .withX(650)
-                        .withY(50)
-                        .addProperty("commandName", "INSTALL")
-                        .build(),
-                    aNode()
-                        .withId("n6")
-                        .withName("Start Instance")
-                        .withType(StateType.COMMAND.name())
-                        .withX(800)
-                        .withY(50)
-                        .addProperty("commandName", "START")
+                        .addProperty("commandName", "Install")
                         .build())
                 .addLinks(
                     aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
                     aLink().withId("l2").withType(TransitionType.REPEAT.name()).withFrom("n2").withTo("n3").build(),
-                    aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build(),
-                    aLink().withId("l4").withType(TransitionType.SUCCESS.name()).withFrom("n4").withTo("n5").build(),
-                    aLink().withId("l5").withType(TransitionType.SUCCESS.name()).withFrom("n5").withTo("n6").build())
+                    aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build())
                 .build())
         .withEnvironment(env)
         .withAppId(env.getAppId())
