@@ -171,7 +171,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n2")
                         .withName("Phases: 10%,20%,30%,40%")
                         .withType(StateType.REPEAT.name())
-                        .withX(200)
+                        .withX(180)
                         .withY(50)
                         .addProperty("executionStrategy", "SERIAL")
                         .addProperty(
@@ -181,7 +181,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n3")
                         .withName("Instances: All")
                         .withType(StateType.REPEAT.name())
-                        .withX(350)
+                        .withX(310)
                         .withY(50)
                         .addProperty("executionStrategy", "PARALLEL")
                         .addProperty("repeatElementExpression", "${instances}")
@@ -190,14 +190,53 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withId("n4")
                         .withName("Install on Instance")
                         .withType(StateType.COMMAND.name())
-                        .withX(500)
+                        .withX(440)
                         .withY(50)
                         .addProperty("commandName", "Install")
+                        .build(),
+                    aNode()
+                        .withId("n5")
+                        .withName("Http Verification")
+                        .withType(StateType.HTTP.name())
+                        .withX(590)
+                        .withY(50)
+                        .addProperty("url", "http://www.google.com")
+                        .addProperty("method", "GET")
+                        .addProperty("assertion", "${httpResponseCode}==200")
+                        .build(),
+                    aNode()
+                        .withId("n6")
+                        .withName("Wait")
+                        .withType(StateType.WAIT.name())
+                        .withX(740)
+                        .withY(50)
+                        .addProperty("duration", "120")
+                        .build(),
+                    aNode()
+                        .withId("n7")
+                        .withName("Verify")
+                        .withType(StateType.FORK.name())
+                        .withX(890)
+                        .withY(50)
+                        .build(),
+                    aNode()
+                        .withId("n8")
+                        .withName("Splunk")
+                        .withType(StateType.SPLUNK.name())
+                        .withX(1020)
+                        .withY(50)
+                        .addProperty("query",
+                            "host=\"${host.name}\" sourcetype=catalina log_level=ERROR earliest=-15m | stats count")
+                        .addProperty("assertion", "${xpath('//field[@k=\"count\"]/value/text/text()')}.equals(\"0\")")
                         .build())
                 .addLinks(
                     aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
                     aLink().withId("l2").withType(TransitionType.REPEAT.name()).withFrom("n2").withTo("n3").build(),
-                    aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build())
+                    aLink().withId("l3").withType(TransitionType.REPEAT.name()).withFrom("n3").withTo("n4").build(),
+                    aLink().withId("l4").withType(TransitionType.SUCCESS.name()).withFrom("n4").withTo("n5").build(),
+                    aLink().withId("l5").withType(TransitionType.SUCCESS.name()).withFrom("n5").withTo("n6").build(),
+                    aLink().withId("l6").withType(TransitionType.SUCCESS.name()).withFrom("n6").withTo("n7").build(),
+                    aLink().withId("l7").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n8").build())
                 .build())
         .withEnvironment(env)
         .withAppId(env.getAppId())
