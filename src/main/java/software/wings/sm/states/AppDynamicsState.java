@@ -55,13 +55,12 @@ public class AppDynamicsState extends HttpState {
             .getValue();
     String controllerUrl = appdConfig.getControllerUrl();
 
-    String evaluatedMetricPath = urlEncodeString(context.renderExpression(metricPath));
-    String evaluatedAppIdentifier = urlEncodeString(context.renderExpression(applicationIdentifier));
+    String evaluatedMetricPath = context.renderExpression(metricPath);
+    String evaluatedAppIdentifier = context.renderExpression(applicationIdentifier);
 
-    setUrl(appdConfig.getControllerUrl() + "/rest/applications");
     setUrl(String.format(
         "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=30",
-        controllerUrl, evaluatedAppIdentifier, evaluatedMetricPath));
+        controllerUrl, urlEncodeString(evaluatedAppIdentifier), urlEncodeString(evaluatedMetricPath)));
     setMethod("GET");
     setHeader("Authorization: Basic "
         + Base64.encodeBase64String(
