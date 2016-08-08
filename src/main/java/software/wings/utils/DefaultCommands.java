@@ -75,7 +75,18 @@ public class DefaultCommands {
                 .withId(nodes.get(2))
                 .withType(PORT_CHECK_LISTENING.name())
                 .withName("Port Listening")
-                .addProperty("commandString", "set -x\nnc -v -z -w 5 localhost 8080")
+                .addProperty("commandString",
+                    "set -x\n"
+                        + "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
+                        + "\n"
+                        + "if [ -f \"$server_xml\" ]\n"
+                        + "then\n"
+                        + "port=$(grep \"<Connector[ ]*port=\\\"[0-9]*\\\"[ ]*protocol=\\\"HTTP/1.1\\\"\" \"$server_xml\" |cut -d '\"' -f2)\n"
+                        + "nc -v -z -w 5 localhost $port\n"
+                        + "else\n"
+                        + " echo \"Tomcat config file(\"$server_xml\") does not exist.. port check failed.\"\n"
+                        + " exit 1\n"
+                        + "fi")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
@@ -127,7 +138,20 @@ public class DefaultCommands {
                 .withType(PORT_CHECK_CLEARED.name())
                 .withName("Port Cleared")
                 .addProperty("commandString",
-                    "set -x\nnc -v -z -w 5 localhost 8080\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
+                    "set -x\n"
+                        + "server_xml=\"$WINGS_RUNTIME_PATH/tomcat/conf/server.xml\"\n"
+                        + "if [ -f \"$server_xml\" ]\n"
+                        + "then\n"
+                        + "port=$(grep \"<Connector[ ]*port=\\\"[0-9]*\\\"[ ]*protocol=\\\"HTTP/1.1\\\"\" \"$server_xml\" |cut -d '\"' -f2)\n"
+                        + "nc -v -z -w 5 localhost $port\n"
+                        + "rc=$?\n"
+                        + "if [ \"$rc\" -eq 0 ]\n"
+                        + "then\n"
+                        + "exit 1\n"
+                        + "fi\n"
+                        + "else\n"
+                        + " echo \"Tomcat config file(\"$server_xml\") does not exist.. skipping port check.\"\n"
+                        + "fi")
                 .build())
         .addLinks(aLink()
                       .withFrom(nodes.get(0))
