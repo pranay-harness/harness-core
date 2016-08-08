@@ -57,7 +57,7 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
-      @BeanParam PageRequest<WorkflowExecution> pageRequest) {
+      @BeanParam PageRequest<WorkflowExecution> pageRequest, @QueryParam("includeGraph") Boolean includeGraph) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
     filter.setFieldValues(appId);
@@ -77,6 +77,7 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
+    // TODO : interpret includeGraph and then request to include graph
     return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
   }
 

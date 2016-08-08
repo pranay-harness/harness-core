@@ -439,12 +439,15 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (res == null || res.size() == 0) {
       return res;
     }
+    for (WorkflowExecution workflowExecution : res) {
+      refreshBreakdown(workflowExecution);
+    }
+
     if (!includeGraph) {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
       populateGraph(workflowExecution, null, null, null, false);
-      refreshBreakdown(workflowExecution);
     }
     return res;
   }
