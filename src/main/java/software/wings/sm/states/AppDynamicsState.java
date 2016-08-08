@@ -78,6 +78,8 @@ public class AppDynamicsState extends HttpState {
                                                 .withAssertionStatement(getAssertion())
                                                 .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
                                                 .withResponse(httpStateExecutionData.getHttpResponseBody())
+                                                .withAppIdentifier(evaluatedAppIdentifier)
+                                                .withMetricPath(evaluatedMetricPath)
                                                 .build());
 
     return executionResponse;
