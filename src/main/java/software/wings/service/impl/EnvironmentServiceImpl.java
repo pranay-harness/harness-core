@@ -228,6 +228,17 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .addProperty("query",
                             "host=\"${host.name}\" sourcetype=catalina log_level=ERROR earliest=-15m | stats count")
                         .addProperty("assertion", "${xpath('//field[@k=\"count\"]/value/text/text()')}.equals(\"0\")")
+                        .build(),
+                    aNode()
+                        .withId("n9")
+                        .withName("App Dynamics")
+                        .withType(StateType.APP_DYNAMICS.name())
+                        .withX(1050)
+                        .withY(150)
+                        .addProperty("applicationIdentifier", "MyApp")
+                        .addProperty("metricPath",
+                            "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}:8005|Average Response Time (ms)")
+                        .addProperty("assertion", "${xpath('//metric-value/value/text()')} < 100")
                         .build())
                 .addLinks(
                     aLink().withId("l1").withType(TransitionType.REPEAT.name()).withFrom("n1").withTo("n2").build(),
@@ -236,7 +247,8 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                     aLink().withId("l4").withType(TransitionType.SUCCESS.name()).withFrom("n4").withTo("n5").build(),
                     aLink().withId("l5").withType(TransitionType.SUCCESS.name()).withFrom("n5").withTo("n6").build(),
                     aLink().withId("l6").withType(TransitionType.SUCCESS.name()).withFrom("n6").withTo("n7").build(),
-                    aLink().withId("l7").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n8").build())
+                    aLink().withId("l7").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n8").build(),
+                    aLink().withId("l8").withType(TransitionType.FORK.name()).withFrom("n7").withTo("n9").build())
                 .build())
         .withEnvironment(env)
         .withAppId(env.getAppId())
