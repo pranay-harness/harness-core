@@ -160,7 +160,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                 .addNodes(aNode()
                               .withId("n1")
                               .withOrigin(true)
-                              .withName("Services:All")
+                              .withName("Services: All")
                               .withType(StateType.REPEAT.name())
                               .withX(50)
                               .withY(50)
@@ -169,7 +169,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                               .build(),
                     aNode()
                         .withId("n2")
-                        .withName("Phases:10%,20%,30%,40%")
+                        .withName("Phases: 10%,20%,30%,40%")
                         .withType(StateType.REPEAT.name())
                         .withX(200)
                         .withY(50)
@@ -179,7 +179,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .build(),
                     aNode()
                         .withId("n3")
-                        .withName("Instances:All")
+                        .withName("Instances: All")
                         .withType(StateType.REPEAT.name())
                         .withX(350)
                         .withY(50)
