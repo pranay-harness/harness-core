@@ -51,7 +51,7 @@ public class ExecCommandUnit extends CommandUnit {
       String prefix) throws IOException, TemplateException {
     String commandFileName = "wings" + DigestUtils.md5Hex(prefix + getName() + activityId);
     String commandFile = new File(System.getProperty("java.io.tmpdir"), commandFileName).getAbsolutePath();
-    String commandDir = isNotBlank(commandPath) ? "'" + commandPath.trim() + "'" : "";
+    String commandDir = isNotBlank(commandPath) ? "-w '" + commandPath.trim() + "'" : "";
 
     try (OutputStreamWriter fileWriter =
              new OutputStreamWriter(new FileOutputStream(commandFile), StandardCharsets.UTF_8)) {
