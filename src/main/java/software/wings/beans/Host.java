@@ -303,95 +303,207 @@ public class Host extends Base {
 
     private Builder() {}
 
+    /**
+     * A host builder.
+     *
+     * @return the builder
+     */
     public static Builder aHost() {
       return new Builder();
     }
 
+    /**
+     * With infra id builder.
+     *
+     * @param infraId the infra id
+     * @return the builder
+     */
     public Builder withInfraId(String infraId) {
       this.infraId = infraId;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With os type builder.
+     *
+     * @param osType the os type
+     * @return the builder
+     */
     public Builder withOsType(String osType) {
       this.osType = osType;
       return this;
     }
 
+    /**
+     * With host conn attr builder.
+     *
+     * @param hostConnAttr the host conn attr
+     * @return the builder
+     */
     public Builder withHostConnAttr(SettingAttribute hostConnAttr) {
       this.hostConnAttr = hostConnAttr;
       return this;
     }
 
+    /**
+     * With bastion conn attr builder.
+     *
+     * @param bastionConnAttr the bastion conn attr
+     * @return the builder
+     */
     public Builder withBastionConnAttr(SettingAttribute bastionConnAttr) {
       this.bastionConnAttr = bastionConnAttr;
       return this;
     }
 
+    /**
+     * With config tag builder.
+     *
+     * @param configTag the config tag
+     * @return the builder
+     */
     public Builder withConfigTag(Tag configTag) {
       this.configTag = configTag;
       return this;
     }
 
+    /**
+     * With config files builder.
+     *
+     * @param configFiles the config files
+     * @return the builder
+     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With host connection credential builder.
+     *
+     * @param hostConnectionCredential the host connection credential
+     * @return the builder
+     */
     public Builder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
       this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
+    /**
+     * With host names builder.
+     *
+     * @param hostNames the host names
+     * @return the builder
+     */
     public Builder withHostNames(List<String> hostNames) {
       this.hostNames = hostNames;
       return this;
     }
 
+    /**
+     * With service templates builder.
+     *
+     * @param serviceTemplates the service templates
+     * @return the builder
+     */
     public Builder withServiceTemplates(List<ServiceTemplate> serviceTemplates) {
       this.serviceTemplates = serviceTemplates;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aHost()
           .withInfraId(infraId)
@@ -413,6 +525,11 @@ public class Host extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build host.
+     *
+     * @return the host
+     */
     public Host build() {
       Host host = new Host();
       host.setInfraId(infraId);

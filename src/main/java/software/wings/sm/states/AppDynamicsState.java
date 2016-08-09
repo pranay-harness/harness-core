@@ -29,15 +29,13 @@ import java.nio.charset.StandardCharsets;
  * Created by anubhaw on 8/4/16.
  */
 public class AppDynamicsState extends HttpState {
+  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
   @Transient @Inject private SettingsService settingsService;
-
   @Attributes(required = true, title = "Application Name") private String applicationName;
   @Attributes(required = true, title = "Metric Path",
       description = "Overall Application Performance|Average Response Time (ms)")
   private String metricPath;
   @Attributes(title = "Time duration (in minutes)", description = "Default 10 minutes") private String timeDuration;
-
-  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
   /**
    * Create a new Http State with given name.

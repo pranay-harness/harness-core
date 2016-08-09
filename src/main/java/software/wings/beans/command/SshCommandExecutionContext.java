@@ -14,6 +14,11 @@ import java.util.List;
 public class SshCommandExecutionContext extends CommandExecutionContext {
   private SshExecutor sshExecutor;
 
+  /**
+   * Instantiates a new Ssh command execution context.
+   *
+   * @param other the other
+   */
   @AssistedInject
   public SshCommandExecutionContext(CommandExecutionContext other) {
     super(other);

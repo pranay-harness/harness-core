@@ -125,21 +125,21 @@ public abstract class Notification extends Base {
   }
 
   /**
-   * Is actionable boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isActionable() {
-    return actionable;
-  }
-
-  /**
    * Sets complete.
    *
    * @param complete the complete
    */
   public void setComplete(boolean complete) {
     this.complete = complete;
+  }
+
+  /**
+   * Is actionable boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isActionable() {
+    return actionable;
   }
 
   /**

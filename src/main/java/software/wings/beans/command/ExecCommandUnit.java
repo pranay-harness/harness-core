@@ -140,22 +140,45 @@ public class ExecCommandUnit extends CommandUnit {
     this.preparedCommand = preparedCommand;
   }
 
+  /**
+   * Is tail files boolean.
+   *
+   * @return the boolean
+   */
   public boolean isTailFiles() {
     return tailFiles;
   }
 
+  /**
+   * Sets tail files.
+   *
+   * @param tailFiles the tail files
+   */
   public void setTailFiles(boolean tailFiles) {
     this.tailFiles = tailFiles;
   }
 
+  /**
+   * Gets tail patterns.
+   *
+   * @return the tail patterns
+   */
   public List<TailFilePatternEntry> getTailPatterns() {
     return tailPatterns;
   }
 
+  /**
+   * Sets tail patterns.
+   *
+   * @param tailPatterns the tail patterns
+   */
   public void setTailPatterns(List<TailFilePatternEntry> tailPatterns) {
     this.tailPatterns = tailPatterns;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String commandPath;
@@ -165,35 +188,75 @@ public class ExecCommandUnit extends CommandUnit {
 
     private Builder() {}
 
+    /**
+     * An exec command unit builder.
+     *
+     * @return the builder
+     */
     public static Builder anExecCommandUnit() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With command path builder.
+     *
+     * @param commandPath the command path
+     * @return the builder
+     */
     public Builder withCommandPath(String commandPath) {
       this.commandPath = commandPath;
       return this;
     }
 
+    /**
+     * With command string builder.
+     *
+     * @param commandString the command string
+     * @return the builder
+     */
     public Builder withCommandString(String commandString) {
       this.commandString = commandString;
       return this;
     }
 
+    /**
+     * With tail files builder.
+     *
+     * @param tailFiles the tail files
+     * @return the builder
+     */
     public Builder withTailFiles(boolean tailFiles) {
       this.tailFiles = tailFiles;
       return this;
     }
 
+    /**
+     * With tail patterns builder.
+     *
+     * @param tailPatterns the tail patterns
+     * @return the builder
+     */
     public Builder withTailPatterns(List<TailFilePatternEntry> tailPatterns) {
       this.tailPatterns = tailPatterns;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anExecCommandUnit()
           .withName(name)
@@ -203,6 +266,11 @@ public class ExecCommandUnit extends CommandUnit {
           .withTailPatterns(tailPatterns);
     }
 
+    /**
+     * Build exec command unit.
+     *
+     * @return the exec command unit
+     */
     public ExecCommandUnit build() {
       ExecCommandUnit execCommandUnit = new ExecCommandUnit();
       execCommandUnit.setName(name);

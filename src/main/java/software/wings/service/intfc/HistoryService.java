@@ -28,7 +28,7 @@ public interface HistoryService {
    *
    * @param appId     the app id
    * @param historyId the history id
-   * @return history
+   * @return history history
    */
   History get(String appId, String historyId);
 }

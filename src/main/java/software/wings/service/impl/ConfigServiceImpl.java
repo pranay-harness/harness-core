@@ -37,12 +37,15 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ConfigServiceImpl implements ConfigService {
+  /**
+   * The Executor service.
+   */
+  @Inject ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
   @Inject private TagService tagService;
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
