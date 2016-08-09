@@ -20,6 +20,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.InputStream;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -44,6 +46,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -133,16 +136,26 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void update(ConfigFile configFile, InputStream uploadedInputStream) {
+    ConfigFile savedConfigFile = get(configFile.getAppId(), configFile.getUuid(), false);
+    Validator.notNullCheck("Configuration file", savedConfigFile);
+
+    Map<String, Object> updateMap = new HashMap<>();
+    String oldFileId = savedConfigFile.getFileUuid();
+
     if (uploadedInputStream != null) {
       fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
+      updateMap.put("fileUuid", configFile.getFileUuid());
+      updateMap.put("fileName", configFile.getFileName());
+      updateMap.put("checksum", configFile.getChecksum());
+      updateMap.put("size", configFile.getSize());
     }
-    Map<String, Object> updateMap = new HashMap<>();
     updateMap.put("name", configFile.getName());
     updateMap.put("relativePath", configFile.getRelativePath());
-    if (configFile.getChecksum() != null) {
-      updateMap.put("checksum", configFile.getChecksum());
-    }
     wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
+
+    if (!oldFileId.equals(configFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
+      executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
+    }
   }
 
   /* (non-Javadoc)

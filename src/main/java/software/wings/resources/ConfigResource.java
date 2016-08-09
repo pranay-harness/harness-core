@@ -125,6 +125,7 @@ public class ConfigResource {
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+    configFile.setAppId(appId);
     configFile.setUuid(configId);
     configFile.setFileName(fileDetail.getFileName());
     configService.update(configFile, uploadedInputStream);
