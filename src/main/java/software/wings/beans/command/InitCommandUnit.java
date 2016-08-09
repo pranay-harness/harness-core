@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static java.util.stream.Collectors.toMap;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -73,28 +74,42 @@ public class InitCommandUnit extends CommandUnit {
 
     ExecutionResult executionResult = context.executeCommandString(preInitCommand);
     try {
-      context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()));
+      executionResult = executionResult == ExecutionResult.SUCCESS
+          ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
+          : executionResult;
     } catch (IOException e) {
       e.printStackTrace();
     } catch (TemplateException e) {
       e.printStackTrace();
     }
     try {
-      context.copyFiles(executionStagingDir, getCommandUnitFiles());
+      List<String> commandUnitFiles = getCommandUnitFiles();
+      if (!isEmpty(commandUnitFiles)) {
+        executionResult = executionResult == ExecutionResult.SUCCESS
+            ? context.copyFiles(executionStagingDir, commandUnitFiles)
+            : executionResult;
+      }
     } catch (IOException e) {
+      executionResult = ExecutionResult.FAILURE;
       e.printStackTrace();
     } catch (TemplateException e) {
+      executionResult = ExecutionResult.FAILURE;
       e.printStackTrace();
     }
-    context.executeCommandString("chmod 0744 " + executionStagingDir + "/*");
+    executionResult = executionResult == ExecutionResult.SUCCESS
+        ? context.executeCommandString("chmod 0744 " + executionStagingDir + "/*")
+        : executionResult;
     StringBuffer envVariablesFromHost = new StringBuffer();
-    context.executeCommandString("printenv", envVariablesFromHost);
+    executionResult = executionResult == ExecutionResult.SUCCESS
+        ? context.executeCommandString("printenv", envVariablesFromHost)
+        : executionResult;
     Properties properties = new Properties();
     try {
       properties.load(new StringReader(envVariablesFromHost.toString()));
       context.addEnvVariables(
           properties.entrySet().stream().collect(toMap(o -> o.getKey().toString(), o -> o.getValue().toString())));
     } catch (IOException e) {
+      executionResult = ExecutionResult.FAILURE;
       e.printStackTrace();
     }
     context.addEnvVariables(envVariables);

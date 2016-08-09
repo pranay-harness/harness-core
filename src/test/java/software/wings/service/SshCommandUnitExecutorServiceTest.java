@@ -2,6 +2,8 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
@@ -45,6 +47,7 @@ import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.InitCommandUnit;
@@ -232,6 +235,9 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(ExecutionResult.SUCCESS);
+    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(ExecutionResult.SUCCESS);
+
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
     verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID");
 
@@ -280,6 +286,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     commandUnit.setCommand(command);
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    when(sshPwdAuthExecutor.executeCommandString(anyString())).thenReturn(ExecutionResult.SUCCESS);
+    when(sshPwdAuthExecutor.copyFiles(anyString(), anyListOf(String.class))).thenReturn(ExecutionResult.SUCCESS);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
 
     String expectedExecCommandUnitScript =
