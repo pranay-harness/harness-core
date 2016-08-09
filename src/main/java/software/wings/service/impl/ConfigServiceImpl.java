@@ -14,11 +14,9 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
 
@@ -41,11 +39,9 @@ import javax.validation.executable.ValidateOnExecution;
 public class ConfigServiceImpl implements ConfigService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
-  @Inject private EnvironmentService environmentService;
   @Inject private TagService tagService;
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceTemplateService serviceTemplateService;
   @Inject ExecutorService executorService;
 
   /* (non-Javadoc)
@@ -96,7 +92,7 @@ public class ConfigServiceImpl implements ConfigService {
                                        .field("templateId")
                                        .equal(serviceTemplate.getUuid())
                                        .asList();
-    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile, serviceTemplate)));
+    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile)));
     return configFiles;
   }
 
@@ -109,16 +105,9 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private String generateOverridePath(ConfigFile configFile) {
-    return generateOverridePath(configFile,
-        serviceTemplateService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getTemplateId()));
-  }
-
-  private String generateOverridePath(ConfigFile configFile, ServiceTemplate serviceTemplate) {
     switch (configFile.getEntityType()) {
       case SERVICE:
         return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
-      case ENVIRONMENT:
-        return environmentService.get(configFile.getAppId(), configFile.getEntityId(), false).getName();
       case TAG:
         return tagService.getTagHierarchyPathString(
             tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
