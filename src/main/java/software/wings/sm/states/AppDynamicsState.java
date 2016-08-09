@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
+
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -26,14 +28,14 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by anubhaw on 8/4/16.
  */
-
 public class AppDynamicsState extends HttpState {
   @Transient @Inject private SettingsService settingsService;
 
-  @Attributes(title = "Application identifier", description = "application-name or application-id")
-  private String applicationIdentifier;
-  @Attributes(title = "Metric Path", description = "Overall Application Performance|Average Response Time (ms)")
+  @Attributes(required = true, title = "Application Name") private String applicationName;
+  @Attributes(required = true, title = "Metric Path",
+      description = "Overall Application Performance|Average Response Time (ms)")
   private String metricPath;
+  @Attributes(title = "Time duration (in minutes)", description = "Default 10 minutes") private String timeDuration;
 
   private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
@@ -56,11 +58,12 @@ public class AppDynamicsState extends HttpState {
     String controllerUrl = appdConfig.getControllerUrl();
 
     String evaluatedMetricPath = context.renderExpression(metricPath);
-    String evaluatedAppIdentifier = context.renderExpression(applicationIdentifier);
+    String evaluatedAppName = context.renderExpression(applicationName);
+    String evaluatedTimeDuration = isNullOrEmpty(timeDuration) ? "10" : context.renderExpression(timeDuration);
 
     setUrl(String.format(
-        "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=30",
-        controllerUrl, urlEncodeString(evaluatedAppIdentifier), urlEncodeString(evaluatedMetricPath)));
+        "%s/rest/applications/%s/metric-data?metric-path=%s&time-range-type=BEFORE_NOW&duration-in-mins=%s",
+        controllerUrl, urlEncodeString(evaluatedAppName), urlEncodeString(evaluatedMetricPath), evaluatedTimeDuration));
     setMethod("GET");
     setHeader("Authorization: Basic "
         + Base64.encodeBase64String(
@@ -77,7 +80,7 @@ public class AppDynamicsState extends HttpState {
                                                 .withAssertionStatement(getAssertion())
                                                 .withAssertionStatus(httpStateExecutionData.getAssertionStatus())
                                                 .withResponse(httpStateExecutionData.getHttpResponseBody())
-                                                .withAppIdentifier(evaluatedAppIdentifier)
+                                                .withAppIdentifier(evaluatedAppName)
                                                 .withMetricPath(evaluatedMetricPath)
                                                 .build());
 
@@ -116,19 +119,63 @@ public class AppDynamicsState extends HttpState {
     return super.getUrl();
   }
 
-  public String getApplicationIdentifier() {
-    return applicationIdentifier;
+  @Attributes(required = true, title = "Assertion")
+  @Override
+  public String getAssertion() {
+    return super.getAssertion();
   }
 
-  public void setApplicationIdentifier(String applicationIdentifier) {
-    this.applicationIdentifier = applicationIdentifier;
+  /**
+   * Gets application identifier.
+   *
+   * @return the application identifier
+   */
+  public String getApplicationName() {
+    return applicationName;
   }
 
+  /**
+   * Sets application identifier.
+   *
+   * @param applicationName the application identifier
+   */
+  public void setApplicationName(String applicationName) {
+    this.applicationName = applicationName;
+  }
+
+  /**
+   * Gets metric path.
+   *
+   * @return the metric path
+   */
   public String getMetricPath() {
     return metricPath;
   }
 
+  /**
+   * Sets metric path.
+   *
+   * @param metricPath the metric path
+   */
   public void setMetricPath(String metricPath) {
     this.metricPath = metricPath;
+  }
+
+  /**
+   * Gets time duration.
+   *
+   * @return the time duration
+   */
+  public String getTimeDuration() {
+    return timeDuration;
+  }
+
+  /**
+   * Sets time duration.
+   *
+   * @param timeDuration the time duration
+   */
+  public void setTimeDuration(String timeDuration) {
+    this.timeDuration = timeDuration;
   }
 }
