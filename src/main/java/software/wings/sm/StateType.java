@@ -46,29 +46,29 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Repeat state type.
    */
-  REPEAT(RepeatState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
+  REPEAT(RepeatState.class, StencilCategory.CONTROLS, 0, ORCHESTRATION_STENCILS),
 
   /**
    * Fork state type.
    */
-  FORK(ForkState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
+  FORK(ForkState.class, StencilCategory.CONTROLS, 1, ORCHESTRATION_STENCILS),
 
   // STATE_MACHINE(ORCHESTRATION_STENCILS),
 
   /**
    * Wait state type.
    */
-  WAIT(WaitState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
+  WAIT(WaitState.class, StencilCategory.CONTROLS, 3, ORCHESTRATION_STENCILS),
 
   /**
    * Pause state type.
    */
-  PAUSE(PauseState.class, StencilCategory.CONTROLS, ORCHESTRATION_STENCILS),
+  PAUSE(PauseState.class, StencilCategory.CONTROLS, 4, ORCHESTRATION_STENCILS),
 
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
@@ -83,7 +83,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Email state type.
    */
-  EMAIL(EmailState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS),
+  EMAIL(EmailState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
 
   /**
    * Build state type.
@@ -103,7 +103,7 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.COMMONS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
+  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

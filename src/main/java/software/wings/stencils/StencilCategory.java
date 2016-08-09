@@ -22,28 +22,28 @@ public enum StencilCategory {
   COMMONS, /**
             * Commands stencil category.
             */
-  COMMANDS, /**
-             * Controls stencil category.
+  COMMANDS(1), /**
+                * Controls stencil category.
+                */
+  CONTROLS(0), /**
+                * Environments stencil category.
+                */
+  ENVIRONMENTS(1), /**
+                    * Build stencil category.
+                    */
+  BUILD(0), /**
+             * Scripts stencil category.
              */
-  CONTROLS, /**
-             * Environments stencil category.
-             */
-  ENVIRONMENTS, /**
-                 * Build stencil category.
-                 */
-  BUILD(null, 0), /**
-                   * Scripts stencil category.
-                   */
   SCRIPTS, /**
             * Verifications stencil category.
             */
-  VERIFICATIONS, /**
-                  * Copy stencil category.
-                  */
+  VERIFICATIONS(2), /**
+                     * Copy stencil category.
+                     */
   COPY, /**
          * Others stencil category.
          */
-  OTHERS;
+  OTHERS(10);
 
   private String displayName;
 
@@ -51,9 +51,12 @@ public enum StencilCategory {
   private Integer displayOrder = 3;
 
   StencilCategory() {
-    this(null);
+    this(null, null);
   }
 
+  StencilCategory(Integer displayOrder) {
+    this(null, displayOrder);
+  }
   StencilCategory(String displayName) {
     if (displayName == null) {
       this.displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
