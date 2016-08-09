@@ -11,6 +11,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
@@ -51,17 +52,19 @@ import javax.ws.rs.core.Response;
 public class HostResource {
   private HostService hostService;
   private InfraService infraService;
+  private MainConfiguration configuration;
 
   /**
    * Instantiates a new Host resource.
-   *
-   * @param hostService  the host service
+   *  @param hostService  the host service
    * @param infraService the infra service
+   * @param configuration
    */
   @Inject
-  public HostResource(HostService hostService, InfraService infraService) {
+  public HostResource(HostService hostService, InfraService infraService, MainConfiguration configuration) {
     this.hostService = hostService;
     this.infraService = infraService;
+    this.configuration = configuration;
   }
 
   /**
@@ -174,8 +177,8 @@ public class HostResource {
       @QueryParam("envId") String envId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
     infraId = infraService.getInfraIdByEnvId(appId, envId);
-    hostService.importHosts(
-        appId, infraId, new BoundedInputStream(uploadedInputStream, 40 * 1000 * 1000)); // TODO: read from config
+    hostService.importHosts(appId, infraId,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getHostUploadLimit()));
     return new RestResponse();
   }
 

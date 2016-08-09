@@ -46,7 +46,7 @@ public class BoundedInputStream extends InputStream {
    * @param size      the size
    * @return the bounded stream for url
    */
-  public static BoundedInputStream getBoundedStreamForUrl(String urlString, int size) {
+  public static BoundedInputStream getBoundedStreamForUrl(String urlString, long size) {
     try {
       URL url = new URL(urlString);
       return new BoundedInputStream(url.openStream(), size);

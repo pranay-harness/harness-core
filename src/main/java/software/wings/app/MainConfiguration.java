@@ -23,6 +23,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty private boolean enableAuth;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize;
   @JsonProperty private String corsDomains;
+  @JsonProperty private FileUploadLimit fileUploadLimits;
 
   /**
    * Gets swagger bundle configuration.
@@ -138,5 +139,23 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    */
   public void setCorsDomains(String corsDomains) {
     this.corsDomains = corsDomains;
+  }
+
+  /**
+   * Gets file upload limit.
+   *
+   * @return the file upload limit
+   */
+  public FileUploadLimit getFileUploadLimits() {
+    return fileUploadLimits;
+  }
+
+  /**
+   * Sets file upload limit.
+   *
+   * @param fileUploadLimits the file upload limit
+   */
+  public void setFileUploadLimits(FileUploadLimit fileUploadLimits) {
+    this.fileUploadLimits = fileUploadLimits;
   }
 }

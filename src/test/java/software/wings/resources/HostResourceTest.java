@@ -17,6 +17,7 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.RestResponse;
@@ -35,15 +36,17 @@ import javax.ws.rs.core.GenericType;
 public class HostResourceTest extends WingsBaseTest {
   private static final HostService RESOURCE_SERVICE = mock(HostService.class);
   private static final InfraService INFRA_SERVICE = mock(InfraService.class);
+  public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
 
   /**
    * The constant RESOURCES.
    */
   @ClassRule
-  public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                       .addResource(new HostResource(RESOURCE_SERVICE, INFRA_SERVICE))
-                                                       .addProvider(WingsExceptionMapper.class)
-                                                       .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .addResource(new HostResource(RESOURCE_SERVICE, INFRA_SERVICE, MAIN_CONFIGURATION))
+          .addProvider(WingsExceptionMapper.class)
+          .build();
   private static final Host aHost =
       Builder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).build();
 
