@@ -88,26 +88,51 @@ public class WaitState extends State {
     this.duration = duration;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private long duration;
     private String name;
 
     private Builder() {}
 
+    /**
+     * A wait state builder.
+     *
+     * @return the builder
+     */
     public static Builder aWaitState() {
       return new Builder();
     }
 
+    /**
+     * With duration builder.
+     *
+     * @param duration the duration
+     * @return the builder
+     */
     public Builder withDuration(long duration) {
       this.duration = duration;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * Build wait state.
+     *
+     * @return the wait state
+     */
     public WaitState build() {
       WaitState waitState = new WaitState(name);
       waitState.setDuration(duration);

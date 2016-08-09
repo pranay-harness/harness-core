@@ -14,12 +14,11 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
+import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.InputStream;
@@ -27,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -37,13 +37,15 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ConfigServiceImpl implements ConfigService {
+  /**
+   * The Executor service.
+   */
+  @Inject ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FileService fileService;
-  @Inject private EnvironmentService environmentService;
   @Inject private TagService tagService;
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private ServiceTemplateService serviceTemplateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -93,7 +95,7 @@ public class ConfigServiceImpl implements ConfigService {
                                        .field("templateId")
                                        .equal(serviceTemplate.getUuid())
                                        .asList();
-    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile, serviceTemplate)));
+    configFiles.forEach(configFile -> configFile.setOverridePath(generateOverridePath(configFile)));
     return configFiles;
   }
 
@@ -106,16 +108,9 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   private String generateOverridePath(ConfigFile configFile) {
-    return generateOverridePath(configFile,
-        serviceTemplateService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getTemplateId()));
-  }
-
-  private String generateOverridePath(ConfigFile configFile, ServiceTemplate serviceTemplate) {
     switch (configFile.getEntityType()) {
       case SERVICE:
         return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
-      case ENVIRONMENT:
-        return environmentService.get(configFile.getAppId(), configFile.getEntityId(), false).getName();
       case TAG:
         return tagService.getTagHierarchyPathString(
             tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
@@ -133,16 +128,26 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void update(ConfigFile configFile, InputStream uploadedInputStream) {
+    ConfigFile savedConfigFile = get(configFile.getAppId(), configFile.getUuid(), false);
+    Validator.notNullCheck("Configuration file", savedConfigFile);
+
+    Map<String, Object> updateMap = new HashMap<>();
+    String oldFileId = savedConfigFile.getFileUuid();
+
     if (uploadedInputStream != null) {
       fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
+      updateMap.put("fileUuid", configFile.getFileUuid());
+      updateMap.put("fileName", configFile.getFileName());
+      updateMap.put("checksum", configFile.getChecksum());
+      updateMap.put("size", configFile.getSize());
     }
-    Map<String, Object> updateMap = new HashMap<>();
     updateMap.put("name", configFile.getName());
     updateMap.put("relativePath", configFile.getRelativePath());
-    if (configFile.getChecksum() != null) {
-      updateMap.put("checksum", configFile.getChecksum());
-    }
     wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
+
+    if (!oldFileId.equals(configFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
+      executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
+    }
   }
 
   /* (non-Javadoc)

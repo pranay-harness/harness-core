@@ -51,11 +51,28 @@ public abstract class CommandUnit {
     this.commandUnitType = commandUnitType;
   }
 
+  /**
+   * Prepare list.
+   *
+   * @param activityId             the activity id
+   * @param executionStagingDir    the execution staging dir
+   * @param launcherScriptFileName the launcher script file name
+   * @param prefix                 the prefix
+   * @return the list
+   * @throws IOException       the io exception
+   * @throws TemplateException the template exception
+   */
   public List<String> prepare(String activityId, String executionStagingDir, String launcherScriptFileName,
       String prefix) throws IOException, TemplateException {
     return Collections.emptyList();
   }
 
+  /**
+   * Execute execution result.
+   *
+   * @param context the context
+   * @return the execution result
+   */
   public abstract ExecutionResult execute(CommandExecutionContext context);
 
   /**

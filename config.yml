@@ -48,3 +48,8 @@ swagger:
   resourcePackage: software.wings.resources,software.wings.utils
 
 corsDomains: http://localhost:8000
+
+fileUploadLimits:
+  appContainerLimit: 1000000000 #  1 GB
+  configFileLimit:   100000000  #  100 MB
+  hostUploadLimit:   100000000  # 100 MB

@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.utils.validation.Create;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -29,11 +30,11 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
-  @FormDataParam("envId") @NotEmpty private String envId;
+  @FormDataParam("envId") @NotEmpty(groups = {Create.class}) private String envId;
 
-  @FormDataParam("entityType") @NotNull private EntityType entityType;
+  @FormDataParam("entityType") @NotNull(groups = {Create.class}) private EntityType entityType;
 
-  @FormDataParam("entityId") @NotEmpty private String entityId;
+  @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) private String entityId;
 
   @FormDataParam("relativePath") private String relativePath;
 

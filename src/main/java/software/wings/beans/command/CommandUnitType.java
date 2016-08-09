@@ -29,6 +29,9 @@ public enum CommandUnitType implements CommandUnitDescriptor {
    */
   SCP(ScpCommandUnit.class, "Copy", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
 
+  /**
+   * The Copy configs.
+   */
   COPY_CONFIGS(CopyConfigCommandUnit.class, "Copy Configs", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
 
   /**
@@ -46,12 +49,21 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   PROCESS_CHECK_RUNNING(
       ProcessCheckRunningCommandUnit.class, "Process Running", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
+  /**
+   * The Process check stopped.
+   */
   PROCESS_CHECK_STOPPED(
       ProcessCheckStoppedCommandUnit.class, "Process Stopped", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
+  /**
+   * The Port check cleared.
+   */
   PORT_CHECK_CLEARED(
       PortCheckClearedCommandUnit.class, "Port Cleared", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER),
 
+  /**
+   * The Port check listening.
+   */
   PORT_CHECK_LISTENING(
       PortCheckListeningCommandUnit.class, "Port Listening", StencilCategory.VERIFICATIONS, DEFAULT_DISPLAY_ORDER);
 

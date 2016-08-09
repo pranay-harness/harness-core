@@ -1,5 +1,5 @@
 {
-  "ui:order": ["applicationIdentifier", "metricPath", "assertion"],
+  "ui:order": ["applicationName", "metricPath", "timeDuration", "assertion"],
   "metricPath": {
     "ui:widget": "textarea"
   },

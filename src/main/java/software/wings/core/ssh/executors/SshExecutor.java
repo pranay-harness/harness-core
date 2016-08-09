@@ -25,6 +25,13 @@ public interface SshExecutor {
    */
   ExecutionResult executeCommandString(String command);
 
+  /**
+   * Execute command string execution result.
+   *
+   * @param command the command
+   * @param output  the output
+   * @return the execution result
+   */
   ExecutionResult executeCommandString(String command, StringBuffer output);
 
   /**

@@ -430,26 +430,51 @@ public class CommandState extends State {
     this.executorService = executorService;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String commandName;
     private String name;
 
     private Builder() {}
 
+    /**
+     * A command state builder.
+     *
+     * @return the builder
+     */
     public static Builder aCommandState() {
       return new Builder();
     }
 
+    /**
+     * With command name builder.
+     *
+     * @param commandName the command name
+     * @return the builder
+     */
     public Builder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * Build command state.
+     *
+     * @return the command state
+     */
     public CommandState build() {
       CommandState commandState = new CommandState(name);
       commandState.setCommandName(commandName);

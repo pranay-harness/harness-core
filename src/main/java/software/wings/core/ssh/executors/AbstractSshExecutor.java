@@ -374,8 +374,8 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     } else {
       if (message.startsWith("invalid privatekey")) {
         errorConst = INVALID_KEY;
-      } else if (message.contains("Auth fail") || message.contains("Auth cancel")
-          || message.contains("USERAUTH fail")) {
+      } else if (message.contains("Auth fail") || message.contains("Auth cancel") || message.contains("USERAUTH fail")
+          || message.contains("authentication failure")) {
         errorConst = INVALID_CREDENTIAL;
       } else if (message.startsWith("timeout: socket is not established")
           || message.contains("SocketTimeoutException")) {

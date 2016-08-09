@@ -331,6 +331,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     verify(serviceInstanceService).updateInstanceMappings(template, asList(host), asList());
   }
 
+  /**
+   * Should set mapped by to tag and remove mapped hosts when mapped by tag.
+   */
   @Test
   public void shouldSetMappedByToTagAndRemoveMappedHostsWhenMappedByTag() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
@@ -355,6 +358,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
         .updateInstanceMappings(builder.withMappedBy(EntityType.TAG).build(), asList(host), asList());
   }
 
+  /**
+   * Should set mapped by to host and remove mapped tags when mapped by host.
+   */
   @Test
   public void shouldSetMappedByToHostAndRemoveMappedTagsWhenMappedByHost() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();

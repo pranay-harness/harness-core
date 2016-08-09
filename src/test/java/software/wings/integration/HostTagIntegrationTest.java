@@ -40,7 +40,6 @@ import javax.inject.Inject;
 /**
  * Created by anubhaw on 8/1/16.
  */
-
 @RealMongo
 public class HostTagIntegrationTest extends WingsBaseTest {
   /**
@@ -125,12 +124,18 @@ public class HostTagIntegrationTest extends WingsBaseTest {
         aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC").build());
   }
 
+  /**
+   * Should add new hosts to default tag for untagged hosts.
+   */
   @Test
   public void shouldAddNewHostsToDefaultTagForUntaggedHosts() {
     List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     hosts.forEach(host -> assertThat(host.getConfigTag().getTagType()).isEqualTo(TagType.UNTAGGED_HOST));
   }
 
+  /**
+   * Should have zero host with default tag when all host tagged by other tag.
+   */
   @Test
   public void shouldHaveZeroHostWithDefaultTagWhenAllHostTaggedByOtherTag() {
     List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
@@ -141,6 +146,9 @@ public class HostTagIntegrationTest extends WingsBaseTest {
         .isEqualTo(0);
   }
 
+  /**
+   * Should remove default tag from host when tagged by other tags.
+   */
   @Test
   public void shouldRemoveDefaultTagFromHostWhenTaggedByOtherTags() {
     List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
@@ -156,6 +164,9 @@ public class HostTagIntegrationTest extends WingsBaseTest {
         .isEqualTo(2);
   }
 
+  /**
+   * Should tag host by default tag when untagged.
+   */
   @Test
   public void shouldTagHostByDefaultTagWhenUntagged() {
     List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);

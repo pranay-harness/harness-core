@@ -14,6 +14,8 @@ import java.util.Objects;
  * Created by anubhaw on 8/4/16.
  */
 public class AppDynamicsExecutionData extends StateExecutionData {
+  private String appIdentifier;
+  private String metricPath;
   private String assertionStatement;
   private String assertionStatus;
   private int httpResponseCode;
@@ -91,6 +93,42 @@ public class AppDynamicsExecutionData extends StateExecutionData {
     this.response = response;
   }
 
+  /**
+   * Gets app identifier.
+   *
+   * @return the app identifier
+   */
+  public String getAppIdentifier() {
+    return appIdentifier;
+  }
+
+  /**
+   * Sets app identifier.
+   *
+   * @param appIdentifier the app identifier
+   */
+  public void setAppIdentifier(String appIdentifier) {
+    this.appIdentifier = appIdentifier;
+  }
+
+  /**
+   * Gets metric path.
+   *
+   * @return the metric path
+   */
+  public String getMetricPath() {
+    return metricPath;
+  }
+
+  /**
+   * Sets metric path.
+   *
+   * @param metricPath the metric path
+   */
+  public void setMetricPath(String metricPath) {
+    this.metricPath = metricPath;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(assertionStatement, assertionStatus, httpResponseCode, response);
@@ -144,6 +182,10 @@ public class AppDynamicsExecutionData extends StateExecutionData {
         anExecutionDataValue().withValue(assertionStatus).withDisplayName("Assertion Result").build());
     putNotNull(
         executionDetails, "response", anExecutionDataValue().withValue(response).withDisplayName("response").build());
+    putNotNull(executionDetails, "appIdentifier",
+        anExecutionDataValue().withValue(appIdentifier).withDisplayName("App Identifier").build());
+    putNotNull(executionDetails, "metricPath",
+        anExecutionDataValue().withValue(metricPath).withDisplayName("Metric Path").build());
     return executionDetails;
   }
 
@@ -151,6 +193,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
    * The type Builder.
    */
   public static final class Builder {
+    private String appIdentifier;
+    private String metricPath;
     private String assertionStatement;
     private String assertionStatus;
     private int httpResponseCode;
@@ -170,6 +214,28 @@ public class AppDynamicsExecutionData extends StateExecutionData {
      */
     public static Builder anAppDynamicsExecutionData() {
       return new Builder();
+    }
+
+    /**
+     * With app identifier builder.
+     *
+     * @param appIdentifier the app identifier
+     * @return the builder
+     */
+    public Builder withAppIdentifier(String appIdentifier) {
+      this.appIdentifier = appIdentifier;
+      return this;
+    }
+
+    /**
+     * With metric path builder.
+     *
+     * @param metricPath the metric path
+     * @return the builder
+     */
+    public Builder withMetricPath(String metricPath) {
+      this.metricPath = metricPath;
+      return this;
     }
 
     /**
@@ -278,6 +344,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
      */
     public Builder but() {
       return anAppDynamicsExecutionData()
+          .withAppIdentifier(appIdentifier)
+          .withMetricPath(metricPath)
           .withAssertionStatement(assertionStatement)
           .withAssertionStatus(assertionStatus)
           .withHttpResponseCode(httpResponseCode)
@@ -296,6 +364,8 @@ public class AppDynamicsExecutionData extends StateExecutionData {
      */
     public AppDynamicsExecutionData build() {
       AppDynamicsExecutionData appDynamicsExecutionData = new AppDynamicsExecutionData();
+      appDynamicsExecutionData.setAppIdentifier(appIdentifier);
+      appDynamicsExecutionData.setMetricPath(metricPath);
       appDynamicsExecutionData.setAssertionStatement(assertionStatement);
       appDynamicsExecutionData.setAssertionStatus(assertionStatus);
       appDynamicsExecutionData.setHttpResponseCode(httpResponseCode);

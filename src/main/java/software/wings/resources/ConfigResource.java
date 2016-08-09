@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
@@ -18,6 +19,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ConfigService;
+import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
 import java.io.InputStream;
@@ -46,6 +48,7 @@ import javax.ws.rs.core.Response;
 @Produces("application/json")
 public class ConfigResource {
   @Inject private ConfigService configService;
+  @Inject private MainConfiguration configuration;
 
   /**
    * List.
@@ -92,7 +95,8 @@ public class ConfigResource {
     }
     configFile.setEnvId(envId);
     configFile.setFileName(fileDetail.getFileName());
-    String fileId = configService.save(configFile, uploadedInputStream);
+    String fileId = configService.save(configFile,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
     return new RestResponse<>(fileId);
   }
 
@@ -125,9 +129,11 @@ public class ConfigResource {
   public RestResponse update(@QueryParam("appId") String appId, @PathParam("configId") String configId,
       @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
+    configFile.setAppId(appId);
     configFile.setUuid(configId);
     configFile.setFileName(fileDetail.getFileName());
-    configService.update(configFile, uploadedInputStream);
+    configService.update(configFile,
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
     return new RestResponse();
   }
 

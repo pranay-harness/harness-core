@@ -69,32 +69,32 @@ public enum ErrorCodes {
   /**
    * Invalid credential error codes.
    */
-  INVALID_CREDENTIAL("INVALID_CREDENTIAL_ERROR", UNAUTHORIZED),
+  INVALID_CREDENTIAL("INVALID_CREDENTIAL", UNAUTHORIZED),
 
   /**
    * Invalid key error codes.
    */
-  INVALID_KEY("INVALID_KEY_ERROR"),
+  INVALID_KEY("INVALID_KEY"),
 
   /**
    * Invalid keypath error codes.
    */
-  INVALID_KEYPATH("INVALID_KEYPATH_ERROR"),
+  INVALID_KEYPATH("INVALID_KEYPATH"),
 
   /**
    * Unknown host error codes.
    */
-  UNKNOWN_HOST("UNKNOWN_HOST_ERROR"),
+  UNKNOWN_HOST("UNKNOWN_HOST"),
 
   /**
    * Unreachable host error codes.
    */
-  UNREACHABLE_HOST("UNREACHABLE_HOST_ERROR"),
+  UNREACHABLE_HOST("UNREACHABLE_HOST"),
 
   /**
    * Invalid port error codes.
    */
-  INVALID_PORT("INVALID_OR_BLOCKED_PORT_ERROR"),
+  INVALID_PORT("INVALID_PORT"),
 
   /**
    * Ssh session timeout error codes.
@@ -104,12 +104,12 @@ public enum ErrorCodes {
   /**
    * Socket connection error error codes.
    */
-  SOCKET_CONNECTION_ERROR("SSH_SOCKET_CONNECTION_ERROR"),
+  SOCKET_CONNECTION_ERROR("SOCKET_CONNECTION_ERROR"),
 
   /**
    * Socket connection timeout error codes.
    */
-  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT_ERROR"),
+  SOCKET_CONNECTION_TIMEOUT("SOCKET_CONNECTION_TIMEOUT"),
 
   /**
    * Invalid execution id error codes.

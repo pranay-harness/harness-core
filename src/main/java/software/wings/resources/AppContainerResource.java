@@ -13,6 +13,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AppContainer;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.beans.FileUploadSource;
@@ -46,6 +47,7 @@ import javax.ws.rs.QueryParam;
 @ExceptionMetered
 public class AppContainerResource {
   @Inject private AppContainerService appContainerService;
+  @Inject private MainConfiguration configuration;
 
   /**
    * List.
@@ -153,10 +155,9 @@ public class AppContainerResource {
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
-    if (sourceType.equals(HTTP)) {
-      inputStream =
-          BoundedInputStream.getBoundedStreamForUrl(urlString, 4 * 1000 * 1000 * 1000); // TODO: read from config
-    }
-    return inputStream;
+    return sourceType.equals(HTTP)
+        ? BoundedInputStream.getBoundedStreamForUrl(
+              urlString, configuration.getFileUploadLimits().getAppContainerLimit())
+        : new BoundedInputStream(inputStream, configuration.getFileUploadLimits().getAppContainerLimit());
   }
 }
