@@ -10,12 +10,21 @@ ${envVariable}=${envVariables[envVariable]}
 export ${envVariable}
 </#list>
 
-if [  $# -gt 1 ]
+if [[ $# -gt 1 ]]
 then
-  eval WINGS_SCRIPT_WORKING_DIRECTORY=$1
-  cd "$WINGS_SCRIPT_WORKING_DIRECTORY"
-  shift
+  key="$1"
+  case $key in
+    -w)
+    shift # past argument
+    eval WINGS_SCRIPT_WORKING_DIRECTORY=$1
+    cd "$WINGS_SCRIPT_WORKING_DIRECTORY"
+    shift
+    ;;
+    *)
+    ;;
+  esac
 fi
+
 WINGS_SCRIPT_NAME=$1
 shift
 

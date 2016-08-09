@@ -251,7 +251,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh '/tmp' wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
+        .contains(
+            "/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh -w '/tmp' wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
   }
 
   /**
@@ -294,12 +295,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh '/tmp' wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
+        .contains(
+            "/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh -w '/tmp' wings" + DigestUtils.md5Hex("dolsACTIVITY_ID"));
 
     assertThat(new File(expectedSubExecCommandUnitScript)).hasContent("start.sh");
     assertThat((ExecCommandUnit) ((Command) command.getCommandUnits().get(2)).getCommandUnits().get(0))
         .extracting(ExecCommandUnit::getPreparedCommand)
-        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh '/home/tomcat' wings"
+        .contains("/tmp/ACTIVITY_ID/wingslauncherACTIVITY_ID.sh -w '/home/tomcat' wings"
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
     verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*");
