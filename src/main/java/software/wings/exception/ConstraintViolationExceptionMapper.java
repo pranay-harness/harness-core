@@ -5,6 +5,7 @@ import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
@@ -51,6 +52,7 @@ import javax.ws.rs.ext.Provider;
 public class ConstraintViolationExceptionMapper implements ExceptionMapper<ConstraintViolationException> {
   private static final Cache<Pair<Path, ? extends ConstraintDescriptor<?>>, String> MESSAGES_CACHE =
       CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
+  private static final Joiner DOT_JOINER = Joiner.on('.');
 
   public static String getMessage(ConstraintViolation<?> v) {
     Pair<Path, ? extends ConstraintDescriptor<?>> of = Pair.of(v.getPropertyPath(), v.getConstraintDescriptor());
@@ -70,7 +72,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
           isValidationMethod(v) ? StringUtils.substringBeforeLast(returnValueName.get(), ".") : returnValueName.get();
       return name + " " + v.getMessage();
     } else if (isValidationMethod(v)) {
-      return ConstraintViolations.validationMethodFormatted(v);
+      return validationMethodFormatted(v);
     } else {
       final String name = getMemberName(v).or(v.getPropertyPath().toString());
       return name + " " + v.getMessage();
@@ -196,5 +198,12 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       }
     }
     return message;
+  }
+
+  public static <T> String validationMethodFormatted(ConstraintViolation<T> v) {
+    final ImmutableList<Path.Node> nodes = ImmutableList.copyOf(v.getPropertyPath());
+    String usefulNodes = DOT_JOINER.join(nodes.subList(0, nodes.size() - 1));
+    String msg = usefulNodes + (v.getMessage().startsWith(".") ? "" : " ") + v.getMessage();
+    return msg.trim();
   }
 }
