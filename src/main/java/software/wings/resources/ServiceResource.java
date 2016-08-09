@@ -178,8 +178,9 @@ public class ServiceResource {
   /**
    * Stencils rest response.
    *
-   * @param appId     the app id
-   * @param serviceId the service id
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
    * @return the rest response
    */
   @GET

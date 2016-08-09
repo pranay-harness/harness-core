@@ -10,6 +10,9 @@ import java.util.List;
  * Created by peeyushaggarwal on 8/3/16.
  */
 public class PortCheckClearedCommandUnit extends ExecCommandUnit {
+  /**
+   * Instantiates a new Port check cleared command unit.
+   */
   public PortCheckClearedCommandUnit() {
     super();
     setCommandUnitType(CommandUnitType.PORT_CHECK_CLEARED);

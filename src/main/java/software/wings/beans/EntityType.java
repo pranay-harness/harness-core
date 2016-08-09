@@ -62,5 +62,8 @@ public enum EntityType {
    */
   WORKFLOW,
 
+  /**
+   * Instance entity type.
+   */
   INSTANCE;
 }

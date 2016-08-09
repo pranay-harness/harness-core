@@ -1,6 +1,7 @@
 /**
  *
  */
+
 package software.wings.sm;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -52,6 +53,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 /**
+ * The type State machine execution simulator test.
+ *
  * @author Rishi
  */
 
@@ -60,6 +63,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceInstanceService serviceInstanceService;
 
+  /**
+   * Should return empty arg type.
+   */
   @Test
   public void shouldReturnEmptyArgType() {
     State s1 = aRepeatState()
@@ -93,6 +99,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     assertThat(reqArgs.getEntityTypes()).isNotNull().hasSize(0);
   }
 
+  /**
+   * Should return ssh arg type.
+   */
   @Test
   public void shouldReturnSshArgType() {
     State s1 = aRepeatState()
@@ -151,6 +160,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(EntityType.SSH_USER, EntityType.SSH_PASSWORD);
   }
 
+  /**
+   * Should return ssh artifact arg type.
+   */
   @Test
   public void shouldReturnSshArtifactArgType() {
     State s1 = aRepeatState()
@@ -209,6 +221,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.ARTIFACT);
   }
 
+  /**
+   * Should return ssh su artifact arg type.
+   */
   @Test
   public void shouldReturnSshSUArtifactArgType() {
     State s1 = aRepeatState()
@@ -278,6 +293,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
             EntityType.SSH_APP_ACCOUNT, EntityType.SSH_APP_ACCOUNT_PASSOWRD);
   }
 
+  /**
+   * Should return ssh sudo artifact arg type.
+   */
   @Test
   public void shouldReturnSshSUDOArtifactArgType() {
     State s1 = aRepeatState()
@@ -347,6 +365,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
             EntityType.ARTIFACT, EntityType.SSH_USER, EntityType.SSH_PASSWORD, EntityType.SSH_APP_ACCOUNT);
   }
 
+  /**
+   * Should compute new execution.
+   */
   @Test
   public void shouldComputeNewExecution() {
     State s1 = aRepeatState()
@@ -381,6 +402,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(0, 0, 2);
   }
 
+  /**
+   * Should compute inprogress estimate.
+   */
   @Test
   public void shouldComputeInprogressEstimate() {
     State s1 = aRepeatState()
@@ -460,6 +484,9 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(2, 0, 3);
   }
 
+  /**
+   * Should compute inprogress estimate with failed node.
+   */
   @Test
   public void shouldComputeInprogressEstimateWithFailedNode() {
     State s1 = aRepeatState()
@@ -568,12 +595,23 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(3, 1, 1);
   }
 
+  /**
+   * The type Execution context factory test.
+   */
   public static class ExecutionContextFactoryTest extends ExecutionContextFactory {
     private final Application app;
     private final Environment env;
     private final ServiceElement service;
     private final List<InstanceElement> instances;
 
+    /**
+     * Instantiates a new Execution context factory test.
+     *
+     * @param app       the app
+     * @param env       the env
+     * @param service   the service
+     * @param instances the instances
+     */
     public ExecutionContextFactoryTest(
         Application app, Environment env, ServiceElement service, List<InstanceElement> instances) {
       this.app = app;

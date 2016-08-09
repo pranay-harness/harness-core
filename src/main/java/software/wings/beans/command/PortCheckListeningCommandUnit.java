@@ -9,6 +9,9 @@ import java.util.List;
  * Created by peeyushaggarwal on 8/3/16.
  */
 public class PortCheckListeningCommandUnit extends ExecCommandUnit {
+  /**
+   * Instantiates a new Port check listening command unit.
+   */
   public PortCheckListeningCommandUnit() {
     super();
     setCommandUnitType(CommandUnitType.PORT_CHECK_LISTENING);

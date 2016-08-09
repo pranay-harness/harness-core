@@ -39,8 +39,9 @@ public interface ConfigService {
   /**
    * Gets the.
    *
-   * @param appId    the app id
-   * @param configId the config id
+   * @param appId            the app id
+   * @param configId         the config id
+   * @param withOverridePath the with override path
    * @return the config file
    */
   ConfigFile get(@NotEmpty String appId, @NotEmpty String configId, @NotNull boolean withOverridePath);

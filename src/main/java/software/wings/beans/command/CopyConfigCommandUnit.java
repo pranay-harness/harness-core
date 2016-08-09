@@ -56,10 +56,20 @@ public class CopyConfigCommandUnit extends CommandUnit {
     return result;
   }
 
+  /**
+   * Gets destination parent path.
+   *
+   * @return the destination parent path
+   */
   public String getDestinationParentPath() {
     return destinationParentPath;
   }
 
+  /**
+   * Sets destination parent path.
+   *
+   * @param destinationParentPath the destination parent path
+   */
   public void setDestinationParentPath(String destinationParentPath) {
     this.destinationParentPath = destinationParentPath;
   }

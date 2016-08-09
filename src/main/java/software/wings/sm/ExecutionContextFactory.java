@@ -12,6 +12,13 @@ import javax.inject.Singleton;
 public class ExecutionContextFactory {
   @Inject private Injector injector;
 
+  /**
+   * Create execution context execution context.
+   *
+   * @param stateExecutionInstance the state execution instance
+   * @param stateMachine           the state machine
+   * @return the execution context
+   */
   public ExecutionContext createExecutionContext(
       StateExecutionInstance stateExecutionInstance, StateMachine stateMachine) {
     return new ExecutionContextImpl(stateExecutionInstance, stateMachine, injector);

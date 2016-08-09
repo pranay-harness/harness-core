@@ -169,6 +169,15 @@ public class ExecutionContextImpl implements ExecutionContext {
   }
 
   /**
+   * Sets state execution instance.
+   *
+   * @param stateExecutionInstance the state execution instance
+   */
+  void setStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
+    this.stateExecutionInstance = stateExecutionInstance;
+  }
+
+  /**
    * Push context element.
    *
    * @param contextElement the context element
@@ -278,9 +287,5 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public String getWorkflowExecutionId() {
     return stateExecutionInstance.getExecutionUuid();
-  }
-
-  void setStateExecutionInstance(StateExecutionInstance stateExecutionInstance) {
-    this.stateExecutionInstance = stateExecutionInstance;
   }
 }

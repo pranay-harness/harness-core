@@ -50,6 +50,15 @@ public class StateMachineExecutionSimulator {
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private ServiceInstanceService serviceInstanceService;
 
+  /**
+   * Gets status breakdown.
+   *
+   * @param appId                   the app id
+   * @param envId                   the env id
+   * @param stateMachine            the state machine
+   * @param stateExecutionInstances the state execution instances
+   * @return the status breakdown
+   */
   public CountsByStatuses getStatusBreakdown(
       String appId, String envId, StateMachine stateMachine, List<StateExecutionInstance> stateExecutionInstances) {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
@@ -61,6 +70,15 @@ public class StateMachineExecutionSimulator {
     return countsByStatuses;
   }
 
+  /**
+   * Gets required execution args.
+   *
+   * @param appId         the app id
+   * @param envId         the env id
+   * @param stateMachine  the state machine
+   * @param executionArgs the execution args
+   * @return the required execution args
+   */
   public RequiredExecutionArgs getRequiredExecutionArgs(
       String appId, String envId, StateMachine stateMachine, ExecutionArgs executionArgs) {
     ExecutionContextImpl context = getInitialExecutionContext(appId, envId, stateMachine);
@@ -87,6 +105,13 @@ public class StateMachineExecutionSimulator {
     return (ExecutionContextImpl) executionContextFactory.createExecutionContext(stateExecutionInstance, stateMachine);
   }
 
+  /**
+   * Gets infrastructure required entity type.
+   *
+   * @param appId              the app id
+   * @param serviceInstanceIds the service instance ids
+   * @return the infrastructure required entity type
+   */
   public Set<EntityType> getInfrastructureRequiredEntityType(String appId, Collection<String> serviceInstanceIds) {
     PageRequest<ServiceInstance> pageRequest = PageRequest.Builder.aPageRequest()
                                                    .addFilter("appId", Operator.EQ, appId)
@@ -364,6 +389,11 @@ public class StateMachineExecutionSimulator {
     }
   }
 
+  /**
+   * Sets execution context factory.
+   *
+   * @param executionContextFactory the execution context factory
+   */
   void setExecutionContextFactory(ExecutionContextFactory executionContextFactory) {
     this.executionContextFactory = executionContextFactory;
   }

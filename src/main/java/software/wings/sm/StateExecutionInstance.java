@@ -389,6 +389,9 @@ public class StateExecutionInstance extends Base {
         + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs + "]";
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String stateMachineId;
     private String stateName;
@@ -418,135 +421,295 @@ public class StateExecutionInstance extends Base {
 
     private Builder() {}
 
+    /**
+     * A state execution instance builder.
+     *
+     * @return the builder
+     */
     public static Builder aStateExecutionInstance() {
       return new Builder();
     }
 
+    /**
+     * With state machine id builder.
+     *
+     * @param stateMachineId the state machine id
+     * @return the builder
+     */
     public Builder withStateMachineId(String stateMachineId) {
       this.stateMachineId = stateMachineId;
       return this;
     }
 
+    /**
+     * With state name builder.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
+    /**
+     * With state type builder.
+     *
+     * @param stateType the state type
+     * @return the builder
+     */
     public Builder withStateType(String stateType) {
       this.stateType = stateType;
       return this;
     }
 
+    /**
+     * With context element type builder.
+     *
+     * @param contextElementType the context element type
+     * @return the builder
+     */
     public Builder withContextElementType(String contextElementType) {
       this.contextElementType = contextElementType;
       return this;
     }
 
+    /**
+     * With context element name builder.
+     *
+     * @param contextElementName the context element name
+     * @return the builder
+     */
     public Builder withContextElementName(String contextElementName) {
       this.contextElementName = contextElementName;
       return this;
     }
 
+    /**
+     * With context transition builder.
+     *
+     * @param contextTransition the context transition
+     * @return the builder
+     */
     public Builder withContextTransition(boolean contextTransition) {
       this.contextTransition = contextTransition;
       return this;
     }
 
+    /**
+     * With context elements builder.
+     *
+     * @param contextElements the context elements
+     * @return the builder
+     */
     public Builder withContextElements(WingsDeque<ContextElement> contextElements) {
       this.contextElements = contextElements;
       return this;
     }
 
+    /**
+     * With state execution map builder.
+     *
+     * @param stateExecutionMap the state execution map
+     * @return the builder
+     */
     public Builder withStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
       this.stateExecutionMap = stateExecutionMap;
       return this;
     }
 
+    /**
+     * With callback builder.
+     *
+     * @param callback the callback
+     * @return the builder
+     */
     public Builder withCallback(StateMachineExecutionCallback callback) {
       this.callback = callback;
       return this;
     }
 
+    /**
+     * With execution uuid builder.
+     *
+     * @param executionUuid the execution uuid
+     * @return the builder
+     */
     public Builder withExecutionUuid(String executionUuid) {
       this.executionUuid = executionUuid;
       return this;
     }
 
+    /**
+     * With parent instance id builder.
+     *
+     * @param parentInstanceId the parent instance id
+     * @return the builder
+     */
     public Builder withParentInstanceId(String parentInstanceId) {
       this.parentInstanceId = parentInstanceId;
       return this;
     }
 
+    /**
+     * With prev instance id builder.
+     *
+     * @param prevInstanceId the prev instance id
+     * @return the builder
+     */
     public Builder withPrevInstanceId(String prevInstanceId) {
       this.prevInstanceId = prevInstanceId;
       return this;
     }
 
+    /**
+     * With next instance id builder.
+     *
+     * @param nextInstanceId the next instance id
+     * @return the builder
+     */
     public Builder withNextInstanceId(String nextInstanceId) {
       this.nextInstanceId = nextInstanceId;
       return this;
     }
 
+    /**
+     * With clone instance id builder.
+     *
+     * @param cloneInstanceId the clone instance id
+     * @return the builder
+     */
     public Builder withCloneInstanceId(String cloneInstanceId) {
       this.cloneInstanceId = cloneInstanceId;
       return this;
     }
 
+    /**
+     * With notify id builder.
+     *
+     * @param notifyId the notify id
+     * @return the builder
+     */
     public Builder withNotifyId(String notifyId) {
       this.notifyId = notifyId;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With start ts builder.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With end ts builder.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * Build state execution instance.
+     *
+     * @return the state execution instance
+     */
     public StateExecutionInstance build() {
       StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
       stateExecutionInstance.setStateMachineId(stateMachineId);

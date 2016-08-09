@@ -30,8 +30,16 @@ public class CommandExecutionContext {
   private ExecutionCredential executionCredential;
   private Map<String, String> envVariables = Maps.newHashMap();
 
+  /**
+   * Instantiates a new Command execution context.
+   */
   public CommandExecutionContext() {}
 
+  /**
+   * Instantiates a new Command execution context.
+   *
+   * @param other the other
+   */
   public CommandExecutionContext(CommandExecutionContext other) {
     this.artifact = other.artifact;
     this.serviceInstance = other.serviceInstance;
@@ -224,28 +232,67 @@ public class CommandExecutionContext {
         .toString();
   }
 
+  /**
+   * Execute command string execution result.
+   *
+   * @param commandString the command string
+   * @return the execution result
+   */
   public ExecutionResult executeCommandString(String commandString) {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Execute command string execution result.
+   *
+   * @param commandString the command string
+   * @param output        the output
+   * @return the execution result
+   */
   public ExecutionResult executeCommandString(String commandString, StringBuffer output) {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Copy files execution result.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   * @param files                    the files
+   * @return the execution result
+   */
   public ExecutionResult copyFiles(String destinationDirectoryPath, List<String> files) {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Copy grid fs files execution result.
+   *
+   * @param destinationDirectoryPath the destination directory path
+   * @param fileBucket               the file bucket
+   * @param fileIds                  the file ids
+   * @return the execution result
+   */
   public ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> fileIds) {
     throw new UnsupportedOperationException();
   }
 
+  /**
+   * Add env variables.
+   *
+   * @param envVariables the env variables
+   */
   public void addEnvVariables(Map<String, String> envVariables) {
     for (Entry<String, String> envVariable : envVariables.entrySet()) {
       this.envVariables.put(envVariable.getKey(), evaluateVariable(envVariable.getValue()));
     }
   }
 
+  /**
+   * Evaluate variable string.
+   *
+   * @param text the text
+   * @return the string
+   */
   protected String evaluateVariable(String text) {
     if (isNotBlank(text)) {
       for (Entry<String, String> entry : envVariables.entrySet()) {

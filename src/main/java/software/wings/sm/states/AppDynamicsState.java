@@ -26,16 +26,13 @@ import java.nio.charset.StandardCharsets;
 /**
  * Created by anubhaw on 8/4/16.
  */
-
 public class AppDynamicsState extends HttpState {
+  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
   @Transient @Inject private SettingsService settingsService;
-
   @Attributes(title = "Application identifier", description = "application-name or application-id")
   private String applicationIdentifier;
   @Attributes(title = "Metric Path", description = "Overall Application Performance|Average Response Time (ms)")
   private String metricPath;
-
-  private static final Logger logger = LoggerFactory.getLogger(AppDynamicsState.class);
 
   /**
    * Create a new Http State with given name.
@@ -116,18 +113,38 @@ public class AppDynamicsState extends HttpState {
     return super.getUrl();
   }
 
+  /**
+   * Gets application identifier.
+   *
+   * @return the application identifier
+   */
   public String getApplicationIdentifier() {
     return applicationIdentifier;
   }
 
+  /**
+   * Sets application identifier.
+   *
+   * @param applicationIdentifier the application identifier
+   */
   public void setApplicationIdentifier(String applicationIdentifier) {
     this.applicationIdentifier = applicationIdentifier;
   }
 
+  /**
+   * Gets metric path.
+   *
+   * @return the metric path
+   */
   public String getMetricPath() {
     return metricPath;
   }
 
+  /**
+   * Sets metric path.
+   *
+   * @param metricPath the metric path
+   */
   public void setMetricPath(String metricPath) {
     this.metricPath = metricPath;
   }

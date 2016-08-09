@@ -257,5 +257,12 @@ public interface WorkflowService {
    */
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
 
+  /**
+   * Gets breakdown.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @return the breakdown
+   */
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 }

@@ -33,39 +33,6 @@ public class Tag extends Base {
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
 
   /**
-   * The enum Tag type.
-   */
-  public enum TagType {
-    /**
-     * Environment tag type.
-     */
-    ENVIRONMENT(false), // created by default. represent Environment level overrides
-    /**
-     * Untagged host tag type.
-     */
-    UNTAGGED_HOST(false), // created by default. represents all untagged hosts
-    /**
-     * The Tagged host.
-     */
-    TAGGED_HOST(true); // user created. represents tagged hosts by user
-
-    private boolean modificationAllowed;
-
-    TagType(boolean modificationAllowed) {
-      this.modificationAllowed = modificationAllowed;
-    }
-
-    /**
-     * Is modification allowed boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isModificationAllowed() {
-      return modificationAllowed;
-    }
-  }
-
-  /**
    * Gets name.
    *
    * @return the name
@@ -266,6 +233,39 @@ public class Tag extends Base {
         .add("children", children)
         .add("configFiles", configFiles)
         .toString();
+  }
+
+  /**
+   * The enum Tag type.
+   */
+  public enum TagType {
+    /**
+     * Environment tag type.
+     */
+    ENVIRONMENT(false), // created by default. represent Environment level overrides
+    /**
+     * Untagged host tag type.
+     */
+    UNTAGGED_HOST(false), // created by default. represents all untagged hosts
+    /**
+     * The Tagged host.
+     */
+    TAGGED_HOST(true); // user created. represents tagged hosts by user
+
+    private boolean modificationAllowed;
+
+    TagType(boolean modificationAllowed) {
+      this.modificationAllowed = modificationAllowed;
+    }
+
+    /**
+     * Is modification allowed boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isModificationAllowed() {
+      return modificationAllowed;
+    }
   }
 
   /**
