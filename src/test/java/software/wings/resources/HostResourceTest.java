@@ -34,10 +34,12 @@ import javax.ws.rs.core.GenericType;
  * Created by anubhaw on 6/7/16.
  */
 public class HostResourceTest extends WingsBaseTest {
+  /**
+   * The constant MAIN_CONFIGURATION.
+   */
+  public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
   private static final HostService RESOURCE_SERVICE = mock(HostService.class);
   private static final InfraService INFRA_SERVICE = mock(InfraService.class);
-  public static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
-
   /**
    * The constant RESOURCES.
    */

@@ -56,9 +56,10 @@ public class HostResource {
 
   /**
    * Instantiates a new Host resource.
-   *  @param hostService  the host service
-   * @param infraService the infra service
-   * @param configuration
+   *
+   * @param hostService   the host service
+   * @param infraService  the infra service
+   * @param configuration the configuration
    */
   @Inject
   public HostResource(HostService hostService, InfraService infraService, MainConfiguration configuration) {
