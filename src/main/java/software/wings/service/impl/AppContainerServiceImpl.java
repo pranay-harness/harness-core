@@ -3,7 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.ErrorCodes.PLATFORM_SOFTWARE_DELETE_ERROR;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
@@ -109,7 +109,7 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
     if (application != null && application.getServices() != null) {
       for (Service service : application.getServices()) {
         if (service.getAppContainer().getUuid().equals(appContainerId)) {
-          throw new WingsException(PLATFORM_SOFTWARE_DELETE_ERROR);
+          throw new WingsException(INVALID_REQUEST, "message", "One or more services are using App Stack");
         }
       }
     }

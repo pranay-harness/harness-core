@@ -231,7 +231,7 @@ public class TagServiceTest extends WingsBaseTest {
     tagPostSave = tagService.save("PARENT_TAG_ID", getTagBuilder().build());
 
     verify(wingsPersistence).saveAndGet(Tag.class, tagPreSave);
-    verify(wingsPersistence).addToList(Tag.class, "PARENT_TAG_ID", "children", TAG_ID);
+    verify(wingsPersistence).addToList(Tag.class, APP_ID, "PARENT_TAG_ID", "children", TAG_ID);
     verify(serviceTemplateService).addLeafTag(aServiceTemplate().withUuid(TEMPLATE_ID).build(), tagPostSave);
   }
 
