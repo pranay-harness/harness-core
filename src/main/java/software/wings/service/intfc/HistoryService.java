@@ -15,6 +15,8 @@ public interface HistoryService {
    */
   void create(History history);
 
+  void createAsync(History history);
+
   /**
    * List page response.
    *
