@@ -105,7 +105,7 @@ public class InfraServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetInfraIdByEnvId() {
     when(query.get()).thenReturn(anInfra().withUuid(INFRA_ID).withAppId(APP_ID).withEnvId(ENV_ID).build());
-    String infraId = infraService.getInfraIdByEnvId(APP_ID, ENV_ID);
+    String infraId = infraService.getInfraByEnvId(APP_ID, ENV_ID).getUuid();
     verify(query).field("appId");
     verify(end).equal(APP_ID);
     verify(query).field("envId");

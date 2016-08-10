@@ -21,6 +21,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
+import software.wings.beans.Infra;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -145,9 +146,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
-    String infraId = infraService.getInfraIdByEnvId(appId, envId);
+    Infra infra = infraService.getInfraByEnvId(appId, envId);
     List<Host> hosts = hostIds.stream()
-                           .map(hostId -> hostService.get(appId, infraId, hostId))
+                           .map(hostId -> hostService.get(appId, infra.getUuid(), hostId))
                            .filter(Objects::nonNull)
                            .collect(toList());
 

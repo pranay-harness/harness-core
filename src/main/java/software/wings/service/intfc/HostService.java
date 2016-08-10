@@ -77,11 +77,11 @@ public interface HostService {
    * Import hosts.
    *
    * @param appId              the app id
-   * @param infraId            the infra id
+   * @param envId            the infra id
    * @param boundedInputStream the bounded input stream
    * @return the int
    */
-  int importHosts(@NotEmpty String appId, @NotEmpty String infraId, @NotNull BoundedInputStream boundedInputStream);
+  int importHosts(@NotEmpty String appId, @NotEmpty String envId, @NotNull BoundedInputStream boundedInputStream);
 
   /**
    * Gets the hosts by id.

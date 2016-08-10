@@ -40,6 +40,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.Infra;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -99,7 +100,8 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
 
     when(wingsPersistence.createUpdateOperations(Host.class)).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(Host.class)).thenReturn(query);
@@ -224,7 +226,7 @@ public class HostServiceTest extends WingsBaseTest {
 
     List<Host> hosts = hostService.getHostsByTags(APP_ID, ENV_ID, tags);
 
-    verify(infraService).getInfraIdByEnvId(APP_ID, ENV_ID);
+    verify(infraService).getInfraByEnvId(APP_ID, ENV_ID);
     verify(query).asList();
     verify(query).field("appId");
     verify(end).equal(APP_ID);
