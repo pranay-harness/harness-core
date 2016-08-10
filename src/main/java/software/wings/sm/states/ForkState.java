@@ -61,14 +61,12 @@ public class ForkState extends State {
     ForkStateExecutionData forkStateExecutionData = new ForkStateExecutionData();
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());
-    int index = 0;
     for (String state : forkStateNames) {
       String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
       StateExecutionInstance childStateExecutionInstance =
           JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
-      index++;
-      childStateExecutionInstance.setContextElementName("Fork" + index);
+      childStateExecutionInstance.setContextElementName(getForkElementName(state));
       childStateExecutionInstance.setContextElementType(StateType.FORK.name());
       childStateExecutionInstance.setStateName(state);
       childStateExecutionInstance.setNotifyId(notifyId);
@@ -126,6 +124,10 @@ public class ForkState extends State {
     return forkStateNames;
   }
 
+  @SchemaIgnore
+  public String getForkElementName(String state) {
+    return "Fork-" + state;
+  }
   /**
    * Sets fork state names.
    *

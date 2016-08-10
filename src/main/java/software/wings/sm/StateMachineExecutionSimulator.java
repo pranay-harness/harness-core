@@ -4,6 +4,7 @@
 
 package software.wings.sm;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
@@ -63,10 +64,11 @@ public class StateMachineExecutionSimulator {
       String appId, String envId, StateMachine stateMachine, List<StateExecutionInstance> stateExecutionInstances) {
     Map<String, StateExecutionInstance> stateExecutionInstanceMap =
         prepareStateExecutionInstanceMap(stateExecutionInstances);
+    logger.debug("stateExecutionInstanceMap: {}", stateExecutionInstanceMap);
     ExecutionContextImpl context = getInitialExecutionContext(appId, envId, stateMachine);
     CountsByStatuses countsByStatuses = new CountsByStatuses();
-    extrapolateProgress(countsByStatuses, context, stateMachine, stateMachine.getInitialState(), null,
-        stateExecutionInstanceMap, false);
+    extrapolateProgress(
+        countsByStatuses, context, stateMachine, stateMachine.getInitialState(), "", stateExecutionInstanceMap, false);
     return countsByStatuses;
   }
 
@@ -249,13 +251,15 @@ public class StateMachineExecutionSimulator {
   }
 
   private void extrapolateProgress(CountsByStatuses countsByStatuses, ExecutionContextImpl context,
-      StateMachine stateMachine, State state, State parentState,
+      StateMachine stateMachine, State state, String parentPath,
       Map<String, StateExecutionInstance> stateExecutionInstanceMap, boolean previousInprogress) {
     if (state == null) {
       return;
     }
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     stateExecutionInstance.setStateName(state.getName());
+
+    String path = getKeyName(parentPath, stateExecutionInstance);
 
     if (state instanceof RepeatState) {
       String repeatElementExpression = ((RepeatState) state).getRepeatElementExpression();
@@ -274,67 +278,56 @@ public class StateMachineExecutionSimulator {
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
         childContext.pushContextElement(repeatElement);
         extrapolateProgress(
-            countsByStatuses, childContext, stateMachine, repeat, state, stateExecutionInstanceMap, previousInprogress);
+            countsByStatuses, childContext, stateMachine, repeat, path, stateExecutionInstanceMap, previousInprogress);
       });
     } else if (state instanceof ForkState) {
       ((ForkState) state).getForkStateNames().forEach(childStateName -> {
         State child = stateMachine.getState(childStateName);
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(child.getName());
-        cloned.setContextElementName("Fork" + childStateName);
+        cloned.setContextElementName(((ForkState) state).getForkElementName(childStateName));
         cloned.setContextElementType(StateType.FORK.name());
         ExecutionContextImpl childContext =
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
         extrapolateProgress(
-            countsByStatuses, childContext, stateMachine, child, state, stateExecutionInstanceMap, previousInprogress);
+            countsByStatuses, childContext, stateMachine, child, path, stateExecutionInstanceMap, previousInprogress);
       });
     } else {
       if (previousInprogress) {
         countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
         State success = stateMachine.getSuccessTransition(state.getName());
         extrapolateProgress(
-            countsByStatuses, context, stateMachine, success, parentState, stateExecutionInstanceMap, true);
+            countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, true);
       } else {
-        ExecutionStatus status = getExecutionStatus(stateExecutionInstanceMap, stateExecutionInstance, parentState);
+        ExecutionStatus status = getExecutionStatus(stateExecutionInstanceMap, path);
         if (status == ExecutionStatus.SUCCESS) {
           countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
           State success = stateMachine.getSuccessTransition(state.getName());
           extrapolateProgress(
-              countsByStatuses, context, stateMachine, success, parentState, stateExecutionInstanceMap, false);
+              countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, false);
         } else if (status == ExecutionStatus.FAILED || status == ExecutionStatus.ERROR
             || status == ExecutionStatus.ABORTING || status == ExecutionStatus.ABORTED) {
           countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
           State failed = stateMachine.getFailureTransition(state.getName());
           extrapolateProgress(
-              countsByStatuses, context, stateMachine, failed, parentState, stateExecutionInstanceMap, false);
+              countsByStatuses, context, stateMachine, failed, parentPath, stateExecutionInstanceMap, false);
         } else {
           countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
           State success = stateMachine.getSuccessTransition(state.getName());
           extrapolateProgress(
-              countsByStatuses, context, stateMachine, success, parentState, stateExecutionInstanceMap, true);
+              countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, true);
         }
       }
     }
   }
 
-  private ExecutionStatus getExecutionStatus(Map<String, StateExecutionInstance> stateExecutionInstanceMap,
-      StateExecutionInstance stateExecutionInstance, State parentState) {
-    String parentName = (parentState == null) ? "NULL" : parentState.getName();
-    String key = getStateExecutionInstanceKey(stateExecutionInstance, parentName);
-    StateExecutionInstance instance = stateExecutionInstanceMap.get(key);
-    return (instance == null) ? null : instance.getStatus();
-  }
-
-  private String getStateExecutionInstanceKey(StateExecutionInstance stateExecutionInstance, String parentName) {
-    String name = stateExecutionInstance.getStateName();
-    String elementType = (stateExecutionInstance.getContextElementType() == null)
-        ? "NULL"
-        : stateExecutionInstance.getContextElementType();
-    String elementName = (stateExecutionInstance.getContextElementName() == null)
-        ? "NULL"
-        : stateExecutionInstance.getContextElementName();
-
-    return name + "__" + parentName + "__" + elementType + "__" + elementName;
+  private ExecutionStatus getExecutionStatus(
+      Map<String, StateExecutionInstance> stateExecutionInstanceMap, String path) {
+    StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(path);
+    if (stateExecutionInstance != null) {
+      return stateExecutionInstance.getStatus();
+    }
+    return null;
   }
 
   private Map<String, StateExecutionInstance> prepareStateExecutionInstanceMap(
@@ -348,14 +341,30 @@ public class StateMachineExecutionSimulator {
         Collectors.toMap(StateExecutionInstance::getUuid, Function.identity()));
 
     stateExecutionInstances.forEach(stateExecutionInstance -> {
-      String parentStateName = null;
-      if (stateExecutionInstance.getParentInstanceId() != null) {
-        parentStateName = stateExecutionInstanceIdMap.get(stateExecutionInstance.getParentInstanceId()).getStateName();
-        stateExecutionInstanceMap.put(
-            getStateExecutionInstanceKey(stateExecutionInstance, parentStateName), stateExecutionInstance);
-      }
+      stateExecutionInstanceMap.put(
+          getKeyName(stateExecutionInstanceIdMap, stateExecutionInstance), stateExecutionInstance);
     });
+
     return stateExecutionInstanceMap;
+  }
+
+  private String getKeyName(
+      Map<String, StateExecutionInstance> stateExecutionInstanceIdMap, StateExecutionInstance stateExecutionInstance) {
+    String parentPath = "";
+    if (stateExecutionInstance.getParentInstanceId() != null) {
+      parentPath = getKeyName(
+          stateExecutionInstanceIdMap, stateExecutionInstanceIdMap.get(stateExecutionInstance.getParentInstanceId()));
+    }
+    return getKeyName(parentPath, stateExecutionInstance);
+  }
+
+  private String getKeyName(String parentPath, StateExecutionInstance stateExecutionInstance) {
+    if (StringUtils.isBlank(stateExecutionInstance.getContextElementName())) {
+      return parentPath + "__" + stateExecutionInstance.getStateName();
+    } else {
+      return parentPath + "__" + stateExecutionInstance.getContextElementName() + "__"
+          + stateExecutionInstance.getStateName();
+    }
   }
 
   private boolean isArtifactNeeded(ExecutionContextImpl context, CommandState state, Map<String, Command> commandMap) {
