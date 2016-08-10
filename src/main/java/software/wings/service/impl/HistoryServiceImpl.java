@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.EntityType;
 import software.wings.beans.History;
 import software.wings.dl.PageRequest;
@@ -10,16 +8,25 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
+
 /**
  * Created by peeyushaggarwal on 6/20/16.
  */
 public class HistoryServiceImpl implements HistoryService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
+  @Inject private ExecutorService executorService;
 
   @Override
   public void create(History history) {
     wingsPersistence.save(history);
+  }
+
+  @Override
+  public void createAsync(History history) {
+    executorService.execute(() -> { create(history); });
   }
 
   @Override

@@ -85,7 +85,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
@@ -98,20 +97,16 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService {
-  private static final Comparator<Stencil> stencilDefaultSorter = new Comparator<Stencil>() {
-
-    @Override
-    public int compare(Stencil o1, Stencil o2) {
-      int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
+  private static final Comparator<Stencil> stencilDefaultSorter = (o1, o2) -> {
+    int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
+    if (comp != 0) {
+      return comp;
+    } else {
+      comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
       if (comp != 0) {
         return comp;
       } else {
-        comp = o1.getDisplayOrder().compareTo(o2.getDisplayOrder());
-        if (comp != 0) {
-          return comp;
-        } else {
-          return o1.getType().compareTo(o2.getType());
-        }
+        return o1.getType().compareTo(o2.getType());
       }
     }
   };
@@ -132,7 +127,6 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private ArtifactService artifactService;
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
-  @Inject private ExecutorService executorService;
   @Inject private HistoryService historyService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
@@ -439,9 +433,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (res == null || res.size() == 0) {
       return res;
     }
-    for (WorkflowExecution workflowExecution : res) {
-      refreshBreakdown(workflowExecution);
-    }
+    res.forEach(this ::refreshBreakdown);
 
     if (!includeGraph) {
       return res;
@@ -818,8 +810,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     wingsPersistence.update(query, updateOps);
 
-    notifyWorkflowExecution(workflowExecution.getAppId(), workflowExecutionId);
-    return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
+    workflowExecution =
+        wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecutionId);
+    notifyWorkflowExecution(workflowExecution);
+    return workflowExecution;
   }
 
   /**
@@ -1136,8 +1130,23 @@ public class WorkflowServiceImpl implements WorkflowService {
     return null;
   }
 
-  private void notifyWorkflowExecution(String appId, String workflowExecutionId) {
-    executorService.execute(new WorkflowExecutionEntryMaker(appId, workflowExecutionId));
+  private void notifyWorkflowExecution(WorkflowExecution workflowExecution) {
+    EntityType entityType = EntityType.ORCHESTRATED_DEPLOYMENT;
+    if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
+      entityType = EntityType.SIMPLE_DEPLOYMENT;
+    }
+
+    History history = History.Builder.aHistory()
+                          .withAppId(workflowExecution.getAppId())
+                          .withEventType(EventType.CREATED)
+                          .withEntityType(entityType)
+                          .withEntityId(workflowExecution.getUuid())
+                          .withEntityName(workflowExecution.getName())
+                          .withEntityNewValue(workflowExecution)
+                          .withShortDescription(workflowExecution.getName() + " started")
+                          .withTitle(workflowExecution.getName() + " started")
+                          .build();
+    historyService.createAsync(history);
   }
 
   @Override
@@ -1195,42 +1204,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       } catch (java.lang.Exception e) {
         logger.error("Error in breakdown retrieval", e);
       }
-    }
-  }
-
-  private class WorkflowExecutionEntryMaker implements Runnable {
-    private String workflowExecutionId;
-    private String appId;
-
-    /**
-     * Instantiates a new Workflow execution entry maker.
-     *
-     * @param appId               the app id
-     * @param workflowExecutionId the workflow execution id
-     */
-    public WorkflowExecutionEntryMaker(String appId, String workflowExecutionId) {
-      this.appId = appId;
-      this.workflowExecutionId = workflowExecutionId;
-    }
-
-    @Override
-    public void run() {
-      WorkflowExecution workflowExecution = getExecutionDetails(appId, workflowExecutionId);
-      EntityType entityType = EntityType.ORCHESTRATED_DEPLOYMENT;
-      if (workflowExecution.getWorkflowType() == WorkflowType.SIMPLE) {
-        entityType = EntityType.SIMPLE_DEPLOYMENT;
-      }
-      History history = History.Builder.aHistory()
-                            .withAppId(appId)
-                            .withEventType(EventType.CREATED)
-                            .withEntityType(entityType)
-                            .withEntityId(workflowExecution.getUuid())
-                            .withEntityName(workflowExecution.getName())
-                            .withEntityNewValue(workflowExecution)
-                            .withShortDescription(workflowExecution.getName() + " started")
-                            .withTitle(workflowExecution.getName() + " started")
-                            .build();
-      historyService.create(history);
     }
   }
 }

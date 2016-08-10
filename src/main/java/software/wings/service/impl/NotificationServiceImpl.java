@@ -17,6 +17,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.NotificationService;
 
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.Valid;
@@ -31,6 +32,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class NotificationServiceImpl implements NotificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Injector injector;
+  @Inject private ExecutorService executorService;
 
   private Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -82,7 +84,9 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public void sendNotificationAsync(@Valid Notification notification) {
-    save(notification); // block for persistence
-    // TODO: async broadcast
+    executorService.execute(() -> {
+      save(notification); // block for persistence
+      // TODO: async broadcast
+    });
   }
 }
