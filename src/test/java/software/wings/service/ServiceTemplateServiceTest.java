@@ -48,6 +48,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Host;
+import software.wings.beans.Infra;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -263,7 +264,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
     ServiceTemplate template = builder.build();
@@ -298,7 +300,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
     when(hostService.get(APP_ID, INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(existingHost)).build());
 
@@ -367,7 +371,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     doReturn(builder.withTags(EMPTY_LIST).withLeafTags(EMPTY_SET).build())

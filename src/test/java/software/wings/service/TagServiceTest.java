@@ -32,6 +32,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
+import software.wings.beans.Infra;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.Builder;
@@ -287,7 +288,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(host));
 
     tagService.tagHosts(tag, asList(host));
@@ -308,7 +310,9 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
     tagService.tagHosts(tag, asList());
@@ -331,7 +335,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraIdByEnvId(APP_ID, ENV_ID)).thenReturn(INFRA_ID);
+    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(existingHost));
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList("NEW_HOST_ID"))).thenReturn(asList(newHost));
 

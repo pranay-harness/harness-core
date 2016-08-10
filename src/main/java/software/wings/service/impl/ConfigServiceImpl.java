@@ -155,9 +155,9 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void delete(String appId, String configId) {
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
-    fileService.deleteFile(configFile.getFileUuid(), CONFIGS);
+    ConfigFile configFile = get(appId, configId, false);
     wingsPersistence.delete(configFile);
+    executorService.submit(() -> fileService.deleteFile(configFile.getFileUuid(), CONFIGS));
   }
 
   /* (non-Javadoc)
@@ -177,14 +177,7 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public void deleteByEntityId(String appId, String entityId, String templateId) {
-    List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
-                                       .field("appId")
-                                       .equal(appId)
-                                       .field("entityId")
-                                       .equal(entityId)
-                                       .field("templateId")
-                                       .equal(templateId)
-                                       .asList();
+    List<ConfigFile> configFiles = getConfigFilesForEntity(appId, templateId, entityId);
     if (configFiles != null) {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }

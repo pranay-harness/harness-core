@@ -302,7 +302,7 @@ public class TagServiceImpl implements TagService {
     }
 
     List<Host> inputHosts =
-        hostService.getHostsByHostIds(appId, infraService.getInfraIdByEnvId(appId, tag.getEnvId()), hostIds);
+        hostService.getHostsByHostIds(appId, infraService.getInfraByEnvId(appId, tag.getEnvId()).getUuid(), hostIds);
     tagHosts(tag, inputHosts);
   }
 

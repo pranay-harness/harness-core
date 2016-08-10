@@ -10,6 +10,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -56,15 +57,11 @@ public class InfraServiceImpl implements InfraService {
   }
 
   @Override
-  public String getInfraIdByEnvId(String appId, String envId) {
+  public Infra getInfraByEnvId(String appId, String envId) {
     Infra infra =
         wingsPersistence.createQuery(Infra.class).field("appId").equal(appId).field("envId").equal(envId).get();
-    return infra == null ? null : infra.getUuid();
-  }
-
-  @Override
-  public String getEnvByInfraId(String appId, String infraId) {
-    return null;
+    Validator.notNullCheck("Infrastructure", infra);
+    return infra;
   }
 
   @Override

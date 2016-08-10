@@ -57,14 +57,5 @@ public interface InfraService {
    * @param envId the env id
    * @return the infra id by env id
    */
-  String getInfraIdByEnvId(String appId, String envId);
-
-  /**
-   * Gets e nv by infra id.
-   *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @return the e nv by infra id
-   */
-  String getEnvByInfraId(String appId, String infraId);
+  Infra getInfraByEnvId(String appId, String envId);
 }

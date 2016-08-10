@@ -142,8 +142,8 @@ public class HostServiceImpl implements HostService {
    * software.wings.utils.BoundedInputStream)
    */
   @Override
-  public int importHosts(String appId, String infraId, BoundedInputStream inputStream) {
-    Infra infra = wingsPersistence.get(Infra.class, infraId);
+  public int importHosts(String appId, String envId, BoundedInputStream inputStream) {
+    Infra infra = infraService.getInfraByEnvId(appId, envId);
     notNullCheck("infra", infra);
     List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
     List<String> Ids = wingsPersistence.save(hosts);
@@ -170,7 +170,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
-    String infraId = infraService.getInfraIdByEnvId(appId, envId);
+    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
@@ -199,7 +199,7 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public List<Host> getHostsByEnv(String appId, String envId) {
-    String infraId = infraService.getInfraIdByEnvId(appId, envId);
+    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)
@@ -210,7 +210,7 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public Host getHostByEnv(String appId, String envId, String hostId) {
-    String infraId = infraService.getInfraIdByEnvId(appId, envId);
+    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
     return wingsPersistence.createQuery(Host.class)
         .field("appId")
         .equal(appId)

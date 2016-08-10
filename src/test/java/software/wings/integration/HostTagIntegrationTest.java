@@ -114,7 +114,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
     environment = environmentService.getEnvByApp(app.getUuid()).get(0);
-    infraId = infraService.getInfraIdByEnvId(environment.getAppId(), environment.getUuid());
+    infraId = infraService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
 
     // create Tag hierarchy
     rootEnvTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
