@@ -15,6 +15,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -107,10 +108,10 @@ public class CatalogResource {
             break;
           }
           case CatalogNames.JENKINS_BUILD: {
-            catalogs.put(catalogType,
-                jenkinsBuildService.getBuilds(uriInfo.getQueryParameters(),
-                    (JenkinsConfig) settingsService.get(uriInfo.getQueryParameters().getFirst(JENKINS_SETTING_ID))
-                        .getValue()));
+            String jenkinsSettingId = uriInfo.getQueryParameters().getFirst(JENKINS_SETTING_ID);
+            SettingAttribute attribute = settingsService.get(jenkinsSettingId);
+            JenkinsConfig config = (JenkinsConfig) attribute.getValue();
+            catalogs.put(catalogType, jenkinsBuildService.getBuilds(uriInfo.getQueryParameters(), config));
             break;
           }
           case CONNECTION_ATTRIBUTES: {

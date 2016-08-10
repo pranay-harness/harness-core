@@ -7,14 +7,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.WebApplicationException;
 
 /**
  * The generic exception class for the Wings Application.
  *
  * @author Rishi
  */
-public class WingsException extends WebApplicationException {
+public class WingsException extends RuntimeException {
   private static final long serialVersionUID = -3266129015976960503L;
 
   /**

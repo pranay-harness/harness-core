@@ -10,7 +10,6 @@ import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.jersey.DropwizardResourceConfig;
 import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
-import io.dropwizard.jersey.validation.ConstraintViolationExceptionMapper;
 import io.dropwizard.jersey.validation.Validators;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.server.ServerProperties;
@@ -23,6 +22,7 @@ import org.glassfish.jersey.test.spi.TestContainerFactory;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import software.wings.exception.ConstraintViolationExceptionMapper;
 
 import java.util.Map;
 import java.util.Set;
@@ -282,7 +282,7 @@ public class ResourceTestRule implements TestRule {
       for (Map.Entry<String, Object> property : resourceTestRule.properties.entrySet()) {
         property(property.getKey(), property.getValue());
       }
-      register(new JacksonMessageBodyProvider(resourceTestRule.mapper, resourceTestRule.validator));
+      register(new JacksonMessageBodyProvider(resourceTestRule.mapper));
       for (Object singleton : resourceTestRule.singletons) {
         register(singleton);
       }

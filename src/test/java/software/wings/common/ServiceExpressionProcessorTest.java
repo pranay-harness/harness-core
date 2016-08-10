@@ -9,11 +9,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -31,7 +37,12 @@ import java.util.List;
  * @author Rishi
  */
 public class ServiceExpressionProcessorTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private String appId = UUIDGenerator.getUuid();
+
+  @Mock private ExecutionContextImpl context;
+
+  @Mock private ServiceResourceService serviceResourceService;
 
   /**
    * Should return matching services.
@@ -41,9 +52,7 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
         aService().withName("B1234").build(), aService().withName("C1234").build());
 
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
-    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     processor.setServiceResourceService(serviceResourceService);
@@ -102,16 +111,14 @@ public class ServiceExpressionProcessorTest {
    */
   @Test
   public void shouldReturnListAllFromContext() {
-    Service serviceC = aService().withName("C1234").build();
+    Service serviceC = aService().withName("C1234").withUuid(SERVICE_ID).build();
 
-    ServiceElement serviceCElement = new ServiceElement();
-    serviceCElement.setName(serviceC.getName());
+    ServiceElement serviceCElement =
+        aServiceElement().withName(serviceC.getName()).withUuid(serviceC.getUuid()).build();
 
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
-    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
     when(serviceResourceService.get(anyString(), anyString())).thenReturn(serviceC);
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
@@ -131,9 +138,7 @@ public class ServiceExpressionProcessorTest {
     List<Service> services = Lists.newArrayList(aService().withName("A1234").build(),
         aService().withName("B1234").build(), aService().withName("C1234").build());
 
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
-    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
 
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
@@ -163,11 +168,9 @@ public class ServiceExpressionProcessorTest {
     ServiceElement serviceCElement = new ServiceElement();
     serviceCElement.setName(serviceC.getName());
 
-    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
     when(context.getApp()).thenReturn(Application.Builder.anApplication().withUuid(appId).build());
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceCElement);
 
-    ServiceResourceService serviceResourceService = mock(ServiceResourceService.class);
     PageResponse<Service> res = new PageResponse<Service>();
     res.setResponse(services);
     when(serviceResourceService.list(any(PageRequest.class))).thenReturn(res);

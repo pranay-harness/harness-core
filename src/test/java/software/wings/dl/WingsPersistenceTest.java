@@ -141,10 +141,10 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public void shouldTakeQueryParamsInSimplifiedForm() {
     UriInfo uriInfo = mock(UriInfo.class);
     MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
-    queryParams.addAll("fieldA", Lists.newArrayList("fieldA13", "fieldA14"));
+    queryParams.put("fieldA", Lists.newArrayList("fieldA13", "fieldA14"));
 
-    queryParams.addAll("sort[0][field]", Lists.newArrayList("fieldA"));
-    queryParams.addAll("sort[0][direction]", Lists.newArrayList("DESC"));
+    queryParams.put("sort[0][field]", Lists.newArrayList("fieldA"));
+    queryParams.put("sort[0][direction]", Lists.newArrayList("DESC"));
 
     when(uriInfo.getQueryParameters()).thenReturn(queryParams);
     createEntitiesForPagination();

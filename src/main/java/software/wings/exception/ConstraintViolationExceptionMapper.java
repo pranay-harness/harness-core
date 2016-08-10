@@ -13,8 +13,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
-import io.dropwizard.jersey.validation.ConstraintMessage;
-import io.dropwizard.validation.ConstraintViolations;
 import io.dropwizard.validation.ValidationMethod;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -42,6 +40,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
@@ -54,7 +53,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       CacheBuilder.newBuilder().expireAfterWrite(1, TimeUnit.HOURS).build();
   private static final Joiner DOT_JOINER = Joiner.on('.');
 
-  public static String getMessage(ConstraintViolation<?> v) {
+  private static String getMessage(ConstraintViolation<?> v) {
     Pair<Path, ? extends ConstraintDescriptor<?>> of = Pair.of(v.getPropertyPath(), v.getConstraintDescriptor());
 
     String message = MESSAGES_CACHE.getIfPresent(of);
@@ -151,21 +150,23 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
     return v.getConstraintDescriptor().getAnnotation() instanceof ValidationMethod;
   }
 
+  private static <T> String validationMethodFormatted(ConstraintViolation<T> v) {
+    final ImmutableList<Path.Node> nodes = ImmutableList.copyOf(v.getPropertyPath());
+    String usefulNodes = DOT_JOINER.join(nodes.subList(0, nodes.size() - 1));
+    String msg = usefulNodes + (v.getMessage().startsWith(".") ? "" : " ") + v.getMessage();
+    return msg.trim();
+  }
+
   @Override
   public Response toResponse(ConstraintViolationException exception) {
-    ImmutableList<String> errors =
-        ImmutableList.copyOf(exception.getConstraintViolations()
-                                 .stream()
-                                 .map(v -> processMessage(v, ConstraintMessage.getMessage(v)))
-                                 .collect(toList()));
+    ImmutableList<String> errors = ImmutableList.copyOf(
+        exception.getConstraintViolations().stream().map(v -> processMessage(v, getMessage(v))).collect(toList()));
 
     if (errors.size() == 0) {
       errors = ImmutableList.of(Strings.nullToEmpty(exception.getMessage()));
     }
 
-    return Response.status(ConstraintViolations.determineStatus(exception.getConstraintViolations()))
-        .entity(toRestResponse(errors))
-        .build();
+    return Response.status(Status.BAD_REQUEST).entity(toRestResponse(errors)).build();
   }
 
   private RestResponse toRestResponse(ImmutableList<String> errors) {
@@ -198,12 +199,5 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
       }
     }
     return message;
-  }
-
-  public static <T> String validationMethodFormatted(ConstraintViolation<T> v) {
-    final ImmutableList<Path.Node> nodes = ImmutableList.copyOf(v.getPropertyPath());
-    String usefulNodes = DOT_JOINER.join(nodes.subList(0, nodes.size() - 1));
-    String msg = usefulNodes + (v.getMessage().startsWith(".") ? "" : " ") + v.getMessage();
-    return msg.trim();
   }
 }

@@ -16,7 +16,8 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 public class MainConfiguration extends Configuration implements AssetsBundleConfiguration {
-  @Valid @NotNull @JsonProperty private final AssetsConfiguration assets = new AssetsConfiguration();
+  @Valid @NotNull @JsonProperty private AssetsConfiguration assets;
+
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConnectionFactory;
   @JsonProperty private PortalConfig portal;

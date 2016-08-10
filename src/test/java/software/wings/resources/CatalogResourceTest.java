@@ -11,6 +11,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CatalogNames.EXECUTION_TYPE;
+import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -29,6 +30,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -111,12 +113,13 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   private Object[][] catalogNames() {
-    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_BUILD)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE)},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENT_TYPE)}};
+    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_BUILD),
+                               aSettingAttribute().withValue(aJenkinsConfig().build()).build()},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG), null},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES), null},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES), null},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE), null},
+        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENT_TYPE), null}};
   }
 
   /**
@@ -127,7 +130,10 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Test
   @TestCaseName("{method}{0}")
   @Parameters(method = "catalogNames")
-  public void shouldListCatalogsFor(String catalogNameForDisplay) {
+  public void shouldListCatalogsFor(String catalogNameForDisplay, SettingAttribute settingAttribute) {
+    if (settingAttribute != null) {
+      when(settingsService.get(any())).thenReturn(settingAttribute);
+    }
     String catalogName = UPPER_CAMEL.to(UPPER_UNDERSCORE, catalogNameForDisplay);
     RestResponse<Map<String, Object>> actual =
         resources.client()

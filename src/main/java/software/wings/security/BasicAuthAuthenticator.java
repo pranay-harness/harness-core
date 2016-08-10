@@ -5,7 +5,6 @@ import static software.wings.beans.ErrorCodes.EMAIL_NOT_VERIFIED;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
 
-import com.google.common.base.Optional;
 import com.google.inject.Inject;
 
 import io.dropwizard.auth.AuthenticationException;
@@ -16,6 +15,7 @@ import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 
+import java.util.Optional;
 import javax.inject.Singleton;
 
 /**
