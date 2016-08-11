@@ -151,6 +151,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                 .withDisplayText(getDecoratedNotificationMessage(ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Service", "ENTITY_NAME", service.getName())))
                 .build());
+        appService.deleteService(service);
         serviceTemplateService.deleteByService(appId, serviceId);
         configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
       });

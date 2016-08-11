@@ -180,6 +180,12 @@ public class AppServiceImpl implements AppService {
   }
 
   @Override
+  public void deleteService(Service service) {
+    wingsPersistence.update(wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(service.getAppId()),
+        wingsPersistence.createUpdateOperations(Application.class).removeAll("services", service));
+  }
+
+  @Override
   public Application get(String appId, SetupStatus status) {
     Application application = get(appId);
     if (status == INCOMPLETE) {

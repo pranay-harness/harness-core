@@ -205,13 +205,14 @@ public interface WingsPersistence {
   /**
    * Delete from list.
    *
-   * @param <T>           the generic type
+   * @param <T>           the type parameter
    * @param cls           the cls
+   * @param appId         the app id
    * @param entityId      the entity id
    * @param listFieldName the list field name
    * @param object        the object
    */
-  <T> void deleteFromList(Class<T> cls, String entityId, String listFieldName, Object object);
+  <T> void deleteFromList(Class<T> cls, String appId, String entityId, String listFieldName, Object object);
 
   /**
    * Delete.

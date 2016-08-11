@@ -56,6 +56,13 @@ public interface AppService {
   void delete(@NotEmpty String appId);
 
   /**
+   * Delete service.
+   *
+   * @param service the service
+   */
+  void deleteService(Service service);
+
+  /**
    * Add environment.
    *
    * @param env the env
