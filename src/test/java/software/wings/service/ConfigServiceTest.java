@@ -2,11 +2,13 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -192,7 +194,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     File file = configService.download(APP_ID, FILE_ID);
     verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
     verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
-    Assertions.assertThat(file.getName()).isEqualTo(FILE_NAME);
+    assertThat(file.getName()).isEqualTo(FILE_NAME);
   }
 
   @Test
@@ -295,5 +297,16 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(end).equal("ENTITY_ID");
     verify(wingsPersistence).delete(configFile);
     verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+  }
+
+  @Test
+  public void shouldValidateAndResolveFilePath() throws Exception {
+    assertThat(configService.validateAndResolveFilePath("config", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./", "")).isEqualTo("config");
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> configService.validateAndResolveFilePath("/config", "abc.txt"))
+        .withMessage(INVALID_ARGUMENT.name());
   }
 }

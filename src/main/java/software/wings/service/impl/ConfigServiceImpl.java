@@ -22,6 +22,9 @@ import software.wings.utils.Validator;
 
 import java.io.File;
 import java.io.InputStream;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,11 +64,25 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
     if (Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
+      configFile.setRelativePath(validateAndResolveFilePath(configFile.getRelativePath(), configFile.getFileName()));
       fileService.saveFile(configFile, inputStream, CONFIGS);
       return wingsPersistence.save(configFile);
     } else {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + configFile.getEntityType());
+    }
+  }
+
+  @Override
+  public String validateAndResolveFilePath(String relativePath, String fileName) {
+    try {
+      Path path = Paths.get(relativePath);
+      if (path.isAbsolute()) {
+        throw new WingsException(INVALID_ARGUMENT, "args", "Relative path can not be absolute");
+      }
+      return path.resolve(fileName).normalize().toString();
+    } catch (InvalidPathException | NullPointerException ex) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Invalid relativePath");
     }
   }
 
@@ -142,7 +159,7 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("size", configFile.getSize());
     }
     updateMap.put("name", configFile.getName());
-    updateMap.put("relativePath", configFile.getRelativePath());
+    //    updateMap.put("relativePath", configFile.getRelativePath());
     wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
 
     if (!oldFileId.equals(configFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
