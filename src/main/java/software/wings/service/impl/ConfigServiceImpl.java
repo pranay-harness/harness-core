@@ -144,25 +144,23 @@ public class ConfigServiceImpl implements ConfigService {
    * @see software.wings.service.intfc.ConfigService#update(software.wings.beans.ConfigFile, java.io.InputStream)
    */
   @Override
-  public void update(ConfigFile configFile, InputStream uploadedInputStream) {
-    ConfigFile savedConfigFile = get(configFile.getAppId(), configFile.getUuid(), false);
+  public void update(ConfigFile inputConfigFile, InputStream uploadedInputStream) {
+    ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid(), false);
     Validator.notNullCheck("Configuration file", savedConfigFile);
 
     Map<String, Object> updateMap = new HashMap<>();
     String oldFileId = savedConfigFile.getFileUuid();
 
     if (uploadedInputStream != null) {
-      fileService.saveFile(configFile, uploadedInputStream, CONFIGS);
-      updateMap.put("fileUuid", configFile.getFileUuid());
-      updateMap.put("fileName", configFile.getFileName());
-      updateMap.put("checksum", configFile.getChecksum());
-      updateMap.put("size", configFile.getSize());
+      fileService.saveFile(inputConfigFile, uploadedInputStream, CONFIGS);
+      updateMap.put("fileUuid", inputConfigFile.getFileUuid());
+      updateMap.put("checksum", inputConfigFile.getChecksum());
+      updateMap.put("size", inputConfigFile.getSize());
     }
-    updateMap.put("name", configFile.getName());
-    //    updateMap.put("relativePath", configFile.getRelativePath());
-    wingsPersistence.updateFields(ConfigFile.class, configFile.getUuid(), updateMap);
+    updateMap.put("name", inputConfigFile.getName());
+    wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
 
-    if (!oldFileId.equals(configFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
+    if (!oldFileId.equals(inputConfigFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
       executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
     }
   }

@@ -221,11 +221,9 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
     assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
-    assertThat(updateMap.get("fileName")).isEqualTo("FILE_NAME");
     assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
     assertThat(updateMap.get("size")).isEqualTo(100L);
     assertThat(updateMap.get("name")).isEqualTo(FILE_NAME);
-    assertThat(updateMap.get("relativePath")).isEqualTo("PATH");
   }
 
   @Test
