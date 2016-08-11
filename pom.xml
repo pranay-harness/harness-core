@@ -619,6 +619,29 @@
         </pluginManagement>
         <plugins>
             <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.mortbay.jetty.alpn</groupId>
+                                    <artifactId>alpn-boot</artifactId>
+                                    <version>8.1.8.v20160420</version>
+                                    <type>jar</type>
+                                    <destFileName>alpn-boot.jar</destFileName>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
                 <version>1.4</version>
@@ -976,6 +999,13 @@
                                      keyfile="${user.home}/.ssh/id_${deployHost}"
                                      file="config.yml"
                                      todir="${deployUsername}@${deployHost}:"/>
+                                <echo message="copy alpn-boot.jar"/>
+                                <scp trust="true" failonerror="true" verbose="off" sftp="true"
+                                     host="${deployHost}"
+                                     username="${deployUsername}"
+                                     keyfile="${user.home}/.ssh/id_${deployHost}"
+                                     file="${project.build.directory}/alpn-boot.jar"
+                                     todir="${deployUsername}@${deployHost}:"/>
                                 <echo message="configure port"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
@@ -983,12 +1013,40 @@
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
                                          command="sed -i 's/port: 9090/port: 3456/' config.yml"
                                          timeout="120000"/>
+                                <echo message="configure keystore path"/>
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="sed -i 's/keyStorePath: keystore.jks/keyStorePath: \/home\/ubuntu\/keystore.jks/' config.yml"
+                                         timeout="120000"/>
+                                <echo message="configure keystorePassword"/>
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="sed -i 's/keyStorePassword: password/keyStorePassword: W!ngs@123/' config.yml"
+                                         timeout="120000"/>
+                                <echo message="configure certAlias"/>
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="sed -i 's/certAlias: selfsigned/certAlias: mykey/' config.yml"
+                                         timeout="120000"/>
+                                <echo message="configure cordDomain"/>
+                                <sshexec trust="true" failonerror="true"
+                                         host="${deployHost}"
+                                         username="${deployUsername}"
+                                         keyfile="${user.home}/.ssh/id_${deployHost}"
+                                         command="sed -i 's/corsDomains: http:\/\/localhost:8000/corsDomains: http:\/\/wingsci.s3-website-us-east-1.amazonaws.com/' config.yml"
+                                         timeout="120000"/>
                                 <echo message="start server"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="nohup java -Dfile.encoding=UTF-8 -Djavax.net.debug=all -Xbootclasspath/p:alpn-boot.jar -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000"/>
                                 <echo message="cleanup files"/>
                                 <sshexec trust="true" failonerror="true"
