@@ -9,6 +9,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
+import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
 import com.palantir.versioninfo.VersionInfoBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
@@ -99,6 +100,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       }
     });
     bootstrap.addBundle(new VersionInfoBundle("build.properties"));
+    bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
 
     logger.info("bootstrapping done.");
   }
