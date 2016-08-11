@@ -64,7 +64,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
     if (Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
-      configFile.setRelativePath(validateAndResolveFilePath(configFile.getRelativePath(), configFile.getFileName()));
+      configFile.setRelativeFilePath(
+          validateAndResolveFilePath(configFile.getRelativeFilePath(), configFile.getFileName()));
       fileService.saveFile(configFile, inputStream, CONFIGS);
       return wingsPersistence.save(configFile);
     } else {

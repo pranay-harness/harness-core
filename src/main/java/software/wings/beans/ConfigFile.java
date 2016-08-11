@@ -36,7 +36,7 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) private String entityId;
 
-  @FormDataParam("relativePath") private String relativePath;
+  @FormDataParam("relativeFilePath") private String relativeFilePath;
 
   private String overridePath;
 
@@ -63,17 +63,17 @@ public class ConfigFile extends BaseFile {
    *
    * @return the relative path
    */
-  public String getRelativePath() {
-    return relativePath;
+  public String getRelativeFilePath() {
+    return relativeFilePath;
   }
 
   /**
    * Sets relative path.
    *
-   * @param relativePath the relative path
+   * @param relativeFilePath the relative path
    */
-  public void setRelativePath(String relativePath) {
-    this.relativePath = relativePath;
+  public void setRelativeFilePath(String relativeFilePath) {
+    this.relativeFilePath = relativeFilePath;
   }
 
   /**
@@ -150,7 +150,8 @@ public class ConfigFile extends BaseFile {
 
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(templateId, envId, entityType, entityId, relativePath, overridePath);
+    return 31 * super.hashCode()
+        + Objects.hash(templateId, envId, entityType, entityId, relativeFilePath, overridePath);
   }
 
   @Override
@@ -167,7 +168,7 @@ public class ConfigFile extends BaseFile {
     final ConfigFile other = (ConfigFile) obj;
     return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
         && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
-        && Objects.equals(this.relativePath, other.relativePath)
+        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
         && Objects.equals(this.overridePath, other.overridePath);
   }
 
@@ -178,7 +179,7 @@ public class ConfigFile extends BaseFile {
         .add("envId", envId)
         .add("entityType", entityType)
         .add("entityId", entityId)
-        .add("relativePath", relativePath)
+        .add("relativeFilePath", relativeFilePath)
         .add("overridePath", overridePath)
         .toString();
   }
@@ -191,7 +192,7 @@ public class ConfigFile extends BaseFile {
     private String envId;
     private EntityType entityType;
     private String entityId;
-    private String relativePath;
+    private String relativeFilePath;
     private String overridePath;
     private String name;
     private String fileUuid;
@@ -264,13 +265,13 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
-     * With relative path builder.
+     * With relative file path builder.
      *
-     * @param relativePath the relative path
+     * @param relativeFilePath the relative file path
      * @return the builder
      */
-    public Builder withRelativePath(String relativePath) {
-      this.relativePath = relativePath;
+    public Builder withRelativeFilePath(String relativeFilePath) {
+      this.relativeFilePath = relativeFilePath;
       return this;
     }
 
@@ -450,7 +451,7 @@ public class ConfigFile extends BaseFile {
           .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
-          .withRelativePath(relativePath)
+          .withRelativeFilePath(relativeFilePath)
           .withOverridePath(overridePath)
           .withName(name)
           .withFileUuid(fileUuid)
@@ -479,7 +480,7 @@ public class ConfigFile extends BaseFile {
       configFile.setEnvId(envId);
       configFile.setEntityType(entityType);
       configFile.setEntityId(entityId);
-      configFile.setRelativePath(relativePath);
+      configFile.setRelativeFilePath(relativeFilePath);
       configFile.setOverridePath(overridePath);
       configFile.setName(name);
       configFile.setFileUuid(fileUuid);

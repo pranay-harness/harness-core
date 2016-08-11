@@ -113,14 +113,18 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldSave() {
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
-                                .withEntityType(EntityType.SERVICE)
-                                .withEntityId(SERVICE_ID)
-                                .withTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID)
-                                .withName(FILE_NAME)
+                                .withEnvId(ENV_ID)
+                                .withUuid(FILE_ID)
+                                .withEntityType(EntityType.TAG)
+                                .withEntityId(TAG_ID)
+                                .withTemplateId(TEMPLATE_ID)
+                                .withName("NAME")
+                                .withRelativeFilePath("PATH")
                                 .withFileName(FILE_NAME)
                                 .build();
     configService.save(configFile, inputStream);
     verify(fileService).saveFile(configFile, inputStream, FileBucket.CONFIGS);
+    assertThat(configFile.getRelativeFilePath()).isEqualTo("PATH/" + FILE_NAME);
     verify(wingsPersistence).save(configFile);
   }
 
@@ -183,7 +187,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -207,7 +211,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -236,7 +240,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -278,7 +282,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
