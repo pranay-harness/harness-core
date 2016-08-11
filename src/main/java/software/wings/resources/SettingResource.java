@@ -1,8 +1,10 @@
 package software.wings.resources;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -12,6 +14,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
 
 import javax.ws.rs.BeanParam;
@@ -30,6 +33,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("settings")
 @Path("/settings")
+@AuthRule
 @Timed
 @ExceptionMetered
 @Consumes(APPLICATION_JSON)
@@ -47,6 +51,9 @@ public class SettingResource {
   @GET
   public RestResponse<PageResponse<SettingAttribute>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<SettingAttribute> pageRequest) {
+    if (Strings.isNullOrEmpty(appId)) {
+      appId = GLOBAL_APP_ID;
+    }
     pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(attributeService.list(pageRequest));
   }
