@@ -20,9 +20,9 @@ import javax.ws.rs.DefaultValue;
  * Created by anubhaw on 4/12/16.
  */
 @Entity(value = "configFiles", noClassnameStored = true)
-@Indexes(@Index(
-    fields = { @Field("entityId")
-               , @Field("templateId"), @Field("name") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("entityId")
+                           , @Field("templateId"), @Field("relativeFilePath") },
+    options = @IndexOptions(unique = true)))
 public class ConfigFile extends BaseFile {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
