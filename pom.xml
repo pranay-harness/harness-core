@@ -1032,21 +1032,21 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/certAlias: selfsigned/certAlias: mykey/' config.yml"
+                                         command="sed -i 's/certAlias: selfsigned/certAlias: java/' config.yml"
                                          timeout="120000"/>
                                 <echo message="configure cordDomain"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/corsDomains: http:\/\/localhost:8000/corsDomains: http:\/\/wingsci.s3-website-us-east-1.amazonaws.com/' config.yml"
+                                         command="sed -i 's/corsDomains: https:\/\/localhost:8000/corsDomains: http:\/\/wingsci.s3-website-us-east-1.amazonaws.com/' config.yml"
                                          timeout="120000"/>
                                 <echo message="start server"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="nohup java -Dfile.encoding=UTF-8 -Djavax.net.debug=all -Xbootclasspath/p:alpn-boot.jar -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="nohup java -Dfile.encoding=UTF-8 -Xbootclasspath/p:alpn-boot.jar -jar $HOME/portal-0.0.1-SNAPSHOT.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000"/>
                                 <echo message="cleanup files"/>
                                 <sshexec trust="true" failonerror="true"
