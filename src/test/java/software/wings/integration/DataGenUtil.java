@@ -46,6 +46,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
@@ -178,7 +179,11 @@ public class DataGenUtil extends WingsBaseTest {
   }
 }
 }, new java.security.SecureRandom());
-client = ClientBuilder.newBuilder().sslContext(sslcontext).hostnameVerifier((s1, s2) -> true).build();
+client = ClientBuilder.newBuilder()
+             .sslContext(sslcontext)
+             .hostnameVerifier((s1, s2) -> true)
+             .register(MultiPartFeature.class)
+             .build();
 }
 
 private void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException {
@@ -618,10 +623,10 @@ private List<Service> addServices(String appId, List<AppContainer> appContainers
     serviceMap.put("appId", appId);
     serviceMap.put("artifactType", WAR.name());
     serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size())));
-    RestResponse<Base> response = getRequestWithAuthHeader(target).post(
-        Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Base>>() { // FIXME
+    RestResponse<Service> response = getRequestWithAuthHeader(target).post(
+        Entity.entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
         });
-    //      assertThat(response.getResource()).isInstanceOf(Service.class);
+    assertThat(response.getResource()).isInstanceOf(Service.class);
     String serviceId = response.getResource().getUuid();
     Service service = wingsPersistence.get(Service.class, serviceId);
     services.add(service);
