@@ -19,6 +19,8 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,6 +29,9 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
+import software.wings.beans.EventType;
+import software.wings.beans.History;
 import software.wings.beans.Notification;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -34,6 +39,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -71,6 +77,8 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private AppContainerService appContainerService;
   @Mock private WorkflowService workflowService;
   @Mock private NotificationService notificationService;
+  @Mock private HistoryService historyService;
+  @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
   /**
    * Sets up.
@@ -100,6 +108,14 @@ public class AppServiceTest extends WingsBaseTest {
     verify(wingsPersistence).saveAndGet(Application.class, app);
     verify(settingsService).createDefaultSettings(APP_ID);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
+    verify(historyService).createAsync(historyArgumentCaptor.capture());
+    assertThat(historyArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("eventType", EventType.CREATED)
+        .hasFieldOrPropertyWithValue("entityType", EntityType.APPLICATION)
+        .hasFieldOrPropertyWithValue("entityId", app.getUuid())
+        .hasFieldOrPropertyWithValue("entityName", app.getName())
+        .hasFieldOrPropertyWithValue("entityNewValue", savedApp);
   }
 
   /**
@@ -184,5 +200,13 @@ public class AppServiceTest extends WingsBaseTest {
     inOrder.verify(serviceResourceService).deleteByAppId(APP_ID);
     inOrder.verify(environmentService).deleteByApp(APP_ID);
     inOrder.verify(appContainerService).deleteByAppId(APP_ID);
+    verify(historyService).createAsync(historyArgumentCaptor.capture());
+    assertThat(historyArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("eventType", EventType.DELETED)
+        .hasFieldOrPropertyWithValue("entityType", EntityType.APPLICATION)
+        .hasFieldOrPropertyWithValue("entityId", APP_ID)
+        .hasFieldOrProperty("entityName")
+        .hasFieldOrProperty("entityNewValue");
   }
 }

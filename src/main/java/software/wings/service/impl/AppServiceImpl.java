@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
@@ -16,7 +17,9 @@ import com.codahale.metrics.annotation.Metered;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Application;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.EventType;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -30,6 +33,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -59,6 +63,7 @@ public class AppServiceImpl implements AppService {
   @Inject private SetupService setupService;
   @Inject private WorkflowService workflowService;
   @Inject private NotificationService notificationService;
+  @Inject private HistoryService historyService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -75,6 +80,17 @@ public class AppServiceImpl implements AppService {
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Application", "ENTITY_NAME", application.getName())))
             .build());
+
+    historyService.createAsync(aHistory()
+                                   .withEventType(EventType.CREATED)
+                                   .withAppId(app.getUuid())
+                                   .withEntityType(EntityType.APPLICATION)
+                                   .withEntityId(app.getUuid())
+                                   .withEntityName(application.getName())
+                                   .withEntityNewValue(application)
+                                   .withShortDescription("Application " + application.getName() + " created")
+                                   .withTitle("Application " + application.getName() + " created")
+                                   .build());
     return get(application.getUuid());
   }
 
@@ -162,6 +178,17 @@ public class AppServiceImpl implements AppService {
         appContainerService.deleteByAppId(appId);
       });
     }
+
+    historyService.createAsync(aHistory()
+                                   .withEventType(EventType.DELETED)
+                                   .withAppId(application.getUuid())
+                                   .withEntityType(EntityType.APPLICATION)
+                                   .withEntityId(application.getUuid())
+                                   .withEntityName(application.getName())
+                                   .withEntityNewValue(application)
+                                   .withShortDescription("Application " + application.getName() + " created")
+                                   .withTitle("Application " + application.getName() + " created")
+                                   .build());
   }
 
   @Override
