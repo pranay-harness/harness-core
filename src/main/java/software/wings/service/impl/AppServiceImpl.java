@@ -202,7 +202,14 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public void addService(Service service) {
-    wingsPersistence.addToList(Application.class, service.getAppId(), "services", service);
+    wingsPersistence.update(wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(service.getAppId()),
+        wingsPersistence.createUpdateOperations(Application.class).add("services", service));
+  }
+
+  @Override
+  public void deleteService(Service service) {
+    wingsPersistence.update(wingsPersistence.createQuery(Application.class).field(ID_KEY).equal(service.getAppId()),
+        wingsPersistence.createUpdateOperations(Application.class).removeAll("services", service));
   }
 
   @Override

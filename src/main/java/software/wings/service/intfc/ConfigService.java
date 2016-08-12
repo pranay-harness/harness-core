@@ -37,6 +37,15 @@ public interface ConfigService {
   @ValidationGroups(Create.class) String save(@Valid ConfigFile configFile, InputStream inputStream);
 
   /**
+   * Validate and compute relative path string.
+   *
+   * @param relativePath the relative path
+   * @param fileName     the file name
+   * @return the string
+   */
+  String validateAndResolveFilePath(String relativePath, String fileName);
+
+  /**
    * Gets the.
    *
    * @param appId            the app id

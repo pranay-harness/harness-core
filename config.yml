@@ -3,14 +3,24 @@ xxxxxxxx
   rootPath: /api
   applicationContextPath: /
   applicationConnectors:
-    - type: http
+    - type: h2
       port: 9090
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: selfsigned
+      validateCerts: false
   adminContextPath: /admin
   adminMinThreads: 1
   adminMaxThreads: 64
   adminConnectors:
-    - type: http
+    - type: h2
       port: 9091
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: selfsigned
+      validateCerts: false
   requestLog:
       appenders:
         - type: file
@@ -31,7 +41,7 @@ mongo:
   db: wings
 
 portal:
-  url: http://ec2-50-16-106-255.compute-1.amazonaws.com:3456
+  url: https://wingsci-api.wings.software:3456
   allowedDomains: wings.software
   companyName: Wings Software
 
@@ -46,7 +56,7 @@ assets:
 swagger:
   resourcePackage: software.wings.resources,software.wings.utils
 
-corsDomains: http://localhost:8000
+corsDomains: https://localhost:8000
 
 fileUploadLimits:
   appContainerLimit: 1000000000 #  1 GB

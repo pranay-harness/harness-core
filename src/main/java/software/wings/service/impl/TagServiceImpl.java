@@ -79,7 +79,7 @@ public class TagServiceImpl implements TagService {
       tag.setRootTagId(
           parentTag.getTagType().equals(TagType.ENVIRONMENT) ? parentTag.getUuid() : parentTag.getRootTagId());
       tag = wingsPersistence.saveAndGet(Tag.class, tag);
-      wingsPersistence.addToList(Tag.class, parentTag.getUuid(), "children", tag.getUuid());
+      wingsPersistence.addToList(Tag.class, tag.getAppId(), parentTag.getUuid(), "children", tag.getUuid());
       updateServiceTemplateWithCommandPredecessor(tag);
       return tag;
     }

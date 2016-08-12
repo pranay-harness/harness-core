@@ -215,7 +215,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
                                    .withName("FILE_NAME")
                                    .withTemplateId("TEMPLATE_ID")
                                    .withEntityId("ENTITY_ID")
-                                   .withRelativePath("/configs/")
+                                   .withRelativeFilePath("/configs/")
                                    .withFileName("text.txt")
                                    .build();
     FileInputStream fileInputStream = new FileInputStream(file);

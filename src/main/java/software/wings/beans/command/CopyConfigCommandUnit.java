@@ -43,7 +43,7 @@ public class CopyConfigCommandUnit extends CommandUnit {
     ExecutionResult result = ExecutionResult.SUCCESS;
     if (!isEmpty(configFiles)) {
       for (ConfigFile configFile : configFiles) {
-        String path = destinationParentPath + "/" + configFile.getRelativePath();
+        String path = destinationParentPath + "/" + configFile.getRelativeFilePath();
         result = context.copyGridFsFiles(path, FileBucket.CONFIGS, Collections.singletonList(configFile.getFileUuid()))
                 == ExecutionResult.FAILURE
             ? ExecutionResult.FAILURE

@@ -352,7 +352,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                    .withTemplateId(template.getUuid())
                                    .withEntityId(entityId)
                                    .withEntityType(entityType)
-                                   .withRelativePath("/configs/")
+                                   .withRelativeFilePath("configs/")
                                    .build();
     if (entityType == EntityType.SERVICE) {
       appConfigFile.setEnvId(GLOBAL_ENV_ID);

@@ -353,7 +353,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   private void deleteHostFromATemplate(Host host, List<ServiceTemplate> serviceTemplates) {
     if (serviceTemplates != null) {
       serviceTemplates.forEach(serviceTemplate -> {
-        wingsPersistence.deleteFromList(ServiceTemplate.class, serviceTemplate.getUuid(), "hosts", host.getUuid());
+        wingsPersistence.deleteFromList(
+            ServiceTemplate.class, host.getAppId(), serviceTemplate.getUuid(), "hosts", host.getUuid());
         serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host));
       });
     }

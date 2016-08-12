@@ -2,11 +2,13 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -111,14 +113,18 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldSave() {
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
-                                .withEntityType(EntityType.SERVICE)
-                                .withEntityId(SERVICE_ID)
-                                .withTemplateId(ConfigFile.DEFAULT_TEMPLATE_ID)
-                                .withName(FILE_NAME)
+                                .withEnvId(ENV_ID)
+                                .withUuid(FILE_ID)
+                                .withEntityType(EntityType.TAG)
+                                .withEntityId(TAG_ID)
+                                .withTemplateId(TEMPLATE_ID)
+                                .withName("NAME")
+                                .withRelativeFilePath("PATH")
                                 .withFileName(FILE_NAME)
                                 .build();
     configService.save(configFile, inputStream);
     verify(fileService).saveFile(configFile, inputStream, FileBucket.CONFIGS);
+    assertThat(configFile.getRelativeFilePath()).isEqualTo("PATH/" + FILE_NAME);
     verify(wingsPersistence).save(configFile);
   }
 
@@ -181,7 +187,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -192,7 +198,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     File file = configService.download(APP_ID, FILE_ID);
     verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
     verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
-    Assertions.assertThat(file.getName()).isEqualTo(FILE_NAME);
+    assertThat(file.getName()).isEqualTo(FILE_NAME);
   }
 
   @Test
@@ -205,7 +211,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -219,11 +225,9 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
     assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
-    assertThat(updateMap.get("fileName")).isEqualTo("FILE_NAME");
     assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
     assertThat(updateMap.get("size")).isEqualTo(100L);
     assertThat(updateMap.get("name")).isEqualTo(FILE_NAME);
-    assertThat(updateMap.get("relativePath")).isEqualTo("PATH");
   }
 
   @Test
@@ -236,7 +240,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -278,7 +282,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName(FILE_NAME)
-                                .withRelativePath("PATH")
+                                .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
                                 .withChecksum("CHECKSUM")
@@ -295,5 +299,16 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(end).equal("ENTITY_ID");
     verify(wingsPersistence).delete(configFile);
     verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+  }
+
+  @Test
+  public void shouldValidateAndResolveFilePath() throws Exception {
+    assertThat(configService.validateAndResolveFilePath("config", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./", "")).isEqualTo("config");
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> configService.validateAndResolveFilePath("/config", "abc.txt"))
+        .withMessage(INVALID_ARGUMENT.name());
   }
 }
