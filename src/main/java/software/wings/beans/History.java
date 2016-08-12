@@ -1,18 +1,33 @@
 package software.wings.beans;
 
+import static software.wings.utils.JsonUtils.asObject;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.utils.JsonUtils;
 
 /**
  * Created by peeyushaggarwal on 6/20/16.
  */
 @Entity(value = "history", noClassnameStored = true)
 public class History extends Base {
+  private static final Logger logger = LoggerFactory.getLogger(History.class);
+
   private EventType eventType;
   private EntityType entityType;
   private String entityId;
   private String entityName;
-  private Base entityOldValue;
-  private Base entityNewValue;
+  @Transient private Base entityOldValue;
+  @Transient private Base entityNewValue;
+
+  @JsonIgnore private String entityOldValueClass;
+  @JsonIgnore private String entityNewValueClass;
+  @JsonIgnore private String entityOldValueStr;
+  @JsonIgnore private String entityNewValueStr;
 
   private String title;
   private String shortDescription;
@@ -159,6 +174,77 @@ public class History extends Base {
    */
   public void setShortDescription(String shortDescription) {
     this.shortDescription = shortDescription;
+  }
+
+  public String getEntityOldValueClass() {
+    return entityOldValueClass;
+  }
+
+  public void setEntityOldValueClass(String entityOldValueClass) {
+    this.entityOldValueClass = entityOldValueClass;
+  }
+
+  public String getEntityNewValueClass() {
+    return entityNewValueClass;
+  }
+
+  public void setEntityNewValueClass(String entityNewValueClass) {
+    this.entityNewValueClass = entityNewValueClass;
+  }
+
+  public String getEntityOldValueStr() {
+    return entityOldValueStr;
+  }
+
+  public void setEntityOldValueStr(String entityOldValueStr) {
+    this.entityOldValueStr = entityOldValueStr;
+  }
+
+  public String getEntityNewValueStr() {
+    return entityNewValueStr;
+  }
+
+  public void setEntityNewValueStr(String entityNewValueStr) {
+    this.entityNewValueStr = entityNewValueStr;
+  }
+
+  @Override
+  public void onSave() {
+    super.onSave();
+    if (entityOldValue == null) {
+      entityOldValueClass = null;
+      entityOldValueStr = null;
+    } else {
+      entityOldValueClass = entityOldValue.getClass().getName();
+      entityOldValueStr = JsonUtils.asJson(entityOldValue);
+    }
+
+    if (entityNewValue == null) {
+      entityNewValueClass = null;
+      entityNewValueStr = null;
+    } else {
+      entityNewValueClass = entityNewValue.getClass().getName();
+      entityNewValueStr = JsonUtils.asJson(entityNewValue);
+    }
+  }
+
+  @PostLoad
+  public void onLoad() {
+    if (entityOldValueClass != null && entityOldValueStr != null) {
+      try {
+        entityOldValue = (Base) asObject(entityOldValueStr, Class.forName(entityOldValueClass));
+      } catch (Exception e) {
+        logger.error("Error in Json conversion- entityOldValueClass: {}, entityOldValueStr: {}");
+      }
+    }
+
+    if (entityNewValueClass != null && entityNewValueStr != null) {
+      try {
+        entityNewValue = (Base) asObject(entityNewValueStr, Class.forName(entityNewValueClass));
+      } catch (Exception e) {
+        logger.error("Error in Json conversion- entityNewValueClass: {}, entityNewValueStr: {}");
+      }
+    }
   }
 
   @Override

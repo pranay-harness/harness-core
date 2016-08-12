@@ -8,6 +8,7 @@ import com.google.common.base.Objects;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
+import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.Base;
 import software.wings.beans.SearchFilter;
@@ -16,6 +17,7 @@ import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.utils.Misc;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -255,14 +257,23 @@ public class PageRequest<T> {
       } else if (!(key.startsWith("search") || key.startsWith("sort") || mappedClass.getMappedField(key) == null)) {
         if (mappedClass.getMappedField(key).isReference()) {
           try {
-            Base referenceObject = (Base) mappedClass.getMappedField(key).getCTor().getDeclaringClass().newInstance();
+            Class type;
+            MappedField mappedField = mappedClass.getMappedField(key);
+            Constructor constructor = null;
+            if (mappedField.isMultipleValues()) {
+              type = mappedField.getSubClass();
+              constructor = type.getDeclaredConstructor();
+            } else {
+              constructor = mappedField.getCTor();
+            }
+            Base referenceObject = (Base) constructor.getDeclaringClass().newInstance();
             String collection = mapper.getCollectionName(referenceObject);
             filters.add(
                 aSearchFilter()
                     .withField(key, Operator.IN,
                         map.get(key).stream().map(s -> new Key(referenceObject.getClass(), collection, s)).toArray())
                     .build());
-          } catch (IllegalAccessException | InstantiationException e) {
+          } catch (IllegalAccessException | InstantiationException | NoSuchMethodException e) {
             filters.add(aSearchFilter().withField(key, Operator.IN, map.get(key).toArray()).build());
           }
         } else {

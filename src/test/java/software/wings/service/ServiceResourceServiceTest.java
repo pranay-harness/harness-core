@@ -46,7 +46,10 @@ import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
+import software.wings.beans.EventType;
 import software.wings.beans.Graph;
+import software.wings.beans.History;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
@@ -60,6 +63,7 @@ import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -97,12 +101,15 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
+  @Mock private HistoryService historyService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
   @Spy @InjectMocks private ServiceResourceService spyServiceResourceService = new ServiceResourceServiceImpl();
 
   @Captor private ArgumentCaptor<Graph> graphArgumentCaptor = ArgumentCaptor.forClass(Graph.class);
+
+  @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
   /**
    * Sets the up.
@@ -157,6 +164,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     assertThat(
         allValues.stream().filter(graph -> asList("Start", "Stop", "Install").contains(graph.getGraphName())).count())
         .isEqualTo(3);
+    verify(historyService).createAsync(historyArgumentCaptor.capture());
+    assertThat(historyArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("eventType", EventType.CREATED)
+        .hasFieldOrPropertyWithValue("entityType", EntityType.SERVICE)
+        .hasFieldOrPropertyWithValue("entityId", service.getUuid())
+        .hasFieldOrPropertyWithValue("entityName", service.getName())
+        .hasFieldOrPropertyWithValue("entityNewValue", service);
   }
 
   /**
@@ -205,6 +220,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
     inOrder.verify(configService).deleteByEntityId(APP_ID, SERVICE_ID, DEFAULT_TEMPLATE_ID);
+    verify(historyService).createAsync(historyArgumentCaptor.capture());
+    assertThat(historyArgumentCaptor.getValue())
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("eventType", EventType.DELETED)
+        .hasFieldOrPropertyWithValue("entityType", EntityType.SERVICE)
+        .hasFieldOrPropertyWithValue("entityId", SERVICE_ID)
+        .hasFieldOrProperty("entityName")
+        .hasFieldOrProperty("entityNewValue");
   }
 
   /**

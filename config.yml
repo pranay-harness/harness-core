@@ -10,6 +10,8 @@ xxxxxxxx
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
       certAlias: selfsigned
       validateCerts: false
+    - type: http
+      port: 3457
   adminContextPath: /admin
   adminMinThreads: 1
   adminMaxThreads: 64

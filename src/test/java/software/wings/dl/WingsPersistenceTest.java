@@ -1,8 +1,11 @@
 package software.wings.dl;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import com.google.common.base.MoreObjects;
 
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -216,6 +219,52 @@ public class WingsPersistenceTest extends WingsBaseTest {
   }
 
   /**
+   * Should take query params in simplified form.
+   */
+  @Test
+  public void shouldTakeQueryParamsForReferenceArrays() {
+    TestEntityB testEntityB1 = new TestEntityB();
+    testEntityB1.setFieldB("fieldB1");
+    wingsPersistence.save(testEntityB1);
+
+    TestEntityB testEntityB2 = new TestEntityB();
+    testEntityB2.setFieldB("fieldB2");
+    wingsPersistence.save(testEntityB2);
+
+    TestEntityB testEntityB3 = new TestEntityB();
+    testEntityB3.setFieldB("fieldB3");
+    wingsPersistence.save(testEntityB3);
+
+    TestEntityC testEntityC1 = new TestEntityC();
+    testEntityC1.setTestEntityBs(asList(testEntityB1, testEntityB2));
+    wingsPersistence.save(testEntityC1);
+
+    TestEntityC testEntityC2 = new TestEntityC();
+    testEntityC2.setTestEntityBs(asList(testEntityB1, testEntityB3));
+    wingsPersistence.save(testEntityC2);
+
+    UriInfo uriInfo = mock(UriInfo.class);
+    MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
+    queryParams.put("testEntityBs", Lists.newArrayList(testEntityB1.getUuid()));
+
+    when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+
+    PageRequest<TestEntityC> req = new PageRequest<>();
+    req.setUriInfo(uriInfo);
+
+    PageResponse<TestEntityC> res = wingsPersistence.query(TestEntityC.class, req);
+
+    assertThat(res).isNotNull().hasSize(2);
+
+    queryParams.clear();
+    queryParams.put("testEntityBs", Lists.newArrayList(testEntityB2.getUuid()));
+
+    res = wingsPersistence.query(TestEntityC.class, req);
+
+    assertThat(res).isNotNull().hasSize(1);
+  }
+
+  /**
    * Should update map
    */
   @Test
@@ -404,6 +453,26 @@ public class WingsPersistenceTest extends WingsBaseTest {
     @Override
     public String toString() {
       return "TestEntityB [fieldB=" + fieldB + "]";
+    }
+  }
+
+  /**
+   * The Class TestEntity.
+   */
+  public static class TestEntityC extends Base {
+    @Reference(idOnly = true) private List<TestEntityB> testEntityBs;
+
+    public List<TestEntityB> getTestEntityBs() {
+      return testEntityBs;
+    }
+
+    public void setTestEntityBs(List<TestEntityB> testEntityBs) {
+      this.testEntityBs = testEntityBs;
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("testEntityBs", testEntityBs).toString();
     }
   }
 }

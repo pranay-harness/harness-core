@@ -10,6 +10,7 @@ import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
+import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -18,7 +19,9 @@ import static software.wings.common.NotificationMessageResolver.getDecoratedNoti
 import com.google.common.collect.ImmutableMap;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.EventType;
 import software.wings.beans.Orchestration;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -32,6 +35,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -65,6 +69,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private WorkflowService workflowService;
   @Inject private SetupService setupService;
   @Inject private NotificationService notificationService;
+  @Inject private HistoryService historyService;
 
   /**
    * {@inheritDoc}
@@ -148,6 +153,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION,
                 ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
             .build());
+    historyService.createAsync(aHistory()
+                                   .withEventType(EventType.CREATED)
+                                   .withAppId(environment.getAppId())
+                                   .withEntityType(EntityType.ENVIRONMENT)
+                                   .withEntityId(environment.getUuid())
+                                   .withEntityName(environment.getName())
+                                   .withEntityNewValue(environment)
+                                   .withShortDescription("Environment " + environment.getName() + " created")
+                                   .withTitle("Environment " + environment.getName() + " created")
+                                   .build());
     return environment;
   }
 
@@ -280,15 +295,26 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
     if (deleted) {
       executorService.submit(() -> {
+        serviceTemplateService.deleteByEnv(appId, envId);
+        tagService.deleteByEnv(appId, envId);
+        infraService.deleteByEnv(appId, envId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(environment.getAppId())
                 .withDisplayText(getDecoratedNotificationMessage(NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION,
                     ImmutableMap.of("ENTITY_TYPE", "Environment", "ENTITY_NAME", environment.getName())))
                 .build());
-        serviceTemplateService.deleteByEnv(appId, envId);
-        tagService.deleteByEnv(appId, envId);
-        infraService.deleteByEnv(appId, envId);
+        historyService.createAsync(aHistory()
+                                       .withEventType(EventType.DELETED)
+                                       .withAppId(environment.getAppId())
+                                       .withEntityType(EntityType.ENVIRONMENT)
+                                       .withEntityId(environment.getUuid())
+                                       .withEntityName(environment.getName())
+                                       .withEntityNewValue(environment)
+                                       .withShortDescription("Environment " + environment.getName() + " created")
+                                       .withTitle("Environment " + environment.getName() + " created")
+                                       .build());
+
       });
     }
   }

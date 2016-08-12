@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
@@ -20,8 +21,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.EventType;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.ResponseMessage;
@@ -34,6 +37,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.NotificationService;
@@ -66,6 +70,7 @@ public class HostServiceImpl implements HostService {
   @Inject private TagService tagService;
   @Inject private NotificationService notificationService;
   @Inject private EnvironmentService environmentService;
+  @Inject private HistoryService historyService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -244,6 +249,16 @@ public class HostServiceImpl implements HostService {
               .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
                   ImmutableMap.of("HOST_NAME", host.getHostName(), "ENV_NAME", environment.getName())))
               .build());
+      historyService.createAsync(aHistory()
+                                     .withEventType(EventType.CREATED)
+                                     .withAppId(host.getAppId())
+                                     .withEntityType(EntityType.HOST)
+                                     .withEntityId(host.getUuid())
+                                     .withEntityName(host.getHostName())
+                                     .withEntityNewValue(host)
+                                     .withShortDescription("Host " + host.getHostName() + " created")
+                                     .withTitle("Host " + host.getHostName() + " created")
+                                     .build());
     }
   }
 
@@ -253,6 +268,16 @@ public class HostServiceImpl implements HostService {
       if (delete) {
         serviceTemplateService.deleteHostFromTemplates(host);
       }
+      historyService.createAsync(aHistory()
+                                     .withEventType(EventType.DELETED)
+                                     .withAppId(host.getAppId())
+                                     .withEntityType(EntityType.HOST)
+                                     .withEntityId(host.getUuid())
+                                     .withEntityName(host.getHostName())
+                                     .withEntityNewValue(host)
+                                     .withShortDescription("Host " + host.getHostName() + " deleted")
+                                     .withTitle("Host " + host.getHostName() + " deleted")
+                                     .build());
       return delete;
     }
     return false;
@@ -320,6 +345,7 @@ public class HostServiceImpl implements HostService {
               .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
                   ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
               .build());
+      // TODO: history entry for bulk save
     }
 
     return aResponseMessage()
