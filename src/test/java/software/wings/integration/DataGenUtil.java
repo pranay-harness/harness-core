@@ -654,7 +654,7 @@ private boolean addOneConfigFileToEntity(String appId, String templateId, String
   File file = getTestFile(getName(configFileNames) + ".properties");
   FileDataBodyPart filePart = new FileDataBodyPart("file", file);
   FormDataMultiPart multiPart =
-      new FormDataMultiPart().field("name", file.getName()).field("relativePath", "./configs/");
+      new FormDataMultiPart().field("name", file.getName()).field("relativeFilePath", "./configs/");
   multiPart.bodyPart(filePart);
   Response response = getRequestWithAuthHeader(target).post(Entity.entity(multiPart, multiPart.getMediaType()));
   return response.getStatus() == 200;
