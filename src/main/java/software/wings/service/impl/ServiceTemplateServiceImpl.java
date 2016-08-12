@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.HOST;
@@ -11,7 +12,9 @@ import static software.wings.beans.EntityType.TAG;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.util.ArrayQueue;
 import org.mongodb.morphia.Key;
@@ -82,8 +85,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         template.setTaggedHosts(hostService.getHostsByTags(
             template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
       }
-      template.setConfigFiles(
-          configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template));
+      template.setConfigFiles(getOverrideFiles(template));
     });
     return pageResponse;
   }
@@ -118,6 +120,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       serviceTemplate.setTaggedHosts(
           hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
     }
+    serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
     return serviceTemplate;
   }
 
@@ -138,6 +141,42 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .field("service")
         .equal(serviceId)
         .asKeyList();
+  }
+
+  @Override
+  public List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId);
+    return getOverrideFiles(serviceTemplate);
+  }
+
+  private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
+    List<ConfigFile> serviceConfigFiles = configService.getConfigFilesForEntity(
+        template.getAppId(), DEFAULT_TEMPLATE_ID, template.getService().getUuid());
+    List<ConfigFile> overrideConfigFiles =
+        configService.getConfigFileByTemplate(template.getAppId(), template.getEnvId(), template);
+
+    ImmutableMap<String, ConfigFile> serviceConfigFilesMap =
+        Maps.uniqueIndex(serviceConfigFiles, ConfigFile::getRelativeFilePath);
+    ImmutableMap<String, ConfigFile> overridePathMap =
+        Maps.uniqueIndex(overrideConfigFiles, ConfigFile::getOverridePath);
+
+    overrideConfigFiles.forEach(configFile -> {
+      if (configFile.getEntityType().equals(TAG) || configFile.getEntityType().equals(HOST)) {
+        String path = configFile.getOverridePath();
+        while (!Strings.isNullOrEmpty(path)) {
+          String parentPath = substringBeforeLast(path, "/");
+          if (overridePathMap.containsKey(parentPath) && !parentPath.equals(path)) {
+            configFile.setOverriddenConfigFile(overridePathMap.get(parentPath));
+            break;
+          } else if (path.equals(parentPath)) {
+            configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getRelativeFilePath()));
+            break;
+          }
+          path = parentPath;
+        }
+      }
+    });
+    return overrideConfigFiles;
   }
 
   /* (non-Javadoc)

@@ -76,12 +76,16 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public String validateAndResolveFilePath(String relativePath, String fileName) {
+    if (!relativePath.endsWith(fileName)) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Relative file path doesn't end with uploaded file name");
+    }
+
     try {
       Path path = Paths.get(relativePath);
       if (path.isAbsolute()) {
         throw new WingsException(INVALID_ARGUMENT, "args", "Relative path can not be absolute");
       }
-      return path.resolve(fileName).normalize().toString();
+      return path.normalize().toString();
     } catch (InvalidPathException | NullPointerException ex) {
       throw new WingsException(INVALID_ARGUMENT, "args", "Invalid relativePath");
     }

@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
 import java.util.Objects;
@@ -39,6 +40,8 @@ public class ConfigFile extends BaseFile {
   @FormDataParam("relativeFilePath") private String relativeFilePath;
 
   private String overridePath;
+
+  @Transient private ConfigFile overriddenConfigFile;
 
   /**
    * Gets entity id.
@@ -146,6 +149,24 @@ public class ConfigFile extends BaseFile {
    */
   public void setEnvId(String envId) {
     this.envId = envId;
+  }
+
+  /**
+   * Gets overridden config file.
+   *
+   * @return the overridden config file
+   */
+  public ConfigFile getOverriddenConfigFile() {
+    return overriddenConfigFile;
+  }
+
+  /**
+   * Sets overridden config file.
+   *
+   * @param overriddenConfigFile the overridden config file
+   */
+  public void setOverriddenConfigFile(ConfigFile overriddenConfigFile) {
+    this.overriddenConfigFile = overriddenConfigFile;
   }
 
   @Override

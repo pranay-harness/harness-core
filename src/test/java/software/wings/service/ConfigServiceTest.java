@@ -119,7 +119,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
                                 .withName("NAME")
-                                .withRelativeFilePath("PATH")
+                                .withRelativeFilePath("PATH/" + FILE_NAME)
                                 .withFileName(FILE_NAME)
                                 .build();
     configService.save(configFile, inputStream);
@@ -303,10 +303,10 @@ public class ConfigServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldValidateAndResolveFilePath() throws Exception {
-    assertThat(configService.validateAndResolveFilePath("config", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/./", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/./", "")).isEqualTo("config");
+    assertThat(configService.validateAndResolveFilePath("config/abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> configService.validateAndResolveFilePath("/config", "abc.txt"))
         .withMessage(INVALID_ARGUMENT.name());

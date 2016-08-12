@@ -194,4 +194,11 @@ public class ServiceTemplateResource {
     pageRequest.addFilter("infraId", infraService.getInfraByEnvId(appId, envId), EQ);
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
+
+  @GET
+  @Path("{templateId}/override-files")
+  public RestResponse<List<ConfigFile>> overrideFiles(@QueryParam("envId") String envId,
+      @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
+    return new RestResponse<>(serviceTemplateService.getOverrideFiles(appId, envId, templateId));
+  }
 }
