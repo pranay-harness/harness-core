@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.sm.ExecutionStatus;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -32,6 +33,8 @@ public class WorkflowExecution extends Base {
   private CountsByStatuses breakdown;
 
   private ExecutionArgs executionArgs;
+  private LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap;
+  private List<InstanceStatusSummary> instanceStatusSummaries;
 
   /**
    * Gets name.
@@ -229,5 +232,21 @@ public class WorkflowExecution extends Base {
    */
   public void setExecutionArgs(ExecutionArgs executionArgs) {
     this.executionArgs = executionArgs;
+  }
+
+  public LinkedHashMap<String, ElementExecutionSummary> getServiceExecutionSummaryMap() {
+    return serviceExecutionSummaryMap;
+  }
+
+  public void setServiceExecutionSummaryMap(LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap) {
+    this.serviceExecutionSummaryMap = serviceExecutionSummaryMap;
+  }
+
+  public List<InstanceStatusSummary> getInstanceStatusSummaries() {
+    return instanceStatusSummaries;
+  }
+
+  public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
+    this.instanceStatusSummaries = instanceStatusSummaries;
   }
 }

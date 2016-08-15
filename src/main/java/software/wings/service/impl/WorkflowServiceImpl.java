@@ -7,7 +7,10 @@ package software.wings.service.impl;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.beans.ElementExecutionSummary.Builder.aServiceExecutionSummary;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
+import static software.wings.beans.InstanceStatusSummary.Builder.anInstanceStatusSummary;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -24,10 +27,12 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.api.ServiceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
 import software.wings.beans.CountsByStatuses;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
@@ -46,6 +51,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
@@ -81,6 +87,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -435,6 +442,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     res.forEach(this ::refreshBreakdown);
 
+    res.forEach(this ::refreshSummaries);
+
     if (!includeGraph) {
       return res;
     }
@@ -488,6 +497,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
     refreshBreakdown(workflowExecution);
+    refreshSummaries(workflowExecution);
     return workflowExecution;
   }
 
@@ -1154,6 +1164,31 @@ public class WorkflowServiceImpl implements WorkflowService {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     refreshBreakdown(workflowExecution);
     return workflowExecution.getBreakdown();
+  }
+
+  private void refreshSummaries(WorkflowExecution workflowExecution) {
+    if ((workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+            || workflowExecution.getStatus() == ExecutionStatus.FAILED
+            || workflowExecution.getStatus() == ExecutionStatus.ERROR
+            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)
+        && workflowExecution.getServiceExecutionSummaryMap() != null
+        && workflowExecution.getInstanceStatusSummaries() != null) {
+      return;
+    }
+
+    // TODO: hard coded data for the time being
+    workflowExecution.setInstanceStatusSummaries(Lists.newArrayList(
+        anInstanceStatusSummary().withInstancesCount(10).withFinalExecutionStatus(ExecutionStatus.SUCCESS).build()));
+
+    LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummary = new LinkedHashMap<>();
+    ServiceElement se = aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("service1").build();
+    serviceExecutionSummary.put(se.getUuid(),
+        aServiceExecutionSummary()
+            .withContextElement(se)
+            .withEndTs(workflowExecution.getLastUpdatedAt())
+            .withStartTs(workflowExecution.getCreatedAt())
+            .build());
+    workflowExecution.setServiceExecutionSummaryMap(serviceExecutionSummary);
   }
 
   private void refreshBreakdown(WorkflowExecution workflowExecution) {

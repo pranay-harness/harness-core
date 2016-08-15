@@ -12,7 +12,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.CountsByStatuses;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
@@ -112,7 +111,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     wingsPersistence.update(query, updateOps);
 
     try {
-      CountsByStatuses breakdown = workflowService.getBreakdown(appId, workflowExecutionId);
+      workflowService.getExecutionDetails(appId, workflowExecutionId);
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
     }
