@@ -1187,6 +1187,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             .withContextElement(se)
             .withEndTs(workflowExecution.getLastUpdatedAt())
             .withStartTs(workflowExecution.getCreatedAt())
+            .withInstancesCount(1)
             .build());
     workflowExecution.setServiceExecutionSummaryMap(serviceExecutionSummary);
   }
