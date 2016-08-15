@@ -285,7 +285,8 @@ public class ReleaseServiceImpl implements ReleaseService {
                                               .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
                                               .build())
                                .addFieldsIncluded("name", "envId")
-                               .<ServiceTemplate>build())
+                               .<ServiceTemplate>build(),
+                           false)
                        .getResponse()
                        .stream())
             .collect(groupingBy(ServiceTemplate::getEnvId));
@@ -313,7 +314,8 @@ public class ReleaseServiceImpl implements ReleaseService {
                                            .withField("service", EQ, wingsPersistence.getDatastore().getKey(service))
                                            .build())
                                    .addFieldsIncluded("name", "envId")
-                                   .<ServiceTemplate>build())
+                                   .<ServiceTemplate>build(),
+                             false)
                          .getResponse()
                          .stream())
               .collect(groupingBy(ServiceTemplate::getEnvId));

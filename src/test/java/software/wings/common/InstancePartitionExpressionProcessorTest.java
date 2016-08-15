@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -154,7 +155,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
 
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);

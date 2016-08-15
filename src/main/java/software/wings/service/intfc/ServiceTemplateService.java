@@ -27,9 +27,10 @@ public interface ServiceTemplateService {
    * List.
    *
    * @param pageRequest the page request
+   * @param withDetails
    * @return the page response
    */
-  PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest);
+  PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails);
 
   /**
    * Save.
@@ -81,9 +82,11 @@ public interface ServiceTemplateService {
    * @param appId             the app id
    * @param envId             the env id
    * @param serviceTemplateId the service template id
+   * @param withDetails
    * @return the service template
    */
-  ServiceTemplate get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId);
+  ServiceTemplate get(
+      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId, boolean withDetails);
 
   /**
    * Update hosts.

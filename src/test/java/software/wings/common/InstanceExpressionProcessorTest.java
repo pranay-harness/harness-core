@@ -6,6 +6,7 @@ package software.wings.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -129,7 +130,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
@@ -178,7 +179,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     PageRequest<ServiceInstance> pageRequest = processor.buildPageRequest();
 
@@ -229,7 +230,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1, instance2, instance3);
@@ -281,7 +282,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(paramList);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.withInstanceIds(instance1);
@@ -347,7 +348,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     processor.setServiceInstanceService(serviceInstanceServiceMock);
@@ -406,7 +407,7 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     context.pushContextElement(std);
 
     InstanceExpressionProcessor processor = new InstanceExpressionProcessor(context);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class))).thenReturn(new PageResponse<>());
+    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     processor.setServiceTemplateService(serviceTemplateServiceMock);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
 

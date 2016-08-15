@@ -295,14 +295,14 @@ public class HostServiceTest extends WingsBaseTest {
                             .build();
 
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
-    when(serviceTemplateService.get(APP_ID, ENV_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(serviceTemplateService.get(APP_ID, ENV_ID, TEMPLATE_ID, true)).thenReturn(serviceTemplate);
     when(tagService.get(APP_ID, ENV_ID, TAG_ID)).thenReturn(tag);
     when(wingsPersistence.saveAndGet(Host.class, hostPreSave)).thenReturn(hostPostSave);
 
     hostService.bulkSave(ENV_ID, requestHost);
 
     verify(wingsPersistence).saveAndGet(Host.class, hostPreSave);
-    verify(serviceTemplateService).get(APP_ID, ENV_ID, TEMPLATE_ID);
+    verify(serviceTemplateService).get(APP_ID, ENV_ID, TEMPLATE_ID, true);
     verify(tagService).get(APP_ID, ENV_ID, TAG_ID);
     verify(serviceTemplateService).addHosts(serviceTemplate, asList(hostPostSave));
     verify(notificationService).sendNotificationAsync(any(Notification.class));

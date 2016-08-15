@@ -78,15 +78,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * @see software.wings.service.intfc.ServiceTemplateService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest) {
+  public PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
-    pageResponse.getResponse().forEach(template -> {
-      if (template.getTags().size() != 0) {
-        template.setTaggedHosts(hostService.getHostsByTags(
-            template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
-      }
-      template.setConfigFiles(getOverrideFiles(template));
-    });
+    if (withDetails) {
+      pageResponse.getResponse().forEach(template -> {
+        if (template.getTags().size() != 0) {
+          template.setTaggedHosts(hostService.getHostsByTags(
+              template.getAppId(), template.getEnvId(), new ArrayList<>(template.getLeafTags())));
+        }
+        template.setConfigFiles(getOverrideFiles(template));
+      });
+    }
     return pageResponse;
   }
 
@@ -113,14 +115,16 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * @see software.wings.service.intfc.ServiceTemplateService#get(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public ServiceTemplate get(String appId, String envId, String serviceTemplateId) {
+  public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
     Validator.notNullCheck("ServiceTemplate", serviceTemplate);
-    if (serviceTemplate.getTags().size() != 0) {
-      serviceTemplate.setTaggedHosts(
-          hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
+    if (withDetails) {
+      if (serviceTemplate.getTags().size() != 0) {
+        serviceTemplate.setTaggedHosts(
+            hostService.getHostsByTags(appId, envId, new ArrayList<>(serviceTemplate.getLeafTags())));
+      }
+      serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
     }
-    serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
     return serviceTemplate;
   }
 
@@ -145,7 +149,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId);
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false);
     return getOverrideFiles(serviceTemplate);
   }
 
@@ -191,7 +195,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                            .filter(Objects::nonNull)
                            .collect(toList());
 
-    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
+    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
 
     if (serviceTemplate.getMappedBy().equals(TAG)) {
       serviceTemplate = updateTags(appId, envId, serviceTemplateId, asList()); // remove existing tags
@@ -205,7 +209,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
         ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hosts", hosts));
-    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
+    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true);
   }
 
   /* (non-Javadoc)
@@ -220,7 +224,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     List<Host> newHostsToBeMapped = hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
 
-    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId);
+    ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
     if (serviceTemplate.getMappedBy().equals(HOST)) {
       serviceTemplate = updateHosts(appId, envId, serviceTemplateId, emptyList()); // remove existing host mapping
       serviceTemplate.setMappedBy(TAG);

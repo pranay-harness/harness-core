@@ -122,7 +122,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", environment.getAppId(), SearchFilter.Operator.EQ);
     pageRequest.addFilter("envId", environment.getUuid(), EQ);
-    environment.setServiceTemplates(serviceTemplateService.list(pageRequest).getResponse());
+    environment.setServiceTemplates(serviceTemplateService.list(pageRequest, true).getResponse());
   }
 
   /**

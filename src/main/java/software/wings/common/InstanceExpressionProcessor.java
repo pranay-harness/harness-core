@@ -344,7 +344,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       pageRequestBuilder.addFilter(
           SearchFilter.Builder.aSearchFilter().withField("name", Operator.IN, serviceTemplateNames).build());
     }
-    return serviceTemplateService.list(pageRequestBuilder.build()).getResponse();
+    return serviceTemplateService.list(pageRequestBuilder.build(), false).getResponse();
   }
 
   private ServiceInstanceIdsParam getServiceInstanceIdsParam() {
