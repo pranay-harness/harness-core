@@ -129,7 +129,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceTemplate.class, pageRequest)).thenReturn(pageResponse);
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
-    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest);
+    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(pageRequest, true);
     assertThat(templatePageResponse).isInstanceOf(PageResponse.class);
     assertThat(pageResponse.getResponse().get(0)).isEqualTo(builder.withTaggedHosts(asList(host)).build());
     assertThat(templatePageResponse.getResponse().get(0).getTaggedHosts()).containsExactlyInAnyOrder(host);

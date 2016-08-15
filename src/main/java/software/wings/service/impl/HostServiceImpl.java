@@ -361,7 +361,7 @@ public class HostServiceImpl implements HostService {
     if (serviceTemplates != null) {
       serviceTemplates.stream()
           .filter(this ::isValidDbReference)
-          .map(serviceTemplate -> serviceTemplateService.get(appId, envId, serviceTemplate.getUuid()))
+          .map(serviceTemplate -> serviceTemplateService.get(appId, envId, serviceTemplate.getUuid(), true))
           .forEach(serviceTemplate -> {
             if (serviceTemplate == null) {
               throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "service mapping");
