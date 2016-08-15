@@ -3,5 +3,8 @@
     "ui:widget": "textarea",
     "classNames": "__execCommandTextarea"
   },
+  "tailPatterns": {
+    "classNames": "__execCommandTailPatterns"
+  },
   "ui:order": ["commandPath", "commandString", "tailFiles", "tailPatterns"]
 }
