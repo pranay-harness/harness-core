@@ -1,8 +1,10 @@
 package software.wings.rules;
 
+import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 
 import com.google.common.collect.Lists;
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.CurrentThreadExecutor;
 import software.wings.app.DatabaseModule;
+import software.wings.service.impl.EventEmitter;
 import software.wings.app.ExecutorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
@@ -156,9 +159,15 @@ public class WingsRule implements MethodRule {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    injector = Guice.createInjector(new ValidationModule(validatorFactory),
-        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration),
-        new ExecutorModule(executorService), new QueueModule(datastore));
+    injector = Guice.createInjector(
+        new AbstractModule() {
+          @Override
+          protected void configure() {
+            bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
+          }
+        },
+        new ValidationModule(validatorFactory), new DatabaseModule(datastore, datastore, distributedLockSvc),
+        new WingsModule(configuration), new ExecutorModule(executorService), new QueueModule(datastore));
 
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
