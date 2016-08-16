@@ -28,21 +28,6 @@ public class AppContainer extends BaseFile {
   private boolean standardUpload = false;
 
   /**
-   * Instantiates a new app container.
-   */
-  public AppContainer() {}
-
-  /**
-   * Instantiates a new app container.
-   *
-   * @param fileName the file name
-   * @param md5      the md5
-   */
-  public AppContainer(String fileName, String md5) {
-    super(fileName, md5);
-  }
-
-  /**
    * Is standard boolean.
    *
    * @return the boolean

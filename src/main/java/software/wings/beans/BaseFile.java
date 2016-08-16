@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -12,31 +11,13 @@ import java.util.Objects;
  * Created by anubhaw on 4/13/16.
  */
 public class BaseFile extends Base {
-  @NotEmpty @FormDataParam("name") private String name;
+  @FormDataParam("name") private String name;
   private String fileUuid;
   @NotEmpty private String fileName;
   private String mimeType;
   private long size;
   private ChecksumType checksumType = ChecksumType.MD5;
   @FormDataParam("md5") private String checksum;
-
-  /**
-   * Instantiates a new base file.
-   */
-  public BaseFile() {}
-
-  /**
-   * Instantiates a new base file.
-   *
-   * @param fileName the file name
-   * @param md5      the md5
-   */
-  public BaseFile(String fileName, String md5) {
-    this.name = fileName;
-    if (StringUtils.isNotBlank(md5)) {
-      this.checksum = md5;
-    }
-  }
 
   /**
    * Gets file uuid.
