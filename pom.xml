@@ -24,6 +24,8 @@
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
         <maven.javadoc.skip>true</maven.javadoc.skip>
+        <atmosphere-version>2.4.5</atmosphere-version>
+        <extensions-version>2.4.2</extensions-version>
     </properties>
 
     <repositories>
@@ -100,6 +102,23 @@
             <version>8.1.8.v20160420</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-runtime</artifactId>
+            <version>${atmosphere-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-server</artifactId>
+            <version>9.3.9.v20160517</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>5.0.3</version>
+        </dependency>
 
         <dependency>
             <groupId>org.mongodb</groupId>
@@ -136,11 +155,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
             <version>1.2</version>
         </dependency>
+
         <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
@@ -250,6 +271,7 @@
             <artifactId>json-path</artifactId>
             <version>2.2.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
