@@ -159,6 +159,9 @@ public interface WorkflowService {
    */
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
 
+  PageResponse<WorkflowExecution> listExecutions(
+      PageRequest<WorkflowExecution> pageRequest, boolean includeGraph, boolean runningOnly);
+
   /**
    * Trigger pipeline execution.
    *

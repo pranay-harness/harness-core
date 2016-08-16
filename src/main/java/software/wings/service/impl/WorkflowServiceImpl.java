@@ -436,6 +436,15 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
+    return listExecutions(pageRequest, includeGraph, false);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public PageResponse<WorkflowExecution> listExecutions(
+      PageRequest<WorkflowExecution> pageRequest, boolean includeGraph, boolean runningOnly) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (res == null || res.size() == 0) {
       return res;
@@ -448,7 +457,9 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      populateGraph(workflowExecution, null, null, null, false);
+      if (!runningOnly || workflowExecution.isRunningStatus()) {
+        populateGraph(workflowExecution, null, null, null, false);
+      }
     }
     return res;
   }
@@ -509,15 +520,20 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (nodeOps != Graph.NodeOps.COLLAPSE && requestedGroupId != null && !expandedGroupIds.contains(requestedGroupId)) {
       expandedGroupIds.add(requestedGroupId);
     }
-    List<StateExecutionInstance> instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
-    if (instances != null && instances.size() > 0 && (requestedGroupId == null || nodeOps == null)
-        && (expandedGroupIds == null || expandedGroupIds.isEmpty())) {
-      StateExecutionInstance firstLevelGroup = getFirstLevelGroup(instances);
-      if (firstLevelGroup != null) {
-        expandedGroupIds = Lists.newArrayList(firstLevelGroup.getUuid());
-        populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, detailsRequested);
-        return;
+
+    Boolean expandLastOnly = null;
+    List<StateExecutionInstance> instances;
+
+    if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
+      if (workflowExecution.isRunningStatus() || workflowExecution.isFailedStatus()
+          || workflowExecution.isPausedStatus()) {
+        instances = queryInstancesForRunningFailedPausedState(workflowExecution);
+      } else {
+        instances = queryAllInstances(workflowExecution);
+        expandLastOnly = true;
       }
+    } else {
+      instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
     }
 
     Map<String, StateExecutionInstance> instanceIdMap =
@@ -558,21 +574,50 @@ public class WorkflowServiceImpl implements WorkflowService {
       commandName = workflowExecution.getExecutionArgs().getCommandName();
     }
     Graph graph = graphRenderer.generateGraph(
-        instanceIdMap, sm.getInitialStateName(), expandedGroupIds, detailsRequested, commandName);
+        instanceIdMap, sm.getInitialStateName(), expandedGroupIds, commandName, expandLastOnly);
     workflowExecution.setGraph(graph);
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
   }
 
-  private StateExecutionInstance getFirstLevelGroup(List<StateExecutionInstance> instances) {
-    for (StateExecutionInstance instance : instances) {
-      if (instance.getStateType().equals(StateType.REPEAT.name())
-          || instance.getStateType().equals(StateType.FORK.name())) {
-        return instance;
-      }
-    }
-    return null;
+  private List<StateExecutionInstance> queryInstancesForRunningFailedPausedState(WorkflowExecution workflowExecution) {
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .field("appId")
+            .equal(workflowExecution.getAppId())
+            .field("executionUuid")
+            .equal(workflowExecution.getUuid())
+            .field("status")
+            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
+                ExecutionStatus.ABORTING, ExecutionStatus.FAILED, ExecutionStatus.ERROR, ExecutionStatus.ABORTED,
+                ExecutionStatus.PAUSED));
+
+    List<StateExecutionInstance> childInstances = wingsPersistence.executeGetListQuery(query);
+    List<String> parentInstanceIds = childInstances.stream()
+                                         .filter(ins -> ins.getParentInstanceId() != null)
+                                         .map(StateExecutionInstance::getParentInstanceId)
+                                         .collect(Collectors.toList());
+
+    Query<StateExecutionInstance> queryByParentId = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                                        .field("appId")
+                                                        .equal(workflowExecution.getAppId())
+                                                        .field("executionUuid")
+                                                        .equal(workflowExecution.getUuid());
+
+    queryByParentId.or(
+        query.criteria("parentInstanceId").doesNotExist(), query.criteria("parentInstanceId").in(parentInstanceIds));
+    return wingsPersistence.executeGetListQuery(queryByParentId);
+  }
+
+  private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field("appId")
+                                              .equal(workflowExecution.getAppId())
+                                              .field("executionUuid")
+                                              .equal(workflowExecution.getUuid());
+
+    return wingsPersistence.executeGetListQuery(query);
   }
 
   private boolean pausedNodesFound(WorkflowExecution workflowExecution) {

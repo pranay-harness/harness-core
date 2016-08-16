@@ -940,17 +940,23 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     graph = res.get(0).getGraph();
     assertThat(graph.getNodes())
-        .hasSize(4)
+        .hasSize(6)
         .extracting("y")
         .containsExactly(DEFAULT_INITIAL_Y, DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT,
             DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT,
+            DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT,
+            DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT,
             DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT);
     assertThat(graph.getNodes())
-        .hasSize(4)
+        .hasSize(6)
         .extracting("x")
         .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING,
             DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING,
-            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING);
+            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING + DEFAULT_ELEMENT_NODE_WIDTH
+                + DEFAULT_ARROW_WIDTH,
+            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING,
+            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING + DEFAULT_ELEMENT_NODE_WIDTH
+                + DEFAULT_ARROW_WIDTH);
   }
 
   /**
@@ -1081,7 +1087,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .extracting("uuid", "status")
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
-    assertThat(execution.getExpandedGroupIds()).isEmpty();
+    assertThat(execution.getExpandedGroupIds()).hasSize(3); // 3 level
 
     graph = execution.getGraph();
     assertThat(graph).isNotNull().extracting("nodes", "links").doesNotContainNull();
@@ -1091,11 +1097,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes())
         .filteredOn("name", "RepeatByInstances")
         .hasSize(2)
-        .allMatch(n
-            -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && !n.isExpanded()
-                && n.getGroup() == null && n.getNext() != null);
+        .allMatch(n -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && n.getNext() != null);
     assertThat(graph.getNodes()).filteredOn("name", "svcRepeatWait").hasSize(2);
-    assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
+    assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").hasSize(2);
     assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
 
     List<Node> repeatByInstances =

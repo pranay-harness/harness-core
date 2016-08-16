@@ -78,8 +78,11 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
-    // TODO : interpret includeGraph and then request to include graph
-    return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
+    boolean includeGraphFlag = true;
+    if (includeGraph != null && includeGraph) {
+      includeGraphFlag = includeGraph;
+    }
+    return new RestResponse<>(workflowService.listExecutions(pageRequest, includeGraphFlag, true));
   }
 
   /**

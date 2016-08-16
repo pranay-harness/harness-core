@@ -249,4 +249,19 @@ public class WorkflowExecution extends Base {
   public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
     this.instanceStatusSummaries = instanceStatusSummaries;
   }
+
+  public boolean isRunningStatus() {
+    return status != null
+        && (status == ExecutionStatus.NEW || status == ExecutionStatus.STARTING || status == ExecutionStatus.RUNNING
+               || status == ExecutionStatus.ABORTING);
+  }
+
+  public boolean isFailedStatus() {
+    return status != null
+        && (status == ExecutionStatus.FAILED || status == ExecutionStatus.ABORTED || status == ExecutionStatus.ERROR);
+  }
+
+  public boolean isPausedStatus() {
+    return status != null && status == ExecutionStatus.PAUSED;
+  }
 }

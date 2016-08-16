@@ -56,12 +56,12 @@ public class GraphRenderer {
    * @param instanceIdMap    the instance id map
    * @param initialStateName the initial state name
    * @param expandedGroupIds the expanded group ids
-   * @param detailsRequested the details requested
    * @param commandName      the command name
+   * @param expandLastOnly
    * @return the graph
    */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, boolean detailsRequested, String commandName) {
+      List<String> expandedGroupIds, String commandName, Boolean expandLastOnly) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -112,12 +112,13 @@ public class GraphRenderer {
         "generateNodeHierarchy invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
         instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
-    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null);
+    generateNodeHierarchy(
+        instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null, expandLastOnly);
 
     Graph graph = new Graph();
     extrapolateDimension(originNode);
-    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y, detailsRequested, true);
-    if (detailsRequested && StringUtils.isNotBlank(commandName)) {
+    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    if (StringUtils.isNotBlank(commandName)) {
       replaceCommandNodeName(graph.getNodes(), commandName);
     }
     logger.debug("graph generated: {}", graph);
@@ -136,7 +137,7 @@ public class GraphRenderer {
 
   private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      StateExecutionData elementStateExecutionData) {
+      StateExecutionData elementStateExecutionData, Boolean expandLastOnly) {
     logger.debug("generateNodeHierarchy requested- node: {}", node);
     StateExecutionInstance instance = instanceIdMap.get(node.getId());
 
@@ -144,7 +145,7 @@ public class GraphRenderer {
       elementStateExecutionData.setStartTs(instance.getStartTs());
     }
 
-    if (parentIdElementsMap.get(node.getId()) != null) {
+    if ((expandLastOnly == null || expandLastOnly) && parentIdElementsMap.get(node.getId()) != null) {
       Group group = new Group();
       group.setId(node.getId() + "-group");
       logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
@@ -166,34 +167,23 @@ public class GraphRenderer {
       if (elements == null) {
         elements = parentIdElementsMap.get(node.getId()).keySet();
       }
+      int i = 0;
       for (String element : elements) {
-        Node elementNode =
-            Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
-        group.getElements().add(elementNode);
-        logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
-        Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
-        StateExecutionData executionData = new StateExecutionData();
-        if (elementRepeatNode != null) {
-          elementNode.setNext(elementRepeatNode);
-          logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
-          generateNodeHierarchy(
-              instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode, executionData);
-        }
-        if (executionData.getStatus() == null) {
-          executionData.setStatus(ExecutionStatus.QUEUED);
-        }
-        elementNode.setStatus(executionData.getStatus().name());
-        elementNode.setExecutionSummary(executionData.getExecutionSummary());
-        elementNode.setExecutionDetails(executionData.getExecutionDetails());
+        generateElement(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, node,
+            expandLastOnly == null ? null : (i == elements.size() - 1), group, element);
+        i++;
       }
+    }
+    if (expandLastOnly != null && !expandLastOnly) {
+      node.setExpanded(false);
     }
 
     if (prevInstanceIdMap.get(node.getId()) != null) {
       Node nextNode = prevInstanceIdMap.get(node.getId());
       logger.debug("generateNodeHierarchy nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
-      generateNodeHierarchy(
-          instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode, elementStateExecutionData);
+      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode,
+          elementStateExecutionData, expandLastOnly);
     } else {
       if (elementStateExecutionData != null) {
         StateExecutionData executionData = instance.getStateExecutionData();
@@ -206,7 +196,30 @@ public class GraphRenderer {
     }
   }
 
-  private void paintGraph(Group group, Graph graph, int x, int y, boolean detailsRequested, boolean topLevel) {
+  private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
+      Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
+      Boolean expandLastOnly, Group group, String element) {
+    Node elementNode =
+        Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
+    group.getElements().add(elementNode);
+    logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
+    Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);
+    StateExecutionData executionData = new StateExecutionData();
+    if (elementRepeatNode != null) {
+      elementNode.setNext(elementRepeatNode);
+      logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
+      generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode,
+          executionData, expandLastOnly);
+    }
+    if (executionData.getStatus() == null) {
+      executionData.setStatus(ExecutionStatus.QUEUED);
+    }
+    elementNode.setStatus(executionData.getStatus().name());
+    elementNode.setExecutionSummary(executionData.getExecutionSummary());
+    elementNode.setExecutionDetails(executionData.getExecutionDetails());
+  }
+
+  private void paintGraph(Group group, Graph graph, int x, int y) {
     group.setX(x);
     group.setY(y);
     graph.addNode(group);
@@ -214,7 +227,7 @@ public class GraphRenderer {
     y += DEFAULT_ARROW_HEIGHT;
     Node priorElement = null;
     for (Node node : group.getElements()) {
-      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y, detailsRequested, false);
+      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);
       y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
       priorElement = node;
     }
@@ -225,30 +238,26 @@ public class GraphRenderer {
     }
   }
 
-  private void paintGraph(Node node, Graph graph, int x, int y, boolean detailsRequested, boolean topLevel) {
+  private void paintGraph(Node node, Graph graph, int x, int y) {
     node.setX(x);
     node.setY(y);
     graph.addNode(node);
 
-    if (!detailsRequested && !topLevel) {
-      return;
-    }
-
     Group group = node.getGroup();
     if (group != null) {
-      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT, detailsRequested, topLevel);
+      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT);
     }
 
     Node next = node.getNext();
     if (next != null) {
       if (group == null || next.getGroup() == null) {
         if (node.getType().equals("ELEMENT")) {
-          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y, detailsRequested, topLevel);
+          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
         } else {
-          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y, detailsRequested, topLevel);
+          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
         }
       } else {
-        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y, detailsRequested, topLevel);
+        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
       }
       graph.addLink(Link.Builder.aLink()
                         .withId(UUIDGenerator.getUuid())
