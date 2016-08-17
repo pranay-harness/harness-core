@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.common.Constants;
 import software.wings.sm.TransitionType;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -959,9 +958,7 @@ public class Graph {
   /**
    * The Class Link.
    */
-  public static class Link implements Serializable {
-    private static final long serialVersionUID = 7894954599933362678L;
-
+  public static class Link {
     private String id;
     private String from;
     private String to;

@@ -793,7 +793,6 @@ public class StateMachineTest extends WingsBaseTest {
    * The Class TestStateExecutionData.
    */
   public static class TestStateExecutionData extends StateExecutionData {
-    private static final long serialVersionUID = -4839494609772157079L;
     private String key;
     private String value;
 
