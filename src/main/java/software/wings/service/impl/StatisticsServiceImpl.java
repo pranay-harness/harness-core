@@ -120,7 +120,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                                                         .build();
     DeploymentStatistics otherDeploymentStatistics = aDeploymentStatistics()
                                                          .withEnvironmentType(OTHER)
-                                                         .withAvgTimeChange(otherDeploymentInLast30Days)
+                                                         .withCount(otherDeploymentInLast30Days)
                                                          .withCountChange(0)
                                                          .withAvgTime(otherDeploymentAvgTime)
                                                          .withAvgTimeChange(0)
