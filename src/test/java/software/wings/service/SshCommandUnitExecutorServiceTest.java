@@ -206,7 +206,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD).build();
     ScpCommandUnit commandUnit = aScpCommandUnit()
                                      .withCommandUnitType(CommandUnitType.SCP)
-                                     .withFileBucket(ARTIFACTS)
                                      .withDestinationDirectoryPath(FILE_PATH)
                                      .withFileCategory(ScpFileCategory.ARTIFACTS)
                                      .build();
@@ -214,8 +213,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, commandUnit, commandExecutionContext);
     verify(sshPwdAuthExecutor)
-        .copyGridFsFiles(
-            commandUnit.getDestinationDirectoryPath(), commandUnit.getFileBucket(), commandUnit.getFileIds());
+        .copyGridFsFiles(commandUnit.getDestinationDirectoryPath(), ARTIFACTS,
+            Lists.newArrayList(org.apache.commons.lang3.tuple.Pair.of(FILE_ID, null)));
   }
 
   /**
