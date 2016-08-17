@@ -6,6 +6,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -39,7 +40,6 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +81,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
                            .build())
+            .addFilter(aSearchFilter().withField("status", Operator.EQ, SUCCESS).build())
             .build();
 
     List<WorkflowExecution> workflowExecutionsForFirst30Days =
@@ -101,14 +102,14 @@ public class StatisticsServiceImpl implements StatisticsService {
                      .filter(workflowExecution -> prodEnvironments.contains(workflowExecution.getEnvId()))
                      .mapToLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))
                      .sum()
-              / prodDeploymentInLast30Days);
+              / (60 * 1000 * prodDeploymentInLast30Days));
     int otherDeploymentAvgTime = otherDeploymentInLast30Days == 0
         ? 0
         : (int) (workflowExecutionsForFirst30Days.stream()
                      .filter(workflowExecution -> otherEnvironments.contains(workflowExecution.getEnvId()))
                      .mapToLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))
                      .sum()
-              / otherDeploymentInLast30Days);
+              / (60 * 1000 * otherDeploymentInLast30Days));
 
     DeploymentStatistics prodDeploymentStatistics = aDeploymentStatistics()
                                                         .withEnvironmentType(PROD)
@@ -147,7 +148,6 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
-    Map<Long, Integer> deploymentActivityByDay = new HashMap<>(30);
 
     Map<Long, Long> longLongMap = workflowExecutions.stream().collect(
         Collectors.groupingBy(wfl -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000), Collectors.counting()));
