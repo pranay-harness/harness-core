@@ -42,8 +42,8 @@ public class EventEmitterTest {
    */
   @Test
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
-    when(broadcasterFactory.lookup("/stream/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
-    when(broadcasterFactory.lookup("/stream/artifacts")).thenReturn(broadcaster);
+    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
+    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts")).thenReturn(broadcaster);
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
     verify(broadcaster).broadcast(event);
@@ -57,7 +57,7 @@ public class EventEmitterTest {
    */
   @Test
   public void shouldSendToGeneralChannelWhenIdChannelNotConnected() throws Exception {
-    when(broadcasterFactory.lookup("/stream/artifacts")).thenReturn(broadcaster);
+    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts")).thenReturn(broadcaster);
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
     verify(broadcaster).broadcast(event);
@@ -71,10 +71,10 @@ public class EventEmitterTest {
    */
   @Test
   public void shouldSendToIdChannelWhenGeneralChannelNotConnected() throws Exception {
-    when(broadcasterFactory.lookup("/stream/artifacts")).thenReturn(broadcaster);
+    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
-    verify(broadcaster).broadcast(event);
-    verifyZeroInteractions(specificBroadcaster);
+    verify(specificBroadcaster).broadcast(event);
+    verifyZeroInteractions(broadcaster);
   }
 }

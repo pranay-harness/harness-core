@@ -30,12 +30,13 @@ public class EventEmitter {
    * @param event   the event
    */
   public void send(Channel channel, Event event) {
-    if (isNotBlank(event.getUuid())
-        && broadcasterFactory.lookup("/stream/" + channel.getChannelName() + "/" + event.getUuid()) != null) {
-      broadcasterFactory.lookup("/stream/" + channel.getChannelName() + "/" + event.getUuid()).broadcast(event);
+    String globalChannelId = "/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
+        + event.getServiceId() + "/" + channel.getChannelName();
+
+    if (isNotBlank(event.getUuid()) && broadcasterFactory.lookup(globalChannelId + "/" + event.getUuid()) != null) {
+      broadcasterFactory.lookup(globalChannelId + "/" + event.getUuid()).broadcast(event);
     }
-    Optional.ofNullable(broadcasterFactory.lookup("/stream/" + channel.getChannelName()))
-        .ifPresent(o -> ((Broadcaster) o).broadcast(event));
+    Optional.ofNullable(broadcasterFactory.lookup(globalChannelId)).ifPresent(o -> ((Broadcaster) o).broadcast(event));
   }
 
   /**
