@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ErrorCodes.ERROR_IN_GETTING_CHANNEL_STREAMS;
 import static software.wings.beans.ErrorCodes.INVALID_CREDENTIAL;
 import static software.wings.beans.ErrorCodes.INVALID_EXECUTION_ID;
@@ -209,20 +210,22 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public ExecutionResult copyGridFsFiles(
-      String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileIds) {
-    return gridFsFileIds.stream()
-        .map(fileId
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
+    return fileNamesIds.stream()
+        .map(fileNamesId
             -> scpOneFile(destinationDirectoryPath,
                 new FileProvider() {
                   @Override
                   public Pair<String, Long> getInfo() throws IOException {
-                    GridFSFile gridFSFile = fileService.getGridFsFile(fileId, fileBucket);
-                    return ImmutablePair.of(gridFSFile.getFilename(), gridFSFile.getLength());
+                    GridFSFile gridFSFile = fileService.getGridFsFile(fileNamesId.getKey(), fileBucket);
+                    return ImmutablePair.of(
+                        isBlank(fileNamesId.getRight()) ? gridFSFile.getFilename() : fileNamesId.getRight(),
+                        gridFSFile.getLength());
                   }
 
                   @Override
                   public void downloadToStream(OutputStream outputStream) throws IOException {
-                    fileService.downloadToStream(fileId, outputStream, fileBucket);
+                    fileService.downloadToStream(fileNamesId.getKey(), outputStream, fileBucket);
                   }
                 }))
         .filter(executionResult -> executionResult == ExecutionResult.FAILURE)

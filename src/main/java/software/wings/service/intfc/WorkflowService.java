@@ -159,6 +159,14 @@ public interface WorkflowService {
    */
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph);
 
+  /**
+   * List executions page response.
+   *
+   * @param pageRequest  the page request
+   * @param includeGraph the include graph
+   * @param runningOnly  the running only
+   * @return the page response
+   */
   PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph, boolean runningOnly);
 

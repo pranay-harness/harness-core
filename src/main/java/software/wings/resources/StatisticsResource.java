@@ -18,7 +18,6 @@ import javax.ws.rs.Produces;
 /**
  * Created by anubhaw on 8/15/16.
  */
-
 @Api("/statistics")
 @Path("/statistics")
 @Produces("application/json")
@@ -27,18 +26,33 @@ import javax.ws.rs.Produces;
 public class StatisticsResource {
   @Inject private StatisticsService statisticsService;
 
+  /**
+   * Cards rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("summary")
   public RestResponse<List<WingsStatistics>> cards() {
     return new RestResponse<>(statisticsService.getSummary());
   }
 
+  /**
+   * Deployment activities rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("deployment-activities")
   public RestResponse<DeploymentActivityStatistics> deploymentActivities() {
     return new RestResponse<>(statisticsService.getDeploymentActivities());
   }
 
+  /**
+   * Top consumers rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("top-consumers")
   public RestResponse<WingsStatistics> topConsumers() {

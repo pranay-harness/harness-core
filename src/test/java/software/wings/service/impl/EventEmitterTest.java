@@ -35,6 +35,11 @@ public class EventEmitterTest {
 
   @Mock private Broadcaster specificBroadcaster;
 
+  /**
+   * Should send to both id and general channel.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
     when(broadcasterFactory.lookup("/stream/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
@@ -45,6 +50,11 @@ public class EventEmitterTest {
     verify(specificBroadcaster).broadcast(event);
   }
 
+  /**
+   * Should send to general channel when id channel not connected.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendToGeneralChannelWhenIdChannelNotConnected() throws Exception {
     when(broadcasterFactory.lookup("/stream/artifacts")).thenReturn(broadcaster);
@@ -54,6 +64,11 @@ public class EventEmitterTest {
     verifyZeroInteractions(specificBroadcaster);
   }
 
+  /**
+   * Should send to id channel when general channel not connected.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSendToIdChannelWhenGeneralChannelNotConnected() throws Exception {
     when(broadcasterFactory.lookup("/stream/artifacts")).thenReturn(broadcaster);

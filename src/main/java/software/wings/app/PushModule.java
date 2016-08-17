@@ -16,6 +16,11 @@ import javax.servlet.ServletRegistration.Dynamic;
 public class PushModule extends AbstractModule {
   private BroadcasterFactory broadcasterFactory;
 
+  /**
+   * Instantiates a new Push module.
+   *
+   * @param environment the environment
+   */
   public PushModule(Environment environment) {
     AtmosphereServlet atmosphereServlet = new AtmosphereServlet();
     atmosphereServlet.framework()

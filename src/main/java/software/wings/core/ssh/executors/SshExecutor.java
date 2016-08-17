@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -39,10 +40,11 @@ public interface SshExecutor {
    *
    * @param destinationDirectoryPath the destination directory path
    * @param fileBucket               the file bucket
-   * @param gridFsFileId             the grid fs file id
+   * @param fileNamesIds             the grid fs file id
    * @return the execution result
    */
-  ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> gridFsFileId);
+  ExecutionResult copyGridFsFiles(
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
 
   /**
    * Scp files execution result.

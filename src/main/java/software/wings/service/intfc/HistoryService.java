@@ -15,6 +15,11 @@ public interface HistoryService {
    */
   void create(History history);
 
+  /**
+   * Create async.
+   *
+   * @param history the history
+   */
   void createAsync(History history);
 
   /**
