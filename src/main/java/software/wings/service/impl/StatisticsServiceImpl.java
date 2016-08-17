@@ -1,6 +1,11 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.Environment.EnvironmentType.OTHER;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -10,17 +15,19 @@ import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
-import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.Release;
+import software.wings.beans.Environment;
+import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActiveReleaseStatistics;
 import software.wings.beans.stats.ApplicationCountStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -32,8 +39,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -49,53 +60,128 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Override
   public List<WingsStatistics> getSummary() {
     List<Application> applications = appService.list(new PageRequest<>(), false, 0).getResponse();
-    ImmutableMap<String, Application> appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
 
-    PageResponse<WorkflowExecution> workflowExecutions = workflowService.listExecutions(new PageRequest<>(), false);
+    Set<String> prodEnvironments = applications.stream()
+                                       .flatMap(application -> application.getEnvironments().stream())
+                                       .filter(environment -> environment.getEnvironmentType().equals(PROD))
+                                       .map(Environment::getUuid)
+                                       .collect(Collectors.toSet());
 
-    wingsPersistence.getDatastore().createAggregation(Application.class);
+    Set<String> otherEnvironments = applications.stream()
+                                        .flatMap(application -> application.getEnvironments().stream())
+                                        .filter(environment -> !environment.getEnvironmentType().equals(PROD))
+                                        .map(Environment::getUuid)
+                                        .collect(Collectors.toSet());
+
+    PageRequest pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter()
+                           .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
+                           .build())
+            .addFilter(aSearchFilter()
+                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                           .build())
+            .build();
+
+    List<WorkflowExecution> workflowExecutionsForFirst30Days =
+        workflowService.listExecutions(pageRequest, false).getResponse();
+
+    int prodDeploymentInLast30Days =
+        (int) workflowExecutionsForFirst30Days.stream()
+            .filter(workflowExecution -> prodEnvironments.contains(workflowExecution.getEnvId()))
+            .count();
+    int otherDeploymentInLast30Days =
+        (int) workflowExecutionsForFirst30Days.stream()
+            .filter(workflowExecution -> otherEnvironments.contains(workflowExecution.getEnvId()))
+            .count();
+
+    int prodDeploymentAvgTime = prodDeploymentInLast30Days == 0
+        ? 0
+        : (int) (workflowExecutionsForFirst30Days.stream()
+                     .filter(workflowExecution -> prodEnvironments.contains(workflowExecution.getEnvId()))
+                     .mapToLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))
+                     .sum()
+              / prodDeploymentInLast30Days);
+    int otherDeploymentAvgTime = otherDeploymentInLast30Days == 0
+        ? 0
+        : (int) (workflowExecutionsForFirst30Days.stream()
+                     .filter(workflowExecution -> otherEnvironments.contains(workflowExecution.getEnvId()))
+                     .mapToLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))
+                     .sum()
+              / otherDeploymentInLast30Days);
+
+    DeploymentStatistics prodDeploymentStatistics = aDeploymentStatistics()
+                                                        .withEnvironmentType(PROD)
+                                                        .withCount(prodDeploymentInLast30Days)
+                                                        .withCountChange(0)
+                                                        .withAvgTime(prodDeploymentAvgTime)
+                                                        .withAvgTimeChange(0)
+                                                        .build();
+    DeploymentStatistics otherDeploymentStatistics = aDeploymentStatistics()
+                                                         .withEnvironmentType(OTHER)
+                                                         .withAvgTimeChange(otherDeploymentInLast30Days)
+                                                         .withCountChange(0)
+                                                         .withAvgTime(otherDeploymentAvgTime)
+                                                         .withAvgTimeChange(0)
+                                                         .build();
 
     int numberOfApplications = appService.list(new PageRequest<>(), false, 0).getResponse().size();
     int numberOfActiveReleases =
-        (int) releaseService.list(new PageRequest<>()).getResponse().stream().filter(Release::isActive).count();
+        5; //(int) releaseService.list(new PageRequest<>()).getResponse().stream().filter(Release::isActive).count();
 
-    return Arrays.asList(aDeploymentStatistics()
-                             .withEnvironmentType(EnvironmentType.PROD)
-                             .withCount(30)
-                             .withCountChange(2)
-                             .withAvgTime(24)
-                             .withAvgTimeChange(-1)
-                             .build(),
-        aDeploymentStatistics()
-            .withEnvironmentType(EnvironmentType.OTHER)
-            .withCount(65)
-            .withCountChange(10)
-            .withAvgTime(15)
-            .withAvgTimeChange(2)
-            .build(),
+    return Arrays.asList(prodDeploymentStatistics, otherDeploymentStatistics,
         new ActiveReleaseStatistics(numberOfActiveReleases), new ApplicationCountStatistics(numberOfApplications));
   }
 
   @Override
   public DeploymentActivityStatistics getDeploymentActivities() {
-    return new DeploymentActivityStatistics(ImmutableMap.of(1470355200L, 70, 1470787200L, 25, 1471219200L, 100));
+    PageRequest pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter()
+                           .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
+                           .build())
+            .addFilter(aSearchFilter()
+                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                           .build())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+
+    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    Map<Long, Integer> deploymentActivityByDay = new HashMap<>(30);
+
+    Map<Long, Long> longLongMap = workflowExecutions.stream().collect(
+        Collectors.groupingBy(wfl -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000), Collectors.counting()));
+
+    return new DeploymentActivityStatistics(longLongMap);
+  }
+
+  public WingsStatistics getActiveReleases() {
+    long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(30);
+    List<Activity> activities = wingsPersistence.createQuery(Activity.class)
+                                    .field("createdAt")
+                                    .greaterThanOrEq(epochMilli)
+                                    .field("releaseId")
+                                    .exists()
+                                    .retrievedFields(true, "releaseId")
+                                    .asList();
+    return new ActiveReleaseStatistics(
+        activities.stream().map(Activity::getReleaseId).collect(Collectors.toSet()).size());
   }
 
   @Override
   public WingsStatistics getTopConsumers() {
     List<Application> applications = appService.list(new PageRequest<>(), false, 0).getResponse();
     ImmutableMap<String, Application> appIdMap = Maps.uniqueIndex(applications, Application::getUuid);
-    List<TopConsumer> topConsumers = getTopConsumerForPastXDays(30);
+    List<TopConsumer> topConsumers = getTopConsumerForPastXDays(30)
+                                         .stream()
+                                         .filter(tc -> appIdMap.containsKey(tc.getAppId()))
+                                         .collect(Collectors.toList());
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
     return new TopConsumersStatistics(topConsumers);
   }
 
   private List<TopConsumer> getTopConsumerForPastXDays(int days) {
-    long epochMilli = LocalDate.now(ZoneId.systemDefault())
-                          .minus(days, ChronoUnit.DAYS)
-                          .atStartOfDay(ZoneId.systemDefault())
-                          .toInstant()
-                          .toEpochMilli();
+    long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
     Iterator<TopConsumer> topConsumerIterator =
         wingsPersistence.getDatastore()
             .createAggregation(Activity.class)
@@ -104,5 +190,13 @@ public class StatisticsServiceImpl implements StatisticsService {
             .aggregate(TopConsumer.class);
 
     return IteratorUtils.toList(topConsumerIterator);
+  }
+
+  private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
+    return LocalDate.now(ZoneId.systemDefault())
+        .minus(days, ChronoUnit.DAYS)
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli();
   }
 }
