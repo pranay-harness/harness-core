@@ -1061,7 +1061,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/corsDomains: https:\/\/localhost:8000/corsDomains: http:\/\/wingsci.s3-website-us-east-1.amazonaws.com/' config.yml"
+                                         command="sed -i 's/corsDomains: https:\/\/localhost:8000/corsDomains: https:\/\/ci.wings.software/' config.yml"
                                          timeout="120000"/>
                                 <echo message="start server"/>
                                 <sshexec trust="true" failonerror="true"
