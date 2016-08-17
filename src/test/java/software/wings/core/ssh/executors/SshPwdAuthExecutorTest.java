@@ -228,6 +228,11 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
   }
 
+  /**
+   * Should transfer grid fs file with different name.
+   *
+   * @throws IOException the io exception
+   */
   @RealMongo
   @Test
   public void shouldTransferGridFSFileWithDifferentName() throws IOException {

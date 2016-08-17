@@ -126,6 +126,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    * Should list catalogs for.
    *
    * @param catalogNameForDisplay the catalog name for display
+   * @param settingAttribute      the setting attribute
    */
   @Test
   @TestCaseName("{method}{0}")

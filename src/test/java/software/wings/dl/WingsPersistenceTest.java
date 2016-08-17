@@ -462,10 +462,20 @@ public class WingsPersistenceTest extends WingsBaseTest {
   public static class TestEntityC extends Base {
     @Reference(idOnly = true) private List<TestEntityB> testEntityBs;
 
+    /**
+     * Gets test entity bs.
+     *
+     * @return the test entity bs
+     */
     public List<TestEntityB> getTestEntityBs() {
       return testEntityBs;
     }
 
+    /**
+     * Sets test entity bs.
+     *
+     * @param testEntityBs the test entity bs
+     */
     public void setTestEntityBs(List<TestEntityB> testEntityBs) {
       this.testEntityBs = testEntityBs;
     }

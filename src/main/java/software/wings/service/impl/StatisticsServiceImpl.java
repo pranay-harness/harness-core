@@ -155,6 +155,11 @@ public class StatisticsServiceImpl implements StatisticsService {
     return new DeploymentActivityStatistics(longLongMap);
   }
 
+  /**
+   * Gets active releases.
+   *
+   * @return the active releases
+   */
   public WingsStatistics getActiveReleases() {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(30);
     List<Activity> activities = wingsPersistence.createQuery(Activity.class)

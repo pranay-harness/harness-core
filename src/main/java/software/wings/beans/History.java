@@ -176,34 +176,74 @@ public class History extends Base {
     this.shortDescription = shortDescription;
   }
 
+  /**
+   * Gets entity old value class.
+   *
+   * @return the entity old value class
+   */
   public String getEntityOldValueClass() {
     return entityOldValueClass;
   }
 
+  /**
+   * Sets entity old value class.
+   *
+   * @param entityOldValueClass the entity old value class
+   */
   public void setEntityOldValueClass(String entityOldValueClass) {
     this.entityOldValueClass = entityOldValueClass;
   }
 
+  /**
+   * Gets entity new value class.
+   *
+   * @return the entity new value class
+   */
   public String getEntityNewValueClass() {
     return entityNewValueClass;
   }
 
+  /**
+   * Sets entity new value class.
+   *
+   * @param entityNewValueClass the entity new value class
+   */
   public void setEntityNewValueClass(String entityNewValueClass) {
     this.entityNewValueClass = entityNewValueClass;
   }
 
+  /**
+   * Gets entity old value str.
+   *
+   * @return the entity old value str
+   */
   public String getEntityOldValueStr() {
     return entityOldValueStr;
   }
 
+  /**
+   * Sets entity old value str.
+   *
+   * @param entityOldValueStr the entity old value str
+   */
   public void setEntityOldValueStr(String entityOldValueStr) {
     this.entityOldValueStr = entityOldValueStr;
   }
 
+  /**
+   * Gets entity new value str.
+   *
+   * @return the entity new value str
+   */
   public String getEntityNewValueStr() {
     return entityNewValueStr;
   }
 
+  /**
+   * Sets entity new value str.
+   *
+   * @param entityNewValueStr the entity new value str
+   */
   public void setEntityNewValueStr(String entityNewValueStr) {
     this.entityNewValueStr = entityNewValueStr;
   }
@@ -228,6 +268,9 @@ public class History extends Base {
     }
   }
 
+  /**
+   * On load.
+   */
   @PostLoad
   public void onLoad() {
     if (entityOldValueClass != null && entityOldValueStr != null) {

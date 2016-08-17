@@ -270,7 +270,7 @@ public class CommandExecutionContext {
    *
    * @param destinationDirectoryPath the destination directory path
    * @param fileBucket               the file bucket
-   * @param fileNamesIds                  the file ids
+   * @param fileNamesIds             the file ids
    * @return the execution result
    */
   public ExecutionResult copyGridFsFiles(

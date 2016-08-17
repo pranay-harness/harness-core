@@ -8,15 +8,30 @@ import java.util.List;
 public class TopConsumersStatistics extends WingsStatistics {
   private List<TopConsumer> topConsumers;
 
+  /**
+   * Instantiates a new Top consumers statistics.
+   *
+   * @param topConsumers the top consumers
+   */
   public TopConsumersStatistics(List<TopConsumer> topConsumers) {
     super(StatisticsType.TOP_CONSUMERS);
     this.topConsumers = topConsumers;
   }
 
+  /**
+   * Gets top consumers.
+   *
+   * @return the top consumers
+   */
   public List<TopConsumer> getTopConsumers() {
     return topConsumers;
   }
 
+  /**
+   * Sets top consumers.
+   *
+   * @param topConsumers the top consumers
+   */
   public void setTopConsumers(List<TopConsumer> topConsumers) {
     this.topConsumers = topConsumers;
   }

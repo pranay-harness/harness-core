@@ -234,33 +234,68 @@ public class WorkflowExecution extends Base {
     this.executionArgs = executionArgs;
   }
 
+  /**
+   * Gets service execution summary map.
+   *
+   * @return the service execution summary map
+   */
   public LinkedHashMap<String, ElementExecutionSummary> getServiceExecutionSummaryMap() {
     return serviceExecutionSummaryMap;
   }
 
+  /**
+   * Sets service execution summary map.
+   *
+   * @param serviceExecutionSummaryMap the service execution summary map
+   */
   public void setServiceExecutionSummaryMap(LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap) {
     this.serviceExecutionSummaryMap = serviceExecutionSummaryMap;
   }
 
+  /**
+   * Gets instance status summaries.
+   *
+   * @return the instance status summaries
+   */
   public List<InstanceStatusSummary> getInstanceStatusSummaries() {
     return instanceStatusSummaries;
   }
 
+  /**
+   * Sets instance status summaries.
+   *
+   * @param instanceStatusSummaries the instance status summaries
+   */
   public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
     this.instanceStatusSummaries = instanceStatusSummaries;
   }
 
+  /**
+   * Is running status boolean.
+   *
+   * @return the boolean
+   */
   public boolean isRunningStatus() {
     return status != null
         && (status == ExecutionStatus.NEW || status == ExecutionStatus.STARTING || status == ExecutionStatus.RUNNING
                || status == ExecutionStatus.ABORTING);
   }
 
+  /**
+   * Is failed status boolean.
+   *
+   * @return the boolean
+   */
   public boolean isFailedStatus() {
     return status != null
         && (status == ExecutionStatus.FAILED || status == ExecutionStatus.ABORTED || status == ExecutionStatus.ERROR);
   }
 
+  /**
+   * Is paused status boolean.
+   *
+   * @return the boolean
+   */
   public boolean isPausedStatus() {
     return status != null && status == ExecutionStatus.PAUSED;
   }

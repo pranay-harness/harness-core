@@ -124,10 +124,6 @@ public class ForkState extends State {
     return forkStateNames;
   }
 
-  @SchemaIgnore
-  public String getForkElementName(String state) {
-    return "Fork-" + state;
-  }
   /**
    * Sets fork state names.
    *
@@ -136,6 +132,17 @@ public class ForkState extends State {
   @SchemaIgnore
   public void setForkStateNames(List<String> forkStateNames) {
     this.forkStateNames = forkStateNames;
+  }
+
+  /**
+   * Gets fork element name.
+   *
+   * @param state the state
+   * @return the fork element name
+   */
+  @SchemaIgnore
+  public String getForkElementName(String state) {
+    return "Fork-" + state;
   }
 
   /**

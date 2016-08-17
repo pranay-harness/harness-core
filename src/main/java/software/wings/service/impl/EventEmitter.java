@@ -14,10 +14,21 @@ import java.util.Optional;
 public class EventEmitter {
   private BroadcasterFactory broadcasterFactory;
 
+  /**
+   * Instantiates a new Event emitter.
+   *
+   * @param broadcasterFactory the broadcaster factory
+   */
   public EventEmitter(BroadcasterFactory broadcasterFactory) {
     this.broadcasterFactory = broadcasterFactory;
   }
 
+  /**
+   * Send.
+   *
+   * @param channel the channel
+   * @param event   the event
+   */
   public void send(Channel channel, Event event) {
     if (isNotBlank(event.getUuid())
         && broadcasterFactory.lookup("/stream/" + channel.getChannelName() + "/" + event.getUuid()) != null) {
@@ -27,7 +38,13 @@ public class EventEmitter {
         .ifPresent(o -> ((Broadcaster) o).broadcast(event));
   }
 
+  /**
+   * The enum Channel.
+   */
   public enum Channel {
+    /**
+     * Artifacts channel.
+     */
     ARTIFACTS("artifacts");
 
     private String channelName;

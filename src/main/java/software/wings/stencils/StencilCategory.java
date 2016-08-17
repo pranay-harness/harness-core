@@ -57,6 +57,7 @@ public enum StencilCategory {
   StencilCategory(Integer displayOrder) {
     this(null, displayOrder);
   }
+
   StencilCategory(String displayName) {
     if (displayName == null) {
       this.displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());

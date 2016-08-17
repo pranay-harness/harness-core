@@ -7,8 +7,6 @@ import static software.wings.beans.Event.Builder.anEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.service.impl.EventEmitter;
-import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
@@ -16,6 +14,8 @@ import software.wings.beans.ArtifactSource;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Release;
 import software.wings.core.queue.AbstractQueueListener;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.NotificationService;

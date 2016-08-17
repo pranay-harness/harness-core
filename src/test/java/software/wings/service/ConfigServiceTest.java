@@ -57,18 +57,27 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/9/16.
  */
 public class ConfigServiceTest extends WingsBaseTest {
+  /**
+   * The Query.
+   */
+  @Mock Query<ConfigFile> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private FileService fileService;
   @Mock private TagService tagService;
   @Mock private HostService hostService;
   @Mock private ServiceResourceService serviceResourceService;
-
-  @Mock Query<ConfigFile> query;
-  @Mock FieldEnd end;
-
   @Inject @InjectMocks private ConfigService configService;
   private InputStream inputStream;
 
+  /**
+   * Sets up.
+   *
+   * @throws IOException the io exception
+   */
   @Before
   public void setUp() throws IOException {
     inputStream = IOUtils.toInputStream("Some content", "UTF-8");
@@ -77,6 +86,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(end.equal(any())).thenReturn(query);
   }
 
+  /**
+   * Should list.
+   */
   @Test
   public void shouldList() {
     ConfigFile configFile = aConfigFile()
@@ -109,6 +121,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThat(configFiles.getResponse().get(0)).isInstanceOf(ConfigFile.class);
   }
 
+  /**
+   * Should save.
+   */
   @Test
   public void shouldSave() {
     ConfigFile configFile = aConfigFile()
@@ -128,6 +143,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(wingsPersistence).save(configFile);
   }
 
+  /**
+   * Should throw exception for unsupported entity types.
+   */
   @Test
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
     ConfigFile configFile = aConfigFile()
@@ -142,6 +160,9 @@ public class ConfigServiceTest extends WingsBaseTest {
         .isThrownBy(() -> configService.save(configFile, inputStream));
   }
 
+  /**
+   * Should get.
+   */
   @Test
   public void shouldGet() {
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID))
@@ -151,6 +172,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThat(configFile.getUuid()).isEqualTo(FILE_ID);
   }
 
+  /**
+   * Should get config file by template.
+   */
   @Test
   public void shouldGetConfigFileByTemplate() {
     ServiceTemplate serviceTemplate =
@@ -177,6 +201,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThat(configFiles.get(0)).isEqualTo(configFile);
   }
 
+  /**
+   * Should download.
+   */
   @Test
   public void shouldDownload() {
     ConfigFile configFile = aConfigFile()
@@ -201,6 +228,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThat(file.getName()).isEqualTo(FILE_NAME);
   }
 
+  /**
+   * Should update.
+   */
   @Test
   public void shouldUpdate() {
     ConfigFile configFile = aConfigFile()
@@ -230,6 +260,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     assertThat(updateMap.get("name")).isEqualTo(FILE_NAME);
   }
 
+  /**
+   * Should delete.
+   */
   @Test
   public void shouldDelete() {
     ConfigFile configFile = aConfigFile()
@@ -252,6 +285,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
   }
 
+  /**
+   * Should get config files for entity.
+   */
   @Test
   public void shouldGetConfigFilesForEntity() {
     ConfigFile configFile = aConfigFile()
@@ -272,6 +308,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(end).equal("ENTITY_ID");
   }
 
+  /**
+   * Should delete by entity id.
+   */
   @Test
   public void shouldDeleteByEntityId() {
     ConfigFile configFile = aConfigFile()
@@ -301,6 +340,11 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
   }
 
+  /**
+   * Should validate and resolve file path.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldValidateAndResolveFilePath() throws Exception {
     assertThat(configService.validateAndResolveFilePath("config/abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
