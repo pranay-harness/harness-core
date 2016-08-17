@@ -102,7 +102,7 @@ public class MongoHelper {
   }
 
   private static <T> Query<T> applyOperator(FieldEnd<? extends Query<T>> fieldEnd, SearchFilter filter) {
-    if (ArrayUtils.isEmpty(filter.getFieldValues())) {
+    if (!filter.getOp().equals(Operator.EXISTS) && ArrayUtils.isEmpty(filter.getFieldValues())) {
       throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Unspecified fieldValue for search");
     }
     Operator op = filter.getOp();
@@ -130,6 +130,9 @@ public class MongoHelper {
 
       case NOT_IN:
         return fieldEnd.hasNoneOf(Arrays.asList(filter.getFieldValues()));
+
+      case EXISTS:
+        return fieldEnd.exists();
     }
     return null;
   }

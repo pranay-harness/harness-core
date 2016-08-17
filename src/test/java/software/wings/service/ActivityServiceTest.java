@@ -73,7 +73,7 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Test
   public void shouldListActivities() {
     wingsPersistence.save(activity);
-    assertThat(activityService.list(APP_ID, ENV_ID, new PageRequest<>())).hasSize(1).containsExactly(activity);
+    assertThat(activityService.list(new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
 
   /**

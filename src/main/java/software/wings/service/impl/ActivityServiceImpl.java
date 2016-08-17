@@ -4,7 +4,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
@@ -39,10 +38,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private LogService logService;
 
   @Override
-  public PageResponse<Activity> list(String appId, String envId, PageRequest<Activity> pageRequest) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("environmentId", envId, EQ);
-
+  public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
     return wingsPersistence.query(Activity.class, pageRequest);
   }
 

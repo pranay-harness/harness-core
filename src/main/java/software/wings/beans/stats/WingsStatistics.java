@@ -14,5 +14,12 @@ public abstract class WingsStatistics {
     return type;
   }
 
-  public enum StatisticsType { DEPLOYMENT, ACTIVE_RELEASES, APPLICATION_COUNT, DEPLOYMENT_ACTIVITIES, TOP_CONSUMERS }
+  public enum StatisticsType {
+    DEPLOYMENT,
+    ACTIVE_RELEASES,
+    ACTIVE_ARTIFACTS,
+    APPLICATION_COUNT,
+    DEPLOYMENT_ACTIVITIES,
+    TOP_CONSUMERS
+  }
 }
