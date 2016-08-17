@@ -69,7 +69,9 @@ public class StatisticsServiceImpl implements StatisticsService {
   public List<WingsStatistics> getSummary() {
     List<WingsStatistics> summaryStats = new ArrayList<>();
 
-    List<Application> applications = appService.list(new PageRequest<>(), false, 0).getResponse();
+    List<Application> applications =
+        appService.list(PageRequest.Builder.aPageRequest().addFieldsIncluded("environments").build(), false, 0)
+            .getResponse();
 
     summaryStats.add(new ActiveReleaseStatistics(getActiveReleases()));
     summaryStats.add(new ActiveArtifactStatistics(getActiveArtifacts()));
@@ -80,9 +82,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     return summaryStats;
   }
 
-  private void addDeploymentStatistics(List<WingsStatistics> statisticses, List<Application> applications) {
-    List<DeploymentStatistics> currentDeploymentStats = getDeploymentStatisticsesForRangeOfDays(applications, 30, -1);
-    List<DeploymentStatistics> oldDeploymentStats = getDeploymentStatisticsesForRangeOfDays(applications, 60, 30);
+  private void addDeploymentStatistics(List<WingsStatistics> statisticsList, List<Application> applications) {
+    List<DeploymentStatistics> currentDeploymentStats = getDeploymentStatisticsForRangeOfDays(applications, 30, 0);
+    List<DeploymentStatistics> oldDeploymentStats = getDeploymentStatisticsForRangeOfDays(applications, 60, 30);
 
     if (oldDeploymentStats != null && oldDeploymentStats.size() == currentDeploymentStats.size()) {
       IntStream.of(0, 1).forEach(idx -> {
@@ -96,10 +98,10 @@ public class StatisticsServiceImpl implements StatisticsService {
         currentDeploymentStats.get(idx).setAvgTimeChange(avgTimeChange);
       });
     }
-    statisticses.addAll(currentDeploymentStats);
+    statisticsList.addAll(currentDeploymentStats);
   }
 
-  private List<DeploymentStatistics> getDeploymentStatisticsesForRangeOfDays(
+  private List<DeploymentStatistics> getDeploymentStatisticsForRangeOfDays(
       List<Application> applications, int daysFrom, int daysTo) {
     Map<EnvironmentType, Set<String>> envUuidListByType =
         applications.stream()
