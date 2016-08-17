@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.summingLong;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.beans.Activity.Status.COMPLETED;
 import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -210,6 +211,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
+            .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
             .addFilter(aSearchFilter().withField("releaseId", Operator.EXISTS).build())
             .addFieldsIncluded("releaseId")
             .build();
@@ -223,6 +225,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
+            .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
             .addFilter(aSearchFilter().withField("artifactId", Operator.EXISTS).build())
             .addFieldsIncluded("artifactId")
             .build();

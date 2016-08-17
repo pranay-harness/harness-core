@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.WingsStatistics;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.StatisticsService;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import javax.ws.rs.Produces;
  */
 @Api("/statistics")
 @Path("/statistics")
+@AuthRule
 @Produces("application/json")
 @Timed
 @ExceptionMetered
