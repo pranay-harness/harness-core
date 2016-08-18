@@ -79,6 +79,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -788,7 +789,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
-      WorkflowExecutionUpdate workflowExecutionUpdate, ContextElement... contextElements) {
+      WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
+      ContextElement... contextElements) {
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
         List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
@@ -829,6 +831,16 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+
+        List<ServiceElement> services = new ArrayList<>();
+        artifacts.forEach(artifact -> {
+          artifact.getServices().forEach(service -> {
+            ServiceElement se = new ServiceElement();
+            MapperUtils.mapObject(service, se);
+            services.add(se);
+          });
+        });
+        stdParams.setServices(services);
       }
     }
 
@@ -844,6 +856,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
     WingsDeque<ContextElement> elements = new WingsDeque<>();
+    elements.push(stdParams);
     if (contextElements != null) {
       for (ContextElement contextElement : contextElements) {
         elements.push(contextElement);

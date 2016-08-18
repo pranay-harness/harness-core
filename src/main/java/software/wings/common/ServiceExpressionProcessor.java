@@ -8,18 +8,20 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.ArrayUtils;
 import software.wings.api.ServiceElement;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExpressionProcessor;
+import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.MapperUtils;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +49,9 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
 
   private String[] serviceNames;
   private ExecutionContextImpl context;
+  private String appId;
 
+  private List<ServiceElement> selectedServices;
   /**
    * Instantiates a new service expression processor.
    *
@@ -127,31 +131,16 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<ServiceElement> list() {
-    String appId = context.getApp().getUuid();
-
-    List<Service> services = null;
-
-    Builder pageRequest =
-        PageRequest.Builder.aPageRequest()
-            .withLimit(PageRequest.UNLIMITED)
-            .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build());
-
     if (ArrayUtils.isEmpty(serviceNames)) {
       ServiceElement element = context.getContextElement(ContextElementType.SERVICE);
-      if (element != null) {
-        services = Lists.newArrayList(serviceResourceService.get(appId, element.getUuid()));
-      } else {
-        services = serviceResourceService.list(pageRequest.build());
+      if (element != null)
+        return Lists.newArrayList(element);
+      else {
+        return getSelectedServices();
       }
-    } else if (Misc.isWildCharPresent(serviceNames)) {
-      services = serviceResourceService.list(pageRequest.build());
-      services = matchingServices(services, serviceNames);
     } else {
-      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter().withField("name", Operator.IN, serviceNames).build());
-      services = serviceResourceService.list(pageRequest.build());
+      return matchingServices(getSelectedServices(), serviceNames);
     }
-
-    return convertToServiceElements(services);
   }
 
   /**
@@ -161,7 +150,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
    * @param names    the names
    * @return the list
    */
-  List<Service> matchingServices(List<Service> services, String... names) {
+  List<ServiceElement> matchingServices(List<ServiceElement> services, String... names) {
     if (services == null) {
       return null;
     }
@@ -171,8 +160,8 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
       patterns.add(Pattern.compile(name.replaceAll("\\" + Constants.WILD_CHAR, "." + Constants.WILD_CHAR)));
     }
 
-    List<Service> matchingServices = new ArrayList<>();
-    for (Service service : services) {
+    List<ServiceElement> matchingServices = new ArrayList<>();
+    for (ServiceElement service : services) {
       for (Pattern pattern : patterns) {
         Matcher matcher = pattern.matcher(service.getName());
         if (matcher.matches()) {
@@ -195,6 +184,33 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     return elements;
+  }
+
+  private String getAppId() {
+    if (appId == null) {
+      appId = context.getApp().getUuid();
+    }
+    return appId;
+  }
+
+  private List<ServiceElement> getSelectedServices() {
+    if (selectedServices == null) {
+      WorkflowStandardParams stdParams = context.getContextElement(ContextElementType.STANDARD);
+      if (stdParams == null) {
+        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Standard params is null");
+      }
+      selectedServices = stdParams.getServices();
+    }
+
+    if (selectedServices == null) {
+      Builder pageRequest =
+          PageRequest.Builder.aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, getAppId()).build());
+      List<Service> services = serviceResourceService.list(pageRequest.build());
+      selectedServices = convertToServiceElements(services);
+    }
+    return selectedServices;
   }
 
   /**
