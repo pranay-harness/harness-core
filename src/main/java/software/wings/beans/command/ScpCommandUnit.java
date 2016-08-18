@@ -5,10 +5,12 @@ import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFACTS;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.AppContainer;
 import software.wings.exception.WingsException;
@@ -18,7 +20,6 @@ import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,9 +37,6 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
 
-  @SchemaIgnore private List<String> fileIds = new ArrayList<>();
-  @SchemaIgnore private FileBucket fileBucket;
-
   /**
    * Instantiates a new Scp command unit.
    */
@@ -48,15 +46,18 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Override
   public ExecutionResult execute(CommandExecutionContext context) {
+    List<Pair<String, String>> fileIds = Lists.newArrayList();
+    FileBucket fileBucket = null;
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
-        context.getArtifact().getArtifactFiles().forEach(artifactFile -> fileIds.add(artifactFile.getFileUuid()));
+        context.getArtifact().getArtifactFiles().forEach(
+            artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
         break;
       case APPLICATION_STACK:
-        setFileBucket(FileBucket.PLATFORMS);
+        fileBucket = FileBucket.PLATFORMS;
         AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
-        fileIds.add(appContainer.getFileUuid());
+        fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:
         throw new WingsException(INVALID_REQUEST, "message", "Unsupported file category for copy step");
@@ -90,44 +91,6 @@ public class ScpCommandUnit extends CommandUnit {
   }
 
   /**
-   * Gets file ids.
-   *
-   * @return the file ids
-   */
-  @SchemaIgnore
-  public List<String> getFileIds() {
-    return fileIds;
-  }
-
-  /**
-   * Sets file ids.
-   *
-   * @param fileIds the file ids
-   */
-  public void setFileIds(List<String> fileIds) {
-    this.fileIds = fileIds;
-  }
-
-  /**
-   * Gets file bucket.
-   *
-   * @return the file bucket
-   */
-  @SchemaIgnore
-  public FileBucket getFileBucket() {
-    return fileBucket;
-  }
-
-  /**
-   * Sets file bucket.
-   *
-   * @param fileBucket the file bucket
-   */
-  public void setFileBucket(FileBucket fileBucket) {
-    this.fileBucket = fileBucket;
-  }
-
-  /**
    * Gets destination directory path.
    *
    * @return the destination directory path
@@ -147,7 +110,7 @@ public class ScpCommandUnit extends CommandUnit {
 
   @Override
   public int hashCode() {
-    return Objects.hash(fileCategory, fileIds, fileBucket, destinationDirectoryPath);
+    return Objects.hash(fileCategory, destinationDirectoryPath);
   }
 
   @Override
@@ -159,8 +122,7 @@ public class ScpCommandUnit extends CommandUnit {
       return false;
     }
     final ScpCommandUnit other = (ScpCommandUnit) obj;
-    return Objects.equals(this.fileCategory, other.fileCategory) && Objects.equals(this.fileIds, other.fileIds)
-        && Objects.equals(this.fileBucket, other.fileBucket)
+    return Objects.equals(this.fileCategory, other.fileCategory)
         && Objects.equals(this.destinationDirectoryPath, other.destinationDirectoryPath);
   }
 
@@ -168,8 +130,6 @@ public class ScpCommandUnit extends CommandUnit {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("fileCategory", fileCategory)
-        .add("fileIds", fileIds)
-        .add("fileBucket", fileBucket)
         .add("destinationDirectoryPath", destinationDirectoryPath)
         .toString();
   }
@@ -216,8 +176,6 @@ public class ScpCommandUnit extends CommandUnit {
    */
   public static final class Builder {
     private ScpFileCategory fileCategory;
-    private List<String> fileIds = new ArrayList<>();
-    private FileBucket fileBucket;
     private String destinationDirectoryPath;
     private String name;
     private CommandUnitType commandUnitType;
@@ -243,28 +201,6 @@ public class ScpCommandUnit extends CommandUnit {
      */
     public Builder withFileCategory(ScpFileCategory fileCategory) {
       this.fileCategory = fileCategory;
-      return this;
-    }
-
-    /**
-     * With file ids builder.
-     *
-     * @param fileIds the file ids
-     * @return the builder
-     */
-    public Builder withFileIds(List<String> fileIds) {
-      this.fileIds = fileIds;
-      return this;
-    }
-
-    /**
-     * With file bucket builder.
-     *
-     * @param fileBucket the file bucket
-     * @return the builder
-     */
-    public Builder withFileBucket(FileBucket fileBucket) {
-      this.fileBucket = fileBucket;
       return this;
     }
 
@@ -331,8 +267,6 @@ public class ScpCommandUnit extends CommandUnit {
     public Builder but() {
       return aScpCommandUnit()
           .withFileCategory(fileCategory)
-          .withFileIds(fileIds)
-          .withFileBucket(fileBucket)
           .withDestinationDirectoryPath(destinationDirectoryPath)
           .withName(name)
           .withCommandUnitType(commandUnitType)
@@ -348,8 +282,6 @@ public class ScpCommandUnit extends CommandUnit {
     public ScpCommandUnit build() {
       ScpCommandUnit scpCommandUnit = new ScpCommandUnit();
       scpCommandUnit.setFileCategory(fileCategory);
-      scpCommandUnit.setFileIds(fileIds);
-      scpCommandUnit.setFileBucket(fileBucket);
       scpCommandUnit.setDestinationDirectoryPath(destinationDirectoryPath);
       scpCommandUnit.setName(name);
       scpCommandUnit.setCommandUnitType(commandUnitType);

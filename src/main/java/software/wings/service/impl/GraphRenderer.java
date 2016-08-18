@@ -57,7 +57,7 @@ public class GraphRenderer {
    * @param initialStateName the initial state name
    * @param expandedGroupIds the expanded group ids
    * @param commandName      the command name
-   * @param expandLastOnly
+   * @param expandLastOnly   the expand last only
    * @return the graph
    */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,

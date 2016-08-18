@@ -38,6 +38,9 @@ import java.util.List;
  * @author Rishi
  */
 public class ServiceExpressionProcessorTest {
+  /**
+   * The Mockito rule.
+   */
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private String appId = UUIDGenerator.getUuid();
 

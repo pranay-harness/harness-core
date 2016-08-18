@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
 
+import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Artifact;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.ServiceInstance;
@@ -269,10 +270,11 @@ public class CommandExecutionContext {
    *
    * @param destinationDirectoryPath the destination directory path
    * @param fileBucket               the file bucket
-   * @param fileIds                  the file ids
+   * @param fileNamesIds             the file ids
    * @return the execution result
    */
-  public ExecutionResult copyGridFsFiles(String destinationDirectoryPath, FileBucket fileBucket, List<String> fileIds) {
+  public ExecutionResult copyGridFsFiles(
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     throw new UnsupportedOperationException();
   }
 

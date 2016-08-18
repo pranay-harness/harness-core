@@ -65,6 +65,8 @@ public enum EntityType {
   /**
    * Instance entity type.
    */
-  INSTANCE,
+  INSTANCE, /**
+             * Application entity type.
+             */
   APPLICATION;
 }

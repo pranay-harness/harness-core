@@ -3,6 +3,7 @@ package software.wings.collect;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.Event.Builder.anEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +11,11 @@ import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.ArtifactFile;
 import software.wings.beans.ArtifactSource;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Release;
 import software.wings.core.queue.AbstractQueueListener;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.NotificationService;
@@ -35,6 +39,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   @Inject private NotificationService notificationService;
 
   @Inject private Map<String, ArtifactCollectorService> artifactCollectorServiceMap;
+  @Inject private EventEmitter eventEmitter;
 
   /* (non-Javadoc)
    * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
@@ -44,6 +49,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
     Artifact artifact = message.getArtifact();
     try {
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING);
+      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
+
       Release release = message.getArtifact().getRelease();
 
       ArtifactSource artifactSource = release.get(artifact.getArtifactSourceName());
@@ -56,9 +63,9 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       } else {
         throw new FileNotFoundException("unable to collect artifact ");
       }
-
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
+      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
 
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
@@ -70,6 +77,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
+      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
     }
   }
 }

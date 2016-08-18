@@ -104,7 +104,7 @@ public class ActivityResourceTest {
     PageResponse<Activity> pageResponse = new PageResponse<>();
     pageResponse.setResponse(Lists.newArrayList(ACTUAL_ACTIVITY));
     pageResponse.setTotal(1);
-    when(ACTIVITY_SERVICE.list(anyString(), anyString(), any(PageRequest.class))).thenReturn(pageResponse);
+    when(ACTIVITY_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
     when(ACTIVITY_SERVICE.get(anyString(), anyString())).thenReturn(ACTUAL_ACTIVITY);
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
@@ -125,10 +125,12 @@ public class ActivityResourceTest {
 
     assertThat(restResponse.getResource()).isInstanceOf(PageResponse.class);
     PageRequest<Activity> expectedPageRequest = new PageRequest<>();
+    expectedPageRequest.addFilter("appId", APP_ID, Operator.EQ);
+    expectedPageRequest.addFilter("environmentId", ENV_ID, Operator.EQ);
     expectedPageRequest.setOffset("0");
     expectedPageRequest.setLimit("50");
 
-    verify(ACTIVITY_SERVICE).list(APP_ID, ENV_ID, expectedPageRequest);
+    verify(ACTIVITY_SERVICE).list(expectedPageRequest);
   }
 
   /**

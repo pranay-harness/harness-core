@@ -1,23 +1,38 @@
 package software.wings.beans.stats;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Created by anubhaw on 8/15/16.
  */
 public class TopConsumersStatistics extends WingsStatistics {
-  Map<String, Integer> topConsumers;
+  private List<TopConsumer> topConsumers;
 
-  public TopConsumersStatistics(Map<String, Integer> topConsumers) {
+  /**
+   * Instantiates a new Top consumers statistics.
+   *
+   * @param topConsumers the top consumers
+   */
+  public TopConsumersStatistics(List<TopConsumer> topConsumers) {
     super(StatisticsType.TOP_CONSUMERS);
     this.topConsumers = topConsumers;
   }
 
-  public Map<String, Integer> getTopConsumers() {
+  /**
+   * Gets top consumers.
+   *
+   * @return the top consumers
+   */
+  public List<TopConsumer> getTopConsumers() {
     return topConsumers;
   }
 
-  public void setTopConsumers(Map<String, Integer> topConsumers) {
+  /**
+   * Sets top consumers.
+   *
+   * @param topConsumers the top consumers
+   */
+  public void setTopConsumers(List<TopConsumer> topConsumers) {
     this.topConsumers = topConsumers;
   }
 }

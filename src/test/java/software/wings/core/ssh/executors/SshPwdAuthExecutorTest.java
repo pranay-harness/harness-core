@@ -17,6 +17,7 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.io.CharStreams;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -222,9 +223,36 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
     String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
     executor.init(configBuilder.but().build());
 
-    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(fileId))).isEqualTo(SUCCESS);
+    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(fileId, null)))).isEqualTo(SUCCESS);
 
     assertThat(new File(sshRoot.getRoot(), "text.txt")).hasSameContentAs(file).canRead().canWrite();
+  }
+
+  /**
+   * Should transfer grid fs file with different name.
+   *
+   * @throws IOException the io exception
+   */
+  @RealMongo
+  @Test
+  public void shouldTransferGridFSFileWithDifferentName() throws IOException {
+    File file = testFolder.newFile();
+    CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
+
+    ConfigFile appConfigFile = aConfigFile()
+                                   .withName("FILE_NAME")
+                                   .withTemplateId("TEMPLATE_ID")
+                                   .withEntityId("ENTITY_ID")
+                                   .withRelativeFilePath("/configs/")
+                                   .withFileName("text.txt")
+                                   .build();
+    FileInputStream fileInputStream = new FileInputStream(file);
+    String fileId = fileService.saveFile(appConfigFile, fileInputStream, CONFIGS);
+    executor.init(configBuilder.but().build());
+
+    assertThat(executor.copyGridFsFiles("/", CONFIGS, asList(Pair.of(fileId, "text1.txt")))).isEqualTo(SUCCESS);
+
+    assertThat(new File(sshRoot.getRoot(), "text1.txt")).hasSameContentAs(file).canRead().canWrite();
   }
 
   /**

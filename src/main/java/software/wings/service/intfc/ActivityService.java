@@ -23,7 +23,7 @@ public interface ActivityService {
    * @param pageRequest the page request
    * @return the page response
    */
-  PageResponse<Activity> list(@NotEmpty String appId, @NotEmpty String envId, PageRequest<Activity> pageRequest);
+  PageResponse<Activity> list(PageRequest<Activity> pageRequest);
 
   /**
    * Gets the.

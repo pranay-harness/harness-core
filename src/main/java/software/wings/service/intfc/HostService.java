@@ -77,7 +77,7 @@ public interface HostService {
    * Import hosts.
    *
    * @param appId              the app id
-   * @param envId            the infra id
+   * @param envId              the infra id
    * @param boundedInputStream the bounded input stream
    * @return the int
    */

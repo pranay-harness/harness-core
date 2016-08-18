@@ -5,6 +5,7 @@ import static org.eclipse.jetty.util.LazyList.isEmpty;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ServiceTemplate;
@@ -12,6 +13,7 @@ import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.stencils.DefaultValue;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,8 +45,10 @@ public class CopyConfigCommandUnit extends CommandUnit {
     ExecutionResult result = ExecutionResult.SUCCESS;
     if (!isEmpty(configFiles)) {
       for (ConfigFile configFile : configFiles) {
-        String path = destinationParentPath + "/" + configFile.getRelativeFilePath();
-        result = context.copyGridFsFiles(path, FileBucket.CONFIGS, Collections.singletonList(configFile.getFileUuid()))
+        File destFile = new File(configFile.getRelativeFilePath());
+        String path = destinationParentPath + "/" + destFile.getParent();
+        result = context.copyGridFsFiles(path, FileBucket.CONFIGS,
+                     Collections.singletonList(Pair.of(configFile.getFileUuid(), destFile.getName())))
                 == ExecutionResult.FAILURE
             ? ExecutionResult.FAILURE
             : ExecutionResult.SUCCESS;

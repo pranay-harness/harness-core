@@ -27,7 +27,7 @@ public interface ServiceTemplateService {
    * List.
    *
    * @param pageRequest the page request
-   * @param withDetails
+   * @param withDetails the with details
    * @return the page response
    */
   PageResponse<ServiceTemplate> list(PageRequest<ServiceTemplate> pageRequest, boolean withDetails);
@@ -82,7 +82,7 @@ public interface ServiceTemplateService {
    * @param appId             the app id
    * @param envId             the env id
    * @param serviceTemplateId the service template id
-   * @param withDetails
+   * @param withDetails       the with details
    * @return the service template
    */
   ServiceTemplate get(
