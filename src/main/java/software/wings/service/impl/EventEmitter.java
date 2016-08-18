@@ -2,25 +2,22 @@ package software.wings.service.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.beans.Event;
-
-import java.util.Optional;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
 public class EventEmitter {
-  private BroadcasterFactory broadcasterFactory;
+  private MetaBroadcaster metaBroadcaster;
 
   /**
    * Instantiates a new Event emitter.
    *
-   * @param broadcasterFactory the broadcaster factory
+   * @param metaBroadcaster the broadcaster factory
    */
-  public EventEmitter(BroadcasterFactory broadcasterFactory) {
-    this.broadcasterFactory = broadcasterFactory;
+  public EventEmitter(MetaBroadcaster metaBroadcaster) {
+    this.metaBroadcaster = metaBroadcaster;
   }
 
   /**
@@ -30,13 +27,14 @@ public class EventEmitter {
    * @param event   the event
    */
   public void send(Channel channel, Event event) {
-    String globalChannelId = "/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
-        + event.getServiceId() + "/" + channel.getChannelName();
-
-    if (isNotBlank(event.getUuid()) && broadcasterFactory.lookup(globalChannelId + "/" + event.getUuid()) != null) {
-      broadcasterFactory.lookup(globalChannelId + "/" + event.getUuid()).broadcast(event);
+    metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
+            + event.getServiceId() + "/" + channel.getChannelName(),
+        event);
+    if (isNotBlank(event.getUuid())) {
+      metaBroadcaster.broadcastTo("/stream/" + event.getOrgId() + "/" + event.getAppId() + "/" + event.getEnvId() + "/"
+              + event.getServiceId() + "/" + channel.getChannelName() + "/" + event.getUuid(),
+          event);
     }
-    Optional.ofNullable(broadcasterFactory.lookup(globalChannelId)).ifPresent(o -> ((Broadcaster) o).broadcast(event));
   }
 
   /**

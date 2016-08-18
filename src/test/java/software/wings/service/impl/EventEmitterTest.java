@@ -1,13 +1,11 @@
 package software.wings.service.impl;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
-import org.atmosphere.cpr.Broadcaster;
-import org.atmosphere.cpr.BroadcasterFactory;
+import org.atmosphere.cpr.MetaBroadcaster;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -29,11 +27,7 @@ public class EventEmitterTest {
 
   @InjectMocks private EventEmitter eventEmitter = new EventEmitter(null);
 
-  @Mock private BroadcasterFactory broadcasterFactory;
-
-  @Mock private Broadcaster broadcaster;
-
-  @Mock private Broadcaster specificBroadcaster;
+  @Mock private MetaBroadcaster metaBroadcaster;
 
   /**
    * Should send to both id and general channel.
@@ -42,12 +36,10 @@ public class EventEmitterTest {
    */
   @Test
   public void shouldSendToBothIdAndGeneralChannel() throws Exception {
-    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
-    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts")).thenReturn(broadcaster);
     Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
     eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
-    verify(broadcaster).broadcast(event);
-    verify(specificBroadcaster).broadcast(event);
+    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
+    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts/" + ARTIFACT_ID, event);
   }
 
   /**
@@ -56,25 +48,10 @@ public class EventEmitterTest {
    * @throws Exception the exception
    */
   @Test
-  public void shouldSendToGeneralChannelWhenIdChannelNotConnected() throws Exception {
-    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts")).thenReturn(broadcaster);
-    Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
-    eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
-    verify(broadcaster).broadcast(event);
-    verifyZeroInteractions(specificBroadcaster);
-  }
-
-  /**
-   * Should send to id channel when general channel not connected.
-   *
-   * @throws Exception the exception
-   */
-  @Test
-  public void shouldSendToIdChannelWhenGeneralChannelNotConnected() throws Exception {
-    when(broadcasterFactory.lookup("/stream/1/all/all/all/artifacts/" + ARTIFACT_ID)).thenReturn(specificBroadcaster);
-    Event event = anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build();
-    eventEmitter.send(Channel.ARTIFACTS, anEvent().withUuid(ARTIFACT_ID).withType(Type.UPDATE).build());
-    verify(specificBroadcaster).broadcast(event);
-    verifyZeroInteractions(broadcaster);
+  public void shouldSendToGeneralChannelWhenIdisNull() throws Exception {
+    Event event = anEvent().withType(Type.UPDATE).build();
+    eventEmitter.send(Channel.ARTIFACTS, event);
+    verify(metaBroadcaster).broadcastTo("/stream/*/all/all/all/artifacts", event);
+    verifyNoMoreInteractions(metaBroadcaster);
   }
 }

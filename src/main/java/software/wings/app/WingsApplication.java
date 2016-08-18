@@ -126,15 +126,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerScheduledJobs(injector);
 
-    FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-    cors.setInitParameters(of("allowedOrigins", configuration.getCorsDomains(), "allowedHeaders",
-        "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
-        "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
-    cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-    environment.servlets()
-        .addFilter("AuditResponseFilter", injector.getInstance(AuditResponseFilter.class))
-        .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-    environment.jersey().register(injector.getInstance(AuditRequestFilter.class));
+    registerCORSFilter(configuration, environment);
+
+    registerAuditResponseFilter(environment, injector);
 
     registerJerseyProviders(environment);
 
@@ -146,6 +140,21 @@ public class WingsApplication extends Application<MainConfiguration> {
     startPlugins(injector);
 
     logger.info("Starting app done");
+  }
+
+  private void registerAuditResponseFilter(Environment environment, Injector injector) {
+    environment.servlets()
+        .addFilter("AuditResponseFilter", injector.getInstance(AuditResponseFilter.class))
+        .addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+    environment.jersey().register(injector.getInstance(AuditRequestFilter.class));
+  }
+
+  private void registerCORSFilter(MainConfiguration configuration, Environment environment) {
+    FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+    cors.setInitParameters(of("allowedOrigins", configuration.getCorsDomains(), "allowedHeaders",
+        "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
+        "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
+    cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
   private void registerResources(Environment environment, Injector injector) {
