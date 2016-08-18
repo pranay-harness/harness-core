@@ -8,7 +8,7 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 8/16/16.
  */
 public class Event {
-  private String orgId = "1";
+  private String orgId = "*";
   private String appId = "all";
   private String envId = "all";
   private String serviceId = "all";
@@ -171,7 +171,7 @@ public class Event {
   }
 
   public static final class Builder {
-    private String orgId = "1";
+    private String orgId = "*";
     private String appId = "all";
     private String envId = "all";
     private String serviceId = "all";
