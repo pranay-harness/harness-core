@@ -137,12 +137,8 @@ public class StatisticsServiceImpl implements StatisticsService {
             .collect(
                 groupingBy(wfl -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : OTHER, counting()));
 
-    if (!deploymentCountByType.containsKey(PROD)) {
-      deploymentCountByType.put(PROD, 0L);
-    }
-    if (!deploymentCountByType.containsKey(OTHER)) {
-      deploymentCountByType.put(OTHER, 0L);
-    }
+    deploymentCountByType.computeIfAbsent(PROD, wfl -> deploymentCountByType.put(PROD, 0L));
+    deploymentCountByType.computeIfAbsent(OTHER, wfl -> deploymentCountByType.put(OTHER, 0L));
 
     Map<EnvironmentType, Long> deploymentTimeDurationSumByType =
         workflowExecutions.stream()
@@ -153,12 +149,8 @@ public class StatisticsServiceImpl implements StatisticsService {
                 -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : OTHER,
                 summingLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))));
 
-    if (!deploymentTimeDurationSumByType.containsKey(PROD)) {
-      deploymentCountByType.put(PROD, 0L);
-    }
-    if (!deploymentTimeDurationSumByType.containsKey(OTHER)) {
-      deploymentCountByType.put(OTHER, 0L);
-    }
+    deploymentTimeDurationSumByType.computeIfAbsent(PROD, wfl -> deploymentCountByType.put(PROD, 0L));
+    deploymentTimeDurationSumByType.computeIfAbsent(OTHER, wfl -> deploymentCountByType.put(OTHER, 0L));
 
     int prodDeploymentAvgTime = deploymentCountByType.get(PROD) == 0
         ? 0
