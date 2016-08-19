@@ -124,7 +124,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public File download(String appId, String configId) {
     ConfigFile configFile = get(appId, configId, false);
-    File file = new File(createTempDirPath(), configFile.getName());
+    File file = new File(createTempDirPath(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     return file;
   }
