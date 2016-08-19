@@ -22,6 +22,7 @@ import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
+import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
@@ -55,6 +56,7 @@ import software.wings.service.intfc.ArtifactCollectorService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ConfigService;
@@ -142,6 +144,7 @@ public class WingsModule extends AbstractModule {
     bind(SetupService.class).to(SetupServiceImpl.class);
     bind(NotificationService.class).to(NotificationServiceImpl.class);
     bind(StatisticsService.class).to(StatisticsServiceImpl.class);
+    bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

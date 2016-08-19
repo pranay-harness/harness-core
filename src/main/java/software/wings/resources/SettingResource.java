@@ -1,10 +1,10 @@
 package software.wings.resources;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -51,7 +51,7 @@ public class SettingResource {
   @GET
   public RestResponse<PageResponse<SettingAttribute>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<SettingAttribute> pageRequest) {
-    if (Strings.isNullOrEmpty(appId)) {
+    if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
     }
     pageRequest.addFilter("appId", appId, EQ);
@@ -81,7 +81,7 @@ public class SettingResource {
   @GET
   @Path("{attrId}")
   public RestResponse<SettingAttribute> get(@QueryParam("appId") String appId, @PathParam("attrId") String attrId) {
-    return new RestResponse<>(attributeService.get(appId, appId));
+    return new RestResponse<>(attributeService.get(appId, attrId));
   }
 
   /**

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
+import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by peeyushaggarwal on 5/12/16.
@@ -20,6 +22,14 @@ public interface Jenkins {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   JobWithDetails getJob(String jobname) throws IOException;
+
+  /**
+   * Gets jobs.
+   *
+   * @return the jobs
+   * @throws IOException the io exception
+   */
+  Map<String, Job> getJobs() throws IOException;
 
   /**
    * Gets the builds for job.

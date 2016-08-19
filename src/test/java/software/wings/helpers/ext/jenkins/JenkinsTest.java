@@ -38,6 +38,13 @@ public class JenkinsTest extends WingsBaseTest {
     jenkins = jenkinsFactory.create("http://localhost:8089", "admin", "admin");
   }
 
+  @Test
+  public void shouldListJobs() throws IOException {
+    Jenkins lJen = jenkinsFactory.create(
+        "http://ec2-54-174-51-35.compute-1.amazonaws.com", "wingsbuild", "0db28aa0f4fc0685df9a216fc7af0ca96254b7c2");
+    System.out.println(lJen.getJob("demo"));
+  }
+
   /**
    * Should get job from jenkins.
    *
