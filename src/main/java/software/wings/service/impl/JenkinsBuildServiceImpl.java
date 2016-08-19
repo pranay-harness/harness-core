@@ -120,7 +120,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       return job.getLastSuccessfulBuild()
           .details()
           .getArtifacts()
-          .stream()
+          .parallelStream()
           .map(Artifact::getRelativePath)
           .collect(Collectors.toSet());
     } catch (Exception ex) {
