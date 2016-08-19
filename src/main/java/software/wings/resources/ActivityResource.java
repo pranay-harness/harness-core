@@ -3,6 +3,7 @@ package software.wings.resources;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -67,8 +68,9 @@ public class ActivityResource {
   public RestResponse<PageResponse<Activity>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     request.addFilter("appId", appId, EQ);
-    request.addFilter("environmentId", envId, EQ);
-
+    if (!Strings.isNullOrEmpty(envId)) {
+      request.addFilter("environmentId", envId, EQ);
+    }
     return new RestResponse<>(activityService.list(request));
   }
 
