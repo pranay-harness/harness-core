@@ -114,9 +114,12 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
-    Injector injector = Guice.createInjector(new PushModule(environment), new ValidationModule(validatorFactory),
-        databaseModule, new WingsModule(configuration), new ExecutorModule(),
-        new QueueModule(databaseModule.getPrimaryDatastore()));
+
+    PushModule module = new PushModule(environment);
+    Injector injector = Guice.createInjector(module, new ValidationModule(validatorFactory), databaseModule,
+        new WingsModule(configuration), new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
+
+    module.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
     registerResources(environment, injector);
 

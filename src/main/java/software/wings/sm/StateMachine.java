@@ -48,7 +48,6 @@ import java.util.Set;
 @Entity(value = "stateMachines", noClassnameStored = true)
 public class StateMachine extends Base {
   private static final Logger logger = LoggerFactory.getLogger(StateMachine.class);
-  @SuppressWarnings("unused") private static final long serialVersionUID = 1L;
 
   @Indexed private String originId;
 

@@ -75,6 +75,80 @@ public class RepeatState extends State {
   }
 
   /**
+   * Execute.
+   *
+   * @param context                  the context
+   * @param repeatStateExecutionData the repeat state execution data
+   * @return the execution response
+   */
+  ExecutionResponse execute(ExecutionContextImpl context, RepeatStateExecutionData repeatStateExecutionData) {
+    if (repeatStateExecutionData == null) {
+      repeatStateExecutionData = new RepeatStateExecutionData();
+    }
+    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
+    try {
+      if (repeatElements == null || repeatElements.size() == 0) {
+        if (repeatElementExpression != null) {
+          repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
+          repeatStateExecutionData.setRepeatElements(repeatElements);
+          repeatStateExecutionData.setRepeatElementType(repeatElements.get(0).getElementType());
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Error in getting repeat elements", ex);
+      throw new WingsException(ex);
+    }
+
+    if (repeatElements == null || repeatElements.size() == 0) {
+      ExecutionResponse executionResponse = new ExecutionResponse();
+      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+      executionResponse.setErrorMessage("Expression: " + repeatElementExpression + ". no repeat elements found");
+      return executionResponse;
+    }
+    if (repeatTransitionStateName == null) {
+      ExecutionResponse executionResponse = new ExecutionResponse();
+      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+      return executionResponse;
+    }
+
+    if (executionStrategyExpression != null) {
+      try {
+        executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
+      } catch (Exception ex) {
+        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
+      }
+    }
+
+    if (executionStrategy == null) {
+      logger.info("RepeatState: {} falling to default  executionStrategy : SERIAL", getName());
+      executionStrategy = ExecutionStrategy.SERIAL;
+    }
+
+    repeatStateExecutionData.setExecutionStrategy(executionStrategy);
+
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+    List<String> correlationIds = new ArrayList<>();
+
+    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
+
+    if (executionStrategy == ExecutionStrategy.PARALLEL) {
+      for (ContextElement repeatElement : repeatElements) {
+        processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
+      }
+    } else {
+      Integer repeatElementIndex = 0;
+      repeatStateExecutionData.setRepeatElementIndex(0);
+      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
+      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
+    }
+
+    executionResponse.setAsync(true);
+    executionResponse.setCorrelationIds(correlationIds);
+    executionResponse.setStateExecutionData(repeatStateExecutionData);
+    return executionResponse;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -132,79 +206,6 @@ public class RepeatState extends State {
         WingsExpressionProcessorFactory.getMatchingExpressionProcessor(repeatElementExpression, null);
     repeatElementType =
         expressionProcessor == null ? ContextElementType.OTHER : expressionProcessor.getContextElementType();
-  }
-
-  /**
-   * Execute.
-   *
-   * @param context                  the context
-   * @param repeatStateExecutionData the repeat state execution data
-   * @return the execution response
-   */
-  ExecutionResponse execute(ExecutionContextImpl context, RepeatStateExecutionData repeatStateExecutionData) {
-    if (repeatStateExecutionData == null) {
-      repeatStateExecutionData = new RepeatStateExecutionData();
-    }
-    List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
-    try {
-      if (repeatElements == null || repeatElements.size() == 0) {
-        if (repeatElementExpression != null) {
-          repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
-          repeatStateExecutionData.setRepeatElements(repeatElements);
-        }
-      }
-    } catch (Exception ex) {
-      logger.error("Error in getting repeat elements", ex);
-      throw new WingsException(ex);
-    }
-
-    if (repeatElements == null || repeatElements.size() == 0) {
-      ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage("Expression: " + repeatElementExpression + ". no repeat elements found");
-      return executionResponse;
-    }
-    if (repeatTransitionStateName == null) {
-      ExecutionResponse executionResponse = new ExecutionResponse();
-      executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      return executionResponse;
-    }
-
-    if (executionStrategyExpression != null) {
-      try {
-        executionStrategy = (ExecutionStrategy) context.evaluateExpression(executionStrategyExpression);
-      } catch (Exception ex) {
-        logger.error("Error in evaluating executionStrategy... default to SERIAL", ex);
-      }
-    }
-
-    if (executionStrategy == null) {
-      logger.info("RepeatState: {} falling to default  executionStrategy : SERIAL", getName());
-      executionStrategy = ExecutionStrategy.SERIAL;
-    }
-
-    repeatStateExecutionData.setExecutionStrategy(executionStrategy);
-
-    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    List<String> correlationIds = new ArrayList<>();
-
-    SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
-
-    if (executionStrategy == ExecutionStrategy.PARALLEL) {
-      for (ContextElement repeatElement : repeatElements) {
-        processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
-      }
-    } else {
-      Integer repeatElementIndex = 0;
-      repeatStateExecutionData.setRepeatElementIndex(0);
-      ContextElement repeatElement = repeatElements.get(repeatElementIndex);
-      processChildState(stateExecutionInstance, correlationIds, executionResponse, repeatElement);
-    }
-
-    executionResponse.setAsync(true);
-    executionResponse.setCorrelationIds(correlationIds);
-    executionResponse.setStateExecutionData(repeatStateExecutionData);
-    return executionResponse;
   }
 
   private void processChildState(StateExecutionInstance stateExecutionInstance, List<String> correlationIds,
@@ -347,10 +348,19 @@ public class RepeatState extends State {
    * The Class RepeatStateExecutionData.
    */
   public static class RepeatStateExecutionData extends StateExecutionData {
-    private static final long serialVersionUID = 5043797016447183954L;
+    private ContextElementType repeatElementType;
     private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
     private ExecutionStrategy executionStrategy;
+    private Map<ContextElementType, Integer> contextElementCountSummary;
+
+    public ContextElementType getRepeatElementType() {
+      return repeatElementType;
+    }
+
+    public void setRepeatElementType(ContextElementType repeatElementType) {
+      this.repeatElementType = repeatElementType;
+    }
 
     /**
      * Gets repeat elements.
@@ -386,6 +396,14 @@ public class RepeatState extends State {
      */
     public void setRepeatElementIndex(Integer repeatElementIndex) {
       this.repeatElementIndex = repeatElementIndex;
+    }
+
+    public Map<ContextElementType, Integer> getContextElementCountSummary() {
+      return contextElementCountSummary;
+    }
+
+    public void setContextElementCountSummary(Map<ContextElementType, Integer> contextElementCountSummary) {
+      this.contextElementCountSummary = contextElementCountSummary;
     }
 
     /**

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
@@ -21,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 /**
  * The Class WorkflowStandardParams.
@@ -50,6 +50,7 @@ public class WorkflowStandardParams implements ContextElement {
   @JsonIgnore @Transient private transient Environment env;
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
 
+  private List<ServiceElement> services;
   private Long startTs;
   private Long endTs;
 
@@ -210,6 +211,14 @@ public class WorkflowStandardParams implements ContextElement {
     this.executionCredential = executionCredential;
   }
 
+  public List<ServiceElement> getServices() {
+    return services;
+  }
+
+  public void setServices(List<ServiceElement> services) {
+    this.services = services;
+  }
+
   /**
    * Gets app.
    *
@@ -281,134 +290,70 @@ public class WorkflowStandardParams implements ContextElement {
    */
   public void setUuid(String uuid) {}
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String appId;
     private String envId;
     private List<String> artifactIds;
     // TODO: centralized in-memory executionCredential and special encrypted mapping
     private ExecutionCredential executionCredential;
+    private List<ServiceElement> services;
     private Long startTs;
     private Long endTs;
-    private String timestampId = System.currentTimeMillis() + "-" + new Random().nextInt(1000);
+    private String timestampId = System.currentTimeMillis() + "-" + nextInt(0, 1000);
 
     private Builder() {}
 
-    /**
-     * A workflow standard params builder.
-     *
-     * @return the builder
-     */
     public static Builder aWorkflowStandardParams() {
       return new Builder();
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    /**
-     * With artifact ids builder.
-     *
-     * @param artifactIds the artifact ids
-     * @return the builder
-     */
     public Builder withArtifactIds(List<String> artifactIds) {
       this.artifactIds = artifactIds;
       return this;
     }
 
-    /**
-     * With execution credential builder.
-     *
-     * @param executionCredential the execution credential
-     * @return the builder
-     */
     public Builder withExecutionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
       return this;
     }
 
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
+    public Builder withServices(List<ServiceElement> services) {
+      this.services = services;
+      return this;
+    }
+
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    /**
-     * With timestamp id builder.
-     *
-     * @param timestampId the timestamp id
-     * @return the builder
-     */
     public Builder withTimestampId(String timestampId) {
       this.timestampId = timestampId;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aWorkflowStandardParams()
-          .withAppId(appId)
-          .withEnvId(envId)
-          .withArtifactIds(artifactIds)
-          .withExecutionCredential(executionCredential)
-          .withStartTs(startTs)
-          .withEndTs(endTs)
-          .withTimestampId(timestampId);
-    }
-
-    /**
-     * Build workflow standard params.
-     *
-     * @return the workflow standard params
-     */
     public WorkflowStandardParams build() {
       WorkflowStandardParams workflowStandardParams = new WorkflowStandardParams();
       workflowStandardParams.setAppId(appId);
       workflowStandardParams.setEnvId(envId);
       workflowStandardParams.setArtifactIds(artifactIds);
       workflowStandardParams.setExecutionCredential(executionCredential);
+      workflowStandardParams.setServices(services);
       workflowStandardParams.setStartTs(startTs);
       workflowStandardParams.setEndTs(endTs);
       workflowStandardParams.setTimestampId(timestampId);

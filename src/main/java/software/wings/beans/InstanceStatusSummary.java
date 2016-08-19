@@ -7,6 +7,7 @@ import software.wings.sm.ExecutionStatus;
  */
 public class InstanceStatusSummary {
   private Integer instancesCount;
+  private Integer totalInstancesCount;
   private Integer retryCount;
   private String stateName;
   private String stateCategory;
@@ -29,6 +30,14 @@ public class InstanceStatusSummary {
    */
   public void setInstancesCount(Integer instancesCount) {
     this.instancesCount = instancesCount;
+  }
+
+  public Integer getTotalInstancesCount() {
+    return totalInstancesCount;
+  }
+
+  public void setTotalInstancesCount(Integer totalInstancesCount) {
+    this.totalInstancesCount = totalInstancesCount;
   }
 
   /**
@@ -137,11 +146,9 @@ public class InstanceStatusSummary {
    */
   public void setReport(String report) {}
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private Integer instancesCount;
+    private Integer totalInstancesCount;
     private Integer retryCount;
     private String stateName;
     private String stateCategory;
@@ -150,89 +157,49 @@ public class InstanceStatusSummary {
 
     private Builder() {}
 
-    /**
-     * An instance status summary builder.
-     *
-     * @return the builder
-     */
     public static Builder anInstanceStatusSummary() {
       return new Builder();
     }
 
-    /**
-     * With instances count builder.
-     *
-     * @param instancesCount the instances count
-     * @return the builder
-     */
     public Builder withInstancesCount(Integer instancesCount) {
       this.instancesCount = instancesCount;
       return this;
     }
 
-    /**
-     * With retry count builder.
-     *
-     * @param retryCount the retry count
-     * @return the builder
-     */
+    public Builder withTotalInstancesCount(Integer totalInstancesCount) {
+      this.totalInstancesCount = totalInstancesCount;
+      return this;
+    }
+
     public Builder withRetryCount(Integer retryCount) {
       this.retryCount = retryCount;
       return this;
     }
 
-    /**
-     * With state name builder.
-     *
-     * @param stateName the state name
-     * @return the builder
-     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
-    /**
-     * With state category builder.
-     *
-     * @param stateCategory the state category
-     * @return the builder
-     */
     public Builder withStateCategory(String stateCategory) {
       this.stateCategory = stateCategory;
       return this;
     }
 
-    /**
-     * With prior execution status builder.
-     *
-     * @param priorExecutionStatus the prior execution status
-     * @return the builder
-     */
     public Builder withPriorExecutionStatus(ExecutionStatus priorExecutionStatus) {
       this.priorExecutionStatus = priorExecutionStatus;
       return this;
     }
 
-    /**
-     * With final execution status builder.
-     *
-     * @param finalExecutionStatus the final execution status
-     * @return the builder
-     */
     public Builder withFinalExecutionStatus(ExecutionStatus finalExecutionStatus) {
       this.finalExecutionStatus = finalExecutionStatus;
       return this;
     }
 
-    /**
-     * Build instance status summary.
-     *
-     * @return the instance status summary
-     */
     public InstanceStatusSummary build() {
       InstanceStatusSummary instanceStatusSummary = new InstanceStatusSummary();
       instanceStatusSummary.setInstancesCount(instancesCount);
+      instanceStatusSummary.setTotalInstancesCount(totalInstancesCount);
       instanceStatusSummary.setRetryCount(retryCount);
       instanceStatusSummary.setStateName(stateName);
       instanceStatusSummary.setStateCategory(stateCategory);

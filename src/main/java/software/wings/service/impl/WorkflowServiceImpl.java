@@ -79,6 +79,7 @@ import software.wings.sm.StateTypeScope;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
+import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -788,7 +789,8 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
-      WorkflowExecutionUpdate workflowExecutionUpdate, ContextElement... contextElements) {
+      WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
+      ContextElement... contextElements) {
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
         List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
@@ -829,6 +831,16 @@ public class WorkflowServiceImpl implements WorkflowService {
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+
+        List<ServiceElement> services = new ArrayList<>();
+        artifacts.forEach(artifact -> {
+          artifact.getServices().forEach(service -> {
+            ServiceElement se = new ServiceElement();
+            MapperUtils.mapObject(service, se);
+            services.add(se);
+          });
+        });
+        stdParams.setServices(services);
       }
     }
 
@@ -844,6 +856,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
     WingsDeque<ContextElement> elements = new WingsDeque<>();
+    elements.push(stdParams);
     if (contextElements != null) {
       for (ContextElement contextElement : contextElements) {
         elements.push(contextElement);
@@ -1212,27 +1225,47 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {
-    if ((workflowExecution.getStatus() == ExecutionStatus.SUCCESS
+    if (!(workflowExecution.getStatus() == ExecutionStatus.SUCCESS
             || workflowExecution.getStatus() == ExecutionStatus.FAILED
             || workflowExecution.getStatus() == ExecutionStatus.ERROR
-            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)
-        && workflowExecution.getServiceExecutionSummaryMap() != null
+            || workflowExecution.getStatus() == ExecutionStatus.ABORTED)) {
+      return;
+    }
+
+    if (workflowExecution.getServiceExecutionSummaryMap() != null
         && workflowExecution.getInstanceStatusSummaries() != null) {
       return;
     }
 
     // TODO: hard coded data for the time being
-    workflowExecution.setInstanceStatusSummaries(Lists.newArrayList(
-        anInstanceStatusSummary().withInstancesCount(10).withFinalExecutionStatus(ExecutionStatus.SUCCESS).build()));
+    workflowExecution.setInstanceStatusSummaries(
+        Lists.newArrayList(anInstanceStatusSummary()
+                               .withInstancesCount(10)
+                               .withTotalInstancesCount(12)
+                               .withFinalExecutionStatus(ExecutionStatus.SUCCESS)
+                               .build(),
+            anInstanceStatusSummary()
+                .withInstancesCount(2)
+                .withTotalInstancesCount(12)
+                .withFinalExecutionStatus(ExecutionStatus.FAILED)
+                .build()));
 
     LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummary = new LinkedHashMap<>();
     ServiceElement se = aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("service1").build();
+    ServiceElement se2 = aServiceElement().withUuid(UUIDGenerator.getUuid()).withName("service2").build();
     serviceExecutionSummary.put(se.getUuid(),
         aServiceExecutionSummary()
             .withContextElement(se)
             .withEndTs(workflowExecution.getLastUpdatedAt())
             .withStartTs(workflowExecution.getCreatedAt())
-            .withInstancesCount(1)
+            .withInstancesCount(10)
+            .build());
+    serviceExecutionSummary.put(se2.getUuid(),
+        aServiceExecutionSummary()
+            .withContextElement(se2)
+            .withEndTs(workflowExecution.getLastUpdatedAt())
+            .withStartTs(workflowExecution.getCreatedAt())
+            .withInstancesCount(12)
             .build());
     workflowExecution.setServiceExecutionSummaryMap(serviceExecutionSummary);
   }
