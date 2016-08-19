@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -12,9 +11,10 @@ import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.stats.DeploymentActivityStatistics.Builder.aDeploymentActivityStatistics;
+import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +33,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActiveArtifactStatistics;
 import software.wings.beans.stats.ActiveReleaseStatistics;
+import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.TopConsumer;
@@ -44,7 +45,6 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.ExecutionStatus;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -55,7 +55,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 
@@ -193,26 +192,22 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>();
 
-    Map<ExecutionStatus, List<WorkflowExecution>> executionStatusListMap =
-        workflowExecutions.stream().collect(groupingBy(WorkflowExecution::getStatus, Collectors.toList()));
-
-    Map<Long, Long> aggregatedSuccessMap =
-        aggregateExecutionCountByDay(executionStatusListMap.get(ExecutionStatus.SUCCESS));
-    Map<Long, Long> aggregatedFailedMap =
-        aggregateExecutionCountByDay(executionStatusListMap.get(ExecutionStatus.FAILED));
-    return aDeploymentActivityStatistics()
-        .withSuccessfulActivitiesCountByDay(aggregatedSuccessMap)
-        .withFailedActivitiesCountByDay(aggregatedFailedMap)
-        .build();
-  }
-
-  private Map<Long, Long> aggregateExecutionCountByDay(List<WorkflowExecution> workflowExecutions) {
-    if (workflowExecutions == null || workflowExecutions.size() == 0) {
-      return emptyMap();
-    }
-    return workflowExecutions.stream().collect(
-        groupingBy(wfl -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000), counting()));
+    workflowExecutions.parallelStream()
+        .collect(groupingBy(wfl
+            -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000),
+            groupingBy(WorkflowExecution::getStatus, counting())))
+        .forEach((epochMilli, executionStatusListMap) -> {
+          int successCount = executionStatusListMap.getOrDefault(SUCCESS, 0L).intValue();
+          int failureCount = executionStatusListMap.getOrDefault(FAILED, 0L).intValue();
+          dayActivityStatisticsList.add(aDayActivityStatistics()
+                                            .withDate(epochMilli)
+                                            .withSuccessCount(successCount)
+                                            .withFailureCount(failureCount)
+                                            .build());
+        });
+    return new DeploymentActivityStatistics(dayActivityStatisticsList);
   }
 
   private int getActiveReleases() {
