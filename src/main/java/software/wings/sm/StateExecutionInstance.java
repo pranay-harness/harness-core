@@ -20,8 +20,7 @@ public class StateExecutionInstance extends Base {
   private String stateMachineId;
   private String stateName;
   private String stateType;
-  private String contextElementType;
-  private String contextElementName;
+  private ContextElement contextElement;
   private boolean contextTransition;
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
@@ -315,40 +314,12 @@ public class StateExecutionInstance extends Base {
     this.callback = callback;
   }
 
-  /**
-   * Gets context element type.
-   *
-   * @return the context element type
-   */
-  public String getContextElementType() {
-    return contextElementType;
+  public ContextElement getContextElement() {
+    return contextElement;
   }
 
-  /**
-   * Sets context element type.
-   *
-   * @param contextElementType the context element type
-   */
-  public void setContextElementType(String contextElementType) {
-    this.contextElementType = contextElementType;
-  }
-
-  /**
-   * Gets context element name.
-   *
-   * @return the context element name
-   */
-  public String getContextElementName() {
-    return contextElementName;
-  }
-
-  /**
-   * Sets context element name.
-   *
-   * @param contextElementName the context element name
-   */
-  public void setContextElementName(String contextElementName) {
-    this.contextElementName = contextElementName;
+  public void setContextElement(ContextElement contextElement) {
+    this.contextElement = contextElement;
   }
 
   /**
@@ -380,13 +351,12 @@ public class StateExecutionInstance extends Base {
 
   @Override
   public String toString() {
-    return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName + ", stateType="
-        + stateType + ", contextElementType=" + contextElementType + ", contextElementName=" + contextElementName
-        + ", contextTransition=" + contextTransition + ", contextElements=" + contextElements
-        + ", stateExecutionMap=" + stateExecutionMap + ", callback=" + callback + ", executionUuid=" + executionUuid
-        + ", parentInstanceId=" + parentInstanceId + ", prevInstanceId=" + prevInstanceId
-        + ", nextInstanceId=" + nextInstanceId + ", cloneInstanceId=" + cloneInstanceId + ", notifyId=" + notifyId
-        + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs + "]";
+    return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName
+        + ", stateType=" + stateType + ", contextElement=" + contextElement + ", contextTransition=" + contextTransition
+        + ", contextElements=" + contextElements + ", stateExecutionMap=" + stateExecutionMap + ", callback=" + callback
+        + ", executionUuid=" + executionUuid + ", parentInstanceId=" + parentInstanceId + ", prevInstanceId="
+        + prevInstanceId + ", nextInstanceId=" + nextInstanceId + ", cloneInstanceId=" + cloneInstanceId
+        + ", notifyId=" + notifyId + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs + "]";
   }
 
   /**
@@ -396,8 +366,7 @@ public class StateExecutionInstance extends Base {
     private String stateMachineId;
     private String stateName;
     private String stateType;
-    private String contextElementType;
-    private String contextElementName;
+    private ContextElement contextElement;
     private boolean contextTransition;
     private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
@@ -466,22 +435,11 @@ public class StateExecutionInstance extends Base {
     /**
      * With context element type builder.
      *
-     * @param contextElementType the context element type
+     * @param contextElement the context element type
      * @return the builder
      */
-    public Builder withContextElementType(String contextElementType) {
-      this.contextElementType = contextElementType;
-      return this;
-    }
-
-    /**
-     * With context element name builder.
-     *
-     * @param contextElementName the context element name
-     * @return the builder
-     */
-    public Builder withContextElementName(String contextElementName) {
-      this.contextElementName = contextElementName;
+    public Builder withContextElement(ContextElement contextElement) {
+      this.contextElement = contextElement;
       return this;
     }
 
@@ -715,8 +673,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setStateMachineId(stateMachineId);
       stateExecutionInstance.setStateName(stateName);
       stateExecutionInstance.setStateType(stateType);
-      stateExecutionInstance.setContextElementType(contextElementType);
-      stateExecutionInstance.setContextElementName(contextElementName);
+      stateExecutionInstance.setContextElement(contextElement);
       stateExecutionInstance.setContextTransition(contextTransition);
       stateExecutionInstance.setContextElements(contextElements);
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);

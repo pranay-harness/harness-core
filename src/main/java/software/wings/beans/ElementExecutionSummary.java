@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import software.wings.sm.ContextElement;
+import software.wings.sm.ExecutionStatus;
 
 /**
  * Created by rishi on 8/15/16.
@@ -10,11 +11,12 @@ public class ElementExecutionSummary {
   private Integer instancesCount;
   private Long startTs;
   private Long endTs;
+  private ExecutionStatus status;
 
   /**
    * Gets context element.
    *
-   * @return the context element
+   * @return the context elementElementExecutionSummary
    */
   public ContextElement getContextElement() {
     return contextElement;
@@ -122,82 +124,45 @@ public class ElementExecutionSummary {
    */
   public void setAvgTime(Integer avgTime) {}
 
-  /**
-   * The type Builder.
-   */
-  public static final class Builder {
+  public static final class ElementExecutionSummaryBuilder {
     private ContextElement contextElement;
     private Integer instancesCount;
     private Long startTs;
     private Long endTs;
 
-    private Builder() {}
+    private ElementExecutionSummaryBuilder() {}
 
-    /**
-     * A service execution summary builder.
-     *
-     * @return the builder
-     */
-    public static Builder aServiceExecutionSummary() {
-      return new Builder();
+    public static ElementExecutionSummaryBuilder anElementExecutionSummary() {
+      return new ElementExecutionSummaryBuilder();
     }
 
-    /**
-     * With context element builder.
-     *
-     * @param contextElement the context element
-     * @return the builder
-     */
-    public Builder withContextElement(ContextElement contextElement) {
+    public ElementExecutionSummaryBuilder withContextElement(ContextElement contextElement) {
       this.contextElement = contextElement;
       return this;
     }
 
-    /**
-     * With instances count builder.
-     *
-     * @param instancesCount the instances count
-     * @return the builder
-     */
-    public Builder withInstancesCount(Integer instancesCount) {
+    public ElementExecutionSummaryBuilder withInstancesCount(Integer instancesCount) {
       this.instancesCount = instancesCount;
       return this;
     }
 
-    /**
-     * With start ts builder.
-     *
-     * @param startTs the start ts
-     * @return the builder
-     */
-    public Builder withStartTs(Long startTs) {
+    public ElementExecutionSummaryBuilder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
-    /**
-     * With end ts builder.
-     *
-     * @param endTs the end ts
-     * @return the builder
-     */
-    public Builder withEndTs(Long endTs) {
+    public ElementExecutionSummaryBuilder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
-    /**
-     * Build element execution summary.
-     *
-     * @return the element execution summary
-     */
     public ElementExecutionSummary build() {
-      ElementExecutionSummary serviceExecutionSummary = new ElementExecutionSummary();
-      serviceExecutionSummary.setContextElement(contextElement);
-      serviceExecutionSummary.setInstancesCount(instancesCount);
-      serviceExecutionSummary.setStartTs(startTs);
-      serviceExecutionSummary.setEndTs(endTs);
-      return serviceExecutionSummary;
+      ElementExecutionSummary elementExecutionSummary = new ElementExecutionSummary();
+      elementExecutionSummary.setContextElement(contextElement);
+      elementExecutionSummary.setInstancesCount(instancesCount);
+      elementExecutionSummary.setStartTs(startTs);
+      elementExecutionSummary.setEndTs(endTs);
+      return elementExecutionSummary;
     }
   }
 }

@@ -6,6 +6,8 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
+import static software.wings.beans.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.base.Joiner;
 
@@ -14,21 +16,23 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.api.InstanceElement;
+import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.InstanceStatusSummary;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
+import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.ExpressionProcessor;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
@@ -155,9 +159,9 @@ public class RepeatState extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Object status : response.values()) {
-      executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
-      if (executionStatus != ExecutionStatus.SUCCESS) {
-        break;
+      ExecutionStatus responseStatus = ((ElementNotifyResponseData) status).getExecutionStatus();
+      if (responseStatus != ExecutionStatus.SUCCESS) {
+        executionStatus = responseStatus;
       }
     }
 
@@ -169,6 +173,9 @@ public class RepeatState extends State {
         || repeatStateExecutionData.indexReachedMax()) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
+
+      updateStateExecutionData(repeatStateExecutionData, response);
+      executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     } else {
       SpawningExecutionResponse executionResponse = new SpawningExecutionResponse();
@@ -184,9 +191,35 @@ public class RepeatState extends State {
 
       executionResponse.setAsync(true);
       executionResponse.setCorrelationIds(correlationIds);
+
+      updateStateExecutionData(repeatStateExecutionData, response);
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     }
+  }
+
+  private void updateStateExecutionData(
+      RepeatStateExecutionData repeatStateExecutionData, Map<String, NotifyResponseData> response) {
+    response.forEach((s, notifyResponseData) -> {
+
+      ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
+      ElementExecutionSummary elementExecutionSummary =
+          anElementExecutionSummary().withContextElement(elementNotifyResponseData.getContextElement()).build();
+      repeatStateExecutionData.getElementStatusSummary().add(elementExecutionSummary);
+
+      if (repeatStateExecutionData.getRepeatElementType() == ContextElementType.INSTANCE) {
+        List<InstanceStatusSummary> instanceStatusSummaries = repeatStateExecutionData.getInstanceStatusSummary();
+        if (instanceStatusSummaries == null) {
+          instanceStatusSummaries = new ArrayList<>();
+          repeatStateExecutionData.setInstanceStatusSummary(instanceStatusSummaries);
+        }
+        instanceStatusSummaries.add(
+            anInstanceStatusSummary()
+                .withInstanceElement((InstanceElement) elementNotifyResponseData.getContextElement())
+                .withStatus(elementNotifyResponseData.getExecutionStatus())
+                .build());
+      }
+    });
   }
 
   /**
@@ -218,8 +251,7 @@ public class RepeatState extends State {
     childStateExecutionInstance.setPrevInstanceId(null);
 
     childStateExecutionInstance.getContextElements().push(repeatElement);
-    childStateExecutionInstance.setContextElementName(repeatElement.getName());
-    childStateExecutionInstance.setContextElementType(repeatElement.getElementType().name());
+    childStateExecutionInstance.setContextElement(repeatElement);
     childStateExecutionInstance.setContextTransition(true);
     childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
     childStateExecutionInstance.setStartTs(null);
@@ -347,12 +379,11 @@ public class RepeatState extends State {
   /**
    * The Class RepeatStateExecutionData.
    */
-  public static class RepeatStateExecutionData extends StateExecutionData {
+  public static class RepeatStateExecutionData extends ElementStateExecutionData {
     private ContextElementType repeatElementType;
     private List<ContextElement> repeatElements = new ArrayList<>();
     private Integer repeatElementIndex;
     private ExecutionStrategy executionStrategy;
-    private Map<ContextElementType, Integer> contextElementCountSummary;
 
     public ContextElementType getRepeatElementType() {
       return repeatElementType;
@@ -396,14 +427,6 @@ public class RepeatState extends State {
      */
     public void setRepeatElementIndex(Integer repeatElementIndex) {
       this.repeatElementIndex = repeatElementIndex;
-    }
-
-    public Map<ContextElementType, Integer> getContextElementCountSummary() {
-      return contextElementCountSummary;
-    }
-
-    public void setContextElementCountSummary(Map<ContextElementType, Integer> contextElementCountSummary) {
-      this.contextElementCountSummary = contextElementCountSummary;
     }
 
     /**

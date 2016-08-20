@@ -34,7 +34,7 @@ public class WorkflowExecution extends Base {
 
   private ExecutionArgs executionArgs;
   private LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap;
-  private List<InstanceStatusSummary> instanceStatusSummaries;
+  private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
 
   /**
    * Gets name.
@@ -252,22 +252,13 @@ public class WorkflowExecution extends Base {
     this.serviceExecutionSummaryMap = serviceExecutionSummaryMap;
   }
 
-  /**
-   * Gets instance status summaries.
-   *
-   * @return the instance status summaries
-   */
-  public List<InstanceStatusSummary> getInstanceStatusSummaries() {
-    return instanceStatusSummaries;
+  public LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> getStatusInstanceBreakdownMap() {
+    return statusInstanceBreakdownMap;
   }
 
-  /**
-   * Sets instance status summaries.
-   *
-   * @param instanceStatusSummaries the instance status summaries
-   */
-  public void setInstanceStatusSummaries(List<InstanceStatusSummary> instanceStatusSummaries) {
-    this.instanceStatusSummaries = instanceStatusSummaries;
+  public void setStatusInstanceBreakdownMap(
+      LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
+    this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
   }
 
   /**
