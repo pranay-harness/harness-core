@@ -11,8 +11,10 @@ import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
+import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +33,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActiveArtifactStatistics;
 import software.wings.beans.stats.ActiveReleaseStatistics;
-import software.wings.beans.stats.ApplicationCountStatistics;
+import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.TopConsumer;
@@ -75,8 +77,6 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     summaryStats.add(new ActiveReleaseStatistics(getActiveReleases()));
     summaryStats.add(new ActiveArtifactStatistics(getActiveArtifacts()));
-    summaryStats.add(new ApplicationCountStatistics(applications.size()));
-
     addDeploymentStatistics(summaryStats, applications);
 
     return summaryStats;
@@ -192,11 +192,22 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>();
 
-    Map<Long, Long> longLongMap = workflowExecutions.stream().collect(
-        groupingBy(wfl -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000), counting()));
-
-    return new DeploymentActivityStatistics(longLongMap);
+    workflowExecutions.parallelStream()
+        .collect(groupingBy(wfl
+            -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000),
+            groupingBy(WorkflowExecution::getStatus, counting())))
+        .forEach((epochMilli, executionStatusListMap) -> {
+          int successCount = executionStatusListMap.getOrDefault(SUCCESS, 0L).intValue();
+          int failureCount = executionStatusListMap.getOrDefault(FAILED, 0L).intValue();
+          dayActivityStatisticsList.add(aDayActivityStatistics()
+                                            .withDate(epochMilli)
+                                            .withSuccessCount(successCount)
+                                            .withFailureCount(failureCount)
+                                            .build());
+        });
+    return new DeploymentActivityStatistics(dayActivityStatisticsList);
   }
 
   private int getActiveReleases() {

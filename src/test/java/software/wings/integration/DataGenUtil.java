@@ -131,6 +131,9 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
   private static final String API_BASE = "https://localhost:9090/api";
 
+  private static final String userName = "admin@wings.software";
+  private static final String password = "YAg@bp2wWB";
+
   private static String userToken = "INVALID_TOKEN";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
@@ -375,8 +378,6 @@ private Map<String, String> addOrchestrationAndPipeline(
 }
 
 private void addAdminUser() {
-  String userName = "admin@wings.software";
-  String password = "YAg@bp2wWB";
   String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
   WebTarget target = client.target(API_BASE + "/users/");
   RestResponse<User> response = target.request().post(

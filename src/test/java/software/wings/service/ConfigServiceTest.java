@@ -225,7 +225,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     File file = configService.download(APP_ID, FILE_ID);
     verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
     verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
-    assertThat(file.getName()).isEqualTo(FILE_NAME);
+    assertThat(file.getName()).isEqualTo("PATH");
   }
 
   /**

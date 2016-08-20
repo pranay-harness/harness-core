@@ -12,6 +12,7 @@ import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
+import com.offbytwo.jenkins.model.Job;
 import com.offbytwo.jenkins.model.JobWithDetails;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -64,6 +65,11 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public JobWithDetails getJob(String jobname) throws IOException {
     return jenkinsServer.getJob(jobname);
+  }
+
+  @Override
+  public Map<String, Job> getJobs() throws IOException {
+    return jenkinsServer.getJobs();
   }
 
   /* (non-Javadoc)

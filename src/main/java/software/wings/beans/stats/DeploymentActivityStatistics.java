@@ -1,41 +1,39 @@
 package software.wings.beans.stats;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Created by anubhaw on 8/15/16.
  */
 public class DeploymentActivityStatistics extends WingsStatistics {
   /**
-   * The Activities count by day.
+   * The Activity statistics.
    */
-  Map<Long, Long> activitiesCountByDay;
+  List<DayActivityStatistics> activityStatistics;
 
   /**
    * Instantiates a new Deployment activity statistics.
-   *
-   * @param activitiesCountByDay the activities count by day
    */
-  public DeploymentActivityStatistics(Map<Long, Long> activitiesCountByDay) {
+  public DeploymentActivityStatistics(List<DayActivityStatistics> activityStatistics) {
     super(StatisticsType.DEPLOYMENT_ACTIVITIES);
-    this.activitiesCountByDay = activitiesCountByDay;
+    this.activityStatistics = activityStatistics;
   }
 
   /**
-   * Gets activities count by day.
+   * Gets activity statistics.
    *
-   * @return the activities count by day
+   * @return the activity statistics
    */
-  public Map<Long, Long> getActivitiesCountByDay() {
-    return activitiesCountByDay;
+  public List<DayActivityStatistics> getActivityStatistics() {
+    return activityStatistics;
   }
 
   /**
-   * Sets activities count by day.
+   * Sets activity statistics.
    *
-   * @param activitiesCountByDay the activities count by day
+   * @param activityStatistics the activity statistics
    */
-  public void setActivitiesCountByDay(Map<Long, Long> activitiesCountByDay) {
-    this.activitiesCountByDay = activitiesCountByDay;
+  public void setActivityStatistics(List<DayActivityStatistics> activityStatistics) {
+    this.activityStatistics = activityStatistics;
   }
 }
