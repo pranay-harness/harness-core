@@ -1263,12 +1263,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
     workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
+    wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
+        workflowExecution.getStatusInstanceBreakdownMap());
 
     StateExecutionInstance svcRepeatStateExecutionInstance = getServiceRepeatInstance(topInstances);
     if (svcRepeatStateExecutionInstance != null) {
       workflowExecution.setServiceExecutionSummaryMap(
           getServiceExecutionSummaryMap(workflowExecution, svcRepeatStateExecutionInstance));
+      wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaryMap",
+          workflowExecution.getServiceExecutionSummaryMap());
     }
+
     // TODO: handle if service repeat is not there, rather instance repeat is introduced directly
   }
 
