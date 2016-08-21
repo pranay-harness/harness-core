@@ -1305,6 +1305,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     LinkedHashMap<String, ElementExecutionSummary> elementExecutionSummaryMap = new LinkedHashMap<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
+      if (stateExecutionInstance.getContextElement() == null) {
+        continue;
+      }
       ElementExecutionSummary elementExecutionSummary = new ElementExecutionSummary();
       elementExecutionSummary.setContextElement(stateExecutionInstance.getContextElement());
       elementExecutionSummary.setStartTs(stateExecutionInstance.getStartTs());
