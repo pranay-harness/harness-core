@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -198,8 +199,8 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void delete(String appId, String configId) {
-    ConfigFile configFile = get(appId, configId, false);
-    wingsPersistence.delete(configFile);
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(appId).field(ID_KEY).equal(configId));
     executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
   }
 
@@ -217,7 +218,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public void deleteByEntityId(String appId, String entityId, String templateId) {
+  public void deleteByEntityId(String appId, String templateId, String entityId) {
     List<ConfigFile> configFiles = getConfigFilesForEntity(appId, templateId, entityId);
     if (configFiles != null) {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));

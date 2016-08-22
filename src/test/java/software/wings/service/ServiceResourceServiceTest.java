@@ -219,7 +219,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).delete(Service.class, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
     inOrder.verify(serviceTemplateService).deleteByService(APP_ID, SERVICE_ID);
-    inOrder.verify(configService).deleteByEntityId(APP_ID, SERVICE_ID, DEFAULT_TEMPLATE_ID);
+    inOrder.verify(configService).deleteByEntityId(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(historyService).createAsync(historyArgumentCaptor.capture());
     assertThat(historyArgumentCaptor.getValue())
         .isNotNull()

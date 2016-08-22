@@ -90,7 +90,7 @@ public interface ConfigService {
    * @param entityId   the service id
    * @param templateId the template id
    */
-  void deleteByEntityId(String appId, String entityId, String templateId);
+  void deleteByEntityId(String appId, String templateId, String entityId);
 
   /**
    * Gets config file by template.
