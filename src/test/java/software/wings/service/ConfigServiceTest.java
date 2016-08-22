@@ -282,7 +282,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     configService.delete(APP_ID, FILE_ID);
     verify(wingsPersistence).delete(configFile);
-    verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+    verify(fileService).deleteAllFilesForEntity(FILE_ID, FileBucket.CONFIGS);
   }
 
   /**
@@ -337,7 +337,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(query).field("entityId");
     verify(end).equal("ENTITY_ID");
     verify(wingsPersistence).delete(configFile);
-    verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+    verify(fileService).deleteAllFilesForEntity(FILE_ID, FileBucket.CONFIGS);
   }
 
   /**

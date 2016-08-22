@@ -1,17 +1,21 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCodes.FILE_INTEGRITY_CHECK_FAILED;
 
 import com.google.inject.Singleton;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -81,6 +85,18 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
+  public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
+    GridFSFindIterable filemetaData =
+        fileBucketHelper.getOrCreateFileBucket(fileBucket).find(Filters.eq("metadata.entityId", entityId));
+    return stream(filemetaData.sort(Sorts.descending("uploadDate")).spliterator(), false)
+        .map(gridFSFile -> gridFSFile.getObjectId().toHexString())
+        .collect(toList());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options) {
     ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(fileBucket).uploadFromStream(filename, in, options);
     return fileId.toHexString();
@@ -96,7 +112,7 @@ public class FileServiceImpl implements FileService {
       objIDs.add(new ObjectId(id));
     }
     BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
-    List<DBObject> dbObjects = wingsPersistence.getCollection("configs.files").find(query).toArray();
+    List<DBObject> dbObjects = wingsPersistence.getCollection(fileBucket.getName() + ".files").find(query).toArray();
     return dbObjects;
   }
 
@@ -132,6 +148,20 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
+  public boolean updateParentEntityId(String entityId, String fileId, FileBucket fileBucket) {
+    DBCollection collection = wingsPersistence.getDatastore().getDB().getCollection(fileBucket.getName() + ".files");
+    collection.createIndex(new BasicDBObject("metadata.entityId", 1), new BasicDBObject("background", true));
+    return collection
+               .update(new BasicDBObject("_id", new ObjectId(fileId)),
+                   new BasicDBObject("$set", new BasicDBObject("metadata.entityId", entityId)))
+               .getN()
+        > 0;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
     GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
     String fileId = fileBucketHelper.getOrCreateFileBucket(bucket)
@@ -151,6 +181,12 @@ public class FileServiceImpl implements FileService {
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
     fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileId));
+  }
+
+  @Override
+  public void deleteAllFilesForEntity(String entityId, FileBucket fileBucket) {
+    getAllFileIds(entityId, fileBucket)
+        .forEach(s -> fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(entityId)));
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {

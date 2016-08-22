@@ -13,6 +13,8 @@ import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.service.intfc.FileService.FileBucket.ARTIFACTS;
+import static software.wings.utils.WingsTestConstants.FILE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -51,7 +53,7 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
   /**
    * The constant SERVICE.
    */
-  public static final Service SERVICE = aService().withUuid("SERVICE_ID").build();
+  public static final Service SERVICE = aService().withUuid(SERVICE_ID).build();
   /**
    * The constant JENKINS_ARTIFACT_SOURCE.
    */
@@ -65,10 +67,6 @@ public class JenkinsArtifactCollectorServiceImplTest extends WingsBaseTest {
                                                            .withServices(Lists.newArrayList(SERVICE))
                                                            .build()))
           .build();
-  /**
-   * The constant FILE_ID.
-   */
-  public static final String FILE_ID = "FILE_ID";
   /**
    * The File metadata argument captor.
    */

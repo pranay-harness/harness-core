@@ -55,6 +55,8 @@ public interface ConfigService {
    */
   ConfigFile get(@NotEmpty String appId, @NotEmpty String configId, @NotNull boolean withOverridePath);
 
+  File download(String appId, String configId, String version);
+
   /**
    * Update.
    *
