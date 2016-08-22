@@ -1374,14 +1374,17 @@ public class WorkflowServiceImpl implements WorkflowService {
   private List<InstanceStatusSummary> aggregateInstanceStatusSummary(List<StateExecutionInstance> childInstances) {
     // TODO: better aggregation needed
     Map<String, InstanceStatusSummary> summaryMap = new HashMap<>();
-    childInstances.forEach(childInstance -> {
+    for (StateExecutionInstance childInstance : childInstances) {
+      if (!(childInstance.getStateExecutionData() instanceof ElementStateExecutionData)) {
+        continue;
+      }
       ElementStateExecutionData childStateExecutionData =
           (ElementStateExecutionData) childInstance.getStateExecutionData();
       if (childStateExecutionData.getInstanceStatusSummary() != null) {
         childStateExecutionData.getInstanceStatusSummary().forEach(
             summary -> { summaryMap.put(summary.getInstanceElement().getUuid(), summary); });
       }
-    });
+    }
     return new ArrayList<>(summaryMap.values());
   }
 
