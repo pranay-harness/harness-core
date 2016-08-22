@@ -10,6 +10,7 @@ public class TopConsumer {
   private String appName;
   private int successfulActivityCount;
   private int failedActivityCount;
+  private int totalCount;
 
   /**
    * Gets app name.
@@ -84,6 +85,24 @@ public class TopConsumer {
   }
 
   /**
+   * Gets total count.
+   *
+   * @return the total count
+   */
+  public int getTotalCount() {
+    return totalCount;
+  }
+
+  /**
+   * Sets total count.
+   *
+   * @param totalCount the total count
+   */
+  public void setTotalCount(int totalCount) {
+    this.totalCount = totalCount;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -91,6 +110,7 @@ public class TopConsumer {
     private String appName;
     private int successfulActivityCount;
     private int failedActivityCount;
+    private int totalCount;
 
     private Builder() {}
 
@@ -148,6 +168,17 @@ public class TopConsumer {
     }
 
     /**
+     * With total count builder.
+     *
+     * @param totalCount the total count
+     * @return the builder
+     */
+    public Builder withTotalCount(int totalCount) {
+      this.totalCount = totalCount;
+      return this;
+    }
+
+    /**
      * But builder.
      *
      * @return the builder
@@ -157,7 +188,8 @@ public class TopConsumer {
           .withAppId(appId)
           .withAppName(appName)
           .withSuccessfulActivityCount(successfulActivityCount)
-          .withFailedActivityCount(failedActivityCount);
+          .withFailedActivityCount(failedActivityCount)
+          .withTotalCount(totalCount);
     }
 
     /**
@@ -171,6 +203,7 @@ public class TopConsumer {
       topConsumer.setAppName(appName);
       topConsumer.setSuccessfulActivityCount(successfulActivityCount);
       topConsumer.setFailedActivityCount(failedActivityCount);
+      topConsumer.setTotalCount(totalCount);
       return topConsumer;
     }
   }

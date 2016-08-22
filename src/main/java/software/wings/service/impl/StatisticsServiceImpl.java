@@ -14,6 +14,7 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
+import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -41,7 +42,6 @@ import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.TopConsumer;
-import software.wings.beans.stats.TopConsumer.Builder;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
@@ -277,13 +277,14 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
-    TopConsumer topConsumer = Builder.aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
+    TopConsumer topConsumer = aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
     activityStatusAggregation.getStatus().stream().forEach(statusCount -> {
       if (statusCount.getStatus().equals(COMPLETED)) {
         topConsumer.setSuccessfulActivityCount(statusCount.getCount());
       } else {
         topConsumer.setFailedActivityCount(statusCount.getCount());
       }
+      topConsumer.setTotalCount(topConsumer.getTotalCount() + statusCount.getCount());
     });
     return topConsumer;
   }
