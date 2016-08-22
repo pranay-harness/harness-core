@@ -1237,7 +1237,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return;
     }
 
-    if (workflowExecution.getServiceExecutionSummaryMap() != null
+    if (workflowExecution.getServiceExecutionSummaries() != null
         && workflowExecution.getStatusInstanceBreakdownMap() != null) {
       return;
     }
@@ -1270,16 +1270,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     StateExecutionInstance svcRepeatStateExecutionInstance = getServiceRepeatInstance(topInstances);
     if (svcRepeatStateExecutionInstance != null) {
-      workflowExecution.setServiceExecutionSummaryMap(
-          getServiceExecutionSummaryMap(workflowExecution, svcRepeatStateExecutionInstance));
-      wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaryMap",
-          workflowExecution.getServiceExecutionSummaryMap());
+      workflowExecution.setServiceExecutionSummaries(
+          getServiceExecutionSummaries(workflowExecution, svcRepeatStateExecutionInstance));
+      wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
+          workflowExecution.getServiceExecutionSummaries());
     }
 
     // TODO: handle if service repeat is not there, rather instance repeat is introduced directly
   }
 
-  private LinkedHashMap<String, ElementExecutionSummary> getServiceExecutionSummaryMap(
+  private List<ElementExecutionSummary> getServiceExecutionSummaries(
       WorkflowExecution workflowExecution, StateExecutionInstance svcRepeatStateExecutionInstance) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
@@ -1305,7 +1305,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     });
 
-    LinkedHashMap<String, ElementExecutionSummary> elementExecutionSummaryMap = new LinkedHashMap<>();
+    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
       if (stateExecutionInstance.getContextElement() == null) {
         continue;
@@ -1329,9 +1329,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childRepeatInstances);
       elementExecutionSummary.setInstancesCount(instanceStatusSummary.size());
-      elementExecutionSummaryMap.put(stateExecutionInstance.getContextElement().getUuid(), elementExecutionSummary);
+      elementExecutionSummaries.add(elementExecutionSummary);
     }
-    return elementExecutionSummaryMap;
+    return elementExecutionSummaries;
   }
 
   private StateExecutionInstance getServiceRepeatInstance(List<StateExecutionInstance> topInstances) {
