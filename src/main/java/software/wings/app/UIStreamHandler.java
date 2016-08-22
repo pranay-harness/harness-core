@@ -7,7 +7,6 @@ import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
