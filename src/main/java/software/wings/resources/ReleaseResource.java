@@ -176,6 +176,15 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.addArtifactSource(id, appId, artifactSource));
   }
 
+  @PUT
+  @Timed
+  @ExceptionMetered
+  @Path("{id}/artifactsources")
+  public RestResponse<Release> updateArtifactSource(
+      @QueryParam("appId") String appId, @PathParam("id") String id, ArtifactSource artifactSource) {
+    return new RestResponse<>(releaseService.updateArtifactSource(id, appId, artifactSource));
+  }
+
   /**
    * Delete artifact source.
    *
