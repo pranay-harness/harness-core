@@ -11,6 +11,7 @@ import static software.wings.beans.Activity.Status.COMPLETED;
 import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
@@ -122,7 +123,11 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
                            .build())
-            .addFilter(aSearchFilter().withField("status", Operator.EQ, SUCCESS).build())
+            .addFilter(aSearchFilter()
+                           .withField("status", Operator.EQ, SUCCESS)
+                           .withField("startTs", EXISTS)
+                           .withField("endTs", EXISTS)
+                           .build())
             .build();
     if (daysTo > 0) {
       pageRequest.addFilter(
@@ -151,7 +156,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                     || envUuidListByType.get(OTHER).contains(wfl.getEnvId()))
             .collect(groupingBy(wfl
                 -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : OTHER,
-                summingLong(wf -> (wf.getLastUpdatedAt() - wf.getCreatedAt()))));
+                summingLong(wf -> (wf.getEndTs() - wf.getStartTs()))));
 
     deploymentTimeDurationSumByType.computeIfAbsent(PROD, wfl -> deploymentCountByType.put(PROD, 0L));
     deploymentTimeDurationSumByType.computeIfAbsent(OTHER, wfl -> deploymentCountByType.put(OTHER, 0L));
@@ -221,7 +226,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
             .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
-            .addFilter(aSearchFilter().withField("releaseId", Operator.EXISTS).build())
+            .addFilter(aSearchFilter().withField("releaseId", EXISTS).build())
             .addFieldsIncluded("releaseId")
             .build();
     List<Activity> activityList = activityService.list(pageRequest).getResponse();
@@ -235,7 +240,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
             .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
-            .addFilter(aSearchFilter().withField("artifactId", Operator.EXISTS).build())
+            .addFilter(aSearchFilter().withField("artifactId", EXISTS).build())
             .addFieldsIncluded("artifactId")
             .build();
     List<Activity> activityList = activityService.list(pageRequest).getResponse();
