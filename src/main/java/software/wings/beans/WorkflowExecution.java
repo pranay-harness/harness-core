@@ -36,6 +36,9 @@ public class WorkflowExecution extends Base {
   private LinkedHashMap<String, ElementExecutionSummary> serviceExecutionSummaryMap;
   private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap;
 
+  private Long startTs;
+  private Long endTs;
+
   /**
    * Gets name.
    *
@@ -289,5 +292,21 @@ public class WorkflowExecution extends Base {
    */
   public boolean isPausedStatus() {
     return status != null && status == ExecutionStatus.PAUSED;
+  }
+
+  public Long getStartTs() {
+    return startTs;
+  }
+
+  public void setStartTs(Long startTs) {
+    this.startTs = startTs;
+  }
+
+  public Long getEndTs() {
+    return endTs;
+  }
+
+  public void setEndTs(Long endTs) {
+    this.endTs = endTs;
   }
 }

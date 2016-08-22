@@ -8,6 +8,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
+import static software.wings.beans.InstanceExecutionHistory.InstanceExecutionHistoryBuilder.anInstanceExecutionHistory;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.StatusInstanceBreakdown.StatusInstanceBreakdownBuilder.aStatusInstanceBreakdown;
 import static software.wings.dl.MongoHelper.setUnset;
@@ -876,8 +877,9 @@ public class WorkflowServiceImpl implements WorkflowService {
                                          .equal(workflowExecutionId)
                                          .field("status")
                                          .equal(ExecutionStatus.NEW);
-    UpdateOperations<WorkflowExecution> updateOps =
-        wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", ExecutionStatus.RUNNING);
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set("status", ExecutionStatus.RUNNING)
+                                                        .set("startTs", System.currentTimeMillis());
 
     wingsPersistence.update(query, updateOps);
 
@@ -1391,18 +1393,31 @@ public class WorkflowServiceImpl implements WorkflowService {
   private LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> getStatusInstanceBreakdownMap(
       List<InstanceStatusSummary> instanceStatusSummaries) {
     LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap = new LinkedHashMap<>();
-    statusInstanceBreakdownMap.put(
-        ExecutionStatus.SUCCESS, aStatusInstanceBreakdown().withStatus(ExecutionStatus.SUCCESS).build());
-    statusInstanceBreakdownMap.put(
-        ExecutionStatus.FAILED, aStatusInstanceBreakdown().withStatus(ExecutionStatus.FAILED).build());
+    StatusInstanceBreakdown success = aStatusInstanceBreakdown().withStatus(ExecutionStatus.SUCCESS).build();
+    statusInstanceBreakdownMap.put(ExecutionStatus.SUCCESS, success);
+    StatusInstanceBreakdown failed = aStatusInstanceBreakdown().withStatus(ExecutionStatus.FAILED).build();
+    statusInstanceBreakdownMap.put(ExecutionStatus.FAILED, failed);
     if (instanceStatusSummaries == null || instanceStatusSummaries.isEmpty()) {
       return statusInstanceBreakdownMap;
     }
     instanceStatusSummaries.forEach(instanceStatusSummary -> {
       ExecutionStatus status = instanceStatusSummary.getStatus();
       StatusInstanceBreakdown statusInstanceBreakdown = statusInstanceBreakdownMap.get(status);
-      statusInstanceBreakdown.setIntanceCount(statusInstanceBreakdown.getIntanceCount() + 1);
+      statusInstanceBreakdown.setInstanceCount(statusInstanceBreakdown.getInstanceCount() + 1);
     });
+    // TODO: interpret history
+    if (success.getInstanceCount() > 0) {
+      success.getInstanceExecutionHistories().add(anInstanceExecutionHistory()
+                                                      .withStatus(success.getStatus())
+                                                      .withIntanceCount(success.getInstanceCount())
+                                                      .build());
+    }
+    if (failed.getInstanceCount() > 0) {
+      failed.getInstanceExecutionHistories().add(anInstanceExecutionHistory()
+                                                     .withStatus(failed.getStatus())
+                                                     .withIntanceCount(failed.getInstanceCount())
+                                                     .build());
+    }
     return statusInstanceBreakdownMap;
   }
 

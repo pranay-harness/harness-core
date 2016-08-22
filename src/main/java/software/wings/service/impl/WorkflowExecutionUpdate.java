@@ -106,8 +106,9 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                                          .field("status")
                                          .in(runningStatuses);
 
-    UpdateOperations<WorkflowExecution> updateOps =
-        wingsPersistence.createUpdateOperations(WorkflowExecution.class).set("status", status);
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set("status", status)
+                                                        .set("endTs", System.currentTimeMillis());
     wingsPersistence.update(query, updateOps);
 
     try {
