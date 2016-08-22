@@ -49,7 +49,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
     Artifact artifact = message.getArtifact();
     try {
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.RUNNING);
-      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
+      eventEmitter.send(Channel.ARTIFACTS,
+          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
       Release release = message.getArtifact().getRelease();
 
@@ -65,7 +66,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       }
       logger.info("Artifact collection completed - artifactId : {}", artifact.getUuid());
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.READY);
-      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
+      eventEmitter.send(Channel.ARTIFACTS,
+          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
 
       notificationService.sendNotificationAsync(anApprovalNotification()
                                                     .withAppId(artifact.getAppId())
@@ -77,7 +79,8 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
     } catch (Exception ex) {
       logger.error(ex.getMessage(), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED);
-      eventEmitter.send(Channel.ARTIFACTS, anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).build());
+      eventEmitter.send(Channel.ARTIFACTS,
+          anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());
     }
   }
 }
