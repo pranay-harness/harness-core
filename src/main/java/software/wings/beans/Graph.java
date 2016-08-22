@@ -403,6 +403,9 @@ public class Graph {
     private boolean expanded;
     private boolean origin;
 
+    private List<ElementExecutionSummary> elementStatusSummary;
+    private List<InstanceStatusSummary> instanceStatusSummary;
+
     private Map<String, Object> properties = new HashMap<>();
 
     @JsonIgnore private Node next;
@@ -694,6 +697,22 @@ public class Graph {
      */
     public void setOrigin(boolean origin) {
       this.origin = origin;
+    }
+
+    public List<ElementExecutionSummary> getElementStatusSummary() {
+      return elementStatusSummary;
+    }
+
+    public void setElementStatusSummary(List<ElementExecutionSummary> elementStatusSummary) {
+      this.elementStatusSummary = elementStatusSummary;
+    }
+
+    public List<InstanceStatusSummary> getInstanceStatusSummary() {
+      return instanceStatusSummary;
+    }
+
+    public void setInstanceStatusSummary(List<InstanceStatusSummary> instanceStatusSummary) {
+      this.instanceStatusSummary = instanceStatusSummary;
     }
 
     /*
