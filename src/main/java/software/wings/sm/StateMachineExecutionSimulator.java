@@ -4,6 +4,8 @@
 
 package software.wings.sm;
 
+import static software.wings.api.ForkElement.Builder.aForkElement;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,8 +206,8 @@ public class StateMachineExecutionSimulator {
         cloned.setStateName(child.getName());
         ExecutionContextImpl childContext =
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
-        cloned.setContextElementName("Fork" + childStateName);
-        cloned.setContextElementType(StateType.FORK.name());
+        cloned.setContextElement(
+            aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
         Set<EntityType> repeatArgsInContext = new HashSet<>(argsInContext);
         Set<EntityType> nextReqEntities = extrapolateRequiredExecutionArgs(
             childContext, stateMachine, child, repeatArgsInContext, commandMap, serviceInstanceIds);
@@ -272,8 +274,7 @@ public class StateMachineExecutionSimulator {
       repeatElements.forEach(repeatElement -> {
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(repeat.getName());
-        cloned.setContextElementName(repeatElement.getName());
-        cloned.setContextElementType(repeatElement.getElementType().name());
+        cloned.setContextElement(repeatElement);
         ExecutionContextImpl childContext =
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
         childContext.pushContextElement(repeatElement);
@@ -285,8 +286,8 @@ public class StateMachineExecutionSimulator {
         State child = stateMachine.getState(childStateName);
         StateExecutionInstance cloned = JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
         cloned.setStateName(child.getName());
-        cloned.setContextElementName(((ForkState) state).getForkElementName(childStateName));
-        cloned.setContextElementType(StateType.FORK.name());
+        cloned.setContextElement(
+            aForkElement().withStateName(childStateName).withParentId(stateExecutionInstance.getUuid()).build());
         ExecutionContextImpl childContext =
             (ExecutionContextImpl) executionContextFactory.createExecutionContext(cloned, stateMachine);
         extrapolateProgress(
@@ -359,10 +360,11 @@ public class StateMachineExecutionSimulator {
   }
 
   private String getKeyName(String parentPath, StateExecutionInstance stateExecutionInstance) {
-    if (StringUtils.isBlank(stateExecutionInstance.getContextElementName())) {
+    if (stateExecutionInstance.getContextElement() == null
+        || StringUtils.isBlank(stateExecutionInstance.getContextElement().getName())) {
       return parentPath + "__" + stateExecutionInstance.getStateName();
     } else {
-      return parentPath + "__" + stateExecutionInstance.getContextElementName() + "__"
+      return parentPath + "__" + stateExecutionInstance.getContextElement().getName() + "__"
           + stateExecutionInstance.getStateName();
     }
   }

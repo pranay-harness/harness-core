@@ -1,7 +1,7 @@
 package software.wings.sm;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.sm.ExecutionStatus.ExecutionStatusData.Builder.anExecutionStatusData;
+import static software.wings.sm.ElementNotifyResponseData.Builder.anElementNotifyResponseData;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -322,8 +322,7 @@ public class StateMachineExecutor {
               stateExecutionInstance.getExecutionUuid());
         }
       } else {
-        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
-            anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
+        notify(stateExecutionInstance, ExecutionStatus.SUCCESS);
       }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
@@ -352,14 +351,21 @@ public class StateMachineExecutor {
               stateExecutionInstance.getExecutionUuid());
         }
       } else {
-        waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
-            anExecutionStatusData().withExecutionStatus(ExecutionStatus.FAILED).build());
+        notify(stateExecutionInstance, ExecutionStatus.FAILED);
       }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
       return triggerExecution(sm, cloned);
     }
     return null;
+  }
+
+  private void notify(StateExecutionInstance stateExecutionInstance, ExecutionStatus status) {
+    waitNotifyEngine.notify(stateExecutionInstance.getNotifyId(),
+        anElementNotifyResponseData()
+            .withContextElement(stateExecutionInstance.getContextElement())
+            .withExecutionStatus(status)
+            .build());
   }
 
   private void handleSpawningStateExecutionInstances(

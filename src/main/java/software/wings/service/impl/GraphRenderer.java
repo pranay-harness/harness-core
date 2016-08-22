@@ -99,7 +99,10 @@ public class GraphRenderer {
           elementsMap = new HashMap<>();
           parentIdElementsMap.put(instance.getParentInstanceId(), elementsMap);
         }
-        elementsMap.put(instance.getContextElementName(), node);
+        if (instance.getContextElement() == null) {
+          continue;
+        }
+        elementsMap.put(instance.getContextElement().getName(), node);
       }
 
       if (instance.getPrevInstanceId() != null) {

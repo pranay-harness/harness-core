@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
+import static software.wings.api.ForkElement.Builder.aForkElement;
 
 import com.google.common.base.Joiner;
 
@@ -9,6 +10,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
+import software.wings.api.ForkElement;
 import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -17,7 +19,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatus.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
@@ -62,22 +63,21 @@ public class ForkState extends State {
     forkStateExecutionData.setForkStateNames(forkStateNames);
     forkStateExecutionData.setElements(new ArrayList<>());
     for (String state : forkStateNames) {
-      String notifyId = stateExecutionInstance.getUuid() + "-forkTo-" + state;
+      ForkElement element = aForkElement().withStateName(state).withParentId(stateExecutionInstance.getUuid()).build();
       StateExecutionInstance childStateExecutionInstance =
           JsonUtils.clone(stateExecutionInstance, StateExecutionInstance.class);
 
-      childStateExecutionInstance.setContextElementName(getForkElementName(state));
-      childStateExecutionInstance.setContextElementType(StateType.FORK.name());
+      childStateExecutionInstance.setContextElement(element);
       childStateExecutionInstance.setStateName(state);
-      childStateExecutionInstance.setNotifyId(notifyId);
+      childStateExecutionInstance.setNotifyId(element.getUuid());
       childStateExecutionInstance.setPrevInstanceId(null);
       childStateExecutionInstance.setContextTransition(true);
       childStateExecutionInstance.setStatus(ExecutionStatus.NEW);
       childStateExecutionInstance.setStartTs(null);
       childStateExecutionInstance.setEndTs(null);
       executionResponse.add(childStateExecutionInstance);
-      correlationIds.add(notifyId);
-      forkStateExecutionData.getElements().add(childStateExecutionInstance.getContextElementName());
+      correlationIds.add(element.getUuid());
+      forkStateExecutionData.getElements().add(childStateExecutionInstance.getContextElement().getName());
     }
 
     executionResponse.setStateExecutionData(forkStateExecutionData);
@@ -157,7 +157,7 @@ public class ForkState extends State {
   /**
    * The type Fork state execution data.
    */
-  public static class ForkStateExecutionData extends StateExecutionData {
+  public static class ForkStateExecutionData extends ElementStateExecutionData {
     private List<String> elements;
     private List<String> forkStateNames;
 

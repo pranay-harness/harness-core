@@ -4,6 +4,8 @@ import static java.util.Arrays.asList;
 
 import com.google.common.collect.Lists;
 
+import software.wings.waitnotify.NotifyResponseData;
+
 import java.util.List;
 
 /**
@@ -17,6 +19,7 @@ public class ExecutionResponse {
   private ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
   private String errorMessage;
   private StateExecutionData stateExecutionData;
+  private NotifyResponseData notifyResponseData;
 
   /**
    * Is asynch boolean.
@@ -106,6 +109,14 @@ public class ExecutionResponse {
    */
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public NotifyResponseData getNotifyResponseData() {
+    return notifyResponseData;
+  }
+
+  public void setNotifyResponseData(NotifyResponseData notifyResponseData) {
+    this.notifyResponseData = notifyResponseData;
   }
 
   /**

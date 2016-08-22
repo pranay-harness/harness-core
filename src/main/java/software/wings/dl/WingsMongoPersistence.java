@@ -28,6 +28,7 @@ import software.wings.security.UserThreadLocal;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -187,6 +188,15 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     return primaryDatastore.update(ent, ops);
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
+    Map<String, Object> keyValuePairs = new HashMap<>();
+    keyValuePairs.put(fieldName, value);
+    updateFields(cls, entityId, keyValuePairs);
+  }
   /**
    * {@inheritDoc}
    */
