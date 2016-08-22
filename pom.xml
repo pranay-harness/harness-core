@@ -135,7 +135,7 @@
         <dependency>
             <groupId>org.mongodb.morphia</groupId>
             <artifactId>morphia</artifactId>
-            <version>1.2.0</version>
+            <version>1.2.1</version>
             <exclusions>
                 <exclusion>
                     <artifactId>mongo-java-driver</artifactId>
@@ -148,6 +148,12 @@
             <groupId>org.mongodb.morphia</groupId>
             <artifactId>morphia-logging-slf4j</artifactId>
             <version>1.2.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>morphia</artifactId>
+                    <groupId>org.mongodb.morphia</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>

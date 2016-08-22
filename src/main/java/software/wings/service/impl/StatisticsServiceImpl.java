@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.summingLong;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.Activity.Status.COMPLETED;
 import static software.wings.beans.Environment.EnvironmentType.OTHER;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -20,10 +21,12 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.collections.IteratorUtils;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.aggregation.Projection;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.Status;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
@@ -33,10 +36,12 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActiveArtifactStatistics;
 import software.wings.beans.stats.ActiveReleaseStatistics;
+import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.TopConsumer;
+import software.wings.beans.stats.TopConsumer.Builder;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
@@ -51,7 +56,6 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -250,14 +254,38 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   private List<TopConsumer> getTopConsumerForPastXDays(int days) {
     long epochMilli = getEpochMilliOfStartOfDayForXDaysInPastFromNow(days);
-    Iterator<TopConsumer> topConsumerIterator =
-        wingsPersistence.getDatastore()
-            .createAggregation(Activity.class)
-            .match(wingsPersistence.createQuery(Activity.class).field("createdAt").greaterThanOrEq(epochMilli))
-            .group("appId", Group.grouping("activityCount", new Accumulator("$sum", 1)))
-            .aggregate(TopConsumer.class);
 
-    return IteratorUtils.toList(topConsumerIterator);
+    List<TopConsumer> topConsumers = new ArrayList<>();
+    Query<Activity> query = wingsPersistence.createQuery(Activity.class)
+                                .field("createdAt")
+                                .greaterThanOrEq(epochMilli)
+                                .field("status")
+                                .hasAnyOf(Arrays.asList(Status.FAILED, Status.COMPLETED));
+
+    wingsPersistence.getDatastore()
+        .createAggregation(Activity.class)
+        .match(query)
+        .group(Group.id(grouping("appId"), grouping("status")), grouping("count", new Accumulator("$sum", 1)))
+        .group("_id.appId",
+            grouping("status",
+                grouping("$addToSet", Projection.projection("status", "_id.status"),
+                    Projection.projection("count", "count"))))
+        .aggregate(ActivityStatusAggregation.class)
+        .forEachRemaining(activityStatusAggregation
+            -> topConsumers.add(getTopConsumerFromActivityStatusAggregation(activityStatusAggregation)));
+    return topConsumers;
+  }
+
+  private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
+    TopConsumer topConsumer = Builder.aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
+    activityStatusAggregation.getStatus().stream().forEach(statusCount -> {
+      if (statusCount.getStatus().equals(COMPLETED)) {
+        topConsumer.setSuccessfulActivityCount(statusCount.getCount());
+      } else {
+        topConsumer.setFailedActivityCount(statusCount.getCount());
+      }
+    });
+    return topConsumer;
   }
 
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {

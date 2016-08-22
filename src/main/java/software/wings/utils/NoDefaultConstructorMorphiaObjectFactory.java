@@ -21,7 +21,11 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
         return constructor.newInstance();
       }
       try {
-        return objenesis.newInstance(clazz);
+        if (clazz.getName().startsWith("software.wings")) {
+          return objenesis.newInstance(clazz);
+        } else {
+          return super.createInstance(clazz);
+        }
       } catch (Exception e) {
         throw new MappingException("Failed to instantiate " + clazz.getName(), e);
       }

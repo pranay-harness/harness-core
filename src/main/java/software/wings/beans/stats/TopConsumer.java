@@ -1,7 +1,5 @@
 package software.wings.beans.stats;
 
-import com.google.common.base.MoreObjects;
-
 import org.mongodb.morphia.annotations.Id;
 
 /**
@@ -10,7 +8,8 @@ import org.mongodb.morphia.annotations.Id;
 public class TopConsumer {
   @Id private String appId;
   private String appName;
-  private Integer activityCount;
+  private int successfulActivityCount;
+  private int failedActivityCount;
 
   /**
    * Gets app name.
@@ -49,29 +48,130 @@ public class TopConsumer {
   }
 
   /**
-   * Gets activity count.
+   * Gets successful activity count.
    *
-   * @return the activity count
+   * @return the successful activity count
    */
-  public Integer getActivityCount() {
-    return activityCount;
+  public int getSuccessfulActivityCount() {
+    return successfulActivityCount;
   }
 
   /**
-   * Sets activity count.
+   * Sets successful activity count.
    *
-   * @param activityCount the activity count
+   * @param successfulActivityCount the successful activity count
    */
-  public void setActivityCount(Integer activityCount) {
-    this.activityCount = activityCount;
+  public void setSuccessfulActivityCount(int successfulActivityCount) {
+    this.successfulActivityCount = successfulActivityCount;
   }
 
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("appName", appName)
-        .add("appId", appId)
-        .add("activityCount", activityCount)
-        .toString();
+  /**
+   * Gets failed activity count.
+   *
+   * @return the failed activity count
+   */
+  public int getFailedActivityCount() {
+    return failedActivityCount;
+  }
+
+  /**
+   * Sets failed activity count.
+   *
+   * @param failedActivityCount the failed activity count
+   */
+  public void setFailedActivityCount(int failedActivityCount) {
+    this.failedActivityCount = failedActivityCount;
+  }
+
+  /**
+   * The type Builder.
+   */
+  public static final class Builder {
+    private String appId;
+    private String appName;
+    private int successfulActivityCount;
+    private int failedActivityCount;
+
+    private Builder() {}
+
+    /**
+     * A top consumer builder.
+     *
+     * @return the builder
+     */
+    public static Builder aTopConsumer() {
+      return new Builder();
+    }
+
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
+    public Builder withAppId(String appId) {
+      this.appId = appId;
+      return this;
+    }
+
+    /**
+     * With app name builder.
+     *
+     * @param appName the app name
+     * @return the builder
+     */
+    public Builder withAppName(String appName) {
+      this.appName = appName;
+      return this;
+    }
+
+    /**
+     * With successful activity count builder.
+     *
+     * @param successfulActivityCount the successful activity count
+     * @return the builder
+     */
+    public Builder withSuccessfulActivityCount(int successfulActivityCount) {
+      this.successfulActivityCount = successfulActivityCount;
+      return this;
+    }
+
+    /**
+     * With failed activity count builder.
+     *
+     * @param failedActivityCount the failed activity count
+     * @return the builder
+     */
+    public Builder withFailedActivityCount(int failedActivityCount) {
+      this.failedActivityCount = failedActivityCount;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
+    public Builder but() {
+      return aTopConsumer()
+          .withAppId(appId)
+          .withAppName(appName)
+          .withSuccessfulActivityCount(successfulActivityCount)
+          .withFailedActivityCount(failedActivityCount);
+    }
+
+    /**
+     * Build top consumer.
+     *
+     * @return the top consumer
+     */
+    public TopConsumer build() {
+      TopConsumer topConsumer = new TopConsumer();
+      topConsumer.setAppId(appId);
+      topConsumer.setAppName(appName);
+      topConsumer.setSuccessfulActivityCount(successfulActivityCount);
+      topConsumer.setFailedActivityCount(failedActivityCount);
+      return topConsumer;
+    }
   }
 }
