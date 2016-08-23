@@ -69,6 +69,8 @@ public interface ReleaseService {
   <T extends ArtifactSource> Release addArtifactSource(
       @NotEmpty String id, @NotEmpty String appId, @Valid T artifactSource);
 
+  Release updateArtifactSource(String id, String appId, ArtifactSource artifactSource);
+
   /**
    * Delete artifact source.
    *

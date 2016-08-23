@@ -202,6 +202,25 @@ public class ReleaseServiceImpl implements ReleaseService {
     return get(id, appId);
   }
 
+  @Override
+  public Release updateArtifactSource(String id, String appId, ArtifactSource artifactSource) {
+    Release release = wingsPersistence.get(Release.class, appId, id);
+    if (release == null) {
+      throw new NotFoundException("Release with id " + id + " not found");
+    }
+
+    wingsPersistence.update(wingsPersistence.createQuery(Release.class)
+                                .field(ID_KEY)
+                                .equal(id)
+                                .field("appId")
+                                .equal(appId)
+                                .field("artifactSources.sourceName")
+                                .equal(artifactSource.getSourceName()),
+        wingsPersistence.createUpdateOperations(Release.class).set("artifactSources.$", artifactSource));
+
+    return get(id, appId);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ReleaseService#deleteArtifactSource(java.lang.String, java.lang.String,
    * java.lang.String)

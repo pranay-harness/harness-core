@@ -98,6 +98,8 @@ public class ReleaseResourceTest extends WingsBaseTest {
     when(RELEASE_SERVICE.softDelete(anyString(), anyString())).then(invocation -> releaseBuilder.but().build());
     when(RELEASE_SERVICE.addArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
         .thenReturn(releaseBuilder.but().build());
+    when(RELEASE_SERVICE.updateArtifactSource(anyString(), anyString(), any(ArtifactSource.class)))
+        .thenReturn(releaseBuilder.but().build());
     when(RELEASE_SERVICE.deleteArtifactSource(anyString(), anyString(), anyString()))
         .thenReturn(releaseBuilder.but().build());
     PageResponse<Release> pageResponse = new PageResponse<>();
@@ -168,6 +170,18 @@ public class ReleaseResourceTest extends WingsBaseTest {
                                                  new GenericType<RestResponse<Release>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Release.class);
     verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, APP_ID, jenkinsArtifactSource);
+  }
+
+  @Test
+  public void shouldUpdateArtifactSource() {
+    ArtifactSource jenkinsArtifactSource = aJenkinsArtifactSource().build();
+    RestResponse<Release> restResponse = RESOURCES.client()
+                                             .target("/releases/" + RELEASE_ID + "/artifactsources?appId=" + APP_ID)
+                                             .request()
+                                             .put(Entity.entity(jenkinsArtifactSource, MediaType.APPLICATION_JSON),
+                                                 new GenericType<RestResponse<Release>>() {});
+    assertThat(restResponse.getResource()).isInstanceOf(Release.class);
+    verify(RELEASE_SERVICE).updateArtifactSource(RELEASE_ID, APP_ID, jenkinsArtifactSource);
   }
 
   /**

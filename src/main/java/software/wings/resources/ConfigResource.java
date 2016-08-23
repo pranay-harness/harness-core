@@ -181,7 +181,7 @@ public class ConfigResource {
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
       @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
       @PathParam("entityId") String entityId) {
-    configService.deleteByEntityId(appId, entityId, templateId);
+    configService.deleteByEntityId(appId, templateId, entityId);
     return new RestResponse();
   }
 }

@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.utils.validation.Create;
 
+import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -40,6 +41,8 @@ public class ConfigFile extends BaseFile {
   @FormDataParam("relativeFilePath") private String relativeFilePath;
 
   private String overridePath;
+
+  @Transient private List<String> versions;
 
   @Transient private ConfigFile overriddenConfigFile;
 
@@ -167,6 +170,14 @@ public class ConfigFile extends BaseFile {
    */
   public void setOverriddenConfigFile(ConfigFile overriddenConfigFile) {
     this.overriddenConfigFile = overriddenConfigFile;
+  }
+
+  public List<String> getVersions() {
+    return versions;
+  }
+
+  public void setVersions(List<String> versions) {
+    this.versions = versions;
   }
 
   @Override
