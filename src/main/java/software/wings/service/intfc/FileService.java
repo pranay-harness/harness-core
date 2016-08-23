@@ -25,6 +25,8 @@ public interface FileService {
    */
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
 
+  boolean updateParentEntityId(String entityId, String fileId, FileBucket fileBucket);
+
   /**
    * Save file.
    *
@@ -71,6 +73,8 @@ public interface FileService {
    */
   GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
 
+  List<String> getAllFileIds(String entityId, FileBucket fileBucket);
+
   /**
    * Upload from stream.
    *
@@ -90,6 +94,8 @@ public interface FileService {
    * @return the files meta data
    */
   List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket);
+
+  void deleteAllFilesForEntity(String entityId, FileBucket fileBucket);
 
   /**
    * The Enum FileBucket.

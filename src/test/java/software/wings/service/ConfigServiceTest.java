@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -31,7 +32,7 @@ import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
-import software.wings.beans.SearchFilter;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.dl.PageRequest;
@@ -107,7 +108,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     PageRequest pageRequest = aPageRequest()
                                   .withLimit("50")
                                   .withOffset("0")
-                                  .addFilter(SearchFilter.Builder.aSearchFilter()
+                                  .addFilter(aSearchFilter()
                                                  .withField("appId", EQ, APP_ID)
                                                  .withField("envId", EQ, ENV_ID)
                                                  .withField("templateId", EQ, TEMPLATE_ID)
@@ -279,10 +280,10 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withChecksum("CHECKSUM")
                                 .withSize(100)
                                 .build();
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     configService.delete(APP_ID, FILE_ID);
-    verify(wingsPersistence).delete(configFile);
-    verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+    verify(wingsPersistence).delete(query);
+    verify(fileService).deleteAllFilesForEntity(FILE_ID, FileBucket.CONFIGS);
   }
 
   /**
@@ -298,14 +299,22 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withName(FILE_NAME)
                                 .withFileName(FILE_NAME)
                                 .build();
-    when(query.asList()).thenReturn(Arrays.asList(configFile));
+
+    PageResponse<ConfigFile> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(configFile));
+    pageResponse.setTotal(1);
+
+    PageRequest<ConfigFile> pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
+            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
+            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
+            .build();
+
+    when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
+
     configService.getConfigFilesForEntity(APP_ID, TEMPLATE_ID, "ENTITY_ID");
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("templateId");
-    verify(end).equal(TEMPLATE_ID);
-    verify(query).field("entityId");
-    verify(end).equal("ENTITY_ID");
+    verify(wingsPersistence).query(ConfigFile.class, pageRequest);
   }
 
   /**
@@ -327,17 +336,24 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withChecksum("CHECKSUM")
                                 .withSize(100)
                                 .build();
-    when(query.asList()).thenReturn(Arrays.asList(configFile));
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+
+    PageResponse<ConfigFile> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(configFile));
+    pageResponse.setTotal(1);
+
+    PageRequest<ConfigFile> pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("appId", Operator.EQ, APP_ID).build())
+            .addFilter(aSearchFilter().withField("templateId", Operator.EQ, TEMPLATE_ID).build())
+            .addFilter(aSearchFilter().withField("entityId", Operator.EQ, "ENTITY_ID").build())
+            .build();
+
+    when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
+    when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
+
     configService.deleteByEntityId(APP_ID, TEMPLATE_ID, "ENTITY_ID");
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("templateId");
-    verify(end).equal(TEMPLATE_ID);
-    verify(query).field("entityId");
-    verify(end).equal("ENTITY_ID");
-    verify(wingsPersistence).delete(configFile);
-    verify(fileService).deleteFile("GFS_FILE_ID", FileBucket.CONFIGS);
+    verify(wingsPersistence).delete(query);
+    verify(fileService).deleteAllFilesForEntity(FILE_ID, FileBucket.CONFIGS);
   }
 
   /**

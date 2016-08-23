@@ -178,7 +178,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                        .build());
         appService.deleteService(service);
         serviceTemplateService.deleteByService(appId, serviceId);
-        configService.deleteByEntityId(appId, serviceId, DEFAULT_TEMPLATE_ID);
+        configService.deleteByEntityId(appId, DEFAULT_TEMPLATE_ID, serviceId);
       });
     }
   }

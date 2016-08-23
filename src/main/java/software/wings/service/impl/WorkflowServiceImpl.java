@@ -13,6 +13,9 @@ import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.StatusInstanceBreakdown.StatusInstanceBreakdownBuilder.aStatusInstanceBreakdown;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.sm.ContextElementType.INSTANCE;
+import static software.wings.sm.ContextElementType.SERVICE;
+import static software.wings.sm.ContextElementType.SERVICE_TEMPLATE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
@@ -26,7 +29,9 @@ import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.api.InstanceElement;
 import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Artifact;
@@ -1268,10 +1273,19 @@ public class WorkflowServiceImpl implements WorkflowService {
     wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
         workflowExecution.getStatusInstanceBreakdownMap());
 
-    StateExecutionInstance svcRepeatStateExecutionInstance = getServiceRepeatInstance(topInstances);
-    if (svcRepeatStateExecutionInstance != null) {
-      workflowExecution.setServiceExecutionSummaries(
-          getServiceExecutionSummaries(workflowExecution, svcRepeatStateExecutionInstance));
+    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
+    Map<String, ElementExecutionSummary> elementExecutionSummaryMap = new HashMap<>();
+
+    StateExecutionInstance repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE);
+    if (repeatStateExecutionInstance == null) {
+      repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE_TEMPLATE);
+      if (repeatStateExecutionInstance == null) {
+        repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, INSTANCE);
+      }
+    }
+    if (repeatStateExecutionInstance != null) {
+      workflowExecution.setServiceExecutionSummaries(getServiceExecutionSummaries(
+          workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries, elementExecutionSummaryMap));
       wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
           workflowExecution.getServiceExecutionSummaries());
     }
@@ -1279,13 +1293,14 @@ public class WorkflowServiceImpl implements WorkflowService {
     // TODO: handle if service repeat is not there, rather instance repeat is introduced directly
   }
 
-  private List<ElementExecutionSummary> getServiceExecutionSummaries(
-      WorkflowExecution workflowExecution, StateExecutionInstance svcRepeatStateExecutionInstance) {
+  private List<ElementExecutionSummary> getServiceExecutionSummaries(WorkflowExecution workflowExecution,
+      StateExecutionInstance repeatStateExecutionInstance, List<ElementExecutionSummary> elementExecutionSummaries,
+      Map<String, ElementExecutionSummary> elementExecutionSummaryMap) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-            .addFilter("parentInstanceId", Operator.IN, svcRepeatStateExecutionInstance.getUuid())
+            .addFilter("parentInstanceId", Operator.IN, repeatStateExecutionInstance.getUuid())
             .build();
 
     PageResponse<StateExecutionInstance> pageResponse =
@@ -1305,14 +1320,19 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     });
 
-    List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     for (StateExecutionInstance stateExecutionInstance : contextTransitionInstances) {
       if (stateExecutionInstance.getContextElement() == null) {
         continue;
       }
-      ElementExecutionSummary elementExecutionSummary = new ElementExecutionSummary();
-      elementExecutionSummary.setContextElement(stateExecutionInstance.getContextElement());
-      elementExecutionSummary.setStartTs(stateExecutionInstance.getStartTs());
+      ContextElement svcElement = getServiceElement(stateExecutionInstance.getContextElement());
+      ElementExecutionSummary elementExecutionSummary = elementExecutionSummaryMap.get(svcElement.getUuid());
+      if (elementExecutionSummary == null) {
+        elementExecutionSummary = new ElementExecutionSummary();
+        elementExecutionSummary.setContextElement(svcElement);
+        elementExecutionSummary.setStartTs(stateExecutionInstance.getStartTs());
+        elementExecutionSummaries.add(elementExecutionSummary);
+        elementExecutionSummaryMap.put(svcElement.getUuid(), elementExecutionSummary);
+      }
 
       StateExecutionInstance last = stateExecutionInstance;
       StateExecutionInstance next = stateExecutionInstance;
@@ -1325,16 +1345,37 @@ public class WorkflowServiceImpl implements WorkflowService {
         next = prevInstanceIdMap.get(next.getUuid());
       }
 
-      elementExecutionSummary.setEndTs(last.getEndTs());
+      if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
+        elementExecutionSummary.setEndTs(last.getEndTs());
+      }
 
       List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childRepeatInstances);
       elementExecutionSummary.setInstancesCount(instanceStatusSummary.size());
-      elementExecutionSummaries.add(elementExecutionSummary);
     }
     return elementExecutionSummaries;
   }
 
-  private StateExecutionInstance getServiceRepeatInstance(List<StateExecutionInstance> topInstances) {
+  private ServiceElement getServiceElement(ContextElement contextElement) {
+    if (contextElement == null) {
+      return null;
+    }
+    switch (contextElement.getElementType()) {
+      case SERVICE: {
+        return (ServiceElement) contextElement;
+      }
+      case SERVICE_TEMPLATE: {
+        return ((ServiceTemplateElement) contextElement).getServiceElement();
+      }
+      case INSTANCE: {
+        return ((InstanceElement) contextElement).getServiceTemplateElement().getServiceElement();
+      }
+      default: {}
+    }
+    return null;
+  }
+
+  private StateExecutionInstance getRepeatInstanceByType(
+      List<StateExecutionInstance> topInstances, ContextElementType contextElementType) {
     if (topInstances == null || topInstances.isEmpty()) {
       return null;
     }
@@ -1344,7 +1385,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         continue;
       }
       RepeatStateExecutionData repeatStateExecutionData = (RepeatStateExecutionData) instance.getStateExecutionData();
-      if (repeatStateExecutionData.getRepeatElementType() == ContextElementType.SERVICE) {
+      if (repeatStateExecutionData.getRepeatElementType() == contextElementType) {
         return instance;
       }
     }

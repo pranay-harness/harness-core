@@ -158,6 +158,34 @@ public class ReleaseServiceTest extends WingsBaseTest {
   }
 
   /**
+   * Should add artifact source.
+   */
+  @Test
+  public void shouldUpdateArtifactSource() {
+    Release release =
+        releaseService.create(releaseBuilder.but().withTargetDate(System.currentTimeMillis() + futureOffset).build());
+
+    releaseService.addArtifactSource(release.getUuid(), APP_ID, artifactSource);
+
+    JenkinsArtifactSource updatedArtifactSource =
+        aJenkinsArtifactSource()
+            .withArtifactType(ArtifactType.WAR)
+            .withSourceName("job1")
+            .withJobname("job1")
+            .withJenkinsSettingId("JENKINS_SETTING_ID2")
+            .withArtifactPathServices(Lists.newArrayList(
+                anArtifactPathServiceEntry()
+                    .withArtifactPathRegex("dist/svr-*.war")
+                    .withServices(Lists.newArrayList(aService().withUuid("SERVICE_ID").withAppId(APP_ID).build()))
+                    .build()))
+            .build();
+
+    releaseService.updateArtifactSource(release.getUuid(), APP_ID, updatedArtifactSource);
+    release = releaseService.list(new PageRequest<>()).get(0);
+    assertThat(release.getArtifactSources()).hasSize(1).containsExactly(updatedArtifactSource);
+  }
+
+  /**
    * Should delete artifact source.
    */
   @Test

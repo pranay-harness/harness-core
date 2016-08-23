@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static software.wings.beans.FileMetadata.Builder.aFileMetadata;
 import static software.wings.service.ExtendedFile.Builder.anExtendedFile;
+import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.Files;
 
@@ -79,6 +80,20 @@ public class FileServiceTest extends WingsBaseTest {
     assertThat(fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
                    new FileInputStream(tempFile), FileBucket.ARTIFACTS))
         .isNotNull();
+  }
+
+  /**
+   * Should save base file.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void shouldUpdateEntityId() throws Exception {
+    String fileId = fileService.saveFile(anExtendedFile().withName("dummy.txt").withFileName("dummy.txt").build(),
+        new FileInputStream(tempFile), FileBucket.ARTIFACTS);
+    assertThat(fileId).isNotNull();
+    fileService.updateParentEntityId(FILE_ID, fileId, FileBucket.ARTIFACTS);
+    assertThat(fileService.getAllFileIds(FILE_ID, FileBucket.ARTIFACTS)).hasSize(1).contains(fileId);
   }
 
   /**

@@ -29,6 +29,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.states.ElementStateExecutionData;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 
@@ -80,7 +81,13 @@ public class GraphRenderer {
         injector.injectMembers(executionData);
         node.setExecutionSummary(executionData.getExecutionSummary());
         node.setExecutionDetails(executionData.getExecutionDetails());
+        if (executionData instanceof ElementStateExecutionData) {
+          ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
+          node.setInstanceStatusSummary(elementStateExecutionData.getInstanceStatusSummary());
+          node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
+        }
       }
+
       if ((StateType.REPEAT.name().equals(instance.getStateType())
               || StateType.FORK.name().equals(instance.getStateType()))
           && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
