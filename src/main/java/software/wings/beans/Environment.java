@@ -186,10 +186,31 @@ public class Environment extends Base {
     /**
      * Prod environment type.
      */
-    PROD, /**
-           * Other environment type.
-           */
-    OTHER
+    PROD,
+    /**
+     * Dev environment type.
+     */
+    DEV,
+    /**
+     * Qa environment type.
+     */
+    QA,
+    /**
+     * Uat environment type.
+     */
+    UAT,
+    /**
+     * Other environment type.
+     */
+    OTHER,
+    /**
+     * All environment type.
+     */
+    NON_PROD,
+    /**
+     * All environment type.
+     */
+    ALL,
   }
 
   /**

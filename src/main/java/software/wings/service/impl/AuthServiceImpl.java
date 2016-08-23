@@ -10,13 +10,17 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Base;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
-import software.wings.security.PermissionAttr;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AuthService;
 
 import java.util.List;
@@ -40,15 +44,16 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
-  public void authorize(String appId, String envId, User user, List<PermissionAttr> permissionAttrs) {
-    for (PermissionAttr permissionAttr : permissionAttrs) {
-      if (!authorizeAccessType(appId, envId, permissionAttr, user.getRoles())) {
+  public void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes) {
+    for (PermissionAttribute permissionAttribute : permissionAttributes) {
+      if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles())) {
         throw new WingsException(ACCESS_DENIED);
       }
     }
   }
 
-  private boolean authorizeAccessType(String appId, String envId, PermissionAttr permissionAttr, List<Role> roles) {
+  private boolean authorizeAccessType(
+      String appId, String envId, PermissionAttribute permissionAttribute, List<Role> roles) {
     Application application = null;
     Environment environment = null;
 
@@ -61,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     for (Role role : roles) {
-      if (roleAuthorizedWithAccessType(role, permissionAttr, application, environment)) {
+      if (roleAuthorizedWithAccessType(role, permissionAttribute, application, environment)) {
         return true;
       }
     }
@@ -69,13 +74,13 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean roleAuthorizedWithAccessType(
-      Role role, PermissionAttr permissionAttr, Application application, Environment environment) {
-    String reqResource = permissionAttr.getResource().toString();
-    String reqAction = permissionAttr.getAction().toString();
-    boolean reqApp = permissionAttr.isOnApp();
-    boolean reqEnv = permissionAttr.isOnEnv();
+      Role role, PermissionAttribute permissionAttribute, Application application, Environment environment) {
+    ResourceType reqResourceType = permissionAttribute.getResourceType();
+    Action reqAction = permissionAttribute.getAction();
+    boolean reqApp = permissionAttribute.isOnApp();
+    boolean reqEnv = permissionAttribute.isOnEnv();
     for (Permission permission : role.getPermissions()) {
-      if (hasResourceAccess(reqResource, permission) && canPerformAction(reqAction, permission)
+      if (hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
           && allowedInEnv(environment, reqEnv, permission) && forApplication(application, reqApp, permission)) {
         return true;
       }
@@ -84,18 +89,20 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean forApplication(Application application, boolean reqApp, Permission permission) {
-    return reqApp && ("ALL".equals(permission.getServiceId())); // TODO: revisit
+    return !reqApp
+        || (Base.GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
   }
 
   private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
-    return reqEnv && "ALL".equals(permission.getEnvId()) || (environment.getUuid().equals(permission.getEnvId()));
+    return !reqEnv || EnvironmentType.ALL.equals(permission.getEnvironmentType())
+        || (environment.getUuid().equals(permission.getEnvId()));
   }
 
-  private boolean canPerformAction(String reqAction, Permission permission) {
-    return "ALL".equals(permission.getAction()) || (reqAction.equals(permission.getAction()));
+  private boolean canPerformAction(Action reqAction, Permission permission) {
+    return Action.ALL.equals(permission.getAction()) || (reqAction.equals(permission.getAction()));
   }
 
-  private boolean hasResourceAccess(String reqResource, Permission permission) {
-    return "ALL".equals(permission.getResource()) || (reqResource.equals(permission.getResource()));
+  private boolean hasResourceAccess(ResourceType reqResource, Permission permission) {
+    return ResourceType.ANY.equals(permission.getResourceType()) || (reqResource.equals(permission.getResourceType()));
   }
 }

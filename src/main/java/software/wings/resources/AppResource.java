@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
+import static software.wings.security.PermissionAttribute.APP_READ;
+import static software.wings.security.PermissionAttribute.APP_WRITE;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -32,7 +34,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("/apps")
 @Path("/apps")
-@AuthRule
+@AuthRule(APP_READ)
 @Produces("application/json")
 @Timed
 @ExceptionMetered
@@ -71,6 +73,7 @@ public class AppResource {
    * @return the rest response
    */
   @POST
+  @AuthRule(APP_WRITE)
   public RestResponse<Application> save(Application app) {
     return new RestResponse<>(appService.save(app));
   }
@@ -83,6 +86,7 @@ public class AppResource {
    * @return the rest response
    */
   @PUT
+  @AuthRule(APP_WRITE)
   @Path("{appId}")
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
@@ -112,6 +116,7 @@ public class AppResource {
    * @return the rest response
    */
   @DELETE
+  @AuthRule(APP_WRITE)
   @Path("{appId}")
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);

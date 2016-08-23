@@ -1,6 +1,6 @@
 package software.wings.security.annotations;
 
-import software.wings.security.PermissionAttr;
+import software.wings.security.PermissionAttribute;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -20,5 +20,5 @@ public @interface AuthRule {
    *
    * @return the permission attr[]
    */
-  PermissionAttr[] value() default {};
+  PermissionAttribute[] value() default {};
 }

@@ -1,14 +1,21 @@
 package software.wings.service.impl;
 
+import static software.wings.utils.Validator.notNullCheck;
+
+import com.google.common.collect.ImmutableMap;
+
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -21,6 +28,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class RoleServiceImpl implements RoleService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.RoleService#list(software.wings.dl.PageRequest)
@@ -51,7 +59,21 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public Role update(Role role) {
-    return save(role);
+    Role savedRole = get(role.getUuid());
+    notNullCheck("Role", savedRole);
+
+    ensureNonAdminRole(role);
+
+    wingsPersistence.updateFields(Role.class, role.getUuid(),
+        ImmutableMap.of(
+            "name", role.getName(), "description", role.getDescription(), "permissions", role.getPermissions()));
+    return get(role.getUuid());
+  }
+
+  private void ensureNonAdminRole(Role role) {
+    if (role.isAdminRole()) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Administrator role can not be modified");
+    }
   }
 
   /* (non-Javadoc)
@@ -59,11 +81,24 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public void delete(String roleId) {
-    wingsPersistence.delete(Role.class, roleId);
-    List<User> users =
-        wingsPersistence.createQuery(User.class).disableValidation().field("roles").equal(roleId).asList();
-    for (User user : users) {
-      userService.revokeRole(user.getUuid(), roleId);
+    Role role = get(roleId);
+    notNullCheck("Role", role);
+    ensureNonAdminRole(role);
+
+    boolean delete = wingsPersistence.delete(Role.class, roleId);
+    if (delete) {
+      executorService.submit(() -> {
+        List<User> users =
+            wingsPersistence.createQuery(User.class).disableValidation().field("roles").equal(roleId).asList();
+        for (User user : users) {
+          userService.revokeRole(user.getUuid(), roleId);
+        }
+      });
     }
+  }
+
+  @Override
+  public Role getAdminRole() {
+    return wingsPersistence.createQuery(Role.class).field("adminRole").equal(true).get();
   }
 }
