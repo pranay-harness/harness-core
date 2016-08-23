@@ -20,6 +20,7 @@ import static software.wings.beans.ChangeNotification.Builder.aChangeNotificatio
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.EnvironmentType.DEV;
 import static software.wings.beans.FailureNotification.Builder.aFailureNotification;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Link.Builder.aLink;
@@ -27,8 +28,12 @@ import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
+import static software.wings.beans.Permission.Builder.aPermission;
+import static software.wings.beans.Permission.PermissionType.APP;
+import static software.wings.beans.Permission.PermissionType.ENV;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
+import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
@@ -39,6 +44,9 @@ import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.integration.SeedData.seedNames;
+import static software.wings.security.PermissionAttribute.Action.ALL;
+import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.ResourceType.ANY;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -68,6 +76,7 @@ import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
@@ -75,6 +84,7 @@ import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Role;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -208,7 +218,7 @@ private void dropDBAndEnsureIndexes() throws IOException, ClassNotFoundException
  */
 @Test
 public void populateData() throws IOException {
-  addAdminUser();
+  addDefaultRoleAndUsers();
   createGlobalSettings();
 
   List<Application> apps = createApplications();
@@ -226,6 +236,102 @@ public void populateData() throws IOException {
     addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
     addOrchestrationAndPipeline(services, appEnvs, application);
     addNotifications(application);
+  }
+}
+
+private void addDefaultRoleAndUsers() {
+  Role administrator = aRole()
+                           .withAppId(Base.GLOBAL_APP_ID)
+                           .withName("Administrator")
+                           .withPermissions(asList(aPermission()
+                                                       .withPermissionType(APP)
+                                                       .withAppId(GLOBAL_APP_ID)
+                                                       .withResourceType(ANY)
+                                                       .withAction(ALL)
+                                                       .build(),
+                               aPermission()
+                                   .withPermissionType(ENV)
+                                   .withAppId(GLOBAL_APP_ID)
+                                   .withEnvironmentType(EnvironmentType.ALL)
+                                   .withResourceType(ANY)
+                                   .withAction(ALL)
+                                   .build()))
+                           .withAdminRole(true)
+                           .build();
+
+  Role engineers = aRole()
+                       .withAppId(Base.GLOBAL_APP_ID)
+                       .withName("Software Engineering")
+                       .withPermissions(asList(aPermission()
+                                                   .withPermissionType(APP)
+                                                   .withAppId(GLOBAL_APP_ID)
+                                                   .withResourceType(ANY)
+                                                   .withAction(ALL)
+                                                   .build(),
+                           aPermission()
+                               .withPermissionType(ENV)
+                               .withAppId(GLOBAL_APP_ID)
+                               .withEnvironmentType(DEV)
+                               .withResourceType(ANY)
+                               .withAction(ALL)
+                               .build()))
+                       .build();
+
+  Role operation = aRole()
+                       .withAppId(Base.GLOBAL_APP_ID)
+                       .withName("Operation Engineering")
+                       .withPermissions(asList(aPermission()
+                                                   .withPermissionType(APP)
+                                                   .withAppId(GLOBAL_APP_ID)
+                                                   .withResourceType(ANY)
+                                                   .withAction(READ)
+                                                   .build(),
+                           aPermission()
+                               .withPermissionType(ENV)
+                               .withAppId(GLOBAL_APP_ID)
+                               .withEnvironmentType(EnvironmentType.ALL)
+                               .withResourceType(ANY)
+                               .withAction(ALL)
+                               .build()))
+                       .build();
+
+  Role quality = aRole()
+                     .withAppId(Base.GLOBAL_APP_ID)
+                     .withName("Quality Engineering")
+                     .withPermissions(asList(aPermission()
+                                                 .withPermissionType(APP)
+                                                 .withAppId(GLOBAL_APP_ID)
+                                                 .withResourceType(ANY)
+                                                 .withAction(READ)
+                                                 .build(),
+                         aPermission()
+                             .withPermissionType(ENV)
+                             .withAppId(GLOBAL_APP_ID)
+                             .withEnvironmentType(EnvironmentType.QA)
+                             .withResourceType(ANY)
+                             .withAction(ALL)
+                             .build()))
+                     .build();
+
+  wingsPersistence.save(asList(administrator, engineers, operation, quality));
+
+  addAdminUser();
+}
+
+private void addAdminUser() {
+  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
+  WebTarget target = client.target(API_BASE + "/users/");
+  RestResponse<User> response = target.request().post(
+      Entity.entity(anUser().withName("Admin").withEmail(userName).withPassword(password).build(), APPLICATION_JSON),
+      new GenericType<RestResponse<User>>() {});
+  assertThat(response.getResource()).isInstanceOf(User.class);
+  wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+  response = client.target(API_BASE + "/users/login")
+                 .request()
+                 .header("Authorization", basicAuthValue)
+                 .get(new GenericType<RestResponse<User>>() {});
+  if (response.getResource() != null) {
+    userToken = response.getResource().getToken();
   }
 }
 
@@ -375,23 +481,6 @@ private Map<String, String> addOrchestrationAndPipeline(
     envWorkflowMap.put(env.getUuid(), orchestration.getUuid());
   });
   return envWorkflowMap;
-}
-
-private void addAdminUser() {
-  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
-  WebTarget target = client.target(API_BASE + "/users/");
-  RestResponse<User> response = target.request().post(
-      Entity.entity(anUser().withName("Admin").withEmail(userName).withPassword(password).build(), APPLICATION_JSON),
-      new GenericType<RestResponse<User>>() {});
-  assertThat(response.getResource()).isInstanceOf(User.class);
-  wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
-  response = client.target(API_BASE + "/users/login")
-                 .request()
-                 .header("Authorization", basicAuthValue)
-                 .get(new GenericType<RestResponse<User>>() {});
-  if (response.getResource() != null) {
-    userToken = response.getResource().getToken();
-  }
 }
 
 private Builder getRequestWithAuthHeader(WebTarget target) {

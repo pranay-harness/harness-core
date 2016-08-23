@@ -8,6 +8,8 @@ import static software.wings.beans.ErrorCodes.EMAIL_VERIFICATION_TOKEN_NOT_FOUND
 import static software.wings.beans.ErrorCodes.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -24,6 +26,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -73,6 +76,11 @@ public class UserServiceImpl implements UserService {
     user.setEmailVerified(false);
     String hashed = hashpw(user.getPassword(), BCrypt.gensalt());
     user.setPasswordHash(hashed);
+    PageResponse<User> verifiedUsers =
+        list(aPageRequest().addFilter(aSearchFilter().withField("emailVerified", Operator.EQ, true).build()).build());
+    if (verifiedUsers.getResponse().size() == 0) { // first User. Assign admin role
+      user.addRole(roleService.getAdminRole());
+    }
     User savedUser = wingsPersistence.saveAndGet(User.class, user);
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;

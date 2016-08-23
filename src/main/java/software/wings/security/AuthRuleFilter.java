@@ -56,31 +56,31 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
     }
-    List<PermissionAttr> permissionAttrs = getAccessTypes();
+    List<PermissionAttribute> permissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(requestContext.getUriInfo().getPathParameters().getFirst("appId"),
-        requestContext.getUriInfo().getPathParameters().getFirst("envId"), user, permissionAttrs);
+        requestContext.getUriInfo().getPathParameters().getFirst("envId"), user, permissionAttributes);
   }
 
-  private List<PermissionAttr> getAccessTypes() {
-    List<PermissionAttr> permissionAttrs = new ArrayList<>();
-    List<PermissionAttr> methodPermissionAttrs = new ArrayList<>();
-    List<PermissionAttr> classPermissionAttrs = new ArrayList<>();
+  private List<PermissionAttribute> getAllRequiredPermissionAttributes() {
+    List<PermissionAttribute> permissionAttributes = new ArrayList<>();
+    List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
+    List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
     if (null != methodAnnotations && methodAnnotations.value().length > 0) {
-      methodPermissionAttrs.addAll(Lists.newArrayList(methodAnnotations.value()));
+      methodPermissionAttributes.addAll(Lists.newArrayList(methodAnnotations.value()));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
     if (null != classAnnotations && classAnnotations.value().length > 0) {
-      classPermissionAttrs.addAll(Lists.newArrayList(classAnnotations.value()));
+      classPermissionAttributes.addAll(Lists.newArrayList(classAnnotations.value()));
     }
-    permissionAttrs.addAll(methodPermissionAttrs);
-    permissionAttrs.removeAll(classPermissionAttrs);
-    permissionAttrs.addAll(classPermissionAttrs);
-    return permissionAttrs;
+    permissionAttributes.addAll(classPermissionAttributes);
+    permissionAttributes.removeAll(methodPermissionAttributes);
+    permissionAttributes.addAll(classPermissionAttributes);
+    return permissionAttributes;
   }
 
   private void updateUserInAuditRecord(User user) {

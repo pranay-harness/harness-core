@@ -14,7 +14,7 @@ public interface RoleService {
    * @param pageRequest the page request
    * @return the page response
    */
-  public PageResponse<Role> list(PageRequest<Role> pageRequest);
+  PageResponse<Role> list(PageRequest<Role> pageRequest);
 
   /**
    * Save.
@@ -22,7 +22,7 @@ public interface RoleService {
    * @param role the role
    * @return the role
    */
-  public Role save(Role role);
+  Role save(Role role);
 
   /**
    * Find by uuid.
@@ -30,7 +30,7 @@ public interface RoleService {
    * @param uuid the uuid
    * @return the role
    */
-  public Role get(String uuid);
+  Role get(String uuid);
 
   /**
    * Update.
@@ -38,12 +38,19 @@ public interface RoleService {
    * @param role the role
    * @return the role
    */
-  public Role update(Role role);
+  Role update(Role role);
 
   /**
    * Delete.
    *
    * @param roleId the role id
    */
-  public void delete(String roleId);
+  void delete(String roleId);
+
+  /**
+   * Gets admin role.
+   *
+   * @return the admin role
+   */
+  Role getAdminRole();
 }

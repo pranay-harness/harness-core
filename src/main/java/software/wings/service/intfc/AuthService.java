@@ -2,7 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
-import software.wings.security.PermissionAttr;
+import software.wings.security.PermissionAttribute;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public interface AuthService {
    * @param appId           the app id
    * @param envId           the env id
    * @param user            the user
-   * @param permissionAttrs the permission attrs
+   * @param permissionAttributes the permission attrs
    */
-  void authorize(String appId, String envId, User user, List<PermissionAttr> permissionAttrs);
+  void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes);
 }

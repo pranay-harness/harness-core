@@ -29,7 +29,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -74,7 +73,6 @@ public class UserResource {
   /**
    * Update.
    *
-   * @param appId  the app id
    * @param userId the user id
    * @param user   the user
    * @return the rest response
@@ -82,23 +80,21 @@ public class UserResource {
   @PUT
   @AuthRule
   @Path("{userId}")
-  public RestResponse<User> update(@QueryParam("appId") String appId, @PathParam("userId") String userId, User user) {
+  public RestResponse<User> update(@PathParam("userId") String userId, User user) {
     user.setUuid(userId);
-    user.setAppId(appId);
     return new RestResponse<>(userService.update(user));
   }
 
   /**
    * Delete.
    *
-   * @param appId  the app id
    * @param userId the user id
    * @return the rest response
    */
   @DELETE
   @AuthRule
   @Path("{userId}")
-  public RestResponse delete(@QueryParam("appId") String appId, @PathParam("userId") String userId) {
+  public RestResponse delete(@PathParam("userId") String userId) {
     userService.delete(userId);
     return new RestResponse();
   }
