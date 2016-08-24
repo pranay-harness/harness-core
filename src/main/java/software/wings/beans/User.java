@@ -47,18 +47,15 @@ public class User extends Base implements Principal {
   /**
    * Return partial user object without sensitive information.
    *
-   * @param fullUser Full User object.
    * @return Partial User object without sensitive information.
    */
-  public static User getPublicUser(User fullUser) {
-    if (fullUser == null) {
-      return null;
-    }
+  @JsonIgnore
+  public User getPublicUser() {
     User publicUser = new User();
-    publicUser.setUuid(fullUser.getUuid());
-    publicUser.setName(fullUser.getName());
-    publicUser.setEmail(fullUser.getEmail());
-    publicUser.setCompanyName(fullUser.getCompanyName());
+    publicUser.setUuid(getUuid());
+    publicUser.setName(getName());
+    publicUser.setEmail(getEmail());
+    publicUser.setCompanyName(getCompanyName());
     return publicUser;
   }
 

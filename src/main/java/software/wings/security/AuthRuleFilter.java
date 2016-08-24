@@ -9,7 +9,6 @@ import com.google.inject.Inject;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AuditService;
@@ -37,8 +36,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   @Inject private AuditService auditService;
 
-  @Inject private GenericDbCache dbCache;
-
   @Inject private AuditHelper auditHelper;
 
   @Inject private AuthService authService;
@@ -56,9 +53,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
     }
-    List<PermissionAttribute> permissionAttributes = getAllRequiredPermissionAttributes();
+    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(requestContext.getUriInfo().getPathParameters().getFirst("appId"),
-        requestContext.getUriInfo().getPathParameters().getFirst("envId"), user, permissionAttributes);
+        requestContext.getUriInfo().getPathParameters().getFirst("envId"), user, requiredPermissionAttributes);
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes() {
@@ -79,12 +76,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
     permissionAttributes.addAll(classPermissionAttributes);
     permissionAttributes.removeAll(methodPermissionAttributes);
-    permissionAttributes.addAll(classPermissionAttributes);
+    permissionAttributes.addAll(methodPermissionAttributes);
     return permissionAttributes;
   }
 
   private void updateUserInAuditRecord(User user) {
-    auditService.updateUser(auditHelper.get(), User.getPublicUser(user));
+    auditService.updateUser(auditHelper.get(), user.getPublicUser());
   }
 
   private String extractToken(ContainerRequestContext requestContext) {

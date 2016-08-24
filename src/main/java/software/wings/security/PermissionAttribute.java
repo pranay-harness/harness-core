@@ -27,27 +27,28 @@ public enum PermissionAttribute {
    * Platform delete permission attr.
    */
   PLATFORM_WRITE(PLATFORM, WRITE, true, false),
+
   /**
    * Service permission attr.
    */
-  SERVICE(ANY, ALL), /**
-                      * Config permission attr.
-                      */
-  CONFIG(ANY, ALL), /**
-                     * Env permission attr.
-                     */
-  ENV(ANY, ALL), /**
-                  * Role permission attr.
-                  */
-  ROLE(ANY, ALL), /**
-                   * User permission attr.
-                   */
-  USER(ANY, ALL), /**
-                   * Deployment permission attr.
-                   */
-  DEPLOYMENT(ANY, ALL), /**
-                         * Release permission attr.
-                         */
+  SERVICE_ALL(ANY, ALL, true, false), /**
+                                       * Config permission attr.
+                                       */
+  CONFIG_ALL(ANY, ALL, true, true), /**
+                                     * Env permission attr.
+                                     */
+  ENVIRONMENT_ALL(ANY, ALL, true, true), /**
+                                          * Role permission attr.
+                                          */
+  ROLE_ALL(ANY, ALL, true, false), /**
+                                    * User permission attr.
+                                    */
+  USER_ALL(ANY, ALL, true, false), /**
+                                    * Deployment permission attr.
+                                    */
+  DEPLOYMENT_ALL(ANY, ALL, true, false), /**
+                                          * Release permission attr.
+                                          */
   RELEASE(ANY, ALL), /**
                       * Delivery permission attr.
                       */
