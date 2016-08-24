@@ -83,7 +83,6 @@ public class GraphRenderer {
         node.setExecutionDetails(executionData.getExecutionDetails());
         if (executionData instanceof ElementStateExecutionData) {
           ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
-          node.setInstanceStatusSummary(elementStateExecutionData.getInstanceStatusSummary());
           node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
         }
       }

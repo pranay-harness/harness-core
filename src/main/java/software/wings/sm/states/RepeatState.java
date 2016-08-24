@@ -6,8 +6,6 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang.StringUtils.abbreviate;
 import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue;
-import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
-import static software.wings.beans.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
 import com.google.common.base.Joiner;
 
@@ -16,10 +14,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
-import software.wings.api.InstanceElement;
-import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.beans.InstanceStatusSummary;
 import software.wings.common.Constants;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.exception.WingsException;
@@ -174,7 +169,6 @@ public class RepeatState extends State {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
 
-      updateStateExecutionData(repeatStateExecutionData, response);
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     } else {
@@ -192,34 +186,9 @@ public class RepeatState extends State {
       executionResponse.setAsync(true);
       executionResponse.setCorrelationIds(correlationIds);
 
-      updateStateExecutionData(repeatStateExecutionData, response);
       executionResponse.setStateExecutionData(repeatStateExecutionData);
       return executionResponse;
     }
-  }
-
-  private void updateStateExecutionData(
-      RepeatStateExecutionData repeatStateExecutionData, Map<String, NotifyResponseData> response) {
-    response.forEach((s, notifyResponseData) -> {
-
-      ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifyResponseData;
-      ElementExecutionSummary elementExecutionSummary =
-          anElementExecutionSummary().withContextElement(elementNotifyResponseData.getContextElement()).build();
-      repeatStateExecutionData.getElementStatusSummary().add(elementExecutionSummary);
-
-      if (repeatStateExecutionData.getRepeatElementType() == ContextElementType.INSTANCE) {
-        List<InstanceStatusSummary> instanceStatusSummaries = repeatStateExecutionData.getInstanceStatusSummary();
-        if (instanceStatusSummaries == null) {
-          instanceStatusSummaries = new ArrayList<>();
-          repeatStateExecutionData.setInstanceStatusSummary(instanceStatusSummaries);
-        }
-        instanceStatusSummaries.add(
-            anInstanceStatusSummary()
-                .withInstanceElement((InstanceElement) elementNotifyResponseData.getContextElement())
-                .withStatus(elementNotifyResponseData.getExecutionStatus())
-                .build());
-      }
-    });
   }
 
   /**

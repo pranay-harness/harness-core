@@ -51,6 +51,11 @@ public abstract class WingsStatistics {
     /**
      * Top consumers statistics type.
      */
-    TOP_CONSUMERS
+    TOP_CONSUMERS,
+
+    /**
+     * Key statistics statistics type.
+     */
+    KEY_STATISTICS
   }
 }

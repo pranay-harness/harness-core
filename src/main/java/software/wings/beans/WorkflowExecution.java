@@ -28,6 +28,8 @@ public class WorkflowExecution extends Base {
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
 
+  private ErrorStrategy errorStrategy = ErrorStrategy.PAUSE;
+
   private String name;
   private int total;
   private CountsByStatuses breakdown;
@@ -298,5 +300,13 @@ public class WorkflowExecution extends Base {
 
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
+  }
+
+  public ErrorStrategy getErrorStrategy() {
+    return errorStrategy;
+  }
+
+  public void setErrorStrategy(ErrorStrategy errorStrategy) {
+    this.errorStrategy = errorStrategy;
   }
 }

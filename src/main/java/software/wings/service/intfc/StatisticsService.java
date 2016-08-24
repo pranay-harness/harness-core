@@ -29,4 +29,6 @@ public interface StatisticsService {
    * @return the top consumers
    */
   WingsStatistics getTopConsumers();
+
+  List<WingsStatistics> getKeyStats();
 }
