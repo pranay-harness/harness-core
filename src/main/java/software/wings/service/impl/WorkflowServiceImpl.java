@@ -73,7 +73,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExpressionProcessorFactory;
-import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -1265,9 +1264,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
     List<StateExecutionInstance> topInstances = parentIdMap.get(nullParent);
 
-    topInstances.forEach(
-        stateExecutionInstance -> { refreshInstanceStatusSummary(stateExecutionInstance, parentIdMap); });
-
     List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(topInstances);
     workflowExecution.setStatusInstanceBreakdownMap(getStatusInstanceBreakdownMap(instanceStatusSummary));
     wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "statusInstanceBreakdownMap",
@@ -1289,8 +1285,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
           workflowExecution.getServiceExecutionSummaries());
     }
-
-    // TODO: handle if service repeat is not there, rather instance repeat is introduced directly
   }
 
   private List<ElementExecutionSummary> getServiceExecutionSummaries(WorkflowExecution workflowExecution,
@@ -1390,28 +1384,6 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
     return null;
-  }
-
-  private void refreshInstanceStatusSummary(
-      StateExecutionInstance stateExecutionInstance, Map<String, List<StateExecutionInstance>> parentIdMap) {
-    StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
-    if (stateExecutionData instanceof ElementStateExecutionData) {
-      ElementStateExecutionData repeatStateExecutionData = (ElementStateExecutionData) stateExecutionData;
-      if (repeatStateExecutionData.getInstanceStatusSummary() != null) {
-        return;
-      }
-
-      List<StateExecutionInstance> childInstances = parentIdMap.get(stateExecutionInstance.getUuid());
-      if (childInstances == null || childInstances.isEmpty()) {
-        return;
-      }
-      childInstances.forEach(childInstance -> { refreshInstanceStatusSummary(childInstance, parentIdMap); });
-
-      List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childInstances);
-      repeatStateExecutionData.setInstanceStatusSummary(instanceStatusSummary);
-      wingsPersistence.updateField(StateExecutionInstance.class, stateExecutionInstance.getUuid(), "stateExecutionMap",
-          stateExecutionInstance.getStateExecutionMap());
-    }
   }
 
   private List<InstanceStatusSummary> aggregateInstanceStatusSummary(List<StateExecutionInstance> childInstances) {

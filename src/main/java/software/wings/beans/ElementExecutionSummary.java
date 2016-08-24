@@ -124,11 +124,20 @@ public class ElementExecutionSummary {
    */
   public void setAvgTime(Integer avgTime) {}
 
+  public ExecutionStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(ExecutionStatus status) {
+    this.status = status;
+  }
+
   public static final class ElementExecutionSummaryBuilder {
     private ContextElement contextElement;
     private Integer instancesCount;
     private Long startTs;
     private Long endTs;
+    private ExecutionStatus status;
 
     private ElementExecutionSummaryBuilder() {}
 
@@ -156,12 +165,18 @@ public class ElementExecutionSummary {
       return this;
     }
 
+    public ElementExecutionSummaryBuilder withStatus(ExecutionStatus status) {
+      this.status = status;
+      return this;
+    }
+
     public ElementExecutionSummary build() {
       ElementExecutionSummary elementExecutionSummary = new ElementExecutionSummary();
       elementExecutionSummary.setContextElement(contextElement);
       elementExecutionSummary.setInstancesCount(instancesCount);
       elementExecutionSummary.setStartTs(startTs);
       elementExecutionSummary.setEndTs(endTs);
+      elementExecutionSummary.setStatus(status);
       return elementExecutionSummary;
     }
   }
