@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -67,7 +68,8 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
-      @BeanParam PageRequest<WorkflowExecution> pageRequest, @QueryParam("includeGraph") Boolean includeGraph) {
+      @BeanParam PageRequest<WorkflowExecution> pageRequest,
+      @DefaultValue("true") @QueryParam("includeGraph") boolean includeGraph) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
     if (StringUtils.isBlank(appId)) {
@@ -97,11 +99,7 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
-    boolean includeGraphFlag = true;
-    if (includeGraph != null && includeGraph) {
-      includeGraphFlag = includeGraph;
-    }
-    return new RestResponse<>(workflowService.listExecutions(pageRequest, includeGraphFlag, true));
+    return new RestResponse<>(workflowService.listExecutions(pageRequest, includeGraph, true));
   }
 
   /**
