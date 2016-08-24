@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
 import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
@@ -14,6 +13,7 @@ import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
+import software.wings.beans.Permission.PermissionType;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
@@ -45,47 +45,45 @@ public class AuthServiceImpl implements AuthService {
 
   @Override
   public void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes) {
+    Application application = dbCache.get(Application.class, appId);
+    Environment environment = dbCache.get(Environment.class, envId);
+
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles())) {
+      if (!authorizeAccessType(application, environment, permissionAttribute, user.getRoles())) {
         throw new WingsException(ACCESS_DENIED);
       }
     }
   }
 
   private boolean authorizeAccessType(
-      String appId, String envId, PermissionAttribute permissionAttribute, List<Role> roles) {
-    Application application = null;
-    Environment environment = null;
-
-    if (isNotBlank(appId)) {
-      application = dbCache.get(Application.class, appId);
-    }
-
-    if (isNotBlank(envId)) {
-      environment = dbCache.get(Environment.class, envId);
-    }
-
-    for (Role role : roles) {
-      if (roleAuthorizedWithAccessType(role, permissionAttribute, application, environment)) {
-        return true;
-      }
-    }
-    return false;
+      Application application, Environment environment, PermissionAttribute permissionAttribute, List<Role> roles) {
+    return roles.stream()
+        .filter(role -> roleAuthorizedWithAccessType(role, permissionAttribute, application, environment))
+        .findFirst()
+        .isPresent();
   }
 
   private boolean roleAuthorizedWithAccessType(
       Role role, PermissionAttribute permissionAttribute, Application application, Environment environment) {
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
-    boolean reqApp = permissionAttribute.isOnApp();
-    boolean reqEnv = permissionAttribute.isOnEnv();
+    boolean requiresAppPermission = permissionAttribute.isOnApp();
+    boolean requiresEnvironmentPermission = permissionAttribute.isOnEnv();
     for (Permission permission : role.getPermissions()) {
-      if (hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
-          && allowedInEnv(environment, reqEnv, permission) && forApplication(application, reqApp, permission)) {
+      if (hasMatchingPermissionType(
+              requiresAppPermission, requiresEnvironmentPermission, permission.getPermissionType())
+          && hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
+          && allowedInEnv(environment, requiresEnvironmentPermission, permission)
+          && forApplication(application, requiresAppPermission, permission)) {
         return true;
       }
     }
     return false;
+  }
+
+  private boolean hasMatchingPermissionType(
+      boolean requiresAppPermission, boolean requiresEnvironmentPermission, PermissionType permissionType) {
+    return permissionType.equals(PermissionType.ENV) ? requiresEnvironmentPermission : requiresAppPermission;
   }
 
   private boolean forApplication(Application application, boolean reqApp, Permission permission) {

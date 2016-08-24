@@ -5,6 +5,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static software.wings.beans.ErrorCodes.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.ErrorCodes.ROLE_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.USER_ALREADY_REGISTERED;
 import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
@@ -32,6 +33,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -157,6 +159,10 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User update(User user) {
+    if (!user.getUuid().equals(UserThreadLocal.get().getUuid())) {
+      throw new WingsException(INVALID_REQUEST, "message", "Modifying other user's profile not allowed");
+    }
+
     Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("name", user.getName());
     if (user.getPassword() != null && user.getPassword().length() > 0) {
       builder.put("passwordHash", hashpw(user.getPassword(), BCrypt.gensalt()));

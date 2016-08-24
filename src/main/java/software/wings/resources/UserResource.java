@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.USER_ALL;
 
 import com.google.inject.Inject;
 
@@ -52,7 +53,7 @@ public class UserResource {
    * @return the rest response
    */
   @GET
-  @AuthRule
+  @AuthRule(USER_ALL)
   public RestResponse<PageResponse<User>> list(@BeanParam PageRequest<User> pageRequest) {
     pageRequest.addFilter("appId", GLOBAL_APP_ID, EQ);
     return new RestResponse<>(userService.list(pageRequest));
@@ -92,7 +93,7 @@ public class UserResource {
    * @return the rest response
    */
   @DELETE
-  @AuthRule
+  @AuthRule(USER_ALL)
   @Path("{userId}")
   public RestResponse delete(@PathParam("userId") String userId) {
     userService.delete(userId);
@@ -108,7 +109,7 @@ public class UserResource {
   @AuthRule
   @Path("user")
   public RestResponse<User> get() {
-    return new RestResponse<>(User.getPublicUser(UserThreadLocal.get()));
+    return new RestResponse<>(UserThreadLocal.get().getPublicUser());
   }
 
   /**
@@ -144,7 +145,7 @@ public class UserResource {
    * @return the rest response
    */
   @PUT
-  @AuthRule
+  @AuthRule(USER_ALL)
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.addRole(userId, roleId));
@@ -158,7 +159,7 @@ public class UserResource {
    * @return the rest response
    */
   @DELETE
-  @AuthRule
+  @AuthRule(USER_ALL)
   @Path("{userId}/role/{roleId}")
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
     return new RestResponse<>(userService.revokeRole(userId, roleId));

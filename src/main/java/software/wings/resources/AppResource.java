@@ -34,7 +34,7 @@ import javax.ws.rs.QueryParam;
  */
 @Api("/apps")
 @Path("/apps")
-@AuthRule(APP_READ)
+@AuthRule
 @Produces("application/json")
 @Timed
 @ExceptionMetered
@@ -60,6 +60,7 @@ public class AppResource {
    * @return the rest response
    */
   @GET
+  @AuthRule(APP_READ)
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {
@@ -86,8 +87,8 @@ public class AppResource {
    * @return the rest response
    */
   @PUT
-  @AuthRule(APP_WRITE)
   @Path("{appId}")
+  @AuthRule(APP_WRITE)
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
@@ -102,6 +103,7 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
+  @AuthRule(APP_READ)
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
