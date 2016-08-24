@@ -39,6 +39,12 @@ public class StatisticsResource {
     return new RestResponse<>(statisticsService.getSummary());
   }
 
+  @GET
+  @Path("keystats")
+  public RestResponse<List<WingsStatistics>> keyStats() {
+    return new RestResponse<>(statisticsService.getKeyStats());
+  }
+
   /**
    * Deployment activities rest response.
    *
