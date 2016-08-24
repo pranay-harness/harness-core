@@ -1,7 +1,11 @@
 package software.wings.resources;
 
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
+
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.Application;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
 import software.wings.beans.RequiredExecutionArgs;
@@ -12,10 +16,13 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -32,6 +39,7 @@ import javax.ws.rs.QueryParam;
 @Api("executions")
 @Path("/executions")
 public class ExecutionResource {
+  private AppService appService;
   private WorkflowService workflowService;
 
   /**
@@ -40,7 +48,8 @@ public class ExecutionResource {
    * @param workflowService the workflow service
    */
   @Inject
-  public ExecutionResource(WorkflowService workflowService) {
+  public ExecutionResource(AppService appService, WorkflowService workflowService) {
+    this.appService = appService;
     this.workflowService = workflowService;
   }
 
@@ -61,8 +70,18 @@ public class ExecutionResource {
       @BeanParam PageRequest<WorkflowExecution> pageRequest, @QueryParam("includeGraph") Boolean includeGraph) {
     SearchFilter filter = new SearchFilter();
     filter.setFieldName("appId");
-    filter.setFieldValues(appId);
-    filter.setOp(Operator.EQ);
+    if (StringUtils.isBlank(appId)) {
+      PageRequest<Application> applicationPageRequest = aPageRequest().addFieldsIncluded("uuid").build();
+      PageResponse<Application> res = appService.list(applicationPageRequest, false, 0);
+      if (res == null || res.isEmpty()) {
+        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "No applications");
+      }
+      List<String> appIds = res.stream().map(Application::getUuid).collect(Collectors.toList());
+      filter.setFieldValues(appIds.toArray());
+    } else {
+      filter.setFieldValues(appId);
+    }
+    filter.setOp(Operator.IN);
     pageRequest.addFilter(filter);
 
     filter = new SearchFilter();
