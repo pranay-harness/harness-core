@@ -15,6 +15,7 @@ import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
+import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
@@ -42,6 +43,7 @@ import software.wings.beans.stats.ActivityStatusAggregation;
 import software.wings.beans.stats.DayActivityStatistics;
 import software.wings.beans.stats.DeploymentActivityStatistics;
 import software.wings.beans.stats.DeploymentStatistics;
+import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.WingsStatistics;
@@ -60,6 +62,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
 
@@ -255,6 +258,34 @@ public class StatisticsServiceImpl implements StatisticsService {
         getTopConsumerForPastXDays(30).stream().filter(tc -> appIdMap.containsKey(tc.getAppId())).collect(toList());
     topConsumers.forEach(topConsumer -> topConsumer.setAppName(appIdMap.get(topConsumer.getAppId()).getName()));
     return new TopConsumersStatistics(topConsumers);
+  }
+
+  @Override
+  public List<WingsStatistics> getKeyStats() {
+    List<Activity> activities = wingsPersistence.createQuery(Activity.class)
+                                    .field("createdAt")
+                                    .greaterThanOrEq(getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
+                                    .retrievedFields(true, "appId", "environmentType", "artifactId")
+                                    .asList();
+
+    return activities.parallelStream()
+        .filter(activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
+        .collect(groupingBy(Activity::getEnvironmentType))
+        .entrySet()
+        .stream()
+        .map(entry -> getKeyStatsForEnvType(entry.getKey(), entry.getValue()))
+        .collect(Collectors.toList());
+  }
+
+  private KeyStatistics getKeyStatsForEnvType(EnvironmentType environmentType, List<Activity> activities) {
+    int appCount = activities.parallelStream().map(Activity::getAppId).collect(Collectors.toSet()).size();
+    int artifactCount = activities.parallelStream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+    return aKeyStatistics()
+        .withApplicationCount(appCount)
+        .withArtifactCount(artifactCount)
+        .withInstanceCount(activities.size())
+        .withEnvironmentType(environmentType)
+        .build();
   }
 
   private List<TopConsumer> getTopConsumerForPastXDays(int days) {
