@@ -13,7 +13,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
@@ -53,7 +52,9 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -70,6 +71,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/15/16.
  */
 public class StatisticsServiceImpl implements StatisticsService {
+  public static final long MILLIS_IN_A_DAY = 86400000;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private WorkflowService workflowService;
@@ -192,11 +194,11 @@ public class StatisticsServiceImpl implements StatisticsService {
 
   @Override
   public DeploymentActivityStatistics getDeploymentActivities() {
+    long epochMilliOfXthDay = getEpochMilliOfStartOfDayForXDaysInPastFromNow(30);
+
     PageRequest pageRequest =
         aPageRequest()
-            .addFilter(aSearchFilter()
-                           .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
-                           .build())
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, epochMilliOfXthDay).build())
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
                            .build())
@@ -204,21 +206,29 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
-    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>();
+    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(30);
 
-    workflowExecutions.parallelStream()
-        .collect(groupingBy(wfl
-            -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000),
-            groupingBy(WorkflowExecution::getStatus, counting())))
-        .forEach((epochMilli, executionStatusListMap) -> {
-          int successCount = executionStatusListMap.getOrDefault(SUCCESS, 0L).intValue();
-          int failureCount = executionStatusListMap.getOrDefault(FAILED, 0L).intValue();
-          dayActivityStatisticsList.add(aDayActivityStatistics()
-                                            .withDate(epochMilli)
-                                            .withSuccessCount(successCount)
-                                            .withFailureCount(failureCount)
-                                            .build());
-        });
+    Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
+        workflowExecutions.parallelStream().collect(groupingBy(
+            wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt())), groupingBy(WorkflowExecution::getStatus, counting())));
+
+    IntStream.range(0, 30).forEach(idx -> {
+      int successCount = 0;
+      int failureCount = 0;
+      Long timeOffset = epochMilliOfXthDay + idx * MILLIS_IN_A_DAY;
+      Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
+      if (executionStatusCountMap != null) {
+        successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
+        failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
+      }
+      int total = successCount + failureCount;
+      dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
+                                        .withDate(timeOffset)
+                                        .withSuccessCount(successCount)
+                                        .withFailureCount(failureCount)
+                                        .withTotalCount(total)
+                                        .build());
+    });
     return new DeploymentActivityStatistics(dayActivityStatisticsList);
   }
 
@@ -337,6 +347,15 @@ public class StatisticsServiceImpl implements StatisticsService {
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
     return LocalDate.now(ZoneId.systemDefault())
         .minus(days, ChronoUnit.DAYS)
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli();
+  }
+
+  private long getStartOfTheDayEpoch(long epoch) {
+    return Instant.ofEpochMilli(epoch)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())
         .toInstant()
         .toEpochMilli();
