@@ -35,10 +35,12 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
@@ -63,6 +65,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
@@ -145,6 +148,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
   @Inject private HistoryService historyService;
+  @Inject private AppService appService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -728,7 +732,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
-
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(pipelineId);
@@ -800,6 +803,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
       ContextElement... contextElements) {
+    Application app = appService.get(workflowExecution.getAppId());
+    workflowExecution.setAppName(app.getName());
+    if (workflowExecution.getEnvId() != null) {
+      Environment env = environmentService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), false);
+      workflowExecution.setEnvName(env.getName());
+    }
+
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
         List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
@@ -864,6 +874,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
+    stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
     if (contextElements != null) {
