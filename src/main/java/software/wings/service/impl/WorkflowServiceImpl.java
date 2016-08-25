@@ -53,6 +53,7 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.StatusInstanceBreakdown;
 import software.wings.beans.Workflow;
@@ -130,6 +131,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
   };
+  private static final String COMMAND_NAME_PREF = "Command: ";
+  private static final String WORKFLOW_NAME_PREF = "Workflow: ";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Expression processor factory.
@@ -783,7 +786,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowId(orchestrationId);
-    workflowExecution.setName(orchestration.getName());
+    workflowExecution.setName(WORKFLOW_NAME_PREF + orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
@@ -1033,7 +1036,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
-    workflowExecution.setName(workflow.getName());
+    Service service = serviceResourceService.get(appId, executionArgs.getServiceId());
+    workflowExecution.setName(COMMAND_NAME_PREF + service.getName() + "/" + executionArgs.getCommandName());
     workflowExecution.setWorkflowId(workflow.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
