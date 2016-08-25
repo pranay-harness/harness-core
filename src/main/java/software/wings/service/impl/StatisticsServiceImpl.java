@@ -268,22 +268,31 @@ public class StatisticsServiceImpl implements StatisticsService {
                                     .retrievedFields(true, "appId", "environmentType", "artifactId")
                                     .asList();
 
-    return activities.parallelStream()
-        .filter(activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
-        .collect(groupingBy(Activity::getEnvironmentType))
-        .entrySet()
-        .stream()
-        .map(entry -> getKeyStatsForEnvType(entry.getKey(), entry.getValue()))
-        .collect(Collectors.toList());
+    Map<EnvironmentType, List<Activity>> activityByEnvType =
+        activities.stream()
+            .filter(
+                activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
+            .collect(groupingBy(Activity::getEnvironmentType));
+    List<WingsStatistics> keyStats = new ArrayList<>();
+    keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
+    keyStats.add(getKeyStatsForEnvType(OTHER, activityByEnvType.get(OTHER)));
+    return keyStats;
   }
 
   private KeyStatistics getKeyStatsForEnvType(EnvironmentType environmentType, List<Activity> activities) {
-    int appCount = activities.parallelStream().map(Activity::getAppId).collect(Collectors.toSet()).size();
-    int artifactCount = activities.parallelStream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+    int appCount = 0;
+    int artifactCount = 0;
+    int instanceCount = 0;
+
+    if (activities != null && activities.size() > 0) {
+      appCount = activities.stream().map(Activity::getAppId).collect(Collectors.toSet()).size();
+      artifactCount = activities.stream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+      instanceCount = activities.size();
+    }
     return aKeyStatistics()
         .withApplicationCount(appCount)
         .withArtifactCount(artifactCount)
-        .withInstanceCount(activities.size())
+        .withInstanceCount(instanceCount)
         .withEnvironmentType(environmentType)
         .build();
   }
