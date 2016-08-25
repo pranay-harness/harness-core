@@ -208,6 +208,9 @@ public class Base {
   public void onSave() {
     if (uuid == null) {
       uuid = UUIDGenerator.getUuid();
+      if (this instanceof Application) {
+        this.appId = uuid;
+      }
     }
     if (createdAt == 0) {
       createdAt = currentTimeMillis();

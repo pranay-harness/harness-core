@@ -17,18 +17,25 @@ public interface StatisticsService {
   List<WingsStatistics> getSummary();
 
   /**
-   * Gets deployment activities.
-   *
-   * @return the deployment activities
-   */
-  DeploymentActivityStatistics getDeploymentActivities();
-
-  /**
    * Gets top consumers.
    *
    * @return the top consumers
    */
   WingsStatistics getTopConsumers();
 
+  /**
+   * Gets key stats.
+   *
+   * @return the key stats
+   */
   List<WingsStatistics> getKeyStats();
+
+  /**
+   * Gets deployment activities.
+   *
+   * @param numOfDays the num of days
+   * @param endDate   the end date
+   * @return the deployment activities
+   */
+  DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate);
 }

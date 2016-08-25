@@ -13,7 +13,6 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
 import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.beans.stats.DayActivityStatistics.Builder.aDayActivityStatistics;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
@@ -53,7 +52,9 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ExecutionStatus;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
@@ -70,6 +71,7 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/15/16.
  */
 public class StatisticsServiceImpl implements StatisticsService {
+  public static final long MILLIS_IN_A_DAY = 86400000;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
   @Inject private WorkflowService workflowService;
@@ -190,38 +192,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     return Arrays.asList(prodDeploymentStatistics, otherDeploymentStatistics);
   }
 
-  @Override
-  public DeploymentActivityStatistics getDeploymentActivities() {
-    PageRequest pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter()
-                           .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
-                           .build())
-            .addFilter(aSearchFilter()
-                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
-                           .build())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
-
-    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
-    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>();
-
-    workflowExecutions.parallelStream()
-        .collect(groupingBy(wfl
-            -> (wfl.getCreatedAt() - wfl.getCreatedAt() % 86400000),
-            groupingBy(WorkflowExecution::getStatus, counting())))
-        .forEach((epochMilli, executionStatusListMap) -> {
-          int successCount = executionStatusListMap.getOrDefault(SUCCESS, 0L).intValue();
-          int failureCount = executionStatusListMap.getOrDefault(FAILED, 0L).intValue();
-          dayActivityStatisticsList.add(aDayActivityStatistics()
-                                            .withDate(epochMilli)
-                                            .withSuccessCount(successCount)
-                                            .withFailureCount(failureCount)
-                                            .build());
-        });
-    return new DeploymentActivityStatistics(dayActivityStatisticsList);
-  }
-
   private int getActiveReleases() {
     PageRequest pageRequest =
         aPageRequest()
@@ -268,22 +238,82 @@ public class StatisticsServiceImpl implements StatisticsService {
                                     .retrievedFields(true, "appId", "environmentType", "artifactId")
                                     .asList();
 
-    return activities.parallelStream()
-        .filter(activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
-        .collect(groupingBy(Activity::getEnvironmentType))
-        .entrySet()
-        .stream()
-        .map(entry -> getKeyStatsForEnvType(entry.getKey(), entry.getValue()))
-        .collect(Collectors.toList());
+    Map<EnvironmentType, List<Activity>> activityByEnvType =
+        activities.stream()
+            .filter(
+                activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
+            .collect(groupingBy(Activity::getEnvironmentType));
+    List<WingsStatistics> keyStats = new ArrayList<>();
+    keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
+    keyStats.add(getKeyStatsForEnvType(OTHER, activityByEnvType.get(OTHER)));
+    return keyStats;
+  }
+
+  @Override
+  public DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate) {
+    if (numOfDays == null || numOfDays <= 0) {
+      numOfDays = 30;
+    }
+    if (endDate == null || endDate <= 0) {
+      endDate = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * numOfDays;
+    return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
+  }
+
+  private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(
+      Integer numOfDays, Long fromDateEpochMilli) {
+    PageRequest pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
+            .addFilter(aSearchFilter()
+                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                           .build())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+
+    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(numOfDays);
+
+    Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
+        workflowExecutions.parallelStream().collect(groupingBy(
+            wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt())), groupingBy(WorkflowExecution::getStatus, counting())));
+
+    IntStream.range(0, numOfDays).forEach(idx -> {
+      int successCount = 0;
+      int failureCount = 0;
+      Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
+      Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
+      if (executionStatusCountMap != null) {
+        successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
+        failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
+      }
+      int total = successCount + failureCount;
+      dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
+                                        .withDate(timeOffset)
+                                        .withSuccessCount(successCount)
+                                        .withFailureCount(failureCount)
+                                        .withTotalCount(total)
+                                        .build());
+    });
+    return new DeploymentActivityStatistics(dayActivityStatisticsList);
   }
 
   private KeyStatistics getKeyStatsForEnvType(EnvironmentType environmentType, List<Activity> activities) {
-    int appCount = activities.parallelStream().map(Activity::getAppId).collect(Collectors.toSet()).size();
-    int artifactCount = activities.parallelStream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+    int appCount = 0;
+    int artifactCount = 0;
+    int instanceCount = 0;
+
+    if (activities != null && activities.size() > 0) {
+      appCount = activities.stream().map(Activity::getAppId).collect(Collectors.toSet()).size();
+      artifactCount = activities.stream().map(Activity::getArtifactId).collect(Collectors.toSet()).size();
+      instanceCount = activities.size();
+    }
     return aKeyStatistics()
         .withApplicationCount(appCount)
         .withArtifactCount(artifactCount)
-        .withInstanceCount(activities.size())
+        .withInstanceCount(instanceCount)
         .withEnvironmentType(environmentType)
         .build();
   }
@@ -328,6 +358,15 @@ public class StatisticsServiceImpl implements StatisticsService {
   private long getEpochMilliOfStartOfDayForXDaysInPastFromNow(int days) {
     return LocalDate.now(ZoneId.systemDefault())
         .minus(days, ChronoUnit.DAYS)
+        .atStartOfDay(ZoneId.systemDefault())
+        .toInstant()
+        .toEpochMilli();
+  }
+
+  private long getStartOfTheDayEpoch(long epoch) {
+    return Instant.ofEpochMilli(epoch)
+        .atZone(ZoneId.systemDefault())
+        .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())
         .toInstant()
         .toEpochMilli();

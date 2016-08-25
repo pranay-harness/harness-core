@@ -211,7 +211,7 @@ public class CommandState extends State {
       Application application = appService.get(serviceInstance.getAppId());
 
       Activity.Builder activityBuilder = anActivity()
-                                             .withAppId(application.getAppId())
+                                             .withAppId(application.getUuid())
                                              .withApplicationName(application.getName())
                                              .withEnvironmentId(environment.getUuid())
                                              .withEnvironmentName(environment.getName())

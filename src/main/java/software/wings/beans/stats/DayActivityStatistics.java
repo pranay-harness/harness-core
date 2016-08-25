@@ -6,6 +6,7 @@ package software.wings.beans.stats;
 public class DayActivityStatistics {
   private int successCount;
   private int failureCount;
+  private int totalCount;
   private Long date;
 
   /**
@@ -45,6 +46,24 @@ public class DayActivityStatistics {
   }
 
   /**
+   * Gets total count.
+   *
+   * @return the total count
+   */
+  public int getTotalCount() {
+    return totalCount;
+  }
+
+  /**
+   * Sets total count.
+   *
+   * @param totalCount the total count
+   */
+  public void setTotalCount(int totalCount) {
+    this.totalCount = totalCount;
+  }
+
+  /**
    * Gets day start epoch.
    *
    * @return the day start epoch
@@ -68,6 +87,7 @@ public class DayActivityStatistics {
   public static final class Builder {
     private int successCount;
     private int failureCount;
+    private int totalCount;
     private Long date;
 
     private Builder() {}
@@ -104,6 +124,17 @@ public class DayActivityStatistics {
     }
 
     /**
+     * With total count builder.
+     *
+     * @param totalCount the total count
+     * @return the builder
+     */
+    public Builder withTotalCount(int totalCount) {
+      this.totalCount = totalCount;
+      return this;
+    }
+
+    /**
      * With date builder.
      *
      * @param date the date
@@ -120,7 +151,11 @@ public class DayActivityStatistics {
      * @return the builder
      */
     public Builder but() {
-      return aDayActivityStatistics().withSuccessCount(successCount).withFailureCount(failureCount).withDate(date);
+      return aDayActivityStatistics()
+          .withSuccessCount(successCount)
+          .withFailureCount(failureCount)
+          .withTotalCount(totalCount)
+          .withDate(date);
     }
 
     /**
@@ -132,6 +167,7 @@ public class DayActivityStatistics {
       DayActivityStatistics dayActivityStatistics = new DayActivityStatistics();
       dayActivityStatistics.setSuccessCount(successCount);
       dayActivityStatistics.setFailureCount(failureCount);
+      dayActivityStatistics.setTotalCount(totalCount);
       dayActivityStatistics.setDate(date);
       return dayActivityStatistics;
     }

@@ -16,6 +16,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
@@ -36,7 +37,7 @@ import javax.ws.rs.core.Response;
 @Api("activities")
 @Path("/activities")
 @Produces("application/json")
-//@AuthRule
+@AuthRule
 @Timed
 @ExceptionMetered
 public class ActivityResource {
