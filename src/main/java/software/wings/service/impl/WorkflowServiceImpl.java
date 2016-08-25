@@ -7,6 +7,7 @@ package software.wings.service.impl;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ElementExecutionSummary.ElementExecutionSummaryBuilder.anElementExecutionSummary;
 import static software.wings.beans.ErrorCodes.INVALID_PIPELINE;
 import static software.wings.beans.InstanceExecutionHistory.InstanceExecutionHistoryBuilder.anInstanceExecutionHistory;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -1272,18 +1273,48 @@ public class WorkflowServiceImpl implements WorkflowService {
     List<ElementExecutionSummary> elementExecutionSummaries = new ArrayList<>();
     Map<String, ElementExecutionSummary> elementExecutionSummaryMap = new HashMap<>();
 
+    boolean svcRepeatFound = true;
     StateExecutionInstance repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE);
     if (repeatStateExecutionInstance == null) {
+      svcRepeatFound = false;
       repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, SERVICE_TEMPLATE);
       if (repeatStateExecutionInstance == null) {
         repeatStateExecutionInstance = getRepeatInstanceByType(topInstances, INSTANCE);
       }
     }
     if (repeatStateExecutionInstance != null) {
-      workflowExecution.setServiceExecutionSummaries(getServiceExecutionSummaries(
-          workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries, elementExecutionSummaryMap));
+      List<ElementExecutionSummary> serviceExecutionSummary = getServiceExecutionSummaries(
+          workflowExecution, repeatStateExecutionInstance, elementExecutionSummaries, elementExecutionSummaryMap);
+
+      if (svcRepeatFound) {
+        handleQueuedServices(repeatStateExecutionInstance, serviceExecutionSummary);
+      }
+
+      workflowExecution.setServiceExecutionSummaries(serviceExecutionSummary);
       wingsPersistence.updateField(WorkflowExecution.class, workflowExecution.getUuid(), "serviceExecutionSummaries",
           workflowExecution.getServiceExecutionSummaries());
+    }
+  }
+
+  private void handleQueuedServices(
+      StateExecutionInstance repeatStateExecutionInstance, List<ElementExecutionSummary> serviceExecutionSummary) {
+    List<String> servicesIncluded =
+        serviceExecutionSummary.stream()
+            .map(elementExecutionSummary -> elementExecutionSummary.getContextElement().getUuid())
+            .collect(Collectors.toList());
+    List<ContextElement> repeatElements =
+        ((RepeatStateExecutionData) repeatStateExecutionInstance.getStateExecutionData()).getRepeatElements();
+    for (ContextElement contextElement : repeatElements) {
+      if (servicesIncluded.contains(contextElement.getUuid())) {
+        continue;
+      }
+      ElementExecutionSummary elementExecutionSummary = anElementExecutionSummary()
+                                                            .withContextElement(contextElement)
+                                                            .withStatus(ExecutionStatus.QUEUED)
+                                                            .withInstancesCount(0)
+                                                            .build();
+      // TODO: instance count should be estimated
+      serviceExecutionSummary.add(elementExecutionSummary);
     }
   }
 

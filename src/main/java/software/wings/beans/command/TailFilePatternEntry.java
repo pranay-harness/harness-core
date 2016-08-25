@@ -1,7 +1,11 @@
 package software.wings.beans.command;
 
+import com.google.common.base.MoreObjects;
+
 import com.github.reinert.jjschema.Attributes;
 import software.wings.stencils.DefaultValue;
+
+import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 8/3/16.
@@ -44,6 +48,28 @@ public class TailFilePatternEntry {
    */
   public void setPattern(String pattern) {
     this.pattern = pattern;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(filePath, pattern);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final TailFilePatternEntry other = (TailFilePatternEntry) obj;
+    return Objects.equals(this.filePath, other.filePath) && Objects.equals(this.pattern, other.pattern);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("filePath", filePath).add("pattern", pattern).toString();
   }
 
   /**

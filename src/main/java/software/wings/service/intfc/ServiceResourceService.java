@@ -90,6 +90,8 @@ public interface ServiceResourceService {
    */
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
+  Service changeCommandVersion(String appId, String serviceId, String commandName, long version);
+
   /**
    * Gets command by name.
    *
@@ -99,6 +101,11 @@ public interface ServiceResourceService {
    * @return the command by name
    */
   Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+
+  List<Command> getCommandVersions(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
+
+  Command getCommandByNameAndVersion(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, long version);
 
   /**
    * Gets command stencils.

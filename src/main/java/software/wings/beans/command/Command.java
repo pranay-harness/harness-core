@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -30,6 +31,8 @@ public class Command extends CommandUnit {
   private String referenceId;
 
   @SchemaIgnore @NotNull private Graph graph;
+
+  @SchemaIgnore private Long version;
 
   @SchemaIgnore @NotEmpty private List<CommandUnit> commandUnits = Lists.newArrayList();
 
@@ -101,6 +104,26 @@ public class Command extends CommandUnit {
   @SchemaIgnore
   public void setCommandUnits(List<CommandUnit> commandUnits) {
     this.commandUnits = commandUnits;
+  }
+
+  /**
+   * Getter for property 'version'.
+   *
+   * @return Value for property 'version'.
+   */
+  @SchemaIgnore
+  public Long getVersion() {
+    return Optional.ofNullable(version).orElse(1L);
+  }
+
+  /**
+   * Setter for property 'version'.
+   *
+   * @param version Value to set for property 'version'.
+   */
+  @SchemaIgnore
+  public void setVersion(Long version) {
+    this.version = version;
   }
 
   /**

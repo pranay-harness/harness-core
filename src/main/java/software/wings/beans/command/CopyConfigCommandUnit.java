@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
+import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -17,6 +18,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 7/14/16.
@@ -76,5 +78,30 @@ public class CopyConfigCommandUnit extends CommandUnit {
    */
   public void setDestinationParentPath(String destinationParentPath) {
     this.destinationParentPath = destinationParentPath;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("destinationParentPath", destinationParentPath)
+        .add("serviceTemplateService", serviceTemplateService)
+        .toString();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(destinationParentPath);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CopyConfigCommandUnit other = (CopyConfigCommandUnit) obj;
+    return Objects.equals(this.destinationParentPath, other.destinationParentPath);
   }
 }
