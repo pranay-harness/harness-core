@@ -13,6 +13,7 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
@@ -29,6 +30,7 @@ import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -56,6 +58,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -93,25 +96,16 @@ public class CommandStateTest extends WingsBaseTest {
   private static final ServiceInstance SERVICE_INSTANCE =
       aServiceInstance()
           .withUuid(SERVICE_INSTANCE_ID)
+          .withAppId(APP_ID)
+          .withEnvId(ENV_ID)
           .withServiceTemplate(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build())
           .withHost(aHost().withHostName(HOST_NAME).build())
-          .build();
-  private static final Activity ACTIVITY =
-      anActivity()
-          .withAppId(SERVICE_INSTANCE.getAppId())
-          .withEnvironmentId(SERVICE_INSTANCE.getEnvId())
-          .withServiceTemplateId(SERVICE_INSTANCE.getServiceTemplate().getUuid())
-          .withServiceTemplateName(SERVICE_INSTANCE.getServiceTemplate().getName())
-          .withServiceId(SERVICE_INSTANCE.getServiceTemplate().getService().getUuid())
-          .withServiceName(SERVICE_INSTANCE.getServiceTemplate().getService().getName())
-          .withCommandName(COMMAND.getName())
-          .withCommandType(COMMAND.getCommandUnitType().name())
-          .withHostName(SERVICE_INSTANCE.getHost().getHostName())
           .build();
   private static final Activity ACTIVITY_WITH_ID =
       anActivity()
           .withUuid(ACTIVITY_ID)
-          .withAppId(SERVICE_INSTANCE.getAppId())
+          .withAppId(APP_ID)
+          .withApplicationName(APP_NAME)
           .withEnvironmentId(SERVICE_INSTANCE.getEnvId())
           .withServiceTemplateId(SERVICE_INSTANCE.getServiceTemplate().getUuid())
           .withServiceTemplateName(SERVICE_INSTANCE.getServiceTemplate().getName())
@@ -127,6 +121,7 @@ public class CommandStateTest extends WingsBaseTest {
 
   @Inject private ExecutorService executorService;
 
+  @Mock private AppService appService;
   @Mock private ExecutionContextImpl context;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceInstanceService serviceInstanceService;
@@ -146,6 +141,7 @@ public class CommandStateTest extends WingsBaseTest {
    */
   @Before
   public void setUpMocks() throws Exception {
+    when(appService.get(APP_ID)).thenReturn(anApplication().withUuid(APP_ID).withName(APP_NAME).build());
     when(environmentService.get(APP_ID, ENV_ID, false))
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, "START")).thenReturn(COMMAND);

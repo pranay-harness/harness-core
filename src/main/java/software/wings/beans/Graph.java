@@ -12,6 +12,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.sm.TransitionType;
 
@@ -80,7 +81,7 @@ public class Graph {
 
   private List<Link> links = new ArrayList<>();
 
-  private Optional<Node> originState = null;
+  @Transient private Optional<Node> originState = null;
 
   /**
    * Gets graph name.
@@ -90,8 +91,6 @@ public class Graph {
   public String getGraphName() {
     return graphName;
   }
-
-  ;
 
   /**
    * Sets graph name.
@@ -307,7 +306,7 @@ public class Graph {
   }
 
   private Optional<Node> getOriginNode() {
-    if (originState == null) {
+    if (originState == null || !originState.isPresent()) {
       originState = getNodes().stream().filter(Node::isOrigin).findFirst();
     }
     return originState;
