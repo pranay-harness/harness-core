@@ -30,6 +30,7 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.stencils.DefaultValue;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -49,7 +50,9 @@ public class RepeatState extends State {
   private static final Logger logger = LoggerFactory.getLogger(RepeatState.class);
 
   @SchemaIgnore private ContextElementType repeatElementType;
-  @Attributes(required = true, title = "Repeat Element Expression") private String repeatElementExpression;
+  @DefaultValue("")
+  @Attributes(required = true, title = "Repeat Element Expression")
+  private String repeatElementExpression;
   @Attributes(required = true, title = "Execution Strategy") private ExecutionStrategy executionStrategy;
   @SchemaIgnore private String executionStrategyExpression;
 
