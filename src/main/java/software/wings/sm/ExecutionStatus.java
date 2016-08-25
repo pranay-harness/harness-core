@@ -41,8 +41,11 @@ public enum ExecutionStatus {
               * Error execution status.
               */
   ERROR, /**
-          * Paused execution status.
+          * Paused on error execution status.
           */
+  PAUSED_ON_ERROR, /**
+                    * Paused execution status.
+                    */
   PAUSED;
 
   /**
