@@ -1,11 +1,17 @@
 package software.wings.security;
 
-import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.Action.WRITE;
-import static software.wings.security.PermissionAttribute.ResourceType.ANY;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
+import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
+import static software.wings.security.PermissionAttribute.ResourceType.CONFIGURATION;
+import static software.wings.security.PermissionAttribute.ResourceType.DEPLOYMENT;
+import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.PLATFORM;
+import static software.wings.security.PermissionAttribute.ResourceType.RELEASE;
+import static software.wings.security.PermissionAttribute.ResourceType.ROLE;
+import static software.wings.security.PermissionAttribute.ResourceType.SERVICE;
+import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
 /**
  * Created by anubhaw on 3/10/16.
@@ -29,33 +35,76 @@ public enum PermissionAttribute {
   PLATFORM_WRITE(PLATFORM, WRITE, true, false),
 
   /**
-   * Service permission attr.
+   * Service read permission attribute.
    */
-  SERVICE_ALL(ANY, ALL, true, false), /**
-                                       * Config permission attr.
-                                       */
-  CONFIG_ALL(ANY, ALL, true, true), /**
-                                     * Env permission attr.
-                                     */
-  ENVIRONMENT_ALL(ANY, ALL, true, true), /**
-                                          * Role permission attr.
-                                          */
-  ROLE_ALL(ANY, ALL, true, false), /**
-                                    * User permission attr.
-                                    */
-  USER_ALL(ANY, ALL, true, false), /**
-                                    * Deployment permission attr.
-                                    */
-  DEPLOYMENT_ALL(ANY, ALL, true, false), /**
-                                          * Release permission attr.
-                                          */
-  RELEASE(ANY, ALL), /**
-                      * Delivery permission attr.
-                      */
-  DELIVERY(ANY, ALL), /**
-                       * Artifacts permission attr.
-                       */
-  ARTIFACTS(ANY, ALL);
+  SERVICE_READ(SERVICE, READ, true, false),
+  /**
+   * Service write permission attribute.
+   */
+  SERVICE_WRITE(SERVICE, WRITE, true, false),
+
+  /**
+   * Environment read permission attribute.
+   */
+  ENVIRONMENT_READ(ENVIRONMENT, READ, true, false),
+  /**
+   * Environment write permission attribute.
+   */
+  ENVIRONMENT_WRITE(ENVIRONMENT, WRITE, true, true),
+
+  /**
+   * Configuration read permission attribute.
+   */
+  CONFIGURATION_READ(CONFIGURATION, READ, true, false),
+  /**
+   * Configuration write permission attribute.
+   */
+  CONFIGURATION_WRITE(CONFIGURATION, WRITE, true, false),
+
+  /**
+   * Role read permission attribute.
+   */
+  ROLE_READ(ROLE, READ, true, false),
+  /**
+   * Role write permission attribute.
+   */
+  ROLE_WRITE(ROLE, WRITE, true, false),
+
+  /**
+   * User read permission attribute.
+   */
+  USER_READ(USER, READ, true, false),
+  /**
+   * User write permission attribute.
+   */
+  USER_WRITE(USER, WRITE, true, false),
+
+  /**
+   * Deployment read permission attribute.
+   */
+  DEPLOYMENT_READ(DEPLOYMENT, READ),
+  /**
+   * Deployment write permission attribute.
+   */
+  DEPLOYMENT_WRITE(DEPLOYMENT, WRITE),
+
+  /**
+   * Release read permission attribute.
+   */
+  RELEASE_READ(RELEASE, READ),
+  /**
+   * Release write permission attribute.
+   */
+  RELEASE_WRITE(RELEASE, WRITE),
+
+  /**
+   * Artifact read permission attribute.
+   */
+  ARTIFACT_READ(ARTIFACT, READ),
+  /**
+   * Artifact write permission attribute.
+   */
+  ARTIFACT_WRITE(ARTIFACT, WRITE);
 
   private ResourceType resourceType;
   private Action action;

@@ -18,6 +18,7 @@ import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import software.wings.beans.AuthToken;
 import software.wings.beans.ErrorCodes;
 import software.wings.common.cache.ResponseCodeCache;
+import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AuthService;
 import software.wings.utils.JsonUtils;
@@ -46,7 +47,7 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
 
         String appId = req.getPathInfo().split("/")[2];
         String envId = req.getPathInfo().split("/")[3];
-        authService.authorize(appId, envId, authToken.getUser(), Lists.newArrayList());
+        authService.authorize(appId, envId, authToken.getUser(), Lists.newArrayList(), PageRequestType.OTHER);
       } catch (WingsException e) {
         sendError(resource, e.getResponseMessageList().get(0).getCode());
         return;

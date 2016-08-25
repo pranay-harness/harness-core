@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
+import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.security.PermissionAttribute;
 
 import java.util.List;
@@ -26,5 +27,6 @@ public interface AuthService {
    * @param user            the user
    * @param permissionAttributes the permission attrs
    */
-  void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes);
+  void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
+      PageRequestType requestType);
 }

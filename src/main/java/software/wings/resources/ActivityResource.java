@@ -67,9 +67,6 @@ public class ActivityResource {
   @GET
   public RestResponse<PageResponse<Activity>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    if (!Strings.isNullOrEmpty(appId)) { // Fixme:: Either make call to appService or let auth layer handle it.
-      request.addFilter("appId", appId, EQ);
-    }
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
     }

@@ -1,6 +1,8 @@
 package software.wings.resources;
 
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.security.PermissionAttribute.ENVIRONMENT_READ;
+import static software.wings.security.PermissionAttribute.ENVIRONMENT_WRITE;
 
 import com.google.inject.Inject;
 
@@ -47,6 +49,7 @@ public class EnvironmentResource {
    * @return the rest response
    */
   @GET
+  @AuthRule(ENVIRONMENT_READ)
   public RestResponse<PageResponse<Environment>> list(
       @QueryParam("appId") String appId, @BeanParam PageRequest<Environment> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
@@ -61,6 +64,7 @@ public class EnvironmentResource {
    * @return the rest response
    */
   @POST
+  @AuthRule(ENVIRONMENT_WRITE)
   public RestResponse<Environment> save(@QueryParam("appId") String appId, Environment environment) {
     environment.setAppId(appId);
     return new RestResponse<>(envService.save(environment));
@@ -76,6 +80,7 @@ public class EnvironmentResource {
    */
   @GET
   @Path("{envId}")
+  @AuthRule(ENVIRONMENT_READ)
   public RestResponse<Environment> get(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, @QueryParam("status") SetupStatus status) {
     if (status == null) {
@@ -94,6 +99,7 @@ public class EnvironmentResource {
    */
   @PUT
   @Path("{envId}")
+  @AuthRule(ENVIRONMENT_WRITE)
   public RestResponse<Environment> update(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, Environment environment) {
     environment.setUuid(envId);
@@ -110,6 +116,7 @@ public class EnvironmentResource {
    */
   @DELETE
   @Path("{envId}")
+  @AuthRule(ENVIRONMENT_WRITE)
   public RestResponse delete(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     envService.delete(appId, envId);
     return new RestResponse();
