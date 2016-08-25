@@ -2,15 +2,20 @@ package software.wings.security;
 
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
+import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
+import static software.wings.dl.PageRequest.PageRequestType.OTHER;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
+import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 
@@ -53,9 +58,26 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
     }
+    String appId = requestContext.getUriInfo().getQueryParameters().getFirst("appId");
+    String envId = requestContext.getUriInfo().getQueryParameters().getFirst("envId");
+
+    setRequestAndResourceType(requestContext, appId);
+
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
-    authService.authorize(requestContext.getUriInfo().getPathParameters().getFirst("appId"),
-        requestContext.getUriInfo().getPathParameters().getFirst("envId"), user, requiredPermissionAttributes);
+    authService.authorize(appId, envId, user, requiredPermissionAttributes,
+        (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {
+    if (Strings.isNullOrEmpty(appId)) {
+      ListAPI listAPI = resourceInfo.getResourceMethod().getAnnotation(ListAPI.class);
+      if (LIST_WITHOUT_APP_ID.equals(listAPI)) {
+        requestContext.setProperty("pageRequestType", LIST_WITHOUT_APP_ID);
+        requestContext.setProperty("resourceType", listAPI.value());
+      } else {
+        requestContext.setProperty("pageRequestType", OTHER);
+      }
+    }
   }
 
   private List<PermissionAttribute> getAllRequiredPermissionAttributes() {

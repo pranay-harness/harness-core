@@ -3,6 +3,7 @@ package software.wings.resources;
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
 import static software.wings.security.PermissionAttribute.APP_READ;
 import static software.wings.security.PermissionAttribute.APP_WRITE;
+import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -13,6 +14,7 @@ import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.ListAPI;
 import software.wings.service.intfc.AppService;
 
 import javax.inject.Inject;
@@ -61,6 +63,7 @@ public class AppResource {
    */
   @GET
   @AuthRule(APP_READ)
+  @ListAPI(APPLICATION)
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
       @QueryParam("numberOfExecutions") @DefaultValue("5") int numberOfExecutions) {

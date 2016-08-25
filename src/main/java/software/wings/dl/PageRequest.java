@@ -10,19 +10,26 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.Permission;
+import software.wings.beans.Permission.PermissionType;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
+import software.wings.security.UserThreadLocal;
 import software.wings.utils.Misc;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
@@ -60,9 +67,14 @@ public class PageRequest<T> {
   @QueryParam("fieldsIncluded") private List<String> fieldsIncluded = new ArrayList<>();
 
   @QueryParam("fieldsExcluded") private List<String> fieldsExcluded = new ArrayList<>();
+
   @JsonIgnore @Context private UriInfo uriInfo;
 
+  @JsonIgnore @Context private ContainerRequestContext requestContext; // TODO: remove UriInfo
+
   @JsonIgnore private boolean isOr = false;
+
+  public enum PageRequestType { LIST_WITHOUT_APP_ID, OTHER }
 
   /**
    * Instantiates a new page request.
@@ -240,6 +252,29 @@ public class PageRequest<T> {
     if (uriInfo == null) {
       return;
     }
+
+    if (requestContext.getProperty("pageRequestType") != null) {
+      PageRequestType pageRequestType = (PageRequestType) requestContext.getProperty("pageRequestType");
+      if (pageRequestType.equals(
+              PageRequestType.LIST_WITHOUT_APP_ID)) { // introduce app filter based on user permissions
+        User user = UserThreadLocal.get();
+        if (user != null && user.getRoles() != null) {
+          List<String> appIds = user.getRoles()
+                                    .stream()
+                                    .flatMap(role -> role.getPermissions().stream())
+                                    .filter(permission -> permission.getPermissionType().equals(PermissionType.APP))
+                                    .map(Permission::getAppId)
+                                    .collect(Collectors.toList());
+          if (!appIds.contains(Base.GLOBAL_APP_ID)) {
+            String fieldName = mappedClass.getClazz().equals(Application.class) ? "uuid" : "appId";
+            filters.add(SearchFilter.Builder.aSearchFilter()
+                            .withField(fieldName, Operator.IN, appIds.stream().toArray())
+                            .build());
+          }
+        }
+      }
+    }
+
     MultivaluedMap<String, String> map = uriInfo.getQueryParameters();
     int fieldCount = 0;
     int orderCount = 0;
