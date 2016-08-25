@@ -13,6 +13,8 @@
     <logger name="io.netty" level="ERROR"/>
     <logger name="org.mongodb.morphia" level="ERROR"/>
     <logger name="org.apache.sshd" level="INFO"/>
+    <logger name="de.danielbechler" level="INFO"/>
+    <logger name="org.hibernate.validator" level="INFO"/>
 
 
 

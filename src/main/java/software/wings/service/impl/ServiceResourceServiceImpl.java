@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.sshd.common.util.GenericUtils.isEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.ErrorCodes.DUPLICATE_COMMAND_NAMES;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -22,8 +22,13 @@ import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.BasicDBObject;
+import de.danielbechler.diff.ObjectDifferBuilder;
+import de.danielbechler.diff.node.DiffNode;
+import de.danielbechler.diff.path.NodePath;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.EventType;
 import software.wings.beans.Graph;
@@ -49,9 +54,11 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -62,6 +69,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
+  private final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ConfigService configService;
   @Inject private ServiceTemplateService serviceTemplateService;
@@ -220,12 +229,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     Command command = aCommand().withGraph(commandGraph).build();
     command.transformGraph();
+    command.setVersion(1L);
 
-    if (!wingsPersistence.addToList(Service.class, appId, serviceId,
-            wingsPersistence.createQuery(Service.class).field("commands.name").notEqual(command.getName()), "commands",
-            command)) {
-      throw new WingsException(DUPLICATE_COMMAND_NAMES, "commandName", command.getName());
-    }
+    service.getCommands().add(command);
+
+    wingsPersistence.save(service);
     return get(appId, serviceId);
   }
 
@@ -242,6 +250,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.createUpdateOperations(Service.class)
             .removeAll("commands", new BasicDBObject("name", commandName)));
 
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Service.class).field(ID_KEY).equal(serviceId).field("appId").equal(appId),
+        wingsPersistence.createUpdateOperations(Service.class)
+            .removeAll("oldCommands", new BasicDBObject("name", commandName)));
+
     return get(appId, serviceId);
   }
 
@@ -253,21 +266,75 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     Validator.notNullCheck("service", service);
 
+    System.out.println(service);
     if (!commandGraph.isLinear()) {
       throw new IllegalArgumentException("Graph is not a pipeline");
     }
 
     Command command = aCommand().withGraph(commandGraph).build();
     command.transformGraph();
+    Command oldCommand = service.getCommands()
+                             .stream()
+                             .filter(command1 -> StringUtils.equals(command1.getName(), command.getName()))
+                             .findFirst()
+                             .get();
 
-    wingsPersistence.update(wingsPersistence.createQuery(Service.class)
-                                .field(ID_KEY)
-                                .equal(serviceId)
-                                .field("appId")
-                                .equal(appId)
-                                .field("commands.name")
-                                .equal(command.getName()),
-        wingsPersistence.createUpdateOperations(Service.class).set("commands.$", command));
+    DiffNode commandUnitDiff =
+        ObjectDifferBuilder.buildDefault().compare(command.getCommandUnits(), oldCommand.getCommandUnits());
+    ObjectDifferBuilder builder = ObjectDifferBuilder.startBuilding();
+    builder.inclusion().exclude().node(NodePath.with("linearGraphIterator"));
+    DiffNode graphDiff = builder.build().compare(command.getGraph(), oldCommand.getGraph());
+
+    if (commandUnitDiff.isChanged()) {
+      commandUnitDiff.visit((node, visit) -> {
+        final Object baseValue = node.canonicalGet(oldCommand.getCommandUnits());
+        final Object workingValue = node.canonicalGet(command.getCommandUnits());
+        if (node.isChanged()) {
+          logger.debug("{} changed from [{}] to [{}]", node.getPath(), baseValue, workingValue);
+        }
+      });
+      command.setVersion(oldCommand.getVersion() + 1);
+      service.getCommands().remove(oldCommand);
+      service.getCommands().add(command);
+      service.getOldCommands().add(oldCommand);
+    } else if (graphDiff.isChanged()) {
+      oldCommand.setGraph(command.getGraph());
+    }
+
+    if (commandUnitDiff.isChanged() || graphDiff.isChanged()) {
+      wingsPersistence.save(service);
+    }
+
+    return get(appId, serviceId);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Service changeCommandVersion(String appId, String serviceId, String commandName, long version) {
+    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Validator.notNullCheck("service", service);
+
+    Command oldCommand = service.getCommands()
+                             .stream()
+                             .filter(command -> StringUtils.equals(command.getName(), commandName))
+                             .findFirst()
+                             .get();
+    Command newCommand =
+        service.getOldCommands()
+            .stream()
+            .filter(command -> StringUtils.equals(command.getName(), commandName) && command.getVersion() == version)
+            .findFirst()
+            .get();
+
+    if (!oldCommand.getVersion().equals(newCommand.getVersion())) {
+      service.getCommands().remove(oldCommand);
+      service.getCommands().add(newCommand);
+      service.getOldCommands().add(oldCommand);
+      service.getOldCommands().remove(newCommand);
+      wingsPersistence.save(service);
+    }
 
     return get(appId, serviceId);
   }
@@ -281,6 +348,33 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return service.getCommands()
         .stream()
         .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<Command> getCommandVersions(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName) {
+    Service service = get(appId, serviceId);
+    return Stream.concat(service.getCommands().stream(), service.getOldCommands().stream())
+        .filter(command -> equalsIgnoreCase(commandName, command.getName()))
+        .sorted(Comparator.comparingLong(Command::getVersion).reversed())
+        .collect(toList());
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Command getCommandByNameAndVersion(
+      @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, long version) {
+    Service service = get(appId, serviceId);
+    return service.getCommands()
+        .stream()
+        .filter(command -> equalsIgnoreCase(commandName, command.getName()) && command.getVersion() == version)
         .findFirst()
         .orElse(null);
   }

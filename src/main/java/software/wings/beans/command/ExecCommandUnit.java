@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 5/25/16.
@@ -37,7 +39,7 @@ public class ExecCommandUnit extends CommandUnit {
 
   @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
 
-  @SchemaIgnore private String preparedCommand;
+  @Transient @SchemaIgnore private String preparedCommand;
 
   /**
    * Instantiates a new exec command unit.
@@ -79,6 +81,36 @@ public class ExecCommandUnit extends CommandUnit {
     }
 
     return returnValue;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(commandPath, commandString, tailFiles, tailPatterns);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ExecCommandUnit other = (ExecCommandUnit) obj;
+    return Objects.equals(this.commandPath, other.commandPath)
+        && Objects.equals(this.commandString, other.commandString) && Objects.equals(this.tailFiles, other.tailFiles)
+        && Objects.equals(this.tailPatterns, other.tailPatterns);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("commandPath", commandPath)
+        .add("commandString", commandString)
+        .add("tailFiles", tailFiles)
+        .add("tailPatterns", tailPatterns)
+        .add("preparedCommand", preparedCommand)
+        .toString();
   }
 
   @Override
