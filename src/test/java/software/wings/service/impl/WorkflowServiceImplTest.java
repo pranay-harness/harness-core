@@ -753,7 +753,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     Host host2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -774,7 +774,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionArgs.setExecutionStrategy(ExecutionStrategy.SERIAL);
     executionArgs.setCommandName("START");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-    executionArgs.setServiceId("123");
+    executionArgs.setServiceId(service.getUuid());
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
 
@@ -866,7 +866,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     Host host2 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
     Service service = wingsPersistence.saveAndGet(
-        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").build());
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -887,7 +887,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionArgs.setExecutionStrategy(ExecutionStrategy.PARALLEL);
     executionArgs.setCommandName("STOP");
     executionArgs.setWorkflowType(WorkflowType.SIMPLE);
-    executionArgs.setServiceId("123");
+    executionArgs.setServiceId(service.getUuid());
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
 
