@@ -192,46 +192,6 @@ public class StatisticsServiceImpl implements StatisticsService {
     return Arrays.asList(prodDeploymentStatistics, otherDeploymentStatistics);
   }
 
-  @Override
-  public DeploymentActivityStatistics getDeploymentActivities() {
-    long epochMilliOfXthDay = getEpochMilliOfStartOfDayForXDaysInPastFromNow(30);
-
-    PageRequest pageRequest =
-        aPageRequest()
-            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, epochMilliOfXthDay).build())
-            .addFilter(aSearchFilter()
-                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
-                           .build())
-            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
-            .build();
-
-    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
-    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(30);
-
-    Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
-        workflowExecutions.parallelStream().collect(groupingBy(
-            wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt())), groupingBy(WorkflowExecution::getStatus, counting())));
-
-    IntStream.range(0, 30).forEach(idx -> {
-      int successCount = 0;
-      int failureCount = 0;
-      Long timeOffset = epochMilliOfXthDay + idx * MILLIS_IN_A_DAY;
-      Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
-      if (executionStatusCountMap != null) {
-        successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
-        failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
-      }
-      int total = successCount + failureCount;
-      dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
-                                        .withDate(timeOffset)
-                                        .withSuccessCount(successCount)
-                                        .withFailureCount(failureCount)
-                                        .withTotalCount(total)
-                                        .build());
-    });
-    return new DeploymentActivityStatistics(dayActivityStatisticsList);
-  }
-
   private int getActiveReleases() {
     PageRequest pageRequest =
         aPageRequest()
@@ -287,6 +247,57 @@ public class StatisticsServiceImpl implements StatisticsService {
     keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
     keyStats.add(getKeyStatsForEnvType(OTHER, activityByEnvType.get(OTHER)));
     return keyStats;
+  }
+
+  @Override
+  public DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate) {
+    if (numOfDays == null || numOfDays <= 0) {
+      numOfDays = 30;
+    }
+    if (endDate == null || endDate <= 0) {
+      endDate = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * numOfDays;
+    return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
+  }
+
+  private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(
+      Integer numOfDays, Long fromDateEpochMilli) {
+    PageRequest pageRequest =
+        aPageRequest()
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
+            .addFilter(aSearchFilter()
+                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                           .build())
+            .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
+            .build();
+
+    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(numOfDays);
+
+    Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
+        workflowExecutions.parallelStream().collect(groupingBy(
+            wfl -> (getStartOfTheDayEpoch(wfl.getCreatedAt())), groupingBy(WorkflowExecution::getStatus, counting())));
+
+    IntStream.range(0, numOfDays).forEach(idx -> {
+      int successCount = 0;
+      int failureCount = 0;
+      Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
+      Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
+      if (executionStatusCountMap != null) {
+        successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
+        failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
+      }
+      int total = successCount + failureCount;
+      dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
+                                        .withDate(timeOffset)
+                                        .withSuccessCount(successCount)
+                                        .withFailureCount(failureCount)
+                                        .withTotalCount(total)
+                                        .build());
+    });
+    return new DeploymentActivityStatistics(dayActivityStatisticsList);
   }
 
   private KeyStatistics getKeyStatsForEnvType(EnvironmentType environmentType, List<Activity> activities) {

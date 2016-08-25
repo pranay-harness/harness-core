@@ -15,6 +15,7 @@ import java.util.List;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Created by anubhaw on 8/15/16.
@@ -52,8 +53,9 @@ public class StatisticsResource {
    */
   @GET
   @Path("deployment-activities")
-  public RestResponse<DeploymentActivityStatistics> deploymentActivities() {
-    return new RestResponse<>(statisticsService.getDeploymentActivities());
+  public RestResponse<DeploymentActivityStatistics> deploymentActivities(
+      @QueryParam("numOfDays") Integer numOfDays, @QueryParam("endDate") Long endDate) {
+    return new RestResponse<>(statisticsService.getDeploymentActivities(numOfDays, endDate));
   }
 
   /**
