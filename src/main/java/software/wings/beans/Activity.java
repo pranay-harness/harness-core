@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "activities", noClassnameStored = true)
 public class Activity extends Base {
+  @NotEmpty private String applicationName;
   @NotEmpty private String environmentId;
   @NotEmpty private String environmentName;
   @NotNull private EnvironmentType environmentType;
@@ -29,6 +30,24 @@ public class Activity extends Base {
   private String artifactId;
   private String artifactName;
   private Status status = Status.RUNNING;
+
+  /**
+   * Gets application name.
+   *
+   * @return the application name
+   */
+  public String getApplicationName() {
+    return applicationName;
+  }
+
+  /**
+   * Sets application name.
+   *
+   * @param applicationName the application name
+   */
+  public void setApplicationName(String applicationName) {
+    this.applicationName = applicationName;
+  }
 
   /**
    * Gets environment id.
@@ -303,9 +322,9 @@ public class Activity extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(environmentId, environmentName, environmentType, commandName, commandType, serviceId,
-              serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName, artifactId,
-              artifactName, status);
+        + Objects.hash(applicationName, environmentId, environmentName, environmentType, commandName, commandType,
+              serviceId, serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName,
+              artifactId, artifactName, status);
   }
 
   @Override
@@ -320,7 +339,8 @@ public class Activity extends Base {
       return false;
     }
     final Activity other = (Activity) obj;
-    return Objects.equals(this.environmentId, other.environmentId)
+    return Objects.equals(this.applicationName, other.applicationName)
+        && Objects.equals(this.environmentId, other.environmentId)
         && Objects.equals(this.environmentName, other.environmentName)
         && Objects.equals(this.environmentType, other.environmentType)
         && Objects.equals(this.commandName, other.commandName) && Objects.equals(this.commandType, other.commandType)
@@ -335,6 +355,7 @@ public class Activity extends Base {
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("applicationName", applicationName)
         .add("environmentId", environmentId)
         .add("environmentName", environmentName)
         .add("environmentType", environmentType)
@@ -376,6 +397,7 @@ public class Activity extends Base {
    * The type Builder.
    */
   public static final class Builder {
+    private String applicationName;
     private String environmentId;
     private String environmentName;
     private EnvironmentType environmentType;
@@ -408,6 +430,17 @@ public class Activity extends Base {
      */
     public static Builder anActivity() {
       return new Builder();
+    }
+
+    /**
+     * With application name builder.
+     *
+     * @param applicationName the application name
+     * @return the builder
+     */
+    public Builder withApplicationName(String applicationName) {
+      this.applicationName = applicationName;
+      return this;
     }
 
     /**
@@ -659,6 +692,7 @@ public class Activity extends Base {
      */
     public Builder but() {
       return anActivity()
+          .withApplicationName(applicationName)
           .withEnvironmentId(environmentId)
           .withEnvironmentName(environmentName)
           .withEnvironmentType(environmentType)
@@ -690,6 +724,7 @@ public class Activity extends Base {
      */
     public Activity build() {
       Activity activity = new Activity();
+      activity.setApplicationName(applicationName);
       activity.setEnvironmentId(environmentId);
       activity.setEnvironmentName(environmentName);
       activity.setEnvironmentType(environmentType);

@@ -28,6 +28,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
+import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -43,6 +44,7 @@ import software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultD
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -87,6 +89,8 @@ public class CommandState extends State {
   public static final String STAGING_PATH = "STAGING_PATH";
 
   private static final Logger logger = LoggerFactory.getLogger(CommandState.class);
+
+  @Inject @Transient private transient AppService appService;
 
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
@@ -204,8 +208,11 @@ public class CommandState extends State {
 
       executionDataBuilder.withCommandName(command.getName());
 
+      Application application = appService.get(serviceInstance.getAppId());
+
       Activity.Builder activityBuilder = anActivity()
-                                             .withAppId(serviceInstance.getAppId())
+                                             .withAppId(application.getAppId())
+                                             .withApplicationName(application.getName())
                                              .withEnvironmentId(environment.getUuid())
                                              .withEnvironmentName(environment.getName())
                                              .withEnvironmentType(environment.getEnvironmentType())
