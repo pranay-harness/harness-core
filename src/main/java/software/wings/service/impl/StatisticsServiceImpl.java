@@ -258,7 +258,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       endDate = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
-    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * numOfDays;
+    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * (numOfDays - 1);
     return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
   }
 
@@ -266,6 +266,8 @@ public class StatisticsServiceImpl implements StatisticsService {
       Integer numOfDays, Long fromDateEpochMilli) {
     PageRequest pageRequest =
         aPageRequest()
+            .withLimit("10000")
+            .withOffset("0")
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
