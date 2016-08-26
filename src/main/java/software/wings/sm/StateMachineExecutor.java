@@ -760,6 +760,7 @@ public class StateMachineExecutor {
 
       if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
         elementExecutionSummary.setEndTs(last.getEndTs());
+        elementExecutionSummary.setStatus(last.getStatus());
       }
       elementExecutionSummary.setStatus(last.getStatus());
       if (last.getContextElement() != null
