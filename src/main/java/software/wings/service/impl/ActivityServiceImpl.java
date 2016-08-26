@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
@@ -22,6 +23,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.inject.Singleton;
@@ -44,7 +46,11 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity get(String id, String appId) {
-    return wingsPersistence.get(Activity.class, appId, id);
+    Activity activity = wingsPersistence.get(Activity.class, appId, id);
+    if (activity == null) {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Activity doesn't exist");
+    }
+    return activity;
   }
 
   @Override
@@ -66,12 +72,13 @@ public class ActivityServiceImpl implements ActivityService {
     Command command =
         serviceResourceService.getCommandByName(appId, activity.getServiceId(), activity.getCommandName());
     List<CommandUnit> commandUnits = getFlattenCommandUnitList(appId, activity.getServiceId(), command);
-    commandUnits.add(0, new InitCommandUnit());
-    commandUnits.add(new CleanupCommandUnit());
-    commandUnits.forEach(commandUnit -> {
-      commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
-    });
-
+    if (commandUnits != null && commandUnits.size() > 0) {
+      commandUnits.add(0, new InitCommandUnit());
+      commandUnits.add(new CleanupCommandUnit());
+      commandUnits.forEach(commandUnit -> {
+        commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
+      });
+    }
     return commandUnits;
   }
 
@@ -85,6 +92,10 @@ public class ActivityServiceImpl implements ActivityService {
    */
   private List<CommandUnit> getFlattenCommandUnitList(String appId, String serviceId, Command command) {
     Command executableCommand = command;
+    if (executableCommand == null) {
+      return new ArrayList<>();
+    }
+
     if (isNotBlank(command.getReferenceId())) {
       executableCommand = serviceResourceService.getCommandByName(appId, serviceId, command.getReferenceId());
       if (executableCommand == null) {
