@@ -1517,7 +1517,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, res.getResponse());
-    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress();
+    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
 
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);

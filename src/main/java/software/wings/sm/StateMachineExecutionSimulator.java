@@ -295,7 +295,7 @@ public class StateMachineExecutionSimulator {
       });
     } else {
       if (previousInprogress) {
-        countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
+        countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
         State success = stateMachine.getSuccessTransition(state.getName());
         extrapolateProgress(
             countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, true);
@@ -312,8 +312,14 @@ public class StateMachineExecutionSimulator {
           State failed = stateMachine.getFailureTransition(state.getName());
           extrapolateProgress(
               countsByStatuses, context, stateMachine, failed, parentPath, stateExecutionInstanceMap, false);
-        } else {
+        } else if (status == ExecutionStatus.RUNNING || status == ExecutionStatus.STARTING
+            || status == ExecutionStatus.NEW) {
           countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
+          State success = stateMachine.getSuccessTransition(state.getName());
+          extrapolateProgress(
+              countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, true);
+        } else {
+          countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
           State success = stateMachine.getSuccessTransition(state.getName());
           extrapolateProgress(
               countsByStatuses, context, stateMachine, success, parentPath, stateExecutionInstanceMap, true);
