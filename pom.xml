@@ -666,6 +666,14 @@
                             <key>Boot-Class-Path-P</key>
                             <value>alpn-boot-${alpnboot.version}.jar</value>
                         </entry>
+                        <entry>
+                            <key>Min-Java-Version</key>
+                            <value>1.8.0</value>
+                        </entry>
+                        <entry>
+                            <key>Min-Update-Version</key>
+                            <value>8=91</value>
+                        </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
                 </configuration>
