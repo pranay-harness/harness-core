@@ -18,6 +18,7 @@ import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
+import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
@@ -258,7 +259,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       endDate = LocalDate.now(ZoneId.systemDefault()).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
-    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * numOfDays;
+    long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * (numOfDays - 1);
     return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
   }
 
@@ -266,6 +267,8 @@ public class StatisticsServiceImpl implements StatisticsService {
       Integer numOfDays, Long fromDateEpochMilli) {
     PageRequest pageRequest =
         aPageRequest()
+            .withLimit("10000")
+            .withOffset("0")
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
@@ -283,17 +286,20 @@ public class StatisticsServiceImpl implements StatisticsService {
     IntStream.range(0, numOfDays).forEach(idx -> {
       int successCount = 0;
       int failureCount = 0;
+      int runningCount = 0;
       Long timeOffset = fromDateEpochMilli + idx * MILLIS_IN_A_DAY;
       Map<ExecutionStatus, Long> executionStatusCountMap = executionStatusCountByDay.get(timeOffset);
       if (executionStatusCountMap != null) {
         successCount = executionStatusCountMap.getOrDefault(SUCCESS, 0L).intValue();
         failureCount = executionStatusCountMap.getOrDefault(FAILED, 0L).intValue();
+        runningCount = executionStatusCountMap.getOrDefault(RUNNING, 0L).intValue();
       }
-      int total = successCount + failureCount;
+      int total = successCount + failureCount + runningCount;
       dayActivityStatisticsList.add(DayActivityStatistics.Builder.aDayActivityStatistics()
                                         .withDate(timeOffset)
                                         .withSuccessCount(successCount)
                                         .withFailureCount(failureCount)
+                                        .withRunningCount(runningCount)
                                         .withTotalCount(total)
                                         .build());
     });
