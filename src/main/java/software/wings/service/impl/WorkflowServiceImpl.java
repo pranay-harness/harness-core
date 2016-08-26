@@ -1387,6 +1387,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
         elementExecutionSummary.setEndTs(last.getEndTs());
+        elementExecutionSummary.setStatus(last.getStatus());
       }
 
       List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childRepeatInstances);
