@@ -474,7 +474,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      if (!runningOnly || workflowExecution.isRunningStatus()) {
+      if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         populateGraph(workflowExecution, null, null, null, false);
       }
     }
