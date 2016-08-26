@@ -134,9 +134,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service update(Service service) {
+    Service savedService = wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
     wingsPersistence.updateFields(Service.class, service.getUuid(),
-        ImmutableMap.of("name", service.getName(), "description", service.getDescription(), "artifactType",
+        ImmutableMap.of("name", service.getName().trim(), "description", service.getDescription(), "artifactType",
             service.getArtifactType(), "appContainer", service.getAppContainer()));
+    if (!savedService.getName().equals(service.getName())) {
+      executorService.submit(()
+                                 -> serviceTemplateService.updateDefaultServiceTemplateName(service.getAppId(),
+                                     service.getUuid(), savedService.getName(), service.getName().trim()));
+    }
     return wingsPersistence.get(Service.class, service.getAppId(), service.getUuid());
   }
 

@@ -18,6 +18,8 @@ import com.google.common.collect.Maps;
 
 import org.eclipse.jetty.util.ArrayQueue;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
@@ -151,6 +153,23 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId) {
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false);
     return getOverrideFiles(serviceTemplate);
+  }
+
+  @Override
+  public void updateDefaultServiceTemplateName(
+      String appId, String serviceId, String oldServiceName, String newServiceName) {
+    Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
+                                       .field("appId")
+                                       .equal(appId)
+                                       .field("service")
+                                       .equal(serviceId)
+                                       .field("defaultServiceTemplate")
+                                       .equal(true)
+                                       .field("name")
+                                       .equal(oldServiceName);
+    UpdateOperations<ServiceTemplate> updateOperations =
+        wingsPersistence.createUpdateOperations(ServiceTemplate.class).set("name", newServiceName);
+    wingsPersistence.update(query, updateOperations);
   }
 
   private List<ConfigFile> getOverrideFiles(ServiceTemplate template) {
@@ -379,6 +398,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
                     .withEnvId(environment.getUuid())
                     .withService(service)
                     .withName(service.getName())
+                    .withDefaultServiceTemplate(true)
                     .build()));
   }
 

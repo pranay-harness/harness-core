@@ -36,6 +36,7 @@ public class ServiceTemplate extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
   @Transient private List<Host> taggedHosts = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+  private boolean defaultServiceTemplate = false;
 
   /**
    * Gets name.
@@ -217,6 +218,24 @@ public class ServiceTemplate extends Base {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Is default service template boolean.
+   *
+   * @return the boolean
+   */
+  public boolean isDefaultServiceTemplate() {
+    return defaultServiceTemplate;
+  }
+
+  /**
+   * Sets default service template.
+   *
+   * @param defaultServiceTemplate the default service template
+   */
+  public void setDefaultServiceTemplate(boolean defaultServiceTemplate) {
+    this.defaultServiceTemplate = defaultServiceTemplate;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -272,6 +291,7 @@ public class ServiceTemplate extends Base {
     private Set<Tag> leafTags = new HashSet<>();
     private List<Host> taggedHosts = new ArrayList<>();
     private List<ConfigFile> configFiles = new ArrayList<>();
+    private boolean defaultServiceTemplate = false;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -402,6 +422,17 @@ public class ServiceTemplate extends Base {
     }
 
     /**
+     * With default service template builder.
+     *
+     * @param defaultServiceTemplate the default service template
+     * @return the builder
+     */
+    public Builder withDefaultServiceTemplate(boolean defaultServiceTemplate) {
+      this.defaultServiceTemplate = defaultServiceTemplate;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -495,6 +526,7 @@ public class ServiceTemplate extends Base {
           .withLeafTags(leafTags)
           .withTaggedHosts(taggedHosts)
           .withConfigFiles(configFiles)
+          .withDefaultServiceTemplate(defaultServiceTemplate)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -521,6 +553,7 @@ public class ServiceTemplate extends Base {
       serviceTemplate.setLeafTags(leafTags);
       serviceTemplate.setTaggedHosts(taggedHosts);
       serviceTemplate.setConfigFiles(configFiles);
+      serviceTemplate.setDefaultServiceTemplate(defaultServiceTemplate);
       serviceTemplate.setUuid(uuid);
       serviceTemplate.setAppId(appId);
       serviceTemplate.setCreatedBy(createdBy);
