@@ -64,6 +64,7 @@ import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionEvent;
 import software.wings.sm.ExecutionEventType;
@@ -824,6 +825,26 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes())
         .extracting("y")
         .containsExactly(row1, row1 + DEFAULT_NODE_HEIGHT, row2, row2, row3, row3);
+
+    assertThat(graph.getNodes().get(0))
+        .hasFieldOrProperty("elementStatusSummary")
+        .hasFieldOrProperty("instanceStatusSummary");
+    assertThat(graph.getNodes().get(0).getElementStatusSummary()).isNotNull().hasSize(2);
+    assertThat(graph.getNodes().get(0).getElementStatusSummary().get(0))
+        .isNotNull()
+        .extracting("instancesCount", "status")
+        .containsExactly(1, ExecutionStatus.SUCCESS);
+    assertThat(graph.getNodes().get(0).getElementStatusSummary()).isNotNull().hasSize(2);
+    assertThat(graph.getNodes().get(0).getElementStatusSummary().get(0))
+        .isNotNull()
+        .extracting("startTs", "endTs")
+        .doesNotContainNull();
+    assertThat(graph.getNodes().get(0).getElementStatusSummary().get(0))
+        .extracting("contextElement")
+        .doesNotContainNull()
+        .extracting("elementType")
+        .hasSize(1)
+        .containsExactly(ContextElementType.INSTANCE);
   }
 
   /**
@@ -1110,6 +1131,21 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
 
     List<Node> repeatByInstances =
         graph.getNodes().stream().filter(n -> "RepeatByInstances".equals(n.getName())).collect(Collectors.toList());
+
+    assertThat(repeatByInstances)
+        .flatExtracting("elementStatusSummary")
+        .doesNotContainNull()
+        .extracting("contextElement")
+        .doesNotContainNull()
+        .extracting("uuid")
+        .contains(uuid11, uuid12, uuid21, uuid22);
+
+    assertThat(execution.getServiceExecutionSummaries())
+        .isNotNull()
+        .extracting("contextElement")
+        .doesNotContainNull()
+        .extracting("uuid")
+        .contains(service1.getUuid(), service2.getUuid());
 
     execution = workflowService.getExecutionDetails(
         app.getUuid(), executionId, null, repeatByInstances.get(0).getId(), NodeOps.EXPAND);
