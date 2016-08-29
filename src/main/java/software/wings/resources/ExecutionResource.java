@@ -17,6 +17,8 @@ import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute;
+import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionEvent;
@@ -67,6 +69,7 @@ public class ExecutionResource {
    */
   @GET
   @Produces("application/json")
+  @AuthRule(PermissionAttribute.DEPLOYMENT_READ)
   public RestResponse<PageResponse<WorkflowExecution>> listExecutions(@QueryParam("appId") String appId,
       @QueryParam("envId") String envId, @QueryParam("orchestrationId") String orchestrationId,
       @BeanParam PageRequest<WorkflowExecution> pageRequest,

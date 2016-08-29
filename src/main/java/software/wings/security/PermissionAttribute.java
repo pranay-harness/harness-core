@@ -20,64 +20,64 @@ public enum PermissionAttribute {
   /**
    * App create permission attr.
    */
-  APP_READ(APPLICATION, READ, true, false),
+  APP_READ(APPLICATION, READ, false),
   /**
    * App delete permission attr.
    */
-  APP_WRITE(APPLICATION, WRITE, true, false),
+  APP_WRITE(APPLICATION, WRITE, false),
   /**
    * Platform create permission attr.
    */
-  PLATFORM_READ(PLATFORM, READ, true, false),
+  PLATFORM_READ(PLATFORM, READ, false),
   /**
    * Platform delete permission attr.
    */
-  PLATFORM_WRITE(PLATFORM, WRITE, true, false),
+  PLATFORM_WRITE(PLATFORM, WRITE, false),
 
   /**
    * Service read permission attribute.
    */
-  SERVICE_READ(SERVICE, READ, true, false),
+  SERVICE_READ(SERVICE, READ, false),
   /**
    * Service write permission attribute.
    */
-  SERVICE_WRITE(SERVICE, WRITE, true, false),
+  SERVICE_WRITE(SERVICE, WRITE, false),
 
   /**
    * Environment read permission attribute.
    */
-  ENVIRONMENT_READ(ENVIRONMENT, READ, true, false),
+  ENVIRONMENT_READ(ENVIRONMENT, READ, false),
   /**
    * Environment write permission attribute.
    */
-  ENVIRONMENT_WRITE(ENVIRONMENT, WRITE, true, true),
+  ENVIRONMENT_WRITE(ENVIRONMENT, WRITE, true),
 
   /**
    * Configuration read permission attribute.
    */
-  CONFIGURATION_READ(CONFIGURATION, READ, true, false),
+  CONFIGURATION_READ(CONFIGURATION, READ, false),
   /**
    * Configuration write permission attribute.
    */
-  CONFIGURATION_WRITE(CONFIGURATION, WRITE, true, false),
+  CONFIGURATION_WRITE(CONFIGURATION, WRITE, false),
 
   /**
    * Role read permission attribute.
    */
-  ROLE_READ(ROLE, READ, true, false),
+  ROLE_READ(ROLE, READ, false),
   /**
    * Role write permission attribute.
    */
-  ROLE_WRITE(ROLE, WRITE, true, false),
+  ROLE_WRITE(ROLE, WRITE, false),
 
   /**
    * User read permission attribute.
    */
-  USER_READ(USER, READ, true, false),
+  USER_READ(USER, READ, false),
   /**
    * User write permission attribute.
    */
-  USER_WRITE(USER, WRITE, true, false),
+  USER_WRITE(USER, WRITE, false),
 
   /**
    * Deployment read permission attribute.
@@ -108,7 +108,6 @@ public enum PermissionAttribute {
 
   private ResourceType resourceType;
   private Action action;
-  private boolean onApp = true;
   private boolean onEnv = true;
 
   /**
@@ -127,13 +126,11 @@ public enum PermissionAttribute {
    *
    * @param resourceType the resource
    * @param action       the action
-   * @param onApp        the on app
    * @param onEnv        the on env
    */
-  PermissionAttribute(ResourceType resourceType, Action action, boolean onApp, boolean onEnv) {
+  PermissionAttribute(ResourceType resourceType, Action action, boolean onEnv) {
     this.resourceType = resourceType;
     this.action = action;
-    this.onApp = onApp;
     this.onEnv = onEnv;
   }
 
@@ -153,15 +150,6 @@ public enum PermissionAttribute {
    */
   public Action getAction() {
     return action;
-  }
-
-  /**
-   * Is on app boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isOnApp() {
-    return onApp;
   }
 
   /**

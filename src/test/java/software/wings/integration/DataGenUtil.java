@@ -152,7 +152,7 @@ public class DataGenUtil extends WingsBaseTest {
   @Rule public TemporaryFolder testFolder = new TemporaryFolder();
   private Client client;
   @Inject private WingsPersistence wingsPersistence;
-  private List<String> appNames = new ArrayList<String>(seedNames);
+  private List<String> appNames = new ArrayList<>(seedNames);
   private List<String> serviceNames;
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;

@@ -18,6 +18,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.UserService;
 
 import java.net.URISyntaxException;
@@ -67,6 +68,7 @@ public class UserResource {
    * @return the rest response
    */
   @POST
+  @PublicApi
   public RestResponse<User> register(User user) {
     user.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.register(user));
@@ -121,6 +123,7 @@ public class UserResource {
    */
   @GET
   @Path("login")
+  @PublicApi
   public RestResponse<User> login(@Auth User user) {
     return new RestResponse<>(user);
   }
@@ -134,6 +137,7 @@ public class UserResource {
    */
   @GET
   @Path("verify/{token}")
+  @PublicApi
   public RestResponse<Map<String, Object>> verifyEmail(@PathParam("token") String token) throws URISyntaxException {
     return new RestResponse<>(of("success", userService.verifyEmail(token)));
   }

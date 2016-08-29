@@ -70,28 +70,24 @@ public class AuthServiceImpl implements AuthService {
       Application application, Environment environment, PageRequestType requestType) {
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
-    boolean requiresAppPermission = permissionAttribute.isOnApp();
     boolean requiresEnvironmentPermission = permissionAttribute.isOnEnv();
     for (Permission permission : role.getPermissions()) {
-      if (hasMatchingPermissionType(
-              requiresAppPermission, requiresEnvironmentPermission, permission.getPermissionType())
+      if (hasMatchingPermissionType(requiresEnvironmentPermission, permission.getPermissionType())
           && hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
           && allowedInEnv(environment, requiresEnvironmentPermission, permission)
-          && forApplication(application, requiresAppPermission, permission, requestType)) {
+          && forApplication(application, permission, requestType)) {
         return true;
       }
     }
     return false;
   }
 
-  private boolean hasMatchingPermissionType(
-      boolean requiresAppPermission, boolean requiresEnvironmentPermission, PermissionType permissionType) {
-    return permissionType.equals(PermissionType.ENV) ? requiresEnvironmentPermission : requiresAppPermission;
+  private boolean hasMatchingPermissionType(boolean requiresEnvironmentPermission, PermissionType permissionType) {
+    return !permissionType.equals(PermissionType.ENV) || requiresEnvironmentPermission;
   }
 
-  private boolean forApplication(
-      Application application, boolean reqApp, Permission permission, PageRequestType requestType) {
-    return requestType.equals(LIST_WITHOUT_APP_ID) || !reqApp
+  private boolean forApplication(Application application, Permission permission, PageRequestType requestType) {
+    return requestType.equals(LIST_WITHOUT_APP_ID)
         || (Base.GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
   }
 

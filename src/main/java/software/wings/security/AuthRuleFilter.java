@@ -16,6 +16,7 @@ import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
 
@@ -35,7 +36,6 @@ import javax.ws.rs.core.HttpHeaders;
  */
 @Singleton
 @Priority(AUTHENTICATION)
-@AuthRule
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
 
@@ -50,6 +50,9 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    if (publicAPI()) {
+      return; // do nothing
+    }
     String tokenString = extractToken(requestContext);
     AuthToken authToken = authService.validateToken(tokenString);
     User user = authToken.getUser();
@@ -66,6 +69,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(appId, envId, user, requiredPermissionAttributes,
         (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private boolean publicAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(AuthRule.class) == null && resourceClass.getAnnotation(AuthRule.class) == null
+        && (resourceMethod.getAnnotation(PublicApi.class) != null
+               || resourceClass.getAnnotation(PublicApi.class) != null);
   }
 
   private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {
