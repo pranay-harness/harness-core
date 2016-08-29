@@ -83,7 +83,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {
     if (Strings.isNullOrEmpty(appId)) {
       ListAPI listAPI = resourceInfo.getResourceMethod().getAnnotation(ListAPI.class);
-      if (LIST_WITHOUT_APP_ID.equals(listAPI)) {
+      if (listAPI != null) {
         requestContext.setProperty("pageRequestType", LIST_WITHOUT_APP_ID);
         requestContext.setProperty("resourceType", listAPI.value());
       } else {
