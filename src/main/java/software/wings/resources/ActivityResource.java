@@ -37,7 +37,6 @@ import javax.ws.rs.core.Response;
 @Api("activities")
 @Path("/activities")
 @Produces("application/json")
-@AuthRule
 @Timed
 @ExceptionMetered
 public class ActivityResource {

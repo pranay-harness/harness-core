@@ -33,7 +33,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("environments")
 @Path("/environments")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")

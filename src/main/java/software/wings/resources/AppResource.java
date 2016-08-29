@@ -36,7 +36,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("/apps")
 @Path("/apps")
-@AuthRule
 @Produces("application/json")
 @Timed
 @ExceptionMetered

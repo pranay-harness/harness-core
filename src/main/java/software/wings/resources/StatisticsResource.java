@@ -22,7 +22,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("/statistics")
 @Path("/statistics")
-@AuthRule
 @Produces("application/json")
 @Timed
 @ExceptionMetered

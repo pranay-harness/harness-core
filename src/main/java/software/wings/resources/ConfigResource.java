@@ -43,7 +43,6 @@ import javax.ws.rs.core.Response;
  * @author Rishi
  */
 @Api("configs")
-@AuthRule
 @Path("/configs")
 @Produces("application/json")
 public class ConfigResource {

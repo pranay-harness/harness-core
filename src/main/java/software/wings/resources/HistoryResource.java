@@ -27,7 +27,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("history")
 @Path("/history")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")

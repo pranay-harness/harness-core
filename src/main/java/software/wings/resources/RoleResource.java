@@ -28,7 +28,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Api("roles")
 @Path("/roles")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Consumes(MediaType.APPLICATION_JSON)
