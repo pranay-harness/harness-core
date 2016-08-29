@@ -42,7 +42,6 @@ import javax.ws.rs.QueryParam;
 @Api("app-containers")
 @Path("/app-containers")
 @Produces("application/json")
-@AuthRule
 @Timed
 @ExceptionMetered
 public class AppContainerResource {

@@ -29,7 +29,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("infrastructures")
 @Path("/infrastructures")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")

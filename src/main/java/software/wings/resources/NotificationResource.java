@@ -35,7 +35,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("/notifications")
 @Path("/notifications")
-@AuthRule
 @Produces("application/json")
 @Timed
 @ExceptionMetered

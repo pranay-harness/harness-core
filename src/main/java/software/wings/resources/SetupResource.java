@@ -24,7 +24,6 @@ import javax.ws.rs.QueryParam;
  * Created by anubhaw on 6/29/16.
  */
 @Api("setup")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")

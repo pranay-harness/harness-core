@@ -33,7 +33,6 @@ import javax.ws.rs.QueryParam;
  */
 @Api("settings")
 @Path("/settings")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Consumes(APPLICATION_JSON)

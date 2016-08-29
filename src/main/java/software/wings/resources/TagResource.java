@@ -32,7 +32,6 @@ import javax.ws.rs.QueryParam;
  * Created by anubhaw on 4/25/16.
  */
 @Api("tags")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")

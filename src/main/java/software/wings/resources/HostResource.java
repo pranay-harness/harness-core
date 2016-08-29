@@ -44,7 +44,6 @@ import javax.ws.rs.core.Response;
  */
 @Api("hosts")
 @Path("/hosts")
-@AuthRule
 @Timed
 @ExceptionMetered
 @Produces("application/json")
