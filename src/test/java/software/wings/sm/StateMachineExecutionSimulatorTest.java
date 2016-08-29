@@ -477,14 +477,21 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                      .withContextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
                                      .withStatus(ExecutionStatus.SUCCESS)
                                      .build();
+    StateExecutionInstance si5 = aStateExecutionInstance()
+                                     .withUuid(getUuid())
+                                     .withStateName(s5.getName())
+                                     .withParentInstanceId(si3.getUuid())
+                                     .withContextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                     .withStatus(ExecutionStatus.RUNNING)
+                                     .build();
 
-    List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4);
+    List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4, si5);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
     assertThat(breakdown)
         .isNotNull()
         .extracting("success", "failed", "inprogress", "queued")
-        .containsExactly(2, 0, 0, 3);
+        .containsExactly(2, 0, 1, 2);
   }
 
   /**
@@ -582,7 +589,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                       .withUuid(getUuid())
                                       .withStateName(s5.getName())
                                       .withParentInstanceId(si3.getUuid())
-                                      .withContextElement(anInstanceElement().withDisplayName(inst1.getName()).build())
+                                      .withContextElement(anInstanceElement().withDisplayName(inst2.getName()).build())
                                       .withStatus(ExecutionStatus.RUNNING)
                                       .build();
 
@@ -592,7 +599,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     assertThat(breakdown)
         .isNotNull()
         .extracting("success", "failed", "inprogress", "queued")
-        .containsExactly(3, 1, 0, 1);
+        .containsExactly(3, 1, 1, 0);
   }
 
   /**
