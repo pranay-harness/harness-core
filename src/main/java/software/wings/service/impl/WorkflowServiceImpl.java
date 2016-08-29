@@ -35,10 +35,12 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.app.StaticConfiguration;
+import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
@@ -51,6 +53,7 @@ import software.wings.beans.ReadPref;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
+import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.StatusInstanceBreakdown;
 import software.wings.beans.Workflow;
@@ -63,6 +66,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
@@ -127,6 +131,8 @@ public class WorkflowServiceImpl implements WorkflowService {
       }
     }
   };
+  private static final String COMMAND_NAME_PREF = "Command: ";
+  private static final String WORKFLOW_NAME_PREF = "Workflow: ";
   private final Logger logger = LoggerFactory.getLogger(getClass());
   /**
    * The Expression processor factory.
@@ -145,6 +151,7 @@ public class WorkflowServiceImpl implements WorkflowService {
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
   @Inject private HistoryService historyService;
+  @Inject private AppService appService;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;
@@ -467,7 +474,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       return res;
     }
     for (WorkflowExecution workflowExecution : res) {
-      if (!runningOnly || workflowExecution.isRunningStatus()) {
+      if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
         populateGraph(workflowExecution, null, null, null, false);
       }
     }
@@ -728,7 +735,6 @@ public class WorkflowServiceImpl implements WorkflowService {
     if (stateMachine == null) {
       throw new WingsException("No stateMachine associated with " + pipelineId);
     }
-
     WorkflowExecution workflowExecution = new WorkflowExecution();
     workflowExecution.setAppId(appId);
     workflowExecution.setWorkflowId(pipelineId);
@@ -780,7 +786,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setAppId(appId);
     workflowExecution.setEnvId(envId);
     workflowExecution.setWorkflowId(orchestrationId);
-    workflowExecution.setName(orchestration.getName());
+    workflowExecution.setName(WORKFLOW_NAME_PREF + orchestration.getName());
     workflowExecution.setWorkflowType(WorkflowType.ORCHESTRATION);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
@@ -800,6 +806,13 @@ public class WorkflowServiceImpl implements WorkflowService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
       ContextElement... contextElements) {
+    Application app = appService.get(workflowExecution.getAppId());
+    workflowExecution.setAppName(app.getName());
+    if (workflowExecution.getEnvId() != null) {
+      Environment env = environmentService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), false);
+      workflowExecution.setEnvName(env.getName());
+    }
+
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstances() != null) {
         List<String> serviceInstanceIds = workflowExecution.getExecutionArgs()
@@ -864,6 +877,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecutionUpdate.setWorkflowExecutionId(workflowExecutionId);
     stateExecutionInstance.setCallback(workflowExecutionUpdate);
 
+    stdParams.setErrorStrategy(workflowExecution.getErrorStrategy());
     WingsDeque<ContextElement> elements = new WingsDeque<>();
     elements.push(stdParams);
     if (contextElements != null) {
@@ -1022,7 +1036,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     workflowExecution.setWorkflowType(WorkflowType.SIMPLE);
     workflowExecution.setStateMachineId(stateMachine.getUuid());
     workflowExecution.setTotal(executionArgs.getServiceInstances().size());
-    workflowExecution.setName(workflow.getName());
+    Service service = serviceResourceService.get(appId, executionArgs.getServiceId());
+    workflowExecution.setName(COMMAND_NAME_PREF + service.getName() + "/" + executionArgs.getCommandName());
     workflowExecution.setWorkflowId(workflow.getUuid());
     workflowExecution.setExecutionArgs(executionArgs);
 
@@ -1372,6 +1387,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       if (elementExecutionSummary.getEndTs() == null || elementExecutionSummary.getEndTs() < last.getEndTs()) {
         elementExecutionSummary.setEndTs(last.getEndTs());
+        elementExecutionSummary.setStatus(last.getStatus());
       }
 
       List<InstanceStatusSummary> instanceStatusSummary = aggregateInstanceStatusSummary(childRepeatInstances);
@@ -1501,7 +1517,7 @@ public class WorkflowServiceImpl implements WorkflowService {
     PageResponse<StateExecutionInstance> res = wingsPersistence.query(StateExecutionInstance.class, req);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         workflowExecution.getAppId(), workflowExecution.getEnvId(), sm, res.getResponse());
-    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress();
+    int total = breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress() + breakdown.getQueued();
 
     workflowExecution.setBreakdown(breakdown);
     workflowExecution.setTotal(total);

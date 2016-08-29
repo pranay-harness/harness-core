@@ -213,4 +213,14 @@ public interface ServiceTemplateService {
    * @return the override files
    */
   List<ConfigFile> getOverrideFiles(String appId, String envId, String templateId);
+
+  /**
+   * Update default service template name.
+   *
+   * @param appId          the app id
+   * @param serviceId      the service id
+   * @param oldServiceName the old service name
+   * @param newServiceName the new service name
+   */
+  void updateDefaultServiceTemplateName(String appId, String serviceId, String oldServiceName, String newServiceName);
 }

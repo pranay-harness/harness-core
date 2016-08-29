@@ -24,6 +24,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -203,7 +204,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .updateFields(Service.class, SERVICE_ID,
             ImmutableMap.of("name", "UPDATED_SERVICE_NAME", "description", "UPDATED_SERVICE_DESC", "artifactType", WAR,
                 "appContainer", anAppContainer().withUuid("UPDATED_APP_CONTAINER_ID").build()));
-    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    verify(serviceTemplateService)
+        .updateDefaultServiceTemplateName(APP_ID, SERVICE_ID, SERVICE_NAME, "UPDATED_SERVICE_NAME");
+    verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
   }
 
   /**

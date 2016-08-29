@@ -87,7 +87,7 @@ public class SetupServiceImpl implements SetupService {
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
-            .withDisplayText("Setup complete: you can try a simple deployment.")
+            .withDisplayText("Setup complete: you can create a deployment.")
             .withUrl(String.format("/#/app/%s/env/%s/executions", application.getUuid(), env.getUuid()))
             .build();
       }
@@ -106,7 +106,7 @@ public class SetupServiceImpl implements SetupService {
     if (res == null || res.isEmpty()) {
       return SetupAction.Builder.aSetupAction()
           .withCode("NO_RELEASE_FOUND")
-          .withDisplayText("Setup complete: now you can create a release and deployment.")
+          .withDisplayText("Setup complete: now you can create release and deployment.")
           .withUrl(String.format("/#/app/%s/releases", application.getUuid()))
           .build();
     }

@@ -399,7 +399,10 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
 
     CountsByStatuses breakdown =
         stateMachineExecutionSimulator.getStatusBreakdown(app.getUuid(), env.getUuid(), sm, null);
-    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(0, 0, 2);
+    assertThat(breakdown)
+        .isNotNull()
+        .extracting("success", "failed", "inprogress", "queued")
+        .containsExactly(0, 0, 0, 2);
   }
 
   /**
@@ -478,7 +481,10 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
-    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(2, 0, 3);
+    assertThat(breakdown)
+        .isNotNull()
+        .extracting("success", "failed", "inprogress", "queued")
+        .containsExactly(2, 0, 0, 3);
   }
 
   /**
@@ -583,7 +589,10 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     List<StateExecutionInstance> stateMachineExecutionInstances = newArrayList(si1, si2, si3, si4, si6, si42, si52);
     CountsByStatuses breakdown = stateMachineExecutionSimulator.getStatusBreakdown(
         app.getUuid(), env.getUuid(), sm, stateMachineExecutionInstances);
-    assertThat(breakdown).isNotNull().extracting("success", "failed", "inprogress").containsExactly(3, 1, 1);
+    assertThat(breakdown)
+        .isNotNull()
+        .extracting("success", "failed", "inprogress", "queued")
+        .containsExactly(3, 1, 0, 1);
   }
 
   /**

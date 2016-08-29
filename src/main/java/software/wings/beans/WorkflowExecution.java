@@ -23,6 +23,8 @@ public class WorkflowExecution extends Base {
 
   private String stateMachineId;
   @Indexed private String envId;
+  private String appName;
+  private String envName;
   @Indexed private WorkflowType workflowType;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
@@ -308,5 +310,21 @@ public class WorkflowExecution extends Base {
 
   public void setErrorStrategy(ErrorStrategy errorStrategy) {
     this.errorStrategy = errorStrategy;
+  }
+
+  public String getAppName() {
+    return appName;
+  }
+
+  public void setAppName(String appName) {
+    this.appName = appName;
+  }
+
+  public String getEnvName() {
+    return envName;
+  }
+
+  public void setEnvName(String envName) {
+    this.envName = envName;
   }
 }

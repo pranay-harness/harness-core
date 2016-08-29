@@ -11,6 +11,7 @@ import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.Service;
 import software.wings.service.intfc.AppService;
@@ -51,6 +52,9 @@ public class WorkflowStandardParams implements ContextElement {
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
 
   private List<ServiceElement> services;
+
+  private ErrorStrategy errorStrategy;
+
   private Long startTs;
   private Long endTs;
 
@@ -217,6 +221,14 @@ public class WorkflowStandardParams implements ContextElement {
 
   public void setServices(List<ServiceElement> services) {
     this.services = services;
+  }
+
+  public ErrorStrategy getErrorStrategy() {
+    return errorStrategy;
+  }
+
+  public void setErrorStrategy(ErrorStrategy errorStrategy) {
+    this.errorStrategy = errorStrategy;
   }
 
   /**

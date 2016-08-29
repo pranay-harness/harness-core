@@ -6,6 +6,8 @@ package software.wings.beans.stats;
 public class DayActivityStatistics {
   private int successCount;
   private int failureCount;
+  private int runningCount;
+  private int totalCount;
   private Long date;
 
   /**
@@ -45,6 +47,24 @@ public class DayActivityStatistics {
   }
 
   /**
+   * Gets total count.
+   *
+   * @return the total count
+   */
+  public int getTotalCount() {
+    return totalCount;
+  }
+
+  /**
+   * Sets total count.
+   *
+   * @param totalCount the total count
+   */
+  public void setTotalCount(int totalCount) {
+    this.totalCount = totalCount;
+  }
+
+  /**
    * Gets day start epoch.
    *
    * @return the day start epoch
@@ -63,11 +83,31 @@ public class DayActivityStatistics {
   }
 
   /**
+   * Gets running count.
+   *
+   * @return the running count
+   */
+  public int getRunningCount() {
+    return runningCount;
+  }
+
+  /**
+   * Sets running count.
+   *
+   * @param runningCount the running count
+   */
+  public void setRunningCount(int runningCount) {
+    this.runningCount = runningCount;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
     private int successCount;
     private int failureCount;
+    private int runningCount;
+    private int totalCount;
     private Long date;
 
     private Builder() {}
@@ -104,6 +144,28 @@ public class DayActivityStatistics {
     }
 
     /**
+     * With running count builder.
+     *
+     * @param runningCount the running count
+     * @return the builder
+     */
+    public Builder withRunningCount(int runningCount) {
+      this.runningCount = runningCount;
+      return this;
+    }
+
+    /**
+     * With total count builder.
+     *
+     * @param totalCount the total count
+     * @return the builder
+     */
+    public Builder withTotalCount(int totalCount) {
+      this.totalCount = totalCount;
+      return this;
+    }
+
+    /**
      * With date builder.
      *
      * @param date the date
@@ -120,7 +182,12 @@ public class DayActivityStatistics {
      * @return the builder
      */
     public Builder but() {
-      return aDayActivityStatistics().withSuccessCount(successCount).withFailureCount(failureCount).withDate(date);
+      return aDayActivityStatistics()
+          .withSuccessCount(successCount)
+          .withFailureCount(failureCount)
+          .withRunningCount(runningCount)
+          .withTotalCount(totalCount)
+          .withDate(date);
     }
 
     /**
@@ -132,6 +199,8 @@ public class DayActivityStatistics {
       DayActivityStatistics dayActivityStatistics = new DayActivityStatistics();
       dayActivityStatistics.setSuccessCount(successCount);
       dayActivityStatistics.setFailureCount(failureCount);
+      dayActivityStatistics.setRunningCount(runningCount);
+      dayActivityStatistics.setTotalCount(totalCount);
       dayActivityStatistics.setDate(date);
       return dayActivityStatistics;
     }

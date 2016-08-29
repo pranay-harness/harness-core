@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorStrategy;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayDeque;
@@ -146,6 +147,15 @@ public class ExecutionContextImpl implements ExecutionContext {
     WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
     if (stdParam != null) {
       return stdParam.getEnv();
+    }
+    return null;
+  }
+
+  @Override
+  public ErrorStrategy getErrorStrategy() {
+    WorkflowStandardParams stdParam = getContextElement(ContextElementType.STANDARD);
+    if (stdParam != null) {
+      return stdParam.getErrorStrategy();
     }
     return null;
   }

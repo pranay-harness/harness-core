@@ -6,6 +6,7 @@ package software.wings.sm;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.ErrorStrategy;
 
 import java.util.List;
 
@@ -87,6 +88,8 @@ public interface ExecutionContext {
    * @return env env
    */
   Environment getEnv();
+
+  ErrorStrategy getErrorStrategy();
 
   /**
    * Gets workflow execution id.
