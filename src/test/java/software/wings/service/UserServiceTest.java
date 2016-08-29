@@ -46,6 +46,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
@@ -135,7 +136,10 @@ public class UserServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateUser() {
-    userService.update(anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).build());
+    User user = anUser().withAppId(APP_ID).withUuid(USER_ID).withEmail(USER_EMAIL).withName(USER_NAME).build();
+    UserThreadLocal.set(user);
+
+    userService.update(user);
     verify(wingsPersistence).updateFields(User.class, USER_ID, ImmutableMap.of("name", USER_NAME));
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
   }

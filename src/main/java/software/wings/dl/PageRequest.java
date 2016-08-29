@@ -253,7 +253,7 @@ public class PageRequest<T> {
       return;
     }
 
-    if (requestContext.getProperty("pageRequestType") != null) {
+    if (requestContext != null && requestContext.getProperty("pageRequestType") != null) {
       PageRequestType pageRequestType = (PageRequestType) requestContext.getProperty("pageRequestType");
       if (pageRequestType.equals(
               PageRequestType.LIST_WITHOUT_APP_ID)) { // introduce app filter based on user permissions
