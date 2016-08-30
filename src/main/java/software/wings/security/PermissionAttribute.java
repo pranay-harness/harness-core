@@ -46,7 +46,7 @@ public enum PermissionAttribute {
   /**
    * Environment read permission attribute.
    */
-  ENVIRONMENT_READ(ENVIRONMENT, READ, false),
+  ENVIRONMENT_READ(ENVIRONMENT, READ, true),
   /**
    * Environment write permission attribute.
    */

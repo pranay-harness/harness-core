@@ -255,8 +255,7 @@ public class PageRequest<T> {
 
     if (requestContext != null && requestContext.getProperty("pageRequestType") != null) {
       PageRequestType pageRequestType = (PageRequestType) requestContext.getProperty("pageRequestType");
-      if (pageRequestType.equals(
-              PageRequestType.LIST_WITHOUT_APP_ID)) { // introduce app filter based on user permissions
+      if (pageRequestType.equals(PageRequestType.LIST_WITHOUT_APP_ID)) { // add app filter based on user permissions
         User user = UserThreadLocal.get();
         if (user != null && user.getRoles() != null) {
           List<String> appIds = user.getRoles()

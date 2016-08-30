@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
 import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
@@ -10,9 +13,7 @@ import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
-import software.wings.beans.Base;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Permission;
 import software.wings.beans.Permission.PermissionType;
 import software.wings.beans.Role;
@@ -88,12 +89,16 @@ public class AuthServiceImpl implements AuthService {
 
   private boolean forApplication(Application application, Permission permission, PageRequestType requestType) {
     return requestType.equals(LIST_WITHOUT_APP_ID)
-        || (Base.GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
+        || (GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
   }
 
-  private boolean allowedInEnv(Environment environment, boolean reqEnv, Permission permission) {
-    return !reqEnv || EnvironmentType.ALL.equals(permission.getEnvironmentType())
+  private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission) {
+    boolean hasAccessByEnvType = ALL.equals(permission.getEnvironmentType())
         || (environment.getEnvironmentType().equals(permission.getEnvironmentType()));
+    boolean hasAccessByEnvId =
+        GLOBAL_ENV_ID.equals(permission.getEnvId()) || environment.getUuid().equals(permission.getEnvId());
+
+    return !requiresEnvironmentPermission || hasAccessByEnvType || hasAccessByEnvId;
   }
 
   private boolean canPerformAction(Action reqAction, Permission permission) {
