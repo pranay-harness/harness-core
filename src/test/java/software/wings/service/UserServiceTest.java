@@ -101,6 +101,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(configuration.getPortal().getAllowedDomains()).thenReturn(asList("wings.software"));
     when(configuration.getPortal().getCompanyName()).thenReturn("COMPANY_NAME");
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(configuration.getPortal().getVerificationUrl()).thenReturn("/api/users/verify");
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
@@ -116,10 +117,8 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(emailDataArgumentCaptor.getValue().getTo().get(0)).isEqualTo(USER_EMAIL);
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo("signup");
     assertThat(((Map) emailDataArgumentCaptor.getValue().getTemplateModel()).get("name")).isEqualTo(USER_NAME);
-    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel())
-                   .get("url")
-                   .startsWith(PORTAL_URL + "/api/users/verify"))
-        .isTrue();
+    assertThat(((Map<String, String>) emailDataArgumentCaptor.getValue().getTemplateModel()).get("url"))
+        .startsWith(PORTAL_URL + "/api/users/verify");
   }
 
   /**

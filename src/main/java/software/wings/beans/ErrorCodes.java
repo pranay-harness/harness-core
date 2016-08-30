@@ -3,6 +3,7 @@ package software.wings.beans;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.FORBIDDEN;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import javax.ws.rs.core.Response.Status;
@@ -49,7 +50,7 @@ public enum ErrorCodes {
   /**
    * Email verification token not found error codes.
    */
-  EMAIL_VERIFICATION_TOKEN_NOT_FOUND("EMAIL_VERIFICATION_TOKEN_NOT_FOUND"),
+  EMAIL_VERIFICATION_TOKEN_NOT_FOUND("EMAIL_VERIFICATION_TOKEN_NOT_FOUND", NOT_FOUND),
 
   /**
    * Invalid token error codes.

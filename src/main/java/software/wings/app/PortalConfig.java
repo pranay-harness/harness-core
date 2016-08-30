@@ -13,6 +13,7 @@ public class PortalConfig {
   @JsonProperty private String url;
   @JsonProperty private List<String> allowedDomains;
   @JsonProperty private String companyName;
+  @JsonProperty private String verificationUrl = "/api/users/verify/";
 
   /**
    * Gets url.
@@ -66,5 +67,23 @@ public class PortalConfig {
    */
   public void setCompanyName(String companyName) {
     this.companyName = companyName;
+  }
+
+  /**
+   * Getter for property 'verificationUrl'.
+   *
+   * @return Value for property 'verificationUrl'.
+   */
+  public String getVerificationUrl() {
+    return verificationUrl;
+  }
+
+  /**
+   * Setter for property 'verificationUrl'.
+   *
+   * @param verificationUrl Value to set for property 'verificationUrl'.
+   */
+  public void setVerificationUrl(String verificationUrl) {
+    this.verificationUrl = verificationUrl;
   }
 }

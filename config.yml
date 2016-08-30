@@ -43,9 +43,10 @@ mongo:
   db: wings
 
 portal:
-  url: https://wingsci-api.wings.software:3456
+  url: https://ci.wings.software
   allowedDomains: wings.software
   companyName: Wings Software
+  verificationUrl: /api/users/verify/
 
 jenkinsBuildQuerySize: 50
 
