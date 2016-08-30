@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
-import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -65,7 +64,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
+  private MainConfiguration configuration = new MainConfiguration();
 
   @Inject @InjectMocks private UserService userService;
 
@@ -98,10 +97,7 @@ public class UserServiceTest extends WingsBaseTest {
                          .withCompanyName(COMPANY_NAME)
                          .withPasswordHash(hashpw(PASSWORD, BCrypt.gensalt()))
                          .build();
-    when(configuration.getPortal().getAllowedDomains()).thenReturn(asList("wings.software"));
-    when(configuration.getPortal().getCompanyName()).thenReturn("COMPANY_NAME");
-    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
-    when(configuration.getPortal().getVerificationUrl()).thenReturn("/api/users/verify");
+
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class))).thenReturn(savedUser);
     when(wingsPersistence.saveAndGet(eq(EmailVerificationToken.class), any(EmailVerificationToken.class)))
         .thenReturn(new EmailVerificationToken(USER_ID));
@@ -186,7 +182,6 @@ public class UserServiceTest extends WingsBaseTest {
                         .withUserId(USER_ID)
                         .withToken("TOKEN")
                         .build());
-    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     userService.verifyEmail("TOKEN");
     assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("appId")).isEqualTo(GLOBAL_APP_ID);
     assertThat(emailVerificationQueryArgumentCaptor.getValue().getQueryObject().get("token")).isEqualTo("TOKEN");

@@ -6,9 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Created by anubhaw on 8/9/16.
  */
 public class FileUploadLimit {
-  @JsonProperty private long appContainerLimit;
-  @JsonProperty private long configFileLimit;
-  @JsonProperty private long hostUploadLimit;
+  @JsonProperty private long appContainerLimit = 1000000000L;
+  @JsonProperty private long configFileLimit = 100000000L;
+  @JsonProperty private long hostUploadLimit = 100000000L;
 
   /**
    * Gets app container.

@@ -12,18 +12,17 @@ import javax.validation.constraints.Min;
  * @author Rishi
  */
 public class MongoConfig {
-  @NotEmpty private String host = "localhost";
+  @JsonProperty(defaultValue = "localhost") @NotEmpty private String host = "localhost";
 
-  @Min(1) @Max(65535) @JsonProperty private int port = 27017;
+  @Min(1) @Max(65535) @JsonProperty(defaultValue = "27017") private int port = 27017;
 
-  @JsonProperty @NotEmpty private String db;
+  @JsonProperty(defaultValue = "wing") @NotEmpty private String db = "wings";
 
   /**
    * Gets host.
    *
    * @return the host
    */
-  @JsonProperty
   public String getHost() {
     return host;
   }
@@ -42,7 +41,6 @@ public class MongoConfig {
    *
    * @return the port
    */
-  @JsonProperty
   public int getPort() {
     return port;
   }
@@ -61,7 +59,6 @@ public class MongoConfig {
    *
    * @return the db
    */
-  @JsonProperty
   public String getDb() {
     return db;
   }

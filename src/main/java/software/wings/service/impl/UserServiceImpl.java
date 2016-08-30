@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private boolean domainAllowedToRegister(String email) {
-    return configuration.getPortal().getAllowedDomains().size() == 0
+    return configuration.getPortal().getAllowedDomainsList().size() == 0
         || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
   }
 

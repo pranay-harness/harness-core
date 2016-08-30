@@ -1,8 +1,13 @@
 package software.wings.app;
 
+import static org.apache.commons.collections.CollectionUtils.isEmpty;
+
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.util.StdConverter;
 
 import java.util.List;
 
@@ -10,10 +15,10 @@ import java.util.List;
  * The Class PortalConfig.
  */
 public class PortalConfig {
-  @JsonProperty private String url;
-  @JsonProperty private List<String> allowedDomains;
-  @JsonProperty private String companyName;
-  @JsonProperty private String verificationUrl = "/api/users/verify/";
+  @JsonProperty(defaultValue = "https://localhost:8000") private String url = "https://localhost:8000";
+  private List<String> allowedDomains = Lists.newArrayList();
+  @JsonProperty(defaultValue = "") private String companyName = "";
+  @JsonProperty(defaultValue = "/api/users/verify") private String verificationUrl = "/api/users/verify/";
 
   /**
    * Gets url.
@@ -38,10 +43,14 @@ public class PortalConfig {
    *
    * @return the allowed domains
    */
-  public List<String> getAllowedDomains() {
-    return allowedDomains;
+  @JsonProperty(defaultValue = "")
+  public String getAllowedDomains() {
+    return Joiner.on(",").join(allowedDomains);
   }
 
+  public List<String> getAllowedDomainsList() {
+    return isEmpty(allowedDomains) ? Lists.newArrayList() : allowedDomains;
+  }
   /**
    * Sets allowed domains.
    *
@@ -85,5 +94,12 @@ public class PortalConfig {
    */
   public void setVerificationUrl(String verificationUrl) {
     this.verificationUrl = verificationUrl;
+  }
+
+  public static class ArrayConverter extends StdConverter<List<String>, String> {
+    @Override
+    public String convert(List<String> value) {
+      return Joiner.on(",").join(value);
+    }
   }
 }
