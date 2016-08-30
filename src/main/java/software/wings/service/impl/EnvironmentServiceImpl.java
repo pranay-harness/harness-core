@@ -246,7 +246,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .build(),
                     aNode()
                         .withId("n9")
-                        .withName("App Dynamics")
+                        .withName("AppDynamics")
                         .withType(StateType.APP_DYNAMICS.name())
                         .withX(1050)
                         .withY(150)
