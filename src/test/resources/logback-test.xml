@@ -15,7 +15,7 @@
     <logger name="org.apache.sshd" level="INFO"/>
     <logger name="de.danielbechler" level="INFO"/>
     <logger name="org.hibernate.validator" level="INFO"/>
-
+    <logger name="com.hazelcast" level="INFO"/>
 
 
     <root level="DEBUG">

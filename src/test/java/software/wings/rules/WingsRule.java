@@ -29,6 +29,7 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.runtime.Network;
 import io.dropwizard.lifecycle.Managed;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.jsr107.ri.annotations.guice.module.CacheAnnotationsModule;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -59,6 +60,8 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.cache.CacheManager;
+import javax.cache.Caching;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
@@ -159,7 +162,9 @@ public class WingsRule implements MethodRule {
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
                                             .buildValidatorFactory();
 
-    injector = Guice.createInjector(
+    System.setProperty("hazelcast.jcache.provider.type", "server");
+
+    injector = Guice.createInjector(new CacheAnnotationsModule(), new CacheAnnotationsModule(),
         new AbstractModule() {
           @Override
           protected void configure() {
@@ -186,6 +191,10 @@ public class WingsRule implements MethodRule {
    * After.
    */
   protected void after() {
+    // Clear caches.
+    CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
+    cacheManager.getCacheNames().forEach(s -> cacheManager.getCache(s).clear());
+
     try {
       log().info("Stopping executorService...");
       executorService.shutdownNow();
