@@ -93,12 +93,17 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission) {
-    boolean hasAccessByEnvType = ALL.equals(permission.getEnvironmentType())
-        || (environment.getEnvironmentType().equals(permission.getEnvironmentType()));
-    boolean hasAccessByEnvId =
-        GLOBAL_ENV_ID.equals(permission.getEnvId()) || environment.getUuid().equals(permission.getEnvId());
+    return !requiresEnvironmentPermission || hasAccessByEnvType(environment, permission)
+        || hasAccessByEnvId(environment, permission);
+  }
 
-    return !requiresEnvironmentPermission || hasAccessByEnvType || hasAccessByEnvId;
+  private boolean hasAccessByEnvId(Environment environment, Permission permission) {
+    return GLOBAL_ENV_ID.equals(permission.getEnvId()) || environment.getUuid().equals(permission.getEnvId());
+  }
+
+  private boolean hasAccessByEnvType(Environment environment, Permission permission) {
+    return ALL.equals(permission.getEnvironmentType())
+        || (environment.getEnvironmentType().equals(permission.getEnvironmentType()));
   }
 
   private boolean canPerformAction(Action reqAction, Permission permission) {
