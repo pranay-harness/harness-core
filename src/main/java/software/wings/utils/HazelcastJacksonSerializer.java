@@ -12,6 +12,8 @@ import java.util.HashMap;
 
 /**
  * Created by peeyushaggarwal on 8/29/16.
+ *
+ * @param <T> the type parameter
  */
 public class HazelcastJacksonSerializer<T> implements ByteArraySerializer<T> {
   @Override

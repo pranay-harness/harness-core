@@ -525,6 +525,7 @@ public class StateMachineExecutor {
     }
     return updated;
   }
+
   /**
    * Resumes execution of a StateMachineInstance.
    *
@@ -611,94 +612,6 @@ public class StateMachineExecutor {
       }
     }
     // TODO - more cases
-  }
-
-  private static class SmExecutionDispatcher implements Runnable {
-    private ExecutionContextImpl context;
-    private StateMachineExecutor stateMachineExecutor;
-
-    /**
-     * Instantiates a new Sm execution dispatcher.
-     *
-     * @param context              the context
-     * @param stateMachineExecutor the state machine executor
-     */
-    public SmExecutionDispatcher(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
-      this.context = context;
-      this.stateMachineExecutor = stateMachineExecutor;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Runnable#run()
-     */
-    @Override
-    public void run() {
-      stateMachineExecutor.startExecution(context);
-    }
-  }
-
-  private static class SmExecutionResumer implements Runnable {
-    private ExecutionContextImpl context;
-    private StateMachineExecutor stateMachineExecutor;
-
-    /**
-     * Instantiates a new Sm execution dispatcher.
-     *
-     * @param context              the context
-     * @param stateMachineExecutor the state machine executor
-     */
-    public SmExecutionResumer(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
-      this.context = context;
-      this.stateMachineExecutor = stateMachineExecutor;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Runnable#run()
-     */
-    @Override
-    public void run() {
-      try {
-        stateMachineExecutor.handleExecuteResponse(context, new ExecutionResponse());
-      } catch (Exception ex) {
-        stateMachineExecutor.handleExecuteResponseException(context, ex);
-      }
-    }
-  }
-
-  private static class SmExecutionAsyncResumer implements Runnable {
-    private ExecutionContextImpl context;
-    private StateMachineExecutor stateMachineExecutor;
-    private State state;
-    private Map<String, NotifyResponseData> response;
-
-    /**
-     * Instantiates a new Sm execution dispatcher.
-     *
-     * @param context              the context
-     * @param state                the state
-     * @param response             the response
-     * @param stateMachineExecutor the state machine executor
-     */
-    public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
-        StateMachineExecutor stateMachineExecutor) {
-      this.context = context;
-      this.state = state;
-      this.response = response;
-      this.stateMachineExecutor = stateMachineExecutor;
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Runnable#run()
-     */
-    @Override
-    public void run() {
-      try {
-        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
-        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
-      } catch (Exception ex) {
-        stateMachineExecutor.handleExecuteResponseException(context, ex);
-      }
-    }
   }
 
   private void refreshSummary(StateExecutionInstance parentStateExecutionInstance) {
@@ -788,5 +701,93 @@ public class StateMachineExecutor {
         contextTransitionInstances.add(stateExecutionInstance);
       }
     });
+  }
+
+  private static class SmExecutionDispatcher implements Runnable {
+    private ExecutionContextImpl context;
+    private StateMachineExecutor stateMachineExecutor;
+
+    /**
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param stateMachineExecutor the state machine executor
+     */
+    public SmExecutionDispatcher(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
+      this.context = context;
+      this.stateMachineExecutor = stateMachineExecutor;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      stateMachineExecutor.startExecution(context);
+    }
+  }
+
+  private static class SmExecutionResumer implements Runnable {
+    private ExecutionContextImpl context;
+    private StateMachineExecutor stateMachineExecutor;
+
+    /**
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param stateMachineExecutor the state machine executor
+     */
+    public SmExecutionResumer(ExecutionContextImpl context, StateMachineExecutor stateMachineExecutor) {
+      this.context = context;
+      this.stateMachineExecutor = stateMachineExecutor;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      try {
+        stateMachineExecutor.handleExecuteResponse(context, new ExecutionResponse());
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, ex);
+      }
+    }
+  }
+
+  private static class SmExecutionAsyncResumer implements Runnable {
+    private ExecutionContextImpl context;
+    private StateMachineExecutor stateMachineExecutor;
+    private State state;
+    private Map<String, NotifyResponseData> response;
+
+    /**
+     * Instantiates a new Sm execution dispatcher.
+     *
+     * @param context              the context
+     * @param state                the state
+     * @param response             the response
+     * @param stateMachineExecutor the state machine executor
+     */
+    public SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
+        StateMachineExecutor stateMachineExecutor) {
+      this.context = context;
+      this.state = state;
+      this.response = response;
+      this.stateMachineExecutor = stateMachineExecutor;
+    }
+
+    /* (non-Javadoc)
+     * @see java.lang.Runnable#run()
+     */
+    @Override
+    public void run() {
+      try {
+        ExecutionResponse executionResponse = state.handleAsyncResponse(context, response);
+        stateMachineExecutor.handleExecuteResponse(context, executionResponse);
+      } catch (Exception ex) {
+        stateMachineExecutor.handleExecuteResponseException(context, ex);
+      }
+    }
   }
 }

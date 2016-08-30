@@ -43,6 +43,11 @@ public class PushModule extends AbstractModule {
     bind(EventEmitter.class).toInstance(new EventEmitter(metaBroadcaster));
   }
 
+  /**
+   * Gets atmosphere servlet.
+   *
+   * @return the atmosphere servlet
+   */
   public AtmosphereServlet getAtmosphereServlet() {
     return atmosphereServlet;
   }

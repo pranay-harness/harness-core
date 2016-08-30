@@ -90,6 +90,15 @@ public interface ServiceResourceService {
    */
   Service deleteCommand(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
+  /**
+   * Change command version service.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @param version     the version
+   * @return the service
+   */
   Service changeCommandVersion(String appId, String serviceId, String commandName, long version);
 
   /**
@@ -102,8 +111,25 @@ public interface ServiceResourceService {
    */
   Command getCommandByName(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
+  /**
+   * Gets command versions.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @return the command versions
+   */
   List<Command> getCommandVersions(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
+  /**
+   * Gets command by name and version.
+   *
+   * @param appId       the app id
+   * @param serviceId   the service id
+   * @param commandName the command name
+   * @param version     the version
+   * @return the command by name and version
+   */
   Command getCommandByNameAndVersion(
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName, long version);
 

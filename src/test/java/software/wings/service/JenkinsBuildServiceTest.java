@@ -176,12 +176,22 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
         .containsExactly(tuple(67, "1bfdd117"), tuple(65, "1bfdd117"), tuple(64, "1bfdd117"), tuple(63, "1bfdd117"));
   }
 
+  /**
+   * Should fetch job names.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldFetchJobNames() throws IOException {
     when(jenkins.getJobs()).thenReturn(ImmutableMap.of("jobName", new Job()));
     assertThat(jenkinsBuildService.getJobs(jenkinsConfig)).isEqualTo(ImmutableSet.of("jobName"));
   }
 
+  /**
+   * Should fetch artifact paths.
+   *
+   * @throws IOException the io exception
+   */
   @Test
   public void shouldFetchArtifactPaths() throws IOException {
     JobWithDetails jobWithDetails = Mockito.mock(JobWithDetails.class, RETURNS_DEEP_STUBS);

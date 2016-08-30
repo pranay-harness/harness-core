@@ -111,10 +111,20 @@ public class ExecutionResponse {
     this.errorMessage = errorMessage;
   }
 
+  /**
+   * Gets notify response data.
+   *
+   * @return the notify response data
+   */
   public NotifyResponseData getNotifyResponseData() {
     return notifyResponseData;
   }
 
+  /**
+   * Sets notify response data.
+   *
+   * @param notifyResponseData the notify response data
+   */
   public void setNotifyResponseData(NotifyResponseData notifyResponseData) {
     this.notifyResponseData = notifyResponseData;
   }

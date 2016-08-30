@@ -1422,7 +1422,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   /**
    * Trigger orchestration.
    *
-   * @param env the env
+   * @param appId the app id
+   * @param env   the env
    * @throws InterruptedException the interrupted exception
    */
   public void triggerOrchestration(String appId, Environment env) throws InterruptedException {

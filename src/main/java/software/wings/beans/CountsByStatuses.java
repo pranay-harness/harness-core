@@ -54,14 +54,6 @@ public class CountsByStatuses {
     return inprogress;
   }
 
-  public int getQueued() {
-    return queued;
-  }
-
-  public void setQueued(int queued) {
-    this.queued = queued;
-  }
-
   /**
    * Setter for property 'inprogress'.
    *
@@ -69,6 +61,24 @@ public class CountsByStatuses {
    */
   public void setInprogress(int inprogress) {
     this.inprogress = inprogress;
+  }
+
+  /**
+   * Gets queued.
+   *
+   * @return the queued
+   */
+  public int getQueued() {
+    return queued;
+  }
+
+  /**
+   * Sets queued.
+   *
+   * @param queued the queued
+   */
+  public void setQueued(int queued) {
+    this.queued = queued;
   }
 
   @Override
@@ -88,30 +98,64 @@ public class CountsByStatuses {
 
     private Builder() {}
 
+    /**
+     * A counts by statuses builder.
+     *
+     * @return the builder
+     */
     public static Builder aCountsByStatuses() {
       return new Builder();
     }
 
+    /**
+     * With success builder.
+     *
+     * @param success the success
+     * @return the builder
+     */
     public Builder withSuccess(int success) {
       this.success = success;
       return this;
     }
 
+    /**
+     * With failed builder.
+     *
+     * @param failed the failed
+     * @return the builder
+     */
     public Builder withFailed(int failed) {
       this.failed = failed;
       return this;
     }
 
+    /**
+     * With inprogress builder.
+     *
+     * @param inprogress the inprogress
+     * @return the builder
+     */
     public Builder withInprogress(int inprogress) {
       this.inprogress = inprogress;
       return this;
     }
 
+    /**
+     * With queued builder.
+     *
+     * @param queued the queued
+     * @return the builder
+     */
     public Builder withQueued(int queued) {
       this.queued = queued;
       return this;
     }
 
+    /**
+     * Build counts by statuses.
+     *
+     * @return the counts by statuses
+     */
     public CountsByStatuses build() {
       CountsByStatuses countsByStatuses = new CountsByStatuses();
       countsByStatuses.setSuccess(success);

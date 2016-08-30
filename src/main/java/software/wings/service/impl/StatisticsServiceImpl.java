@@ -72,6 +72,9 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/15/16.
  */
 public class StatisticsServiceImpl implements StatisticsService {
+  /**
+   * The constant MILLIS_IN_A_DAY.
+   */
   public static final long MILLIS_IN_A_DAY = 86400000;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;

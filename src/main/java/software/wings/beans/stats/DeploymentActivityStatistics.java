@@ -13,6 +13,8 @@ public class DeploymentActivityStatistics extends WingsStatistics {
 
   /**
    * Instantiates a new Deployment activity statistics.
+   *
+   * @param activityStatistics the activity statistics
    */
   public DeploymentActivityStatistics(List<DayActivityStatistics> activityStatistics) {
     super(StatisticsType.DEPLOYMENT_ACTIVITIES);

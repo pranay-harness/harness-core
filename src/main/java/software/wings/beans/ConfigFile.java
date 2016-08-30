@@ -172,10 +172,20 @@ public class ConfigFile extends BaseFile {
     this.overriddenConfigFile = overriddenConfigFile;
   }
 
+  /**
+   * Gets versions.
+   *
+   * @return the versions
+   */
   public List<String> getVersions() {
     return versions;
   }
 
+  /**
+   * Sets versions.
+   *
+   * @param versions the versions
+   */
   public void setVersions(List<String> versions) {
     this.versions = versions;
   }

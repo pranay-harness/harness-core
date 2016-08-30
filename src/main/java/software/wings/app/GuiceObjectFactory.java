@@ -24,11 +24,21 @@ import java.util.List;
  */
 public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModule> {
   private static final Logger logger = LoggerFactory.getLogger(GuiceObjectFactory.class);
-
-  protected Injector injector;
-  protected AtmosphereConfig config;
   private final List<AbstractModule> modules = new ArrayList<AbstractModule>();
+  /**
+   * The Injector.
+   */
+  protected Injector injector;
+  /**
+   * The Config.
+   */
+  protected AtmosphereConfig config;
 
+  /**
+   * Instantiates a new Guice object factory.
+   *
+   * @param injector the injector
+   */
   public GuiceObjectFactory(Injector injector) {
     this.injector = injector;
   }
@@ -71,6 +81,11 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
     return "Guice ObjectFactory";
   }
 
+  /**
+   * Init injector.
+   *
+   * @param framework the framework
+   */
   protected void initInjector(AtmosphereFramework framework) {
     if (injector == null) {
       // start by trying to get an Injector instance from the servlet context
@@ -91,6 +106,15 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
   public AtmosphereObjectFactory allowInjectionOf(AbstractModule module) {
     modules.add(module);
     return this;
+  }
+
+  /**
+   * Sets injector.
+   *
+   * @param injector the injector
+   */
+  public void setInjector(Injector injector) {
+    this.injector = injector;
   }
 
   private class AtmosphereModule extends AbstractModule {
@@ -133,9 +157,5 @@ public class GuiceObjectFactory implements AtmosphereObjectFactory<AbstractModul
         }
       });
     }
-  }
-
-  public void setInjector(Injector injector) {
-    this.injector = injector;
   }
 }

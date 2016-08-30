@@ -142,10 +142,9 @@ public class SearchFilter {
     IN, /**
          * Not in operator.
          */
-    NOT_IN,
-    /**
-     * Exists operator.
-     */
+    NOT_IN, /**
+             * Exists operator.
+             */
     EXISTS
   }
 

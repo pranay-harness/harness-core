@@ -172,6 +172,9 @@ public class ReleaseResourceTest extends WingsBaseTest {
     verify(RELEASE_SERVICE).addArtifactSource(RELEASE_ID, APP_ID, jenkinsArtifactSource);
   }
 
+  /**
+   * Should update artifact source.
+   */
   @Test
   public void shouldUpdateArtifactSource() {
     ArtifactSource jenkinsArtifactSource = aJenkinsArtifactSource().build();

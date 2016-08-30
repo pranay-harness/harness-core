@@ -15,6 +15,9 @@ import javax.inject.Inject;
 public class CachingTest extends WingsBaseTest {
   @Inject private CacheableService cacheableService;
 
+  /**
+   * Should cache repeated calls.
+   */
   @Test
   public void shouldCacheRepeatedCalls() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
@@ -23,6 +26,9 @@ public class CachingTest extends WingsBaseTest {
     assertThat(cacheableService.getCallCount()).isEqualTo(1);
   }
 
+  /**
+   * Should not cache when key is different.
+   */
   @Test
   public void shouldNotCacheWhenKeyIsDifferent() {
     assertThat(cacheableService.getCacheableObject(1, 1)).extracting(CacheableObject::getX).contains(1);
@@ -31,7 +37,13 @@ public class CachingTest extends WingsBaseTest {
     assertThat(cacheableService.getCallCount()).isEqualTo(2);
   }
 
+  /**
+   * The type Cacheable object.
+   */
   public static class CacheableObject {
+    /**
+     * The X.
+     */
     int x;
 
     /**
@@ -53,9 +65,19 @@ public class CachingTest extends WingsBaseTest {
     }
   }
 
+  /**
+   * The type Cacheable service.
+   */
   public static class CacheableService {
     private int callCount = 0;
 
+    /**
+     * Gets cacheable object.
+     *
+     * @param x the x
+     * @param y the y
+     * @return the cacheable object
+     */
     @CacheResult
     public CacheableObject getCacheableObject(@CacheKey int x, int y) {
       CacheableObject toReturn = new CacheableObject();
@@ -64,6 +86,11 @@ public class CachingTest extends WingsBaseTest {
       return toReturn;
     }
 
+    /**
+     * Gets call count.
+     *
+     * @return the call count
+     */
     public int getCallCount() {
       return callCount;
     }

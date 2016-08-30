@@ -170,6 +170,9 @@ public class Event {
     DELETE
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String orgId = "*";
     private String appId = "all";
@@ -180,40 +183,86 @@ public class Event {
 
     private Builder() {}
 
+    /**
+     * An event builder.
+     *
+     * @return the builder
+     */
     public static Builder anEvent() {
       return new Builder();
     }
 
+    /**
+     * With org id builder.
+     *
+     * @param orgId the org id
+     * @return the builder
+     */
     public Builder withOrgId(String orgId) {
       this.orgId = orgId;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With type builder.
+     *
+     * @param type the type
+     * @return the builder
+     */
     public Builder withType(Type type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anEvent()
           .withOrgId(orgId)
@@ -224,6 +273,11 @@ public class Event {
           .withUuid(uuid);
     }
 
+    /**
+     * Build event.
+     *
+     * @return the event
+     */
     public Event build() {
       Event event = new Event();
       event.setOrgId(orgId);

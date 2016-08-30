@@ -25,6 +25,14 @@ public interface FileService {
    */
   String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket);
 
+  /**
+   * Update parent entity id boolean.
+   *
+   * @param entityId   the entity id
+   * @param fileId     the file id
+   * @param fileBucket the file bucket
+   * @return the boolean
+   */
   boolean updateParentEntityId(String entityId, String fileId, FileBucket fileBucket);
 
   /**
@@ -73,6 +81,13 @@ public interface FileService {
    */
   GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
 
+  /**
+   * Gets all file ids.
+   *
+   * @param entityId   the entity id
+   * @param fileBucket the file bucket
+   * @return the all file ids
+   */
   List<String> getAllFileIds(String entityId, FileBucket fileBucket);
 
   /**
@@ -95,6 +110,12 @@ public interface FileService {
    */
   List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket);
 
+  /**
+   * Delete all files for entity.
+   *
+   * @param entityId   the entity id
+   * @param fileBucket the file bucket
+   */
   void deleteAllFilesForEntity(String entityId, FileBucket fileBucket);
 
   /**
