@@ -105,7 +105,7 @@ public class ForkState extends State {
     for (Object status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();
       if (executionStatus != ExecutionStatus.SUCCESS) {
-        executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+        executionResponse.setExecutionStatus(executionStatus);
       }
     }
     logger.info("Fork state execution completed - stateExecutionInstanceId:{}, stateName:{}, executionStatus:{}",

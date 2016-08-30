@@ -167,7 +167,7 @@ public class RepeatState extends State {
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
 
     executionStrategy = repeatStateExecutionData.getExecutionStrategy();
-    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
+    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus != ExecutionStatus.SUCCESS
         || repeatStateExecutionData.indexReachedMax()) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);

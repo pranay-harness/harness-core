@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -30,7 +32,8 @@ public class StateMachineExecutionEventManagerTest extends WingsBaseTest {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
+  @InjectMocks @Inject private StateMachineExecutionEventManager stateMachineExecutionEventManager;
+  @Mock private StateMachineExecutor stateMachineExecutor;
 
   /**
    * Should throw invalid argument for null state execution instance.
