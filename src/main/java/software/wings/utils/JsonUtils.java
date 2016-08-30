@@ -40,7 +40,7 @@ import java.util.Set;
 public class JsonUtils {
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
-  private static final ObjectMapper mapperForCloning;
+  public static final ObjectMapper mapperForCloning;
 
   static {
     // json-path initialization
@@ -208,8 +208,21 @@ public class JsonUtils {
    */
   @JsonDeserialize
   public static <T> T asObject(String jsonString, TypeReference<T> valueTypeRef) {
+    return asObject(jsonString, valueTypeRef, mapper);
+  }
+
+  /**
+   * Deserializes json string to object of given type reference.
+   *
+   * @param <T>          target class type.
+   * @param jsonString   json to deserialize.
+   * @param valueTypeRef target class type reference.
+   * @return Deserialized object.
+   */
+  @JsonDeserialize
+  public static <T> T asObject(String jsonString, TypeReference<T> valueTypeRef, ObjectMapper objectMapper) {
     try {
-      return mapper.readValue(jsonString, valueTypeRef);
+      return objectMapper.readValue(jsonString, valueTypeRef);
     } catch (Exception exception) {
       logger.error(exception.getMessage(), exception);
       throw new RuntimeException(exception);

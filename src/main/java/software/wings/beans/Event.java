@@ -2,14 +2,12 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
  */
-public class Event implements Serializable {
-  private static final long serialVersionUID = 8952717215853630570L;
+public class Event {
   private String orgId = "*";
   private String appId = "all";
   private String envId = "all";

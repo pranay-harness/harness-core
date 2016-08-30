@@ -20,9 +20,12 @@
     Please see the schema for how to configure Hazelcast at https://hazelcast.com/schema/config/hazelcast-config-3.7.xsd
     or the documentation at https://hazelcast.org/documentation/
 -->
-<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.7.xsd"
+<hazelcast xsi:schemaLocation="http://www.hazelcast.com/schema/config hazelcast-config-3.4.xsd"
            xmlns="http://www.hazelcast.com/schema/config"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <properties>
+        <property name="hazelcast.logging.type">slf4j</property>
+    </properties>
     <group>
         <name>dev</name>
         <password>dev-pass</password>
@@ -251,6 +254,9 @@
 
     <serialization>
         <portable-version>0</portable-version>
+        <serializers>
+            <global-serializer>software.wings.utils.HazelcastJacksonSerializer</global-serializer>
+        </serializers>
     </serialization>
 
     <services enable-defaults="true"/>

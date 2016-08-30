@@ -28,6 +28,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.jsr107.ri.annotations.guice.module.CacheAnnotationsModule;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,8 +117,9 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     PushModule module = new PushModule(environment);
-    Injector injector = Guice.createInjector(module, new ValidationModule(validatorFactory), databaseModule,
-        new WingsModule(configuration), new ExecutorModule(), new QueueModule(databaseModule.getPrimaryDatastore()));
+    Injector injector = Guice.createInjector(new CacheAnnotationsModule(), module,
+        new ValidationModule(validatorFactory), databaseModule, new WingsModule(configuration), new ExecutorModule(),
+        new QueueModule(databaseModule.getPrimaryDatastore()));
 
     module.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
