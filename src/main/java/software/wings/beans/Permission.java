@@ -3,6 +3,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Embedded;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 
 /**
@@ -15,21 +16,7 @@ public class Permission {
   private String envId;
   private String appId;
   private EnvironmentType environmentType;
-  private PermissionType permissionType;
-
-  /**
-   * The enum Permission type.
-   */
-  public enum PermissionType {
-    /**
-     * App permission type.
-     */
-    APP,
-    /**
-     * Env permission type.
-     */
-    ENV
-  }
+  private PermissionScope permissionScope;
 
   /**
    * Gets resource type.
@@ -126,17 +113,17 @@ public class Permission {
    *
    * @return the permission type
    */
-  public PermissionType getPermissionType() {
-    return permissionType;
+  public PermissionScope getPermissionScope() {
+    return permissionScope;
   }
 
   /**
    * Sets permission type.
    *
-   * @param permissionType the permission type
+   * @param permissionScope the permission type
    */
-  public void setPermissionType(PermissionType permissionType) {
-    this.permissionType = permissionType;
+  public void setPermissionScope(PermissionScope permissionScope) {
+    this.permissionScope = permissionScope;
   }
 
   /**
@@ -148,7 +135,7 @@ public class Permission {
     private String envId;
     private String appId;
     private EnvironmentType environmentType;
-    private PermissionType permissionType;
+    private PermissionScope permissionScope;
 
     private Builder() {}
 
@@ -219,11 +206,11 @@ public class Permission {
     /**
      * With permission type builder.
      *
-     * @param permissionType the permission type
+     * @param permissionScope the permission type
      * @return the builder
      */
-    public Builder withPermissionType(PermissionType permissionType) {
-      this.permissionType = permissionType;
+    public Builder withPermissionType(PermissionScope permissionScope) {
+      this.permissionScope = permissionScope;
       return this;
     }
 
@@ -239,7 +226,7 @@ public class Permission {
           .withEnvId(envId)
           .withAppId(appId)
           .withEnvironmentType(environmentType)
-          .withPermissionType(permissionType);
+          .withPermissionType(permissionScope);
     }
 
     /**
@@ -254,7 +241,7 @@ public class Permission {
       permission.setEnvId(envId);
       permission.setAppId(appId);
       permission.setEnvironmentType(environmentType);
-      permission.setPermissionType(permissionType);
+      permission.setPermissionScope(permissionScope);
       return permission;
     }
   }

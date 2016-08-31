@@ -1,5 +1,6 @@
 package software.wings.security.annotations;
 
+import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute;
 
 import java.lang.annotation.ElementType;
@@ -16,9 +17,10 @@ import javax.ws.rs.NameBinding;
 @NameBinding
 public @interface AuthRule {
   /**
-   * Value.
+   * Value string.
    *
-   * @return the permission attr[]
+   * @return the string
    */
-  PermissionAttribute[] value() default {};
+  String[] value() default {}; /* Resource:Action */
+  PermissionScope scope() default PermissionAttribute.PermissionScope.APP;
 }

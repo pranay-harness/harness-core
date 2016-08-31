@@ -1,8 +1,6 @@
 package software.wings.resources;
 
 import static software.wings.beans.Setup.SetupStatus.COMPLETE;
-import static software.wings.security.PermissionAttribute.APP_READ;
-import static software.wings.security.PermissionAttribute.APP_WRITE;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -61,7 +59,7 @@ public class AppResource {
    * @return the rest response
    */
   @GET
-  @AuthRule(APP_READ)
+  @AuthRule("APPLICATION:READ")
   @ListAPI(APPLICATION)
   public RestResponse<PageResponse<Application>> list(@BeanParam PageRequest<Application> pageRequest,
       @QueryParam("overview") @DefaultValue("false") boolean overview,
@@ -76,7 +74,7 @@ public class AppResource {
    * @return the rest response
    */
   @POST
-  @AuthRule(APP_WRITE)
+  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> save(Application app) {
     return new RestResponse<>(appService.save(app));
   }
@@ -90,7 +88,7 @@ public class AppResource {
    */
   @PUT
   @Path("{appId}")
-  @AuthRule(APP_WRITE)
+  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> update(@PathParam("appId") String appId, Application app) {
     app.setUuid(appId);
     return new RestResponse<>(appService.update(app));
@@ -105,7 +103,7 @@ public class AppResource {
    */
   @GET
   @Path("{appId}")
-  @AuthRule(APP_READ)
+  @AuthRule("APPLICATION:WRITE")
   public RestResponse<Application> get(@PathParam("appId") String appId, @QueryParam("status") SetupStatus status) {
     if (status == null) {
       status = COMPLETE; // don't verify setup status
@@ -120,7 +118,7 @@ public class AppResource {
    * @return the rest response
    */
   @DELETE
-  @AuthRule(APP_WRITE)
+  @AuthRule("APPLICATION:WRITE")
   @Path("{appId}")
   public RestResponse delete(@PathParam("appId") String appId) {
     appService.delete(appId);

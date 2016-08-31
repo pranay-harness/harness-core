@@ -3,10 +3,9 @@ package software.wings.security;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
+import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 import static software.wings.dl.PageRequest.PageRequestType.OTHER;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import software.wings.beans.AuthToken;
@@ -14,15 +13,18 @@ import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EnvironmentService;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.inject.Singleton;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -30,6 +32,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -44,6 +47,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject private AuditHelper auditHelper;
 
   @Inject private AuthService authService;
+
+  @Inject private EnvironmentService environmentService;
 
   /* (non-Javadoc)
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
@@ -61,14 +66,23 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       updateUserInAuditRecord(user); // FIXME: find better place
       UserThreadLocal.set(user);
     }
-    String appId = requestContext.getUriInfo().getQueryParameters().getFirst("appId");
-    String envId = requestContext.getUriInfo().getQueryParameters().getFirst("envId");
+
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+    String appId = getRequestParamFromContext("appId", pathParameters, queryParameters);
+    String envId = getRequestParamFromContext("envId", pathParameters, queryParameters);
 
     setRequestAndResourceType(requestContext, appId);
 
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(appId, envId, user, requiredPermissionAttributes,
         (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private String getRequestParamFromContext(
+      String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
+    return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
   }
 
   private boolean publicAPI() {
@@ -81,14 +95,18 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private void setRequestAndResourceType(ContainerRequestContext requestContext, String appId) {
-    if (Strings.isNullOrEmpty(appId)) {
-      ListAPI listAPI = resourceInfo.getResourceMethod().getAnnotation(ListAPI.class);
-      if (listAPI != null) {
+    ListAPI listAPI = resourceInfo.getResourceMethod().getAnnotation(ListAPI.class);
+    if (listAPI != null) {
+      requestContext.setProperty("resourceType", listAPI.value());
+      // TODO:: Improve this logic
+      if (listAPI.value() == ResourceType.APPLICATION) {
         requestContext.setProperty("pageRequestType", LIST_WITHOUT_APP_ID);
-        requestContext.setProperty("resourceType", listAPI.value());
-      } else {
-        requestContext.setProperty("pageRequestType", OTHER);
+      } else if (listAPI.value() == ResourceType.ENVIRONMENT) {
+        requestContext.setProperty("pageRequestType", LIST_WITHOUT_ENV_ID);
+        requestContext.setProperty("appEnvironments", environmentService.getEnvByApp(appId));
       }
+    } else {
+      requestContext.setProperty("pageRequestType", OTHER);
     }
   }
 
@@ -99,15 +117,18 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     Method resourceMethod = resourceInfo.getResourceMethod();
     AuthRule methodAnnotations = resourceMethod.getAnnotation(AuthRule.class);
-    if (null != methodAnnotations && methodAnnotations.value().length > 0) {
-      methodPermissionAttributes.addAll(Lists.newArrayList(methodAnnotations.value()));
+    if (null != methodAnnotations) {
+      Stream.of(methodAnnotations.value())
+          .forEach(s -> methodPermissionAttributes.add(new PermissionAttribute(s, methodAnnotations.scope())));
     }
 
     Class<?> resourceClass = resourceInfo.getResourceClass();
     AuthRule classAnnotations = resourceClass.getAnnotation(AuthRule.class);
-    if (null != classAnnotations && classAnnotations.value().length > 0) {
-      classPermissionAttributes.addAll(Lists.newArrayList(classAnnotations.value()));
+    if (null != classAnnotations) {
+      Stream.of(classAnnotations.value())
+          .forEach(s -> classPermissionAttributes.add(new PermissionAttribute(s, methodAnnotations.scope())));
     }
+
     permissionAttributes.addAll(classPermissionAttributes);
     permissionAttributes.removeAll(methodPermissionAttributes);
     permissionAttributes.addAll(methodPermissionAttributes);
