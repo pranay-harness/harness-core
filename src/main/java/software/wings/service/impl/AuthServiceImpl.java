@@ -7,6 +7,7 @@ import static software.wings.beans.ErrorCodes.ACCESS_DENIED;
 import static software.wings.beans.ErrorCodes.EXPIRED_TOKEN;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
+import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,7 +16,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
-import software.wings.beans.Permission.PermissionType;
+import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
@@ -51,7 +52,6 @@ public class AuthServiceImpl implements AuthService {
       PageRequestType requestType) {
     Application application = dbCache.get(Application.class, appId);
     Environment environment = dbCache.get(Environment.class, envId);
-
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
       if (!authorizeAccessType(application, environment, permissionAttribute, user.getRoles(), requestType)) {
         throw new WingsException(ACCESS_DENIED);
@@ -71,11 +71,11 @@ public class AuthServiceImpl implements AuthService {
       Application application, Environment environment, PageRequestType requestType) {
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
-    boolean requiresEnvironmentPermission = permissionAttribute.isOnEnv();
+    boolean requiresEnvironmentPermission = permissionAttribute.getScope().equals(PermissionScope.ENV);
     for (Permission permission : role.getPermissions()) {
-      if (hasMatchingPermissionType(requiresEnvironmentPermission, permission.getPermissionType())
+      if (hasMatchingPermissionType(requiresEnvironmentPermission, permission.getPermissionScope())
           && hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
-          && allowedInEnv(environment, requiresEnvironmentPermission, permission)
+          && allowedInEnv(environment, requiresEnvironmentPermission, permission, requestType)
           && forApplication(application, permission, requestType)) {
         return true;
       }
@@ -83,8 +83,9 @@ public class AuthServiceImpl implements AuthService {
     return false;
   }
 
-  private boolean hasMatchingPermissionType(boolean requiresEnvironmentPermission, PermissionType permissionType) {
-    return !permissionType.equals(PermissionType.ENV) || requiresEnvironmentPermission;
+  private boolean hasMatchingPermissionType(boolean requiresEnvironmentPermission, PermissionScope permissionScope) {
+    return requiresEnvironmentPermission ? permissionScope.equals(PermissionScope.ENV)
+                                         : permissionScope.equals(PermissionScope.APP);
   }
 
   private boolean forApplication(Application application, Permission permission, PageRequestType requestType) {
@@ -92,9 +93,10 @@ public class AuthServiceImpl implements AuthService {
         || (GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
   }
 
-  private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission) {
-    return !requiresEnvironmentPermission || hasAccessByEnvType(environment, permission)
-        || hasAccessByEnvId(environment, permission);
+  private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission,
+      PageRequestType requestType) {
+    return !requiresEnvironmentPermission || requestType.equals(LIST_WITHOUT_ENV_ID)
+        || hasAccessByEnvType(environment, permission) || hasAccessByEnvId(environment, permission);
   }
 
   private boolean hasAccessByEnvId(Environment environment, Permission permission) {
