@@ -309,6 +309,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should update command when command graph changed.
+   */
   @Test
   public void shouldUpdateCommandWhenCommandGraphChanged() {
     Graph oldCommandGraph = aGraph()
@@ -355,6 +358,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should not update command nothing changed.
+   */
   @Test
   public void shouldNotUpdateCommandNothingChanged() {
     Graph oldCommandGraph = aGraph()
@@ -399,6 +405,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should change command version.
+   */
   @Test
   public void shouldChangeCommandVersion() {
     Graph oldCommandGraph = aGraph()
@@ -443,6 +452,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
   }
 
+  /**
+   * Should list all command versions.
+   */
   @Test
   public void shouldListAllCommandVersions() {
     Graph oldCommandGraph = aGraph()

@@ -39,6 +39,11 @@ public class StatisticsResource {
     return new RestResponse<>(statisticsService.getSummary());
   }
 
+  /**
+   * Key stats rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("keystats")
   public RestResponse<List<WingsStatistics>> keyStats() {
@@ -48,6 +53,8 @@ public class StatisticsResource {
   /**
    * Deployment activities rest response.
    *
+   * @param numOfDays the num of days
+   * @param endDate   the end date
    * @return the rest response
    */
   @GET

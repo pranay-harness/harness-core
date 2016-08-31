@@ -20,7 +20,6 @@ import javax.ws.rs.QueryParam;
 /**
  * Created by anubhaw on 8/18/16.
  */
-
 @Api("build-sources")
 @Path("/build-sources")
 @Timed
@@ -29,12 +28,25 @@ import javax.ws.rs.QueryParam;
 public class BuildSourceResource {
   @Inject private BuildSourceService buildSourceService;
 
+  /**
+   * Gets jobs.
+   *
+   * @param settingId the setting id
+   * @return the jobs
+   */
   @GET
   @Path("jobs")
   public RestResponse<Set<String>> getJobs(@QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getJobs(settingId));
   }
 
+  /**
+   * Gets artifact paths.
+   *
+   * @param jobName   the job name
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
   @GET
   @Path("jobs/{jobName}/paths")
   public RestResponse<Set<String>> getArtifactPaths(
@@ -42,6 +54,15 @@ public class BuildSourceResource {
     return new RestResponse<>(buildSourceService.getArtifactPaths(jobName, settingId));
   }
 
+  /**
+   * Gets builds.
+   *
+   * @param appId              the app id
+   * @param releaseId          the release id
+   * @param artifactSourceName the artifact source name
+   * @param settingId          the setting id
+   * @return the builds
+   */
   @GET
   @Path("builds")
   public RestResponse<List<BuildDetails>> getBuilds(@QueryParam("appId") String appId,

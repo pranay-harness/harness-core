@@ -1,6 +1,5 @@
 package software.wings.service.intfc;
 
-import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.command.CommandUnit;
@@ -18,8 +17,6 @@ public interface ActivityService {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param envId       the env id
    * @param pageRequest the page request
    * @return the page response
    */

@@ -86,5 +86,5 @@ public interface UserService {
    * @param token the token
    * @return the string
    */
-  String verifyEmail(String token);
+  boolean verifyEmail(String token);
 }

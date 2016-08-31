@@ -672,7 +672,7 @@ private void createGlobalSettings() {
 
   getRequestWithAuthHeader(target).post(
       Entity.entity(aSettingAttribute()
-                        .withName("App Dynamics")
+                        .withName("AppDynamics")
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
                                        .withControllerUrl("https://wingssoftware.saas.appdynamics.com/controller")
                                        .withUsername("testuser")

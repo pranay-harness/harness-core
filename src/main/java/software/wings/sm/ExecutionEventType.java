@@ -41,6 +41,11 @@ public enum ExecutionEventType {
     this.description = description;
   }
 
+  /**
+   * Gets description.
+   *
+   * @return the description
+   */
   public String getDescription() {
     return description;
   }

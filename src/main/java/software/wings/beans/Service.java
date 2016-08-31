@@ -289,6 +289,9 @@ public class Service extends Base {
         .toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String description;
@@ -311,110 +314,240 @@ public class Service extends Base {
 
     private Builder() {}
 
+    /**
+     * A service builder.
+     *
+     * @return the builder
+     */
     public static Builder aService() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With artifact type builder.
+     *
+     * @param artifactType the artifact type
+     * @return the builder
+     */
     public Builder withArtifactType(ArtifactType artifactType) {
       this.artifactType = artifactType;
       return this;
     }
 
+    /**
+     * With commands builder.
+     *
+     * @param commands the commands
+     * @return the builder
+     */
     public Builder withCommands(List<Command> commands) {
       this.commands = commands;
       return this;
     }
 
+    /**
+     * Add commands builder.
+     *
+     * @param commands the commands
+     * @return the builder
+     */
     public Builder addCommands(Command... commands) {
       this.commands.addAll(asList(commands));
       return this;
     }
 
+    /**
+     * Add old commands builder.
+     *
+     * @param oldCommands the old commands
+     * @return the builder
+     */
     public Builder addOldCommands(Command... oldCommands) {
       this.oldCommands.addAll(asList(oldCommands));
       return this;
     }
 
+    /**
+     * With old commands builder.
+     *
+     * @param oldCommands the old commands
+     * @return the builder
+     */
     public Builder withOldCommands(List<Command> oldCommands) {
       this.oldCommands = oldCommands;
       return this;
     }
 
+    /**
+     * With version builder.
+     *
+     * @param version the version
+     * @return the builder
+     */
     public Builder withVersion(long version) {
       this.version = version;
       return this;
     }
 
+    /**
+     * With app container builder.
+     *
+     * @param appContainer the app container
+     * @return the builder
+     */
     public Builder withAppContainer(AppContainer appContainer) {
       this.appContainer = appContainer;
       return this;
     }
 
+    /**
+     * With config files builder.
+     *
+     * @param configFiles the config files
+     * @return the builder
+     */
     public Builder withConfigFiles(List<ConfigFile> configFiles) {
       this.configFiles = configFiles;
       return this;
     }
 
+    /**
+     * With last deployment activity builder.
+     *
+     * @param lastDeploymentActivity the last deployment activity
+     * @return the builder
+     */
     public Builder withLastDeploymentActivity(Activity lastDeploymentActivity) {
       this.lastDeploymentActivity = lastDeploymentActivity;
       return this;
     }
 
+    /**
+     * With last prod deployment activity builder.
+     *
+     * @param lastProdDeploymentActivity the last prod deployment activity
+     * @return the builder
+     */
     public Builder withLastProdDeploymentActivity(Activity lastProdDeploymentActivity) {
       this.lastProdDeploymentActivity = lastProdDeploymentActivity;
       return this;
     }
 
+    /**
+     * With setup builder.
+     *
+     * @param setup the setup
+     * @return the builder
+     */
     public Builder withSetup(Setup setup) {
       this.setup = setup;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aService()
           .withName(name)
@@ -437,6 +570,11 @@ public class Service extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build service.
+     *
+     * @return the service
+     */
     public Service build() {
       Service service = new Service();
       service.setName(name);

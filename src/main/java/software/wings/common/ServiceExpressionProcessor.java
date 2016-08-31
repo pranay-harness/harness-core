@@ -52,6 +52,7 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
   private String appId;
 
   private List<ServiceElement> selectedServices;
+
   /**
    * Instantiates a new service expression processor.
    *

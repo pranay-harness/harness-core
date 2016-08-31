@@ -15,6 +15,7 @@ import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
+import io.dropwizard.bundles.assets.AssetsConfiguration;
 import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -34,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
+import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.User;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
@@ -102,6 +104,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
     bootstrap.addBundle(new VersionInfoBundle("build.properties"));
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
+    bootstrap.getObjectMapper().addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
 
     logger.info("bootstrapping done.");
   }
@@ -131,7 +134,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     registerScheduledJobs(injector);
 
-    registerCORSFilter(configuration, environment);
+    registerCorsFilter(configuration, environment);
 
     registerAuditResponseFilter(environment, injector);
 
@@ -154,9 +157,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(injector.getInstance(AuditRequestFilter.class));
   }
 
-  private void registerCORSFilter(MainConfiguration configuration, Environment environment) {
+  private void registerCorsFilter(MainConfiguration configuration, Environment environment) {
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-    cors.setInitParameters(of("allowedOrigins", configuration.getCorsDomains(), "allowedHeaders",
+    cors.setInitParameters(of("allowedOrigins", configuration.getPortal().getUrl(), "allowedHeaders",
         "X-Requested-With,Content-Type,Accept,Origin,Authorization", "allowedMethods",
         "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");

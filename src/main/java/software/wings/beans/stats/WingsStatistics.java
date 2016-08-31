@@ -31,26 +31,21 @@ public abstract class WingsStatistics {
     /**
      * Deployment statistics type.
      */
-    DEPLOYMENT,
-    /**
-     * Active releases statistics type.
-     */
-    ACTIVE_RELEASES,
-    /**
-     * Active artifacts statistics type.
-     */
-    ACTIVE_ARTIFACTS,
-    /**
-     * Application count statistics type.
-     */
-    APPLICATION_COUNT,
-    /**
-     * Deployment activities statistics type.
-     */
-    DEPLOYMENT_ACTIVITIES,
-    /**
-     * Top consumers statistics type.
-     */
+    DEPLOYMENT, /**
+                 * Active releases statistics type.
+                 */
+    ACTIVE_RELEASES, /**
+                      * Active artifacts statistics type.
+                      */
+    ACTIVE_ARTIFACTS, /**
+                       * Application count statistics type.
+                       */
+    APPLICATION_COUNT, /**
+                        * Deployment activities statistics type.
+                        */
+    DEPLOYMENT_ACTIVITIES, /**
+                            * Top consumers statistics type.
+                            */
     TOP_CONSUMERS,
 
     /**

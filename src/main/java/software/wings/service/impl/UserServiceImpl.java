@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMap.Builder;
 
 import freemarker.template.TemplateException;
 import org.apache.commons.mail.EmailException;
+import org.apache.http.client.utils.URIBuilder;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -39,6 +40,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -87,7 +89,7 @@ public class UserServiceImpl implements UserService {
   }
 
   private boolean domainAllowedToRegister(String email) {
-    return configuration.getPortal().getAllowedDomains().size() == 0
+    return configuration.getPortal().getAllowedDomainsList().size() == 0
         || configuration.getPortal().getAllowedDomains().contains(email.split("@")[1]);
   }
 
@@ -95,32 +97,30 @@ public class UserServiceImpl implements UserService {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
     try {
-      String baseURl = getBaseUrlString();
-      String relativeApiPath = "api/users/verify/" + emailVerificationToken.getToken();
-      String apiUrl = baseURl + relativeApiPath;
+      String verificationUrl =
+          buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken());
 
       EmailData emailData = EmailData.Builder.anEmailData()
                                 .withTo(asList(user.getEmail()))
                                 .withRetries(2)
                                 .withTemplateName("signup")
-                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", apiUrl))
+                                .withTemplateModel(ImmutableMap.of("name", user.getName(), "url", verificationUrl))
                                 .build();
       emailNotificationService.send(emailData);
-    } catch (EmailException | TemplateException | IOException e) {
+    } catch (EmailException | TemplateException | IOException | URISyntaxException e) {
       logger.error("Verification email couldn't be sent " + e);
     }
   }
 
-  private String getBaseUrlString() {
+  private String buildAbsoluteUrl(String relativeUrl) throws URISyntaxException {
     String baseURl = configuration.getPortal().getUrl().trim();
-    if (baseURl.charAt(baseURl.length() - 1) != '/') {
-      baseURl += "/";
-    }
-    return baseURl;
+    URIBuilder uriBuilder = new URIBuilder(baseURl);
+    uriBuilder.setPath(uriBuilder.getPath() + relativeUrl);
+    return uriBuilder.toString();
   }
 
   @Override
-  public String verifyEmail(String emailToken) {
+  public boolean verifyEmail(String emailToken) {
     EmailVerificationToken verificationToken =
         wingsPersistence.executeGetOneQuery(wingsPersistence.createQuery(EmailVerificationToken.class)
                                                 .field("appId")
@@ -133,7 +133,7 @@ public class UserServiceImpl implements UserService {
     }
     wingsPersistence.updateFields(User.class, verificationToken.getUserId(), ImmutableMap.of("emailVerified", true));
     wingsPersistence.delete(EmailVerificationToken.class, verificationToken.getUuid());
-    return getBaseUrlString() + "#/login";
+    return true;
   }
 
   private boolean userAlreadyRegistered(User user) {

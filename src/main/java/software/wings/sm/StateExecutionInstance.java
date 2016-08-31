@@ -314,10 +314,20 @@ public class StateExecutionInstance extends Base {
     this.callback = callback;
   }
 
+  /**
+   * Gets context element.
+   *
+   * @return the context element
+   */
   public ContextElement getContextElement() {
     return contextElement;
   }
 
+  /**
+   * Sets context element.
+   *
+   * @param contextElement the context element
+   */
   public void setContextElement(ContextElement contextElement) {
     this.contextElement = contextElement;
   }

@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static com.google.common.collect.ImmutableMap.of;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 
@@ -18,8 +19,8 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.UserService;
 
-import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -30,7 +31,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * Users Resource class.
@@ -136,8 +136,8 @@ public class UserResource {
   @GET
   @Path("verify/{token}")
   @PublicApi
-  public Response verifyEmail(@PathParam("token") String token) throws URISyntaxException {
-    return Response.seeOther(new URI(userService.verifyEmail(token))).build();
+  public RestResponse<Map<String, Object>> verifyEmail(@PathParam("token") String token) throws URISyntaxException {
+    return new RestResponse<>(of("success", userService.verifyEmail(token)));
   }
 
   /**

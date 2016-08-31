@@ -38,9 +38,12 @@ import java.util.Set;
  * The Class JsonUtils.
  */
 public class JsonUtils {
+  /**
+   * The constant mapperForCloning.
+   */
+  public static final ObjectMapper mapperForCloning;
   private static final Logger logger = LoggerFactory.getLogger(JsonUtils.class);
   private static final ObjectMapper mapper;
-  public static final ObjectMapper mapperForCloning;
 
   static {
     // json-path initialization
@@ -217,6 +220,7 @@ public class JsonUtils {
    * @param <T>          target class type.
    * @param jsonString   json to deserialize.
    * @param valueTypeRef target class type reference.
+   * @param objectMapper the object mapper
    * @return Deserialized object.
    */
   @JsonDeserialize

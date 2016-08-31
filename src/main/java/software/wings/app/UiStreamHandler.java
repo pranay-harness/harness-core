@@ -30,7 +30,7 @@ import java.io.IOException;
  */
 @AtmosphereHandlerService(path = "{channel}", interceptors = {AtmosphereResourceLifecycleInterceptor.class},
     broadcasterCache = UUIDBroadcasterCache.class)
-public class UIStreamHandler extends AtmosphereHandlerAdapter {
+public class UiStreamHandler extends AtmosphereHandlerAdapter {
   @Inject private AuthService authService;
 
   @Override

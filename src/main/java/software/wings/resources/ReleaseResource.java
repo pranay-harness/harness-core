@@ -176,6 +176,14 @@ public class ReleaseResource {
     return new RestResponse<>(releaseService.addArtifactSource(id, appId, artifactSource));
   }
 
+  /**
+   * Update artifact source rest response.
+   *
+   * @param appId          the app id
+   * @param id             the id
+   * @param artifactSource the artifact source
+   * @return the rest response
+   */
   @PUT
   @Timed
   @ExceptionMetered

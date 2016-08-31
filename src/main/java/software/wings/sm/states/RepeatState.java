@@ -167,7 +167,7 @@ public class RepeatState extends State {
     List<ContextElement> repeatElements = repeatStateExecutionData.getRepeatElements();
 
     executionStrategy = repeatStateExecutionData.getExecutionStrategy();
-    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus == ExecutionStatus.FAILED
+    if (executionStrategy == ExecutionStrategy.PARALLEL || executionStatus != ExecutionStatus.SUCCESS
         || repeatStateExecutionData.indexReachedMax()) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(executionStatus);
@@ -357,10 +357,20 @@ public class RepeatState extends State {
     private Integer repeatElementIndex;
     private ExecutionStrategy executionStrategy;
 
+    /**
+     * Gets repeat element type.
+     *
+     * @return the repeat element type
+     */
     public ContextElementType getRepeatElementType() {
       return repeatElementType;
     }
 
+    /**
+     * Sets repeat element type.
+     *
+     * @param repeatElementType the repeat element type
+     */
     public void setRepeatElementType(ContextElementType repeatElementType) {
       this.repeatElementType = repeatElementType;
     }

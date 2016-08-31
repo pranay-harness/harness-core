@@ -197,6 +197,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     keyValuePairs.put(fieldName, value);
     updateFields(cls, entityId, keyValuePairs);
   }
+
   /**
    * {@inheritDoc}
    */

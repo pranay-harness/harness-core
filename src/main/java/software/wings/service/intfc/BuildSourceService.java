@@ -33,7 +33,7 @@ public interface BuildSourceService {
    * @param appId              the app id
    * @param releaseId          the release id
    * @param artifactSourceName the artifact source name
-   * @param settingId   the jenkins setting id
+   * @param settingId          the jenkins setting id
    * @return the builds
    */
   List<BuildDetails> getBuilds(@NotEmpty String appId, @NotEmpty String releaseId, @NotEmpty String artifactSourceName,

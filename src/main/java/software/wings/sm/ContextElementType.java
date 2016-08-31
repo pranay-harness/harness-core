@@ -51,5 +51,8 @@ public enum ContextElementType {
    */
   OTHER,
 
+  /**
+   * Fork context element type.
+   */
   FORK;
 }

@@ -15,18 +15,38 @@ public class ActivityStatusAggregation {
   @Id private String appId;
   private List<StatusCount> status;
 
+  /**
+   * Gets app id.
+   *
+   * @return the app id
+   */
   public String getAppId() {
     return appId;
   }
 
+  /**
+   * Sets app id.
+   *
+   * @param appId the app id
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }
 
+  /**
+   * Gets status.
+   *
+   * @return the status
+   */
   public List<StatusCount> getStatus() {
     return status;
   }
 
+  /**
+   * Sets status.
+   *
+   * @param status the status
+   */
   public void setStatus(List<StatusCount> status) {
     this.status = status;
   }
@@ -36,22 +56,45 @@ public class ActivityStatusAggregation {
     return MoreObjects.toStringHelper(this).add("appId", appId).add("status", status).toString();
   }
 
+  /**
+   * The type Status count.
+   */
   public static class StatusCount {
     private Activity.Status status;
     private int count;
 
+    /**
+     * Gets status.
+     *
+     * @return the status
+     */
     public Status getStatus() {
       return status;
     }
 
+    /**
+     * Sets status.
+     *
+     * @param status the status
+     */
     public void setStatus(Status status) {
       this.status = status;
     }
 
+    /**
+     * Gets count.
+     *
+     * @return the count
+     */
     public int getCount() {
       return count;
     }
 
+    /**
+     * Sets count.
+     *
+     * @param count the count
+     */
     public void setCount(int count) {
       this.count = count;
     }

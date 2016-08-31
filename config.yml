@@ -1,7 +1,4 @@
 xxxxxxxx
-  registerDefaultExceptionMappers: false
-  rootPath: /api
-  applicationContextPath: /
   applicationConnectors:
     - type: h2
       port: 9090
@@ -12,9 +9,6 @@ xxxxxxxx
       validateCerts: false
     - type: http
       port: 3457
-  adminContextPath: /admin
-  adminMinThreads: 1
-  adminMaxThreads: 64
   adminConnectors:
     - type: h2
       port: 9091
@@ -23,14 +17,7 @@ xxxxxxxx
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
       certAlias: selfsigned
       validateCerts: false
-  requestLog:
-      appenders:
-        - type: file
-          currentLogFilename: access.log
-          threshold: ALL
-          archive: true
-          archivedLogFilenamePattern: access.%d.log.gz
-          archivedFileCount: 14
+
 logging:
   appenders:
     - type: console
@@ -43,24 +30,6 @@ mongo:
   db: wings
 
 portal:
-  url: https://wingsci-api.wings.software:3456
+  url: https://localhost:8000
   allowedDomains: wings.software
   companyName: Wings Software
-
-jenkinsBuildQuerySize: 50
-
-enableAuth: true
-
-assets:
-  mimeTypes:
-    js: application/json; charset=UTF-8
-
-swagger:
-  resourcePackage: software.wings.resources,software.wings.utils
-
-corsDomains: https://localhost:8000
-
-fileUploadLimits:
-  appContainerLimit: 1000000000 #  1 GB
-  configFileLimit:   100000000  #  100 MB
-  hostUploadLimit:   100000000  # 100 MB

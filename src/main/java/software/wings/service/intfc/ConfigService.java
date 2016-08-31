@@ -55,6 +55,14 @@ public interface ConfigService {
    */
   ConfigFile get(@NotEmpty String appId, @NotEmpty String configId, @NotNull boolean withOverridePath);
 
+  /**
+   * Download file.
+   *
+   * @param appId    the app id
+   * @param configId the config id
+   * @param version  the version
+   * @return the file
+   */
   File download(String appId, String configId, String version);
 
   /**
@@ -87,8 +95,8 @@ public interface ConfigService {
    * Delete by entity id.
    *
    * @param appId      the app id
-   * @param entityId   the service id
    * @param templateId the template id
+   * @param entityId   the service id
    */
   void deleteByEntityId(String appId, String templateId, String entityId);
 

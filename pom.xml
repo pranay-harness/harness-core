@@ -704,6 +704,10 @@
                             <key>Min-Update-Version</key>
                             <value>8=91</value>
                         </entry>
+                        <entry>
+                            <key>Args</key>
+                            <value>server $*</value>
+                        </entry>
                     </manifest>
                     <execPluginConfig>root</execPluginConfig>
                 </configuration>
@@ -1073,14 +1077,14 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/corsDomains: https:\/\/localhost:8000/corsDomains: https:\/\/ci.wings.software/' config.yml"
+                                         command="sed -i 's/url: https:\/\/localhost:8000/url: https:\/\/ci.wings.software/' config.yml"
                                          timeout="120000"/>
                                 <echo message="start server"/>
                                 <sshexec trust="true" failonerror="true"
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar server config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000"/>
                                 <echo message="cleanup files"/>
                                 <sshexec trust="true" failonerror="true"

@@ -241,18 +241,38 @@ public class WorkflowExecution extends Base {
     this.executionArgs = executionArgs;
   }
 
+  /**
+   * Gets service execution summaries.
+   *
+   * @return the service execution summaries
+   */
   public List<ElementExecutionSummary> getServiceExecutionSummaries() {
     return serviceExecutionSummaries;
   }
 
+  /**
+   * Sets service execution summaries.
+   *
+   * @param serviceExecutionSummaries the service execution summaries
+   */
   public void setServiceExecutionSummaries(List<ElementExecutionSummary> serviceExecutionSummaries) {
     this.serviceExecutionSummaries = serviceExecutionSummaries;
   }
 
+  /**
+   * Gets status instance breakdown map.
+   *
+   * @return the status instance breakdown map
+   */
   public LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> getStatusInstanceBreakdownMap() {
     return statusInstanceBreakdownMap;
   }
 
+  /**
+   * Sets status instance breakdown map.
+   *
+   * @param statusInstanceBreakdownMap the status instance breakdown map
+   */
   public void setStatusInstanceBreakdownMap(
       LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
     this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
@@ -288,42 +308,92 @@ public class WorkflowExecution extends Base {
     return status != null && status == ExecutionStatus.PAUSED;
   }
 
+  /**
+   * Gets start ts.
+   *
+   * @return the start ts
+   */
   public Long getStartTs() {
     return startTs;
   }
 
+  /**
+   * Sets start ts.
+   *
+   * @param startTs the start ts
+   */
   public void setStartTs(Long startTs) {
     this.startTs = startTs;
   }
 
+  /**
+   * Gets end ts.
+   *
+   * @return the end ts
+   */
   public Long getEndTs() {
     return endTs;
   }
 
+  /**
+   * Sets end ts.
+   *
+   * @param endTs the end ts
+   */
   public void setEndTs(Long endTs) {
     this.endTs = endTs;
   }
 
+  /**
+   * Gets error strategy.
+   *
+   * @return the error strategy
+   */
   public ErrorStrategy getErrorStrategy() {
     return errorStrategy;
   }
 
+  /**
+   * Sets error strategy.
+   *
+   * @param errorStrategy the error strategy
+   */
   public void setErrorStrategy(ErrorStrategy errorStrategy) {
     this.errorStrategy = errorStrategy;
   }
 
+  /**
+   * Gets app name.
+   *
+   * @return the app name
+   */
   public String getAppName() {
     return appName;
   }
 
+  /**
+   * Sets app name.
+   *
+   * @param appName the app name
+   */
   public void setAppName(String appName) {
     this.appName = appName;
   }
 
+  /**
+   * Gets env name.
+   *
+   * @return the env name
+   */
   public String getEnvName() {
     return envName;
   }
 
+  /**
+   * Sets env name.
+   *
+   * @param envName the env name
+   */
   public void setEnvName(String envName) {
     this.envName = envName;
   }

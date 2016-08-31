@@ -89,6 +89,11 @@ public interface ExecutionContext {
    */
   Environment getEnv();
 
+  /**
+   * Gets error strategy.
+   *
+   * @return the error strategy
+   */
   ErrorStrategy getErrorStrategy();
 
   /**

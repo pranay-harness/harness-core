@@ -168,11 +168,11 @@ public interface WingsPersistence {
   /**
    * Update field.
    *
-   * @param <T>           the generic type
-   * @param cls           the cls
-   * @param entityId      the entity id
-   * @param fieldName      the field name
-   * @param value      the value
+   * @param <T>       the generic type
+   * @param cls       the cls
+   * @param entityId  the entity id
+   * @param fieldName the field name
+   * @param value     the value
    */
   <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value);
 

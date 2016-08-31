@@ -45,14 +45,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
    * The constant ARTIFACT_SOURCE_NAME.
    */
   public static final String ARTIFACT_SOURCE_NAME = "artifactSourceName";
-
-  @Inject private JenkinsFactory jenkinsFactory;
-
-  @Inject private ReleaseService releaseService;
-
-  @Inject private MainConfiguration configuration;
-
   private final Logger logger = LoggerFactory.getLogger(getClass());
+  @Inject private JenkinsFactory jenkinsFactory;
+  @Inject private ReleaseService releaseService;
+  @Inject private MainConfiguration configuration;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.JenkinsBuildService#getBuilds(javax.ws.rs.core.MultivaluedMap,
