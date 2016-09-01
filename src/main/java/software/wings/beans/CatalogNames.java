@@ -27,6 +27,4 @@ public interface CatalogNames {
    * The constant ENVIRONMENT_TYPE.
    */
   String ENVIRONMENT_TYPE = "ENVIRONMENT_TYPE";
-
-  String CONTAINER_FAMILY = "CONTAINER_FAMILY";
 }
