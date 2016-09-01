@@ -7,6 +7,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Permission.Builder.aPermission;
+import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.READ;
@@ -33,7 +34,6 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.Permission;
 import software.wings.beans.Role;
 import software.wings.beans.User.Builder;
 import software.wings.dl.GenericDbCache;
@@ -56,86 +56,78 @@ public class AuthServiceTest extends WingsBaseTest {
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
 
-  private final Permission appAllResourceReadPermission = aPermission()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withPermissionScope(APP)
-                                                              .withResourceType(ANY)
-                                                              .withAction(READ)
-                                                              .build();
-  private final Permission appAllResourceWritePermission = aPermission()
-                                                               .withAppId(APP_ID)
-                                                               .withEnvId(ENV_ID)
-                                                               .withPermissionScope(APP)
-                                                               .withResourceType(ANY)
-                                                               .withAction(WRITE)
-                                                               .build();
-  private final Permission appAllResourceAllActionPermission = aPermission()
-                                                                   .withAppId(APP_ID)
-                                                                   .withEnvId(ENV_ID)
-                                                                   .withPermissionScope(APP)
-                                                                   .withResourceType(ANY)
-                                                                   .withAction(ALL)
-                                                                   .build();
-
-  private final Permission envAllResourceReadPermission = aPermission()
-                                                              .withAppId(GLOBAL_APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withPermissionScope(ENV)
-                                                              .withResourceType(ANY)
-                                                              .withAction(READ)
-                                                              .build();
-  private final Permission envAllResourceWritePermission = aPermission()
-                                                               .withAppId(GLOBAL_APP_ID)
-                                                               .withEnvId(ENV_ID)
-                                                               .withPermissionScope(ENV)
-                                                               .withResourceType(ANY)
-                                                               .withAction(WRITE)
-                                                               .build();
-  private final Permission envAllResourceAllActionPermission = aPermission()
-                                                                   .withAppId(GLOBAL_APP_ID)
-                                                                   .withEnvId(ENV_ID)
-                                                                   .withPermissionScope(ENV)
-                                                                   .withResourceType(ANY)
-                                                                   .withAction(ALL)
-                                                                   .build();
-
-  private final Role appAllResourceReadActionRole = Role.Builder.aRole()
+  private final Role appAllResourceReadActionRole = aRole()
                                                         .withAppId(GLOBAL_APP_ID)
                                                         .withName(ROLE_NAME)
                                                         .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(appAllResourceReadPermission))
+                                                        .withPermissions(asList(aPermission()
+                                                                                    .withAppId(APP_ID)
+                                                                                    .withEnvId(ENV_ID)
+                                                                                    .withPermissionScope(APP)
+                                                                                    .withResourceType(ANY)
+                                                                                    .withAction(READ)
+                                                                                    .build()))
                                                         .build();
-  private final Role appAllResourceWriteActionRole = Role.Builder.aRole()
+  private final Role appAllResourceWriteActionRole = aRole()
                                                          .withAppId(GLOBAL_APP_ID)
                                                          .withName(ROLE_NAME)
                                                          .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(appAllResourceWritePermission))
+                                                         .withPermissions(asList(aPermission()
+                                                                                     .withAppId(APP_ID)
+                                                                                     .withEnvId(ENV_ID)
+                                                                                     .withPermissionScope(APP)
+                                                                                     .withResourceType(ANY)
+                                                                                     .withAction(WRITE)
+                                                                                     .build()))
                                                          .build();
-  private final Role appAllResourceAllActionRole = Role.Builder.aRole()
+  private final Role appAllResourceAllActionRole = aRole()
                                                        .withAppId(GLOBAL_APP_ID)
                                                        .withName(ROLE_NAME)
                                                        .withUuid(ROLE_ID)
-                                                       .withPermissions(asList(appAllResourceAllActionPermission))
+                                                       .withPermissions(asList(aPermission()
+                                                                                   .withAppId(APP_ID)
+                                                                                   .withEnvId(ENV_ID)
+                                                                                   .withPermissionScope(APP)
+                                                                                   .withResourceType(ANY)
+                                                                                   .withAction(ALL)
+                                                                                   .build()))
                                                        .build();
 
-  private final Role envAllResourceReadActionRole = Role.Builder.aRole()
+  private final Role envAllResourceReadActionRole = aRole()
                                                         .withAppId(GLOBAL_APP_ID)
                                                         .withName(ROLE_NAME)
                                                         .withUuid(ROLE_ID)
-                                                        .withPermissions(asList(envAllResourceReadPermission))
+                                                        .withPermissions(asList(aPermission()
+                                                                                    .withAppId(GLOBAL_APP_ID)
+                                                                                    .withEnvId(ENV_ID)
+                                                                                    .withPermissionScope(ENV)
+                                                                                    .withResourceType(ANY)
+                                                                                    .withAction(READ)
+                                                                                    .build()))
                                                         .build();
-  private final Role envAllResourceWriteActionRole = Role.Builder.aRole()
+  private final Role envAllResourceWriteActionRole = aRole()
                                                          .withAppId(GLOBAL_APP_ID)
                                                          .withName(ROLE_NAME)
                                                          .withUuid(ROLE_ID)
-                                                         .withPermissions(asList(envAllResourceWritePermission))
+                                                         .withPermissions(asList(aPermission()
+                                                                                     .withAppId(GLOBAL_APP_ID)
+                                                                                     .withEnvId(ENV_ID)
+                                                                                     .withPermissionScope(ENV)
+                                                                                     .withResourceType(ANY)
+                                                                                     .withAction(WRITE)
+                                                                                     .build()))
                                                          .build();
-  private final Role envAllResourceAllActionRole = Role.Builder.aRole()
+  private final Role envAllResourceAllActionRole = aRole()
                                                        .withAppId(GLOBAL_APP_ID)
                                                        .withName(ROLE_NAME)
                                                        .withUuid(ROLE_ID)
-                                                       .withPermissions(asList(envAllResourceAllActionPermission))
+                                                       .withPermissions(asList(aPermission()
+                                                                                   .withAppId(GLOBAL_APP_ID)
+                                                                                   .withEnvId(ENV_ID)
+                                                                                   .withPermissionScope(ENV)
+                                                                                   .withResourceType(ANY)
+                                                                                   .withAction(ALL)
+                                                                                   .build()))
                                                        .build();
 
   private Builder userBuilder =
