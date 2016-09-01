@@ -18,19 +18,15 @@ public class AuthToken extends Base {
 
   /**
    * Instantiates a new auth token.
-   */
-  public AuthToken() {}
-
-  /**
-   * Instantiates a new auth token.
    *
    * @param user the user
+   * @param tokenExpiryInMillis
    */
-  public AuthToken(User user) {
+  public AuthToken(User user, Long tokenExpiryInMillis) {
     this.user = user;
     setUuid(secureRandAlphaNumString(32));
     setAppId(Base.GLOBAL_APP_ID);
-    expireAt = System.currentTimeMillis() + 24 * 60 * 60 * 1000; // 24 hrs expiry
+    expireAt = System.currentTimeMillis() + tokenExpiryInMillis;
   }
 
   /**

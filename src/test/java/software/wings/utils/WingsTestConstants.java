@@ -202,4 +202,12 @@ public class WingsTestConstants {
    * The constant NOTIFICATION_ID.
    */
   public static final String NOTIFICATION_ID = "NOTIFICATION_ID";
+  /**
+   * The constant ROLE_NAME.
+   */
+  public static final String ROLE_NAME = "ROLE_NAME";
+  /**
+   * The constant ROLE_ID.
+   */
+  public static final String ROLE_ID = "ROLE_ID";
 }

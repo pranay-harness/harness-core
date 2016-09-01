@@ -9,14 +9,12 @@ import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
-import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.dl.GenericDbCache;
@@ -24,24 +22,31 @@ import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.PermissionAttribute.PermissionScope;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.service.intfc.AuthService;
 
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Created by peeyushaggarwal on 8/18/16.
  */
 @Singleton
 public class AuthServiceImpl implements AuthService {
-  @Inject private GenericDbCache dbCache;
+  private GenericDbCache dbCache;
+
+  @Inject
+  public AuthServiceImpl(GenericDbCache dbCache) {
+    this.dbCache = dbCache;
+  }
 
   @Override
   public AuthToken validateToken(String tokenString) {
     AuthToken authToken = dbCache.get(AuthToken.class, tokenString);
     if (authToken == null) {
       throw new WingsException(INVALID_TOKEN);
-    } else if (authToken.getExpireAt() < System.currentTimeMillis()) {
+    } else if (authToken.getExpireAt() <= System.currentTimeMillis()) {
       throw new WingsException(EXPIRED_TOKEN);
     }
     return authToken;

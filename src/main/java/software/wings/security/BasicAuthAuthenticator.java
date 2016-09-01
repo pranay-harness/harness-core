@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import io.dropwizard.auth.AuthenticationException;
 import io.dropwizard.auth.Authenticator;
 import io.dropwizard.auth.basic.BasicCredentials;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -24,6 +25,7 @@ import javax.inject.Singleton;
 @Singleton
 public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, User> {
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private MainConfiguration configuration;
 
   /* (non-Javadoc)
    * @see io.dropwizard.auth.Authenticator#authenticate(java.lang.Object)
@@ -38,7 +40,7 @@ public class BasicAuthAuthenticator implements Authenticator<BasicCredentials, U
       throw new WingsException(EMAIL_NOT_VERIFIED);
     }
     if (checkpw(basicCredentials.getPassword(), user.getPasswordHash())) {
-      AuthToken authToken = new AuthToken(user);
+      AuthToken authToken = new AuthToken(user, configuration.getPortal().getAuthTokenExpiryInMillis());
       wingsPersistence.save(authToken);
       user.setToken(authToken.getUuid());
       return Optional.of(user);

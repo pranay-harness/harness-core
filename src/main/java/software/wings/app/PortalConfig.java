@@ -19,6 +19,7 @@ public class PortalConfig {
   private List<String> allowedDomains = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
   @JsonProperty(defaultValue = "/api/users/verify") private String verificationUrl = "/api/users/verify/";
+  private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
    * Gets url.
@@ -94,6 +95,14 @@ public class PortalConfig {
    */
   public void setVerificationUrl(String verificationUrl) {
     this.verificationUrl = verificationUrl;
+  }
+
+  public Long getAuthTokenExpiryInMillis() {
+    return authTokenExpiryInMillis;
+  }
+
+  public void setAuthTokenExpiryInMillis(Long authTokenExpiryInMillis) {
+    this.authTokenExpiryInMillis = authTokenExpiryInMillis;
   }
 
   public static class ArrayConverter extends StdConverter<List<String>, String> {
