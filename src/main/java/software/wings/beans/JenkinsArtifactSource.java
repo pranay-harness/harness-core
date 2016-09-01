@@ -7,6 +7,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Set;

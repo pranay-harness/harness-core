@@ -17,7 +17,7 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ArtifactSource.ArtifactType;
+import software.wings.utils.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.Builder;

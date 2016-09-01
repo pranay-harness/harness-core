@@ -24,4 +24,14 @@ public class UUIDGenerator {
     uuidBytes.putLong(uuid.getLeastSignificantBits());
     return Base64.encodeBase64URLSafeString(bytes);
   }
+
+  /**
+   * Graph id generator string.
+   *
+   * @param prefix the prefix
+   * @return the string
+   */
+  public static String graphIdGenerator(String prefix) {
+    return prefix + "_" + UUID.randomUUID().toString();
+  }
 }

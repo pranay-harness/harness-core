@@ -10,12 +10,11 @@ import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.utils.ContainerFamily;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -97,6 +96,7 @@ public class CatalogResource {
     if (catalogTypes == null || catalogTypes.size() == 0) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
+      catalogs.put(CatalogNames.EXECUTION_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
@@ -105,13 +105,6 @@ public class CatalogResource {
             catalogs.put(catalogType,
                 settingsService.getSettingAttributesByType(
                     uriInfo.getQueryParameters().getFirst(APP_ID), SettingVariableTypes.JENKINS));
-            break;
-          }
-          case CatalogNames.JENKINS_BUILD: {
-            String jenkinsSettingId = uriInfo.getQueryParameters().getFirst(JENKINS_SETTING_ID);
-            SettingAttribute attribute = settingsService.get(jenkinsSettingId);
-            JenkinsConfig config = (JenkinsConfig) attribute.getValue();
-            catalogs.put(catalogType, jenkinsBuildService.getBuilds(uriInfo.getQueryParameters(), config));
             break;
           }
           case CONNECTION_ATTRIBUTES: {
@@ -133,6 +126,9 @@ public class CatalogResource {
           }
           case CatalogNames.ENVIRONMENT_TYPE: {
             catalogs.put(catalogType, EnvironmentType.values());
+          }
+          case CatalogNames.CONTAINER_FAMILY: {
+            catalogs.put(catalogType, ContainerFamily.values());
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }

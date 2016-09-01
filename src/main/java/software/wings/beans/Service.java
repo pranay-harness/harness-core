@@ -10,7 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
-import software.wings.beans.ArtifactSource.ArtifactType;
+import software.wings.utils.ArtifactType;
 import software.wings.beans.command.Command;
 
 import java.util.List;

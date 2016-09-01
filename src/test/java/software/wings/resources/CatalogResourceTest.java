@@ -14,7 +14,6 @@ import static software.wings.beans.CatalogNames.EXECUTION_TYPE;
 import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -113,7 +112,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   private Object[][] catalogNames() {
-    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_BUILD),
+    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONTAINER_FAMILY),
                                aSettingAttribute().withValue(aJenkinsConfig().build()).build()},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES), null},
@@ -136,11 +135,10 @@ public class CatalogResourceTest extends WingsBaseTest {
       when(settingsService.get(any())).thenReturn(settingAttribute);
     }
     String catalogName = UPPER_CAMEL.to(UPPER_UNDERSCORE, catalogNameForDisplay);
-    RestResponse<Map<String, Object>> actual =
-        resources.client()
-            .target("/catalogs?catalogType=" + catalogName + "&appId=" + APP_ID + "&serviceId=" + SERVICE_ID)
-            .request()
-            .get(new GenericType<RestResponse<Map<String, Object>>>() {});
+    RestResponse<Map<String, Object>> actual = resources.client()
+                                                   .target("/catalogs?catalogType=" + catalogName + "&appId=" + APP_ID)
+                                                   .request()
+                                                   .get(new GenericType<RestResponse<Map<String, Object>>>() {});
 
     assertThat(actual)
         .isNotNull()

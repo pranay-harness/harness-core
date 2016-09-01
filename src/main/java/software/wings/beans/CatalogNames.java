@@ -11,10 +11,6 @@ public interface CatalogNames {
    */
   String JENKINS_CONFIG = "JENKINS_CONFIG";
   /**
-   * The constant JENKINS_BUILD.
-   */
-  String JENKINS_BUILD = "JENKINS_BUILD";
-  /**
    * The constant CONNECTION_ATTRIBUTES.
    */
   String CONNECTION_ATTRIBUTES = "CONNECTION_ATTRIBUTES";
@@ -31,4 +27,6 @@ public interface CatalogNames {
    * The constant ENVIRONMENT_TYPE.
    */
   String ENVIRONMENT_TYPE = "ENVIRONMENT_TYPE";
+
+  String CONTAINER_FAMILY = "CONTAINER_FAMILY";
 }
