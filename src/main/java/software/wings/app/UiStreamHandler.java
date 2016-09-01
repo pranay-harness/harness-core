@@ -1,10 +1,11 @@
 package software.wings.app;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.atmosphere.cache.UUIDBroadcasterCache;
@@ -16,10 +17,13 @@ import org.atmosphere.cpr.AtmosphereResponse;
 import org.atmosphere.handler.AtmosphereHandlerAdapter;
 import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 import software.wings.beans.AuthToken;
+import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.common.cache.ResponseCodeCache;
 import software.wings.dl.PageRequest.PageRequestType;
 import software.wings.exception.WingsException;
+import software.wings.security.PermissionAttribute;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AuthService;
 import software.wings.utils.JsonUtils;
 
@@ -45,9 +49,22 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
       try {
         AuthToken authToken = authService.validateToken(req.getParameter("token"));
 
-        String appId = req.getPathInfo().split("/")[2];
-        String envId = req.getPathInfo().split("/")[3];
-        authService.authorize(appId, envId, authToken.getUser(), Lists.newArrayList(), PageRequestType.OTHER);
+        String[] pathSegments = req.getPathInfo().split("/");
+        if (pathSegments.length <= 5) {
+          sendError(resource, INVALID_REQUEST);
+        }
+
+        String appId = "all".equalsIgnoreCase(pathSegments[2]) ? Base.GLOBAL_APP_ID : pathSegments[2];
+        String envId = "all".equalsIgnoreCase(pathSegments[3]) ? Base.GLOBAL_ENV_ID : pathSegments[3];
+        Channel channel = Channel.getChannelByChannelName(pathSegments[5]);
+
+        if (channel == null) {
+          sendError(resource, INVALID_REQUEST);
+        }
+        PermissionAttribute permissionAttribute = new PermissionAttribute(channel.getPermission(), channel.getScope());
+
+        authService.authorize(appId, envId, authToken.getUser(), asList(permissionAttribute), PageRequestType.OTHER);
+
       } catch (WingsException e) {
         sendError(resource, e.getResponseMessageList().get(0).getCode());
         return;

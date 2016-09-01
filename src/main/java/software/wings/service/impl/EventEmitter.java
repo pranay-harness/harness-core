@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.atmosphere.cpr.MetaBroadcaster;
 import software.wings.beans.Event;
+import software.wings.security.PermissionAttribute.PermissionScope;
 
 /**
  * Created by peeyushaggarwal on 8/16/16.
@@ -44,12 +45,21 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts");
+    ARTIFACTS("artifacts", "ARTIFACT:ALL");
 
     private String channelName;
+    private String permission;
+    private PermissionScope scope = PermissionScope.APP;
 
-    Channel(String channelName) {
+    Channel(String channelName, String permission) {
       this.channelName = channelName;
+      this.permission = permission;
+    }
+
+    Channel(String channelName, String permission, PermissionScope scope) {
+      this.channelName = channelName;
+      this.permission = permission;
+      this.scope = scope;
     }
 
     /**
@@ -62,12 +72,39 @@ public class EventEmitter {
     }
 
     /**
-     * Setter for property 'channelName'.
+     * Gets permission.
      *
-     * @param channelName Value to set for property 'channelName'.
+     * @return the permission
      */
-    public void setChannelName(String channelName) {
-      this.channelName = channelName;
+    public String getPermission() {
+      return permission;
+    }
+
+    /**
+     * Sets permission.
+     *
+     * @param permission the permission
+     */
+    public void setPermission(String permission) {
+      this.permission = permission;
+    }
+
+    /**
+     * Gets scope.
+     *
+     * @return the scope
+     */
+    public PermissionScope getScope() {
+      return scope;
+    }
+
+    public static Channel getChannelByChannelName(String channelName) {
+      for (Channel channel : values()) {
+        if (channel.getChannelName().equalsIgnoreCase(channelName)) {
+          return channel;
+        }
+      }
+      return null;
     }
   }
 }
