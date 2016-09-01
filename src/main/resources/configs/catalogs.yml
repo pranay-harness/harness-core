@@ -55,3 +55,7 @@ ACCESS_TYPE:
 EXECUTION_TYPE:
     - name: SSH
       value: SSH
+
+CONTAINER_FAMILY:
+    - name: Tomcat
+    - value: TOMCAT

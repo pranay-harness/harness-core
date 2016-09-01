@@ -11,7 +11,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.CatalogNames.EXECUTION_TYPE;
-import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -112,9 +111,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   private Object[][] catalogNames() {
-    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONTAINER_FAMILY),
-                               aSettingAttribute().withValue(aJenkinsConfig().build()).build()},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG), null},
+    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE), null},

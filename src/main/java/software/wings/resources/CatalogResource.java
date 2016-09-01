@@ -10,7 +10,6 @@ import static software.wings.beans.CatalogNames.CONNECTION_ATTRIBUTES;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.utils.ContainerFamily;
 import software.wings.beans.CatalogNames;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionCredential.ExecutionType;
@@ -126,9 +125,6 @@ public class CatalogResource {
           }
           case CatalogNames.ENVIRONMENT_TYPE: {
             catalogs.put(catalogType, EnvironmentType.values());
-          }
-          case CatalogNames.CONTAINER_FAMILY: {
-            catalogs.put(catalogType, ContainerFamily.values());
           }
           default: { catalogs.put(catalogType, catalogService.getCatalogItems(catalogType)); }
         }
