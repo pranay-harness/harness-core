@@ -94,8 +94,8 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean forApplication(Application application, Permission permission, PageRequestType requestType) {
-    return requestType.equals(LIST_WITHOUT_APP_ID)
-        || (GLOBAL_APP_ID.equals(permission.getAppId()) || application.getUuid().equals(permission.getAppId()));
+    return requestType.equals(LIST_WITHOUT_APP_ID) || GLOBAL_APP_ID.equals(permission.getAppId())
+        || (application != null && application.getUuid().equals(permission.getAppId()));
   }
 
   private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission,
@@ -105,12 +105,13 @@ public class AuthServiceImpl implements AuthService {
   }
 
   private boolean hasAccessByEnvId(Environment environment, Permission permission) {
-    return GLOBAL_ENV_ID.equals(permission.getEnvId()) || environment.getUuid().equals(permission.getEnvId());
+    return GLOBAL_ENV_ID.equals(permission.getEnvId())
+        || (environment != null && environment.getUuid().equals(permission.getEnvId()));
   }
 
   private boolean hasAccessByEnvType(Environment environment, Permission permission) {
     return ALL.equals(permission.getEnvironmentType())
-        || (environment.getEnvironmentType().equals(permission.getEnvironmentType()));
+        || (environment != null && environment.getEnvironmentType().equals(permission.getEnvironmentType()));
   }
 
   private boolean canPerformAction(Action reqAction, Permission permission) {
