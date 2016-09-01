@@ -7,6 +7,8 @@ package software.wings.beans;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.Graph.Link.Builder.aLink;
+import static software.wings.sm.TransitionType.SUCCESS;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
@@ -14,6 +16,7 @@ import com.google.common.base.Throwables;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
+import software.wings.common.UUIDGenerator;
 import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
@@ -1313,6 +1316,23 @@ public class Graph {
       Graph graph = new Graph();
       graph.setGraphName(graphName);
       graph.setNodes(nodes);
+      graph.setLinks(links);
+      return graph;
+    }
+
+    public Graph buildPipeline() {
+      Graph graph = new Graph();
+      graph.setGraphName(graphName);
+      graph.setNodes(nodes);
+      links.clear();
+      for (int i = 0; i < nodes.size() - 1; i++) {
+        links.add(aLink()
+                      .withFrom(nodes.get(i).getId())
+                      .withTo(nodes.get(i + 1).getId())
+                      .withType(SUCCESS.name())
+                      .withId(UUIDGenerator.graphIdGenerator("link"))
+                      .build());
+      }
       graph.setLinks(links);
       return graph;
     }

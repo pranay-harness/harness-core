@@ -14,7 +14,7 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.ArtifactSource.ArtifactType.WAR;
+import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;

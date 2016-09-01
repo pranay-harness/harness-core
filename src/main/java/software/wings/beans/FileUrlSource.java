@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.utils.ArtifactType;
 
 import java.util.Set;
 

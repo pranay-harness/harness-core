@@ -1,13 +1,12 @@
 package software.wings.beans;
 
-import static software.wings.beans.ChecksumType.MD5;
-
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
+import software.wings.utils.ContainerFamily;
 
 import java.util.Objects;
 
@@ -26,6 +25,7 @@ public class AppContainer extends BaseFile {
   @FormDataParam("description") private String description;
   @FormDataParam("source") private ArtifactSource source;
   private boolean standardUpload = false;
+  @FormDataParam("family") private ContainerFamily family;
 
   /**
    * Is standard boolean.
@@ -117,17 +117,29 @@ public class AppContainer extends BaseFile {
     this.standardUpload = standardUpload;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#hashCode()
+  /**
+   * Getter for property 'family'.
+   *
+   * @return Value for property 'family'.
    */
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(standard, version, description, source, standardUpload);
+  public ContainerFamily getFamily() {
+    return family;
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.beans.BaseFile#equals(java.lang.Object)
+  /**
+   * Setter for property 'family'.
+   *
+   * @param family Value to set for property 'family'.
    */
+  public void setFamily(ContainerFamily family) {
+    this.family = family;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(standard, version, description, source, standardUpload, family);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -142,24 +154,23 @@ public class AppContainer extends BaseFile {
     final AppContainer other = (AppContainer) obj;
     return Objects.equals(this.standard, other.standard) && Objects.equals(this.version, other.version)
         && Objects.equals(this.description, other.description) && Objects.equals(this.source, other.source)
-        && Objects.equals(this.standardUpload, other.standardUpload);
+        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family);
   }
 
-  /**
-   * The Class AppContainerBuilder.
-   */
-  public static final class AppContainerBuilder {
+  public static final class Builder {
+    private String name;
+    private String fileUuid;
+    private String fileName;
+    private String mimeType;
+    private long size;
+    private ChecksumType checksumType = ChecksumType.MD5;
+    private String checksum;
     private boolean standard;
     private String version;
     private String description;
     private ArtifactSource source;
     private boolean standardUpload = false;
-    private String fileUuid;
-    private String name;
-    private String mimeType;
-    private long size;
-    private ChecksumType checksumType = MD5;
-    private String checksum;
+    private ContainerFamily family;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -168,233 +179,127 @@ public class AppContainer extends BaseFile {
     private long lastUpdatedAt;
     private boolean active = true;
 
-    private AppContainerBuilder() {}
+    private Builder() {}
 
-    /**
-     * An app container.
-     *
-     * @return the app container builder
-     */
-    public static AppContainerBuilder anAppContainer() {
-      return new AppContainerBuilder();
+    public static Builder anAppContainer() {
+      return new Builder();
     }
 
-    /**
-     * With standard.
-     *
-     * @param standard the standard
-     * @return the app container builder
-     */
-    public AppContainerBuilder withStandard(boolean standard) {
-      this.standard = standard;
-      return this;
-    }
-
-    /**
-     * With version.
-     *
-     * @param version the version
-     * @return the app container builder
-     */
-    public AppContainerBuilder withVersion(String version) {
-      this.version = version;
-      return this;
-    }
-
-    /**
-     * With description.
-     *
-     * @param description the description
-     * @return the app container builder
-     */
-    public AppContainerBuilder withDescription(String description) {
-      this.description = description;
-      return this;
-    }
-
-    /**
-     * With source.
-     *
-     * @param source the source
-     * @return the app container builder
-     */
-    public AppContainerBuilder withSource(ArtifactSource source) {
-      this.source = source;
-      return this;
-    }
-
-    /**
-     * With standard upload.
-     *
-     * @param standardUpload the standard upload
-     * @return the app container builder
-     */
-    public AppContainerBuilder withStandardUpload(boolean standardUpload) {
-      this.standardUpload = standardUpload;
-      return this;
-    }
-
-    /**
-     * With file uuid.
-     *
-     * @param fileUuid the file uuid
-     * @return the app container builder
-     */
-    public AppContainerBuilder withFileUuid(String fileUuid) {
-      this.fileUuid = fileUuid;
-      return this;
-    }
-
-    /**
-     * With name.
-     *
-     * @param name the name
-     * @return the app container builder
-     */
-    public AppContainerBuilder withName(String name) {
+    public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With mime type.
-     *
-     * @param mimeType the mime type
-     * @return the app container builder
-     */
-    public AppContainerBuilder withMimeType(String mimeType) {
+    public Builder withFileUuid(String fileUuid) {
+      this.fileUuid = fileUuid;
+      return this;
+    }
+
+    public Builder withFileName(String fileName) {
+      this.fileName = fileName;
+      return this;
+    }
+
+    public Builder withMimeType(String mimeType) {
       this.mimeType = mimeType;
       return this;
     }
 
-    /**
-     * With size.
-     *
-     * @param size the size
-     * @return the app container builder
-     */
-    public AppContainerBuilder withSize(long size) {
+    public Builder withSize(long size) {
       this.size = size;
       return this;
     }
 
-    /**
-     * With checksum type.
-     *
-     * @param checksumType the checksum type
-     * @return the app container builder
-     */
-    public AppContainerBuilder withChecksumType(ChecksumType checksumType) {
+    public Builder withChecksumType(ChecksumType checksumType) {
       this.checksumType = checksumType;
       return this;
     }
 
-    /**
-     * With checksum.
-     *
-     * @param checksum the checksum
-     * @return the app container builder
-     */
-    public AppContainerBuilder withChecksum(String checksum) {
+    public Builder withChecksum(String checksum) {
       this.checksum = checksum;
       return this;
     }
 
-    /**
-     * With uuid.
-     *
-     * @param uuid the uuid
-     * @return the app container builder
-     */
-    public AppContainerBuilder withUuid(String uuid) {
+    public Builder withStandard(boolean standard) {
+      this.standard = standard;
+      return this;
+    }
+
+    public Builder withVersion(String version) {
+      this.version = version;
+      return this;
+    }
+
+    public Builder withDescription(String description) {
+      this.description = description;
+      return this;
+    }
+
+    public Builder withSource(ArtifactSource source) {
+      this.source = source;
+      return this;
+    }
+
+    public Builder withStandardUpload(boolean standardUpload) {
+      this.standardUpload = standardUpload;
+      return this;
+    }
+
+    public Builder withFamily(ContainerFamily family) {
+      this.family = family;
+      return this;
+    }
+
+    public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id.
-     *
-     * @param appId the app id
-     * @return the app container builder
-     */
-    public AppContainerBuilder withAppId(String appId) {
+    public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by.
-     *
-     * @param createdBy the created by
-     * @return the app container builder
-     */
-    public AppContainerBuilder withCreatedBy(User createdBy) {
+    public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at.
-     *
-     * @param createdAt the created at
-     * @return the app container builder
-     */
-    public AppContainerBuilder withCreatedAt(long createdAt) {
+    public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the app container builder
-     */
-    public AppContainerBuilder withLastUpdatedBy(User lastUpdatedBy) {
+    public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the app container builder
-     */
-    public AppContainerBuilder withLastUpdatedAt(long lastUpdatedAt) {
+    public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active.
-     *
-     * @param active the active
-     * @return the app container builder
-     */
-    public AppContainerBuilder withActive(boolean active) {
+    public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the app container builder
-     */
-    public AppContainerBuilder but() {
+    public Builder but() {
       return anAppContainer()
+          .withName(name)
+          .withFileUuid(fileUuid)
+          .withFileName(fileName)
+          .withMimeType(mimeType)
+          .withSize(size)
+          .withChecksumType(checksumType)
+          .withChecksum(checksum)
           .withStandard(standard)
           .withVersion(version)
           .withDescription(description)
           .withSource(source)
           .withStandardUpload(standardUpload)
-          .withFileUuid(fileUuid)
-          .withName(name)
-          .withMimeType(mimeType)
-          .withSize(size)
-          .withChecksumType(checksumType)
-          .withChecksum(checksum)
+          .withFamily(family)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -404,24 +309,21 @@ public class AppContainer extends BaseFile {
           .withActive(active);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the app container
-     */
     public AppContainer build() {
       AppContainer appContainer = new AppContainer();
+      appContainer.setName(name);
+      appContainer.setFileUuid(fileUuid);
+      appContainer.setFileName(fileName);
+      appContainer.setMimeType(mimeType);
+      appContainer.setSize(size);
+      appContainer.setChecksumType(checksumType);
+      appContainer.setChecksum(checksum);
       appContainer.setStandard(standard);
       appContainer.setVersion(version);
       appContainer.setDescription(description);
       appContainer.setSource(source);
       appContainer.setStandardUpload(standardUpload);
-      appContainer.setFileUuid(fileUuid);
-      appContainer.setName(name);
-      appContainer.setMimeType(mimeType);
-      appContainer.setSize(size);
-      appContainer.setChecksumType(checksumType);
-      appContainer.setChecksum(checksum);
+      appContainer.setFamily(family);
       appContainer.setUuid(uuid);
       appContainer.setAppId(appId);
       appContainer.setCreatedBy(createdBy);

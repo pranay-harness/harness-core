@@ -30,7 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ArtifactFile;
-import software.wings.beans.ArtifactSource.ArtifactType;
+import software.wings.utils.ArtifactType;
 import software.wings.beans.FileMetadata;
 import software.wings.beans.Service;
 import software.wings.helpers.ext.jenkins.Jenkins;

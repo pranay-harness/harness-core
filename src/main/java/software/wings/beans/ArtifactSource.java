@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.utils.ArtifactType;
 
 import java.util.Set;
 import javax.validation.constraints.NotNull;
@@ -180,27 +181,5 @@ public abstract class ArtifactSource {
            * File upload source type.
            */
     FILE_UPLOAD
-  }
-
-  /**
-   * The Enum ArtifactType.
-   */
-  public enum ArtifactType {
-    /**
-     * Jar artifact type.
-     */
-    JAR, /**
-          * War artifact type.
-          */
-    WAR, /**
-          * Tar artifact type.
-          */
-    TAR, /**
-          * Zip artifact type.
-          */
-    ZIP, /**
-          * Other artifact type.
-          */
-    OTHER
   }
 }

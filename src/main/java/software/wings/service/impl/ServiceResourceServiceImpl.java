@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -15,9 +16,6 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.common.NotificationMessageResolver.ENTITY_CREATE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.ENTITY_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
-import static software.wings.utils.DefaultCommands.getInstallCommandGraph;
-import static software.wings.utils.DefaultCommands.getStartCommandGraph;
-import static software.wings.utils.DefaultCommands.getStopCommandGraph;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -124,9 +122,19 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service addDefaultCommands(Service service) {
-    addCommand(service.getAppId(), service.getUuid(), getInstallCommandGraph());
-    addCommand(service.getAppId(), service.getUuid(), getStopCommandGraph());
-    return addCommand(service.getAppId(), service.getUuid(), getStartCommandGraph());
+    List<Graph> commands = emptyList();
+    if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
+      commands = service.getAppContainer().getFamily().getDefaultCommands(service.getArtifactType());
+    } else if (service.getArtifactType() != null) {
+      commands = service.getArtifactType().getDefaultCommands();
+    }
+
+    Service serviceToReturn = service;
+    for (Graph command : commands) {
+      serviceToReturn = addCommand(service.getAppId(), service.getUuid(), command);
+    }
+
+    return serviceToReturn;
   }
 
   /**
