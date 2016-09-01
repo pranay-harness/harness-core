@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static software.wings.beans.Environment.EnvironmentType.*;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.base.MoreObjects;
@@ -368,7 +369,7 @@ public class PageRequest<T> {
                 } else if (permission.getEnvId() != null && appEnvIds.contains(permission.getEnvId())) {
                   envIds.add(permission.getEnvId());
                 } else if (permission.getEnvironmentType() != null) {
-                  envIds.addAll(appEnvIdsByType.get(permission.getEnvironmentType()));
+                  envIds.addAll(getEnvIdsByType(appEnvironments, permission.getEnvironmentType()));
                 }
               });
 
@@ -384,6 +385,22 @@ public class PageRequest<T> {
           }
         }
       }
+    }
+  }
+
+  private List<String> getEnvIdsByType(List<Environment> appEnvironments, EnvironmentType environmentType) {
+    if (ALL.equals(environmentType)) {
+      return appEnvironments.stream().map(Environment::getUuid).collect(Collectors.toList());
+    } else if (NON_PROD.equals(environmentType)) {
+      return appEnvironments.stream()
+          .filter(env -> !PROD.equals(environmentType))
+          .map(Environment::getUuid)
+          .collect(Collectors.toList());
+    } else {
+      return appEnvironments.stream()
+          .filter(env -> env.getEnvironmentType().equals(environmentType))
+          .map(Environment::getUuid)
+          .collect(Collectors.toList());
     }
   }
 
