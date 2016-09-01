@@ -204,12 +204,12 @@ public class Permission {
     }
 
     /**
-     * With permission type builder.
+     * With permission scope builder.
      *
-     * @param permissionScope the permission type
+     * @param permissionScope the permission scope
      * @return the builder
      */
-    public Builder withPermissionType(PermissionScope permissionScope) {
+    public Builder withPermissionScope(PermissionScope permissionScope) {
       this.permissionScope = permissionScope;
       return this;
     }
@@ -226,7 +226,7 @@ public class Permission {
           .withEnvId(envId)
           .withAppId(appId)
           .withEnvironmentType(environmentType)
-          .withPermissionType(permissionScope);
+          .withPermissionScope(permissionScope);
     }
 
     /**

@@ -33,3 +33,4 @@ portal:
   url: https://localhost:8000
   allowedDomains: wings.software
   companyName: Wings Software
+  authTokenExpiryInMillis: 86400000

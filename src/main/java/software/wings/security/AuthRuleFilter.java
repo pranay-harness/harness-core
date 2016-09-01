@@ -6,8 +6,6 @@ import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 import static software.wings.dl.PageRequest.PageRequestType.OTHER;
 
-import com.google.inject.Inject;
-
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
@@ -26,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -42,13 +41,19 @@ import javax.ws.rs.core.MultivaluedMap;
 public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
 
-  @Inject private AuditService auditService;
+  private AuditService auditService;
+  private AuditHelper auditHelper;
+  private AuthService authService;
+  private EnvironmentService environmentService;
 
-  @Inject private AuditHelper auditHelper;
-
-  @Inject private AuthService authService;
-
-  @Inject private EnvironmentService environmentService;
+  @Inject
+  public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
+      EnvironmentService environmentService) {
+    this.auditService = auditService;
+    this.auditHelper = auditHelper;
+    this.authService = authService;
+    this.environmentService = environmentService;
+  }
 
   /* (non-Javadoc)
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
