@@ -29,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import org.apache.commons.jexl3.JxltEngine.Exception;
 import org.assertj.core.api.Assertions;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -45,6 +46,7 @@ import software.wings.common.AuditHelper;
 import software.wings.dl.GenericDbCache;
 import software.wings.exception.WingsException;
 import software.wings.security.AuthRuleFilter;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
@@ -139,6 +141,11 @@ public class SecureResourceTest {
     when(genericDbCache.get(Environment.class, ENV_ID))
         .thenReturn(
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.OTHER).build());
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    UserThreadLocal.unset();
   }
 
   @Test
