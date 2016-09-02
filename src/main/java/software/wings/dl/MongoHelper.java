@@ -119,6 +119,9 @@ public class MongoHelper {
       case EQ:
         return fieldEnd.equal(filter.getFieldValues()[0]);
 
+      case NOT_EQ:
+        return fieldEnd.notEqual(filter.getFieldValues()[0]);
+
       case CONTAINS:
         return fieldEnd.containsIgnoreCase(String.valueOf(filter.getFieldValues()[0]));
 

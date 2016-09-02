@@ -8,7 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static software.wings.beans.Activity.Status.COMPLETED;
-import static software.wings.beans.Environment.EnvironmentType.OTHER;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EXISTS;
@@ -31,7 +31,6 @@ import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
 import software.wings.beans.Application;
-import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
@@ -120,8 +119,9 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<EnvironmentType, Set<String>> envUuidListByType =
         applications.stream()
             .flatMap(application -> application.getEnvironments().stream())
-            .collect(
-                groupingBy(Environment::getEnvironmentType, mapping(environment -> environment.getUuid(), toSet())));
+            .collect(groupingBy(env
+                -> env.getEnvironmentType().equals(PROD) ? PROD : NON_PROD,
+                mapping(environment -> environment.getUuid(), toSet())));
 
     PageRequest pageRequest =
         aPageRequest()
@@ -151,32 +151,32 @@ public class StatisticsServiceImpl implements StatisticsService {
         workflowExecutions.stream()
             .filter(wfl
                 -> envUuidListByType.get(PROD).contains(wfl.getEnvId())
-                    || envUuidListByType.get(OTHER).contains(wfl.getEnvId()))
+                    || envUuidListByType.get(NON_PROD).contains(wfl.getEnvId()))
             .collect(
-                groupingBy(wfl -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : OTHER, counting()));
+                groupingBy(wfl -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : NON_PROD, counting()));
 
     deploymentCountByType.computeIfAbsent(PROD, wfl -> deploymentCountByType.put(PROD, 0L));
-    deploymentCountByType.computeIfAbsent(OTHER, wfl -> deploymentCountByType.put(OTHER, 0L));
+    deploymentCountByType.computeIfAbsent(NON_PROD, wfl -> deploymentCountByType.put(NON_PROD, 0L));
 
     Map<EnvironmentType, Long> deploymentTimeDurationSumByType =
         workflowExecutions.stream()
             .filter(wfl
                 -> envUuidListByType.get(PROD).contains(wfl.getEnvId())
-                    || envUuidListByType.get(OTHER).contains(wfl.getEnvId()))
+                    || envUuidListByType.get(NON_PROD).contains(wfl.getEnvId()))
             .collect(groupingBy(wfl
-                -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : OTHER,
+                -> envUuidListByType.get(PROD).contains(wfl.getEnvId()) ? PROD : NON_PROD,
                 summingLong(wf -> (wf.getEndTs() - wf.getStartTs()))));
 
     deploymentTimeDurationSumByType.computeIfAbsent(PROD, wfl -> deploymentCountByType.put(PROD, 0L));
-    deploymentTimeDurationSumByType.computeIfAbsent(OTHER, wfl -> deploymentCountByType.put(OTHER, 0L));
+    deploymentTimeDurationSumByType.computeIfAbsent(NON_PROD, wfl -> deploymentCountByType.put(NON_PROD, 0L));
 
     int prodDeploymentAvgTime = deploymentCountByType.get(PROD) == 0
         ? 0
         : (int) (deploymentTimeDurationSumByType.get(PROD) / (60 * 1000 * deploymentCountByType.get(PROD)));
 
-    int otherDeploymentAvgTime = deploymentCountByType.get(OTHER) == 0
+    int otherDeploymentAvgTime = deploymentCountByType.get(NON_PROD) == 0
         ? 0
-        : (int) (deploymentTimeDurationSumByType.get(OTHER) / (60 * 1000 * deploymentCountByType.get(OTHER)));
+        : (int) (deploymentTimeDurationSumByType.get(NON_PROD) / (60 * 1000 * deploymentCountByType.get(NON_PROD)));
 
     DeploymentStatistics prodDeploymentStatistics = aDeploymentStatistics()
                                                         .withEnvironmentType(PROD)
@@ -186,8 +186,8 @@ public class StatisticsServiceImpl implements StatisticsService {
                                                         .withAvgTimeChange(0)
                                                         .build();
     DeploymentStatistics otherDeploymentStatistics = aDeploymentStatistics()
-                                                         .withEnvironmentType(OTHER)
-                                                         .withCount(deploymentCountByType.get(OTHER).intValue())
+                                                         .withEnvironmentType(NON_PROD)
+                                                         .withCount(deploymentCountByType.get(NON_PROD).intValue())
                                                          .withCountChange(0)
                                                          .withAvgTime(otherDeploymentAvgTime)
                                                          .withAvgTimeChange(0)
@@ -244,12 +244,11 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     Map<EnvironmentType, List<Activity>> activityByEnvType =
         activities.stream()
-            .filter(
-                activity -> PROD.equals(activity.getEnvironmentType()) || OTHER.equals(activity.getEnvironmentType()))
-            .collect(groupingBy(Activity::getEnvironmentType));
+            .filter(activity -> activity.getEnvironmentType() != null)
+            .collect(groupingBy(activity -> PROD.equals(activity.getEnvironmentType()) ? PROD : NON_PROD));
     List<WingsStatistics> keyStats = new ArrayList<>();
     keyStats.add(getKeyStatsForEnvType(PROD, activityByEnvType.get(PROD)));
-    keyStats.add(getKeyStatsForEnvType(OTHER, activityByEnvType.get(OTHER)));
+    keyStats.add(getKeyStatsForEnvType(NON_PROD, activityByEnvType.get(NON_PROD)));
     return keyStats;
   }
 
