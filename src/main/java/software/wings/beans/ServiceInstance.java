@@ -28,6 +28,7 @@ public class ServiceInstance extends Base {
   @Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
   @Reference(idOnly = true, ignoreMissing = true) private Release release;
   @Reference(idOnly = true, ignoreMissing = true) private Artifact artifact;
+  @Reference(idOnly = true, ignoreMissing = true) private Activity activity;
   private long lastDeployedOn;
 
   /**
@@ -188,6 +189,24 @@ public class ServiceInstance extends Base {
   }
 
   /**
+   * Gets activity.
+   *
+   * @return the activity
+   */
+  public Activity getActivity() {
+    return activity;
+  }
+
+  /**
+   * Sets activity.
+   *
+   * @param activity the activity
+   */
+  public void setActivity(Activity activity) {
+    this.activity = activity;
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -196,6 +215,7 @@ public class ServiceInstance extends Base {
     private ServiceTemplate serviceTemplate;
     private Release release;
     private Artifact artifact;
+    private Activity activity;
     private long lastDeployedOn;
     private String uuid;
     private String appId;
@@ -268,6 +288,17 @@ public class ServiceInstance extends Base {
      */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
+      return this;
+    }
+
+    /**
+     * With activity builder.
+     *
+     * @param activity the activity
+     * @return the builder
+     */
+    public Builder withActivity(Activity activity) {
+      this.activity = activity;
       return this;
     }
 
@@ -371,6 +402,7 @@ public class ServiceInstance extends Base {
           .withServiceTemplate(serviceTemplate)
           .withRelease(release)
           .withArtifact(artifact)
+          .withActivity(activity)
           .withLastDeployedOn(lastDeployedOn)
           .withUuid(uuid)
           .withAppId(appId)
@@ -393,6 +425,7 @@ public class ServiceInstance extends Base {
       serviceInstance.setServiceTemplate(serviceTemplate);
       serviceInstance.setRelease(release);
       serviceInstance.setArtifact(artifact);
+      serviceInstance.setActivity(activity);
       serviceInstance.setLastDeployedOn(lastDeployedOn);
       serviceInstance.setUuid(uuid);
       serviceInstance.setAppId(appId);

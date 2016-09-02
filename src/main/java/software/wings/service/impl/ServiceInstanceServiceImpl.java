@@ -15,8 +15,11 @@ import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Activity;
+import software.wings.beans.Artifact;
 import software.wings.beans.Host;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
@@ -25,6 +28,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 
@@ -43,6 +47,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private ActivityService activityService;
 
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
@@ -208,5 +213,27 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                  .equal(appId))
                       .group("envId", grouping("count", new Accumulator("$sum", 1)))
                       .out(InstanceCountByEnv.class);
+  }
+
+  @Override
+  public void updateActivity(Activity activity) {
+    Query<ServiceInstance> query = wingsPersistence.createQuery(ServiceInstance.class)
+                                       .field("appId")
+                                       .equal(activity.getAppId())
+                                       .field(ID_KEY)
+                                       .equal(activity.getServiceInstanceId());
+    UpdateOperations<ServiceInstance> operations =
+        wingsPersistence.createUpdateOperations(ServiceInstance.class).set("activity", activity);
+    wingsPersistence.update(query, operations);
+  }
+
+  @Override
+  public List<Artifact> getRecentArtifacts(String appId, String envId, String serviceInstanceId) {
+    return activityService.getRecentArtifactsForInstanceId(appId, envId, serviceInstanceId);
+  }
+
+  @Override
+  public List<Activity> getRecentActivities(String appId, String envId, String serviceInstanceId) {
+    return activityService.recentActivitiesForInstance(appId, envId, serviceInstanceId);
   }
 }

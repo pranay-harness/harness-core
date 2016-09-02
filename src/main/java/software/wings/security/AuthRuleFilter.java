@@ -88,8 +88,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
     return publicAPI() || requestContext.getMethod().equals(OPTIONS)
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
-        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith(".well-known");
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version");
   }
 
   private String getRequestParamFromContext(

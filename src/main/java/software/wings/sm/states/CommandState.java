@@ -222,7 +222,8 @@ public class CommandState extends State {
                                              .withServiceName(service.getName())
                                              .withCommandName(command.getName())
                                              .withCommandType(command.getCommandUnitType().name())
-                                             .withHostName(serviceInstance.getHost().getHostName());
+                                             .withHostName(serviceInstance.getHost().getHostName())
+                                             .withServiceInstanceId(serviceInstance.getUuid());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
@@ -252,6 +253,7 @@ public class CommandState extends State {
       }
 
       Activity activity = activityService.save(activityBuilder.build());
+      serviceInstanceService.updateActivity(activity);
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);

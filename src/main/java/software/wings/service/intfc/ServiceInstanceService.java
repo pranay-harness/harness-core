@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.Activity;
+import software.wings.beans.Artifact;
 import software.wings.beans.Host;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
@@ -116,4 +118,31 @@ public interface ServiceInstanceService {
    * @return the counts by env
    */
   Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates);
+
+  /**
+   * Update activity.
+   *
+   * @param activity the activity
+   */
+  void updateActivity(Activity activity);
+
+  /**
+   * Gets recent artifacts.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceInstanceId the service instance id
+   * @return the recent artifacts
+   */
+  List<Artifact> getRecentArtifacts(String appId, String envId, String serviceInstanceId);
+
+  /**
+   * Gets recent activities.
+   *
+   * @param appId             the app id
+   * @param envId             the env id
+   * @param serviceInstanceId the service instance id
+   * @return the recent activities
+   */
+  List<Activity> getRecentActivities(String appId, String envId, String serviceInstanceId);
 }
