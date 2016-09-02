@@ -43,8 +43,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 /**
@@ -243,6 +246,17 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
       elements.add(convertToInstanceElement(instance));
+    }
+
+    if (ArrayUtils.isNotEmpty(instanceIds)) {
+      Map<String, InstanceElement> map =
+          elements.stream().collect(Collectors.toMap(InstanceElement::getUuid, Function.identity()));
+      elements = new ArrayList<>();
+      for (String instanceId : instanceIds) {
+        if (map.containsKey(instanceId)) {
+          elements.add(map.get(instanceId));
+        }
+      }
     }
 
     return elements;

@@ -137,21 +137,19 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     processor.setServiceTemplateService(serviceTemplateServiceMock);
 
     List<InstanceElement> elements = processor.list();
-
-    assertThat(elements).isNotNull();
-    assertThat(elements.size()).isEqualTo(3);
-    assertThat(elements.get(0)).isNotNull();
-    assertThat(elements.get(0).getUuid()).isEqualTo(instance1.getUuid());
-    assertThat(elements.get(0).getHostElement()).isNotNull();
-    assertThat(elements.get(0).getServiceTemplateElement()).isNotNull();
-    assertThat(elements.get(1)).isNotNull();
-    assertThat(elements.get(1).getUuid()).isEqualTo(instance2.getUuid());
-    assertThat(elements.get(1).getHostElement()).isNotNull();
-    assertThat(elements.get(1).getServiceTemplateElement()).isNotNull();
-    assertThat(elements.get(2)).isNotNull();
-    assertThat(elements.get(2).getUuid()).isEqualTo(instance3.getUuid());
-    assertThat(elements.get(2).getHostElement()).isNotNull();
-    assertThat(elements.get(2).getServiceTemplateElement()).isNotNull();
+    assertThat(elements).isNotNull().hasSize(3).doesNotContainNull().extracting("uuid").contains(
+        instance1.getUuid(), instance2.getUuid(), instance3.getUuid());
+    assertThat(elements)
+        .extracting("hostElement")
+        .doesNotContainNull()
+        .extracting("uuid")
+        .contains(instance1.getHost().getUuid(), instance2.getHost().getUuid(), instance3.getHost().getUuid());
+    assertThat(elements)
+        .extracting("serviceTemplateElement")
+        .doesNotContainNull()
+        .extracting("uuid")
+        .contains(instance1.getServiceTemplate().getUuid(), instance2.getServiceTemplate().getUuid(),
+            instance3.getServiceTemplate().getUuid());
   }
 
   /**
