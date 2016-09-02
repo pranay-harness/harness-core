@@ -61,7 +61,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
-    if (publicAPI() || requestContext.getMethod().equals(OPTIONS)) {
+    if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
     String tokenString = extractToken(requestContext);
@@ -84,6 +84,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes();
     authService.authorize(appId, envId, user, requiredPermissionAttributes,
         (PageRequestType) requestContext.getProperty("pageRequestType"));
+  }
+
+  private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
+    return publicAPI() || requestContext.getMethod().equals(OPTIONS)
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
+        || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith(".well-known");
   }
 
   private String getRequestParamFromContext(
