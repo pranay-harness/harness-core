@@ -805,7 +805,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes()).hasSize(6).doesNotContainNull();
     assertThat(graph.getNodes())
         .extracting("name")
-        .containsExactly("RepeatByInstances", null, "host2:TEMPLATE_NAME", "email", "host1:TEMPLATE_NAME", "email");
+        .containsExactly("RepeatByInstances", null, "host1:TEMPLATE_NAME", "email", "host2:TEMPLATE_NAME", "email");
     assertThat(graph.getNodes())
         .extracting("type")
         .containsExactly("REPEAT", "GROUP", "ELEMENT", "EMAIL", "ELEMENT", "EMAIL");
@@ -938,7 +938,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes()).hasSize(6).doesNotContainNull();
     assertThat(graph.getNodes())
         .extracting("name")
-        .containsExactly("RepeatByInstances", null, "host2:TEMPLATE_NAME", "STOP", "host1:TEMPLATE_NAME", "STOP");
+        .containsExactly("RepeatByInstances", null, "host1:TEMPLATE_NAME", "STOP", "host2:TEMPLATE_NAME", "STOP");
     assertThat(graph.getNodes())
         .extracting("type")
         .containsExactly("REPEAT", "GROUP", "ELEMENT", "COMMAND", "ELEMENT", "COMMAND");

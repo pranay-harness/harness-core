@@ -63,24 +63,20 @@ public class ServiceExpressionProcessorTest {
     processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.matchingServices(services, "A1234", "B1234");
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(2);
-    assertThat(matchingServices.get(0)).isNotNull();
-    assertThat(matchingServices.get(0).getName()).isNotNull();
-    assertThat(matchingServices.get(1)).isNotNull();
-    assertThat(matchingServices.get(1).getName()).isNotNull();
-    assertThat(matchingServices.get(0).getName()).isIn("A1234", "B1234");
-    assertThat(matchingServices.get(1).getName()).isIn("A1234", "B1234");
+    assertThat(matchingServices)
+        .isNotNull()
+        .hasSize(2)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly("A1234", "B1234");
 
     matchingServices = processor.matchingServices(services, "B*4", "C1234");
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(2);
-    assertThat(matchingServices.get(0)).isNotNull();
-    assertThat(matchingServices.get(0).getName()).isNotNull();
-    assertThat(matchingServices.get(1)).isNotNull();
-    assertThat(matchingServices.get(1).getName()).isNotNull();
-    assertThat(matchingServices.get(0).getName()).isIn("B1234", "C1234");
-    assertThat(matchingServices.get(1).getName()).isIn("B1234", "C1234");
+    assertThat(matchingServices)
+        .isNotNull()
+        .hasSize(2)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly("B1234", "C1234");
   }
 
   /**
@@ -106,11 +102,12 @@ public class ServiceExpressionProcessorTest {
     processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.list();
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(3);
-    assertThat(matchingServices.get(0).getName()).isEqualTo("A1234");
-    assertThat(matchingServices.get(1).getName()).isEqualTo("B1234");
-    assertThat(matchingServices.get(2).getName()).isEqualTo("C1234");
+    assertThat(matchingServices)
+        .isNotNull()
+        .hasSize(3)
+        .doesNotContainNull()
+        .extracting("name")
+        .contains("A1234", "B1234", "C1234");
   }
 
   /**
@@ -133,9 +130,7 @@ public class ServiceExpressionProcessorTest {
     processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.list();
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(1);
-    assertThat(matchingServices.get(0).getName()).isEqualTo("C1234");
+    assertThat(matchingServices).isNotNull().hasSize(1).doesNotContainNull().extracting("name").contains("C1234");
   }
 
   /**
@@ -158,10 +153,12 @@ public class ServiceExpressionProcessorTest {
     processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(2);
-    assertThat(matchingServices.get(0).getName()).isEqualTo("B1234");
-    assertThat(matchingServices.get(1).getName()).isEqualTo("C1234");
+    assertThat(matchingServices)
+        .isNotNull()
+        .hasSize(2)
+        .doesNotContainNull()
+        .extracting("name")
+        .containsExactly("B1234", "C1234");
   }
 
   /**
@@ -178,10 +175,12 @@ public class ServiceExpressionProcessorTest {
 
     ServiceExpressionProcessor processor = new ServiceExpressionProcessor(context);
     List<ServiceElement> matchingServices = processor.withNames("B1234", "C12*").list();
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(2);
-    assertThat(matchingServices.get(0).getName()).isEqualTo("B1234");
-    assertThat(matchingServices.get(1).getName()).isEqualTo("C1234");
+    assertThat(matchingServices)
+        .isNotNull()
+        .hasSize(2)
+        .doesNotContainNull()
+        .extracting("name")
+        .contains("B1234", "C1234");
   }
 
   /**
@@ -209,8 +208,6 @@ public class ServiceExpressionProcessorTest {
     processor.setServiceResourceService(serviceResourceService);
 
     List<ServiceElement> matchingServices = processor.withNames("A*").list();
-    assertThat(matchingServices).isNotNull();
-    assertThat(matchingServices.size()).isEqualTo(1);
-    assertThat(matchingServices.get(0).getName()).isEqualTo("A1234");
+    assertThat(matchingServices).isNotNull().hasSize(1).doesNotContainNull().extracting("name").contains("A1234");
   }
 }

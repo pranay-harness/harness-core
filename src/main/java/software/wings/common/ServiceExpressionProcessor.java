@@ -162,8 +162,8 @@ public class ServiceExpressionProcessor implements ExpressionProcessor {
     }
 
     List<ServiceElement> matchingServices = new ArrayList<>();
-    for (ServiceElement service : services) {
-      for (Pattern pattern : patterns) {
+    for (Pattern pattern : patterns) {
+      for (ServiceElement service : services) {
         Matcher matcher = pattern.matcher(service.getName());
         if (matcher.matches()) {
           matchingServices.add(service);
