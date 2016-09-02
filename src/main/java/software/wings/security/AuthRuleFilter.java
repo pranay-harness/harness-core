@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static software.wings.beans.ErrorCodes.INVALID_TOKEN;
 import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_APP_ID;
@@ -7,7 +8,6 @@ import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 import static software.wings.dl.PageRequest.PageRequestType.OTHER;
 
 import software.wings.beans.AuthToken;
-import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.PageRequest.PageRequestType;
@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 import javax.annotation.Priority;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.ws.rs.OPTIONS;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -62,7 +61,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
-    if (publicAPI() || requestContext.getMethod().equals(HttpMethod.OPTIONS)) {
+    if (publicAPI() || requestContext.getMethod().equals(OPTIONS)) {
       return; // do nothing
     }
     String tokenString = extractToken(requestContext);
