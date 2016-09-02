@@ -16,7 +16,6 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 
@@ -66,6 +65,10 @@ public class ActivityResource {
   @GET
   public RestResponse<PageResponse<Activity>> list(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
+    if (!Strings.isNullOrEmpty(appId)) {
+      request.addFilter("appId", appId, EQ);
+    }
+
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
     }
