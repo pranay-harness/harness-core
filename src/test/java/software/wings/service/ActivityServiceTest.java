@@ -13,6 +13,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitCommandUnit.INITIALIZE_UNIT;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -36,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.Activity.Builder;
 import software.wings.beans.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -50,25 +52,24 @@ import java.util.List;
  * Created by peeyushaggarwal on 5/27/16.
  */
 public class ActivityServiceTest extends WingsBaseTest {
-  private static final Activity activity = anActivity()
-                                               .withEnvironmentId(ENV_ID)
-                                               .withEnvironmentName(ENV_NAME)
-                                               .withEnvironmentType(PROD)
-                                               .withAppId(APP_ID)
-                                               .withApplicationName(APP_NAME)
-                                               .withArtifactId(ARTIFACT_ID)
-                                               .withArtifactName(ARTIFACT_NAME)
-                                               .withCommandName(COMMAND_NAME)
-                                               .withCommandType(EXEC.name())
-                                               .withHostName(HOST_NAME)
-                                               .withReleaseName(RELEASE_NAME)
-                                               .withServiceName(SERVICE_NAME)
-                                               .withServiceId(SERVICE_ID)
-                                               .withServiceTemplateName(TEMPLATE_NAME)
-                                               .withServiceTemplateId(TEMPLATE_ID)
-                                               .withStatus(RUNNING)
-                                               .withServiceInstanceId(SERVICE_INSTANCE_ID)
-                                               .build();
+  private static final Builder builder = anActivity()
+                                             .withEnvironmentId(ENV_ID)
+                                             .withEnvironmentName(ENV_NAME)
+                                             .withEnvironmentType(PROD)
+                                             .withAppId(APP_ID)
+                                             .withApplicationName(APP_NAME)
+                                             .withArtifactId(ARTIFACT_ID)
+                                             .withArtifactName(ARTIFACT_NAME)
+                                             .withCommandName(COMMAND_NAME)
+                                             .withCommandType(EXEC.name())
+                                             .withHostName(HOST_NAME)
+                                             .withReleaseName(RELEASE_NAME)
+                                             .withServiceName(SERVICE_NAME)
+                                             .withServiceId(SERVICE_ID)
+                                             .withServiceTemplateName(TEMPLATE_NAME)
+                                             .withServiceTemplateId(TEMPLATE_ID)
+                                             .withStatus(RUNNING)
+                                             .withServiceInstanceId(SERVICE_INSTANCE_ID);
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -81,6 +82,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldListActivities() {
+    Activity activity = builder.but().build();
     wingsPersistence.save(activity);
     assertThat(activityService.list(new PageRequest<>())).hasSize(1).containsExactly(activity);
   }
@@ -90,6 +92,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetActivity() {
+    Activity activity = builder.but().build();
     wingsPersistence.save(activity);
     assertThat(activityService.get(activity.getUuid(), activity.getAppId())).isEqualTo(activity);
   }
@@ -99,6 +102,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveActivity() {
+    Activity activity = builder.but().build();
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
   }
@@ -108,6 +112,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetActivityCommandUnits() {
+    Activity activity = builder.but().build();
     String activityId = wingsPersistence.save(activity);
     Command command =
         aCommand()
@@ -128,6 +133,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetLastActivityForService() {
+    Activity activity = builder.but().build();
     wingsPersistence.save(activity);
     Activity activityForService = activityService.getLastActivityForService(APP_ID, SERVICE_ID);
     assertThat(activityForService).isEqualTo(activity);
@@ -138,6 +144,7 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetLastProductionActivityForService() {
+    Activity activity = builder.but().build();
     activity.setEnvironmentType(PROD);
     wingsPersistence.save(activity);
     Activity lastProductionActivityForService = activityService.getLastProductionActivityForService(APP_ID, SERVICE_ID);
@@ -150,9 +157,9 @@ public class ActivityServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetRecentArtifactsForInstance() {
     wingsPersistence.save(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
-    wingsPersistence.save(activity);
-    activity.setUuid("ACTIVITY_ID_2");
-    wingsPersistence.save(activity);
+    wingsPersistence.save(builder.but().withUuid(ACTIVITY_ID).build());
+    wingsPersistence.save(builder.but().withUuid("ACTIVITY_ID_2").build());
+
     List<Artifact> recentArtifactsForInstance =
         activityService.getRecentArtifactsForInstance(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     assertThat(recentArtifactsForInstance.size()).isEqualTo(2);
@@ -164,13 +171,12 @@ public class ActivityServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetRecentActivitiesForInstance() {
-    String activityId = wingsPersistence.save(activity);
-    activity.setUuid("ACTIVITY_ID_2");
-    wingsPersistence.save(activity);
+    wingsPersistence.save(builder.but().withUuid(ACTIVITY_ID).build());
+    wingsPersistence.save(builder.but().withUuid("ACTIVITY_ID_2").build());
     List<Activity> recentActivitiesForInstance =
         activityService.getRecentActivitiesForInstance(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     assertThat(recentActivitiesForInstance.size()).isEqualTo(2);
     assertThat(recentActivitiesForInstance.stream().map(Activity::getUuid).collect(toList()))
-        .containsExactlyInAnyOrder(activityId, "ACTIVITY_ID_2");
+        .containsExactlyInAnyOrder(ACTIVITY_ID, "ACTIVITY_ID_2");
   }
 }
