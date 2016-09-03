@@ -229,11 +229,11 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
 
   @Override
   public List<Artifact> getRecentArtifacts(String appId, String envId, String serviceInstanceId) {
-    return activityService.getRecentArtifactsForInstanceId(appId, envId, serviceInstanceId);
+    return activityService.getRecentArtifactsForInstance(appId, envId, serviceInstanceId);
   }
 
   @Override
   public List<Activity> getRecentActivities(String appId, String envId, String serviceInstanceId) {
-    return activityService.recentActivitiesForInstance(appId, envId, serviceInstanceId);
+    return activityService.getRecentActivitiesForInstance(appId, envId, serviceInstanceId);
   }
 }

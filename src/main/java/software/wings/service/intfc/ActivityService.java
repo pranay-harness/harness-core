@@ -84,7 +84,7 @@ public interface ActivityService {
    * @param serviceInstanceId the service instance id
    * @return the recent artifacts for instance id
    */
-  List<Artifact> getRecentArtifactsForInstanceId(String appId, String envId, String serviceInstanceId);
+  List<Artifact> getRecentArtifactsForInstance(String appId, String envId, String serviceInstanceId);
 
   /**
    * Recent activities for instance list.
@@ -94,5 +94,5 @@ public interface ActivityService {
    * @param serviceInstanceId the service instance id
    * @return the list
    */
-  List<Activity> recentActivitiesForInstance(String appId, String envId, String serviceInstanceId);
+  List<Activity> getRecentActivitiesForInstance(String appId, String envId, String serviceInstanceId);
 }

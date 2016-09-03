@@ -145,7 +145,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<Artifact> getRecentArtifactsForInstanceId(String appId, String envId, String serviceInstanceId) {
+  public List<Artifact> getRecentArtifactsForInstance(String appId, String envId, String serviceInstanceId) {
     PageRequest pageRequest = aPageRequest()
                                   .addFilter("appId", Operator.EQ, appId)
                                   .addFilter("environmentId", Operator.EQ, envId)
@@ -161,7 +161,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<Activity> recentActivitiesForInstance(String appId, String envId, String serviceInstanceId) {
+  public List<Activity> getRecentActivitiesForInstance(String appId, String envId, String serviceInstanceId) {
     PageRequest pageRequest = aPageRequest()
                                   .addFilter("appId", Operator.EQ, appId)
                                   .addFilter("environmentId", Operator.EQ, envId)
