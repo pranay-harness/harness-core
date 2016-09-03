@@ -1698,6 +1698,17 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
       execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
 
+    List<Node> pendingWait1List = execution.getGraph()
+                                      .getNodes()
+                                      .stream()
+                                      .filter(n -> "wait1".equals(n.getName()) && !"SUCCESS".equals(n.getStatus()))
+                                      .collect(Collectors.toList());
+
+    if (pendingWait1List != null && !pendingWait1List.isEmpty()) {
+      logger.warn("Some wait1 nodes not finished");
+      Thread.sleep(1000);
+    }
+
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
     graph = execution.getGraph();
     assertThat(graph.getNodes().get(0))
