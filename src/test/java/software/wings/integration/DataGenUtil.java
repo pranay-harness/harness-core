@@ -14,7 +14,6 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
 import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
@@ -29,15 +28,15 @@ import static software.wings.beans.JenkinsConfig.Builder.aJenkinsConfig;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Permission.Builder.aPermission;
-import static software.wings.security.PermissionAttribute.PermissionScope.APP;
-import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Role.Builder.aRole;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
 import static software.wings.beans.User.Builder.anUser;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.helpers.ext.mail.SmtpConfig.Builder.aSmtpConfig;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
@@ -46,7 +45,10 @@ import static software.wings.integration.SeedData.randomSeedString;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.security.PermissionAttribute.Action.ALL;
 import static software.wings.security.PermissionAttribute.Action.READ;
+import static software.wings.security.PermissionAttribute.PermissionScope.APP;
+import static software.wings.security.PermissionAttribute.PermissionScope.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.ANY;
+import static software.wings.utils.ArtifactType.WAR;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -85,6 +87,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -322,7 +325,19 @@ private void addAdminUser() {
   String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
   WebTarget target = client.target(API_BASE + "/users/");
   RestResponse<User> response = target.request().post(
-      Entity.entity(anUser().withName("Admin").withEmail(userName).withPassword(password).build(), APPLICATION_JSON),
+      Entity.entity(
+          anUser()
+              .withName("Admin")
+              .withEmail(userName)
+              .withPassword(password)
+              .withRoles(wingsPersistence
+                             .query(Role.class,
+                                 aPageRequest()
+                                     .addFilter(aSearchFilter().withField("adminRole", Operator.EQ, true).build())
+                                     .build())
+                             .getResponse())
+              .build(),
+          APPLICATION_JSON),
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
