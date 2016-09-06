@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "activities", noClassnameStored = true)
 public class Activity extends Base {
+  private Type type;
   @NotEmpty private String applicationName;
   @NotEmpty private String environmentId;
   @NotEmpty private String environmentName;
@@ -26,8 +27,14 @@ public class Activity extends Base {
   @NotEmpty private String serviceTemplateName;
   @NotEmpty private String hostName;
   private String serviceInstanceId;
+  @NotEmpty private String workflowExecutionId;
+  @NotEmpty private String workflowExecutionName;
+  @NotEmpty private String stateExecutionInstanceId;
+  @NotEmpty private String stateExecutionInstanceName;
+
   private String releaseId;
   private String releaseName;
+  private boolean isPipeline;
   private String artifactId;
   private String artifactName;
   private Status status = Status.RUNNING;
@@ -320,12 +327,121 @@ public class Activity extends Base {
     this.artifactId = artifactId;
   }
 
+  /**
+   * Getter for property 'type'.
+   *
+   * @return Value for property 'type'.
+   */
+  public Type getType() {
+    return type;
+  }
+
+  /**
+   * Setter for property 'type'.
+   *
+   * @param type Value to set for property 'type'.
+   */
+  public void setType(Type type) {
+    this.type = type;
+  }
+
+  /**
+   * Getter for property 'workflowExecutionId'.
+   *
+   * @return Value for property 'workflowExecutionId'.
+   */
+  public String getWorkflowExecutionId() {
+    return workflowExecutionId;
+  }
+
+  /**
+   * Setter for property 'workflowExecutionId'.
+   *
+   * @param workflowExecutionId Value to set for property 'workflowExecutionId'.
+   */
+  public void setWorkflowExecutionId(String workflowExecutionId) {
+    this.workflowExecutionId = workflowExecutionId;
+  }
+
+  /**
+   * Getter for property 'workflowExecutionName'.
+   *
+   * @return Value for property 'workflowExecutionName'.
+   */
+  public String getWorkflowExecutionName() {
+    return workflowExecutionName;
+  }
+
+  /**
+   * Setter for property 'workflowExecutionName'.
+   *
+   * @param workflowExecutionName Value to set for property 'workflowExecutionName'.
+   */
+  public void setWorkflowExecutionName(String workflowExecutionName) {
+    this.workflowExecutionName = workflowExecutionName;
+  }
+
+  /**
+   * Getter for property 'stateExecutionInstanceId'.
+   *
+   * @return Value for property 'stateExecutionInstanceId'.
+   */
+  public String getStateExecutionInstanceId() {
+    return stateExecutionInstanceId;
+  }
+
+  /**
+   * Setter for property 'stateExecutionInstanceId'.
+   *
+   * @param stateExecutionInstanceId Value to set for property 'stateExecutionInstanceId'.
+   */
+  public void setStateExecutionInstanceId(String stateExecutionInstanceId) {
+    this.stateExecutionInstanceId = stateExecutionInstanceId;
+  }
+
+  /**
+   * Getter for property 'stateExecutionInstanceName'.
+   *
+   * @return Value for property 'stateExecutionInstanceName'.
+   */
+  public String getStateExecutionInstanceName() {
+    return stateExecutionInstanceName;
+  }
+
+  /**
+   * Setter for property 'stateExecutionInstanceName'.
+   *
+   * @param stateExecutionInstanceName Value to set for property 'stateExecutionInstanceName'.
+   */
+  public void setStateExecutionInstanceName(String stateExecutionInstanceName) {
+    this.stateExecutionInstanceName = stateExecutionInstanceName;
+  }
+
+  /**
+   * Getter for property 'pipeline'.
+   *
+   * @return Value for property 'pipeline'.
+   */
+  public boolean isPipeline() {
+    return isPipeline;
+  }
+
+  /**
+   * Setter for property 'pipeline'.
+   *
+   * @param pipeline Value to set for property 'pipeline'.
+   */
+  public void setPipeline(boolean pipeline) {
+    isPipeline = pipeline;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(applicationName, environmentId, environmentName, environmentType, commandName, commandType,
-              serviceId, serviceName, serviceTemplateId, serviceTemplateName, hostName, releaseId, releaseName,
-              artifactId, artifactName, status);
+        + Objects.hash(type, applicationName, environmentId, environmentName, environmentType, commandName, commandType,
+              serviceId, serviceName, serviceTemplateId, serviceTemplateName, hostName, serviceInstanceId,
+              workflowExecutionId, workflowExecutionName, stateExecutionInstanceId, stateExecutionInstanceName,
+              releaseId, releaseName, isPipeline, artifactId, artifactName, status);
   }
 
   @Override
@@ -340,7 +456,7 @@ public class Activity extends Base {
       return false;
     }
     final Activity other = (Activity) obj;
-    return Objects.equals(this.applicationName, other.applicationName)
+    return Objects.equals(this.type, other.type) && Objects.equals(this.applicationName, other.applicationName)
         && Objects.equals(this.environmentId, other.environmentId)
         && Objects.equals(this.environmentName, other.environmentName)
         && Objects.equals(this.environmentType, other.environmentType)
@@ -348,14 +464,21 @@ public class Activity extends Base {
         && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
         && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
         && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
-        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.releaseId, other.releaseId)
-        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactId, other.artifactId)
+        && Objects.equals(this.hostName, other.hostName)
+        && Objects.equals(this.serviceInstanceId, other.serviceInstanceId)
+        && Objects.equals(this.workflowExecutionId, other.workflowExecutionId)
+        && Objects.equals(this.workflowExecutionName, other.workflowExecutionName)
+        && Objects.equals(this.stateExecutionInstanceId, other.stateExecutionInstanceId)
+        && Objects.equals(this.stateExecutionInstanceName, other.stateExecutionInstanceName)
+        && Objects.equals(this.releaseId, other.releaseId) && Objects.equals(this.releaseName, other.releaseName)
+        && Objects.equals(this.isPipeline, other.isPipeline) && Objects.equals(this.artifactId, other.artifactId)
         && Objects.equals(this.artifactName, other.artifactName) && Objects.equals(this.status, other.status);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
+        .add("type", type)
         .add("applicationName", applicationName)
         .add("environmentId", environmentId)
         .add("environmentName", environmentName)
@@ -367,11 +490,18 @@ public class Activity extends Base {
         .add("serviceTemplateId", serviceTemplateId)
         .add("serviceTemplateName", serviceTemplateName)
         .add("hostName", hostName)
+        .add("serviceInstanceId", serviceInstanceId)
+        .add("workflowExecutionId", workflowExecutionId)
+        .add("workflowExecutionName", workflowExecutionName)
+        .add("stateExecutionInstanceId", stateExecutionInstanceId)
+        .add("stateExecutionInstanceName", stateExecutionInstanceName)
         .add("releaseId", releaseId)
         .add("releaseName", releaseName)
+        .add("isPipeline", isPipeline)
         .add("artifactId", artifactId)
         .add("artifactName", artifactName)
         .add("status", status)
+        .add("pipeline", isPipeline())
         .toString();
   }
 
@@ -402,10 +532,10 @@ public class Activity extends Base {
     FAILED
   }
 
-  /**
-   * The type Builder.
-   */
+  public enum Type { Command, Verification }
+
   public static final class Builder {
+    private Type type;
     private String applicationName;
     private String environmentId;
     private String environmentName;
@@ -418,6 +548,10 @@ public class Activity extends Base {
     private String serviceTemplateName;
     private String hostName;
     private String serviceInstanceId;
+    private String workflowExecutionId;
+    private String workflowExecutionName;
+    private String stateExecutionInstanceId;
+    private String stateExecutionInstanceName;
     private String releaseId;
     private String releaseName;
     private String artifactId;
@@ -435,6 +569,11 @@ public class Activity extends Base {
 
     public static Builder anActivity() {
       return new Builder();
+    }
+
+    public Builder withType(Type type) {
+      this.type = type;
+      return this;
     }
 
     public Builder withApplicationName(String applicationName) {
@@ -494,6 +633,26 @@ public class Activity extends Base {
 
     public Builder withServiceInstanceId(String serviceInstanceId) {
       this.serviceInstanceId = serviceInstanceId;
+      return this;
+    }
+
+    public Builder withWorkflowExecutionId(String workflowExecutionId) {
+      this.workflowExecutionId = workflowExecutionId;
+      return this;
+    }
+
+    public Builder withWorkflowExecutionName(String workflowExecutionName) {
+      this.workflowExecutionName = workflowExecutionName;
+      return this;
+    }
+
+    public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
+      this.stateExecutionInstanceId = stateExecutionInstanceId;
+      return this;
+    }
+
+    public Builder withStateExecutionInstanceName(String stateExecutionInstanceName) {
+      this.stateExecutionInstanceName = stateExecutionInstanceName;
       return this;
     }
 
@@ -559,6 +718,7 @@ public class Activity extends Base {
 
     public Builder but() {
       return anActivity()
+          .withType(type)
           .withApplicationName(applicationName)
           .withEnvironmentId(environmentId)
           .withEnvironmentName(environmentName)
@@ -571,6 +731,10 @@ public class Activity extends Base {
           .withServiceTemplateName(serviceTemplateName)
           .withHostName(hostName)
           .withServiceInstanceId(serviceInstanceId)
+          .withWorkflowExecutionId(workflowExecutionId)
+          .withWorkflowExecutionName(workflowExecutionName)
+          .withStateExecutionInstanceId(stateExecutionInstanceId)
+          .withStateExecutionInstanceName(stateExecutionInstanceName)
           .withReleaseId(releaseId)
           .withReleaseName(releaseName)
           .withArtifactId(artifactId)
@@ -587,6 +751,7 @@ public class Activity extends Base {
 
     public Activity build() {
       Activity activity = new Activity();
+      activity.setType(type);
       activity.setApplicationName(applicationName);
       activity.setEnvironmentId(environmentId);
       activity.setEnvironmentName(environmentName);
@@ -599,6 +764,10 @@ public class Activity extends Base {
       activity.setServiceTemplateName(serviceTemplateName);
       activity.setHostName(hostName);
       activity.setServiceInstanceId(serviceInstanceId);
+      activity.setWorkflowExecutionId(workflowExecutionId);
+      activity.setWorkflowExecutionName(workflowExecutionName);
+      activity.setStateExecutionInstanceId(stateExecutionInstanceId);
+      activity.setStateExecutionInstanceName(stateExecutionInstanceName);
       activity.setReleaseId(releaseId);
       activity.setReleaseName(releaseName);
       activity.setArtifactId(artifactId);

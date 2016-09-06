@@ -61,8 +61,8 @@ public class StateMachineExecutor {
    * @param executionUuid the execution uuid
    * @return the state execution instance
    */
-  public StateExecutionInstance execute(String appId, String smId, String executionUuid) {
-    return execute(appId, smId, executionUuid, null);
+  public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName) {
+    return execute(appId, smId, executionUuid, executionName, null);
   }
 
   /**
@@ -75,8 +75,9 @@ public class StateMachineExecutor {
    * @return the state execution instance
    */
   public StateExecutionInstance execute(
-      String appId, String smId, String executionUuid, List<ContextElement> contextParams) {
-    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, null);
+      String appId, String smId, String executionUuid, String executionName, List<ContextElement> contextParams) {
+    return execute(
+        wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams, null);
   }
 
   /**
@@ -89,9 +90,10 @@ public class StateMachineExecutor {
    * @param callback      the callback
    * @return the state execution instance
    */
-  public StateExecutionInstance execute(String appId, String smId, String executionUuid,
+  public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, contextParams, callback);
+    return execute(
+        wingsPersistence.get(StateMachine.class, appId, smId), executionUuid, executionName, contextParams, callback);
   }
 
   /**
@@ -103,8 +105,8 @@ public class StateMachineExecutor {
    * @param callback      the callback
    * @return the state execution instance
    */
-  public StateExecutionInstance execute(StateMachine sm, String executionUuid, List<ContextElement> contextParams,
-      StateMachineExecutionCallback callback) {
+  public StateExecutionInstance execute(StateMachine sm, String executionUuid, String executionName,
+      List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
     if (sm == null) {
       logger.error("StateMachine passed for execution is null");
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT);
@@ -113,6 +115,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(sm.getAppId());
     stateExecutionInstance.setStateMachineId(sm.getUuid());
+    stateExecutionInstance.setExecutionName(executionName);
     stateExecutionInstance.setExecutionUuid(executionUuid);
 
     WingsDeque<ContextElement> contextElements = new WingsDeque<>();

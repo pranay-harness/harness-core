@@ -102,4 +102,10 @@ public interface ExecutionContext {
    * @return the workflow execution id
    */
   String getWorkflowExecutionId();
+
+  String getWorkflowExecutionName();
+
+  String getStateExecutionInstanceId();
+
+  String getStateExecutionInstanceName();
 }

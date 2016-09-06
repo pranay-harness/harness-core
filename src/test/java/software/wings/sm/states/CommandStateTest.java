@@ -213,7 +213,11 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(2)).getWorkflowExecutionId();
+    verify(context, times(3)).getWorkflowExecutionId();
+    verify(context, times(1)).getWorkflowExecutionName();
+    verify(context, times(1)).getStateExecutionInstanceId();
+    verify(context, times(1)).getStateExecutionInstanceName();
+
     verify(context, times(4)).renderExpression(anyString());
 
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
@@ -292,8 +296,11 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
     verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(2)).getWorkflowExecutionId();
+    verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(4)).renderExpression(anyString());
+    verify(context, times(1)).getWorkflowExecutionName();
+    verify(context, times(1)).getStateExecutionInstanceId();
+    verify(context, times(1)).getStateExecutionInstanceName();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verify(activityService).get(ACTIVITY_ID, APP_ID);

@@ -28,6 +28,8 @@ public class StateExecutionInstance extends Base {
 
   private StateMachineExecutionCallback callback;
 
+  private String executionName;
+
   @Indexed private String executionUuid;
 
   @Indexed private String parentInstanceId;
@@ -357,6 +359,24 @@ public class StateExecutionInstance extends Base {
    */
   public void setContextTransition(boolean contextTransition) {
     this.contextTransition = contextTransition;
+  }
+
+  /**
+   * Getter for property 'executionName'.
+   *
+   * @return Value for property 'executionName'.
+   */
+  public String getExecutionName() {
+    return executionName;
+  }
+
+  /**
+   * Setter for property 'executionName'.
+   *
+   * @param executionName Value to set for property 'executionName'.
+   */
+  public void setExecutionName(String executionName) {
+    this.executionName = executionName;
   }
 
   @Override

@@ -69,6 +69,10 @@ public class ActivityServiceTest extends WingsBaseTest {
                                              .withServiceTemplateName(TEMPLATE_NAME)
                                              .withServiceTemplateId(TEMPLATE_ID)
                                              .withStatus(RUNNING)
+                                             .withWorkflowExecutionId("WORKFLOW_ID")
+                                             .withWorkflowExecutionName("Workflow 1")
+                                             .withStateExecutionInstanceId("STATE_ID")
+                                             .withStateExecutionInstanceName("STATE")
                                              .withServiceInstanceId(SERVICE_INSTANCE_ID);
 
   @Inject private WingsPersistence wingsPersistence;

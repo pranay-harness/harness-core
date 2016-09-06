@@ -177,8 +177,8 @@ public class WorkflowServiceImpl implements WorkflowService {
    * {@inheritDoc}
    */
   @Override
-  public void trigger(String appId, String stateMachineId, String executionUuid) {
-    trigger(appId, stateMachineId, executionUuid, null);
+  public void trigger(String appId, String stateMachineId, String executionUuid, String executionName) {
+    trigger(appId, stateMachineId, executionUuid, executionName, null);
   }
 
   /**
@@ -189,8 +189,9 @@ public class WorkflowServiceImpl implements WorkflowService {
    * @param executionUuid  the execution uuid
    * @param callback       the callback
    */
-  void trigger(String appId, String stateMachineId, String executionUuid, StateMachineExecutionCallback callback) {
-    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, null, callback);
+  void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
+      StateMachineExecutionCallback callback) {
+    stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
   }
 
   /**
@@ -869,6 +870,8 @@ public class WorkflowServiceImpl implements WorkflowService {
     String workflowExecutionId = wingsPersistence.save(workflowExecution);
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
+    stateExecutionInstance.setExecutionName(workflowExecution.getName());
+
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();

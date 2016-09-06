@@ -144,7 +144,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -206,7 +206,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -270,7 +270,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -339,7 +339,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
@@ -403,7 +403,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -466,7 +466,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -526,7 +526,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -623,7 +623,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
   }
 
@@ -680,12 +680,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
     String executionUuid = UUIDGenerator.getUuid();
-    workflowService.trigger(appId, sm.getUuid(), executionUuid);
+    workflowService.trigger(appId, sm.getUuid(), executionUuid, executionUuid);
 
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, callback);
+    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
   }
 

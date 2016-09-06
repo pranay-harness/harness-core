@@ -28,6 +28,7 @@ import software.wings.api.InstanceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Status;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.EntityType;
@@ -221,9 +222,14 @@ public class CommandState extends State {
                                              .withServiceId(service.getUuid())
                                              .withServiceName(service.getName())
                                              .withCommandName(command.getName())
+                                             .withType(Type.Command)
+                                             .withServiceInstanceId(serviceInstance.getUuid())
+                                             .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                                             .withWorkflowExecutionName(context.getWorkflowExecutionName())
+                                             .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+                                             .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
                                              .withCommandType(command.getCommandUnitType().name())
-                                             .withHostName(serviceInstance.getHost().getHostName())
-                                             .withServiceInstanceId(serviceInstance.getUuid());
+                                             .withHostName(serviceInstance.getHost().getHostName());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");

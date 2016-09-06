@@ -298,4 +298,19 @@ public class ExecutionContextImpl implements ExecutionContext {
   public String getWorkflowExecutionId() {
     return stateExecutionInstance.getExecutionUuid();
   }
+
+  @Override
+  public String getWorkflowExecutionName() {
+    return stateExecutionInstance.getExecutionName();
+  }
+
+  @Override
+  public String getStateExecutionInstanceId() {
+    return stateExecutionInstance.getUuid();
+  }
+
+  @Override
+  public String getStateExecutionInstanceName() {
+    return stateExecutionInstance.getStateName();
+  }
 }

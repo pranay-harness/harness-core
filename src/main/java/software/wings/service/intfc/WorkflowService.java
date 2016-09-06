@@ -113,7 +113,8 @@ public interface WorkflowService {
    * @param stateMachineId the state machine id
    * @param executionUuid  the execution uuid
    */
-  void trigger(@NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid);
+  void trigger(
+      @NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid, String executionName);
 
   /**
    * Stencils.
