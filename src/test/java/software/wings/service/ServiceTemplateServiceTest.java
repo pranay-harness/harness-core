@@ -205,6 +205,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteServiceTemplate() {
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     templateService.delete(APP_ID, ENV_ID, TEMPLATE_ID);
     verify(wingsPersistence).delete(query);
     verify(query).field("appId");
