@@ -51,7 +51,8 @@ public class StateMachineExecutionEventManager {
       }
 
       if (executionEvent.getExecutionEventType() == ExecutionEventType.RESUME
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR) {
         throw new WingsException(ErrorCodes.STATE_NOT_FOR_RESUME, "stateName", stateExecutionInstance.getStateName());
       }
 
@@ -65,7 +66,8 @@ public class StateMachineExecutionEventManager {
           && stateExecutionInstance.getStatus() != ExecutionStatus.NEW
           && stateExecutionInstance.getStatus() != ExecutionStatus.STARTING
           && stateExecutionInstance.getStatus() != ExecutionStatus.RUNNING
-          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED) {
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR) {
         throw new WingsException(ErrorCodes.STATE_NOT_FOR_ABORT, "stateName", stateExecutionInstance.getStateName());
       }
       if (executionEvent.getExecutionEventType() == ExecutionEventType.PAUSE

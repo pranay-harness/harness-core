@@ -16,9 +16,9 @@ public enum ErrorStrategy {
   CONTINUE("Continue"), /**
                          * Abort error strategy.
                          */
-  ABORT("Abort"), /**
-                   * Pause error strategy.
-                   */
+  FAIL("Fail"), /**
+                 * Pause error strategy.
+                 */
   PAUSE("Pause"), /**
                    * Retry error strategy.
                    */

@@ -142,7 +142,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final String API_BASE = "https://localhost:9090/api";
 
   private static final String userName = "admin@wings.software";
-  private static final String password = "YAg@bp2wWB";
+  private static final String password = "admin";
 
   private static String userToken = "INVALID_TOKEN";
   private final Logger logger = LoggerFactory.getLogger(getClass());

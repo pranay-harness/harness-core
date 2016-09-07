@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.ErrorStrategy;
 import software.wings.beans.InstanceStatusSummary;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
@@ -346,13 +347,25 @@ public class StateMachineExecutor {
 
     State nextState = sm.getFailureTransition(stateExecutionInstance.getStateName());
     if (nextState == null) {
-      logger.info("nextFailureState is null.. ending execution  - currentState : "
-          + stateExecutionInstance.getStateName() + ", stateExecutionInstanceId: " + stateExecutionInstance.getUuid());
+      logger.info("nextFailureState is null.. for the currentState : {}, stateExecutionInstanceId: {}",
+          stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
 
-      logger.info("State Machine execution failed for the stateMachine: {}, executionUuid: {}", sm.getName(),
-          stateExecutionInstance.getExecutionUuid());
-
-      endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, exception);
+      ErrorStrategy errorStrategy = context.getErrorStrategy();
+      if (errorStrategy == null || errorStrategy == ErrorStrategy.FAIL) {
+        logger.info("Ending execution  - currentState : {}, stateExecutionInstanceId: {}",
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
+        endTransition(context, stateExecutionInstance, ExecutionStatus.FAILED, exception);
+      } else if (errorStrategy == ErrorStrategy.PAUSE) {
+        logger.info("Pausing execution  - currentState : {}, stateExecutionInstanceId: {}",
+            stateExecutionInstance.getStateName(), stateExecutionInstance.getUuid());
+        updateStatus(
+            stateExecutionInstance, ExecutionStatus.PAUSED_ON_ERROR, Lists.newArrayList(ExecutionStatus.FAILED));
+      } else {
+        // TODO: handle more strategy
+        logger.info("Unhandled error strategy for the state: {}, stateExecutionInstanceId: {}, errorStrategy: {}"
+                + stateExecutionInstance.getStateName(),
+            stateExecutionInstance.getUuid(), errorStrategy);
+      }
     } else {
       StateExecutionInstance cloned = clone(stateExecutionInstance, nextState);
       return triggerExecution(sm, cloned);
@@ -543,7 +556,7 @@ public class StateMachineExecutor {
 
     if (runningStatusLists == null || runningStatusLists.isEmpty()) {
       runningStatusLists = Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.STARTING, ExecutionStatus.RUNNING,
-          ExecutionStatus.PAUSED, ExecutionStatus.ABORTING);
+          ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR, ExecutionStatus.ABORTING);
     }
 
     Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -772,8 +785,8 @@ public class StateMachineExecutor {
             .field("executionUuid")
             .equal(workflowExecutionEvent.getExecutionUuid())
             .field("status")
-            .in(Lists.newArrayList(
-                ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING, ExecutionStatus.PAUSED))
+            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
+                ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR))
             .field("stateType")
             .notIn(Lists.newArrayList(StateType.REPEAT.name(), StateType.FORK.name()));
     UpdateResults updateResult = wingsPersistence.update(query, ops);

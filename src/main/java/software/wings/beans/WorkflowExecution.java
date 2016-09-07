@@ -30,7 +30,7 @@ public class WorkflowExecution extends Base {
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
 
-  private ErrorStrategy errorStrategy = ErrorStrategy.PAUSE;
+  private ErrorStrategy errorStrategy;
 
   private String name;
   private int total;
@@ -305,7 +305,7 @@ public class WorkflowExecution extends Base {
    * @return the boolean
    */
   public boolean isPausedStatus() {
-    return status != null && status == ExecutionStatus.PAUSED;
+    return status != null && (status == ExecutionStatus.PAUSED || status == ExecutionStatus.PAUSED_ON_ERROR);
   }
 
   /**

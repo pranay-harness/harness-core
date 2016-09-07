@@ -609,7 +609,7 @@ public class WorkflowServiceImpl implements WorkflowService {
             .field("status")
             .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
                 ExecutionStatus.ABORTING, ExecutionStatus.FAILED, ExecutionStatus.ERROR, ExecutionStatus.ABORTED,
-                ExecutionStatus.PAUSED));
+                ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR));
 
     List<StateExecutionInstance> childInstances = wingsPersistence.executeGetListQuery(query);
     List<String> parentInstanceIds = childInstances.stream()
@@ -639,11 +639,12 @@ public class WorkflowServiceImpl implements WorkflowService {
   }
 
   private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
-    PageRequest<StateExecutionInstance> req = aPageRequest()
-                                                  .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
-                                                  .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-                                                  .addFilter("status", Operator.EQ, ExecutionStatus.PAUSED)
-                                                  .build();
+    PageRequest<StateExecutionInstance> req =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+            .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+            .addFilter("status", Operator.IN, ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR)
+            .build();
     return wingsPersistence.get(StateExecutionInstance.class, req) != null;
   }
 
@@ -865,6 +866,7 @@ public class WorkflowServiceImpl implements WorkflowService {
         });
         stdParams.setServices(services);
       }
+      workflowExecution.setErrorStrategy(workflowExecution.getExecutionArgs().getErrorStrategy());
     }
 
     String workflowExecutionId = wingsPersistence.save(workflowExecution);

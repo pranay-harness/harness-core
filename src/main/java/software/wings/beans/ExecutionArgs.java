@@ -26,6 +26,7 @@ public class ExecutionArgs {
   @Transient private List<ServiceInstance> serviceInstances;
   private Map<String, String> serviceInstanceIdNames;
   @Transient private ExecutionCredential executionCredential;
+  private ErrorStrategy errorStrategy;
 
   /**
    * Gets service id.
@@ -223,5 +224,13 @@ public class ExecutionArgs {
    */
   public void setServiceInstanceIdNames(Map<String, String> serviceInstanceIdNames) {
     this.serviceInstanceIdNames = serviceInstanceIdNames;
+  }
+
+  public ErrorStrategy getErrorStrategy() {
+    return errorStrategy;
+  }
+
+  public void setErrorStrategy(ErrorStrategy errorStrategy) {
+    this.errorStrategy = errorStrategy;
   }
 }
