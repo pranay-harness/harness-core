@@ -224,4 +224,15 @@ public class ConfigServiceImpl implements ConfigService {
       configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
     }
   }
+
+  @Override
+  public void deleteByTemplateId(String appId, String serviceTemplateId) {
+    wingsPersistence.createQuery(ConfigFile.class)
+        .field("appId")
+        .equal(appId)
+        .field("templateId")
+        .equal(serviceTemplateId)
+        .asList()
+        .forEach(configFile -> delete(appId, configFile.getUuid()));
+  }
 }

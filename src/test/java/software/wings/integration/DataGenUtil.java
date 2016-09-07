@@ -136,7 +136,7 @@ import javax.ws.rs.core.Response;
 public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
-  private static final int NUM_SERVICES_PER_APP = 5; /* Max 1000 */
+  private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
   private static final int NUM_CONFIG_FILE_PER_SERVICE = 2; /* Max 100  */
   private static final int NUM_ENV_PER_APP = 0; /* Max 6. 4 are created by default */
   private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
@@ -145,7 +145,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final String API_BASE = "https://localhost:9090/api";
 
   private static final String userName = "admin@wings.software";
-  private static final String password = "admin";
+  private static final String password = "YAg@bp2wWB";
 
   private static String userToken = "INVALID_TOKEN";
   private final Logger logger = LoggerFactory.getLogger(getClass());

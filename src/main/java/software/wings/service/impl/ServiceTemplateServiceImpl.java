@@ -344,14 +344,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public void delete(String appId, String envId, String serviceTemplateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("envId")
-                                .equal(envId)
-                                .field(ID_KEY)
-                                .equal(serviceTemplateId));
-    executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
+                                                  .field("appId")
+                                                  .equal(appId)
+                                                  .field("envId")
+                                                  .equal(envId)
+                                                  .field(ID_KEY)
+                                                  .equal(serviceTemplateId));
+    if (deleted) {
+      executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+      configService.deleteByTemplateId(appId, serviceTemplateId);
+    }
   }
 
   @Override

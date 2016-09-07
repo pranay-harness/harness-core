@@ -186,7 +186,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public void deleteAllFilesForEntity(String entityId, FileBucket fileBucket) {
     getAllFileIds(entityId, fileBucket)
-        .forEach(s -> fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(entityId)));
+        .forEach(fileUuid -> fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileUuid)));
   }
 
   private void verifyFileIntegrity(BaseFile baseFile, GridFSFile gridFsFile) {
