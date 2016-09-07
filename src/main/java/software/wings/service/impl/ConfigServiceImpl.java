@@ -1,6 +1,8 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -21,6 +23,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
 
@@ -53,6 +56,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private TagService tagService;
   @Inject private HostService hostService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -70,17 +74,21 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
-    if (Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
-      configFile.setRelativeFilePath(
-          validateAndResolveFilePath(configFile.getRelativeFilePath(), configFile.getFileName()));
-      String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
-      String id = wingsPersistence.save(configFile);
-      fileService.updateParentEntityId(id, fileId, CONFIGS);
-      return id;
-    } else {
+    if (!Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
       throw new WingsException(
           INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + configFile.getEntityType());
     }
+    String envId = configFile.getEntityType().equals(SERVICE)
+        ? GLOBAL_ENV_ID
+        : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
+
+    configFile.setEnvId(envId);
+    configFile.setRelativeFilePath(
+        validateAndResolveFilePath(configFile.getRelativeFilePath(), configFile.getFileName()));
+    String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
+    String id = wingsPersistence.save(configFile);
+    fileService.updateParentEntityId(id, fileId, CONFIGS);
+    return id;
   }
 
   @Override

@@ -89,6 +89,15 @@ public interface ServiceTemplateService {
       @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId, boolean withDetails);
 
   /**
+   * Get service template.
+   *
+   * @param appId             the app id
+   * @param serviceTemplateId the service template id
+   * @return the service template
+   */
+  ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceTemplateId);
+
+  /**
    * Update hosts.
    *
    * @param appId             the app id

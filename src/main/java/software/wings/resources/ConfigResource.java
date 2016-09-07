@@ -17,7 +17,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ConfigService;
 import software.wings.utils.BoundedInputStream;
 
@@ -52,19 +51,11 @@ public class ConfigResource {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param entityId    the entity id
-   * @param templateId  the template id
    * @param pageRequest the page request
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<ConfigFile>> list(@QueryParam("appId") String appId,
-      @QueryParam("entityId") String entityId,
-      @DefaultValue(DEFAULT_TEMPLATE_ID) @QueryParam("templateId") String templateId,
-      @BeanParam PageRequest<ConfigFile> pageRequest) {
-    pageRequest.addFilter("templateId", templateId, EQ);
-    pageRequest.addFilter("entityId", entityId, EQ);
+  public RestResponse<PageResponse<ConfigFile>> list(@BeanParam PageRequest<ConfigFile> pageRequest) {
     return new RestResponse<>(configService.list(pageRequest));
   }
 
@@ -74,7 +65,6 @@ public class ConfigResource {
    * @param appId               the app id
    * @param entityId            the entity id
    * @param entityType          the entity type
-   * @param envId               the env id
    * @param uploadedInputStream the uploaded input stream
    * @param fileDetail          the file detail
    * @param configFile          the config file
@@ -83,16 +73,11 @@ public class ConfigResource {
   @POST
   @Consumes(MULTIPART_FORM_DATA)
   public RestResponse<String> save(@QueryParam("appId") String appId, @QueryParam("entityId") String entityId,
-      @QueryParam("entityType") EntityType entityType, @QueryParam("envId") String envId,
-      @FormDataParam("file") InputStream uploadedInputStream,
+      @QueryParam("entityType") EntityType entityType, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setAppId(appId);
     configFile.setEntityId(entityId);
     configFile.setEntityType(entityType == null ? SERVICE : entityType);
-    if (configFile.getEntityType().equals(SERVICE)) {
-      envId = GLOBAL_ENV_ID;
-    }
-    configFile.setEnvId(envId);
     configFile.setFileName(fileDetail.getFileName());
     String fileId = configService.save(configFile,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
