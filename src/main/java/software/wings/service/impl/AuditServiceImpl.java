@@ -87,7 +87,8 @@ public class AuditServiceImpl implements AuditService {
     Document metadata = new Document();
     metadata.append("headerId", headerId);
     metadata.append("requestType", requestType == null ? null : requestType.name());
-    GridFSUploadOptions options = new GridFSUploadOptions().chunkSizeBytes(16 * 1024 * 1024).metadata(metadata);
+    GridFSUploadOptions options =
+        new GridFSUploadOptions().chunkSizeBytes(1024 * 1024).metadata(metadata); // Fixme: merge with FileBucket helper
     String fileId = fileService.uploadFromStream(
         requestType + "-" + headerId, new ByteArrayInputStream(httpBody), FileService.FileBucket.AUDITS, options);
     return fileId;
