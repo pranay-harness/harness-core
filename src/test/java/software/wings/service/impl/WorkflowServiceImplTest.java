@@ -2109,11 +2109,19 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     workflowService.triggerExecutionEvent(executionEvent);
 
     int i = 0;
+    List<Node> pausedNodes = null;
     do {
       i++;
       Thread.sleep(1000);
       execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
-    } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
+      pausedNodes = execution.getGraph()
+                        .getNodes()
+                        .stream()
+                        .filter(node
+                            -> "install".equals(node.getName())
+                                && node.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
+                        .collect(Collectors.toList());
+    } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
 
     assertThat(execution)
         .isNotNull()
@@ -2129,14 +2137,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .extracting("status")
         .contains(ExecutionStatus.SUCCESS.name(), ExecutionStatus.PAUSED_ON_ERROR.name());
 
-    installNode =
-        execution.getGraph()
-            .getNodes()
-            .stream()
-            .filter(node
-                -> "install".equals(node.getName()) && node.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
-            .collect(Collectors.toList())
-            .get(0);
+    installNode = pausedNodes.get(0);
     executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
                          .withAppId(app.getUuid())
                          .withEnvId(env.getUuid())
