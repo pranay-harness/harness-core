@@ -20,6 +20,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -47,6 +48,7 @@ public class TagServiceImpl implements TagService {
   @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
+  @Inject private ConfigService configService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.TagService#list(software.wings.dl.PageRequest)
@@ -191,13 +193,18 @@ public class TagServiceImpl implements TagService {
 
   private void cascadingDelete(Tag tag) {
     if (tag != null) {
-      wingsPersistence.delete(tag);
+      deleteTag(tag);
       if (tag.getChildren() != null && tag.getChildren().size() > 0) {
         tag.getChildren().forEach(this ::cascadingDelete);
       } else { // leaf tag should update hostInstance mapping
         executorService.submit(() -> updateAllServiceTemplatesWithDeletedHosts(tag));
       }
     }
+  }
+
+  private void deleteTag(Tag tag) {
+    wingsPersistence.delete(tag);
+    executorService.submit(() -> configService.deleteByEntityId(tag.getAppId(), tag.getUuid()));
   }
 
   @Override

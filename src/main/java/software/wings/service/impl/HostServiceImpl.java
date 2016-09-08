@@ -36,6 +36,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
@@ -50,6 +51,7 @@ import software.wings.utils.HostCsvFileHelper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -71,6 +73,8 @@ public class HostServiceImpl implements HostService {
   @Inject private NotificationService notificationService;
   @Inject private EnvironmentService environmentService;
   @Inject private HistoryService historyService;
+  @Inject private ConfigService configService;
+  @Inject private ExecutorService executorService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -267,6 +271,7 @@ public class HostServiceImpl implements HostService {
       boolean delete = wingsPersistence.delete(host);
       if (delete) {
         serviceTemplateService.deleteHostFromTemplates(host);
+        executorService.submit(() -> configService.deleteByEntityId(host.getAppId(), host.getUuid()));
       }
       historyService.createAsync(aHistory()
                                      .withEventType(EventType.DELETED)
