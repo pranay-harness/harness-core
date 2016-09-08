@@ -262,7 +262,9 @@ public enum ErrorCodes {
   RESUME_ALL_ALREADY("RESUME_ALL_ALREADY"), /**
                                              * Abort all already error codes.
                                              */
-  ABORT_ALL_ALREADY("ABORT_ALL_ALREADY");
+  ABORT_ALL_ALREADY("ABORT_ALL_ALREADY"),
+
+  RETRY_FAILED("RETRY_FAILED");
 
   /**
    * The constant ARGS_NAME.

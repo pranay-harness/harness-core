@@ -7,7 +7,9 @@ import software.wings.beans.User;
 import software.wings.dl.WingsDeque;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +27,7 @@ public class StateExecutionInstance extends Base {
 
   private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+  private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
 
   private StateMachineExecutionCallback callback;
 
@@ -379,6 +382,14 @@ public class StateExecutionInstance extends Base {
     this.executionName = executionName;
   }
 
+  public List<StateExecutionData> getStateExecutionDataHistory() {
+    return stateExecutionDataHistory;
+  }
+
+  public void setStateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
+    this.stateExecutionDataHistory = stateExecutionDataHistory;
+  }
+
   @Override
   public String toString() {
     return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName
@@ -386,7 +397,8 @@ public class StateExecutionInstance extends Base {
         + ", contextElements=" + contextElements + ", stateExecutionMap=" + stateExecutionMap + ", callback=" + callback
         + ", executionUuid=" + executionUuid + ", parentInstanceId=" + parentInstanceId + ", prevInstanceId="
         + prevInstanceId + ", nextInstanceId=" + nextInstanceId + ", cloneInstanceId=" + cloneInstanceId
-        + ", notifyId=" + notifyId + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs + "]";
+        + ", notifyId=" + notifyId + ", status=" + status + ", startTs=" + startTs + ", endTs=" + endTs
+        + ", stateExecutionDataHistory=" + stateExecutionDataHistory + "]";
   }
 
   /**
@@ -400,6 +412,7 @@ public class StateExecutionInstance extends Base {
     private boolean contextTransition;
     private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
+    private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
     private StateMachineExecutionCallback callback;
     private String executionUuid;
     private String parentInstanceId;
@@ -503,6 +516,11 @@ public class StateExecutionInstance extends Base {
      */
     public Builder withStateExecutionMap(Map<String, StateExecutionData> stateExecutionMap) {
       this.stateExecutionMap = stateExecutionMap;
+      return this;
+    }
+
+    public Builder withStateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
+      this.stateExecutionDataHistory = stateExecutionDataHistory;
       return this;
     }
 
@@ -707,6 +725,7 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setContextTransition(contextTransition);
       stateExecutionInstance.setContextElements(contextElements);
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
+      stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
       stateExecutionInstance.setCallback(callback);
       stateExecutionInstance.setExecutionUuid(executionUuid);
       stateExecutionInstance.setParentInstanceId(parentInstanceId);

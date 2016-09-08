@@ -2076,7 +2076,20 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     logger.debug("Orchestration executionId: {}", executionId);
     assertThat(executionId).isNotNull();
 
-    Thread.sleep(1000);
+    int i = 0;
+    List<Node> pausedNodes = null;
+    do {
+      i++;
+      Thread.sleep(1000);
+      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      pausedNodes = execution.getGraph()
+                        .getNodes()
+                        .stream()
+                        .filter(node
+                            -> "install".equals(node.getName())
+                                && node.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
+                        .collect(Collectors.toList());
+    } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
 
     execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
@@ -2093,12 +2106,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .extracting("status")
         .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
 
-    Node installNode = execution.getGraph()
-                           .getNodes()
-                           .stream()
-                           .filter(node -> "install".equals(node.getName()))
-                           .collect(Collectors.toList())
-                           .get(0);
+    Node installNode = pausedNodes.get(0);
     ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
                                         .withAppId(app.getUuid())
                                         .withEnvId(env.getUuid())
@@ -2108,8 +2116,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .build();
     workflowService.triggerExecutionEvent(executionEvent);
 
-    int i = 0;
-    List<Node> pausedNodes = null;
+    i = 0;
+    pausedNodes = null;
     do {
       i++;
       Thread.sleep(1000);
@@ -2162,6 +2170,188 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .hasSize(2)
         .extracting("status")
         .containsExactly(ExecutionStatus.SUCCESS.name(), ExecutionStatus.SUCCESS.name());
+  }
+
+  /**
+   * Should retry on error
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void shouldRetryOnError() throws InterruptedException {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
+    Environment env =
+        wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+
+    Host host1 = wingsPersistence.saveAndGet(
+        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
+    ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
+        aServiceTemplate()
+            .withAppId(app.getUuid())
+            .withEnvId(env.getUuid())
+            .withService(service)
+            .withName("TEMPLATE_NAME")
+            .withDescription("TEMPLATE_DESCRIPTION")
+            .build());
+
+    software.wings.beans.ServiceInstance.Builder builder =
+        aServiceInstance().withServiceTemplate(serviceTemplate).withAppId(app.getUuid()).withEnvId(env.getUuid());
+
+    ServiceInstance inst1 = serviceInstanceService.save(builder.withHost(host1).build());
+
+    Graph graph =
+        aGraph()
+            .addNodes(aNode()
+                          .withId("RepeatByServices")
+                          .withOrigin(true)
+                          .withName("RepeatByServices")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${services()}")
+                          .addProperty("executionStrategy", ExecutionStrategy.PARALLEL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("RepeatByInstances")
+                          .withName("RepeatByInstances")
+                          .withType(StateType.REPEAT.name())
+                          .addProperty("repeatElementExpression", "${instances()}")
+                          .addProperty("executionStrategy", ExecutionStrategy.SERIAL)
+                          .build())
+            .addNodes(aNode()
+                          .withId("install")
+                          .withName("install")
+                          .withType(StateType.COMMAND.name())
+                          .addProperty("command", "install")
+                          .build())
+            .addLinks(aLink()
+                          .withId("l1")
+                          .withFrom("RepeatByServices")
+                          .withTo("RepeatByInstances")
+                          .withType("repeat")
+                          .build())
+            .addLinks(aLink().withId("l2").withFrom("RepeatByInstances").withTo("install").withType("repeat").build())
+            .build();
+
+    Orchestration orchestration = anOrchestration()
+                                      .withAppId(app.getUuid())
+                                      .withName("workflow1")
+                                      .withDescription("Sample Workflow")
+                                      .withEnvironment(env)
+                                      .withGraph(graph)
+                                      .withWorkflowType(WorkflowType.ORCHESTRATION)
+                                      .build();
+    orchestration = workflowService.createWorkflow(Orchestration.class, orchestration);
+    assertThat(orchestration).isNotNull();
+    assertThat(orchestration.getUuid()).isNotNull();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setErrorStrategy(ErrorStrategy.PAUSE);
+    String signalId = UUIDGenerator.getUuid();
+    WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
+    workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+                                      .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
+                                          orchestration.getUuid(), executionArgs, callback);
+
+    assertThat(execution).isNotNull();
+    String executionId = execution.getUuid();
+    logger.debug("Orchestration executionId: {}", executionId);
+    assertThat(executionId).isNotNull();
+
+    int i = 0;
+    List<Node> pausedNodes = null;
+    do {
+      i++;
+      Thread.sleep(1000);
+      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      pausedNodes = execution.getGraph()
+                        .getNodes()
+                        .stream()
+                        .filter(node
+                            -> "install".equals(node.getName())
+                                && node.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
+                        .collect(Collectors.toList());
+    } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("uuid", executionId)
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED)
+        .extracting("graph")
+        .doesNotContainNull()
+        .flatExtracting("nodes")
+        .doesNotContainNull();
+    assertThat(execution.getGraph().getNodes())
+        .filteredOn("name", "install")
+        .hasSize(1)
+        .extracting("status")
+        .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
+
+    Node installNode = pausedNodes.get(0);
+    ExecutionEvent executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                                        .withAppId(app.getUuid())
+                                        .withEnvId(env.getUuid())
+                                        .withExecutionUuid(executionId)
+                                        .withStateExecutionInstanceId(installNode.getId())
+                                        .withExecutionEventType(ExecutionEventType.RETRY)
+                                        .build();
+    workflowService.triggerExecutionEvent(executionEvent);
+
+    i = 0;
+    pausedNodes = null;
+    do {
+      i++;
+      Thread.sleep(1000);
+      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      pausedNodes = execution.getGraph()
+                        .getNodes()
+                        .stream()
+                        .filter(node
+                            -> "install".equals(node.getName())
+                                && node.getStatus().equals(ExecutionStatus.PAUSED_ON_ERROR.name()))
+                        .collect(Collectors.toList());
+    } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
+
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("uuid", executionId)
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.PAUSED)
+        .extracting("graph")
+        .doesNotContainNull()
+        .flatExtracting("nodes")
+        .doesNotContainNull();
+    assertThat(execution.getGraph().getNodes())
+        .filteredOn("name", "install")
+        .hasSize(1)
+        .extracting("status")
+        .containsExactly(ExecutionStatus.PAUSED_ON_ERROR.name());
+
+    installNode = pausedNodes.get(0);
+    executionEvent = ExecutionEvent.Builder.aWorkflowExecutionEvent()
+                         .withAppId(app.getUuid())
+                         .withEnvId(env.getUuid())
+                         .withExecutionUuid(executionId)
+                         .withStateExecutionInstanceId(installNode.getId())
+                         .withExecutionEventType(ExecutionEventType.RESUME)
+                         .build();
+    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionSignals.get(signalId).await();
+
+    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    assertThat(execution)
+        .isNotNull()
+        .hasFieldOrPropertyWithValue("uuid", executionId)
+        .hasFieldOrPropertyWithValue("status", ExecutionStatus.SUCCESS)
+        .extracting("graph")
+        .doesNotContainNull()
+        .flatExtracting("nodes")
+        .doesNotContainNull();
+    assertThat(execution.getGraph().getNodes())
+        .filteredOn("name", "install")
+        .hasSize(1)
+        .extracting("status")
+        .containsExactly(ExecutionStatus.SUCCESS.name());
   }
 
   /**

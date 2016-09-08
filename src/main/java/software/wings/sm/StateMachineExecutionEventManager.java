@@ -57,7 +57,7 @@ public class StateMachineExecutionEventManager {
       }
 
       if (executionEvent.getExecutionEventType() == ExecutionEventType.RETRY
-          && stateExecutionInstance.getStatus() != ExecutionStatus.FAILED
+          && stateExecutionInstance.getStatus() != ExecutionStatus.PAUSED_ON_ERROR
           && stateExecutionInstance.getStatus() != ExecutionStatus.ERROR) {
         throw new WingsException(ErrorCodes.STATE_NOT_FOR_RETRY, "stateName", stateExecutionInstance.getStateName());
       }

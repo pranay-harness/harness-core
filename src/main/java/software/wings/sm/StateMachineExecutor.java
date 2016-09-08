@@ -218,7 +218,7 @@ public class StateMachineExecutor {
     StateMachine stateMachine = context.getStateMachine();
 
     boolean updated = updateStartStatus(stateExecutionInstance, ExecutionStatus.STARTING,
-        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED));
+        Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR));
     if (!updated) {
       WingsException ex =
           new WingsException("stateExecutionInstance: " + stateExecutionInstance.getUuid() + " could not be started");
@@ -531,6 +531,7 @@ public class StateMachineExecutor {
       }
     }
 
+    stateExecutionData.setStateName(stateExecutionInstance.getStateName());
     stateExecutionMap.put(stateExecutionInstance.getStateName(), stateExecutionData);
 
     UpdateOperations<StateExecutionInstance> ops =
@@ -641,6 +642,23 @@ public class StateMachineExecutor {
         break;
       }
 
+      case RETRY: {
+        StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
+            workflowExecutionEvent.getAppId(), workflowExecutionEvent.getStateExecutionInstanceId());
+
+        clearStateExecutionData(stateExecutionInstance);
+        StateMachine sm = wingsPersistence.get(
+            StateMachine.class, workflowExecutionEvent.getAppId(), stateExecutionInstance.getStateMachineId());
+
+        State currentState = sm.getState(stateExecutionInstance.getStateName());
+        injector.injectMembers(currentState);
+
+        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
+        injector.injectMembers(context);
+        executorService.execute(new SmExecutionDispatcher(context, this));
+        break;
+      }
+
       case ABORT: {
         StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
             workflowExecutionEvent.getAppId(), workflowExecutionEvent.getStateExecutionInstanceId());
@@ -682,6 +700,44 @@ public class StateMachineExecutor {
       }
     }
     // TODO - more cases
+  }
+
+  private void clearStateExecutionData(StateExecutionInstance stateExecutionInstance) {
+    Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+    if (stateExecutionMap == null) {
+      return;
+    }
+
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+
+    StateExecutionData stateExecutionData = stateExecutionMap.get(stateExecutionInstance.getStateName());
+    ops.add("stateExecutionDataHistory", stateExecutionData);
+    stateExecutionInstance.getStateExecutionDataHistory().add(stateExecutionData);
+
+    stateExecutionMap.remove(stateExecutionInstance.getStateName());
+    ops.set("stateExecutionMap", stateExecutionInstance.getStateExecutionMap());
+
+    if (stateExecutionInstance.getEndTs() != null) {
+      stateExecutionInstance.setEndTs(null);
+      ops.unset("endTs");
+    }
+
+    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
+                                              .field("appId")
+                                              .equal(stateExecutionInstance.getAppId())
+                                              .field(ID_KEY)
+                                              .equal(stateExecutionInstance.getUuid())
+                                              .field("status")
+                                              .equal(ExecutionStatus.PAUSED_ON_ERROR);
+
+    UpdateResults updateResult = wingsPersistence.update(query, ops);
+    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
+      logger.warn("clearStateExecutionData could not be completed for the stateExecutionInstance: {}",
+          stateExecutionInstance.getUuid());
+
+      throw new WingsException(ErrorCodes.RETRY_FAILED, "stateName", stateExecutionInstance.getStateName());
+    }
   }
 
   private void refreshSummary(StateExecutionInstance parentStateExecutionInstance) {
