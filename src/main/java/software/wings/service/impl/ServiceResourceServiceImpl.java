@@ -124,7 +124,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private Service addDefaultCommands(Service service) {
     List<Graph> commands = emptyList();
     if (service.getAppContainer() != null && service.getAppContainer().getFamily() != null) {
-      commands = service.getAppContainer().getFamily().getDefaultCommands(service.getArtifactType());
+      commands = service.getAppContainer().getFamily().getDefaultCommands(
+          service.getArtifactType(), service.getAppContainer());
     } else if (service.getArtifactType() != null) {
       commands = service.getArtifactType().getDefaultCommands();
     }

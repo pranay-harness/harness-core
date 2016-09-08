@@ -21,7 +21,13 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
+import software.wings.utils.FileType;
+import software.wings.utils.FileTypeDetector;
+import software.wings.utils.Misc;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -67,8 +73,8 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
   @Override
   public AppContainer save(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
     appContainer.setAppId(GLOBAL_APP_ID); // FIXME
-    String fileId = fileService.saveFile(appContainer, in, fileBucket);
-    appContainer.setFileUuid(fileId);
+    uploadAppContainerFile(appContainer, in, fileBucket);
+
     return wingsPersistence.saveAndGet(AppContainer.class, appContainer);
   }
 
@@ -77,11 +83,9 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
    */
   @Override
   public AppContainer update(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
-    AppContainer storedAppContainer =
-        wingsPersistence.get(AppContainer.class, appContainer.getAppId(), appContainer.getUuid());
+    AppContainer storedAppContainer = wingsPersistence.get(AppContainer.class, GLOBAL_APP_ID, appContainer.getUuid());
     if (newPlatformSoftwareBinaryUploaded(storedAppContainer, appContainer)) {
-      String fileId = fileService.saveFile(appContainer, in, fileBucket);
-      appContainer.setFileUuid(fileId);
+      uploadAppContainerFile(appContainer, in, fileBucket);
     }
     appContainer.setAppId(storedAppContainer.getAppId());
     appContainer.setUuid(storedAppContainer.getUuid());
@@ -102,17 +106,6 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
     AppContainer appContainer = wingsPersistence.get(AppContainer.class, appId, appContainerId);
     wingsPersistence.delete(AppContainer.class, appContainerId);
     fileService.deleteFile(appContainer.getFileUuid(), PLATFORMS);
-  }
-
-  private void ensureAppContainerNotInUse(String appContainerId) {
-    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
-    if (application != null && application.getServices() != null) {
-      for (Service service : application.getServices()) {
-        if (service.getAppContainer().getUuid().equals(appContainerId)) {
-          throw new WingsException(INVALID_REQUEST, "message", "One or more services are using App Stack");
-        }
-      }
-    }
   }
 
   @Override
@@ -141,5 +134,31 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
         .getResponse()
         .stream()
         .collect(toMap(AppContainer::getUuid, AppContainer::getName));
+  }
+
+  private void ensureAppContainerNotInUse(String appContainerId) {
+    Application application = wingsPersistence.createQuery(Application.class).retrievedFields(true, "services").get();
+    if (application != null && application.getServices() != null) {
+      for (Service service : application.getServices()) {
+        if (service.getAppContainer().getUuid().equals(appContainerId)) {
+          throw new WingsException(INVALID_REQUEST, "message", "One or more services are using App Stack");
+        }
+      }
+    }
+  }
+
+  private void uploadAppContainerFile(AppContainer appContainer, InputStream in, FileBucket fileBucket) {
+    String fileId = fileService.saveFile(appContainer, in, fileBucket);
+    appContainer.setFileUuid(fileId);
+
+    File tempFile = new File(System.getProperty("java.io.tmpdir"), "appStack" + Thread.currentThread().getId());
+    fileService.download(fileId, tempFile, fileBucket);
+
+    Misc.ignoreException(() -> {
+      BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream(tempFile));
+      FileType fileType = FileTypeDetector.detectType(bufferedInputStream);
+      appContainer.setFileType(fileType);
+      appContainer.setStackRootDirectory(fileType.getRoot(bufferedInputStream));
+    });
   }
 }

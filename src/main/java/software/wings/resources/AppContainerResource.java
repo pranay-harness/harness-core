@@ -20,10 +20,10 @@ import software.wings.beans.FileUploadSource;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -96,8 +96,10 @@ public class AppContainerResource {
     appContainer.setAppId(appId);
     appContainer.setFileName(fileDetail.getFileName());
     setSourceForAppContainer(sourceType, urlString, appContainer);
+
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
+
     return new RestResponse<>(appContainerService.save(appContainer, uploadedInputStream, PLATFORMS));
   }
 
@@ -126,6 +128,7 @@ public class AppContainerResource {
     setSourceForAppContainer(sourceType, urlString, appContainer);
     uploadedInputStream =
         updateTheUploadedInputStream(urlString, uploadedInputStream, appContainer.getSource().getSourceType());
+
     return new RestResponse<>(appContainerService.update(appContainer, uploadedInputStream, PLATFORMS));
   }
 
@@ -154,9 +157,9 @@ public class AppContainerResource {
   }
 
   private InputStream updateTheUploadedInputStream(String urlString, InputStream inputStream, SourceType sourceType) {
-    return sourceType.equals(HTTP)
-        ? BoundedInputStream.getBoundedStreamForUrl(
-              urlString, configuration.getFileUploadLimits().getAppContainerLimit())
-        : new BoundedInputStream(inputStream, configuration.getFileUploadLimits().getAppContainerLimit());
+    return sourceType.equals(HTTP) ? new BufferedInputStream(BoundedInputStream.getBoundedStreamForUrl(
+                                         urlString, configuration.getFileUploadLimits().getAppContainerLimit()))
+                                   : new BufferedInputStream(new BoundedInputStream(
+                                         inputStream, configuration.getFileUploadLimits().getAppContainerLimit()));
   }
 }

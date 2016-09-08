@@ -35,7 +35,7 @@ import javax.validation.Payload;
 //@Artifact.ValidArtifact(groups = Create.class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Artifact extends Base {
-  @Indexed @Reference(idOnly = true) private Release release;
+  @Indexed @Reference(idOnly = true, ignoreMissing = true) private Release release;
 
   @Indexed @NotEmpty(groups = Create.class) private String artifactSourceName;
 
@@ -45,7 +45,7 @@ public class Artifact extends Base {
 
   @Indexed @NotEmpty(groups = Create.class) private String revision;
 
-  @Reference(idOnly = true) private List<Service> services;
+  @Reference(idOnly = true, ignoreMissing = true) private List<Service> services;
 
   private List<ArtifactFile> artifactFiles = Lists.newArrayList();
 

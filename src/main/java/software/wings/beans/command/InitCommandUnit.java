@@ -70,6 +70,10 @@ public class InitCommandUnit extends CommandUnit {
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
     envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
+    if (context.getArtifact() != null && !isEmpty(context.getArtifact().getArtifactFiles())) {
+      envVariables.put("ARTIFACT_FILE_NAME", context.getArtifact().getArtifactFiles().get(0).getName());
+    }
+
     launcherScriptFileName = "wingslauncher" + activityId + ".sh";
 
     ExecutionResult executionResult = context.executeCommandString(preInitCommand);

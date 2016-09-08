@@ -7,6 +7,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.utils.ContainerFamily;
+import software.wings.utils.FileType;
 
 import java.util.Objects;
 
@@ -26,6 +27,8 @@ public class AppContainer extends BaseFile {
   @FormDataParam("source") private ArtifactSource source;
   private boolean standardUpload = false;
   @FormDataParam("family") private ContainerFamily family;
+  private String stackRootDirectory;
+  private FileType fileType;
 
   /**
    * Is standard boolean.
@@ -135,9 +138,26 @@ public class AppContainer extends BaseFile {
     this.family = family;
   }
 
+  public String getStackRootDirectory() {
+    return stackRootDirectory;
+  }
+
+  public void setStackRootDirectory(String stackRootDirectory) {
+    this.stackRootDirectory = stackRootDirectory;
+  }
+
+  public FileType getFileType() {
+    return fileType;
+  }
+
+  public void setFileType(FileType fileType) {
+    this.fileType = fileType;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(standard, version, description, source, standardUpload, family);
+    return 31 * super.hashCode()
+        + Objects.hash(standard, version, description, source, standardUpload, family, stackRootDirectory, fileType);
   }
 
   @Override
@@ -154,7 +174,9 @@ public class AppContainer extends BaseFile {
     final AppContainer other = (AppContainer) obj;
     return Objects.equals(this.standard, other.standard) && Objects.equals(this.version, other.version)
         && Objects.equals(this.description, other.description) && Objects.equals(this.source, other.source)
-        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family);
+        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
+        && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
+        && Objects.equals(this.fileType, other.fileType);
   }
 
   public static final class Builder {
@@ -171,6 +193,8 @@ public class AppContainer extends BaseFile {
     private ArtifactSource source;
     private boolean standardUpload = false;
     private ContainerFamily family;
+    private String stackRootDirectory;
+    private FileType fileType;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -250,6 +274,16 @@ public class AppContainer extends BaseFile {
       return this;
     }
 
+    public Builder withStackRootDirectory(String stackRootDirectory) {
+      this.stackRootDirectory = stackRootDirectory;
+      return this;
+    }
+
+    public Builder withFileType(FileType fileType) {
+      this.fileType = fileType;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
@@ -300,6 +334,8 @@ public class AppContainer extends BaseFile {
           .withSource(source)
           .withStandardUpload(standardUpload)
           .withFamily(family)
+          .withStackRootDirectory(stackRootDirectory)
+          .withFileType(fileType)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -324,6 +360,8 @@ public class AppContainer extends BaseFile {
       appContainer.setSource(source);
       appContainer.setStandardUpload(standardUpload);
       appContainer.setFamily(family);
+      appContainer.setStackRootDirectory(stackRootDirectory);
+      appContainer.setFileType(fileType);
       appContainer.setUuid(uuid);
       appContainer.setAppId(appId);
       appContainer.setCreatedBy(createdBy);

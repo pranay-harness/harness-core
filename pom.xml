@@ -582,6 +582,11 @@
             <version>1.46</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>1.10</version>
+        </dependency>
     </dependencies>
 
     <build>
