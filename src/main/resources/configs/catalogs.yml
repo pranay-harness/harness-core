@@ -59,3 +59,5 @@ EXECUTION_TYPE:
 CONTAINER_FAMILY:
     - name: Tomcat
       value: TOMCAT
+    - name: JBoss AS 7
+      value: JBOSS

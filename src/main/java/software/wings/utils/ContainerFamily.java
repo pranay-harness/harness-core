@@ -17,6 +17,7 @@ import static software.wings.common.UUIDGenerator.graphIdGenerator;
 
 import com.google.common.collect.Lists;
 
+import software.wings.beans.AppContainer;
 import software.wings.beans.Graph;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 
@@ -128,7 +129,7 @@ public enum ContainerFamily {
     }
 
     @Override
-    protected Graph getInstallCommandGraph(ArtifactType artifactType) {
+    protected Graph getInstallCommandGraph(ArtifactType artifactType, AppContainer appContainer) {
       return aGraph()
           .withGraphName("Install")
           .addNodes(
@@ -163,11 +164,17 @@ public enum ContainerFamily {
                   .withX(500)
                   .withY(50)
                   .withId(graphIdGenerator("node"))
-                  .withName("Expand App Server")
+                  .withName("Expand App Stack")
                   .withType(EXEC.name())
                   .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                   .addProperty("commandString",
-                      "rm -rf tomcat\ntar -xvzf apache-tomcat-7.0.70.tar.gz\nmv apache-tomcat-7.0.70 tomcat")
+                      "rm -rf tomcat\n"
+                          + (".".equals(appContainer.getStackRootDirectory())
+                                    ? ""
+                                    : "rm -rf " + appContainer.getStackRootDirectory())
+                          + appContainer.getFileType().getUnarchiveCommand(
+                                appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
+                          + "\nchmod +x tomcat/bin/*")
                   .build(),
               aNode()
                   .withX(650)
@@ -196,16 +203,205 @@ public enum ContainerFamily {
                   .build())
           .buildPipeline();
     }
+
+  },
+  JBOSS {
+    private static final long serialVersionUID = 2932493038229748527L;
+
+    @Override
+    protected Graph getStartCommandGraph(ArtifactType artifactType) {
+      return aGraph()
+          .withGraphName("Start")
+          .addNodes(
+              aNode()
+                  .withOrigin(true)
+                  .withX(50)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withType(EXEC.name())
+                  .withName("Start Service")
+                  .addProperty("commandPath", "$WINGS_RUNTIME_PATH/jboss/bin")
+                  .addProperty("commandString", "nohup ./standalone.sh &")
+                  .addProperty("tailFiles", true)
+                  .addProperty("tailPatterns", singletonList(of("filePath", "nohup.out", "pattern", "started in")))
+                  .build(),
+              aNode()
+                  .withX(200)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Process Running")
+                  .withType(PROCESS_CHECK_RUNNING.name())
+                  .addProperty("commandString", "set -x\npgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"")
+                  .build(),
+              aNode()
+                  .withX(350)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withType(PORT_CHECK_LISTENING.name())
+                  .withName("Port Listening")
+                  .addProperty("commandString",
+                      "set -x\n"
+                          + "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
+                          + "\n"
+                          + "if [ -f \"$standalone_xml\" ]\n"
+                          + "then\n"
+                          + "port=$(grep \"<socket-binding name=\\\"http\\\" port=\\\"\\${jboss.http.port\" \"$standalone_xml\" | cut -d \":\" -f2 | cut -d \"}\" -f1)\n"
+                          + "nc -v -z -w 5 localhost $port\n"
+                          + "else\n"
+                          + " echo \"JBoss config file(\"$standalone_xml\") does not exist.. port check failed.\"\n"
+                          + " exit 1\n"
+                          + "fi")
+                  .build())
+          .buildPipeline();
+    }
+
+    @Override
+    protected Graph getStopCommandGraph(ArtifactType artifactType) {
+      return aGraph()
+          .withGraphName("Stop")
+          .addNodes(aNode()
+                        .withOrigin(true)
+                        .withX(50)
+                        .withY(50)
+                        .withId(graphIdGenerator("node"))
+                        .withType(EXEC.name())
+                        .withName("Stop Service")
+                        .addProperty("commandPath", "$WINGS_RUNTIME_PATH/jboss/bin")
+                        .addProperty(
+                            "commandString", "pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\" | xargs kill")
+                        .build(),
+              aNode()
+                  .withX(200)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Process Stopped")
+                  .withType(PROCESS_CHECK_STOPPED.name())
+                  .addProperty("commandString",
+                      "set -x\npgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
+                  .build(),
+              aNode()
+                  .withX(350)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withType(PORT_CHECK_CLEARED.name())
+                  .withName("Port Cleared")
+                  .addProperty("commandString",
+                      "set -x\n"
+                          + "standalone_xml=\"$WINGS_RUNTIME_PATH/jboss/standalone/configuration/standalone.xml\"\n"
+                          + "if [ -f \"$standalone_xml\" ]\n"
+                          + "then\n"
+                          + "port=$(grep \"<socket-binding name=\\\"http\\\" port=\\\"\\${jboss.http.port\" \"$standalone_xml\" | cut -d \":\" -f2 | cut -d \"}\" -f1)\n"
+                          + "nc -v -z -w 5 localhost $port\n"
+                          + "rc=$?\n"
+                          + "if [ \"$rc\" -eq 0 ]\n"
+                          + "then\n"
+                          + "exit 1\n"
+                          + "fi\n"
+                          + "else\n"
+                          + " echo \"JBoss config file(\"$standalone_xml\") does not exist.. skipping port check.\"\n"
+                          + "fi")
+                  .build())
+          .buildPipeline();
+    }
+
+    @Override
+    protected Graph getInstallCommandGraph(ArtifactType artifactType, AppContainer appContainer) {
+      return aGraph()
+          .withGraphName("Install")
+          .addNodes(
+              aNode()
+                  .withOrigin(true)
+                  .withX(50)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Setup Runtime Paths")
+                  .withType(SETUP_ENV.name())
+                  .addProperty("commandString",
+                      "mkdir -p \"$WINGS_RUNTIME_PATH\"\nmkdir -p \"$WINGS_BACKUP_PATH\"\nmkdir -p \"$WINGS_STAGING_PATH\"")
+                  .build(),
+              aNode()
+                  .withX(200)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Stop")
+                  .withType(COMMAND.name())
+                  .addProperty("referenceId", "Stop")
+                  .build(),
+              aNode()
+                  .withX(350)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Copy App Stack")
+                  .withType(SCP.name())
+                  .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                  .addProperty("fileCategory", ScpFileCategory.APPLICATION_STACK)
+                  .build(),
+              aNode()
+                  .withX(500)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Expand App Stack")
+                  .withType(EXEC.name())
+                  .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
+                  .addProperty("commandString",
+                      "rm -rf jboss\n"
+                          + (".".equals(appContainer.getStackRootDirectory())
+                                    ? ""
+                                    : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
+                          + appContainer.getFileType().getUnarchiveCommand(
+                                appContainer.getFileName(), appContainer.getStackRootDirectory(), "jboss")
+                          + "\nchmod +x jboss/bin/*")
+                  .build(),
+              aNode()
+                  .withX(650)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Copy Artifact")
+                  .withType(SCP.name())
+                  .addProperty("fileCategory", ScpFileCategory.ARTIFACTS)
+                  .addProperty("destinationDirectoryPath", "$WINGS_RUNTIME_PATH")
+                  .build(),
+              aNode()
+                  .withX(800)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Expand Artifact")
+                  .withType(EXEC.name())
+                  .addProperty("commandPath", "$WINGS_RUNTIME_PATH/jboss/standalone/deployments")
+                  .addProperty("commandString",
+                      "mkdir -p $ARTIFACT_FILE_NAME\n"
+                          + "touch ${ARTIFACT_FILE_NAME}.dodeploy\n"
+                          + "cd $ARTIFACT_FILE_NAME\n"
+                          + "jar xvf $WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME")
+                  .build(),
+              aNode()
+                  .withX(950)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Copy Configs")
+                  .withType(COPY_CONFIGS.name())
+                  .addProperty("destinationParentPath", "$WINGS_RUNTIME_PATH")
+                  .build(),
+              aNode()
+                  .withX(1100)
+                  .withY(50)
+                  .withId(graphIdGenerator("node"))
+                  .withName("Start")
+                  .withType(COMMAND.name())
+                  .addProperty("referenceId", "Start")
+                  .build())
+          .buildPipeline();
+    }
   };
 
-  public List<Graph> getDefaultCommands(ArtifactType artifactType) {
-    return Lists.newArrayList(
-        getStartCommandGraph(artifactType), getInstallCommandGraph(artifactType), getStopCommandGraph(artifactType));
+  public List<Graph> getDefaultCommands(ArtifactType artifactType, AppContainer appContainer) {
+    return Lists.newArrayList(getStartCommandGraph(artifactType), getInstallCommandGraph(artifactType, appContainer),
+        getStopCommandGraph(artifactType));
   }
 
   protected abstract Graph getStopCommandGraph(ArtifactType artifactType);
 
   protected abstract Graph getStartCommandGraph(ArtifactType artifactType);
 
-  protected abstract Graph getInstallCommandGraph(ArtifactType artifactType);
+  protected abstract Graph getInstallCommandGraph(ArtifactType artifactType, AppContainer appContainer);
 }

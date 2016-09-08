@@ -118,7 +118,8 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
           .withExecutionCredential(
               aSSHExecutionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build())
           .withArtifact(anArtifact()
-                            .withArtifactFiles(Lists.newArrayList(anArtifactFile().withFileUuid(FILE_ID).build()))
+                            .withArtifactFiles(Lists.newArrayList(
+                                anArtifactFile().withName("artifact.war").withFileUuid(FILE_ID).build()))
                             .build())
           .build();
 

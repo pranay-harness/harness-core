@@ -23,7 +23,7 @@ public class Release extends Base {
   private String description;
   @FutureDate private Long targetDate;
 
-  @Reference(idOnly = true) private Set<Service> services;
+  @Reference(idOnly = true, ignoreMissing = true) private Set<Service> services;
 
   private List<ArtifactSource> artifactSources = Lists.newArrayList();
 
