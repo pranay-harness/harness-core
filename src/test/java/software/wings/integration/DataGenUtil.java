@@ -93,7 +93,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -160,8 +159,6 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
   @Inject private WorkflowService workflowService;
-  @Inject private NotificationMessageResolver notMsgResolver;
-  private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
   /**
    * Generated Data for across the API use.

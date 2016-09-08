@@ -38,6 +38,8 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) private String entityId;
 
+  @FormDataParam("parentConfigFileId") private String parentConfigFileId;
+
   @FormDataParam("relativeFilePath") private String relativeFilePath;
 
   private String overridePath;
@@ -193,7 +195,8 @@ public class ConfigFile extends BaseFile {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(templateId, envId, entityType, entityId, relativeFilePath, overridePath);
+        + Objects.hash(templateId, envId, entityType, entityId, parentConfigFileId, relativeFilePath, overridePath,
+              versions, overriddenConfigFile);
   }
 
   @Override
@@ -210,8 +213,10 @@ public class ConfigFile extends BaseFile {
     final ConfigFile other = (ConfigFile) obj;
     return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
         && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
         && Objects.equals(this.relativeFilePath, other.relativeFilePath)
-        && Objects.equals(this.overridePath, other.overridePath);
+        && Objects.equals(this.overridePath, other.overridePath) && Objects.equals(this.versions, other.versions)
+        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
   }
 
   @Override
@@ -221,9 +226,30 @@ public class ConfigFile extends BaseFile {
         .add("envId", envId)
         .add("entityType", entityType)
         .add("entityId", entityId)
+        .add("parentConfigFileId", parentConfigFileId)
         .add("relativeFilePath", relativeFilePath)
         .add("overridePath", overridePath)
+        .add("versions", versions)
+        .add("overriddenConfigFile", overriddenConfigFile)
         .toString();
+  }
+
+  /**
+   * Gets parent config file id.
+   *
+   * @return the parent config file id
+   */
+  public String getParentConfigFileId() {
+    return parentConfigFileId;
+  }
+
+  /**
+   * Sets parent config file id.
+   *
+   * @param parentConfigFileId the parent config file id
+   */
+  public void setParentConfigFileId(String parentConfigFileId) {
+    this.parentConfigFileId = parentConfigFileId;
   }
 
   /**
@@ -234,8 +260,11 @@ public class ConfigFile extends BaseFile {
     private String envId;
     private EntityType entityType;
     private String entityId;
+    private String parentConfigFileId;
     private String relativeFilePath;
     private String overridePath;
+    private List<String> versions;
+    private ConfigFile overriddenConfigFile;
     private String name;
     private String fileUuid;
     private String fileName;
@@ -307,6 +336,17 @@ public class ConfigFile extends BaseFile {
     }
 
     /**
+     * With parent config file id builder.
+     *
+     * @param parentConfigFileId the parent config file id
+     * @return the builder
+     */
+    public Builder withParentConfigFileId(String parentConfigFileId) {
+      this.parentConfigFileId = parentConfigFileId;
+      return this;
+    }
+
+    /**
      * With relative file path builder.
      *
      * @param relativeFilePath the relative file path
@@ -325,6 +365,28 @@ public class ConfigFile extends BaseFile {
      */
     public Builder withOverridePath(String overridePath) {
       this.overridePath = overridePath;
+      return this;
+    }
+
+    /**
+     * With versions builder.
+     *
+     * @param versions the versions
+     * @return the builder
+     */
+    public Builder withVersions(List<String> versions) {
+      this.versions = versions;
+      return this;
+    }
+
+    /**
+     * With overridden config file builder.
+     *
+     * @param overriddenConfigFile the overridden config file
+     * @return the builder
+     */
+    public Builder withOverriddenConfigFile(ConfigFile overriddenConfigFile) {
+      this.overriddenConfigFile = overriddenConfigFile;
       return this;
     }
 
@@ -493,8 +555,11 @@ public class ConfigFile extends BaseFile {
           .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
+          .withParentConfigFileId(parentConfigFileId)
           .withRelativeFilePath(relativeFilePath)
           .withOverridePath(overridePath)
+          .withVersions(versions)
+          .withOverriddenConfigFile(overriddenConfigFile)
           .withName(name)
           .withFileUuid(fileUuid)
           .withFileName(fileName)
@@ -522,8 +587,11 @@ public class ConfigFile extends BaseFile {
       configFile.setEnvId(envId);
       configFile.setEntityType(entityType);
       configFile.setEntityId(entityId);
+      configFile.setParentConfigFileId(parentConfigFileId);
       configFile.setRelativeFilePath(relativeFilePath);
       configFile.setOverridePath(overridePath);
+      configFile.setVersions(versions);
+      configFile.setOverriddenConfigFile(overriddenConfigFile);
       configFile.setName(name);
       configFile.setFileUuid(fileUuid);
       configFile.setFileName(fileName);

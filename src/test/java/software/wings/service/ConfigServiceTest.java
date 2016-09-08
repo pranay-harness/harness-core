@@ -271,20 +271,7 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDelete() {
-    ConfigFile configFile = aConfigFile()
-                                .withAppId(APP_ID)
-                                .withEnvId(ENV_ID)
-                                .withUuid(FILE_ID)
-                                .withEntityType(EntityType.TAG)
-                                .withEntityId(TAG_ID)
-                                .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
-                                .withRelativeFilePath("PATH")
-                                .withFileUuid("GFS_FILE_ID")
-                                .withFileName(FILE_NAME)
-                                .withChecksum("CHECKSUM")
-                                .withSize(100)
-                                .build();
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     configService.delete(APP_ID, FILE_ID);
     verify(wingsPersistence).delete(query);
@@ -355,6 +342,7 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.createQuery(ConfigFile.class)).thenReturn(query);
     when(wingsPersistence.query(ConfigFile.class, pageRequest)).thenReturn(pageResponse);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
 
     configService.deleteByEntityId(APP_ID, TEMPLATE_ID, "ENTITY_ID");
     verify(wingsPersistence).delete(query);

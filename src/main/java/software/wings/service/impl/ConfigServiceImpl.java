@@ -207,9 +207,20 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public void delete(String appId, String configId) {
-    wingsPersistence.delete(
+    boolean deleted = wingsPersistence.delete(
         wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(appId).field(ID_KEY).equal(configId));
-    executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
+    if (deleted) {
+      List<ConfigFile> configFiles = wingsPersistence.createQuery(ConfigFile.class)
+                                         .field("appId")
+                                         .equal(appId)
+                                         .field("parentConfigFileId")
+                                         .equal(configId)
+                                         .asList();
+      if (configFiles.size() != 0) {
+        configFiles.forEach(configFile -> delete(appId, configFile.getUuid()));
+      }
+      executorService.submit(() -> fileService.deleteAllFilesForEntity(configId, CONFIGS));
+    }
   }
 
   /* (non-Javadoc)
