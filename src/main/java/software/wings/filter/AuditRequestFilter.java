@@ -2,18 +2,19 @@ package software.wings.filter;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.HttpMethod;
 import software.wings.common.AuditHelper;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.BoundedInputStream;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.InetAddress;
 import javax.annotation.Priority;
 import javax.inject.Singleton;
@@ -38,6 +39,8 @@ public class AuditRequestFilter implements ContainerRequestFilter {
   @Context private ResourceContext resourceContext;
 
   @Inject private AuditHelper auditHelper;
+  @Inject private FileService fileService;
+  @Inject private MainConfiguration configuration;
 
   /* (non-Javadoc)
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
@@ -69,26 +72,13 @@ public class AuditRequestFilter implements ContainerRequestFilter {
 
     header = auditHelper.create(header);
 
-    InputStream entityStream = null;
-    ByteArrayInputStream byteArrayInputStream = null;
     try {
-      entityStream = requestContext.getEntityStream();
-
-      byte[] httpBody = IOUtils.toByteArray(entityStream);
-
-      if (httpBody != null) {
-        byteArrayInputStream = new ByteArrayInputStream(httpBody);
-
-        requestContext.setEntityStream(byteArrayInputStream);
-
-        auditHelper.create(header, RequestType.REQUEST, httpBody);
-      }
-
+      BoundedInputStream inputStream = new BoundedInputStream(
+          requestContext.getEntityStream(), configuration.getFileUploadLimits().getAppContainerLimit());
+      String fileId = auditHelper.create(header, RequestType.REQUEST, inputStream);
+      requestContext.setEntityStream(fileService.openDownloadStream(fileId, FileBucket.AUDITS));
     } catch (Exception exception) {
       throw new WingsException(exception);
-    } finally {
-      IOUtils.closeQuietly(entityStream);
-      IOUtils.closeQuietly(byteArrayInputStream);
     }
   }
 

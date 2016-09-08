@@ -17,6 +17,7 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import javax.inject.Inject;
@@ -65,12 +66,9 @@ public class AuditServiceImpl implements AuditService {
     return wingsPersistence.saveAndGet(AuditHeader.class, header);
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public String create(AuditHeader header, RequestType requestType, byte[] httpBody) {
-    String fileUuid = savePayload(header.getUuid(), requestType, httpBody);
+  public String create(AuditHeader header, RequestType requestType, InputStream inputStream) {
+    String fileUuid = savePayload(header.getUuid(), requestType, inputStream);
     if (fileUuid != null) {
       UpdateOperations<AuditHeader> ops = wingsPersistence.createUpdateOperations(AuditHeader.class);
       if (requestType == RequestType.RESPONSE) {
@@ -84,14 +82,13 @@ public class AuditServiceImpl implements AuditService {
     return fileUuid;
   }
 
-  private String savePayload(String headerId, RequestType requestType, byte[] httpBody) {
+  private String savePayload(String headerId, RequestType requestType, InputStream inputStream) {
     Map<String, Object> metaData = new HashMap<>();
     metaData.put("headerId", headerId);
     if (requestType != null) {
       metaData.put("requestType", requestType.name());
     }
-    return fileService.uploadFromStream(
-        requestType + "-" + headerId, new ByteArrayInputStream(httpBody), FileBucket.AUDITS, metaData);
+    return fileService.uploadFromStream(requestType + "-" + headerId, inputStream, FileBucket.AUDITS, metaData);
   }
 
   /**
@@ -112,7 +109,7 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public void finalize(AuditHeader header, byte[] payload) {
     AuditHeader auditHeader = wingsPersistence.get(AuditHeader.class, header.getUuid());
-    String fileUuid = savePayload(auditHeader.getUuid(), RequestType.RESPONSE, payload);
+    String fileUuid = savePayload(auditHeader.getUuid(), RequestType.RESPONSE, new ByteArrayInputStream(payload));
     UpdateOperations<AuditHeader> ops = wingsPersistence.createUpdateOperations(AuditHeader.class)
                                             .set("responseStatusCode", header.getResponseStatusCode())
                                             .set("responseTime", header.getResponseTime());

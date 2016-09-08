@@ -72,6 +72,11 @@ public class FileServiceImpl implements FileService {
     fileBucketHelper.getOrCreateFileBucket(fileBucket).downloadToStream(new ObjectId(fileId), outputStream);
   }
 
+  @Override
+  public InputStream openDownloadStream(String fileId, FileBucket fileBucket) {
+    return fileBucketHelper.getOrCreateFileBucket(fileBucket).openDownloadStream(new ObjectId(fileId));
+  }
+
   /**
    * {@inheritDoc}
    */

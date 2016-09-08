@@ -6,6 +6,8 @@ import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.io.InputStream;
+
 /**
  * HttpAuditService.
  *
@@ -21,14 +23,14 @@ public interface AuditService {
   AuditHeader create(AuditHeader header);
 
   /**
-   * Creates the.
+   * Create string.
    *
    * @param header      the header
    * @param requestType the request type
-   * @param httpBody    the http body
+   * @param inputStream the input stream
    * @return the string
    */
-  String create(AuditHeader header, RequestType requestType, byte[] httpBody);
+  String create(AuditHeader header, RequestType requestType, InputStream inputStream);
 
   /**
    * Finalize.

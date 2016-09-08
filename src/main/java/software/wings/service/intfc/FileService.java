@@ -73,6 +73,15 @@ public interface FileService {
   void downloadToStream(String fileId, OutputStream op, FileBucket fileBucket);
 
   /**
+   * Open download stream input stream.
+   *
+   * @param fileId     the file id
+   * @param fileBucket the file bucket
+   * @return the input stream
+   */
+  InputStream openDownloadStream(String fileId, FileBucket fileBucket);
+
+  /**
    * Gets the grid fs file.
    *
    * @param fileId     the file id

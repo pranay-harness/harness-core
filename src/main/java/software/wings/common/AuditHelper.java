@@ -8,6 +8,7 @@ import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.service.intfc.AuditService;
 
+import java.io.InputStream;
 import javax.inject.Singleton;
 
 /**
@@ -51,15 +52,16 @@ public class AuditHelper {
   }
 
   /**
-   * Creates a audit header for request or response with request/response body.
+   * Create string.
    *
-   * @param header      AuditHeader entry.
-   * @param requestType Request or Response.
-   * @param httpBody    HttpBody for request or response.
+   * @param header      the header
+   * @param requestType the request type
+   * @param inputStream the input stream
+   * @return the string
    */
-  public void create(AuditHeader header, RequestType requestType, byte[] httpBody) {
+  public String create(AuditHeader header, RequestType requestType, InputStream inputStream) {
     try {
-      auditService.create(header, requestType, httpBody);
+      return auditService.create(header, requestType, inputStream);
     } catch (RuntimeException exception) {
       logger.error(
           "Exception occurred while trying to save payload - headerId" + (header != null ? header.getUuid() : null));
