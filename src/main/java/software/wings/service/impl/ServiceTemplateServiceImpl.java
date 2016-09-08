@@ -118,8 +118,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails) {
-    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
-    Validator.notNullCheck("ServiceTemplate", serviceTemplate);
+    ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (withDetails) {
       if (serviceTemplate.getTags().size() != 0) {
         serviceTemplate.setTaggedHosts(
@@ -127,6 +126,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       }
       serviceTemplate.setConfigFiles(getOverrideFiles(serviceTemplate));
     }
+    return serviceTemplate;
+  }
+
+  @Override
+  public ServiceTemplate get(String appId, String serviceTemplateId) {
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
+    Validator.notNullCheck("ServiceTemplate", serviceTemplate);
     return serviceTemplate;
   }
 
@@ -344,14 +350,17 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public void delete(String appId, String envId, String serviceTemplateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                .field("appId")
-                                .equal(appId)
-                                .field("envId")
-                                .equal(envId)
-                                .field(ID_KEY)
-                                .equal(serviceTemplateId));
-    executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
+                                                  .field("appId")
+                                                  .equal(appId)
+                                                  .field("envId")
+                                                  .equal(envId)
+                                                  .field(ID_KEY)
+                                                  .equal(serviceTemplateId));
+    if (deleted) {
+      executorService.submit(() -> serviceInstanceService.deleteByServiceTemplate(appId, envId, serviceTemplateId));
+      configService.deleteByTemplateId(appId, serviceTemplateId);
+    }
   }
 
   @Override

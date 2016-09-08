@@ -11,6 +11,7 @@ import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -34,7 +35,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -44,6 +44,7 @@ import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 
 import java.io.File;
@@ -71,6 +72,8 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Mock private TagService tagService;
   @Mock private HostService hostService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private ServiceTemplateService serviceTemplateService;
+
   @Inject @InjectMocks private ConfigService configService;
   private InputStream inputStream;
 
@@ -127,6 +130,8 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldSave() {
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
+        .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
@@ -179,7 +184,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetConfigFileByTemplate() {
     ServiceTemplate serviceTemplate =
-        Builder.aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
+        aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
                                 .withEntityType(EntityType.TAG)
