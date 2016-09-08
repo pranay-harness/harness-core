@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -97,8 +98,10 @@ public class FileServiceImpl implements FileService {
    * {@inheritDoc}
    */
   @Override
-  public String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options) {
-    ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(fileBucket).uploadFromStream(filename, in, options);
+  public String uploadFromStream(String filename, InputStream in, FileBucket bucket, Map<String, Object> metaData) {
+    GridFSUploadOptions gridFSOptions =
+        new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize()).metadata(new Document(metaData));
+    ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(bucket).uploadFromStream(filename, in, gridFSOptions);
     return fileId.toHexString();
   }
 

@@ -2,7 +2,6 @@ package software.wings.service.intfc;
 
 import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 
@@ -10,6 +9,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Interface FileService.
@@ -91,15 +91,15 @@ public interface FileService {
   List<String> getAllFileIds(String entityId, FileBucket fileBucket);
 
   /**
-   * Upload from stream.
+   * Upload from stream string.
    *
    * @param filename   the filename
    * @param in         the in
    * @param fileBucket the file bucket
-   * @param options    the options
+   * @param metaData   the meta data
    * @return the string
    */
-  String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, GridFSUploadOptions options);
+  String uploadFromStream(String filename, InputStream in, FileBucket fileBucket, Map<String, Object> metaData);
 
   /**
    * Gets the files meta data.

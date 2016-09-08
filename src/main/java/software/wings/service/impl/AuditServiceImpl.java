@@ -1,11 +1,10 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.service.intfc.FileService.*;
 
 import com.google.inject.Singleton;
 
-import com.mongodb.client.gridfs.model.GridFSUploadOptions;
-import org.bson.Document;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.audit.AuditHeader;
@@ -18,6 +17,8 @@ import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.FileService;
 
 import java.io.ByteArrayInputStream;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 
 /**
@@ -84,14 +85,13 @@ public class AuditServiceImpl implements AuditService {
   }
 
   private String savePayload(String headerId, RequestType requestType, byte[] httpBody) {
-    Document metadata = new Document();
-    metadata.append("headerId", headerId);
-    metadata.append("requestType", requestType == null ? null : requestType.name());
-    GridFSUploadOptions options =
-        new GridFSUploadOptions().chunkSizeBytes(1024 * 1024).metadata(metadata); // Fixme: merge with FileBucket helper
-    String fileId = fileService.uploadFromStream(
-        requestType + "-" + headerId, new ByteArrayInputStream(httpBody), FileService.FileBucket.AUDITS, options);
-    return fileId;
+    Map<String, Object> metaData = new HashMap<>();
+    metaData.put("headerId", headerId);
+    if (requestType != null) {
+      metaData.put("requestType", requestType.name());
+    }
+    return fileService.uploadFromStream(
+        requestType + "-" + headerId, new ByteArrayInputStream(httpBody), FileBucket.AUDITS, metaData);
   }
 
   /**
