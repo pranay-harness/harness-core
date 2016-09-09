@@ -91,7 +91,7 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         headerString.append(key).append("=");
         for (String value : headers.get(key)) {
           headerString.append(";");
-          headerString.append(value);
+          headerString.append(key.equalsIgnoreCase("Authorization") ? "********" : value);
         }
         headerString.substring(1);
         headerString.append(",");
