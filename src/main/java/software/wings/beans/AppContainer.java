@@ -16,13 +16,11 @@ import java.util.Objects;
  *
  * @author Rishi
  */
-@Indexes(
-    @Index(fields = { @Field("appId")
-                      , @Field("name"), @Field("version") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("appId")
+                           , @Field("name") }, options = @IndexOptions(unique = true)))
 @Entity(value = "appContainers", noClassnameStored = true)
 public class AppContainer extends BaseFile {
   @FormDataParam("standard") private boolean standard;
-  @FormDataParam("version") private String version;
   @FormDataParam("description") private String description;
   @FormDataParam("source") private ArtifactSource source;
   private boolean standardUpload = false;
@@ -46,24 +44,6 @@ public class AppContainer extends BaseFile {
    */
   public void setStandard(boolean standard) {
     this.standard = standard;
-  }
-
-  /**
-   * Gets version.
-   *
-   * @return the version
-   */
-  public String getVersion() {
-    return version;
-  }
-
-  /**
-   * Sets version.
-   *
-   * @param version the version
-   */
-  public void setVersion(String version) {
-    this.version = version;
   }
 
   /**
@@ -157,7 +137,7 @@ public class AppContainer extends BaseFile {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(standard, version, description, source, standardUpload, family, stackRootDirectory, fileType);
+        + Objects.hash(standard, description, source, standardUpload, family, stackRootDirectory, fileType);
   }
 
   @Override
@@ -172,9 +152,9 @@ public class AppContainer extends BaseFile {
       return false;
     }
     final AppContainer other = (AppContainer) obj;
-    return Objects.equals(this.standard, other.standard) && Objects.equals(this.version, other.version)
-        && Objects.equals(this.description, other.description) && Objects.equals(this.source, other.source)
-        && Objects.equals(this.standardUpload, other.standardUpload) && Objects.equals(this.family, other.family)
+    return Objects.equals(this.standard, other.standard) && Objects.equals(this.description, other.description)
+        && Objects.equals(this.source, other.source) && Objects.equals(this.standardUpload, other.standardUpload)
+        && Objects.equals(this.family, other.family)
         && Objects.equals(this.stackRootDirectory, other.stackRootDirectory)
         && Objects.equals(this.fileType, other.fileType);
   }
@@ -188,7 +168,6 @@ public class AppContainer extends BaseFile {
     private ChecksumType checksumType = ChecksumType.MD5;
     private String checksum;
     private boolean standard;
-    private String version;
     private String description;
     private ArtifactSource source;
     private boolean standardUpload = false;
@@ -246,11 +225,6 @@ public class AppContainer extends BaseFile {
 
     public Builder withStandard(boolean standard) {
       this.standard = standard;
-      return this;
-    }
-
-    public Builder withVersion(String version) {
-      this.version = version;
       return this;
     }
 
@@ -329,7 +303,6 @@ public class AppContainer extends BaseFile {
           .withChecksumType(checksumType)
           .withChecksum(checksum)
           .withStandard(standard)
-          .withVersion(version)
           .withDescription(description)
           .withSource(source)
           .withStandardUpload(standardUpload)
@@ -355,7 +328,6 @@ public class AppContainer extends BaseFile {
       appContainer.setChecksumType(checksumType);
       appContainer.setChecksum(checksum);
       appContainer.setStandard(standard);
-      appContainer.setVersion(version);
       appContainer.setDescription(description);
       appContainer.setSource(source);
       appContainer.setStandardUpload(standardUpload);

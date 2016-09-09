@@ -90,8 +90,8 @@ public class AppContainerServiceImpl implements AppContainerService, DataProvide
     appContainer.setAppId(storedAppContainer.getAppId());
     appContainer.setUuid(storedAppContainer.getUuid());
     wingsPersistence.updateFields(AppContainer.class, appContainer.getUuid(),
-        of("name", appContainer.getName(), "description", appContainer.getDescription(), "version",
-            appContainer.getVersion(), "source", appContainer.getSource()));
+        of("name", appContainer.getName(), "description", appContainer.getDescription(), "source",
+            appContainer.getSource()));
     return get(appContainer.getAppId(), appContainer.getUuid());
   }
 
