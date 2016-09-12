@@ -194,7 +194,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
-    verify(serviceInstanceService).updateActivity(any(Activity.class));
+    verify(serviceInstanceService, times(2)).updateActivity(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
 
@@ -224,8 +224,6 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-
-    verify(serviceInstanceService).update(SERVICE_INSTANCE);
 
     verify(waitNotifyEngine).notify(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build());
 
@@ -278,7 +276,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
     verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
-    verify(serviceInstanceService).updateActivity(any(Activity.class));
+    verify(serviceInstanceService, times(2)).updateActivity(any(Activity.class));
 
     verify(serviceCommandExecutorService)
         .execute(SERVICE_INSTANCE, command,
@@ -308,8 +306,6 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(workflowService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-
-    verify(serviceInstanceService).update(any(ServiceInstance.class));
 
     verifyNoMoreInteractions(context, serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowService, releaseService);
