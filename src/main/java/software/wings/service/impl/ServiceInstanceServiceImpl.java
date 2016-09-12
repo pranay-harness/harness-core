@@ -217,14 +217,4 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         .set("lastDeployedOn", activity.getCreatedAt());
     wingsPersistence.update(query, operations);
   }
-
-  @Override
-  public List<Artifact> getRecentArtifacts(String appId, String envId, String serviceInstanceId) {
-    return activityService.getRecentArtifactsForInstance(appId, envId, serviceInstanceId);
-  }
-
-  @Override
-  public List<Activity> getRecentActivities(String appId, String envId, String serviceInstanceId) {
-    return activityService.getRecentActivitiesForInstance(appId, envId, serviceInstanceId);
-  }
 }

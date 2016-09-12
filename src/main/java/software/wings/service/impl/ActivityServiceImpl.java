@@ -6,14 +6,11 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
-import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
-import software.wings.beans.Artifact;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -30,8 +27,6 @@ import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -143,32 +138,5 @@ public class ActivityServiceImpl implements ActivityService {
         .field("environmentType")
         .equal(EnvironmentType.PROD)
         .get();
-  }
-
-  @Override
-  public List<Artifact> getRecentArtifactsForInstance(String appId, String envId, String serviceInstanceId) {
-    PageRequest pageRequest = aPageRequest()
-                                  .addFilter("appId", Operator.EQ, appId)
-                                  .addFilter("environmentId", Operator.EQ, envId)
-                                  .addFilter("serviceInstanceId", Operator.EQ, serviceInstanceId)
-                                  .addFilter("artifactId", Operator.EXISTS)
-                                  .withLimit("5")
-                                  .build();
-    List<Activity> activities = list(pageRequest).getResponse();
-    return activities.stream()
-        .map(activity -> artifactService.get(appId, activity.getArtifactId()))
-        .filter(Objects::nonNull)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public List<Activity> getRecentActivitiesForInstance(String appId, String envId, String serviceInstanceId) {
-    PageRequest pageRequest = aPageRequest()
-                                  .addFilter("appId", Operator.EQ, appId)
-                                  .addFilter("environmentId", Operator.EQ, envId)
-                                  .addFilter("serviceInstanceId", Operator.EQ, serviceInstanceId)
-                                  .withLimit("5")
-                                  .build();
-    return list(pageRequest).getResponse();
   }
 }
