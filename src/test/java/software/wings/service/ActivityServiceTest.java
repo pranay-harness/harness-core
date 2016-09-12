@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.Activity.Status.RUNNING;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.command.CleanupCommandUnit.CLEANUP_UNIT;
@@ -45,6 +44,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 
@@ -68,7 +68,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                                              .withServiceId(SERVICE_ID)
                                              .withServiceTemplateName(TEMPLATE_NAME)
                                              .withServiceTemplateId(TEMPLATE_ID)
-                                             .withStatus(RUNNING)
+                                             .withStatus(ExecutionStatus.RUNNING)
                                              .withWorkflowExecutionId("WORKFLOW_ID")
                                              .withWorkflowExecutionName("Workflow 1")
                                              .withStateExecutionInstanceId("STATE_ID")

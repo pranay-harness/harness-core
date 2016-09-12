@@ -12,6 +12,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -33,11 +34,11 @@ public class ServiceInstance extends Base {
   private String artifactId;
   @Indexed private String artifactName;
   @Indexed private long artifactDeployedOn;
-  @Indexed private Activity.Status artifactDeploymentStatus;
+  @Indexed private ExecutionStatus artifactDeploymentStatus;
   private String artifactDeploymentActivityId;
 
   private String lastActivityId;
-  private Activity.Status lastActivityStatus;
+  private ExecutionStatus lastActivityStatus;
   @Indexed private String commandName;
   @Indexed private String commandType;
   private long lastDeployedOn;
@@ -206,7 +207,7 @@ public class ServiceInstance extends Base {
    *
    * @return the artifact deployment status
    */
-  public Activity.Status getArtifactDeploymentStatus() {
+  public ExecutionStatus getArtifactDeploymentStatus() {
     return artifactDeploymentStatus;
   }
 
@@ -215,7 +216,7 @@ public class ServiceInstance extends Base {
    *
    * @param artifactDeploymentStatus the artifact deployment status
    */
-  public void setArtifactDeploymentStatus(Activity.Status artifactDeploymentStatus) {
+  public void setArtifactDeploymentStatus(ExecutionStatus artifactDeploymentStatus) {
     this.artifactDeploymentStatus = artifactDeploymentStatus;
   }
 
@@ -260,7 +261,7 @@ public class ServiceInstance extends Base {
    *
    * @return the last activity status
    */
-  public Activity.Status getLastActivityStatus() {
+  public ExecutionStatus getLastActivityStatus() {
     return lastActivityStatus;
   }
 
@@ -269,7 +270,7 @@ public class ServiceInstance extends Base {
    *
    * @param lastActivityStatus the last activity status
    */
-  public void setLastActivityStatus(Activity.Status lastActivityStatus) {
+  public void setLastActivityStatus(ExecutionStatus lastActivityStatus) {
     this.lastActivityStatus = lastActivityStatus;
   }
 
@@ -393,10 +394,10 @@ public class ServiceInstance extends Base {
     private String artifactId;
     private String artifactName;
     private long artifactDeployedOn;
-    private Activity.Status artifactDeploymentStatus;
+    private ExecutionStatus artifactDeploymentStatus;
     private String artifactDeploymentActivityId;
     private String lastActivityId;
-    private Activity.Status lastActivityStatus;
+    private ExecutionStatus lastActivityStatus;
     private String commandName;
     private String commandType;
     private long lastDeployedOn;
@@ -513,7 +514,7 @@ public class ServiceInstance extends Base {
      * @param artifactDeploymentStatus the artifact deployment status
      * @return the builder
      */
-    public Builder withArtifactDeploymentStatus(Activity.Status artifactDeploymentStatus) {
+    public Builder withArtifactDeploymentStatus(ExecutionStatus artifactDeploymentStatus) {
       this.artifactDeploymentStatus = artifactDeploymentStatus;
       return this;
     }
@@ -546,7 +547,7 @@ public class ServiceInstance extends Base {
      * @param lastActivityStatus the last activity status
      * @return the builder
      */
-    public Builder withLastActivityStatus(Activity.Status lastActivityStatus) {
+    public Builder withLastActivityStatus(ExecutionStatus lastActivityStatus) {
       this.lastActivityStatus = lastActivityStatus;
       return this;
     }

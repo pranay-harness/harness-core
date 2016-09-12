@@ -50,7 +50,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.Artifact;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -68,6 +67,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
@@ -195,7 +195,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(activityService).save(any(Activity.class));
     verify(serviceInstanceService, times(2)).updateActivity(any(Activity.class));
-    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
 
     verify(serviceCommandExecutorService)
@@ -300,7 +300,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
 
-    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, Status.COMPLETED);
+    verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
 

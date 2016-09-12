@@ -42,7 +42,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
@@ -52,6 +51,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -146,7 +146,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
                             .withReleaseName(RELEASE_NAME)
                             .withArtifactId(ARTIFACT_ID)
                             .withArtifactName(ARTIFACT_NAME)
-                            .withStatus(Status.COMPLETED)
+                            .withStatus(ExecutionStatus.SUCCESS)
                             .withCommandName(COMMAND_NAME)
                             .withCommandType(COMMAND_UNIT_TYPE)
                             .withCreatedAt(createdAt)
@@ -165,10 +165,10 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(updateOperations).set("releaseId", RELEASE_ID);
     verify(updateOperations).set("releaseName", RELEASE_NAME);
     verify(updateOperations).set("artifactDeployedOn", createdAt);
-    verify(updateOperations).set("artifactDeploymentStatus", Status.COMPLETED);
+    verify(updateOperations).set("artifactDeploymentStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("artifactDeploymentActivityId", ACTIVITY_ID);
     verify(updateOperations).set("lastActivityId", ACTIVITY_ID);
-    verify(updateOperations).set("lastActivityStatus", Status.COMPLETED);
+    verify(updateOperations).set("lastActivityStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("commandName", COMMAND_NAME);
     verify(updateOperations).set("commandType", COMMAND_UNIT_TYPE);
     verify(updateOperations).set("lastDeployedOn", createdAt);

@@ -3,8 +3,7 @@ package software.wings.beans.stats;
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Id;
-import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 
@@ -60,7 +59,7 @@ public class ActivityStatusAggregation {
    * The type Status count.
    */
   public static class StatusCount {
-    private Activity.Status status;
+    private ExecutionStatus status;
     private int count;
 
     /**
@@ -68,7 +67,7 @@ public class ActivityStatusAggregation {
      *
      * @return the status
      */
-    public Status getStatus() {
+    public ExecutionStatus getStatus() {
       return status;
     }
 
@@ -77,7 +76,7 @@ public class ActivityStatusAggregation {
      *
      * @param status the status
      */
-    public void setStatus(Status status) {
+    public void setStatus(ExecutionStatus status) {
       this.status = status;
     }
 

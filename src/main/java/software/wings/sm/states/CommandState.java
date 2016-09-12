@@ -24,7 +24,6 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
@@ -307,7 +306,7 @@ public class CommandState extends State {
 
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {
     if (activityId != null) {
-      activityService.updateStatus(activityId, appId, Status.FAILED);
+      activityService.updateStatus(activityId, appId, ExecutionStatus.FAILED);
     }
   }
 
@@ -334,8 +333,8 @@ public class CommandState extends State {
       handleCommandException(context, activityId, appId);
     }
 
-    activityService.updateStatus(
-        activityId, appId, executionResultData.getResult().equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
+    activityService.updateStatus(activityId, appId,
+        executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
     Activity activity = activityService.get(activityId, appId);
     String oldReleaseId = serviceInstance.getReleaseId();
     serviceInstanceService.updateActivity(activity);
