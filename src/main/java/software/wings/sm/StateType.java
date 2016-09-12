@@ -18,6 +18,8 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BuildState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.ElasticLoadBalancerDisableState;
+import software.wings.sm.states.ElasticLoadBalancerEnableState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -103,7 +105,11 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Approval state type.
    */
-  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS);
+  APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
+
+  E_L_B_ENABLE_HOST(ElasticLoadBalancerEnableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
+
+  E_L_B_DISABLE_HOST(ElasticLoadBalancerDisableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
