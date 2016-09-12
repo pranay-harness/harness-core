@@ -23,7 +23,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SetupService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +41,7 @@ public class SetupServiceImpl implements SetupService {
   @Inject private HostService hostService;
   @Inject private ReleaseService releaseService;
   @Inject private ArtifactService artifactService;
-  @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   @Override
   public Setup getApplicationSetupStatus(Application application) {
@@ -78,7 +78,7 @@ public class SetupServiceImpl implements SetupService {
                                              .addFilter("appId", Operator.EQ, application.getUuid())
                                              .withLimit("1")
                                              .build();
-    PageResponse<WorkflowExecution> res = workflowService.listExecutions(req, false);
+    PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(req, false);
     if (res != null && !res.isEmpty()) {
       return null;
     }

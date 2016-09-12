@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
@@ -33,7 +33,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   private String workflowExecutionId;
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new workflow execution update.
@@ -112,7 +112,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     wingsPersistence.update(query, updateOps);
 
     try {
-      workflowService.getExecutionDetails(appId, workflowExecutionId);
+      workflowExecutionService.getExecutionDetails(appId, workflowExecutionId);
     } catch (Exception e) {
       logger.error("Error in breakdown refresh", e);
     }

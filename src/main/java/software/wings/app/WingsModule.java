@@ -48,6 +48,7 @@ import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.TagServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.WorkflowServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppContainerService;
@@ -81,6 +82,7 @@ import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.TagService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExpressionProcessorFactory;
 
@@ -123,6 +125,7 @@ public class WingsModule extends AbstractModule {
     bind(ServiceTemplateService.class).to(ServiceTemplateServiceImpl.class);
     bind(InfraService.class).to(InfraServiceImpl.class);
     bind(WorkflowService.class).to(WorkflowServiceImpl.class);
+    bind(WorkflowExecutionService.class).to(WorkflowExecutionServiceImpl.class);
     bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
     bind(TagService.class).to(TagServiceImpl.class);
     bind(ConfigService.class).to(ConfigServiceImpl.class);

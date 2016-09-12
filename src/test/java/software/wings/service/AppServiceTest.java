@@ -43,7 +43,7 @@ import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import javax.inject.Inject;
 
@@ -75,7 +75,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
   @Mock private AppContainerService appContainerService;
-  @Mock private WorkflowService workflowService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationService notificationService;
   @Mock private HistoryService historyService;
   @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
@@ -128,7 +128,7 @@ public class AppServiceTest extends WingsBaseTest {
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
-    when(workflowService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
     PageResponse<Notification> notificationPageResponse = new PageResponse<>();
     notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);

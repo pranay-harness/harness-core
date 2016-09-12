@@ -64,6 +64,7 @@ import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -96,10 +97,11 @@ import javax.inject.Inject;
  * @author Rishi
  */
 @Listeners(NotifyEventListener.class)
-public class WorkflowServiceImplTest extends WingsBaseTest {
+public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static Map<String, CountDownLatch> workflowExecutionSignals = new HashMap<>();
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Mock @Inject private StaticConfiguration staticConfiguration;
   @Inject private ServiceInstanceService serviceInstanceService;
@@ -145,7 +147,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -207,7 +210,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -271,7 +275,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
 
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -340,7 +345,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat((long) StaticMap.getValue(stateA.getName()) < (long) StaticMap.getValue(stateAB.getName()))
@@ -404,7 +410,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -467,7 +474,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -527,7 +535,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(StaticMap.getValue(stateA.getName())).isNotNull();
@@ -624,7 +633,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, sm.getUuid(), executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
   }
 
@@ -681,12 +691,13 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String smId = sm.getUuid();
     System.out.println("Going to trigger state machine");
     String executionUuid = UUIDGenerator.getUuid();
-    workflowService.trigger(appId, sm.getUuid(), executionUuid, executionUuid);
+    workflowExecutionService.trigger(appId, sm.getUuid(), executionUuid, executionUuid);
 
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    ((WorkflowServiceImpl) workflowService).trigger(appId, smId, executionUuid, executionUuid, callback);
+    ((WorkflowExecutionServiceImpl) workflowExecutionService)
+        .trigger(appId, smId, executionUuid, executionUuid, callback);
     workflowExecutionSignals.get(signalId).await();
   }
 
@@ -699,8 +710,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
-    Orchestration workflow = impl.readLatestSimpleWorkflow(app.getUuid(), env.getUuid());
+    Orchestration workflow = workflowService.readLatestSimpleWorkflow(app.getUuid(), env.getUuid());
     assertThat(workflow).isNotNull();
     assertThat(workflow.getWorkflowType()).isEqualTo(WorkflowType.SIMPLE);
     assertThat(workflow.getGraph()).isNotNull();
@@ -779,21 +789,21 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionArgs.setServiceId(service.getUuid());
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
-
     impl.setStaticConfiguration(staticConfiguration);
 
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionServiceImpl workflowExecutionServiceImpl = (WorkflowExecutionServiceImpl) workflowExecutionService;
     WorkflowExecution workflowExecution =
-        impl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
+        workflowExecutionServiceImpl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
 
     WorkflowExecution workflowExecution2 =
-        workflowService.getExecutionDetails(app.getUuid(), workflowExecution.getUuid());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), workflowExecution.getUuid());
     assertThat(workflowExecution2)
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
             WorkflowExecution::getWorkflowId)
@@ -912,21 +922,21 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     executionArgs.setServiceId(service.getUuid());
 
     WorkflowServiceImpl impl = (WorkflowServiceImpl) workflowService;
-
     impl.setStaticConfiguration(staticConfiguration);
 
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
+    WorkflowExecutionServiceImpl workflowExecutionServiceImpl = (WorkflowExecutionServiceImpl) workflowExecutionService;
     WorkflowExecution workflowExecution =
-        impl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
+        workflowExecutionServiceImpl.triggerEnvExecution(app.getUuid(), env.getUuid(), executionArgs, callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(workflowExecution).isNotNull();
     assertThat(workflowExecution.getUuid()).isNotNull();
 
     WorkflowExecution workflowExecution2 =
-        workflowService.getExecutionDetails(app.getUuid(), workflowExecution.getUuid());
+        workflowExecutionService.getExecutionDetails(app.getUuid(), workflowExecution.getUuid());
     assertThat(workflowExecution2)
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
             WorkflowExecution::getWorkflowId)
@@ -964,7 +974,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                                      .addFilter("appId", Operator.EQ, app.getUuid())
                                                      .addFilter("uuid", Operator.EQ, workflowExecution.getUuid())
                                                      .build();
-    PageResponse<WorkflowExecution> res = workflowService.listExecutions(pageRequest, true);
+    PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(pageRequest, true);
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
 
     graph = res.get(0).getGraph();
@@ -1101,7 +1111,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
     workflowExecutionSignals.get(signalId).await();
@@ -1110,7 +1120,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     logger.debug("Orchestration executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1148,7 +1158,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
         .extracting("uuid")
         .contains(service1.getUuid(), service2.getUuid());
 
-    execution = workflowService.getExecutionDetails(
+    execution = workflowExecutionService.getExecutionDetails(
         app.getUuid(), executionId, null, repeatByInstances.get(0).getId(), NodeOps.EXPAND);
     assertThat(execution.getExpandedGroupIds()).hasSize(2);
 
@@ -1176,8 +1186,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
             -> "REPEAT".equals(n.getType()) && "SUCCESS".equals(n.getStatus()) && !n.isExpanded()
                 && n.getGroup() == null && n.getNext() != null);
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId, execution.getExpandedGroupIds(),
-        repeatByInstances.get(0).getId(), NodeOps.COLLAPSE);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId,
+        execution.getExpandedGroupIds(), repeatByInstances.get(0).getId(), NodeOps.COLLAPSE);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1199,7 +1209,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     assertThat(graph.getNodes()).filteredOn("name", "instRepeatWait").isEmpty();
     assertThat(graph.getNodes()).filteredOn("name", "instSuccessWait").hasSize(2);
 
-    execution = workflowService.getExecutionDetails(
+    execution = workflowExecutionService.getExecutionDetails(
         app.getUuid(), executionId, twoLevelExpanded, graph.getNodes().get(0).getId(), NodeOps.COLLAPSE);
     assertThat(execution)
         .isNotNull()
@@ -1233,15 +1243,15 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution =
-        ((WorkflowServiceImpl) workflowService).triggerPipelineExecution(appId, pipeline.getUuid(), callback);
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
+                                      .triggerPipelineExecution(appId, pipeline.getUuid(), callback);
     workflowExecutionSignals.get(signalId).await();
 
     assertThat(execution).isNotNull();
     String executionId = execution.getUuid();
     logger.debug("Pipeline executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowService.getExecutionDetails(appId, executionId);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -1274,7 +1284,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     filter.setOp(Operator.EQ);
     pageRequest.addFilter(filter);
 
-    PageResponse<WorkflowExecution> pageResponse = workflowService.listExecutions(pageRequest, true);
+    PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, true);
     assertThat(pageResponse).isNotNull().hasSize(1).doesNotContainNull();
     WorkflowExecution workflowExecution2 = pageResponse.get(0);
     assertThat(workflowExecution2)
@@ -1383,7 +1393,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
   //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-  //    workflowService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+  //    workflowExecutionService.incrementInProgressCount(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getInprogress()).isEqualTo(1);
   //  }
@@ -1398,7 +1408,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
   //    Environment env = wingsPersistence.saveAndGet(Environment.class,
   //    Builder.anEnvironment().withAppId(appId).build()); triggerOrchestration(env); WorkflowExecution
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-  //    workflowService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+  //    workflowExecutionService.incrementSuccess(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
   //    workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
   //    assertThat(workflowExecution.getBreakdown().getSuccess()).isEqualTo(2);
   //  }
@@ -1415,7 +1425,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
     triggerOrchestration(appId, env);
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
-    workflowService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
+    workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
     workflowExecution = wingsPersistence.get(WorkflowExecution.class, new PageRequest<>());
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
   }
@@ -1435,7 +1445,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
     WorkflowExecution execution =
-        ((WorkflowServiceImpl) workflowService)
+        ((WorkflowExecutionServiceImpl) workflowExecutionService)
             .triggerOrchestrationExecution(appId, env.getUuid(), orchestration.getUuid(), executionArgs, callback);
     workflowExecutionSignals.get(signalId).await();
 
@@ -1443,7 +1453,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String executionId = execution.getUuid();
     logger.debug("Orchestration executionId: {}", executionId);
     assertThat(executionId).isNotNull();
-    execution = workflowService.getExecutionDetails(appId, executionId);
+    execution = workflowExecutionService.getExecutionDetails(appId, executionId);
     assertThat(execution)
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
@@ -1559,7 +1569,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -1572,7 +1582,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
@@ -1593,10 +1603,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withStateExecutionInstanceId(graph.getNodes().get(1).getId())
                                         .withExecutionEventType(ExecutionEventType.RESUME)
                                         .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
     workflowExecutionSignals.get(signalId).await();
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1672,7 +1682,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -1689,14 +1699,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withExecutionUuid(executionId)
                                         .withEnvId(env.getUuid())
                                         .build();
-    executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
     assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
 
     int i = 0;
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
 
     List<Node> pendingWait1List = execution.getGraph()
@@ -1730,12 +1740,12 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                          .withExecutionUuid(executionId)
                          .withEnvId(env.getUuid())
                          .build();
-    executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
     assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
 
     workflowExecutionSignals.get(signalId).await();
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1771,7 +1781,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withExecutionUuid(UUIDGenerator.getUuid())
                                         .build();
     try {
-      executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+      executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException exception) {
       assertThat(exception.getParams().values()).doesNotContainNull();
@@ -1834,7 +1844,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -1847,7 +1857,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.PAUSED && i < 5);
     assertThat(execution).isNotNull().extracting("uuid", "status").containsExactly(executionId, ExecutionStatus.PAUSED);
 
@@ -1868,10 +1878,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withStateExecutionInstanceId(graph.getNodes().get(1).getId())
                                         .withExecutionEventType(ExecutionEventType.ABORT)
                                         .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
     workflowExecutionSignals.get(signalId).await();
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .extracting("uuid", "status")
@@ -1944,7 +1954,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -1961,14 +1971,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withExecutionUuid(executionId)
                                         .withEnvId(env.getUuid())
                                         .build();
-    executionEvent = workflowService.triggerExecutionEvent(executionEvent);
+    executionEvent = workflowExecutionService.triggerExecutionEvent(executionEvent);
     assertThat(executionEvent).isNotNull().hasFieldOrProperty("uuid");
 
     int i = 0;
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     } while (execution.getStatus() != ExecutionStatus.ABORTED && i < 5);
 
     assertThat(execution)
@@ -2067,7 +2077,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -2081,7 +2091,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       pausedNodes = execution.getGraph()
                         .getNodes()
                         .stream()
@@ -2091,7 +2101,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                         .collect(Collectors.toList());
     } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -2114,14 +2124,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withStateExecutionInstanceId(installNode.getId())
                                         .withExecutionEventType(ExecutionEventType.RESUME)
                                         .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
 
     i = 0;
     pausedNodes = null;
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       pausedNodes = execution.getGraph()
                         .getNodes()
                         .stream()
@@ -2153,10 +2163,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                          .withStateExecutionInstanceId(installNode.getId())
                          .withExecutionEventType(ExecutionEventType.RESUME)
                          .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
     workflowExecutionSignals.get(signalId).await();
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -2249,7 +2259,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     String signalId = UUIDGenerator.getUuid();
     WorkflowExecutionUpdateMock callback = new WorkflowExecutionUpdateMock(signalId);
     workflowExecutionSignals.put(signalId, new CountDownLatch(1));
-    WorkflowExecution execution = ((WorkflowServiceImpl) workflowService)
+    WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerOrchestrationExecution(app.getUuid(), env.getUuid(),
                                           orchestration.getUuid(), executionArgs, callback);
 
@@ -2263,7 +2273,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       pausedNodes = execution.getGraph()
                         .getNodes()
                         .stream()
@@ -2273,7 +2283,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                         .collect(Collectors.toList());
     } while ((pausedNodes == null || pausedNodes.isEmpty()) && i < 5);
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)
@@ -2296,14 +2306,14 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                                         .withStateExecutionInstanceId(installNode.getId())
                                         .withExecutionEventType(ExecutionEventType.RETRY)
                                         .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
 
     i = 0;
     pausedNodes = null;
     do {
       i++;
       Thread.sleep(1000);
-      execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+      execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
       pausedNodes = execution.getGraph()
                         .getNodes()
                         .stream()
@@ -2335,10 +2345,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
                          .withStateExecutionInstanceId(installNode.getId())
                          .withExecutionEventType(ExecutionEventType.RESUME)
                          .build();
-    workflowService.triggerExecutionEvent(executionEvent);
+    workflowExecutionService.triggerExecutionEvent(executionEvent);
     workflowExecutionSignals.get(signalId).await();
 
-    execution = workflowService.getExecutionDetails(app.getUuid(), executionId);
+    execution = workflowExecutionService.getExecutionDetails(app.getUuid(), executionId);
     assertThat(execution)
         .isNotNull()
         .hasFieldOrPropertyWithValue("uuid", executionId)

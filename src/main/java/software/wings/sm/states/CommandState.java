@@ -52,7 +52,7 @@ import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -105,7 +105,7 @@ public class CommandState extends State {
 
   @Inject @Transient private transient EnvironmentService environmentService;
 
-  @Inject @Transient private transient WorkflowService workflowService;
+  @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
   @Inject @Transient private ReleaseService releaseService;
 
@@ -383,9 +383,9 @@ public class CommandState extends State {
     if (simpleWorkflowParamOpt.isPresent()) {
       String appId = getAppId(context);
       if (executionStatus == ExecutionStatus.FAILED) {
-        workflowService.incrementFailed(appId, context.getWorkflowExecutionId(), 1);
+        workflowExecutionService.incrementFailed(appId, context.getWorkflowExecutionId(), 1);
       } else {
-        workflowService.incrementSuccess(appId, context.getWorkflowExecutionId(), 1);
+        workflowExecutionService.incrementSuccess(appId, context.getWorkflowExecutionId(), 1);
       }
     }
   }
@@ -403,7 +403,7 @@ public class CommandState extends State {
             .findFirst();
     if (simpleWorkflowParamOpt.isPresent()) {
       String appId = getAppId(context);
-      workflowService.incrementInProgressCount(appId, context.getWorkflowExecutionId(), 1);
+      workflowExecutionService.incrementInProgressCount(appId, context.getWorkflowExecutionId(), 1);
     }
   }
 

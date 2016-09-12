@@ -38,7 +38,7 @@ import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SetupService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -61,7 +61,7 @@ public class AppServiceImpl implements AppService {
   @Inject private AppContainerService appContainerService;
   @Inject private ExecutorService executorService;
   @Inject private SetupService setupService;
-  @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
 
@@ -103,7 +103,7 @@ public class AppServiceImpl implements AppService {
     if (overview) {
       response.getResponse().parallelStream().forEach(application -> {
         application.setRecentExecutions(
-            workflowService
+            workflowExecutionService
                 .listExecutions(
                     aPageRequest()
                         .withLimit(Integer.toString(numberOfExecutions))

@@ -51,7 +51,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 
 import java.time.Instant;
@@ -77,7 +77,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   public static final long MILLIS_IN_A_DAY = 86400000;
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
-  @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
 
   @Override
@@ -145,7 +145,8 @@ public class StatisticsServiceImpl implements StatisticsService {
               .build());
     }
 
-    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
 
     Map<EnvironmentType, Long> deploymentCountByType =
         workflowExecutions.stream()
@@ -278,7 +279,8 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addOrder(aSortOrder().withField("createdAt", OrderType.DESC).build())
             .build();
 
-    List<WorkflowExecution> workflowExecutions = workflowService.listExecutions(pageRequest, false).getResponse();
+    List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
     List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(numOfDays);
 
     Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =

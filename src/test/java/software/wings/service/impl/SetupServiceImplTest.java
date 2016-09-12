@@ -34,7 +34,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.SetupService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import javax.inject.Inject;
 
@@ -45,7 +45,7 @@ public class SetupServiceImplTest extends WingsBaseTest {
   @Mock private HostService hostService;
   @Mock private ReleaseService releaseService;
   @Mock private ArtifactService artifactService;
-  @Mock private WorkflowService workflowService;
+  @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private MainConfiguration configuration;
 
   @Inject @InjectMocks private SetupService setupService;
@@ -104,7 +104,7 @@ public class SetupServiceImplTest extends WingsBaseTest {
 
     PageResponse<WorkflowExecution> execRes = new PageResponse<>();
     execRes.setResponse(asList(new WorkflowExecution()));
-    when(workflowService.listExecutions(any(PageRequest.class), anyBoolean())).thenReturn(execRes);
+    when(workflowExecutionService.listExecutions(any(PageRequest.class), anyBoolean())).thenReturn(execRes);
     setupStatus = setupService.getApplicationSetupStatus(application);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
     assertThat(setupStatus.getActions()).isEmpty();

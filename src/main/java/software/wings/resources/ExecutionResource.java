@@ -18,7 +18,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionEvent;
 
 import java.util.List;
@@ -41,18 +41,18 @@ import javax.ws.rs.QueryParam;
 @Path("/executions")
 public class ExecutionResource {
   private AppService appService;
-  private WorkflowService workflowService;
+  private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new execution resource.
    *
    * @param appService      the app service
-   * @param workflowService the workflow service
+   * @param workflowExecutionService the workflow service
    */
   @Inject
-  public ExecutionResource(AppService appService, WorkflowService workflowService) {
+  public ExecutionResource(AppService appService, WorkflowExecutionService workflowExecutionService) {
     this.appService = appService;
-    this.workflowService = workflowService;
+    this.workflowExecutionService = workflowExecutionService;
   }
 
   /**
@@ -100,7 +100,7 @@ public class ExecutionResource {
       filter.setOp(Operator.EQ);
       pageRequest.addFilter(filter);
     }
-    return new RestResponse<>(workflowService.listExecutions(pageRequest, includeGraph, true));
+    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, includeGraph, true));
   }
 
   /**
@@ -121,8 +121,8 @@ public class ExecutionResource {
       @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("expandedGroupId") List<String> expandedGroupIds,
       @QueryParam("requestedGroupId") String requestedGroupId, @QueryParam("nodeOps") Graph.NodeOps nodeOps) {
-    return new RestResponse<>(
-        workflowService.getExecutionDetails(appId, workflowExecutionId, expandedGroupIds, requestedGroupId, nodeOps));
+    return new RestResponse<>(workflowExecutionService.getExecutionDetails(
+        appId, workflowExecutionId, expandedGroupIds, requestedGroupId, nodeOps));
   }
 
   /**
@@ -137,7 +137,7 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(workflowService.triggerEnvExecution(appId, envId, executionArgs));
+    return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs));
   }
 
   /**
@@ -193,7 +193,7 @@ public class ExecutionResource {
     executionEvent.setEnvId(envId);
     executionEvent.setExecutionUuid(workflowExecutionId);
 
-    return new RestResponse<>(workflowService.triggerExecutionEvent(executionEvent));
+    return new RestResponse<>(workflowExecutionService.triggerExecutionEvent(executionEvent));
   }
 
   /**
@@ -209,6 +209,6 @@ public class ExecutionResource {
   @Produces("application/json")
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(workflowService.getRequiredExecutionArgs(appId, envId, executionArgs));
+    return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
   }
 }

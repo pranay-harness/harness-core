@@ -181,7 +181,7 @@ public class WingsRule implements MethodRule {
 
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
-    registerScheduledJobs(injector);
+    // registerScheduledJobs(injector);
   }
 
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
@@ -262,7 +262,7 @@ public class WingsRule implements MethodRule {
   private void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
-        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 1000L, TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 000L, TimeUnit.MILLISECONDS);
   }
 
   private Logger log() {

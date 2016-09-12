@@ -14,6 +14,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
@@ -40,6 +41,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 public class PipelineResource {
   private WorkflowService workflowService;
+  private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Instantiates a new pipeline resource.
@@ -148,7 +150,7 @@ public class PipelineResource {
     filter.setOp(Operator.EQ);
     pageRequest.addFilter(filter);
 
-    return new RestResponse<>(workflowService.listExecutions(pageRequest, true));
+    return new RestResponse<>(workflowExecutionService.listExecutions(pageRequest, true));
   }
 
   /**
@@ -163,7 +165,7 @@ public class PipelineResource {
   @Path("{pipelineId}/executions")
   public RestResponse<WorkflowExecution> triggerExecution(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId, ExecutionArgs executionArgs) {
-    return new RestResponse<>(workflowService.triggerPipelineExecution(appId, pipelineId));
+    return new RestResponse<>(workflowExecutionService.triggerPipelineExecution(appId, pipelineId));
   }
 
   /**

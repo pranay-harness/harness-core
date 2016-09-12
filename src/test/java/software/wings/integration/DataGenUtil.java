@@ -97,6 +97,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
@@ -159,6 +160,7 @@ public class DataGenUtil extends WingsBaseTest {
   private List<String> configFileNames;
   private SettingAttribute envAttr = null;
   @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
 
   /**
    * Generated Data for across the API use.
@@ -390,13 +392,14 @@ private void addOrchestrationAndPipeline(
 }
 
 private void addPipelineExecution(Application application, Pipeline pipeline) {
-  WorkflowExecution execution = workflowService.triggerPipelineExecution(application.getUuid(), pipeline.getUuid());
+  WorkflowExecution execution =
+      workflowExecutionService.triggerPipelineExecution(application.getUuid(), pipeline.getUuid());
   assertThat(execution).isNotNull();
   String executionId = execution.getUuid();
   logger.debug("Pipeline executionId: {}", executionId);
   assertThat(executionId).isNotNull();
   Misc.quietSleep(2000);
-  execution = workflowService.getExecutionDetails(application.getUuid(), executionId);
+  execution = workflowExecutionService.getExecutionDetails(application.getUuid(), executionId);
   assertThat(execution)
       .isNotNull()
       .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)

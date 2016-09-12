@@ -6,7 +6,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HistoryService;
-import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
@@ -16,7 +16,7 @@ import javax.inject.Inject;
  */
 public class HistoryServiceImpl implements HistoryService {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private WorkflowService workflowService;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ExecutorService executorService;
 
   @Override
@@ -39,7 +39,8 @@ public class HistoryServiceImpl implements HistoryService {
     History history = wingsPersistence.get(History.class, appId, historyId);
     if (history.getEntityType() == EntityType.ORCHESTRATED_DEPLOYMENT
         || history.getEntityType() == EntityType.SIMPLE_DEPLOYMENT) {
-      history.setEntityNewValue(workflowService.getExecutionDetails(history.getAppId(), history.getEntityId()));
+      history.setEntityNewValue(
+          workflowExecutionService.getExecutionDetails(history.getAppId(), history.getEntityId()));
     }
     return history;
   }
