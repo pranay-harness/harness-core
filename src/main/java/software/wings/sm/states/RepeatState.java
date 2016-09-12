@@ -93,7 +93,9 @@ public class RepeatState extends State {
         if (repeatElementExpression != null) {
           repeatElements = (List<ContextElement>) context.evaluateExpression(repeatElementExpression);
           repeatStateExecutionData.setRepeatElements(repeatElements);
-          repeatStateExecutionData.setRepeatElementType(repeatElements.get(0).getElementType());
+          if (repeatElements != null && !repeatElements.isEmpty()) {
+            repeatStateExecutionData.setRepeatElementType(repeatElements.get(0).getElementType());
+          }
         }
       }
     } catch (Exception ex) {
@@ -104,7 +106,7 @@ public class RepeatState extends State {
     if (repeatElements == null || repeatElements.size() == 0) {
       ExecutionResponse executionResponse = new ExecutionResponse();
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-      executionResponse.setErrorMessage("Expression: " + repeatElementExpression + ". no repeat elements found");
+      executionResponse.setErrorMessage("No repeat elements found for the expression: " + repeatElementExpression);
       return executionResponse;
     }
     if (repeatTransitionStateName == null) {
