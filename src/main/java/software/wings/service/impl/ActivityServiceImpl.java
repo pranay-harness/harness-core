@@ -26,6 +26,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,10 +68,10 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void updateStatus(String activityId, String appId, Activity.Status activityStatus) {
+  public void updateStatus(String activityId, String appId, ExecutionStatus status) {
     wingsPersistence.update(
         wingsPersistence.createQuery(Activity.class).field(ID_KEY).equal(activityId).field("appId").equal(appId),
-        wingsPersistence.createUpdateOperations(Activity.class).set("status", activityStatus));
+        wingsPersistence.createUpdateOperations(Activity.class).set("status", status));
   }
 
   @Override

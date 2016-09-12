@@ -5,6 +5,7 @@ import com.google.common.base.MoreObjects;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -37,7 +38,7 @@ public class Activity extends Base {
   private boolean isPipeline;
   private String artifactId;
   private String artifactName;
-  private Status status = Status.RUNNING;
+  private ExecutionStatus status = ExecutionStatus.RUNNING;
 
   /**
    * Gets application name.
@@ -260,7 +261,7 @@ public class Activity extends Base {
    *
    * @return the status
    */
-  public Status getStatus() {
+  public ExecutionStatus getStatus() {
     return status;
   }
 
@@ -269,7 +270,7 @@ public class Activity extends Base {
    *
    * @param status the status
    */
-  public void setStatus(Status status) {
+  public void setStatus(ExecutionStatus status) {
     this.status = status;
   }
 
@@ -505,35 +506,40 @@ public class Activity extends Base {
         .toString();
   }
 
+  /**
+   * Gets service instance id.
+   *
+   * @return the service instance id
+   */
   public String getServiceInstanceId() {
     return serviceInstanceId;
   }
 
+  /**
+   * Sets service instance id.
+   *
+   * @param serviceInstanceId the service instance id
+   */
   public void setServiceInstanceId(String serviceInstanceId) {
     this.serviceInstanceId = serviceInstanceId;
   }
 
   /**
-   * The Enum Status.
+   * The enum Type.
    */
-  public enum Status {
+  public enum Type {
     /**
-     * Running status.
+     * Command type.
      */
-    RUNNING, /**
-              * Completed status.
+    Command, /**
+              * Verification type.
               */
-    COMPLETED, /**
-                * Aborted status.
-                */
-    ABORTED, /**
-              * Failed status.
-              */
-    FAILED
+    Verification
   }
 
-  public enum Type { Command, Verification }
-
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private Type type;
     private String applicationName;
@@ -556,7 +562,7 @@ public class Activity extends Base {
     private String releaseName;
     private String artifactId;
     private String artifactName;
-    private Status status = Status.RUNNING;
+    private ExecutionStatus status = ExecutionStatus.RUNNING;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -567,155 +573,339 @@ public class Activity extends Base {
 
     private Builder() {}
 
+    /**
+     * An activity builder.
+     *
+     * @return the builder
+     */
     public static Builder anActivity() {
       return new Builder();
     }
 
+    /**
+     * With type builder.
+     *
+     * @param type the type
+     * @return the builder
+     */
     public Builder withType(Type type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * With application name builder.
+     *
+     * @param applicationName the application name
+     * @return the builder
+     */
     public Builder withApplicationName(String applicationName) {
       this.applicationName = applicationName;
       return this;
     }
 
+    /**
+     * With environment id builder.
+     *
+     * @param environmentId the environment id
+     * @return the builder
+     */
     public Builder withEnvironmentId(String environmentId) {
       this.environmentId = environmentId;
       return this;
     }
 
+    /**
+     * With environment name builder.
+     *
+     * @param environmentName the environment name
+     * @return the builder
+     */
     public Builder withEnvironmentName(String environmentName) {
       this.environmentName = environmentName;
       return this;
     }
 
+    /**
+     * With environment type builder.
+     *
+     * @param environmentType the environment type
+     * @return the builder
+     */
     public Builder withEnvironmentType(EnvironmentType environmentType) {
       this.environmentType = environmentType;
       return this;
     }
 
+    /**
+     * With command name builder.
+     *
+     * @param commandName the command name
+     * @return the builder
+     */
     public Builder withCommandName(String commandName) {
       this.commandName = commandName;
       return this;
     }
 
+    /**
+     * With command type builder.
+     *
+     * @param commandType the command type
+     * @return the builder
+     */
     public Builder withCommandType(String commandType) {
       this.commandType = commandType;
       return this;
     }
 
+    /**
+     * With service id builder.
+     *
+     * @param serviceId the service id
+     * @return the builder
+     */
     public Builder withServiceId(String serviceId) {
       this.serviceId = serviceId;
       return this;
     }
 
+    /**
+     * With service name builder.
+     *
+     * @param serviceName the service name
+     * @return the builder
+     */
     public Builder withServiceName(String serviceName) {
       this.serviceName = serviceName;
       return this;
     }
 
+    /**
+     * With service template id builder.
+     *
+     * @param serviceTemplateId the service template id
+     * @return the builder
+     */
     public Builder withServiceTemplateId(String serviceTemplateId) {
       this.serviceTemplateId = serviceTemplateId;
       return this;
     }
 
+    /**
+     * With service template name builder.
+     *
+     * @param serviceTemplateName the service template name
+     * @return the builder
+     */
     public Builder withServiceTemplateName(String serviceTemplateName) {
       this.serviceTemplateName = serviceTemplateName;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With service instance id builder.
+     *
+     * @param serviceInstanceId the service instance id
+     * @return the builder
+     */
     public Builder withServiceInstanceId(String serviceInstanceId) {
       this.serviceInstanceId = serviceInstanceId;
       return this;
     }
 
+    /**
+     * With workflow execution id builder.
+     *
+     * @param workflowExecutionId the workflow execution id
+     * @return the builder
+     */
     public Builder withWorkflowExecutionId(String workflowExecutionId) {
       this.workflowExecutionId = workflowExecutionId;
       return this;
     }
 
+    /**
+     * With workflow execution name builder.
+     *
+     * @param workflowExecutionName the workflow execution name
+     * @return the builder
+     */
     public Builder withWorkflowExecutionName(String workflowExecutionName) {
       this.workflowExecutionName = workflowExecutionName;
       return this;
     }
 
+    /**
+     * With state execution instance id builder.
+     *
+     * @param stateExecutionInstanceId the state execution instance id
+     * @return the builder
+     */
     public Builder withStateExecutionInstanceId(String stateExecutionInstanceId) {
       this.stateExecutionInstanceId = stateExecutionInstanceId;
       return this;
     }
 
+    /**
+     * With state execution instance name builder.
+     *
+     * @param stateExecutionInstanceName the state execution instance name
+     * @return the builder
+     */
     public Builder withStateExecutionInstanceName(String stateExecutionInstanceName) {
       this.stateExecutionInstanceName = stateExecutionInstanceName;
       return this;
     }
 
+    /**
+     * With release id builder.
+     *
+     * @param releaseId the release id
+     * @return the builder
+     */
     public Builder withReleaseId(String releaseId) {
       this.releaseId = releaseId;
       return this;
     }
 
+    /**
+     * With release name builder.
+     *
+     * @param releaseName the release name
+     * @return the builder
+     */
     public Builder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
+    /**
+     * With artifact id builder.
+     *
+     * @param artifactId the artifact id
+     * @return the builder
+     */
     public Builder withArtifactId(String artifactId) {
       this.artifactId = artifactId;
       return this;
     }
 
+    /**
+     * With artifact name builder.
+     *
+     * @param artifactName the artifact name
+     * @return the builder
+     */
     public Builder withArtifactName(String artifactName) {
       this.artifactName = artifactName;
       return this;
     }
 
-    public Builder withStatus(Status status) {
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
+    public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anActivity()
           .withType(type)
@@ -749,6 +939,11 @@ public class Activity extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build activity.
+     *
+     * @return the activity
+     */
     public Activity build() {
       Activity activity = new Activity();
       activity.setType(type);

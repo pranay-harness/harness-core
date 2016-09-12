@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
 import software.wings.beans.Artifact;
 import software.wings.beans.Host;
@@ -10,9 +11,12 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
 
 import java.util.List;
 import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by anubhaw on 5/26/16.
@@ -36,7 +40,7 @@ public interface ServiceInstanceService {
    * @return the page response
    */
   PageResponse<ServiceInstance> list(
-      PageRequest<ServiceInstance> pageRequest, String appId, String envId, String serviceId);
+      PageRequest<ServiceInstance> pageRequest, @NotEmpty String appId, @NotEmpty String envId, String serviceId);
 
   /**
    * Save.
@@ -44,15 +48,7 @@ public interface ServiceInstanceService {
    * @param serviceInstance the service instance
    * @return the service instance
    */
-  ServiceInstance save(ServiceInstance serviceInstance);
-
-  /**
-   * Update.
-   *
-   * @param serviceInstance the service instance
-   * @return the service instance
-   */
-  ServiceInstance update(ServiceInstance serviceInstance);
+  @ValidationGroups(Create.class) ServiceInstance save(@Valid ServiceInstance serviceInstance);
 
   /**
    * Delete.
@@ -61,7 +57,7 @@ public interface ServiceInstanceService {
    * @param envId      the env id
    * @param instanceId the instance id
    */
-  void delete(String appId, String envId, String instanceId);
+  void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String instanceId);
 
   /**
    * Gets the.
@@ -80,7 +76,7 @@ public interface ServiceInstanceService {
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
+  void updateInstanceMappings(@NotNull ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
 
   /**
    * Delete by env.
@@ -88,7 +84,7 @@ public interface ServiceInstanceService {
    * @param appId the app id
    * @param envId the env id
    */
-  void deleteByEnv(String appId, String envId);
+  void deleteByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Delete by service template.
@@ -97,7 +93,7 @@ public interface ServiceInstanceService {
    * @param envId      the env id
    * @param templateId the template id
    */
-  void deleteByServiceTemplate(String appId, String envId, String templateId);
+  void deleteByServiceTemplate(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String templateId);
 
   /**
    * Gets counts by env release and template.
@@ -108,7 +104,7 @@ public interface ServiceInstanceService {
    * @return the counts by env release and template
    */
   Iterable<InstanceCountByEnv> getCountsByEnvReleaseAndTemplate(
-      String appId, Release release, Set<ServiceTemplate> serviceTemplates);
+      @NotEmpty String appId, @NotNull Release release, Set<ServiceTemplate> serviceTemplates);
 
   /**
    * Gets counts by env.
@@ -117,14 +113,14 @@ public interface ServiceInstanceService {
    * @param serviceTemplates the service templates
    * @return the counts by env
    */
-  Iterable<InstanceCountByEnv> getCountsByEnv(String appId, Set<ServiceTemplate> serviceTemplates);
+  Iterable<InstanceCountByEnv> getCountsByEnv(@NotEmpty String appId, Set<ServiceTemplate> serviceTemplates);
 
   /**
    * Update activity.
    *
    * @param activity the activity
    */
-  void updateActivity(Activity activity);
+  void updateActivity(@NotNull Activity activity);
 
   /**
    * Gets recent artifacts.
@@ -134,7 +130,7 @@ public interface ServiceInstanceService {
    * @param serviceInstanceId the service instance id
    * @return the recent artifacts
    */
-  List<Artifact> getRecentArtifacts(String appId, String envId, String serviceInstanceId);
+  List<Artifact> getRecentArtifacts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceInstanceId);
 
   /**
    * Gets recent activities.
@@ -144,5 +140,6 @@ public interface ServiceInstanceService {
    * @param serviceInstanceId the service instance id
    * @return the recent activities
    */
-  List<Activity> getRecentActivities(String appId, String envId, String serviceInstanceId);
+  List<Activity> getRecentActivities(
+      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceInstanceId);
 }

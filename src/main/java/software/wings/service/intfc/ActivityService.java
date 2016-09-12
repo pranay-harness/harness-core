@@ -6,6 +6,7 @@ import software.wings.beans.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.utils.validation.Create;
 
 import java.util.List;
@@ -45,9 +46,9 @@ public interface ActivityService {
    *
    * @param activityId     the activity id
    * @param appId          the app id
-   * @param activityStatus the activity status
+   * @param status the activity status
    */
-  void updateStatus(String activityId, String appId, Activity.Status activityStatus);
+  void updateStatus(String activityId, String appId, ExecutionStatus status);
 
   /**
    * Gets command units.

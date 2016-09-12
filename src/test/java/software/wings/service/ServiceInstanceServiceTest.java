@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -17,11 +18,16 @@ import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
+import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_TYPE;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
+import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -33,9 +39,10 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Activity;
 import software.wings.beans.Host;
-import software.wings.beans.Release.Builder;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -44,6 +51,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.intfc.ServiceInstanceService;
+import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -54,21 +62,26 @@ import javax.inject.Inject;
 public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<ServiceInstance> query;
+  @Mock private UpdateOperations<ServiceInstance> updateOperations;
   @Mock private FieldEnd end;
 
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
 
   @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
 
-  private ServiceInstance.Builder builder =
-      aServiceInstance()
-          .withHost(aHost().withUuid(HOST_ID).build())
-          .withServiceTemplate(
-              aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build())
-          .withRelease(Builder.aRelease().withUuid(RELEASE_ID).build())
-          .withArtifact(software.wings.beans.Artifact.Builder.anArtifact().withUuid(ARTIFACT_ID).build())
-          .withAppId(APP_ID)
-          .withEnvId(ENV_ID);
+  private final ServiceTemplate serviceTemplate =
+      aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build();
+  private final Host host = aHost().withUuid(HOST_ID).build();
+
+  private ServiceInstance.Builder builder = aServiceInstance()
+                                                .withAppId(APP_ID)
+                                                .withEnvId(ENV_ID)
+                                                .withHost(host)
+                                                .withServiceTemplate(serviceTemplate)
+                                                .withReleaseId(RELEASE_NAME)
+                                                .withReleaseId(RELEASE_ID)
+                                                .withArtifactId(ARTIFACT_ID)
+                                                .withArtifactName(ARTIFACT_NAME);
 
   /**
    * Sets up.
@@ -81,6 +94,8 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     when(query.field(anyString())).thenReturn(end);
     when(end.equal(anyObject())).thenReturn(query);
     when(end.hasAnyOf(anyCollection())).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(ServiceInstance.class)).thenReturn(updateOperations);
+    when(updateOperations.set(anyString(), anyObject())).thenReturn(updateOperations);
   }
 
   /**
@@ -121,12 +136,42 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    * Should update service instance.
    */
   @Test
-  public void shouldUpdateServiceInstance() {
-    ServiceInstance serviceInstance = builder.withUuid(SERVICE_INSTANCE_ID).withLastDeployedOn(100).build();
-    when(query.get()).thenReturn(builder.withUuid(SERVICE_INSTANCE_ID).build());
+  public void shouldUpdateActivity() {
+    long createdAt = System.currentTimeMillis();
+    Activity activity = Activity.Builder.anActivity()
+                            .withAppId(APP_ID)
+                            .withUuid(ACTIVITY_ID)
+                            .withServiceInstanceId(SERVICE_INSTANCE_ID)
+                            .withReleaseId(RELEASE_ID)
+                            .withReleaseName(RELEASE_NAME)
+                            .withArtifactId(ARTIFACT_ID)
+                            .withArtifactName(ARTIFACT_NAME)
+                            .withStatus(ExecutionStatus.SUCCESS)
+                            .withCommandName(COMMAND_NAME)
+                            .withCommandType(COMMAND_UNIT_TYPE)
+                            .withCreatedAt(createdAt)
+                            .build();
+    serviceInstanceService.updateActivity(activity);
 
-    ServiceInstance savedServiceInstance = serviceInstanceService.update(serviceInstance);
-    assertThat(savedServiceInstance).isNotNull().isInstanceOf(ServiceInstance.class); // TODO" improve
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+
+    verify(query).field("appId");
+    verify(end).equal(APP_ID);
+    verify(query).field(ID_KEY);
+    verify(end).equal(SERVICE_INSTANCE_ID);
+
+    verify(updateOperations).set("artifactId", ARTIFACT_ID);
+    verify(updateOperations).set("artifactName", ARTIFACT_NAME);
+    verify(updateOperations).set("releaseId", RELEASE_ID);
+    verify(updateOperations).set("releaseName", RELEASE_NAME);
+    verify(updateOperations).set("artifactDeployedOn", createdAt);
+    verify(updateOperations).set("artifactDeploymentStatus", ExecutionStatus.SUCCESS);
+    verify(updateOperations).set("artifactDeploymentActivityId", ACTIVITY_ID);
+    verify(updateOperations).set("lastActivityId", ACTIVITY_ID);
+    verify(updateOperations).set("lastActivityStatus", ExecutionStatus.SUCCESS);
+    verify(updateOperations).set("commandName", COMMAND_NAME);
+    verify(updateOperations).set("commandType", COMMAND_UNIT_TYPE);
+    verify(updateOperations).set("lastDeployedOn", createdAt);
   }
 
   /**

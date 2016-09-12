@@ -1,12 +1,9 @@
 package software.wings.sm.states;
 
-import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.Artifact.Builder.anArtifact;
-import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.ExecutionResultData.Builder.anExecutionResultData;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.SUCCESS;
@@ -27,13 +24,11 @@ import software.wings.api.CommandStateExecutionData;
 import software.wings.api.InstanceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Release;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.SettingAttribute;
@@ -311,7 +306,7 @@ public class CommandState extends State {
 
   private void handleCommandException(ExecutionContext context, String activityId, String appId) {
     if (activityId != null) {
-      activityService.updateStatus(activityId, appId, Status.FAILED);
+      activityService.updateStatus(activityId, appId, ExecutionStatus.FAILED);
     }
   }
 
@@ -338,22 +333,14 @@ public class CommandState extends State {
       handleCommandException(context, activityId, appId);
     }
 
-    activityService.updateStatus(
-        activityId, appId, executionResultData.getResult().equals(SUCCESS) ? Status.COMPLETED : Status.FAILED);
-
+    activityService.updateStatus(activityId, appId,
+        executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
     Activity activity = activityService.get(activityId, appId);
-    if (executionResultData.getResult().equals(SUCCESS)) {
-      serviceInstance.setLastDeployedOn(currentTimeMillis());
-      if (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId())) {
-        Release oldRelease = serviceInstance.getRelease();
-        serviceInstance.setRelease(aRelease().withUuid(activity.getReleaseId()).build());
-        serviceInstance.setArtifact(anArtifact().withUuid(activity.getArtifactId()).build());
+    String oldReleaseId = serviceInstance.getReleaseId();
+    serviceInstanceService.updateActivity(activity);
 
-        if (oldRelease == null || !StringUtils.equals(oldRelease.getUuid(), activity.getReleaseId())) {
-          releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);
-        }
-      }
-      serviceInstanceService.update(serviceInstance);
+    if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {
+      releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);
     }
 
     ExecutionStatus executionStatus =
@@ -364,6 +351,13 @@ public class CommandState extends State {
         .withExecutionStatus(executionStatus)
         .withErrorMessage(executionResultData.getErrorMessage())
         .build();
+  }
+
+  private boolean artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(
+      ExecutionResultData executionResultData, Activity activity, String oldReleaseId) {
+    return executionResultData.getResult().equals(SUCCESS)
+        && (isNotEmpty(activity.getArtifactId()) || isNotEmpty(activity.getReleaseId()))
+        && (oldReleaseId == null || !StringUtils.equals(oldReleaseId, activity.getReleaseId()));
   }
 
   /**

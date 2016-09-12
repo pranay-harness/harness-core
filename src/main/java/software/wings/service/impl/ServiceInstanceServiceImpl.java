@@ -1,15 +1,12 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 
 import com.mongodb.DuplicateKeyException;
 import org.mongodb.morphia.Key;
@@ -62,7 +59,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
       PageRequest<ServiceInstance> pageRequest, String appId, String envId, String serviceId) {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("envId", envId, EQ);
-    if (!Strings.isNullOrEmpty(serviceId)) {
+    if (!isNullOrEmpty(serviceId)) {
       List<Key<ServiceTemplate>> keyList = serviceTemplateService.getTemplateRefKeysByService(appId, envId, serviceId);
       if (keyList.size() > 0) {
         pageRequest.addFilter(aSearchFilter().withField("serviceTemplate", IN, keyList.toArray()).build());
@@ -77,25 +74,6 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public ServiceInstance save(ServiceInstance serviceInstance) {
     return wingsPersistence.saveAndGet(ServiceInstance.class, serviceInstance);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceInstanceService#update(software.wings.beans.ServiceInstance)
-   */
-  @Override
-  public ServiceInstance update(ServiceInstance serviceInstance) {
-    ServiceInstance oldServiceInstance =
-        get(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getUuid());
-    Builder<String, Object> builder =
-        ImmutableMap.<String, Object>builder().put("lastDeployedOn", serviceInstance.getLastDeployedOn());
-    if (serviceInstance.getArtifact() != null) {
-      builder.put("artifact", serviceInstance.getArtifact());
-    }
-    if (serviceInstance.getRelease() != null) {
-      builder.put("release", serviceInstance.getRelease());
-    }
-    wingsPersistence.updateFields(ServiceInstance.class, serviceInstance.getUuid(), builder.build());
-    return get(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getUuid());
   }
 
   /* (non-Javadoc)
@@ -195,8 +173,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                  .in(serviceTemplates)
                                  .field("appId")
                                  .equal(appId)
-                                 .field("release")
-                                 .equal(wingsPersistence.getDatastore().getKey(release)))
+                                 .field("releaseId")
+                                 .equal(release.getUuid()))
                       .group("envId", grouping("count", new Accumulator("$sum", 1)))
                       .out(InstanceCountByEnv.class);
   }
@@ -222,8 +200,21 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                        .equal(activity.getAppId())
                                        .field(ID_KEY)
                                        .equal(activity.getServiceInstanceId());
-    UpdateOperations<ServiceInstance> operations =
-        wingsPersistence.createUpdateOperations(ServiceInstance.class).set("activity", activity);
+    UpdateOperations<ServiceInstance> operations = wingsPersistence.createUpdateOperations(ServiceInstance.class);
+    if (!isNullOrEmpty(activity.getArtifactId())) {
+      operations.set("artifactId", activity.getArtifactId())
+          .set("artifactName", activity.getArtifactName())
+          .set("releaseId", activity.getReleaseId())
+          .set("releaseName", activity.getReleaseName())
+          .set("artifactDeployedOn", activity.getCreatedAt())
+          .set("artifactDeploymentStatus", activity.getStatus())
+          .set("artifactDeploymentActivityId", activity.getUuid());
+    }
+    operations.set("lastActivityId", activity.getUuid())
+        .set("lastActivityStatus", activity.getStatus())
+        .set("commandName", activity.getCommandName())
+        .set("commandType", activity.getCommandType())
+        .set("lastDeployedOn", activity.getCreatedAt());
     wingsPersistence.update(query, operations);
   }
 

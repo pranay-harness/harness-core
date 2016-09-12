@@ -69,7 +69,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -549,15 +548,15 @@ private void addActivitiesAndLogs(Application application, List<Service> service
         wingsPersistence.saveAndGet(Artifact.class, anArtifact().withDisplayName("Build_02_16_10AM").build());
 
     shuffle(hosts);
-    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, Status.RUNNING);
-    createStartActivity(application, environment, template, hosts.get(1), Status.COMPLETED);
-    createStopActivity(application, environment, template, hosts.get(2), Status.FAILED);
-    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, Status.ABORTED);
+    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, ExecutionStatus.RUNNING);
+    createStartActivity(application, environment, template, hosts.get(1), ExecutionStatus.SUCCESS);
+    createStopActivity(application, environment, template, hosts.get(2), ExecutionStatus.FAILED);
+    createDeployActivity(application, environment, template, hosts.get(0), release, artifact, ExecutionStatus.ABORTED);
   });
 }
 
 private void createStopActivity(
-    Application application, Environment environment, ServiceTemplate template, Host host, Status status) {
+    Application application, Environment environment, ServiceTemplate template, Host host, ExecutionStatus status) {
   Activity activity = wingsPersistence.saveAndGet(Activity.class,
       anActivity()
           .withAppId(application.getUuid())
@@ -579,7 +578,7 @@ private void createStopActivity(
 }
 
 private void createStartActivity(
-    Application application, Environment environment, ServiceTemplate template, Host host, Status status) {
+    Application application, Environment environment, ServiceTemplate template, Host host, ExecutionStatus status) {
   Activity activity = wingsPersistence.saveAndGet(Activity.class,
       anActivity()
           .withAppId(application.getUuid())
@@ -601,7 +600,7 @@ private void createStartActivity(
 }
 
 private void createDeployActivity(Application application, Environment environment, ServiceTemplate template, Host host,
-    Release release, Artifact artifact, Status status) {
+    Release release, Artifact artifact, ExecutionStatus status) {
   Activity activity = wingsPersistence.saveAndGet(Activity.class,
       anActivity()
           .withAppId(application.getUuid())

@@ -7,7 +7,6 @@ import static java.util.stream.Collectors.summingLong;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.aggregation.Group.grouping;
-import static software.wings.beans.Activity.Status.COMPLETED;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
@@ -29,7 +28,6 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
-import software.wings.beans.Activity.Status;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
@@ -203,7 +201,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
-            .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
+            .addFilter(aSearchFilter().withField("status", Operator.EQ, ExecutionStatus.SUCCESS).build())
             .addFilter(aSearchFilter().withField("releaseId", EXISTS).build())
             .addFieldsIncluded("releaseId")
             .build();
@@ -217,7 +215,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .addFilter(aSearchFilter()
                            .withField("createdAt", Operator.GT, getEpochMilliOfStartOfDayForXDaysInPastFromNow(30))
                            .build())
-            .addFilter(aSearchFilter().withField("status", Operator.EQ, COMPLETED).build())
+            .addFilter(aSearchFilter().withField("status", Operator.EQ, ExecutionStatus.SUCCESS).build())
             .addFilter(aSearchFilter().withField("artifactId", EXISTS).build())
             .addFieldsIncluded("artifactId")
             .build();
@@ -336,7 +334,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                                 .field("createdAt")
                                 .greaterThanOrEq(epochMilli)
                                 .field("status")
-                                .hasAnyOf(Arrays.asList(Status.FAILED, Status.COMPLETED));
+                                .hasAnyOf(Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS));
 
     wingsPersistence.getDatastore()
         .createAggregation(Activity.class)
@@ -355,7 +353,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   private TopConsumer getTopConsumerFromActivityStatusAggregation(ActivityStatusAggregation activityStatusAggregation) {
     TopConsumer topConsumer = aTopConsumer().withAppId(activityStatusAggregation.getAppId()).build();
     activityStatusAggregation.getStatus().stream().forEach(statusCount -> {
-      if (statusCount.getStatus().equals(COMPLETED)) {
+      if (statusCount.getStatus().equals(ExecutionStatus.SUCCESS)) {
         topConsumer.setSuccessfulActivityCount(statusCount.getCount());
       } else {
         topConsumer.setFailedActivityCount(statusCount.getCount());
