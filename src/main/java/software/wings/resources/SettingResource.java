@@ -2,8 +2,11 @@ package software.wings.resources;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static org.eclipse.jetty.util.LazyList.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.IN;
 
 import com.google.inject.Inject;
 
@@ -12,11 +15,12 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -48,10 +52,14 @@ public class SettingResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<SettingAttribute>> list(
-      @QueryParam("appId") String appId, @BeanParam PageRequest<SettingAttribute> pageRequest) {
+  public RestResponse<PageResponse<SettingAttribute>> list(@QueryParam("appId") String appId,
+      @QueryParam("type") List<SettingVariableTypes> settingVariableTypes,
+      @BeanParam PageRequest<SettingAttribute> pageRequest) {
     if (isNullOrEmpty(appId)) {
       appId = GLOBAL_APP_ID;
+    }
+    if (!isEmpty(settingVariableTypes)) {
+      pageRequest.addFilter(aSearchFilter().withField("value.type", IN, settingVariableTypes.toArray()).build());
     }
     pageRequest.addFilter("appId", appId, EQ);
     return new RestResponse<>(attributeService.list(pageRequest));
