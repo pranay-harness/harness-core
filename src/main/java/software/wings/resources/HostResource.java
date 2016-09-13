@@ -17,7 +17,6 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.utils.BoundedInputStream;

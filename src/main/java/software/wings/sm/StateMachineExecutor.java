@@ -60,6 +60,7 @@ public class StateMachineExecutor {
    * @param appId         the app id
    * @param smId          the sm id
    * @param executionUuid the execution uuid
+   * @param executionName the execution name
    * @return the state execution instance
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName) {
@@ -72,6 +73,7 @@ public class StateMachineExecutor {
    * @param appId         the app id
    * @param smId          the sm id
    * @param executionUuid the execution uuid
+   * @param executionName the execution name
    * @param contextParams the context params
    * @return the state execution instance
    */
@@ -87,6 +89,7 @@ public class StateMachineExecutor {
    * @param appId         the app id
    * @param smId          the sm id
    * @param executionUuid the execution uuid
+   * @param executionName the execution name
    * @param contextParams the context params
    * @param callback      the callback
    * @return the state execution instance
@@ -102,6 +105,7 @@ public class StateMachineExecutor {
    *
    * @param sm            the sm
    * @param executionUuid the execution uuid
+   * @param executionName the execution name
    * @param contextParams the context params
    * @param callback      the callback
    * @return the state execution instance

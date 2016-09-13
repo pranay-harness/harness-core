@@ -107,8 +107,14 @@ public enum StateType implements StateTypeDescriptor {
    */
   APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
 
+  /**
+   * E l b enable host state type.
+   */
   E_L_B_ENABLE_HOST(ElasticLoadBalancerEnableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
 
+  /**
+   * E l b disable host state type.
+   */
   E_L_B_DISABLE_HOST(ElasticLoadBalancerDisableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

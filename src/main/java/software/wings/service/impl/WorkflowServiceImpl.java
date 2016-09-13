@@ -417,6 +417,11 @@ public class WorkflowServiceImpl implements WorkflowService {
     return createWorkflow(Orchestration.class, orchestration);
   }
 
+  /**
+   * Sets static configuration.
+   *
+   * @param staticConfiguration the static configuration
+   */
   void setStaticConfiguration(StaticConfiguration staticConfiguration) {
     this.staticConfiguration = staticConfiguration;
   }

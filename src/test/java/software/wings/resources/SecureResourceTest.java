@@ -62,8 +62,17 @@ import javax.ws.rs.core.Response;
  * Created by anubhaw on 8/31/16.
  */
 public class SecureResourceTest {
+  /**
+   * The constant TOKEN_EXPIRY_IN_MILLIS.
+   */
   public static final long TOKEN_EXPIRY_IN_MILLIS = 86400000L;
+  /**
+   * The constant VALID_TOKEN.
+   */
   public static final String VALID_TOKEN = "VALID_TOKEN";
+  /**
+   * The constant ENTITY.
+   */
   public static final Entity<Base> ENTITY = Entity.entity(new Base(), APPLICATION_JSON);
 
   private static AuditService auditService = mock(AuditService.class);
@@ -76,6 +85,9 @@ public class SecureResourceTest {
   private static AuthRuleFilter authRuleFilter =
       new AuthRuleFilter(auditService, auditHelper, authService, environmentService);
 
+  /**
+   * The constant resources.
+   */
   @ClassRule
   public static final ResourceTestRule resources =
       ResourceTestRule.builder().addResource(new SecureResource()).addProvider(authRuleFilter).build();
@@ -133,6 +145,11 @@ public class SecureResourceTest {
   private User user =
       anUser().withAppId(GLOBAL_APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD).build();
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(genericDbCache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(user, TOKEN_EXPIRY_IN_MILLIS));
@@ -143,17 +160,28 @@ public class SecureResourceTest {
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.OTHER).build());
   }
 
+  /**
+   * Tear down.
+   *
+   * @throws Exception the exception
+   */
   @After
   public void tearDown() throws Exception {
     UserThreadLocal.unset();
   }
 
+  /**
+   * Should get public resource without authorization.
+   */
   @Test
   public void shouldGetPublicResourceWithoutAuthorization() {
     Response response = resources.client().target("/secure-resources/publicApiAuthTokenNotRequired").request().get();
     assertThat(response.getStatus()).isEqualTo(200);
   }
 
+  /**
+   * Should deny access for non public resource without valid token.
+   */
   @Test
   public void shouldDenyAccessForNonPublicResourceWithoutValidToken() {
     Assertions.assertThatThrownBy(() -> resources.client().target("/secure-resources/NonPublicApi").request().get())
@@ -161,6 +189,9 @@ public class SecureResourceTest {
         .hasStackTraceContaining(ErrorCodes.INVALID_TOKEN.name());
   }
 
+  /**
+   * Should require authorization by default for non public resource.
+   */
   @Test
   public void shouldRequireAuthorizationByDefaultForNonPublicResource() {
     RestResponse<User> response = resources.client()
@@ -171,6 +202,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should authorize app scope resource read request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceReadActionRole));
@@ -183,6 +217,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should authorize app scope resource write request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(appAllResourceWriteActionRole));
@@ -195,6 +232,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should deny app scope resource read request for user without required permission.
+   */
   @Test
   public void shouldDenyAppScopeResourceReadRequestForUserWithoutRequiredPermission() {
     user.setRoles(asList());
@@ -210,6 +250,9 @@ public class SecureResourceTest {
         .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should deny app scope resource write request for user without required permission.
+   */
   @Test
   public void shouldDenyAppScopeResourceWriteRequestForUserWithoutRequiredPermission() {
     user.setRoles(asList());
@@ -225,6 +268,9 @@ public class SecureResourceTest {
         .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should authorize env scope resource read request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
     user.setRoles(asList(envAllResourceReadActionRole));
@@ -238,6 +284,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should authorize env scope resource write request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
     user.setRoles(asList(envAllResourceWriteActionRole));
@@ -251,6 +300,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should deny env scope resource read request for user without required permission.
+   */
   @Test
   public void shouldDenyEnvScopeResourceReadRequestForUserWithoutRequiredPermission() {
     user.setRoles(asList());
@@ -267,6 +319,9 @@ public class SecureResourceTest {
         .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should deny env scope resource write request for user without required permission.
+   */
   @Test
   public void shouldDenyEnvScopeResourceWriteRequestForUserWithoutRequiredPermission() {
     user.setRoles(asList());
@@ -283,6 +338,9 @@ public class SecureResourceTest {
         .hasStackTraceContaining(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should authorize env scope release resource read request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeReleaseResourceReadRequestForUserWithRequiredPermission() {
     Role envReleaseResourceReadActionRole = aRole()
@@ -308,6 +366,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should authorize env scope release resource write request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeReleaseResourceWriteRequestForUserWithRequiredPermission() {
     Role envReleaseResourceWriteActionRole = aRole()
@@ -333,6 +394,9 @@ public class SecureResourceTest {
     assertThat(response.getResource().getEmail()).isEqualTo(USER_EMAIL);
   }
 
+  /**
+   * Should deny env scope release resource read request for user without required permission.
+   */
   @Test
   public void shouldDenyEnvScopeReleaseResourceReadRequestForUserWithoutRequiredPermission() {
     Role envDeploymentResourceALLActionRole = aRole()

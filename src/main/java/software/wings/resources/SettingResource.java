@@ -47,8 +47,9 @@ public class SettingResource {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param pageRequest the page request
+   * @param appId                the app id
+   * @param settingVariableTypes the setting variable types
+   * @param pageRequest          the page request
    * @return the rest response
    */
   @GET

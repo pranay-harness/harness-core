@@ -124,14 +124,12 @@ public class SearchFilter {
     /**
      * Eq operator.
      */
-    EQ,
-    /**
-     * Not eq operator.
-     */
-    NOT_EQ,
-    /**
-     * Lt operator.
-     */
+    EQ, /**
+         * Not eq operator.
+         */
+    NOT_EQ, /**
+             * Lt operator.
+             */
     LT, /**
          * Gt operator.
          */

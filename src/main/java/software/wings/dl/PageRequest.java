@@ -1,6 +1,8 @@
 package software.wings.dl;
 
-import static software.wings.beans.Environment.EnvironmentType.*;
+import static software.wings.beans.Environment.EnvironmentType.ALL;
+import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
+import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 
 import com.google.common.base.MoreObjects;
@@ -78,8 +80,6 @@ public class PageRequest<T> {
   @JsonIgnore @Context private ContainerRequestContext requestContext; // TODO: remove UriInfo
 
   @JsonIgnore private boolean isOr = false;
-
-  public enum PageRequestType { LIST_WITHOUT_APP_ID, LIST_WITHOUT_ENV_ID, OTHER }
 
   /**
    * Instantiates a new page request.
@@ -418,7 +418,6 @@ public class PageRequest<T> {
    *
    * @param filters the filters
    */
-
   public void setFilters(List<SearchFilter> filters) {
     this.filters = filters;
   }
@@ -517,6 +516,22 @@ public class PageRequest<T> {
         .add("start", start)
         .add("offset", offset)
         .toString();
+  }
+
+  /**
+   * The enum Page request type.
+   */
+  public enum PageRequestType {
+    /**
+     * List without app id page request type.
+     */
+    LIST_WITHOUT_APP_ID, /**
+                          * List without env id page request type.
+                          */
+    LIST_WITHOUT_ENV_ID, /**
+                          * Other page request type.
+                          */
+    OTHER
   }
 
   /**

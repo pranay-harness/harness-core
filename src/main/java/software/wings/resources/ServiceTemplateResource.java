@@ -13,7 +13,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceTemplateService;
 

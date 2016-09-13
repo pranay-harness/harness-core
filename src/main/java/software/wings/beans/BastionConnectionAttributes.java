@@ -74,6 +74,9 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private ConnectionType connectionType;
     private AccessType accessType;
@@ -84,40 +87,86 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
 
     private Builder() {}
 
+    /**
+     * A bastion connection attributes builder.
+     *
+     * @return the builder
+     */
     public static Builder aBastionConnectionAttributes() {
       return new Builder();
     }
 
+    /**
+     * With connection type builder.
+     *
+     * @param connectionType the connection type
+     * @return the builder
+     */
     public Builder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
 
+    /**
+     * With access type builder.
+     *
+     * @param accessType the access type
+     * @return the builder
+     */
     public Builder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With key builder.
+     *
+     * @param key the key
+     * @return the builder
+     */
     public Builder withKey(String key) {
       this.key = key;
       return this;
     }
 
+    /**
+     * With user name builder.
+     *
+     * @param userName the user name
+     * @return the builder
+     */
     public Builder withUserName(String userName) {
       this.userName = userName;
       return this;
     }
 
+    /**
+     * With type builder.
+     *
+     * @param type the type
+     * @return the builder
+     */
     public Builder withType(SettingVariableTypes type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aBastionConnectionAttributes()
           .withConnectionType(connectionType)
@@ -128,6 +177,11 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
           .withType(type);
     }
 
+    /**
+     * Build bastion connection attributes.
+     *
+     * @return the bastion connection attributes
+     */
     public BastionConnectionAttributes build() {
       BastionConnectionAttributes bastionConnectionAttributes = new BastionConnectionAttributes();
       bastionConnectionAttributes.setConnectionType(connectionType);

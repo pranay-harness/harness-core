@@ -1320,6 +1320,11 @@ public class Graph {
       return graph;
     }
 
+    /**
+     * Build pipeline graph.
+     *
+     * @return the graph
+     */
     public Graph buildPipeline() {
       Graph graph = new Graph();
       graph.setGraphName(graphName);

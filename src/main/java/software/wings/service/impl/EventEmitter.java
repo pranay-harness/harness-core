@@ -63,6 +63,21 @@ public class EventEmitter {
     }
 
     /**
+     * Gets channel by channel name.
+     *
+     * @param channelName the channel name
+     * @return the channel by channel name
+     */
+    public static Channel getChannelByChannelName(String channelName) {
+      for (Channel channel : values()) {
+        if (channel.getChannelName().equalsIgnoreCase(channelName)) {
+          return channel;
+        }
+      }
+      return null;
+    }
+
+    /**
      * Getter for property 'channelName'.
      *
      * @return Value for property 'channelName'.
@@ -96,15 +111,6 @@ public class EventEmitter {
      */
     public PermissionScope getScope() {
       return scope;
-    }
-
-    public static Channel getChannelByChannelName(String channelName) {
-      for (Channel channel : values()) {
-        if (channel.getChannelName().equalsIgnoreCase(channelName)) {
-          return channel;
-        }
-      }
-      return null;
     }
   }
 }

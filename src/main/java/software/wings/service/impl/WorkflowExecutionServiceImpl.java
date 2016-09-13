@@ -131,6 +131,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param appId          the app id
    * @param stateMachineId the state machine id
    * @param executionUuid  the execution uuid
+   * @param executionName  the execution name
    * @param callback       the callback
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,

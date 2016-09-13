@@ -47,6 +47,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private AuthService authService;
   private EnvironmentService environmentService;
 
+  /**
+   * Instantiates a new Auth rule filter.
+   *
+   * @param auditService       the audit service
+   * @param auditHelper        the audit helper
+   * @param authService        the auth service
+   * @param environmentService the environment service
+   */
   @Inject
   public AuthRuleFilter(AuditService auditService, AuditHelper auditHelper, AuthService authService,
       EnvironmentService environmentService) {

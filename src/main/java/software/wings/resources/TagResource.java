@@ -13,7 +13,6 @@ import software.wings.beans.Tag.TagType;
 import software.wings.beans.UuidList;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.TagService;
 
 import java.util.List;

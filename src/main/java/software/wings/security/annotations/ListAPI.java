@@ -13,5 +13,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface ListAPI {
+  /**
+   * Value resource type.
+   *
+   * @return the resource type
+   */
   ResourceType value();
 }

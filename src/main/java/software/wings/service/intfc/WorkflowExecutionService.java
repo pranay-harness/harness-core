@@ -20,12 +20,13 @@ import javax.validation.constraints.NotNull;
  */
 public interface WorkflowExecutionService {
   /**
-  /**
+   * /**
    * Trigger.
    *
    * @param appId          the app id
    * @param stateMachineId the state machine id
    * @param executionUuid  the execution uuid
+   * @param executionName  the execution name
    */
   void trigger(
       @NotNull String appId, @NotNull String stateMachineId, @NotNull String executionUuid, String executionName);

@@ -264,6 +264,9 @@ public enum ErrorCodes {
                                              */
   ABORT_ALL_ALREADY("ABORT_ALL_ALREADY"),
 
+  /**
+   * Retry failed error codes.
+   */
   RETRY_FAILED("RETRY_FAILED");
 
   /**

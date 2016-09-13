@@ -54,39 +54,79 @@ public abstract class ElasticLoadBalancerBaseState extends State {
     super(name, stateType);
   }
 
+  /**
+   * Gets load balancer name.
+   *
+   * @return the load balancer name
+   */
   @Attributes(title = "Load Balancer Name")
   public String getLoadBalancerName() {
     return loadBalancerName;
   }
 
+  /**
+   * Sets load balancer name.
+   *
+   * @param loadBalancerName the load balancer name
+   */
   public void setLoadBalancerName(String loadBalancerName) {
     this.loadBalancerName = loadBalancerName;
   }
 
+  /**
+   * Gets access key.
+   *
+   * @return the access key
+   */
   @Attributes(title = "AWS Access Key")
   public String getAccessKey() {
     return accessKey;
   }
 
+  /**
+   * Sets access key.
+   *
+   * @param accessKey the access key
+   */
   public void setAccessKey(String accessKey) {
     this.accessKey = accessKey;
   }
 
+  /**
+   * Gets secret key.
+   *
+   * @return the secret key
+   */
   @Attributes(title = "AWS Secret Key")
   public String getSecretKey() {
     return secretKey;
   }
 
+  /**
+   * Sets secret key.
+   *
+   * @param secretKey the secret key
+   */
   public void setSecretKey(String secretKey) {
     this.secretKey = secretKey;
   }
 
+  /**
+   * Gets region.
+   *
+   * @return the region
+   */
   @DefaultValue("US_EAST_1")
   @Attributes(title = "Region")
   public Regions getRegion() {
     return region;
   }
 
+  /**
+   * Sets region.
+   *
+   * @param region the region
+   */
   public void setRegion(Regions region) {
     this.region = region;
   }
@@ -137,9 +177,23 @@ public abstract class ElasticLoadBalancerBaseState extends State {
     return ContextElementType.INSTANCE;
   }
 
+  /**
+   * Gets execution status.
+   *
+   * @param result     the result
+   * @param instanceId the instance id
+   * @return the execution status
+   */
   protected abstract ExecutionStatus getExecutionStatus(
       AmazonWebServiceResult<ResponseMetadata> result, String instanceId);
 
+  /**
+   * Do operation amazon web service result.
+   *
+   * @param instanceId the instance id
+   * @param elbClient  the elb client
+   * @return the amazon web service result
+   */
   protected abstract AmazonWebServiceResult<ResponseMetadata> doOperation(
       String instanceId, AmazonElasticLoadBalancingClient elbClient);
 

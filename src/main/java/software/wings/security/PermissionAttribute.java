@@ -82,46 +82,36 @@ public class PermissionAttribute {
     /**
      * Any resource.
      */
-    ANY,
-    /**
-     * App resource.
-     */
-    APPLICATION,
-    /**
-     * Service resource.
-     */
-    SERVICE,
-    /**
-     * Config resource.
-     */
-    CONFIGURATION,
-    /**
-     * Env resource.
-     */
-    ENVIRONMENT,
-    /**
-     * Role resource.
-     */
-    ROLE,
-    /**
-     * Host resource.
-     */
-    HOST,
-    /**
-     * Deployment resource.
-     */
-    DEPLOYMENT,
-    /**
-     * Release resource.
-     */
-    RELEASE,
-    /**
-     * Artifcats resource.
-     */
-    ARTIFACT,
-    /**
-     * User resource.
-     */
+    ANY, /**
+          * App resource.
+          */
+    APPLICATION, /**
+                  * Service resource.
+                  */
+    SERVICE, /**
+              * Config resource.
+              */
+    CONFIGURATION, /**
+                    * Env resource.
+                    */
+    ENVIRONMENT, /**
+                  * Role resource.
+                  */
+    ROLE, /**
+           * Host resource.
+           */
+    HOST, /**
+           * Deployment resource.
+           */
+    DEPLOYMENT, /**
+                 * Release resource.
+                 */
+    RELEASE, /**
+              * Artifcats resource.
+              */
+    ARTIFACT, /**
+               * User resource.
+               */
     USER
   }
 
@@ -149,10 +139,9 @@ public class PermissionAttribute {
     /**
      * App permission type.
      */
-    APP,
-    /**
-     * Env permission type.
-     */
+    APP, /**
+          * Env permission type.
+          */
     ENV
   }
 }

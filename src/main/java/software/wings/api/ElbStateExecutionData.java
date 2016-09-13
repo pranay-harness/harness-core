@@ -75,8 +75,17 @@ public class ElbStateExecutionData extends StateExecutionData {
     return data;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
+    /**
+     * The Amazon web service result.
+     */
     AmazonWebServiceResult amazonWebServiceResult;
+    /**
+     * The Host name.
+     */
     String hostName;
     private String stateName;
     private Long startTs;
@@ -86,45 +95,97 @@ public class ElbStateExecutionData extends StateExecutionData {
 
     private Builder() {}
 
+    /**
+     * An elb state execution data builder.
+     *
+     * @return the builder
+     */
     public static Builder anElbStateExecutionData() {
       return new Builder();
     }
 
+    /**
+     * With amazon web service result builder.
+     *
+     * @param amazonWebServiceResult the amazon web service result
+     * @return the builder
+     */
     public Builder withAmazonWebServiceResult(AmazonWebServiceResult amazonWebServiceResult) {
       this.amazonWebServiceResult = amazonWebServiceResult;
       return this;
     }
 
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
+    /**
+     * With state name builder.
+     *
+     * @param stateName the state name
+     * @return the builder
+     */
     public Builder withStateName(String stateName) {
       this.stateName = stateName;
       return this;
     }
 
+    /**
+     * With start ts builder.
+     *
+     * @param startTs the start ts
+     * @return the builder
+     */
     public Builder withStartTs(Long startTs) {
       this.startTs = startTs;
       return this;
     }
 
+    /**
+     * With end ts builder.
+     *
+     * @param endTs the end ts
+     * @return the builder
+     */
     public Builder withEndTs(Long endTs) {
       this.endTs = endTs;
       return this;
     }
 
+    /**
+     * With status builder.
+     *
+     * @param status the status
+     * @return the builder
+     */
     public Builder withStatus(ExecutionStatus status) {
       this.status = status;
       return this;
     }
 
+    /**
+     * With error msg builder.
+     *
+     * @param errorMsg the error msg
+     * @return the builder
+     */
     public Builder withErrorMsg(String errorMsg) {
       this.errorMsg = errorMsg;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anElbStateExecutionData()
           .withAmazonWebServiceResult(amazonWebServiceResult)
@@ -136,6 +197,11 @@ public class ElbStateExecutionData extends StateExecutionData {
           .withErrorMsg(errorMsg);
     }
 
+    /**
+     * Build elb state execution data.
+     *
+     * @return the elb state execution data
+     */
     public ElbStateExecutionData build() {
       ElbStateExecutionData eLBStateExecutionData = new ElbStateExecutionData();
       eLBStateExecutionData.setAmazonWebServiceResult(amazonWebServiceResult);

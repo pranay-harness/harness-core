@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.service.intfc.FileService.*;
+import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.inject.Singleton;
 

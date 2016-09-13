@@ -24,6 +24,9 @@ public class ElasticLoadBalancerStatesTest extends WingsBaseTest {
       new ElasticLoadBalancerDisableState("Disable");
   @Mock private ExecutionContext executionContext;
 
+  /**
+   * Sets up.
+   */
   @Before
   public void setUp() {
     System.setProperty(SDKGlobalConfiguration.DISABLE_CERT_CHECKING_SYSTEM_PROPERTY, "true");
@@ -43,6 +46,9 @@ public class ElasticLoadBalancerStatesTest extends WingsBaseTest {
     elasticLoadBalancerDisableState.setLoadBalancerName("testlb");
   }
 
+  /**
+   * Test.
+   */
   @Test
   public void test() {
     elasticLoadBalancerDisableState.execute(executionContext);

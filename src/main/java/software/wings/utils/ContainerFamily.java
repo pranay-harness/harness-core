@@ -27,6 +27,9 @@ import java.util.List;
  * Created by peeyushaggarwal on 8/31/16.
  */
 public enum ContainerFamily {
+  /**
+   * The constant TOMCAT.
+   */
   TOMCAT {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -204,7 +207,9 @@ public enum ContainerFamily {
           .buildPipeline();
     }
 
-  },
+  }, /**
+      * The constant JBOSS.
+      */
   JBOSS {
     private static final long serialVersionUID = 2932493038229748527L;
 
@@ -394,14 +399,40 @@ public enum ContainerFamily {
     }
   };
 
+  /**
+   * Gets default commands.
+   *
+   * @param artifactType the artifact type
+   * @param appContainer the app container
+   * @return the default commands
+   */
   public List<Graph> getDefaultCommands(ArtifactType artifactType, AppContainer appContainer) {
     return Lists.newArrayList(getStartCommandGraph(artifactType), getInstallCommandGraph(artifactType, appContainer),
         getStopCommandGraph(artifactType));
   }
 
+  /**
+   * Gets stop command graph.
+   *
+   * @param artifactType the artifact type
+   * @return the stop command graph
+   */
   protected abstract Graph getStopCommandGraph(ArtifactType artifactType);
 
+  /**
+   * Gets start command graph.
+   *
+   * @param artifactType the artifact type
+   * @return the start command graph
+   */
   protected abstract Graph getStartCommandGraph(ArtifactType artifactType);
 
+  /**
+   * Gets install command graph.
+   *
+   * @param artifactType the artifact type
+   * @param appContainer the app container
+   * @return the install command graph
+   */
   protected abstract Graph getInstallCommandGraph(ArtifactType artifactType, AppContainer appContainer);
 }
