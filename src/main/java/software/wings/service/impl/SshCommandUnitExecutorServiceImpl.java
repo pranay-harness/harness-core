@@ -211,12 +211,14 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                           .withUserName(sshExecutionCredential.getSshUser())
                           .withPassword(sshExecutionCredential.getSshPassword())
                           .withSudoAppName(sshExecutionCredential.getAppAccount())
-                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
+                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword())
+                          .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
 
     if (executorType.equals(KEY_AUTH)) {
       HostConnectionAttributes hostConnectionAttrs = (HostConnectionAttributes) host.getHostConnAttr().getValue();
       builder.withKey(hostConnectionAttrs.getKey())
-          .withKeyPassphrase(hostConnectionAttrs.getKeyPassphrase())
+          .withUserName(hostConnectionAttrs.getUserName())
+          .withKeyName(host.getHostConnAttr().getUuid())
           .withPassword(null);
     }
 
@@ -225,7 +227,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       builder.withBastionHostConfig(aSshSessionConfig()
                                         .withHost(bastionAttrs.getHostName())
                                         .withKey(bastionAttrs.getKey())
-                                        .withKeyPassphrase(bastionAttrs.getKeyPassphrase())
+                                        .withKeyName(host.getBastionConnAttr().getUuid())
+                                        .withUserName(bastionAttrs.getUserName())
                                         .build());
     }
     return builder.build();

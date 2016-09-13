@@ -8,10 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
-import static software.wings.beans.BastionConnectionAttributes.BastionConnectionAttributesBuilder.aBastionConnectionAttributes;
+import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -80,10 +80,13 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
       aSettingAttribute()
           .withValue(aBastionConnectionAttributes().withHostName(HOST_NAME).withKey(SSH_KEY).build())
           .build();
-  private static final SettingAttribute HOST_CONN_ATTR_KEY =
-      aSettingAttribute()
-          .withValue(aHostConnectionAttributes().withAccessType(AccessType.KEY).withKey(SSH_KEY).build())
-          .build();
+  private static final SettingAttribute HOST_CONN_ATTR_KEY = aSettingAttribute()
+                                                                 .withValue(aHostConnectionAttributes()
+                                                                                .withAccessType(AccessType.KEY)
+                                                                                .withKey(SSH_KEY)
+                                                                                .withUserName(SSH_USER_NAME)
+                                                                                .build())
+                                                                 .build();
 
   private static final ExecCommandUnit EXEC_COMMAND_UNIT = anExecCommandUnit().withCommandString(EXEC_CMD).build();
   /**

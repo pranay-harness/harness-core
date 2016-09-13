@@ -6,7 +6,7 @@ import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.ArtifactFile.Builder.anArtifactFile;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.HostConnectionAttributesBuilder.aHostConnectionAttributes;
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
