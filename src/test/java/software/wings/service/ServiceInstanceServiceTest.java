@@ -171,7 +171,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(updateOperations).set("lastActivityStatus", ExecutionStatus.SUCCESS);
     verify(updateOperations).set("commandName", COMMAND_NAME);
     verify(updateOperations).set("commandType", COMMAND_UNIT_TYPE);
-    verify(updateOperations).set("lastDeployedOn", createdAt);
+    verify(updateOperations).set("lastActivityCreatedAt", createdAt);
   }
 
   /**

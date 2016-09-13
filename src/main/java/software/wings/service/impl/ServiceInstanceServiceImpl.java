@@ -16,12 +16,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
-import software.wings.beans.Artifact;
 import software.wings.beans.Host;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.command.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -201,6 +201,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
                                        .field(ID_KEY)
                                        .equal(activity.getServiceInstanceId());
     UpdateOperations<ServiceInstance> operations = wingsPersistence.createUpdateOperations(ServiceInstance.class);
+
     if (!isNullOrEmpty(activity.getArtifactId())) {
       operations.set("artifactId", activity.getArtifactId())
           .set("artifactName", activity.getArtifactName())
@@ -214,7 +215,11 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         .set("lastActivityStatus", activity.getStatus())
         .set("commandName", activity.getCommandName())
         .set("commandType", activity.getCommandType())
-        .set("lastDeployedOn", activity.getCreatedAt());
+        .set("lastActivityCreatedAt", activity.getCreatedAt());
+
+    if (activity.getCommandType().equals(CommandUnitType.COMMAND.getName())) {
+      operations.set("lastDeployedOn", activity.getLastUpdatedAt());
+    }
     wingsPersistence.update(query, operations);
   }
 }
