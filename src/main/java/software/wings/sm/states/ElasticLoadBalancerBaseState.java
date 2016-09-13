@@ -156,8 +156,7 @@ public abstract class ElasticLoadBalancerBaseState extends State {
     }
 
     return anExecutionResponse()
-        .withStateExecutionData(
-            anElbStateExecutionData().withAmazonWebServiceResult(result).withHostName(hostName).build())
+        .withStateExecutionData(anElbStateExecutionData().withHostName(hostName).build())
         .withExecutionStatus(status)
         .withErrorMessage(errorMessage)
         .build();
