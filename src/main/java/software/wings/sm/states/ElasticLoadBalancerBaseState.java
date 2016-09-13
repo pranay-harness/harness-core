@@ -5,7 +5,6 @@ import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecuti
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.amazonaws.AmazonWebServiceResult;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.ResponseMetadata;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -27,8 +26,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
-
-import java.net.InetAddress;
 
 /**
  * Created by peeyushaggarwal on 9/9/16.
@@ -149,8 +146,6 @@ public abstract class ElasticLoadBalancerBaseState extends State {
           (AmazonElasticLoadBalancingClient) AmazonElasticLoadBalancingClientBuilder.standard()
               .withRegion(region)
               .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
-              .withClientConfiguration(new ClientConfiguration().withDnsResolver(
-                  host -> new InetAddress[] {InetAddress.getLoopbackAddress()}))
               .build();
 
       result = doOperation(instanceId, elbClient);
