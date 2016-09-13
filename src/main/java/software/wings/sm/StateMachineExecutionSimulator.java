@@ -161,6 +161,10 @@ public class StateMachineExecutionSimulator {
           entityTypes.add(EntityType.SSH_APP_ACCOUNT);
           break;
         }
+        case KEY: {
+          entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
+          break;
+        }
       }
     });
 

@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
+import static org.eclipse.jetty.util.StringUtil.isNotBlank;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.jcraft.jsch.JSch;
@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Created by anubhaw on 2/8/16.
@@ -57,11 +58,12 @@ public class SshSessionFactory {
     //    JSch.setLogger(new jschLogger());
 
     Session session = null;
-    if ("KEY_AUTH".equals(getSessionType(config))) {
+    if (isNotBlank(config.getKey())) {
       if (null == config.getKeyPassphrase()) {
-        jsch.addIdentity(config.getKey());
+        jsch.addIdentity(config.getKeyName(), config.getKey().getBytes(StandardCharsets.UTF_8), null, null);
       } else {
-        jsch.addIdentity(config.getKey(), config.getKeyPassphrase());
+        jsch.addIdentity(config.getKeyName(), config.getKey().getBytes(StandardCharsets.UTF_8), null,
+            config.getKeyPassphrase().getBytes(StandardCharsets.UTF_8));
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
@@ -84,10 +86,6 @@ public class SshSessionFactory {
     session.connect(config.getSshConnectionTimeout());
 
     return session;
-  }
-
-  private static String getSessionType(SshSessionConfig config) {
-    return isNullOrEmpty(config.getKey()) ? "PASSWORD" : "KEY";
   }
 
   /**

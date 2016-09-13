@@ -3,7 +3,6 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
-import software.wings.beans.Artifact;
 import software.wings.beans.Host;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
@@ -121,25 +120,4 @@ public interface ServiceInstanceService {
    * @param activity the activity
    */
   void updateActivity(@NotNull Activity activity);
-
-  /**
-   * Gets recent artifacts.
-   *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceInstanceId the service instance id
-   * @return the recent artifacts
-   */
-  List<Artifact> getRecentArtifacts(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceInstanceId);
-
-  /**
-   * Gets recent activities.
-   *
-   * @param appId             the app id
-   * @param envId             the env id
-   * @param serviceInstanceId the service instance id
-   * @return the recent activities
-   */
-  List<Activity> getRecentActivities(
-      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceInstanceId);
 }

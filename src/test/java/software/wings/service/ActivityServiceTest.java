@@ -1,18 +1,15 @@
 package software.wings.service;
 
-import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
-import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.command.CleanupCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitCommandUnit.INITIALIZE_UNIT;
-import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -37,7 +34,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Builder;
-import software.wings.beans.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
@@ -153,34 +149,5 @@ public class ActivityServiceTest extends WingsBaseTest {
     wingsPersistence.save(activity);
     Activity lastProductionActivityForService = activityService.getLastProductionActivityForService(APP_ID, SERVICE_ID);
     assertThat(lastProductionActivityForService).isEqualTo(activity);
-  }
-
-  /**
-   * Should get recent artifacts for instance id.
-   */
-  @Test
-  public void shouldGetRecentArtifactsForInstance() {
-    wingsPersistence.save(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
-    wingsPersistence.save(builder.but().withUuid(ACTIVITY_ID).build());
-    wingsPersistence.save(builder.but().withUuid("ACTIVITY_ID_2").build());
-
-    List<Artifact> recentArtifactsForInstance =
-        activityService.getRecentArtifactsForInstance(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    assertThat(recentArtifactsForInstance.size()).isEqualTo(2);
-    recentArtifactsForInstance.forEach(artifact -> assertThat(artifact.getUuid()).isEqualTo(ARTIFACT_ID));
-  }
-
-  /**
-   * Should get recent activities for instance id.
-   */
-  @Test
-  public void shouldGetRecentActivitiesForInstance() {
-    wingsPersistence.save(builder.but().withUuid(ACTIVITY_ID).build());
-    wingsPersistence.save(builder.but().withUuid("ACTIVITY_ID_2").build());
-    List<Activity> recentActivitiesForInstance =
-        activityService.getRecentActivitiesForInstance(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
-    assertThat(recentActivitiesForInstance.size()).isEqualTo(2);
-    assertThat(recentActivitiesForInstance.stream().map(Activity::getUuid).collect(toList()))
-        .containsExactlyInAnyOrder(ACTIVITY_ID, "ACTIVITY_ID_2");
   }
 }

@@ -39,6 +39,7 @@ public class ServiceInstance extends Base {
 
   private String lastActivityId;
   private ExecutionStatus lastActivityStatus;
+  private long lastActivityCreatedAt;
   @Indexed private String commandName;
   @Indexed private String commandType;
   private long lastDeployedOn;
@@ -328,12 +329,30 @@ public class ServiceInstance extends Base {
     this.lastDeployedOn = lastDeployedOn;
   }
 
+  /**
+   * Gets last activity created on.
+   *
+   * @return the last activity created on
+   */
+  public long getLastActivityCreatedAt() {
+    return lastActivityCreatedAt;
+  }
+
+  /**
+   * Sets last activity created on.
+   *
+   * @param lastActivityCreatedAt the last activity created on
+   */
+  public void setLastActivityCreatedAt(long lastActivityCreatedAt) {
+    this.lastActivityCreatedAt = lastActivityCreatedAt;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(envId, host, serviceTemplate, releaseId, releaseName, artifactId, artifactName,
               artifactDeployedOn, artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId,
-              lastActivityStatus, commandName, commandType, lastDeployedOn);
+              lastActivityStatus, lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
   }
 
   @Override
@@ -357,6 +376,7 @@ public class ServiceInstance extends Base {
         && Objects.equals(this.artifactDeploymentActivityId, other.artifactDeploymentActivityId)
         && Objects.equals(this.lastActivityId, other.lastActivityId)
         && Objects.equals(this.lastActivityStatus, other.lastActivityStatus)
+        && Objects.equals(this.lastActivityCreatedAt, other.lastActivityCreatedAt)
         && Objects.equals(this.commandName, other.commandName) && Objects.equals(this.commandType, other.commandType)
         && Objects.equals(this.lastDeployedOn, other.lastDeployedOn);
   }
@@ -376,6 +396,7 @@ public class ServiceInstance extends Base {
         .add("artifactDeploymentActivityId", artifactDeploymentActivityId)
         .add("lastActivityId", lastActivityId)
         .add("lastActivityStatus", lastActivityStatus)
+        .add("lastActivityCreatedAt", lastActivityCreatedAt)
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("lastDeployedOn", lastDeployedOn)
@@ -398,6 +419,7 @@ public class ServiceInstance extends Base {
     private String artifactDeploymentActivityId;
     private String lastActivityId;
     private ExecutionStatus lastActivityStatus;
+    private long lastActivityCreatedAt;
     private String commandName;
     private String commandType;
     private long lastDeployedOn;
@@ -553,6 +575,17 @@ public class ServiceInstance extends Base {
     }
 
     /**
+     * With last activity created on builder.
+     *
+     * @param lastActivityCreatedOn the last activity created on
+     * @return the builder
+     */
+    public Builder withLastActivityCreatedOn(long lastActivityCreatedOn) {
+      this.lastActivityCreatedAt = lastActivityCreatedOn;
+      return this;
+    }
+
+    /**
      * With command name builder.
      *
      * @param commandName the command name
@@ -681,6 +714,7 @@ public class ServiceInstance extends Base {
           .withArtifactDeploymentActivityId(artifactDeploymentActivityId)
           .withLastActivityId(lastActivityId)
           .withLastActivityStatus(lastActivityStatus)
+          .withLastActivityCreatedOn(lastActivityCreatedAt)
           .withCommandName(commandName)
           .withCommandType(commandType)
           .withLastDeployedOn(lastDeployedOn)
@@ -712,6 +746,7 @@ public class ServiceInstance extends Base {
       serviceInstance.setArtifactDeploymentActivityId(artifactDeploymentActivityId);
       serviceInstance.setLastActivityId(lastActivityId);
       serviceInstance.setLastActivityStatus(lastActivityStatus);
+      serviceInstance.setLastActivityCreatedAt(lastActivityCreatedAt);
       serviceInstance.setCommandName(commandName);
       serviceInstance.setCommandType(commandType);
       serviceInstance.setLastDeployedOn(lastDeployedOn);

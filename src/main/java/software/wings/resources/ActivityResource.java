@@ -57,18 +57,13 @@ public class ActivityResource {
   /**
    * List.
    *
-   * @param appId   the app id
    * @param envId   the env id
    * @param request the request
    * @return the rest response
    */
   @GET
   public RestResponse<PageResponse<Activity>> list(
-      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
-    if (!Strings.isNullOrEmpty(appId)) {
-      request.addFilter("appId", appId, EQ);
-    }
-
+      @QueryParam("envId") String envId, @BeanParam PageRequest<Activity> request) {
     if (!Strings.isNullOrEmpty(envId)) {
       request.addFilter("environmentId", envId, EQ);
     }

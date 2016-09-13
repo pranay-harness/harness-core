@@ -24,6 +24,7 @@ public class SshSessionConfig {
   private Integer port = 22;
   private String userName;
   private String password;
+  private String keyName;
   private String key;
   private String keyPassphrase;
   private String sudoAppName;
@@ -336,11 +337,19 @@ public class SshSessionConfig {
     this.socketConnectTimeout = socketConnectTimeout;
   }
 
+  public String getKeyName() {
+    return keyName;
+  }
+
+  public void setKeyName(String keyName) {
+    this.keyName = keyName;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(appId, executorType, executionId, commandUnitName, socketConnectTimeout, sshConnectionTimeout,
         sshSessionTimeout, retryInterval, host, port, userName, password, key, keyPassphrase, sudoAppName,
-        sudoAppPassword, bastionHostConfig);
+        sudoAppPassword, bastionHostConfig, keyName);
   }
 
   @Override
@@ -364,7 +373,8 @@ public class SshSessionConfig {
         && Objects.equals(this.keyPassphrase, other.keyPassphrase)
         && Objects.equals(this.sudoAppName, other.sudoAppName)
         && Objects.equals(this.sudoAppPassword, other.sudoAppPassword)
-        && Objects.equals(this.bastionHostConfig, other.bastionHostConfig);
+        && Objects.equals(this.bastionHostConfig, other.bastionHostConfig)
+        && Objects.equals(this.keyName, other.keyName);
   }
 
   @Override
@@ -387,6 +397,7 @@ public class SshSessionConfig {
         .add("sudoAppName", sudoAppName)
         .add("sudoAppPassword", sudoAppPassword)
         .add("bastionHostConfig", bastionHostConfig)
+        .add("keyName", keyName)
         .toString();
   }
 
@@ -410,6 +421,7 @@ public class SshSessionConfig {
     private String keyPassphrase;
     private String sudoAppName;
     private String sudoAppPassword;
+    private String keyName;
     private SshSessionConfig bastionHostConfig;
 
     private Builder() {}
@@ -555,6 +567,11 @@ public class SshSessionConfig {
       return this;
     }
 
+    public Builder withKeyName(String keyName) {
+      this.keyName = keyName;
+      return this;
+    }
+
     /**
      * With key builder.
      *
@@ -633,6 +650,7 @@ public class SshSessionConfig {
           .withKeyPassphrase(keyPassphrase)
           .withSudoAppName(sudoAppName)
           .withSudoAppPassword(sudoAppPassword)
+          .withKeyName(keyName)
           .withBastionHostConfig(bastionHostConfig);
     }
 
@@ -660,6 +678,7 @@ public class SshSessionConfig {
       sshSessionConfig.setSudoAppName(sudoAppName);
       sshSessionConfig.setSudoAppPassword(sudoAppPassword);
       sshSessionConfig.setBastionHostConfig(bastionHostConfig);
+      sshSessionConfig.setKeyName(keyName);
       return sshSessionConfig;
     }
   }

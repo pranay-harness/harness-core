@@ -14,7 +14,7 @@ public class HostConnectionAttributes extends SettingValue {
   private ConnectionType connectionType;
   private AccessType accessType;
   private String key;
-  private String keyPassphrase;
+  private String userName;
 
   /**
    * Instantiates a new host connection attributes.
@@ -87,21 +87,21 @@ public class HostConnectionAttributes extends SettingValue {
   }
 
   /**
-   * Gets key passphrase.
+   * Getter for property 'userName'.
    *
-   * @return the key passphrase
+   * @return Value for property 'userName'.
    */
-  public String getKeyPassphrase() {
-    return keyPassphrase;
+  public String getUserName() {
+    return userName;
   }
 
   /**
-   * Sets key passphrase.
+   * Setter for property 'userName'.
    *
-   * @param keyPassphrase the key passphrase
+   * @param userName Value to set for property 'userName'.
    */
-  public void setKeyPassphrase(String keyPassphrase) {
-    this.keyPassphrase = keyPassphrase;
+  public void setUserName(String userName) {
+    this.userName = userName;
   }
 
   /* (non-Javadoc)
@@ -109,7 +109,7 @@ public class HostConnectionAttributes extends SettingValue {
    */
   @Override
   public int hashCode() {
-    return Objects.hash(accessType, connectionType, key, keyPassphrase);
+    return Objects.hash(accessType, connectionType, key, userName);
   }
 
   /* (non-Javadoc)
@@ -126,7 +126,7 @@ public class HostConnectionAttributes extends SettingValue {
     final HostConnectionAttributes other = (HostConnectionAttributes) obj;
     return Objects.equals(this.accessType, other.accessType)
         && Objects.equals(this.connectionType, other.connectionType) && Objects.equals(this.key, other.key)
-        && Objects.equals(this.keyPassphrase, other.keyPassphrase);
+        && Objects.equals(this.userName, other.userName);
   }
 
   /**
@@ -165,24 +165,24 @@ public class HostConnectionAttributes extends SettingValue {
   }
 
   /**
-   * The Class HostConnectionAttributesBuilder.
+   * The Class Builder.
    */
-  public static final class HostConnectionAttributesBuilder {
+  public static final class Builder {
     private ConnectionType connectionType;
     private AccessType accessType;
     private String key;
-    private String keyPassphrase;
+    private String userName;
     private SettingVariableTypes type;
 
-    private HostConnectionAttributesBuilder() {}
+    private Builder() {}
 
     /**
      * A host connection attributes.
      *
      * @return the host connection attributes builder
      */
-    public static HostConnectionAttributesBuilder aHostConnectionAttributes() {
-      return new HostConnectionAttributesBuilder();
+    public static Builder aHostConnectionAttributes() {
+      return new Builder();
     }
 
     /**
@@ -191,7 +191,7 @@ public class HostConnectionAttributes extends SettingValue {
      * @param connectionType the connection type
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
+    public Builder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
@@ -202,7 +202,7 @@ public class HostConnectionAttributes extends SettingValue {
      * @param accessType the access type
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder withAccessType(AccessType accessType) {
+    public Builder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
@@ -213,19 +213,19 @@ public class HostConnectionAttributes extends SettingValue {
      * @param key the key
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder withKey(String key) {
+    public Builder withKey(String key) {
       this.key = key;
       return this;
     }
 
     /**
-     * With key passphrase.
+     * With user name.
      *
-     * @param keyPassphrase the key passphrase
+     * @param userName the user name
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder withKeyPassphrase(String keyPassphrase) {
-      this.keyPassphrase = keyPassphrase;
+    public Builder withUserName(String userName) {
+      this.userName = userName;
       return this;
     }
 
@@ -235,7 +235,7 @@ public class HostConnectionAttributes extends SettingValue {
      * @param type the type
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder withType(SettingVariableTypes type) {
+    public Builder withType(SettingVariableTypes type) {
       this.type = type;
       return this;
     }
@@ -245,12 +245,12 @@ public class HostConnectionAttributes extends SettingValue {
      *
      * @return the host connection attributes builder
      */
-    public HostConnectionAttributesBuilder but() {
+    public Builder but() {
       return aHostConnectionAttributes()
           .withConnectionType(connectionType)
           .withAccessType(accessType)
           .withKey(key)
-          .withKeyPassphrase(keyPassphrase)
+          .withUserName(userName)
           .withType(type);
     }
 
@@ -264,7 +264,7 @@ public class HostConnectionAttributes extends SettingValue {
       hostConnectionAttributes.setConnectionType(connectionType);
       hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setKey(key);
-      hostConnectionAttributes.setKeyPassphrase(keyPassphrase);
+      hostConnectionAttributes.setUserName(userName);
       hostConnectionAttributes.setType(type);
       return hostConnectionAttributes;
     }

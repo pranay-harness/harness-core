@@ -74,121 +74,67 @@ public class BastionConnectionAttributes extends HostConnectionAttributes {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
-  /**
-   * The Class BastionConnectionAttributesBuilder.
-   */
-  public static final class BastionConnectionAttributesBuilder {
-    private String hostName;
+  public static final class Builder {
     private ConnectionType connectionType;
     private AccessType accessType;
+    private String hostName;
     private String key;
-    private String keyPassphrase;
+    private String userName;
     private SettingVariableTypes type;
 
-    private BastionConnectionAttributesBuilder() {}
+    private Builder() {}
 
-    /**
-     * A bastion connection attributes.
-     *
-     * @return the bastion connection attributes builder
-     */
-    public static BastionConnectionAttributesBuilder aBastionConnectionAttributes() {
-      return new BastionConnectionAttributesBuilder();
+    public static Builder aBastionConnectionAttributes() {
+      return new Builder();
     }
 
-    /**
-     * With host name.
-     *
-     * @param hostName the host name
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withHostName(String hostName) {
-      this.hostName = hostName;
-      return this;
-    }
-
-    /**
-     * With connection type.
-     *
-     * @param connectionType the connection type
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withConnectionType(ConnectionType connectionType) {
+    public Builder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
       return this;
     }
 
-    /**
-     * With access type.
-     *
-     * @param accessType the access type
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withAccessType(AccessType accessType) {
+    public Builder withAccessType(AccessType accessType) {
       this.accessType = accessType;
       return this;
     }
 
-    /**
-     * With key.
-     *
-     * @param key the key
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withKey(String key) {
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withKey(String key) {
       this.key = key;
       return this;
     }
 
-    /**
-     * With key passphrase.
-     *
-     * @param keyPassphrase the key passphrase
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withKeyPassphrase(String keyPassphrase) {
-      this.keyPassphrase = keyPassphrase;
+    public Builder withUserName(String userName) {
+      this.userName = userName;
       return this;
     }
 
-    /**
-     * With type.
-     *
-     * @param type the type
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder withType(SettingVariableTypes type) {
+    public Builder withType(SettingVariableTypes type) {
       this.type = type;
       return this;
     }
 
-    /**
-     * But.
-     *
-     * @return the bastion connection attributes builder
-     */
-    public BastionConnectionAttributesBuilder but() {
+    public Builder but() {
       return aBastionConnectionAttributes()
-          .withHostName(hostName)
           .withConnectionType(connectionType)
           .withAccessType(accessType)
+          .withHostName(hostName)
           .withKey(key)
-          .withKeyPassphrase(keyPassphrase)
+          .withUserName(userName)
           .withType(type);
     }
 
-    /**
-     * Builds the.
-     *
-     * @return the bastion connection attributes
-     */
     public BastionConnectionAttributes build() {
       BastionConnectionAttributes bastionConnectionAttributes = new BastionConnectionAttributes();
-      bastionConnectionAttributes.setHostName(hostName);
       bastionConnectionAttributes.setConnectionType(connectionType);
       bastionConnectionAttributes.setAccessType(accessType);
+      bastionConnectionAttributes.setHostName(hostName);
       bastionConnectionAttributes.setKey(key);
-      bastionConnectionAttributes.setKeyPassphrase(keyPassphrase);
+      bastionConnectionAttributes.setUserName(userName);
       bastionConnectionAttributes.setType(type);
       return bastionConnectionAttributes;
     }
