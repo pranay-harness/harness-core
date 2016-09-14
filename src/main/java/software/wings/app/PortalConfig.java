@@ -49,9 +49,6 @@ public class PortalConfig {
     return Joiner.on(",").join(allowedDomains);
   }
 
-  public List<String> getAllowedDomainsList() {
-    return isEmpty(allowedDomains) ? Lists.newArrayList() : allowedDomains;
-  }
   /**
    * Sets allowed domains.
    *
@@ -59,6 +56,15 @@ public class PortalConfig {
    */
   public void setAllowedDomains(String allowedDomains) {
     this.allowedDomains = Splitter.on(",").trimResults().omitEmptyStrings().splitToList(allowedDomains);
+  }
+
+  /**
+   * Gets allowed domains list.
+   *
+   * @return the allowed domains list
+   */
+  public List<String> getAllowedDomainsList() {
+    return isEmpty(allowedDomains) ? Lists.newArrayList() : allowedDomains;
   }
 
   /**
@@ -97,14 +103,27 @@ public class PortalConfig {
     this.verificationUrl = verificationUrl;
   }
 
+  /**
+   * Gets auth token expiry in millis.
+   *
+   * @return the auth token expiry in millis
+   */
   public Long getAuthTokenExpiryInMillis() {
     return authTokenExpiryInMillis;
   }
 
+  /**
+   * Sets auth token expiry in millis.
+   *
+   * @param authTokenExpiryInMillis the auth token expiry in millis
+   */
   public void setAuthTokenExpiryInMillis(Long authTokenExpiryInMillis) {
     this.authTokenExpiryInMillis = authTokenExpiryInMillis;
   }
 
+  /**
+   * The type Array converter.
+   */
   public static class ArrayConverter extends StdConverter<List<String>, String> {
     @Override
     public String convert(List<String> value) {

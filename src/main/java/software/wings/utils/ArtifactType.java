@@ -300,5 +300,10 @@ public enum ArtifactType {
     }
   };
 
+  /**
+   * Gets default commands.
+   *
+   * @return the default commands
+   */
   public abstract List<Graph> getDefaultCommands();
 }

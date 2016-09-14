@@ -118,18 +118,38 @@ public class AppContainer extends BaseFile {
     this.family = family;
   }
 
+  /**
+   * Gets stack root directory.
+   *
+   * @return the stack root directory
+   */
   public String getStackRootDirectory() {
     return stackRootDirectory;
   }
 
+  /**
+   * Sets stack root directory.
+   *
+   * @param stackRootDirectory the stack root directory
+   */
   public void setStackRootDirectory(String stackRootDirectory) {
     this.stackRootDirectory = stackRootDirectory;
   }
 
+  /**
+   * Gets file type.
+   *
+   * @return the file type
+   */
   public FileType getFileType() {
     return fileType;
   }
 
+  /**
+   * Sets file type.
+   *
+   * @param fileType the file type
+   */
   public void setFileType(FileType fileType) {
     this.fileType = fileType;
   }
@@ -159,6 +179,9 @@ public class AppContainer extends BaseFile {
         && Objects.equals(this.fileType, other.fileType);
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String name;
     private String fileUuid;
@@ -184,115 +207,251 @@ public class AppContainer extends BaseFile {
 
     private Builder() {}
 
+    /**
+     * An app container builder.
+     *
+     * @return the builder
+     */
     public static Builder anAppContainer() {
       return new Builder();
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With file uuid builder.
+     *
+     * @param fileUuid the file uuid
+     * @return the builder
+     */
     public Builder withFileUuid(String fileUuid) {
       this.fileUuid = fileUuid;
       return this;
     }
 
+    /**
+     * With file name builder.
+     *
+     * @param fileName the file name
+     * @return the builder
+     */
     public Builder withFileName(String fileName) {
       this.fileName = fileName;
       return this;
     }
 
+    /**
+     * With mime type builder.
+     *
+     * @param mimeType the mime type
+     * @return the builder
+     */
     public Builder withMimeType(String mimeType) {
       this.mimeType = mimeType;
       return this;
     }
 
+    /**
+     * With size builder.
+     *
+     * @param size the size
+     * @return the builder
+     */
     public Builder withSize(long size) {
       this.size = size;
       return this;
     }
 
+    /**
+     * With checksum type builder.
+     *
+     * @param checksumType the checksum type
+     * @return the builder
+     */
     public Builder withChecksumType(ChecksumType checksumType) {
       this.checksumType = checksumType;
       return this;
     }
 
+    /**
+     * With checksum builder.
+     *
+     * @param checksum the checksum
+     * @return the builder
+     */
     public Builder withChecksum(String checksum) {
       this.checksum = checksum;
       return this;
     }
 
+    /**
+     * With standard builder.
+     *
+     * @param standard the standard
+     * @return the builder
+     */
     public Builder withStandard(boolean standard) {
       this.standard = standard;
       return this;
     }
 
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
     public Builder withDescription(String description) {
       this.description = description;
       return this;
     }
 
+    /**
+     * With source builder.
+     *
+     * @param source the source
+     * @return the builder
+     */
     public Builder withSource(ArtifactSource source) {
       this.source = source;
       return this;
     }
 
+    /**
+     * With standard upload builder.
+     *
+     * @param standardUpload the standard upload
+     * @return the builder
+     */
     public Builder withStandardUpload(boolean standardUpload) {
       this.standardUpload = standardUpload;
       return this;
     }
 
+    /**
+     * With family builder.
+     *
+     * @param family the family
+     * @return the builder
+     */
     public Builder withFamily(ContainerFamily family) {
       this.family = family;
       return this;
     }
 
+    /**
+     * With stack root directory builder.
+     *
+     * @param stackRootDirectory the stack root directory
+     * @return the builder
+     */
     public Builder withStackRootDirectory(String stackRootDirectory) {
       this.stackRootDirectory = stackRootDirectory;
       return this;
     }
 
+    /**
+     * With file type builder.
+     *
+     * @param fileType the file type
+     * @return the builder
+     */
     public Builder withFileType(FileType fileType) {
       this.fileType = fileType;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anAppContainer()
           .withName(name)
@@ -318,6 +477,11 @@ public class AppContainer extends BaseFile {
           .withActive(active);
     }
 
+    /**
+     * Build app container.
+     *
+     * @return the app container
+     */
     public AppContainer build() {
       AppContainer appContainer = new AppContainer();
       appContainer.setName(name);

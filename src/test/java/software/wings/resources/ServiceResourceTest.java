@@ -10,9 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
-import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Service.Builder.aService;
+import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import org.junit.ClassRule;

@@ -337,10 +337,20 @@ public class SshSessionConfig {
     this.socketConnectTimeout = socketConnectTimeout;
   }
 
+  /**
+   * Gets key name.
+   *
+   * @return the key name
+   */
   public String getKeyName() {
     return keyName;
   }
 
+  /**
+   * Sets key name.
+   *
+   * @param keyName the key name
+   */
   public void setKeyName(String keyName) {
     this.keyName = keyName;
   }
@@ -567,6 +577,12 @@ public class SshSessionConfig {
       return this;
     }
 
+    /**
+     * With key name builder.
+     *
+     * @param keyName the key name
+     * @return the builder
+     */
     public Builder withKeyName(String keyName) {
       this.keyName = keyName;
       return this;

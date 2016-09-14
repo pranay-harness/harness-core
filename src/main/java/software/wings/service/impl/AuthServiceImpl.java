@@ -36,6 +36,11 @@ import javax.inject.Inject;
 public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
 
+  /**
+   * Instantiates a new Auth service.
+   *
+   * @param dbCache the db cache
+   */
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache) {
     this.dbCache = dbCache;

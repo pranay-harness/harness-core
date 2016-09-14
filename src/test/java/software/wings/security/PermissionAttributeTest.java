@@ -19,6 +19,9 @@ import java.util.stream.Stream;
  * Created by anubhaw on 8/30/16.
  */
 public class PermissionAttributeTest {
+  /**
+   * Should validate all permission bits.
+   */
   @Test
   public void shouldValidateAllPermissionBits() {
     Reflections reflections = new Reflections(new ConfigurationBuilder()

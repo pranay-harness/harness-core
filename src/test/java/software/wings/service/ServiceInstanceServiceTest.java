@@ -60,19 +60,15 @@ import javax.inject.Inject;
  * Created by anubhaw on 5/26/16.
  */
 public class ServiceInstanceServiceTest extends WingsBaseTest {
+  private final ServiceTemplate serviceTemplate =
+      aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build();
+  private final Host host = aHost().withUuid(HOST_ID).build();
   @Mock private WingsPersistence wingsPersistence;
   @Mock private Query<ServiceInstance> query;
   @Mock private UpdateOperations<ServiceInstance> updateOperations;
   @Mock private FieldEnd end;
-
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
-
   @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
-
-  private final ServiceTemplate serviceTemplate =
-      aServiceTemplate().withUuid(TEMPLATE_ID).withService(aService().withUuid(SERVICE_ID).build()).build();
-  private final Host host = aHost().withUuid(HOST_ID).build();
-
   private ServiceInstance.Builder builder = aServiceInstance()
                                                 .withAppId(APP_ID)
                                                 .withEnvId(ENV_ID)

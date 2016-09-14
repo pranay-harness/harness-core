@@ -39,10 +39,12 @@ public enum EntityType {
                  */
   SSH_APP_ACCOUNT,
 
-  SSH_KEY_PASSPHRASE,
   /**
-   * Ssh app account passowrd entity type.
+   * Ssh key passphrase entity type.
    */
+  SSH_KEY_PASSPHRASE, /**
+                       * Ssh app account passowrd entity type.
+                       */
   SSH_APP_ACCOUNT_PASSOWRD,
 
   /**

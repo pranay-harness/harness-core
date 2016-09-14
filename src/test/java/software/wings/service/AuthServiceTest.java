@@ -48,14 +48,9 @@ import javax.inject.Inject;
  * Created by anubhaw on 8/31/16.
  */
 public class AuthServiceTest extends WingsBaseTest {
-  @Mock private GenericDbCache cache;
-
-  @Inject @InjectMocks private AuthService authService;
-
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
-
   private final Role appAllResourceReadActionRole = aRole()
                                                         .withAppId(GLOBAL_APP_ID)
                                                         .withName(ROLE_NAME)
@@ -92,7 +87,6 @@ public class AuthServiceTest extends WingsBaseTest {
                                                                                    .withAction(ALL)
                                                                                    .build()))
                                                        .build();
-
   private final Role envAllResourceReadActionRole = aRole()
                                                         .withAppId(GLOBAL_APP_ID)
                                                         .withName(ROLE_NAME)
@@ -129,10 +123,16 @@ public class AuthServiceTest extends WingsBaseTest {
                                                                                    .withAction(ALL)
                                                                                    .build()))
                                                        .build();
-
+  @Mock private GenericDbCache cache;
+  @Inject @InjectMocks private AuthService authService;
   private Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
 
+  /**
+   * Sets up.
+   *
+   * @throws Exception the exception
+   */
   @Before
   public void setUp() throws Exception {
     when(cache.get(AuthToken.class, VALID_TOKEN)).thenReturn(new AuthToken(userBuilder.but().build(), 86400000L));
@@ -143,12 +143,18 @@ public class AuthServiceTest extends WingsBaseTest {
             anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withEnvironmentType(EnvironmentType.OTHER).build());
   }
 
+  /**
+   * Should validate valid token.
+   */
   @Test
   public void shouldValidateValidToken() {
     AuthToken authToken = authService.validateToken(VALID_TOKEN);
     Assertions.assertThat(authToken).isNotNull().isInstanceOf(AuthToken.class);
   }
 
+  /**
+   * Should throw invalid token exception for invalid token.
+   */
   @Test
   public void shouldThrowInvalidTokenExceptionForInvalidToken() {
     assertThatThrownBy(() -> authService.validateToken(INVALID_TOKEN))
@@ -156,6 +162,9 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCodes.INVALID_TOKEN.name());
   }
 
+  /**
+   * Should throw expired token exception for expired token.
+   */
   @Test
   public void shouldThrowExpiredTokenExceptionForExpiredToken() {
     assertThatThrownBy(() -> authService.validateToken(EXPIRED_TOKEN))
@@ -163,6 +172,9 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCodes.EXPIRED_TOKEN.name());
   }
 
+  /**
+   * Should authorize app scope resource read request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeAppScopeResourceReadRequestForUserWithRequiredPermission() {
     authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceReadActionRole)).build(),
@@ -171,6 +183,9 @@ public class AuthServiceTest extends WingsBaseTest {
         asList(new PermissionAttribute("APPLICATION:READ", APP)), PageRequestType.OTHER);
   }
 
+  /**
+   * Should deny app scope resource read request for user without required permission.
+   */
   @Test
   public void shouldDenyAppScopeResourceReadRequestForUserWithoutRequiredPermission() {
     assertThatThrownBy(()
@@ -181,6 +196,9 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should authorize app scope resource write request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeAppScopeResourceWriteRequestForUserWithRequiredPermission() {
     authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(appAllResourceWriteActionRole)).build(),
@@ -189,6 +207,9 @@ public class AuthServiceTest extends WingsBaseTest {
         asList(new PermissionAttribute("APPLICATION:WRITE", APP)), PageRequestType.OTHER);
   }
 
+  /**
+   * Should deny app scope resource write request for user without required permission.
+   */
   @Test
   public void shouldDenyAppScopeResourceWriteRequestForUserWithoutRequiredPermission() {
     assertThatThrownBy(()
@@ -199,6 +220,9 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should authorize env scope resource read request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeResourceReadRequestForUserWithRequiredPermission() {
     authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceReadActionRole)).build(),
@@ -207,6 +231,9 @@ public class AuthServiceTest extends WingsBaseTest {
         asList(new PermissionAttribute("ENVIRONMENT:READ", ENV)), PageRequestType.OTHER);
   }
 
+  /**
+   * Should deny env scope resource read request for user without required permission.
+   */
   @Test
   public void shouldDenyEnvScopeResourceReadRequestForUserWithoutRequiredPermission() {
     assertThatThrownBy(()
@@ -217,6 +244,9 @@ public class AuthServiceTest extends WingsBaseTest {
         .hasMessage(ErrorCodes.ACCESS_DENIED.name());
   }
 
+  /**
+   * Should authorize env scope resource write request for user with required permission.
+   */
   @Test
   public void shouldAuthorizeEnvScopeResourceWriteRequestForUserWithRequiredPermission() {
     authService.authorize(APP_ID, ENV_ID, userBuilder.but().withRoles(asList(envAllResourceWriteActionRole)).build(),
@@ -225,6 +255,9 @@ public class AuthServiceTest extends WingsBaseTest {
         asList(new PermissionAttribute("ENVIRONMENT:WRITE", ENV)), PageRequestType.OTHER);
   }
 
+  /**
+   * Should deny env scope resource write request for user without required permission.
+   */
   @Test
   public void shouldDenyEnvScopeResourceWriteRequestForUserWithoutRequiredPermission() {
     assertThatThrownBy(()

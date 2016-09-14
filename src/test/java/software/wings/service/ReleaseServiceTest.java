@@ -17,13 +17,13 @@ import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.utils.ArtifactType;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
 import software.wings.beans.Release.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.ReleaseService;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import javax.inject.Inject;

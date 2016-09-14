@@ -382,10 +382,20 @@ public class StateExecutionInstance extends Base {
     this.executionName = executionName;
   }
 
+  /**
+   * Gets state execution data history.
+   *
+   * @return the state execution data history
+   */
   public List<StateExecutionData> getStateExecutionDataHistory() {
     return stateExecutionDataHistory;
   }
 
+  /**
+   * Sets state execution data history.
+   *
+   * @param stateExecutionDataHistory the state execution data history
+   */
   public void setStateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
     this.stateExecutionDataHistory = stateExecutionDataHistory;
   }
@@ -519,6 +529,12 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
+    /**
+     * With state execution data history builder.
+     *
+     * @param stateExecutionDataHistory the state execution data history
+     * @return the builder
+     */
     public Builder withStateExecutionDataHistory(List<StateExecutionData> stateExecutionDataHistory) {
       this.stateExecutionDataHistory = stateExecutionDataHistory;
       return this;

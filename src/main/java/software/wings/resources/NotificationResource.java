@@ -17,7 +17,6 @@ import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.NotificationService;
 
 import java.util.Arrays;

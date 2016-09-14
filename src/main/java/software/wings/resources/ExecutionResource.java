@@ -46,7 +46,7 @@ public class ExecutionResource {
   /**
    * Instantiates a new execution resource.
    *
-   * @param appService      the app service
+   * @param appService               the app service
    * @param workflowExecutionService the workflow service
    */
   @Inject

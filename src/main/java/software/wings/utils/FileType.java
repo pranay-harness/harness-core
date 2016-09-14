@@ -21,6 +21,9 @@ import java.util.zip.GZIPInputStream;
  * Created by peeyushaggarwal on 9/6/16.
  */
 public enum FileType {
+  /**
+   * The constant ZIP.
+   */
   ZIP {
     private static final long serialVersionUID = 1L;
 
@@ -35,6 +38,9 @@ public enum FileType {
     }
   },
 
+  /**
+   * The constant TAR_GZ.
+   */
   TAR_GZ {
     private static final long serialVersionUID = 1L;
 
@@ -49,6 +55,9 @@ public enum FileType {
     }
   },
 
+  /**
+   * The constant TAR_BZ.
+   */
   TAR_BZ {
     private static final long serialVersionUID = 1L;
 
@@ -63,6 +72,9 @@ public enum FileType {
     }
   },
 
+  /**
+   * The constant TAR.
+   */
   TAR {
     private static final long serialVersionUID = 1L;
 
@@ -77,6 +89,9 @@ public enum FileType {
     }
   },
 
+  /**
+   * The constant UNKNOWN.
+   */
   UNKNOWN {
     private static final long serialVersionUID = 1L;
 
@@ -101,6 +116,13 @@ public enum FileType {
     }
   };
 
+  /**
+   * Gets top level hierarchy.
+   *
+   * @param archiveInputStream the archive input stream
+   * @return the top level hierarchy
+   * @throws IOException the io exception
+   */
   protected static Set<String> getTopLevelHierarchy(ArchiveInputStream archiveInputStream) throws IOException {
     Set<String> topLevelElements = Sets.newHashSet();
     ArchiveEntry archiveEntry;
@@ -115,6 +137,12 @@ public enum FileType {
     return topLevelElements;
   }
 
+  /**
+   * Test boolean.
+   *
+   * @param bufferedInputStream the buffered input stream
+   * @return the boolean
+   */
   public boolean test(BufferedInputStream bufferedInputStream) {
     try {
       bufferedInputStream.mark(10 * 1024);
@@ -124,6 +152,12 @@ public enum FileType {
     }
   }
 
+  /**
+   * Gets root.
+   *
+   * @param bufferedInputStream the buffered input stream
+   * @return the root
+   */
   public String getRoot(BufferedInputStream bufferedInputStream) {
     try {
       bufferedInputStream.mark(10 * 1024);
@@ -140,13 +174,34 @@ public enum FileType {
     }
   }
 
+  /**
+   * Gets unarchive command.
+   *
+   * @param fileName      the file name
+   * @param rootDirectory the root directory
+   * @param symlink       the symlink
+   * @return the unarchive command
+   */
   public String getUnarchiveCommand(String fileName, String rootDirectory, String symlink) {
     return getUnarchiveCommandString(fileName) + "\n"
         + (isNotBlank(rootDirectory) ? "ln -s " + rootDirectory + " " + symlink : "");
   }
 
+  /**
+   * Gets archive input stream.
+   *
+   * @param bufferedInputStream the buffered input stream
+   * @return the archive input stream
+   * @throws IOException the io exception
+   */
   protected abstract ArchiveInputStream getArchiveInputStream(BufferedInputStream bufferedInputStream)
       throws IOException;
 
+  /**
+   * Gets unarchive command string.
+   *
+   * @param fileName the file name
+   * @return the unarchive command string
+   */
   protected abstract String getUnarchiveCommandString(String fileName);
 }

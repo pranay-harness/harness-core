@@ -11,7 +11,6 @@ import software.wings.beans.History;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.HistoryService;
 
 import javax.ws.rs.BeanParam;

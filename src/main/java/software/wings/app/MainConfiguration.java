@@ -42,6 +42,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
   @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
 
+  /**
+   * Instantiates a new Main configuration.
+   */
   public MainConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");
@@ -210,6 +213,11 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    * Created by peeyushaggarwal on 8/30/16.
    */
   public static abstract class AssetsConfigurationMixin {
+    /**
+     * Gets resource path to uri mappings.
+     *
+     * @return the resource path to uri mappings
+     */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
   }
 }

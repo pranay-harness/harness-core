@@ -19,8 +19,8 @@ public class AuthToken extends Base {
   /**
    * Instantiates a new auth token.
    *
-   * @param user the user
-   * @param tokenExpiryInMillis
+   * @param user                the user
+   * @param tokenExpiryInMillis the token expiry in millis
    */
   public AuthToken(User user, Long tokenExpiryInMillis) {
     this.user = user;

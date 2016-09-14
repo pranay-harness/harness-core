@@ -226,10 +226,20 @@ public class ExecutionArgs {
     this.serviceInstanceIdNames = serviceInstanceIdNames;
   }
 
+  /**
+   * Gets error strategy.
+   *
+   * @return the error strategy
+   */
   public ErrorStrategy getErrorStrategy() {
     return errorStrategy;
   }
 
+  /**
+   * Sets error strategy.
+   *
+   * @param errorStrategy the error strategy
+   */
   public void setErrorStrategy(ErrorStrategy errorStrategy) {
     this.errorStrategy = errorStrategy;
   }

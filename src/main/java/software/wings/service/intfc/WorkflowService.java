@@ -135,5 +135,12 @@ public interface WorkflowService {
    */
   Orchestration updateOrchestration(Orchestration orchestration);
 
+  /**
+   * Read latest simple workflow orchestration.
+   *
+   * @param appId the app id
+   * @param envId the env id
+   * @return the orchestration
+   */
   Orchestration readLatestSimpleWorkflow(String appId, String envId);
 }
