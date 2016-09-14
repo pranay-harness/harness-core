@@ -55,6 +55,8 @@ public class Host extends Base {
   @JsonProperty(access = WRITE_ONLY)
   private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
+  @Reference private List<String> environments = new ArrayList<>();
+
   /**
    * Gets infra id.
    *
@@ -277,6 +279,14 @@ public class Host extends Base {
         .add("hostNames", hostNames)
         .add("serviceTemplates", serviceTemplates)
         .toString();
+  }
+
+  public List<String> getEnvironments() {
+    return environments;
+  }
+
+  public void setEnvironments(List<String> environments) {
+    this.environments = environments;
   }
 
   /**

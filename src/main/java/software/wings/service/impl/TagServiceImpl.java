@@ -22,7 +22,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -45,7 +45,7 @@ public class TagServiceImpl implements TagService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
-  @Inject private InfraService infraService;
+  @Inject private InfrastructureService infrastructureService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ExecutorService executorService;
   @Inject private ConfigService configService;
@@ -308,8 +308,8 @@ public class TagServiceImpl implements TagService {
       throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
     }
 
-    List<Host> inputHosts =
-        hostService.getHostsByHostIds(appId, infraService.getInfraByEnvId(appId, tag.getEnvId()).getUuid(), hostIds);
+    List<Host> inputHosts = hostService.getHostsByHostIds(
+        appId, infrastructureService.getInfraByEnvId(appId, tag.getEnvId()).getUuid(), hostIds);
     tagHosts(tag, inputHosts);
   }
 

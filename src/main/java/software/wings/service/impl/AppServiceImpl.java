@@ -34,6 +34,7 @@ import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -64,6 +65,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private NotificationService notificationService;
   @Inject private HistoryService historyService;
+  @Inject private InfrastructureService infrastructureService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.AppService#save(software.wings.beans.Application)
@@ -73,6 +75,7 @@ public class AppServiceImpl implements AppService {
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
     settingsService.createDefaultSettings(application.getUuid());
+    infrastructureService.createDefaultInfrastructure();
     environmentService.createDefaultEnvironments(application.getUuid());
     notificationService.sendNotificationAsync(
         anInformationNotification()

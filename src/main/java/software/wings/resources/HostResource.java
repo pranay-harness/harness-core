@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.Status.OK;
@@ -18,7 +19,7 @@ import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -49,7 +50,7 @@ import javax.ws.rs.core.Response;
 @Consumes("application/json")
 public class HostResource {
   private HostService hostService;
-  private InfraService infraService;
+  private InfrastructureService infraService;
   private MainConfiguration configuration;
 
   /**
@@ -60,7 +61,7 @@ public class HostResource {
    * @param configuration the configuration
    */
   @Inject
-  public HostResource(HostService hostService, InfraService infraService, MainConfiguration configuration) {
+  public HostResource(HostService hostService, InfrastructureService infraService, MainConfiguration configuration) {
     this.hostService = hostService;
     this.infraService = infraService;
     this.configuration = configuration;
@@ -78,7 +79,9 @@ public class HostResource {
   @GET
   public RestResponse<PageResponse<Host>> list(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @BeanParam PageRequest<Host> pageRequest) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    if (isNullOrEmpty(infraId)) {
+      infraId = infraService.getDefaultInfrastructureId();
+    }
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("infraId", infraId, EQ);
     return new RestResponse<>(hostService.list(pageRequest));
@@ -97,7 +100,9 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse<Host> get(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
+      infraId = infraService.getDefaultInfrastructureId();
+    }
     return new RestResponse<>(hostService.get(appId, infraId, hostId));
   }
 
@@ -113,9 +118,10 @@ public class HostResource {
   @POST
   public Response save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, Host baseHost) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
     baseHost.setAppId(appId);
-    baseHost.setInfraId(infraId);
+    if (isNullOrEmpty(baseHost.getInfraId())) { // TODO:: INFRA
+      baseHost.setInfraId(infraService.getDefaultInfrastructureId());
+    }
     ResponseMessage responseMessage = hostService.bulkSave(envId, baseHost);
     return Response.status(OK).entity(aRestResponse().withResponseMessages(asList(responseMessage)).build()).build();
   }
@@ -134,7 +140,9 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
+      infraId = infraService.getDefaultInfrastructureId();
+    }
     host.setUuid(hostId);
     host.setInfraId(infraId);
     host.setAppId(appId);
@@ -154,7 +162,9 @@ public class HostResource {
   @Path("{hostId}")
   public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
+      infraId = infraService.getDefaultInfrastructureId();
+    }
     hostService.delete(appId, infraId, envId, hostId);
     return new RestResponse();
   }

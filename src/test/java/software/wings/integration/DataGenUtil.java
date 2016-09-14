@@ -84,7 +84,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
@@ -512,7 +512,7 @@ private void addServiceInstances(List<Service> services, List<Environment> appEn
   services.forEach(service -> {
     appEnvs.forEach(environment -> {
       String infraId =
-          wingsPersistence.createQuery(Infra.class).field("envId").equal(environment.getUuid()).get().getUuid();
+          wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(Base.GLOBAL_APP_ID).get().getUuid();
       List<Host> hosts = wingsPersistence.createQuery(Host.class)
                              .field("appId")
                              .equal(environment.getAppId())
@@ -539,7 +539,7 @@ private void addActivitiesAndLogs(Application application, List<Service> service
   // TODO: improve make http calls and use better generation scheme
   appEnvs.forEach(environment -> {
     String infraId =
-        wingsPersistence.createQuery(Infra.class).field("envId").equal(environment.getUuid()).get().getUuid();
+        wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(Base.GLOBAL_APP_ID).get().getUuid();
     List<Host> hosts = wingsPersistence.createQuery(Host.class)
                            .field("appId")
                            .equal(environment.getAppId())

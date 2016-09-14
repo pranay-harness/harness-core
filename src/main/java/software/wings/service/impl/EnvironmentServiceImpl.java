@@ -37,7 +37,6 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
-import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SetupService;
@@ -62,7 +61,6 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class EnvironmentServiceImpl implements EnvironmentService, DataProvider {
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private InfraService infraService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private TagService tagService;
   @Inject private ExecutorService executorService;
@@ -143,8 +141,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public Environment save(Environment environment) {
     environment = wingsPersistence.saveAndGet(Environment.class, environment);
     appService.addEnvironment(environment);
-    infraService.createDefaultInfraForEnvironment(
-        environment.getAppId(), environment.getUuid()); // FIXME: stopgap for Alpha
     tagService.createDefaultRootTagForEnvironment(environment);
     serviceTemplateService.createDefaultTemplatesByEnv(environment);
     workflowService.createWorkflow(Orchestration.class, getDefaultCanaryDeploymentObject(environment));
@@ -298,7 +294,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       executorService.submit(() -> {
         serviceTemplateService.deleteByEnv(appId, envId);
         tagService.deleteByEnv(appId, envId);
-        infraService.deleteByEnv(appId, envId);
         notificationService.sendNotificationAsync(
             anInformationNotification()
                 .withAppId(environment.getAppId())

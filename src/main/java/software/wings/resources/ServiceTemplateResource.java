@@ -13,7 +13,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
@@ -43,7 +43,7 @@ public class ServiceTemplateResource {
    * The Service template service.
    */
   @Inject ServiceTemplateService serviceTemplateService;
-  @Inject private InfraService infraService;
+  @Inject private InfrastructureService infrastructureService;
 
   /**
    * List.
@@ -189,7 +189,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @BeanParam PageRequest<Host> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", infraService.getInfraByEnvId(appId, envId), EQ);
+    pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(appId, envId), EQ);
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
 

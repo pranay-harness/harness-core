@@ -19,6 +19,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -40,7 +41,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.HostConnectionCredential;
-import software.wings.beans.Infra;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceTemplate;
@@ -52,7 +52,7 @@ import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -69,7 +69,7 @@ import javax.inject.Inject;
 public class HostServiceTest extends WingsBaseTest {
   @Mock private HostCsvFileHelper csvFileHelper;
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private InfraService infraService;
+  @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
   @Mock private TagService tagService;
@@ -100,8 +100,8 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withUuid(INFRA_ID).build());
 
     when(wingsPersistence.createUpdateOperations(Host.class)).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(Host.class)).thenReturn(query);
@@ -226,7 +226,7 @@ public class HostServiceTest extends WingsBaseTest {
 
     List<Host> hosts = hostService.getHostsByTags(APP_ID, ENV_ID, tags);
 
-    verify(infraService).getInfraByEnvId(APP_ID, ENV_ID);
+    verify(infrastructureService).getInfraByEnvId(APP_ID, ENV_ID);
     verify(query).asList();
     verify(query).field("appId");
     verify(end).equal(APP_ID);

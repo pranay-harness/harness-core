@@ -26,7 +26,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -36,7 +36,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -71,7 +71,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private ConfigService configService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
-  @Inject private InfraService infraService;
+  @Inject private InfrastructureService infrastructureService;
   @Inject private ExecutorService executorService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
@@ -214,9 +214,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
-    Infra infra = infraService.getInfraByEnvId(appId, envId);
+    Infrastructure infrastructure = infrastructureService.getInfraByEnvId(appId, envId);
     List<Host> hosts = hostIds.stream()
-                           .map(hostId -> hostService.get(appId, infra.getUuid(), hostId))
+                           .map(hostId -> hostService.get(appId, infrastructure.getUuid(), hostId))
                            .filter(Objects::nonNull)
                            .collect(toList());
 

@@ -22,7 +22,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -34,7 +34,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -93,9 +93,9 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
    */
   @Inject ServiceResourceService srs;
   /**
-   * The Infra service.
+   * The Infrastructure service.
    */
-  @Inject InfraService infraService;
+  @Inject InfrastructureService infrastructureService;
   /**
    * The Template service.
    */
@@ -168,7 +168,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   public void setUp() throws IOException {
     // DB cleanup
     Arrays
-        .asList(Application.class, Environment.class, Host.class, Infra.class, Tag.class, ConfigFile.class,
+        .asList(Application.class, Environment.class, Host.class, Infrastructure.class, Tag.class, ConfigFile.class,
             ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
@@ -176,7 +176,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Application app = appService.save(anApplication().withName("AppA").build());
     Service service = srs.save(Service.Builder.aService().withAppId(app.getUuid()).withName("Catalog").build());
     Environment environment = environmentService.getEnvByApp(app.getUuid()).get(0);
-    String infraId = infraService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
+    String infraId = infrastructureService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
 
     hosts = importAndGetHosts(app.getUuid(), environment.getUuid(), infraId); // FIXME split
 

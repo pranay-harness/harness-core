@@ -12,7 +12,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.exception.WingsException;
@@ -42,14 +41,7 @@ public class HostCsvFileHelper {
   @Inject private TagService tagService;
   private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-  /**
-   * Parses the hosts.
-   *
-   * @param infra       the infra
-   * @param inputStream the input stream
-   * @return the list
-   */
-  public List<Host> parseHosts(Infra infra, BoundedInputStream inputStream) {
+  public List<Host> parseHosts(String infraId, String appId, String envId, BoundedInputStream inputStream) {
     List<Host> hosts = new ArrayList<>();
     CSVParser csvParser = null;
     try {
@@ -58,16 +50,16 @@ public class HostCsvFileHelper {
       for (CSVRecord record : records) {
         String hostName = record.get("HOST_NAME");
         SettingAttribute hostConnectionAttrs =
-            attributeService.getByName(infra.getAppId(), record.get("HOST_CONNECTION_ATTRIBUTES"));
+            attributeService.getByName(appId, record.get("HOST_CONNECTION_ATTRIBUTES"));
         SettingAttribute bastionHostAttrs =
-            attributeService.getByName(infra.getAppId(), record.get("BASTION_HOST_CONNECTION_ATTRIBUTES"));
+            attributeService.getByName(appId, record.get("BASTION_HOST_CONNECTION_ATTRIBUTES"));
         String tagsString = record.get("TAGS");
         List<String> tagNames = tagsString != null && tagsString.length() > 0 ? asList(tagsString.split(",")) : null;
-        List<Tag> tags = tagService.getTagsByName(infra.getAppId(), infra.getEnvId(), tagNames);
+        List<Tag> tags = tagService.getTagsByName(appId, envId, tagNames);
 
         hosts.add(aHost()
-                      .withAppId(infra.getAppId())
-                      .withInfraId(infra.getUuid())
+                      .withAppId(appId)
+                      .withInfraId(infraId)
                       .withHostName(hostName)
                       .withHostConnAttr(hostConnectionAttrs)
                       .withBastionConnAttr(bastionHostAttrs)

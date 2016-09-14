@@ -11,7 +11,6 @@ import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
-import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +25,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -40,7 +38,7 @@ import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
@@ -67,7 +65,7 @@ public class HostServiceImpl implements HostService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private HostCsvFileHelper csvFileHelper;
   @Inject private ServiceTemplateService serviceTemplateService;
-  @Inject private InfraService infraService;
+  @Inject private InfrastructureService infraService;
   @Inject private SettingsService settingsService;
   @Inject private TagService tagService;
   @Inject private NotificationService notificationService;
@@ -152,11 +150,13 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public int importHosts(String appId, String envId, BoundedInputStream inputStream) {
-    Infra infra = infraService.getInfraByEnvId(appId, envId);
-    notNullCheck("infra", infra);
-    List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
-    List<String> Ids = wingsPersistence.save(hosts);
-    return Ids.size();
+    //    Infra infra = infraService.getInfraByEnvId(appId, envId);
+    //    notNullCheck("infra", infra);
+    //    List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
+    //    List<String> Ids = wingsPersistence.save(hosts);
+    //    return Ids.size();
+    // TODO:: INFRA:
+    return 0;
   }
 
   /* (non-Javadoc)
@@ -179,15 +179,11 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
-    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("infraId")
-        .equal(infraId)
-        .field("configTag")
-        .hasAnyOf(tags)
-        .asList();
+    // TODO:: INFRA:
+    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    //    return
+    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).field("configTag").hasAnyOf(tags).asList();
+    return null;
   }
 
   @Override
@@ -208,26 +204,20 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public List<Host> getHostsByEnv(String appId, String envId) {
-    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("infraId")
-        .equal(infraId)
-        .asList();
+    // TODO:: INFRA:
+    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    //    return
+    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).asList();
+    return asList();
   }
 
   @Override
   public Host getHostByEnv(String appId, String envId, String hostId) {
-    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(appId)
-        .field("infraId")
-        .equal(infraId)
-        .field(ID_KEY)
-        .equal(hostId)
-        .get();
+    // TODO:: INFRA:
+    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    //    return
+    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).field(ID_KEY).equal(hostId).get();
+    return null;
   }
 
   /* (non-Javadoc)
@@ -235,6 +225,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public File exportHosts(String appId, String infraId) {
+    // TODO:: INFRA:
     List<Host> hosts = wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).asList();
     return csvFileHelper.createHostsFile(hosts);
   }

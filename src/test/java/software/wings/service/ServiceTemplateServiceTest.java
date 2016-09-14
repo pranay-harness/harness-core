@@ -24,6 +24,7 @@ import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -43,12 +44,12 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
@@ -60,7 +61,7 @@ import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -86,7 +87,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private TagService tagService;
   @Mock private HostService hostService;
-  @Mock private InfraService infraService;
+  @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
@@ -265,8 +266,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
     ServiceTemplate template = builder.build();
@@ -301,8 +302,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
     when(hostService.get(APP_ID, INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
         .thenReturn(builder.withHosts(asList(existingHost)).build());
@@ -372,8 +373,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     doReturn(builder.withTags(EMPTY_LIST).withLeafTags(EMPTY_SET).build())

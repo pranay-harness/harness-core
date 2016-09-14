@@ -14,6 +14,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.beans.Tag.TagType.ENVIRONMENT;
 import static software.wings.beans.Tag.TagType.TAGGED_HOST;
+import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -31,8 +32,8 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Base;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.Builder;
@@ -41,7 +42,7 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
@@ -64,7 +65,7 @@ public class TagServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ServiceInstanceService serviceInstanceService;
   @Mock private HostService hostService;
-  @Mock private InfraService infraService;
+  @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Inject @InjectMocks private TagService tagService;
 
@@ -288,8 +289,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(host));
 
     tagService.tagHosts(tag, asList(host));
@@ -310,8 +311,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
 
@@ -335,8 +336,8 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infraService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(Infra.InfraBuilder.anInfra().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(existingHost));
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList("NEW_HOST_ID"))).thenReturn(asList(newHost));
 

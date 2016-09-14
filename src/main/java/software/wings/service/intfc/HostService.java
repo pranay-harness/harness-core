@@ -35,7 +35,7 @@ public interface HostService {
    * @param hostId  the host id
    * @return the host
    */
-  public Host get(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
+  Host get(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
 
   /**
    * Update.
@@ -44,7 +44,7 @@ public interface HostService {
    * @param host  the host
    * @return the host
    */
-  @ValidationGroups(Update.class) public Host update(String envId, @Valid Host host);
+  @ValidationGroups(Update.class) Host update(String envId, @Valid Host host);
 
   /**
    * Delete.

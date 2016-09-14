@@ -16,7 +16,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
-import software.wings.beans.Infra;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -28,7 +28,7 @@ import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
-import software.wings.service.intfc.InfraService;
+import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.TagService;
 
 import java.io.IOException;
@@ -56,9 +56,9 @@ public class HostTagIntegrationTest extends WingsBaseTest {
   @Inject AppService appService;
 
   /**
-   * The Infra service.
+   * The Infrastructure service.
    */
-  @Inject InfraService infraService;
+  @Inject InfrastructureService infrastructureService;
 
   /**
    * The Tag service.
@@ -89,7 +89,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
   Tag nc;
 
   /**
-   * The Infra id.
+   * The Infrastructure id.
    */
   String infraId;
 
@@ -107,14 +107,14 @@ public class HostTagIntegrationTest extends WingsBaseTest {
   public void setUp() throws IOException {
     // DB cleanup
     Arrays
-        .asList(Application.class, Environment.class, Host.class, Infra.class, Tag.class, ConfigFile.class,
+        .asList(Application.class, Environment.class, Host.class, Infrastructure.class, Tag.class, ConfigFile.class,
             ServiceTemplate.class, Service.class, SettingAttribute.class)
         .forEach(aClass -> wingsPersistence.getDatastore().getCollection(aClass).drop());
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
     environment = environmentService.getEnvByApp(app.getUuid()).get(0);
-    infraId = infraService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
+    infraId = infrastructureService.getInfraByEnvId(environment.getAppId(), environment.getUuid()).getUuid();
 
     // create Tag hierarchy
     rootEnvTag = tagService.getRootConfigTag(app.getUuid(), environment.getUuid());
