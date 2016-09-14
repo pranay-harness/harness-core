@@ -88,7 +88,20 @@ public enum ArtifactType {
                   .withName("Process Stopped")
                   .withType(PROCESS_CHECK_STOPPED.name())
                   .addProperty("commandString",
-                      "set -x\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
+                      "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    exit 0\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build())
           .buildPipeline();
     }
