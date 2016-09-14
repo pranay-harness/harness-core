@@ -4,7 +4,6 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.base.MoreObjects;
 
-import com.amazonaws.AmazonWebServiceResult;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -14,26 +13,7 @@ import java.util.Map;
  * Created by peeyushaggarwal on 9/12/16.
  */
 public class ElbStateExecutionData extends StateExecutionData {
-  private AmazonWebServiceResult amazonWebServiceResult;
   private String hostName;
-
-  /**
-   * Getter for property 'amazonWebServiceResult'.
-   *
-   * @return Value for property 'amazonWebServiceResult'.
-   */
-  public AmazonWebServiceResult getAmazonWebServiceResult() {
-    return amazonWebServiceResult;
-  }
-
-  /**
-   * Setter for property 'amazonWebServiceResult'.
-   *
-   * @param amazonWebServiceResult Value to set for property 'amazonWebServiceResult'.
-   */
-  public void setAmazonWebServiceResult(AmazonWebServiceResult amazonWebServiceResult) {
-    this.amazonWebServiceResult = amazonWebServiceResult;
-  }
 
   /**
    * Getter for property 'hostName'.
@@ -55,10 +35,7 @@ public class ElbStateExecutionData extends StateExecutionData {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("amazonWebServiceResult", amazonWebServiceResult)
-        .add("hostName", hostName)
-        .toString();
+    return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
   @Override
@@ -80,10 +57,6 @@ public class ElbStateExecutionData extends StateExecutionData {
    */
   public static final class Builder {
     /**
-     * The Amazon web service result.
-     */
-    AmazonWebServiceResult amazonWebServiceResult;
-    /**
      * The Host name.
      */
     String hostName;
@@ -102,17 +75,6 @@ public class ElbStateExecutionData extends StateExecutionData {
      */
     public static Builder anElbStateExecutionData() {
       return new Builder();
-    }
-
-    /**
-     * With amazon web service result builder.
-     *
-     * @param amazonWebServiceResult the amazon web service result
-     * @return the builder
-     */
-    public Builder withAmazonWebServiceResult(AmazonWebServiceResult amazonWebServiceResult) {
-      this.amazonWebServiceResult = amazonWebServiceResult;
-      return this;
     }
 
     /**
@@ -188,7 +150,6 @@ public class ElbStateExecutionData extends StateExecutionData {
      */
     public Builder but() {
       return anElbStateExecutionData()
-          .withAmazonWebServiceResult(amazonWebServiceResult)
           .withHostName(hostName)
           .withStateName(stateName)
           .withStartTs(startTs)
@@ -204,7 +165,6 @@ public class ElbStateExecutionData extends StateExecutionData {
      */
     public ElbStateExecutionData build() {
       ElbStateExecutionData eLBStateExecutionData = new ElbStateExecutionData();
-      eLBStateExecutionData.setAmazonWebServiceResult(amazonWebServiceResult);
       eLBStateExecutionData.setHostName(hostName);
       eLBStateExecutionData.setStateName(stateName);
       eLBStateExecutionData.setStartTs(startTs);
