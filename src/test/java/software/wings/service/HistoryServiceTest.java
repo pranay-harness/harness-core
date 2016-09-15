@@ -1,4 +1,4 @@
-package software.wings.service.intfc;
+package software.wings.service;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -15,6 +15,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.History;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.HistoryService;
 
 /**
  * Created by peeyushaggarwal on 6/20/16.
