@@ -104,7 +104,20 @@ public enum ContainerFamily {
                   .withName("Process Stopped")
                   .withType(PROCESS_CHECK_STOPPED.name())
                   .addProperty("commandString",
-                      "set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
+                      "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    exit 0\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build(),
               aNode()
                   .withX(350)
@@ -282,7 +295,20 @@ public enum ContainerFamily {
                   .withName("Process Stopped")
                   .withType(PROCESS_CHECK_STOPPED.name())
                   .addProperty("commandString",
-                      "set -x\npgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"\nrc=$?\nif [ \"$rc\" -eq 0 ]\nthen\nexit 1\nfi")
+                      "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    exit 0\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build(),
               aNode()
                   .withX(350)
