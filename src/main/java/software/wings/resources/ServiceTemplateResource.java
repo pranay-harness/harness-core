@@ -7,8 +7,8 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Host;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
@@ -185,9 +185,9 @@ public class ServiceTemplateResource {
    */
   @GET
   @Path("{templateId}/tagged-hosts")
-  public RestResponse<PageResponse<Host>> hostConfigs(@QueryParam("envId") String envId,
+  public RestResponse<PageResponse<ApplicationHost>> hostConfigs(@QueryParam("envId") String envId,
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
-      @BeanParam PageRequest<Host> pageRequest) {
+      @BeanParam PageRequest<ApplicationHost> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(envId), EQ);
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));

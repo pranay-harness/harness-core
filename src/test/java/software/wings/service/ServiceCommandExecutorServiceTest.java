@@ -6,6 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
+import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -25,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMMAND_UNIT_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.RUNTIME_PATH;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -86,12 +88,13 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   private Service service = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private ServiceTemplate serviceTemplate =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(service).build();
-  private ServiceInstance serviceInstance = aServiceInstance()
-                                                .withAppId(APP_ID)
-                                                .withEnvId(ENV_ID)
-                                                .withHost(host)
-                                                .withServiceTemplate(serviceTemplate)
-                                                .build();
+  private ServiceInstance serviceInstance =
+      aServiceInstance()
+          .withAppId(APP_ID)
+          .withEnvId(ENV_ID)
+          .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
+          .withServiceTemplate(serviceTemplate)
+          .build();
   private CommandUnit commandUnit =
       anExecCommandUnit().withName(COMMAND_UNIT_NAME).withCommandString("rm -f $HOME/jetty").build();
   private Command command = aCommand().withName(COMMAND_NAME).addCommandUnits(commandUnit).build();
@@ -119,7 +122,10 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Test
   public void shouldExecuteCommandForServiceInstance() {
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(eq(host), any(CommandUnit.class), eq(context))).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(
+             eq(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()),
+             any(CommandUnit.class), eq(context)))
+        .thenReturn(SUCCESS);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, command, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
   }
@@ -131,7 +137,10 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldExecuteNestedCommandForServiceInstance() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId(COMMAND_NAME).build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(eq(host), any(CommandUnit.class), eq(context))).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(
+             eq(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()),
+             any(CommandUnit.class), eq(context)))
+        .thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     ExecutionResult executionResult = cmdExecutorService.execute(serviceInstance, nestedCommand, context);
     assertThat(executionResult).isEqualTo(SUCCESS);
@@ -144,7 +153,10 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionForUnknownCommand() {
     Command nestedCommand = aCommand().withName("NESTED_CMD").withReferenceId("NON_EXISTENT_COMMAND").build();
     when(activityService.save(activityBuilder.build())).thenReturn(activityBuilder.withUuid(ACTIVITY_ID).build());
-    when(commandUnitExecutorService.execute(host, commandUnit, context)).thenReturn(SUCCESS);
+    when(commandUnitExecutorService.execute(
+             anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build(),
+             commandUnit, context))
+        .thenReturn(SUCCESS);
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, COMMAND_NAME)).thenReturn(command);
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> cmdExecutorService.execute(serviceInstance, nestedCommand, context));

@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
-import software.wings.beans.Host;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
@@ -75,7 +75,8 @@ public interface ServiceInstanceService {
    * @param addedHosts   the added hosts
    * @param deletedHosts the deleted hosts
    */
-  void updateInstanceMappings(@NotNull ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts);
+  void updateInstanceMappings(
+      @NotNull ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts);
 
   /**
    * Delete by env.

@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Tag;
@@ -25,16 +26,17 @@ public interface HostService {
    * @param req the req
    * @return the page response
    */
-  PageResponse<Host> list(PageRequest<Host> req);
+  PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req);
 
   /**
    * Gets the.
    *
-   * @param infraId the infra id
-   * @param hostId  the host id
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
    * @return the host
    */
-  Host get(@NotEmpty String infraId, @NotEmpty String hostId);
+  ApplicationHost get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Update.
@@ -43,17 +45,16 @@ public interface HostService {
    * @param host  the host
    * @return the host
    */
-  @ValidationGroups(Update.class) Host update(String envId, @Valid Host host);
+  @ValidationGroups(Update.class) ApplicationHost update(String envId, @Valid Host host);
 
   /**
    * Delete.
    *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @param envId   the env id
-   * @param hostId  the host id
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
    */
-  void delete(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String envId, @NotEmpty String hostId);
+  void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Delete by infra.
@@ -85,11 +86,12 @@ public interface HostService {
    * Gets the hosts by id.
    *
    * @param appId     the app id
-   * @param infraId   the infra id
+   * @param envId     the env id
    * @param hostUuids the host uuids
    * @return the hosts by id
    */
-  List<Host> getHostsByHostIds(@NotEmpty String appId, @NotEmpty String infraId, @NotNull List<String> hostUuids);
+  List<ApplicationHost> getHostsByHostIds(
+      @NotEmpty String appId, @NotEmpty String envId, @NotNull List<String> hostUuids);
 
   /**
    * Gets the hosts by tags.
@@ -99,7 +101,7 @@ public interface HostService {
    * @param tags  the tags
    * @return the hosts by tags
    */
-  List<Host> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
+  List<ApplicationHost> getHostsByTags(@NotEmpty String appId, @NotEmpty String envId, @NotNull List<Tag> tags);
 
   /**
    * Sets tag.
@@ -107,7 +109,7 @@ public interface HostService {
    * @param host the host
    * @param tag  the tag
    */
-  void setTag(@NotNull Host host, @NotNull Tag tag);
+  void setTag(@NotNull ApplicationHost host, @NotNull Tag tag);
 
   /**
    * Remove tag from host.
@@ -115,7 +117,7 @@ public interface HostService {
    * @param host the host
    * @param tag  the tag
    */
-  void removeTagFromHost(@NotNull Host host, @NotNull Tag tag);
+  void removeTagFromHost(@NotNull ApplicationHost host, @NotNull Tag tag);
 
   /**
    * Gets hosts by env.
@@ -124,7 +126,7 @@ public interface HostService {
    * @param envId the env id
    * @return the hosts by env
    */
-  List<Host> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
+  List<ApplicationHost> getHostsByEnv(@NotEmpty String appId, @NotEmpty String envId);
 
   /**
    * Gets host by env.
@@ -139,9 +141,10 @@ public interface HostService {
   /**
    * Bulk save.
    *
-   * @param infraId    the env id
-   * @param envId
-   *@param baseHost the base host  @return the response message
+   * @param infraId  the env id
+   * @param envId    the env id
+   * @param baseHost the base host  @return the response message
+   * @return the response message
    */
   ResponseMessage bulkSave(String infraId, String envId, Host baseHost);
 }

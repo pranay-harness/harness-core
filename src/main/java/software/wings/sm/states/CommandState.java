@@ -184,8 +184,8 @@ public class CommandState extends State {
           .withServiceName(service.getName())
           .withTemplateId(serviceInstance.getServiceTemplate().getUuid())
           .withTemplateName(serviceInstance.getServiceTemplate().getName())
-          .withHostId(serviceInstance.getHost().getInfraId())
-          .withHostName(serviceInstance.getHost().getHostName())
+          .withHostId(serviceInstance.getHost().getHost().getInfraId())
+          .withHostName(serviceInstance.getHost().getHost().getHostName())
           .withAppId(appId);
 
       String actualCommand = commandName;
@@ -224,7 +224,7 @@ public class CommandState extends State {
                                              .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                              .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
                                              .withCommandType(command.getCommandUnitType().name())
-                                             .withHostName(serviceInstance.getHost().getHostName());
+                                             .withHostName(serviceInstance.getHost().getHost().getHostName());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");

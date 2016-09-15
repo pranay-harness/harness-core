@@ -2,8 +2,8 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -88,7 +88,7 @@ public interface TagService {
    * @param tag   the tag
    * @param hosts the hosts
    */
-  void tagHosts(@NotNull Tag tag, @NotNull List<Host> hosts);
+  void tagHosts(@NotNull Tag tag, @NotNull List<ApplicationHost> hosts);
 
   /**
    * Gets the tags by name.

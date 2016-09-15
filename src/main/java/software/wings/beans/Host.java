@@ -42,11 +42,9 @@ public class Host extends Base {
   @Reference(idOnly = true, ignoreMissing = true)
   private SettingAttribute bastionConnAttr;
 
-  @FormDataParam("configTag") @Reference(idOnly = true, ignoreMissing = true) private Tag configTag;
+  @FormDataParam("configTag") @Reference(idOnly = true, ignoreMissing = true) @Transient private Tag configTag;
 
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
-
-  @Transient private HostConnectionCredential hostConnectionCredential; // TODO: remove
 
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> hostNames; // to support bulk add host API
 
@@ -55,6 +53,7 @@ public class Host extends Base {
   @JsonProperty(access = WRITE_ONLY)
   private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
+  @Transient
   @Reference(idOnly = true, ignoreMissing = true, lazy = true)
   private List<Environment> environments = new ArrayList<>();
 
@@ -185,24 +184,6 @@ public class Host extends Base {
   }
 
   /**
-   * Gets host connection credential.
-   *
-   * @return the host connection credential
-   */
-  public HostConnectionCredential getHostConnectionCredential() {
-    return hostConnectionCredential;
-  }
-
-  /**
-   * Sets host connection credential.
-   *
-   * @param hostConnectionCredential the host connection credential
-   */
-  public void setHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
-    this.hostConnectionCredential = hostConnectionCredential;
-  }
-
-  /**
    * Gets os type.
    *
    * @return the os type
@@ -259,8 +240,8 @@ public class Host extends Base {
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles,
-              hostConnectionCredential, hostNames, serviceTemplates, environments);
+        + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles, hostNames,
+              serviceTemplates, environments);
   }
 
   @Override
@@ -279,7 +260,6 @@ public class Host extends Base {
         && Objects.equals(this.osType, other.osType) && Objects.equals(this.hostConnAttr, other.hostConnAttr)
         && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
         && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
-        && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential)
         && Objects.equals(this.hostNames, other.hostNames)
         && Objects.equals(this.serviceTemplates, other.serviceTemplates)
         && Objects.equals(this.environments, other.environments);
@@ -295,7 +275,6 @@ public class Host extends Base {
         .add("bastionConnAttr", bastionConnAttr)
         .add("configTag", configTag)
         .add("configFiles", configFiles)
-        .add("hostConnectionCredential", hostConnectionCredential)
         .add("hostNames", hostNames)
         .add("serviceTemplates", serviceTemplates)
         .add("environments", environments)
@@ -313,7 +292,6 @@ public class Host extends Base {
     private SettingAttribute bastionConnAttr;
     private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
-    private HostConnectionCredential hostConnectionCredential; // TODO: remove
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
     private List<Environment> environments = new ArrayList<>();
@@ -420,7 +398,6 @@ public class Host extends Base {
      * @return the builder
      */
     public Builder withHostConnectionCredential(HostConnectionCredential hostConnectionCredential) {
-      this.hostConnectionCredential = hostConnectionCredential;
       return this;
     }
 
@@ -548,7 +525,6 @@ public class Host extends Base {
           .withBastionConnAttr(bastionConnAttr)
           .withConfigTag(configTag)
           .withConfigFiles(configFiles)
-          .withHostConnectionCredential(hostConnectionCredential)
           .withHostNames(hostNames)
           .withServiceTemplates(serviceTemplates)
           .withEnvironments(environments)
@@ -575,7 +551,6 @@ public class Host extends Base {
       host.setBastionConnAttr(bastionConnAttr);
       host.setConfigTag(configTag);
       host.setConfigFiles(configFiles);
-      host.setHostConnectionCredential(hostConnectionCredential);
       host.setHostNames(hostNames);
       host.setServiceTemplates(serviceTemplates);
       host.setEnvironments(environments);

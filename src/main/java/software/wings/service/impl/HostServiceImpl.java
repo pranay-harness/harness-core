@@ -17,9 +17,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.DuplicateKeyException;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -47,6 +49,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
+import software.wings.utils.Validator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,23 +83,22 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Host> list(PageRequest<Host> req) {
-    return wingsPersistence.query(Host.class, req);
+  public PageResponse<ApplicationHost> list(PageRequest<ApplicationHost> req) {
+    return wingsPersistence.query(ApplicationHost.class, req);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#get(java.lang.String, java.lang.String, java.lang.String)
-   */
   @Override
-  public Host get(String infraId, String hostId) {
-    return wingsPersistence.createQuery(Host.class)
-        .field(ID_KEY)
-        .equal(hostId)
-        .field("infraId")
-        .equal(infraId)
-        .field("appId")
-        .equal(Base.GLOBAL_APP_ID)
-        .get();
+  public ApplicationHost get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId) {
+    ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
+                                          .field(ID_KEY)
+                                          .equal(hostId)
+                                          .field("envId")
+                                          .equal(envId)
+                                          .field("appId")
+                                          .equal(appId)
+                                          .get();
+    Validator.notNullCheck("ApplicationHost", applicationHost);
+    return applicationHost;
   }
 
   /* (non-Javadoc)
@@ -111,38 +113,36 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#update(software.wings.beans.Host)
    */
   @Override
-  public Host update(String envId, Host host) {
-    Host savedHost = get(host.getInfraId(), host.getUuid());
-
-    ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder()
-                                       .put("hostName", host.getHostName())
-                                       .put("hostConnAttr", host.getHostConnAttr());
-    if (host.getBastionConnAttr() != null) {
-      builder.put("bastionConnAttr", host.getBastionConnAttr());
-    }
-    wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
-
-    Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
-
-    if (tag != null && tag.equals(savedHost.getConfigTag())) {
-      return wingsPersistence.get(Host.class, host.getAppId(), host.getUuid());
-    }
-
-    // Tag update -> should update host mapped in template
-
-    if (tag == null) {
-      tag = tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId);
-    }
-
-    List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
-    hostsByTags.add(host);
-    tagService.tagHosts(tag, hostsByTags);
-
-    List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(host.getAppId(), host.getServiceTemplates());
-    serviceTemplates.forEach(serviceTemplate
-        -> serviceTemplateService.addHosts(serviceTemplate, asList(get(host.getInfraId(), host.getUuid()))));
-    return host;
+  public ApplicationHost update(String envId, Host host) {
+    return null; // TODO:: Infra
+    //    ApplicationHost savedHost = get(host.getInfraId(), host.getUuid());
+    //
+    //    ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostName",
+    //    host.getHostName()).put("hostConnAttr", host.getHostConnAttr()); if (host.getBastionConnAttr() != null) {
+    //      builder.put("bastionConnAttr", host.getBastionConnAttr());
+    //    }
+    //    wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
+    //
+    //    Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
+    //
+    //    if (tag != null && tag.equals(savedHost.getConfigTag())) {
+    //      return wingsPersistence.get(Host.class, host.getAppId(), host.getUuid());
+    //    }
+    //
+    //    //Tag update -> should update host mapped in template
+    //
+    //    if (tag == null) {
+    //      tag = tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId);
+    //    }
+    //
+    //    List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
+    //    hostsByTags.add(host);
+    //    tagService.tagHosts(tag, hostsByTags);
+    //
+    //    List<ServiceTemplate> serviceTemplates = validateAndFetchServiceTemplate(host.getAppId(),
+    //    host.getServiceTemplates()); serviceTemplates.forEach(serviceTemplate ->
+    //    serviceTemplateService.addHosts(serviceTemplate, asList(get(host.getInfraId(), host.getUuid())))); return
+    //    host;
   }
 
   /* (non-Javadoc)
@@ -164,12 +164,12 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getHostsByHostIds(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsByHostIds(String appId, String infraId, List<String> hostUuids) {
-    return wingsPersistence.createQuery(Host.class)
+  public List<ApplicationHost> getHostsByHostIds(String appId, String envId, List<String> hostUuids) {
+    return wingsPersistence.createQuery(ApplicationHost.class)
         .field("appId")
         .equal(appId)
-        .field("infraId")
-        .equal(infraId)
+        .field("envId")
+        .equal(envId)
         .field(ID_KEY)
         .hasAnyOf(hostUuids)
         .asList();
@@ -179,40 +179,39 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#getHostsByTags(java.lang.String, java.util.List)
    */
   @Override
-  public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
-    // TODO:: INFRA:
-    String infraId = infraService.getInfraByEnvId(envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
+  public List<ApplicationHost> getHostsByTags(String appId, String envId, List<Tag> tags) {
+    return wingsPersistence.createQuery(ApplicationHost.class)
         .field("appId")
         .equal(appId)
-        .field("infraId")
-        .equal(infraId)
+        .field("envId")
+        .equal(envId)
         .field("configTag")
         .hasAnyOf(tags)
         .asList();
   }
 
   @Override
-  public void setTag(Host host, Tag tag) {
+  public void setTag(ApplicationHost host, Tag tag) {
     if (tag == null) {
       throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "Can not tag host with null tag");
     }
-    UpdateOperations<Host> updateOp = wingsPersistence.createUpdateOperations(Host.class).set("configTag", tag);
+    UpdateOperations<ApplicationHost> updateOp =
+        wingsPersistence.createUpdateOperations(ApplicationHost.class).set("configTag", tag);
     wingsPersistence.update(host, updateOp);
   }
 
   @Override
-  public void removeTagFromHost(Host host, Tag tag) {
+  public void removeTagFromHost(ApplicationHost host, Tag tag) {
     if (!host.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)) {
       setTag(host, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
     }
   }
 
   @Override
-  public List<Host> getHostsByEnv(String appId, String envId) {
+  public List<ApplicationHost> getHostsByEnv(String appId, String envId) {
     // TODO:: INFRA:
     String infraId = infraService.getInfraByEnvId(envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
+    return wingsPersistence.createQuery(ApplicationHost.class)
         .field("appId")
         .equal(appId)
         .field("infraId")
@@ -244,50 +243,51 @@ public class HostServiceImpl implements HostService {
     return csvFileHelper.createHostsFile(hosts);
   }
 
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#delete(java.lang.String, java.lang.String, java.lang.String)
-   */
   @Override
-  public void delete(String appId, String infraId, String envId, String hostId) {
-    Host host = get(infraId, hostId);
-    if (delete(host)) {
-      Environment environment = environmentService.get(host.getAppId(), envId, false);
+  public void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId) {
+    ApplicationHost applicationHost = get(appId, envId, hostId);
+    if (delete(applicationHost)) {
+      Environment environment = environmentService.get(applicationHost.getAppId(), envId, false);
       notificationService.sendNotificationAsync(
           anInformationNotification()
-              .withAppId(host.getAppId())
+              .withAppId(applicationHost.getAppId())
               .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
-                  ImmutableMap.of("HOST_NAME", host.getHostName(), "ENV_NAME", environment.getName())))
+                  ImmutableMap.of(
+                      "HOST_NAME", applicationHost.getHost().getHostName(), "ENV_NAME", environment.getName())))
               .build());
-      historyService.createAsync(aHistory()
-                                     .withEventType(EventType.CREATED)
-                                     .withAppId(host.getAppId())
-                                     .withEntityType(EntityType.HOST)
-                                     .withEntityId(host.getUuid())
-                                     .withEntityName(host.getHostName())
-                                     .withEntityNewValue(host)
-                                     .withShortDescription("Host " + host.getHostName() + " created")
-                                     .withTitle("Host " + host.getHostName() + " created")
-                                     .build());
+      historyService.createAsync(
+          aHistory()
+              .withEventType(EventType.CREATED)
+              .withAppId(applicationHost.getAppId())
+              .withEntityType(EntityType.HOST)
+              .withEntityId(applicationHost.getUuid())
+              .withEntityName(applicationHost.getHost().getHostName())
+              .withEntityNewValue(applicationHost)
+              .withShortDescription("Host " + applicationHost.getHost().getHostName() + " created")
+              .withTitle("Host " + applicationHost.getHost().getHostName() + " created")
+              .build());
     }
   }
 
-  private boolean delete(Host host) {
-    if (host != null) {
-      boolean delete = wingsPersistence.delete(host);
+  private boolean delete(ApplicationHost applicationHost) {
+    if (applicationHost != null) {
+      boolean delete = wingsPersistence.delete(applicationHost);
       if (delete) {
-        serviceTemplateService.deleteHostFromTemplates(host);
-        executorService.submit(() -> configService.deleteByEntityId(host.getAppId(), host.getUuid()));
+        serviceTemplateService.deleteHostFromTemplates(applicationHost);
+        executorService.submit(
+            () -> configService.deleteByEntityId(applicationHost.getAppId(), applicationHost.getUuid()));
       }
-      historyService.createAsync(aHistory()
-                                     .withEventType(EventType.DELETED)
-                                     .withAppId(host.getAppId())
-                                     .withEntityType(EntityType.HOST)
-                                     .withEntityId(host.getUuid())
-                                     .withEntityName(host.getHostName())
-                                     .withEntityNewValue(host)
-                                     .withShortDescription("Host " + host.getHostName() + " deleted")
-                                     .withTitle("Host " + host.getHostName() + " deleted")
-                                     .build());
+      historyService.createAsync(
+          aHistory()
+              .withEventType(EventType.DELETED)
+              .withAppId(applicationHost.getAppId())
+              .withEntityType(EntityType.HOST)
+              .withEntityId(applicationHost.getUuid())
+              .withEntityName(applicationHost.getHost().getHostName())
+              .withEntityNewValue(applicationHost)
+              .withShortDescription("Host " + applicationHost.getHost().getHostName() + " deleted")
+              .withTitle("Host " + applicationHost.getHost().getHostName() + " deleted")
+              .build());
       return delete;
     }
     return false;
@@ -295,13 +295,7 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void deleteByInfra(String infraId) {
-    wingsPersistence.createQuery(Host.class)
-        .field("appId")
-        .equal(Base.GLOBAL_APP_ID)
-        .field("infraId")
-        .equal(infraId)
-        .asList()
-        .forEach(this ::delete);
+    wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
   }
 
   /* (non-Javadoc)
@@ -318,8 +312,10 @@ public class HostServiceImpl implements HostService {
         validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
     Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
     Infrastructure infrastructure = infraService.get(infraId);
+    Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
+
     List<String> duplicateHostNames = new ArrayList<>();
-    List<Host> savedHosts = new ArrayList<>();
+    List<ApplicationHost> savedAppHosts = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
@@ -334,21 +330,17 @@ public class HostServiceImpl implements HostService {
       if (bastionConnAttr != null) {
         host.setBastionConnAttr(bastionConnAttr);
       }
-      // TODO:: Infra
-      Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
-      if (configTag == null) {
-        configTag = tagService.getDefaultTagForUntaggedHosts(baseHost.getAppId(), envId);
-      }
       host.setConfigTag(configTag);
       try {
         Host savedHost = save(host);
-        savedHosts.add(savedHost);
+        ApplicationHost savedAppHost = saveApplicationHost(baseHost.getAppId(), envId, savedHost);
+        savedAppHosts.add(savedAppHost);
       } catch (DuplicateKeyException dupEx) {
         logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
         duplicateHostNames.add(host.getHostName());
       }
     });
-    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedHosts));
+    //    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedAppHosts));
 
     int countOfNewHostsAdded = hostNames.size() - duplicateHostNames.size();
     if (countOfNewHostsAdded > 0) {
@@ -366,6 +358,16 @@ public class HostServiceImpl implements HostService {
         .withCode(ErrorCodes.DUPLICATE_HOST_NAMES)
         .withMessage(Joiner.on(",").join(duplicateHostNames))
         .build();
+  }
+
+  private ApplicationHost saveApplicationHost(String appId, String envId, Host host) {
+    return wingsPersistence.saveAndGet(ApplicationHost.class,
+        ApplicationHost.Builder.anApplicationHost()
+            .withAppId(appId)
+            .withEnvId(envId)
+            .withConfigTag(host.getConfigTag())
+            .withHost(host)
+            .build());
   }
 
   private List<Environment> validateAndFetchEnvironments(String appId, List<Environment> environments) {
@@ -400,6 +402,8 @@ public class HostServiceImpl implements HostService {
       if (fetchedTag == null) {
         throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "configTags");
       }
+    } else {
+      fetchedTag = tagService.getDefaultTagForUntaggedHosts(appId, envId);
     }
     return fetchedTag;
   }

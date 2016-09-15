@@ -16,7 +16,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
-import software.wings.beans.Host;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
@@ -97,7 +97,8 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    * java.util.List, java.util.List)
    */
   @Override
-  public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
+  public void updateInstanceMappings(
+      ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts) {
     Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
                                              .field("appId")
                                              .equal(template.getAppId())

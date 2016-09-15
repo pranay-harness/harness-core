@@ -23,6 +23,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
 import software.wings.beans.JenkinsArtifactSource;
 import software.wings.beans.Release;
@@ -73,7 +74,8 @@ public class SetupServiceImplTest extends WingsBaseTest {
                                   .withServices(asList(aService().withUuid(SERVICE_ID).build()))
                                   .withEnvironments(asList(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build()))
                                   .build();
-    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(aHost().build()));
+    when(hostService.getHostsByEnv(APP_ID, ENV_ID))
+        .thenReturn(asList(ApplicationHost.Builder.anApplicationHost().build()));
     Setup setupStatus = setupService.getApplicationSetupStatus(application);
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);
     assertThat(setupStatus.getActions()).hasSize(1).doesNotContainNull();
@@ -150,7 +152,8 @@ public class SetupServiceImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetEnvironmentSetupStatus() {
-    when(hostService.getHostsByEnv(APP_ID, ENV_ID)).thenReturn(asList(aHost().build()));
+    when(hostService.getHostsByEnv(APP_ID, ENV_ID))
+        .thenReturn(asList(ApplicationHost.Builder.anApplicationHost().build()));
     Setup setupStatus =
         setupService.getEnvironmentSetupStatus(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     assertThat(setupStatus.getSetupStatus()).isEqualTo(COMPLETE);

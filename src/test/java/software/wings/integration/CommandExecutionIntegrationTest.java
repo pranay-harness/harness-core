@@ -32,6 +32,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppContainer;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ArtifactFile;
 import software.wings.beans.Host;
 import software.wings.beans.Service;
@@ -66,6 +67,8 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
   private static final Host HOST =
       aHost().withAppId(APP_ID).withHostName(HOST_NAME).withHostConnAttr(HOST_CONN_ATTR_PWD).build();
+  public static final ApplicationHost APPLICATION_HOST =
+      ApplicationHost.Builder.anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withHost(HOST).build();
   private static final Service SERVICE = aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withName(TEMPLATE_NAME).withService(SERVICE).build();
@@ -75,7 +78,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
   public static final ServiceInstance SERVICE_INSTANCE = aServiceInstance()
                                                              .withAppId(APP_ID)
                                                              .withEnvId(ENV_ID)
-                                                             .withHost(HOST)
+                                                             .withHost(APPLICATION_HOST)
                                                              .withServiceTemplate(SERVICE_TEMPLATE)
                                                              .build();
   /**

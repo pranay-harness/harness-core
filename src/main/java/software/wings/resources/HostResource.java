@@ -12,6 +12,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.Host;
 import software.wings.beans.ResponseMessage;
@@ -74,27 +75,31 @@ public class HostResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Host>> list(@BeanParam PageRequest<Host> pageRequest) {
+  public RestResponse<PageResponse<ApplicationHost>> list(@BeanParam PageRequest<ApplicationHost> pageRequest) {
     return new RestResponse<>(hostService.list(pageRequest));
   }
 
   /**
    * Gets the.
    *
-   * @param infraId the infra id
-   * @param hostId  the host id
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
    * @return the rest response
    */
   @GET
   @Path("{hostId}")
-  public RestResponse<Host> get(@QueryParam("infraId") String infraId, @PathParam("hostId") String hostId) {
-    return new RestResponse<>(hostService.get(infraId, hostId));
+  public RestResponse<ApplicationHost> get(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
+    return new RestResponse<>(hostService.get(appId, envId, hostId));
   }
 
   /**
    * Save.
    *
    * @param infraId  the infra id
+   * @param appId    the app id
+   * @param envId    the env id
    * @param baseHost the base host
    * @return the rest response
    */
@@ -121,7 +126,7 @@ public class HostResource {
    */
   @PUT
   @Path("{hostId}")
-  public RestResponse<Host> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  public RestResponse<ApplicationHost> update(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @PathParam("hostId") String hostId, Host host) {
     if (isNullOrEmpty(infraId)) { // TODO:: INFRA
       infraId = infraService.getDefaultInfrastructureId();
@@ -129,26 +134,22 @@ public class HostResource {
     host.setUuid(hostId);
     host.setInfraId(infraId);
     host.setAppId(appId);
-    return new RestResponse<Host>(hostService.update(envId, host));
+    return new RestResponse<ApplicationHost>(hostService.update(envId, host));
   }
 
   /**
    * Delete.
    *
-   * @param appId   the app id
-   * @param infraId the infra id
-   * @param envId   the env id
-   * @param hostId  the host id
+   * @param appId  the app id
+   * @param envId  the env id
+   * @param hostId the host id
    * @return the rest response
    */
   @DELETE
   @Path("{hostId}")
-  public RestResponse delete(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
-      infraId = infraService.getDefaultInfrastructureId();
-    }
-    hostService.delete(appId, infraId, envId, hostId);
+  public RestResponse delete(
+      @QueryParam("appId") String appId, @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
+    hostService.delete(appId, envId, hostId);
     return new RestResponse();
   }
 

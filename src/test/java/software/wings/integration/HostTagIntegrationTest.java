@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -130,7 +131,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldAddNewHostsToDefaultTagForUntaggedHosts() {
-    List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
+    List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     hosts.forEach(host -> assertThat(host.getConfigTag().getTagType()).isEqualTo(TagType.UNTAGGED_HOST));
   }
 
@@ -139,7 +140,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldHaveZeroHostWithDefaultTagWhenAllHostTaggedByOtherTag() {
-    List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
+    List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     tagService.tagHosts(nc, hosts);
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
     hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(nc));
@@ -153,11 +154,11 @@ public class HostTagIntegrationTest extends WingsBaseTest {
   @Test
   @Ignore // TODO:: Infra
   public void shouldRemoveDefaultTagFromHostWhenTaggedByOtherTags() {
-    List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
-    List<Host> hostsToTag = Arrays.asList(hosts.get(0), hosts.get(1), hosts.get(2));
+    List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
+    List<ApplicationHost> hostsToTag = Arrays.asList(hosts.get(0), hosts.get(1), hosts.get(2));
     tagService.tagHosts(nc, hostsToTag);
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
-    final List<Host> finalHosts = hosts;
+    final List<ApplicationHost> finalHosts = hosts;
     hostsToTag.forEach(host
         -> assertThat(
             finalHosts.stream().filter(h -> h.getUuid().equals(host.getUuid())).findFirst().get().getConfigTag())
@@ -171,7 +172,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldTagHostByDefaultTagWhenUntagged() {
-    List<Host> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
+    List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     tagService.tagHosts(nc, hosts);
     hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
     hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(nc));
@@ -181,7 +182,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     hosts.forEach(host -> assertThat(host.getConfigTag()).isEqualTo(defaultTag));
   }
 
-  private List<Host> importAndGetHosts(String appId, String envId, String infraId) {
+  private List<ApplicationHost> importAndGetHosts(String appId, String envId, String infraId) {
     SettingAttribute settingAttribute =
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
@@ -196,7 +197,7 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     }
     baseHost.setHostNames(hostNames);
     hostService.bulkSave(infraId, envId, baseHost);
-    PageRequest<Host> pageRequest = new PageRequest<>();
+    PageRequest<ApplicationHost> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infraId, EQ);
     return hostService.list(pageRequest).getResponse();
   }

@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -130,15 +131,15 @@ public interface ServiceTemplateService {
    * @param pageRequest the page request   @return the tagged hosts
    * @return the tagged hosts
    */
-  PageResponse<Host> getTaggedHosts(
-      @NotEmpty String appId, @NotEmpty String envId, @NotEmpty String templateId, PageRequest<Host> pageRequest);
+  PageResponse<ApplicationHost> getTaggedHosts(@NotEmpty String appId, @NotEmpty String envId,
+      @NotEmpty String templateId, PageRequest<ApplicationHost> pageRequest);
 
   /**
    * Delete host from templates.
    *
    * @param host the host
    */
-  void deleteHostFromTemplates(@NotNull Host host);
+  void deleteHostFromTemplates(@NotNull ApplicationHost host);
 
   /**
    * Gets templates by leaf tag.
@@ -201,7 +202,7 @@ public interface ServiceTemplateService {
    * @param hosts    the hosts
    * @return the service template
    */
-  ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts);
+  ServiceTemplate addHosts(ServiceTemplate template, List<ApplicationHost> hosts);
 
   /**
    * Gets template ref keys by service.

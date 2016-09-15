@@ -6,10 +6,10 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
 import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
@@ -83,7 +83,7 @@ public class SetupServiceImpl implements SetupService {
       return null;
     }
     for (Environment env : application.getEnvironments()) {
-      List<Host> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
+      List<ApplicationHost> hosts = hostService.getHostsByEnv(env.getAppId(), env.getUuid());
       if (hosts != null && !hosts.isEmpty()) {
         return SetupAction.Builder.aSetupAction()
             .withCode("NO_DEPLOYMENT_FOUND")
@@ -171,7 +171,7 @@ public class SetupServiceImpl implements SetupService {
   }
 
   private SetupAction fetchIncompleteMandatoryEnvironmentAction(Environment environment) {
-    List<Host> hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
+    List<ApplicationHost> hosts = hostService.getHostsByEnv(environment.getAppId(), environment.getUuid());
 
     if (hosts.size() == 0) {
       return aSetupAction()

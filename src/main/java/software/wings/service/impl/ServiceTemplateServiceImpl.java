@@ -22,14 +22,14 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -137,8 +137,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public ServiceTemplate addHosts(ServiceTemplate template, List<Host> hosts) {
-    List<Host> allHosts =
+  public ServiceTemplate addHosts(ServiceTemplate template, List<ApplicationHost> hosts) {
+    List<ApplicationHost> allHosts =
         Stream.concat(hosts.stream(), template.getHosts().stream()).distinct().collect(Collectors.toList());
     return updateTemplateAndServiceInstance(template, allHosts);
   }
@@ -215,10 +215,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
     Infrastructure infrastructure = infrastructureService.getInfraByEnvId(envId);
-    List<Host> hosts = hostIds.stream()
-                           .map(hostId -> hostService.get(infrastructure.getUuid(), hostId))
-                           .filter(Objects::nonNull)
-                           .collect(toList());
+    List<ApplicationHost> hosts = hostIds.stream()
+                                      .map(hostId -> hostService.get(appId, envId, hostId))
+                                      .filter(Objects::nonNull)
+                                      .collect(toList());
 
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
 
@@ -229,8 +229,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return updateTemplateAndServiceInstance(serviceTemplate, hosts);
   }
 
-  private ServiceTemplate updateTemplateAndServiceInstance(ServiceTemplate serviceTemplate, List<Host> hosts) {
-    List<Host> alreadyMappedHosts = serviceTemplate.getHosts();
+  private ServiceTemplate updateTemplateAndServiceInstance(
+      ServiceTemplate serviceTemplate, List<ApplicationHost> hosts) {
+    List<ApplicationHost> alreadyMappedHosts = serviceTemplate.getHosts();
     updateServiceInstances(serviceTemplate, hosts, alreadyMappedHosts);
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
         ImmutableMap.of("mappedBy", serviceTemplate.getMappedBy(), "hosts", hosts));
@@ -247,7 +248,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     Set<Tag> newLeafTags =
         newTags.stream().map(tag -> tagService.getLeafTagInSubTree(tag)).flatMap(List::stream).collect(toSet());
 
-    List<Host> newHostsToBeMapped = hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
+    List<ApplicationHost> newHostsToBeMapped =
+        hostService.getHostsByTags(appId, envId, newLeafTags.stream().collect(toList()));
 
     ServiceTemplate serviceTemplate = get(appId, envId, serviceTemplateId, true);
     if (serviceTemplate.getMappedBy().equals(HOST)) {
@@ -255,7 +257,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       serviceTemplate.setMappedBy(TAG);
     }
 
-    List<Host> existingMappedHosts =
+    List<ApplicationHost> existingMappedHosts =
         hostService.getHostsByTags(appId, envId, serviceTemplate.getLeafTags().stream().collect(toList()));
 
     updateServiceInstances(serviceTemplate, newHostsToBeMapped, existingMappedHosts);
@@ -265,9 +267,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return wingsPersistence.get(ServiceTemplate.class, serviceTemplateId);
   }
 
-  private void updateServiceInstances(ServiceTemplate serviceTemplate, List<Host> newHosts, List<Host> existingHosts) {
-    List<Host> addHostsList = new ArrayList<>();
-    List<Host> deleteHostList = new ArrayList<>();
+  private void updateServiceInstances(
+      ServiceTemplate serviceTemplate, List<ApplicationHost> newHosts, List<ApplicationHost> existingHosts) {
+    List<ApplicationHost> addHostsList = new ArrayList<>();
+    List<ApplicationHost> deleteHostList = new ArrayList<>();
 
     newHosts.forEach(host -> {
       if (!existingHosts.contains(host)) {
@@ -288,8 +291,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Host> getTaggedHosts(
-      String appId, String envId, String templateId, PageRequest<Host> pageRequest) {
+  public PageResponse<ApplicationHost> getTaggedHosts(
+      String appId, String envId, String templateId, PageRequest<ApplicationHost> pageRequest) {
     ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, appId, templateId);
     List<Tag> tags = serviceTemplate.getTags();
     pageRequest.addFilter("tags", tags, IN);
@@ -297,18 +300,18 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public void deleteHostFromTemplates(Host host) {
+  public void deleteHostFromTemplates(ApplicationHost host) {
     deleteDirectlyMappedHosts(host);
     deleteHostsMappedByTags(host);
   }
 
-  private void deleteHostsMappedByTags(Host host) {
+  private void deleteHostsMappedByTags(ApplicationHost host) {
     getTemplatesByLeafTag(host.getConfigTag())
         .forEach(
             serviceTemplate -> serviceInstanceService.updateInstanceMappings(serviceTemplate, asList(), asList(host)));
   }
 
-  private void deleteDirectlyMappedHosts(Host host) {
+  private void deleteDirectlyMappedHosts(ApplicationHost host) {
     List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
                                                  .field("appId")
                                                  .equal(host.getAppId())
@@ -422,7 +425,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         .asList();
   }
 
-  private void deleteHostFromATemplate(Host host, List<ServiceTemplate> serviceTemplates) {
+  private void deleteHostFromATemplate(ApplicationHost host, List<ServiceTemplate> serviceTemplates) {
     if (serviceTemplates != null) {
       serviceTemplates.forEach(serviceTemplate -> {
         wingsPersistence.deleteFromList(
@@ -463,8 +466,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     logger.info("Apply host overrides for tagged hosts");
     for (Tag tag : leafTagNodes) {
-      List<Host> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-      for (Host host : taggedHosts) {
+      List<ApplicationHost> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
+      for (ApplicationHost host : taggedHosts) {
         computedHostConfigs.put(host.getUuid(),
             overrideConfigFiles(
                 tag.getConfigFiles(), configService.getConfigFilesForEntity(appId, templateId, host.getUuid())));

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Service.Builder.aService;
@@ -42,6 +43,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Host;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.ServiceInstance;
@@ -69,15 +71,16 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   @Mock private FieldEnd end;
   @InjectMocks @Inject private ServiceInstanceService serviceInstanceService;
   @Spy @InjectMocks private ServiceInstanceService spyInstanceService = new ServiceInstanceServiceImpl();
-  private ServiceInstance.Builder builder = aServiceInstance()
-                                                .withAppId(APP_ID)
-                                                .withEnvId(ENV_ID)
-                                                .withHost(host)
-                                                .withServiceTemplate(serviceTemplate)
-                                                .withReleaseId(RELEASE_NAME)
-                                                .withReleaseId(RELEASE_ID)
-                                                .withArtifactId(ARTIFACT_ID)
-                                                .withArtifactName(ARTIFACT_NAME);
+  private ServiceInstance.Builder builder =
+      aServiceInstance()
+          .withAppId(APP_ID)
+          .withEnvId(ENV_ID)
+          .withHost(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build())
+          .withServiceTemplate(serviceTemplate)
+          .withReleaseId(RELEASE_NAME)
+          .withReleaseId(RELEASE_ID)
+          .withArtifactId(ARTIFACT_ID)
+          .withArtifactName(ARTIFACT_NAME);
 
   /**
    * Sets up.
@@ -242,8 +245,12 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateHostInstanceMapping() {
-    List<Host> newHostList = asList(aHost().withUuid("NEW_HOST_ID").build());
-    List<Host> deletedHosts = asList(aHost().withUuid("DELETED_HOST_ID").build());
+    Host newHost = aHost().withUuid("NEW_HOST_ID").build();
+    Host deletedHost = aHost().withUuid("DELETED_HOST_ID").build();
+    List<ApplicationHost> newHostList =
+        asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(newHost).build());
+    List<ApplicationHost> deletedHosts =
+        asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(deletedHost).build());
     ServiceTemplate serviceTemplate =
         aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
     serviceInstanceService.updateInstanceMappings(serviceTemplate, newHostList, deletedHosts);

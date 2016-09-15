@@ -18,6 +18,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Host;
 import software.wings.beans.Host.Builder;
 import software.wings.beans.RestResponse;
@@ -51,6 +52,8 @@ public class HostResourceTest extends WingsBaseTest {
           .build();
   private static final Host aHost =
       Builder.aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withHostName(HOST_NAME).build();
+  public static final ApplicationHost applicationHost =
+      ApplicationHost.Builder.anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withHost(aHost).build();
 
   /**
    * Should list hosts.
@@ -58,15 +61,16 @@ public class HostResourceTest extends WingsBaseTest {
   @Test
   @Ignore
   public void shouldListHosts() {
-    PageResponse<Host> pageResponse = new PageResponse<>();
-    pageResponse.setResponse(asList(aHost));
+    PageResponse<ApplicationHost> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList(applicationHost));
     pageResponse.setTotal(1);
     when(RESOURCE_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
-    RestResponse<PageResponse<Host>> restResponse = RESOURCES.client()
-                                                        .target(format("/hosts?appId=%s&envId=%s", APP_ID, ENV_ID))
-                                                        .request()
-                                                        .get(new GenericType<RestResponse<PageResponse<Host>>>() {});
-    PageRequest<Host> pageRequest = new PageRequest<>();
+    RestResponse<PageResponse<ApplicationHost>> restResponse =
+        RESOURCES.client()
+            .target(format("/hosts?appId=%s&envId=%s", APP_ID, ENV_ID))
+            .request()
+            .get(new GenericType<RestResponse<PageResponse<ApplicationHost>>>() {});
+    PageRequest<ApplicationHost> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
     pageRequest.setLimit("50");
     pageRequest.addFilter("appId", APP_ID, EQ);

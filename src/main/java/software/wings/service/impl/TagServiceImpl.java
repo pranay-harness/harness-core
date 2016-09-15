@@ -11,8 +11,8 @@ import static software.wings.beans.Tag.Builder.aTag;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
@@ -262,7 +262,7 @@ public class TagServiceImpl implements TagService {
   }
 
   private void updateAllServiceTemplatesWithDeletedHosts(Tag tag) {
-    List<Host> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
+    List<ApplicationHost> hosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
     if (serviceTemplates != null) {
       serviceTemplates.forEach(
@@ -286,11 +286,11 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
-  public void tagHosts(Tag tag, List<Host> inputHosts) {
-    List<Host> existingMappedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-    List<Host> hostToBeUntagged =
+  public void tagHosts(Tag tag, List<ApplicationHost> inputHosts) {
+    List<ApplicationHost> existingMappedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
+    List<ApplicationHost> hostToBeUntagged =
         existingMappedHosts.stream().filter(host -> !inputHosts.contains(host)).collect(toList());
-    List<Host> hostTobeTagged =
+    List<ApplicationHost> hostTobeTagged =
         inputHosts.stream().filter(host -> !existingMappedHosts.contains(host)).collect(toList());
 
     tagHosts(tag, hostToBeUntagged, hostTobeTagged);
@@ -308,12 +308,12 @@ public class TagServiceImpl implements TagService {
       throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
     }
 
-    List<Host> inputHosts =
+    List<ApplicationHost> inputHosts =
         hostService.getHostsByHostIds(appId, infrastructureService.getInfraByEnvId(tag.getEnvId()).getUuid(), hostIds);
     tagHosts(tag, inputHosts);
   }
 
-  private void tagHosts(Tag tag, List<Host> hostToBeUntagged, List<Host> hostTobeTagged) {
+  private void tagHosts(Tag tag, List<ApplicationHost> hostToBeUntagged, List<ApplicationHost> hostTobeTagged) {
     List<ServiceTemplate> serviceTemplates = serviceTemplateService.getTemplatesByLeafTag(tag);
 
     // Tag

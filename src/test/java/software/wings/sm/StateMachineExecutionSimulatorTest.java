@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -141,13 +142,17 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     res.setResponse(Lists.newArrayList(
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
-                    .build())
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(aSettingAttribute()
+                                                              .withValue(aHostConnectionAttributes()
+                                                                             .withAccessType(AccessType.USER_PASSWORD)
+                                                                             .build())
+                                                              .build())
+                                        .build())
+                          .build())
             .build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
 
@@ -202,13 +207,17 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     res.setResponse(Lists.newArrayList(
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
-                    .build())
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(aSettingAttribute()
+                                                              .withValue(aHostConnectionAttributes()
+                                                                             .withAccessType(AccessType.USER_PASSWORD)
+                                                                             .build())
+                                                              .build())
+                                        .build())
+                          .build())
             .build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
 
@@ -263,22 +272,31 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     res.setResponse(Lists.newArrayList(
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
-                    .build())
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(aSettingAttribute()
+                                                              .withValue(aHostConnectionAttributes()
+                                                                             .withAccessType(AccessType.USER_PASSWORD)
+                                                                             .build())
+                                                              .build())
+                                        .build())
+                          .build())
             .build(),
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(aHost()
-                          .withHostConnAttr(aSettingAttribute()
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(
+                                            aSettingAttribute()
                                                 .withValue(aHostConnectionAttributes()
                                                                .withAccessType(AccessType.USER_PASSWORD_SU_APP_USER)
                                                                .build())
                                                 .build())
+                                        .build())
                           .build())
             .build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
@@ -332,25 +350,35 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
+
     res.setResponse(Lists.newArrayList(
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
-                    .build())
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(aSettingAttribute()
+                                                              .withValue(aHostConnectionAttributes()
+                                                                             .withAccessType(AccessType.USER_PASSWORD)
+                                                                             .build())
+                                                              .build())
+                                        .build())
+                          .build())
             .build(),
         aServiceInstance()
             .withUuid(getUuid())
-            .withHost(aHost()
-                          .withHostConnAttr(aSettingAttribute()
+            .withHost(anApplicationHost()
+                          .withAppId(app.getUuid())
+                          .withEnvId(env.getUuid())
+                          .withHost(aHost()
+                                        .withHostConnAttr(
+                                            aSettingAttribute()
                                                 .withValue(aHostConnectionAttributes()
-                                                               .withAccessType(AccessType.USER_PASSWORD_SUDO_APP_USER)
+                                                               .withAccessType(AccessType.USER_PASSWORD_SU_APP_USER)
                                                                .build())
                                                 .build())
+                                        .build())
                           .build())
             .build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);

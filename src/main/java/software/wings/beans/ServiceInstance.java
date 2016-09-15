@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.Host.Builder.aHost;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -15,7 +12,6 @@ import org.mongodb.morphia.annotations.Reference;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * The Class ServiceInstance.
@@ -26,7 +22,7 @@ import java.util.Optional;
     options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
-  @Reference(idOnly = true, ignoreMissing = true) private Host host;
+  @Reference(idOnly = true, ignoreMissing = true) private ApplicationHost host;
   @Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
 
   private String releaseId;
@@ -50,8 +46,9 @@ public class ServiceInstance extends Base {
    * @return the display name
    */
   public String getDisplayName() {
-    return Optional.ofNullable(host).orElse(aHost().withHostName("").build()).getHostName() + ":"
-        + Optional.ofNullable(serviceTemplate).orElse(aServiceTemplate().withName("").build()).getName();
+    String hostName = host == null ? "" : host.getHost().getHostName();
+    String serviceTemplateName = serviceTemplate == null ? "" : serviceTemplate.getName();
+    return hostName + ":" + serviceTemplateName;
   }
 
   /**
@@ -82,7 +79,7 @@ public class ServiceInstance extends Base {
    *
    * @return the host
    */
-  public Host getHost() {
+  public ApplicationHost getHost() {
     return host;
   }
 
@@ -91,7 +88,7 @@ public class ServiceInstance extends Base {
    *
    * @param host the host
    */
-  public void setHost(Host host) {
+  public void setHost(ApplicationHost host) {
     this.host = host;
   }
 
@@ -408,7 +405,7 @@ public class ServiceInstance extends Base {
    */
   public static final class Builder {
     private String envId;
-    private Host host;
+    private ApplicationHost host;
     private ServiceTemplate serviceTemplate;
     private String releaseId;
     private String releaseName;
@@ -459,7 +456,7 @@ public class ServiceInstance extends Base {
      * @param host the host
      * @return the builder
      */
-    public Builder withHost(Host host) {
+    public Builder withHost(ApplicationHost host) {
       this.host = host;
       return this;
     }

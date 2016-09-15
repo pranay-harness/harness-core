@@ -32,9 +32,9 @@ public class ServiceTemplate extends Base {
   @NotNull private EntityType mappedBy = HOST;
   @Reference(idOnly = true, ignoreMissing = true) private Service service;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> tags = new ArrayList<>();
-  @Reference(idOnly = true, ignoreMissing = true) private List<Host> hosts = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true) private List<ApplicationHost> hosts = new ArrayList<>();
   @Reference(idOnly = true, ignoreMissing = true) private Set<Tag> leafTags = new HashSet<>();
-  @Transient private List<Host> taggedHosts = new ArrayList<>();
+  @Transient private List<ApplicationHost> taggedHosts = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
   private boolean defaultServiceTemplate = false;
 
@@ -115,7 +115,7 @@ public class ServiceTemplate extends Base {
    *
    * @return the hosts
    */
-  public List<Host> getHosts() {
+  public List<ApplicationHost> getHosts() {
     return hosts;
   }
 
@@ -124,7 +124,7 @@ public class ServiceTemplate extends Base {
    *
    * @param hosts the hosts
    */
-  public void setHosts(List<Host> hosts) {
+  public void setHosts(List<ApplicationHost> hosts) {
     this.hosts = hosts;
   }
 
@@ -187,7 +187,7 @@ public class ServiceTemplate extends Base {
    *
    * @return the tagged hosts
    */
-  public List<Host> getTaggedHosts() {
+  public List<ApplicationHost> getTaggedHosts() {
     return taggedHosts;
   }
 
@@ -196,7 +196,7 @@ public class ServiceTemplate extends Base {
    *
    * @param taggedHosts the tagged hosts
    */
-  public void setTaggedHosts(List<Host> taggedHosts) {
+  public void setTaggedHosts(List<ApplicationHost> taggedHosts) {
     this.taggedHosts = taggedHosts;
   }
 
@@ -287,9 +287,9 @@ public class ServiceTemplate extends Base {
     private EntityType mappedBy = HOST;
     private Service service;
     private List<Tag> tags = new ArrayList<>();
-    private List<Host> hosts = new ArrayList<>();
+    private List<ApplicationHost> hosts = new ArrayList<>();
     private Set<Tag> leafTags = new HashSet<>();
-    private List<Host> taggedHosts = new ArrayList<>();
+    private List<ApplicationHost> taggedHosts = new ArrayList<>();
     private List<ConfigFile> configFiles = new ArrayList<>();
     private boolean defaultServiceTemplate = false;
     private String uuid;
@@ -383,7 +383,7 @@ public class ServiceTemplate extends Base {
      * @param hosts the hosts
      * @return the builder
      */
-    public Builder withHosts(List<Host> hosts) {
+    public Builder withHosts(List<ApplicationHost> hosts) {
       this.hosts = hosts;
       return this;
     }
@@ -405,7 +405,7 @@ public class ServiceTemplate extends Base {
      * @param taggedHosts the tagged hosts
      * @return the builder
      */
-    public Builder withTaggedHosts(List<Host> taggedHosts) {
+    public Builder withTaggedHosts(List<ApplicationHost> taggedHosts) {
       this.taggedHosts = taggedHosts;
       return this;
     }

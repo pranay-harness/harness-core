@@ -16,7 +16,6 @@ import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
@@ -34,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -50,7 +50,9 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
+import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.command.Command;
@@ -99,8 +101,14 @@ public class CommandStateTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withEnvId(ENV_ID)
           .withServiceTemplate(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build())
-          .withHost(aHost().withHostName(HOST_NAME).build())
+          .withHost(ApplicationHost.Builder.anApplicationHost()
+                        .withAppId(APP_ID)
+                        .withEnvId(ENV_ID)
+                        .withUuid(HOST_ID)
+                        .withHost(Host.Builder.aHost().withHostName(HOST_NAME).build())
+                        .build())
           .build();
+
   private static final Activity ACTIVITY_WITH_ID =
       anActivity()
           .withUuid(ACTIVITY_ID)
@@ -113,7 +121,7 @@ public class CommandStateTest extends WingsBaseTest {
           .withServiceName(SERVICE_INSTANCE.getServiceTemplate().getService().getName())
           .withCommandName(COMMAND.getName())
           .withCommandType(COMMAND.getCommandUnitType().name())
-          .withHostName(SERVICE_INSTANCE.getHost().getHostName())
+          .withHostName(SERVICE_INSTANCE.getHost().getHost().getHostName())
           .withServiceInstanceId(SERVICE_INSTANCE_ID)
           .build();
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =

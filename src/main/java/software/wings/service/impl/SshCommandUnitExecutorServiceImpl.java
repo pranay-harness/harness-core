@@ -19,6 +19,7 @@ import com.google.inject.Injector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
@@ -85,19 +86,20 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
   }
 
   @Override
-  public void cleanup(String activityId, Host host) {
-    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, host.getHostName());
+  public void cleanup(String activityId, ApplicationHost applicationHost) {
+    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, applicationHost.getHost().getHostName());
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context) {
+  public ExecutionResult execute(
+      ApplicationHost applicationHost, CommandUnit commandUnit, CommandExecutionContext context) {
     String activityId = context.getActivityId();
     logService.save(aLog()
-                        .withAppId(host.getAppId())
-                        .withHostName(host.getHostName())
+                        .withAppId(applicationHost.getHost().getAppId())
+                        .withHostName(applicationHost.getHost().getHostName())
                         .withActivityId(activityId)
                         .withLogLevel(INFO)
                         .withCommandUnitName(commandUnit.getName())
@@ -107,7 +109,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     ExecutionResult executionResult = FAILURE;
 
     try {
-      SshSessionConfig sshSessionConfig = getSshSessionConfig(host, context, commandUnit);
+      SshSessionConfig sshSessionConfig = getSshSessionConfig(applicationHost.getHost(), context, commandUnit);
       SshExecutor executor = sshExecutorFactory.getExecutor(sshSessionConfig.getExecutorType()); // TODO: Reuse executor
       executor.init(sshSessionConfig);
 
@@ -124,9 +126,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
             commandUnit.getCommandExecutionTimeout(), TimeUnit.MILLISECONDS); // TODO: Improve logging
       } catch (InterruptedException | TimeoutException e) {
         logService.save(aLog()
-                            .withAppId(host.getAppId())
+                            .withAppId(applicationHost.getAppId())
                             .withActivityId(activityId)
-                            .withHostName(host.getHostName())
+                            .withHostName(applicationHost.getHost().getHostName())
                             .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                             .withLogLine("Command execution timed out")
                             .withCommandUnitName(commandUnit.getName())
@@ -145,9 +147,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
                                                  .getMessage())
                                       .collect(toList()));
           logService.save(aLog()
-                              .withAppId(host.getAppId())
+                              .withAppId(applicationHost.getAppId())
                               .withActivityId(activityId)
-                              .withHostName(host.getHostName())
+                              .withHostName(applicationHost.getHost().getHostName())
                               .withCommandUnitName(commandUnit.getName())
                               .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                               .withLogLine(errorMessage)
@@ -156,9 +158,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           throw(WingsException) e.getCause();
         } else {
           logService.save(aLog()
-                              .withAppId(host.getAppId())
+                              .withAppId(applicationHost.getHost().getAppId())
                               .withActivityId(activityId)
-                              .withHostName(host.getHostName())
+                              .withHostName(applicationHost.getHost().getHostName())
                               .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                               .withLogLine("Unknown Error " + e.getCause().getMessage())
                               .withCommandUnitName(commandUnit.getName())
@@ -170,9 +172,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       }
 
       logService.save(aLog()
-                          .withAppId(host.getAppId())
+                          .withAppId(applicationHost.getAppId())
                           .withActivityId(activityId)
-                          .withHostName(host.getHostName())
+                          .withHostName(applicationHost.getHost().getHostName())
                           .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                           .withLogLine("Command execution finished with status " + executionResult)
                           .withCommandUnitName(commandUnit.getName())
@@ -185,9 +187,9 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     } catch (Exception ex) {
       logger.error("Command execution failed with error " + ex);
       logService.save(aLog()
-                          .withAppId(host.getAppId())
+                          .withAppId(applicationHost.getAppId())
                           .withActivityId(activityId)
-                          .withHostName(host.getHostName())
+                          .withHostName(applicationHost.getHost().getHostName())
                           .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                           .withLogLine("Command execution finished with status " + executionResult)
                           .withCommandUnitName(commandUnit.getName())

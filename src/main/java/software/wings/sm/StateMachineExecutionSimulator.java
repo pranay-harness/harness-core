@@ -131,7 +131,7 @@ public class StateMachineExecutionSimulator {
 
     Set<AccessType> accessTypes = new HashSet<>();
     for (ServiceInstance serviceInstance : res.getResponse()) {
-      SettingAttribute connAttribute = serviceInstance.getHost().getHostConnAttr();
+      SettingAttribute connAttribute = serviceInstance.getHost().getHost().getHostConnAttr();
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {

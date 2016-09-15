@@ -19,6 +19,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -125,7 +126,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Hosts.
    */
-  List<Host> hosts;
+  List<ApplicationHost> hosts;
 
   /**
    * The Root env tag.
@@ -366,7 +367,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
         entityId);
   }
 
-  private List<Host> importAndGetHosts(String appId, String envId, String infraId) {
+  private List<ApplicationHost> importAndGetHosts(String appId, String envId, String infraId) {
     SettingAttribute settingAttribute =
         wingsPersistence.saveAndGet(SettingAttribute.class, aSettingAttribute().withAppId(appId).build());
     Host baseHost = aHost()
@@ -385,7 +386,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     baseHost.setHostNames(hostNames);
     hostService.bulkSave(infraId, envId, baseHost);
     //    log().info("{} host imported", numOfHostsImported);
-    PageRequest<Host> pageRequest = new PageRequest<>();
+    PageRequest<ApplicationHost> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infraId, EQ);
     return hostService.list(pageRequest).getResponse();
   }

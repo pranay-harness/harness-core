@@ -5,7 +5,7 @@
 package software.wings.common;
 
 import software.wings.api.HostElement;
-import software.wings.beans.Host;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
@@ -48,14 +48,14 @@ public class HostExpressionProcessor implements ExpressionProcessor {
   }
 
   /**
-   * Convert to host element host element.
+   * Convert to applicationHost element applicationHost element.
    *
-   * @param host the host
-   * @return the host element
+   * @param applicationHost the applicationHost
+   * @return the applicationHost element
    */
-  static HostElement convertToHostElement(Host host) {
+  static HostElement convertToHostElement(ApplicationHost applicationHost) {
     HostElement element = new HostElement();
-    MapperUtils.mapObject(host, element);
+    MapperUtils.mapObject(applicationHost, element);
     return element;
   }
 
@@ -116,8 +116,8 @@ public class HostExpressionProcessor implements ExpressionProcessor {
    * @return the list
    */
   public List<HostElement> list() {
-    List<Host> hosts = null;
-    PageRequest<Host> pageRequest =
+    List<ApplicationHost> hosts = null;
+    PageRequest<ApplicationHost> pageRequest =
         PageRequest.Builder.aPageRequest()
             .withLimit(PageRequest.UNLIMITED)
             .addFilter(SearchFilter.Builder.aSearchFilter().withField("appId", Operator.EQ, appId).build())
@@ -131,13 +131,13 @@ public class HostExpressionProcessor implements ExpressionProcessor {
     return convertToHostElements(hosts);
   }
 
-  private List<HostElement> convertToHostElements(List<Host> hosts) {
+  private List<HostElement> convertToHostElements(List<ApplicationHost> hosts) {
     if (hosts == null) {
       return null;
     }
     List<HostElement> hostElements = new ArrayList<>();
-    for (Host host : hosts) {
-      hostElements.add(convertToHostElement(host));
+    for (ApplicationHost applicationHost : hosts) {
+      hostElements.add(convertToHostElement(applicationHost));
     }
     return hostElements;
   }
