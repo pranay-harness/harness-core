@@ -1,8 +1,10 @@
 package software.wings.service.impl;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 
+import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
@@ -11,6 +13,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
+import software.wings.utils.Validator;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -47,17 +50,20 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   @Override
   public void delete(String infraId) {
     // TODO:: INFRA:
-    //    boolean deleted =
-    //        wingsPersistence.delete(wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(Base.GLOBAL_APP_ID).field(ID_KEY).equal(infraId));
-    //    if (deleted) {
-    //      executorService.submit(() -> hostService.deleteByInfra(infraId));
-    //    }
+    boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Infrastructure.class)
+                                                  .field("appId")
+                                                  .equal(Base.GLOBAL_APP_ID)
+                                                  .field(ID_KEY)
+                                                  .equal(infraId));
+    if (deleted) {
+      executorService.submit(() -> hostService.deleteByInfra(infraId));
+    }
   }
 
   @Override
-  public Infrastructure getInfraByEnvId(String appId, String envId) {
+  public Infrastructure getInfraByEnvId(String envId) {
     // TODO:: INFRA:
-    return wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(GLOBAL_APP_ID).asList().get(0);
+    return wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(GLOBAL_APP_ID).get();
   }
 
   @Override
@@ -77,5 +83,17 @@ public class InfrastructureServiceImpl implements InfrastructureService {
       throw new WingsException(ErrorCodes.INVALID_REQUEST);
     }
     return infrastructures.get(0).getUuid();
+  }
+
+  @Override
+  public Infrastructure get(String infraId) {
+    Infrastructure infrastructure = wingsPersistence.createQuery(Infrastructure.class)
+                                        .field("appId")
+                                        .equal(Base.GLOBAL_APP_ID)
+                                        .field(ID_KEY)
+                                        .equal(infraId)
+                                        .get();
+    Validator.notNullCheck("Infrastructure", infrastructure);
+    return infrastructure;
   }
 }

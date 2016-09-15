@@ -34,11 +34,10 @@ public interface InfrastructureService {
   /**
    * Gets infra by env id.
    *
-   * @param appId the app id
    * @param envId the env id
    * @return the infra by env id
    */
-  Infrastructure getInfraByEnvId(String appId, String envId);
+  Infrastructure getInfraByEnvId(String envId);
 
   /**
    * Create default infrastructure.
@@ -51,4 +50,12 @@ public interface InfrastructureService {
    * @return the default infrastructure id
    */
   String getDefaultInfrastructureId();
+
+  /**
+   * Get infrastructure.
+   *
+   * @param infraId the infra id
+   * @return the infrastructure
+   */
+  Infrastructure get(String infraId);
 }

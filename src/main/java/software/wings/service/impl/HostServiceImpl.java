@@ -13,6 +13,7 @@ import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTI
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.DuplicateKeyException;
@@ -30,6 +31,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -86,14 +88,14 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#get(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public Host get(String appId, String infraId, String hostId) {
+  public Host get(String infraId, String hostId) {
     return wingsPersistence.createQuery(Host.class)
         .field(ID_KEY)
         .equal(hostId)
         .field("infraId")
         .equal(infraId)
         .field("appId")
-        .equal(appId)
+        .equal(Base.GLOBAL_APP_ID)
         .get();
   }
 
@@ -110,7 +112,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public Host update(String envId, Host host) {
-    Host savedHost = get(host.getAppId(), host.getInfraId(), host.getUuid());
+    Host savedHost = get(host.getInfraId(), host.getUuid());
 
     ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder()
                                        .put("hostName", host.getHostName())
@@ -137,10 +139,9 @@ public class HostServiceImpl implements HostService {
     tagService.tagHosts(tag, hostsByTags);
 
     List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(host.getAppId(), envId, host.getServiceTemplates());
+        validateAndFetchServiceTemplate(host.getAppId(), host.getServiceTemplates());
     serviceTemplates.forEach(serviceTemplate
-        -> serviceTemplateService.addHosts(
-            serviceTemplate, asList(get(host.getAppId(), host.getInfraId(), host.getUuid()))));
+        -> serviceTemplateService.addHosts(serviceTemplate, asList(get(host.getInfraId(), host.getUuid()))));
     return host;
   }
 
@@ -180,10 +181,15 @@ public class HostServiceImpl implements HostService {
   @Override
   public List<Host> getHostsByTags(String appId, String envId, List<Tag> tags) {
     // TODO:: INFRA:
-    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    //    return
-    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).field("configTag").hasAnyOf(tags).asList();
-    return null;
+    String infraId = infraService.getInfraByEnvId(envId).getUuid();
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .field("configTag")
+        .hasAnyOf(tags)
+        .asList();
   }
 
   @Override
@@ -205,19 +211,27 @@ public class HostServiceImpl implements HostService {
   @Override
   public List<Host> getHostsByEnv(String appId, String envId) {
     // TODO:: INFRA:
-    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    //    return
-    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).asList();
-    return asList();
+    String infraId = infraService.getInfraByEnvId(envId).getUuid();
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .asList();
   }
 
   @Override
   public Host getHostByEnv(String appId, String envId, String hostId) {
     // TODO:: INFRA:
-    //    String infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
-    //    return
-    //    wingsPersistence.createQuery(Host.class).field("appId").equal(appId).field("infraId").equal(infraId).field(ID_KEY).equal(hostId).get();
-    return null;
+    String infraId = infraService.getInfraByEnvId(envId).getUuid();
+    return wingsPersistence.createQuery(Host.class)
+        .field("appId")
+        .equal(appId)
+        .field("infraId")
+        .equal(infraId)
+        .field(ID_KEY)
+        .equal(hostId)
+        .get();
   }
 
   /* (non-Javadoc)
@@ -235,7 +249,7 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public void delete(String appId, String infraId, String envId, String hostId) {
-    Host host = get(appId, infraId, hostId);
+    Host host = get(infraId, hostId);
     if (delete(host)) {
       Environment environment = environmentService.get(host.getAppId(), envId, false);
       notificationService.sendNotificationAsync(
@@ -280,10 +294,10 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void deleteByInfra(String appId, String infraId) {
+  public void deleteByInfra(String infraId) {
     wingsPersistence.createQuery(Host.class)
         .field("appId")
-        .equal(appId)
+        .equal(Base.GLOBAL_APP_ID)
         .field("infraId")
         .equal(infraId)
         .asList()
@@ -294,29 +308,33 @@ public class HostServiceImpl implements HostService {
    * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
    */
   @Override
-  public ResponseMessage bulkSave(String envId, Host baseHost) {
+  public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {
     List<String> hostNames = baseHost.getHostNames()
                                  .stream()
                                  .filter(hostName -> !isNullOrEmpty(hostName))
                                  .map(String::trim)
                                  .collect(Collectors.toList());
     List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(baseHost.getAppId(), envId, baseHost.getServiceTemplates());
+        validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
+    Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
+    Infrastructure infrastructure = infraService.get(infraId);
     List<String> duplicateHostNames = new ArrayList<>();
     List<Host> savedHosts = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
       Host host = aHost()
                       .withHostName(hostName)
-                      .withAppId(baseHost.getAppId())
-                      .withInfraId(baseHost.getInfraId())
+                      .withAppId(infrastructure.getAppId())
+                      .withInfraId(infrastructure.getUuid())
                       .withHostConnAttr(baseHost.getHostConnAttr())
+                      .withEnvironments(asList(environment))
                       .build();
       SettingAttribute bastionConnAttr =
           validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
       if (bastionConnAttr != null) {
         host.setBastionConnAttr(bastionConnAttr);
       }
+      // TODO:: Infra
       Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
       if (configTag == null) {
         configTag = tagService.getDefaultTagForUntaggedHosts(baseHost.getAppId(), envId);
@@ -334,7 +352,6 @@ public class HostServiceImpl implements HostService {
 
     int countOfNewHostsAdded = hostNames.size() - duplicateHostNames.size();
     if (countOfNewHostsAdded > 0) {
-      Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
       notificationService.sendNotificationAsync(
           anInformationNotification()
               .withAppId(baseHost.getAppId())
@@ -351,13 +368,21 @@ public class HostServiceImpl implements HostService {
         .build();
   }
 
-  private List<ServiceTemplate> validateAndFetchServiceTemplate(
-      String appId, String envId, List<ServiceTemplate> serviceTemplates) {
+  private List<Environment> validateAndFetchEnvironments(String appId, List<Environment> environments) {
+    List<Environment> environmentList = new ArrayList<>();
+    if (!(Strings.isNullOrEmpty(appId) || environments == null || environments.size() == 0)) {
+      environments.forEach(
+          environment -> environmentList.add(environmentService.get(appId, environment.getUuid(), false)));
+    }
+    return environmentList;
+  }
+
+  private List<ServiceTemplate> validateAndFetchServiceTemplate(String appId, List<ServiceTemplate> serviceTemplates) {
     List<ServiceTemplate> fetchedServiceTemplate = new ArrayList<>();
     if (serviceTemplates != null) {
       serviceTemplates.stream()
           .filter(this ::isValidDbReference)
-          .map(serviceTemplate -> serviceTemplateService.get(appId, envId, serviceTemplate.getUuid(), true))
+          .map(serviceTemplate -> serviceTemplateService.get(appId, serviceTemplate.getUuid()))
           .forEach(serviceTemplate -> {
             if (serviceTemplate == null) {
               throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "service mapping");

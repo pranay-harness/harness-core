@@ -25,17 +25,16 @@ public interface HostService {
    * @param req the req
    * @return the page response
    */
-  public PageResponse<Host> list(PageRequest<Host> req);
+  PageResponse<Host> list(PageRequest<Host> req);
 
   /**
    * Gets the.
    *
-   * @param appId   the app id
    * @param infraId the infra id
    * @param hostId  the host id
    * @return the host
    */
-  Host get(@NotEmpty String appId, @NotEmpty String infraId, @NotEmpty String hostId);
+  Host get(@NotEmpty String infraId, @NotEmpty String hostId);
 
   /**
    * Update.
@@ -59,10 +58,9 @@ public interface HostService {
   /**
    * Delete by infra.
    *
-   * @param appId   the app id
    * @param infraId the infra id
    */
-  void deleteByInfra(String appId, String infraId);
+  void deleteByInfra(String infraId);
 
   /**
    * Export hosts.
@@ -141,9 +139,9 @@ public interface HostService {
   /**
    * Bulk save.
    *
-   * @param envId    the env id
-   * @param baseHost the base host
-   * @return the response message
+   * @param infraId    the env id
+   * @param envId
+   *@param baseHost the base host  @return the response message
    */
-  ResponseMessage bulkSave(String envId, Host baseHost);
+  ResponseMessage bulkSave(String infraId, String envId, Host baseHost);
 }

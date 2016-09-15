@@ -289,7 +289,7 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList(HOST_ID))).thenReturn(asList(host));
 
@@ -311,7 +311,7 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(host));
@@ -336,7 +336,7 @@ public class TagServiceTest extends WingsBaseTest {
 
     when(query.get()).thenReturn(tag);
     when(serviceTemplateService.getTemplatesByLeafTag(tag)).thenReturn(asList(serviceTemplate));
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.getHostsByTags(APP_ID, ENV_ID, asList(tag))).thenReturn(asList(existingHost));
     when(hostService.getHostsByHostIds(APP_ID, INFRA_ID, asList("NEW_HOST_ID"))).thenReturn(asList(newHost));

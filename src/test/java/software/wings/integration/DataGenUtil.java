@@ -234,13 +234,13 @@ public void populateData() throws IOException {
   containers.put(GLOBAL_APP_ID, addAppContainers(GLOBAL_APP_ID));
 
   for (Application application : apps) {
+    appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
     containers.put(application.getUuid(), addAppContainers(application.getUuid()));
     services.put(application.getUuid(), addServices(application.getUuid(), containers.get(GLOBAL_APP_ID)));
-    appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-    addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-    addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
-    addOrchestrationAndPipeline(services, appEnvs, application);
-    addNotifications(application);
+    //      addServiceInstances(services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+    //      addActivitiesAndLogs(application, services.get(application.getUuid()), appEnvs.get(application.getUuid()));
+    //      addOrchestrationAndPipeline(services, appEnvs, application);
+    //      addNotifications(application);
     createAppSettings(application.getUuid());
   }
 }
@@ -878,7 +878,9 @@ private void addHostsToEnv(Environment env) {
             .build());
   }
 
-  WebTarget target = client.target(format(API_BASE + "/hosts?appId=%s&envId=%s", env.getAppId(), env.getUuid()));
+  Infrastructure infrastructure = wingsPersistence.createQuery(Infrastructure.class).get();
+  WebTarget target = client.target(format(
+      API_BASE + "/hosts?infraId=%s&appId=%s&envId=%s", infrastructure.getUuid(), env.getAppId(), env.getUuid()));
 
   List<SettingAttribute> connectionAttributes = wingsPersistence.createQuery(SettingAttribute.class)
                                                     .field("appId")

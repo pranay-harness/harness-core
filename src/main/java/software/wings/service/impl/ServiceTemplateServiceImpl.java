@@ -214,9 +214,9 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
-    Infrastructure infrastructure = infrastructureService.getInfraByEnvId(appId, envId);
+    Infrastructure infrastructure = infrastructureService.getInfraByEnvId(envId);
     List<Host> hosts = hostIds.stream()
-                           .map(hostId -> hostService.get(appId, infrastructure.getUuid(), hostId))
+                           .map(hostId -> hostService.get(infrastructure.getUuid(), hostId))
                            .filter(Objects::nonNull)
                            .collect(toList());
 

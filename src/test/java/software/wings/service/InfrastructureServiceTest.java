@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
-import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
@@ -93,11 +92,9 @@ public class InfrastructureServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetInfraIdByEnvId() {
     when(query.get()).thenReturn(aStaticInfrastructure().withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
-    String infraId = infrastructureService.getInfraByEnvId(APP_ID, ENV_ID).getUuid();
+    String infraId = infrastructureService.getInfraByEnvId(ENV_ID).getUuid();
     verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
+    verify(end).equal(GLOBAL_APP_ID);
     verify(query).get();
     assertThat(infraId).isEqualTo(INFRA_ID);
   }
@@ -109,11 +106,9 @@ public class InfrastructureServiceTest extends WingsBaseTest {
   public void shouldDelete() {
     when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
     infrastructureService.delete(INFRA_ID);
-    verify(hostService).deleteByInfra(APP_ID, INFRA_ID);
+    verify(hostService).deleteByInfra(INFRA_ID);
     verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
+    verify(end).equal(GLOBAL_APP_ID);
     verify(query).field(ID_KEY);
     verify(end).equal(INFRA_ID);
   }

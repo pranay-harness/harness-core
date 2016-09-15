@@ -265,8 +265,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldAddHosts() {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
-    when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(hostService.get(INFRA_ID, HOST_ID)).thenReturn(host);
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
@@ -301,8 +301,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   public void shouldAddAndDeleteHosts() {
     Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
     Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
-    when(hostService.get(APP_ID, INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(hostService.get(INFRA_ID, "HOST_ID_2")).thenReturn(newHost);
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
@@ -373,9 +373,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+    when(infrastructureService.getInfraByEnvId(ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
-    when(hostService.get(APP_ID, INFRA_ID, HOST_ID)).thenReturn(host);
+    when(hostService.get(INFRA_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     doReturn(builder.withTags(EMPTY_LIST).withLeafTags(EMPTY_SET).build())
         .when(spyTemplateService)

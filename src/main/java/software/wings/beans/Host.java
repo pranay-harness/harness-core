@@ -55,7 +55,8 @@ public class Host extends Base {
   @JsonProperty(access = WRITE_ONLY)
   private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
-  @Reference private List<String> environments = new ArrayList<>();
+  @Reference(idOnly = true, ignoreMissing = true, lazy = true)
+  private List<Environment> environments = new ArrayList<>();
 
   /**
    * Gets infra id.
@@ -237,11 +238,29 @@ public class Host extends Base {
     this.serviceTemplates = serviceTemplates;
   }
 
+  /**
+   * Gets environments.
+   *
+   * @return the environments
+   */
+  public List<Environment> getEnvironments() {
+    return environments;
+  }
+
+  /**
+   * Sets environments.
+   *
+   * @param environments the environments
+   */
+  public void setEnvironments(List<Environment> environments) {
+    this.environments = environments;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles,
-              hostConnectionCredential, hostNames, serviceTemplates);
+              hostConnectionCredential, hostNames, serviceTemplates, environments);
   }
 
   @Override
@@ -262,7 +281,8 @@ public class Host extends Base {
         && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.hostConnectionCredential, other.hostConnectionCredential)
         && Objects.equals(this.hostNames, other.hostNames)
-        && Objects.equals(this.serviceTemplates, other.serviceTemplates);
+        && Objects.equals(this.serviceTemplates, other.serviceTemplates)
+        && Objects.equals(this.environments, other.environments);
   }
 
   @Override
@@ -278,15 +298,8 @@ public class Host extends Base {
         .add("hostConnectionCredential", hostConnectionCredential)
         .add("hostNames", hostNames)
         .add("serviceTemplates", serviceTemplates)
+        .add("environments", environments)
         .toString();
-  }
-
-  public List<String> getEnvironments() {
-    return environments;
-  }
-
-  public void setEnvironments(List<String> environments) {
-    this.environments = environments;
   }
 
   /**
@@ -300,9 +313,10 @@ public class Host extends Base {
     private SettingAttribute bastionConnAttr;
     private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
-    private HostConnectionCredential hostConnectionCredential;
+    private HostConnectionCredential hostConnectionCredential; // TODO: remove
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
+    private List<Environment> environments = new ArrayList<>();
     private String uuid;
     private String appId;
     private User createdBy;
@@ -433,6 +447,17 @@ public class Host extends Base {
     }
 
     /**
+     * With environments builder.
+     *
+     * @param environments the environments
+     * @return the builder
+     */
+    public Builder withEnvironments(List<Environment> environments) {
+      this.environments = environments;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -526,6 +551,7 @@ public class Host extends Base {
           .withHostConnectionCredential(hostConnectionCredential)
           .withHostNames(hostNames)
           .withServiceTemplates(serviceTemplates)
+          .withEnvironments(environments)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -552,6 +578,7 @@ public class Host extends Base {
       host.setHostConnectionCredential(hostConnectionCredential);
       host.setHostNames(hostNames);
       host.setServiceTemplates(serviceTemplates);
+      host.setEnvironments(environments);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);

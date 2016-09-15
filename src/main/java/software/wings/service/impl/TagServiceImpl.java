@@ -308,8 +308,8 @@ public class TagServiceImpl implements TagService {
       throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
     }
 
-    List<Host> inputHosts = hostService.getHostsByHostIds(
-        appId, infrastructureService.getInfraByEnvId(appId, tag.getEnvId()).getUuid(), hostIds);
+    List<Host> inputHosts =
+        hostService.getHostsByHostIds(appId, infrastructureService.getInfraByEnvId(tag.getEnvId()).getUuid(), hostIds);
     tagHosts(tag, inputHosts);
   }
 

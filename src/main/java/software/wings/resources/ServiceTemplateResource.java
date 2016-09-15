@@ -189,7 +189,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @BeanParam PageRequest<Host> pageRequest) {
     pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(appId, envId), EQ);
+    pageRequest.addFilter("infraId", infrastructureService.getInfraByEnvId(envId), EQ);
     return new RestResponse<>(serviceTemplateService.getTaggedHosts(appId, envId, templateId, pageRequest));
   }
 

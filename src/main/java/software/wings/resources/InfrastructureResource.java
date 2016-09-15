@@ -9,6 +9,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureService;
 
 import javax.ws.rs.BeanParam;
@@ -29,6 +30,7 @@ import javax.ws.rs.Produces;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
+@PublicApi // TODO::remove
 public class InfrastructureResource {
   @Inject private InfrastructureService infrastructureService;
 

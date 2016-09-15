@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static javax.ws.rs.core.Response.Status.OK;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -13,6 +12,7 @@ import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Base;
 import software.wings.beans.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
@@ -70,59 +70,42 @@ public class HostResource {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param infraId     the infra id
-   * @param envId       the env id
    * @param pageRequest the page request
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<Host>> list(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @BeanParam PageRequest<Host> pageRequest) {
-    if (isNullOrEmpty(infraId)) {
-      infraId = infraService.getDefaultInfrastructureId();
-    }
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("infraId", infraId, EQ);
+  public RestResponse<PageResponse<Host>> list(@BeanParam PageRequest<Host> pageRequest) {
     return new RestResponse<>(hostService.list(pageRequest));
   }
 
   /**
    * Gets the.
    *
-   * @param appId   the app id
    * @param infraId the infra id
-   * @param envId   the env id
    * @param hostId  the host id
    * @return the rest response
    */
   @GET
   @Path("{hostId}")
-  public RestResponse<Host> get(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
-      @QueryParam("envId") String envId, @PathParam("hostId") String hostId) {
-    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
-      infraId = infraService.getDefaultInfrastructureId();
-    }
-    return new RestResponse<>(hostService.get(appId, infraId, hostId));
+  public RestResponse<Host> get(@QueryParam("infraId") String infraId, @PathParam("hostId") String hostId) {
+    return new RestResponse<>(hostService.get(infraId, hostId));
   }
 
   /**
    * Save.
    *
-   * @param appId    the app id
    * @param infraId  the infra id
-   * @param envId    the env id
    * @param baseHost the base host
    * @return the rest response
    */
   @POST
-  public Response save(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
+  public Response save(@QueryParam("infraId") String infraId, @QueryParam("appId") String appId,
       @QueryParam("envId") String envId, Host baseHost) {
-    baseHost.setAppId(appId);
-    if (isNullOrEmpty(baseHost.getInfraId())) { // TODO:: INFRA
-      baseHost.setInfraId(infraService.getDefaultInfrastructureId());
+    if (isNullOrEmpty(infraId)) { // TODO:: INFRA
+      infraId = infraService.getDefaultInfrastructureId();
     }
-    ResponseMessage responseMessage = hostService.bulkSave(envId, baseHost);
+    baseHost.setAppId(isNullOrEmpty(appId) ? Base.GLOBAL_APP_ID : appId);
+    ResponseMessage responseMessage = hostService.bulkSave(infraId, envId, baseHost);
     return Response.status(OK).entity(aRestResponse().withResponseMessages(asList(responseMessage)).build()).build();
   }
 
@@ -203,7 +186,7 @@ public class HostResource {
   @Encoded
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
-    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
+    infraId = infraService.getInfraByEnvId(envId).getUuid();
     File hostsFile = hostService.exportHosts(appId, infraId);
     Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
     response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());
