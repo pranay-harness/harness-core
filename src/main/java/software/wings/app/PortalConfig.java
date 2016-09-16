@@ -18,7 +18,7 @@ public class PortalConfig {
   @JsonProperty(defaultValue = "https://localhost:8000") private String url = "https://localhost:8000";
   private List<String> allowedDomains = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
-  @JsonProperty(defaultValue = "/api/users/verify") private String verificationUrl = "/api/users/verify/";
+  @JsonProperty(defaultValue = "/#/register/verify/") private String verificationUrl = "/#/register/verify/";
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;
 
   /**
