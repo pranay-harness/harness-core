@@ -87,7 +87,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
   @Override
   public void cleanup(String activityId, ApplicationHost applicationHost) {
-    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, applicationHost.getHost().getHostName());
+    AbstractSshExecutor.evictAndDisconnectCachedSession(activityId, applicationHost.getHostName());
   }
 
   /**
@@ -99,7 +99,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
     String activityId = context.getActivityId();
     logService.save(aLog()
                         .withAppId(applicationHost.getHost().getAppId())
-                        .withHostName(applicationHost.getHost().getHostName())
+                        .withHostName(applicationHost.getHostName())
                         .withActivityId(activityId)
                         .withLogLevel(INFO)
                         .withCommandUnitName(commandUnit.getName())
@@ -128,7 +128,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         logService.save(aLog()
                             .withAppId(applicationHost.getAppId())
                             .withActivityId(activityId)
-                            .withHostName(applicationHost.getHost().getHostName())
+                            .withHostName(applicationHost.getHostName())
                             .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                             .withLogLine("Command execution timed out")
                             .withCommandUnitName(commandUnit.getName())
@@ -149,7 +149,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           logService.save(aLog()
                               .withAppId(applicationHost.getAppId())
                               .withActivityId(activityId)
-                              .withHostName(applicationHost.getHost().getHostName())
+                              .withHostName(applicationHost.getHostName())
                               .withCommandUnitName(commandUnit.getName())
                               .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                               .withLogLine(errorMessage)
@@ -160,7 +160,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
           logService.save(aLog()
                               .withAppId(applicationHost.getHost().getAppId())
                               .withActivityId(activityId)
-                              .withHostName(applicationHost.getHost().getHostName())
+                              .withHostName(applicationHost.getHostName())
                               .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                               .withLogLine("Unknown Error " + e.getCause().getMessage())
                               .withCommandUnitName(commandUnit.getName())
@@ -174,7 +174,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       logService.save(aLog()
                           .withAppId(applicationHost.getAppId())
                           .withActivityId(activityId)
-                          .withHostName(applicationHost.getHost().getHostName())
+                          .withHostName(applicationHost.getHostName())
                           .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                           .withLogLine("Command execution finished with status " + executionResult)
                           .withCommandUnitName(commandUnit.getName())
@@ -189,7 +189,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
       logService.save(aLog()
                           .withAppId(applicationHost.getAppId())
                           .withActivityId(activityId)
-                          .withHostName(applicationHost.getHost().getHostName())
+                          .withHostName(applicationHost.getHostName())
                           .withLogLevel(SUCCESS.equals(executionResult) ? INFO : ERROR)
                           .withLogLine("Command execution finished with status " + executionResult)
                           .withCommandUnitName(commandUnit.getName())

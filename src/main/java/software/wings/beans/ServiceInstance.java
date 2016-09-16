@@ -46,7 +46,7 @@ public class ServiceInstance extends Base {
    * @return the display name
    */
   public String getDisplayName() {
-    String hostName = host == null ? "" : host.getHost().getHostName();
+    String hostName = host == null ? "" : host.getHostName();
     String serviceTemplateName = serviceTemplate == null ? "" : serviceTemplate.getName();
     return hostName + ":" + serviceTemplateName;
   }

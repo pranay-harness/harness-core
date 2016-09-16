@@ -277,7 +277,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(hostService.get(APP_ID, ENV_ID, HOST_ID))
         .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build());
-    when(infrastructureService.getInfraByEnvId(ENV_ID))
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
@@ -324,7 +324,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(hostService.get(APP_ID, ENV_ID, "HOST_ID_2"))
         .thenReturn(
             anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(newHost).build());
-    when(infrastructureService.getInfraByEnvId(ENV_ID))
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
 
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
@@ -423,7 +423,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     Host host = aHost().withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
-    when(infrastructureService.getInfraByEnvId(ENV_ID))
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
     when(hostService.get(APP_ID, ENV_ID, HOST_ID))
         .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build());

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
+import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
@@ -92,7 +93,7 @@ public class InfrastructureServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetInfraIdByEnvId() {
     when(query.get()).thenReturn(aStaticInfrastructure().withAppId(GLOBAL_APP_ID).withUuid(INFRA_ID).build());
-    String infraId = infrastructureService.getInfraByEnvId(ENV_ID).getUuid();
+    String infraId = infrastructureService.getInfraByEnvId(APP_ID, ENV_ID).getUuid();
     verify(query).field("appId");
     verify(end).equal(GLOBAL_APP_ID);
     verify(query).get();

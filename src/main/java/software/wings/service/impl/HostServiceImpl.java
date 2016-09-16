@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -13,7 +14,6 @@ import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTI
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.DuplicateKeyException;
@@ -54,6 +54,7 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -114,35 +115,108 @@ public class HostServiceImpl implements HostService {
    */
   @Override
   public ApplicationHost update(String envId, Host host) {
-    return null; // TODO:: Infra
-    //    ApplicationHost savedHost = get(host.getInfraId(), host.getUuid());
-    //
-    //    ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostName",
-    //    host.getHostName()).put("hostConnAttr", host.getHostConnAttr()); if (host.getBastionConnAttr() != null) {
-    //      builder.put("bastionConnAttr", host.getBastionConnAttr());
-    //    }
-    //    wingsPersistence.updateFields(Host.class, host.getUuid(), builder.build());
-    //
-    //    Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
-    //
-    //    if (tag != null && tag.equals(savedHost.getConfigTag())) {
-    //      return wingsPersistence.get(Host.class, host.getAppId(), host.getUuid());
-    //    }
-    //
-    //    //Tag update -> should update host mapped in template
-    //
-    //    if (tag == null) {
-    //      tag = tagService.getDefaultTagForUntaggedHosts(host.getAppId(), envId);
-    //    }
-    //
-    //    List<Host> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
-    //    hostsByTags.add(host);
-    //    tagService.tagHosts(tag, hostsByTags);
-    //
-    //    List<ServiceTemplate> serviceTemplates = validateAndFetchServiceTemplate(host.getAppId(),
-    //    host.getServiceTemplates()); serviceTemplates.forEach(serviceTemplate ->
-    //    serviceTemplateService.addHosts(serviceTemplate, asList(get(host.getInfraId(), host.getUuid())))); return
-    //    host;
+    ApplicationHost applicationHost = get(host.getAppId(), envId, host.getUuid());
+
+    if (applicationHost == null || applicationHost.getHost() == null) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Host doesn't exist");
+    }
+
+    ImmutableMap.Builder builder = ImmutableMap.<String, Object>builder().put("hostConnAttr", host.getHostConnAttr());
+    if (host.getBastionConnAttr() != null) {
+      builder.put("bastionConnAttr", host.getBastionConnAttr());
+    }
+    wingsPersistence.updateFields(Host.class, applicationHost.getHost().getUuid(), builder.build());
+
+    Tag tag = validateAndFetchTag(host.getAppId(), envId, host.getConfigTag());
+
+    if (tag != null && tag.equals(applicationHost.getConfigTag())) {
+      return get(applicationHost.getAppId(), applicationHost.getEnvId(), applicationHost.getUuid());
+    }
+
+    // Tag update -> should update host mapped in template
+
+    if (tag == null) {
+      tag = tagService.getDefaultTagForUntaggedHosts(applicationHost.getAppId(), envId);
+    }
+
+    List<ApplicationHost> hostsByTags = getHostsByTags(host.getAppId(), envId, asList(tag));
+    hostsByTags.add(applicationHost);
+    tagService.tagHosts(tag, hostsByTags);
+
+    List<ServiceTemplate> serviceTemplates =
+        validateAndFetchServiceTemplate(host.getAppId(), host.getServiceTemplates());
+    ApplicationHost appHost = get(applicationHost.getAppId(), applicationHost.getEnvId(), host.getUuid());
+    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, asList(appHost)));
+    return appHost;
+  }
+
+  /* (non-Javadoc)
+   * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
+   */
+  @Override
+  public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {
+    List<String> hostNames = baseHost.getHostNames()
+                                 .stream()
+                                 .filter(hostName -> !isNullOrEmpty(hostName))
+                                 .map(String::trim)
+                                 .collect(Collectors.toList());
+    List<ServiceTemplate> serviceTemplates =
+        validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
+    Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
+    Infrastructure infrastructure = infraService.get(infraId);
+    Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
+
+    List<String> duplicateHostNames = new ArrayList<>();
+    List<ApplicationHost> savedAppHosts = new ArrayList<>();
+
+    hostNames.forEach(hostName -> {
+      Host host = aHost()
+                      .withHostName(hostName)
+                      .withAppId(infrastructure.getAppId())
+                      .withInfraId(infrastructure.getUuid())
+                      .withHostConnAttr(baseHost.getHostConnAttr())
+                      .withEnvironments(asList(environment))
+                      .build();
+      SettingAttribute bastionConnAttr =
+          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
+      if (bastionConnAttr != null) {
+        host.setBastionConnAttr(bastionConnAttr);
+      }
+      try {
+        Host savedHost = save(host);
+        ApplicationHost savedAppHost = wingsPersistence.saveAndGet(ApplicationHost.class,
+            anApplicationHost()
+                .withAppId(baseHost.getAppId())
+                .withEnvId(envId)
+                .withConfigTag(configTag)
+                .withInfraId(savedHost.getInfraId())
+                .withHostName(savedHost.getHostName())
+                .withHost(savedHost)
+                .build());
+        savedAppHosts.add(savedAppHost);
+      } catch (DuplicateKeyException dupEx) {
+        logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
+        duplicateHostNames.add(host.getHostName());
+      }
+    });
+    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedAppHosts));
+
+    int countOfNewHostsAdded = hostNames.size() - duplicateHostNames.size();
+    if (countOfNewHostsAdded > 0) {
+      notificationService.sendNotificationAsync(
+          anInformationNotification()
+              .withAppId(baseHost.getAppId())
+              .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
+                  ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
+              .build());
+      // TODO: history entry for bulk save
+    }
+
+    return aResponseMessage()
+        .withErrorType(WARN)
+        .withCode(ErrorCodes.DUPLICATE_HOST_NAMES)
+        .withMessage(Joiner.on(",").join(duplicateHostNames))
+        .build();
   }
 
   /* (non-Javadoc)
@@ -150,14 +224,9 @@ public class HostServiceImpl implements HostService {
    * software.wings.utils.BoundedInputStream)
    */
   @Override
-  public int importHosts(String appId, String envId, BoundedInputStream inputStream) {
-    //    Infra infra = infraService.getInfraByEnvId(appId, envId);
-    //    notNullCheck("infra", infra);
-    //    List<Host> hosts = csvFileHelper.parseHosts(infra, inputStream);
-    //    List<String> Ids = wingsPersistence.save(hosts);
-    //    return Ids.size();
-    // TODO:: INFRA:
-    return 0;
+  public int importHosts(String appId, String envId, String infraId, BoundedInputStream inputStream) {
+    List<Host> hosts = csvFileHelper.parseHosts(infraId, appId, envId, inputStream);
+    return (int) hosts.stream().map(host -> bulkSave(infraId, envId, host)).filter(Objects::nonNull).count();
   }
 
   /* (non-Javadoc)
@@ -209,25 +278,21 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public List<ApplicationHost> getHostsByEnv(String appId, String envId) {
-    // TODO:: INFRA:
-    String infraId = infraService.getInfraByEnvId(envId).getUuid();
     return wingsPersistence.createQuery(ApplicationHost.class)
         .field("appId")
         .equal(appId)
-        .field("infraId")
-        .equal(infraId)
+        .field("envId")
+        .equal(envId)
         .asList();
   }
 
   @Override
-  public Host getHostByEnv(String appId, String envId, String hostId) {
-    // TODO:: INFRA:
-    String infraId = infraService.getInfraByEnvId(envId).getUuid();
-    return wingsPersistence.createQuery(Host.class)
+  public ApplicationHost getHostByEnv(String appId, String envId, String hostId) {
+    return wingsPersistence.createQuery(ApplicationHost.class)
         .field("appId")
         .equal(appId)
-        .field("infraId")
-        .equal(infraId)
+        .field("envId")
+        .equal(envId)
         .field(ID_KEY)
         .equal(hostId)
         .get();
@@ -252,20 +317,18 @@ public class HostServiceImpl implements HostService {
           anInformationNotification()
               .withAppId(applicationHost.getAppId())
               .withDisplayText(getDecoratedNotificationMessage(HOST_DELETE_NOTIFICATION,
-                  ImmutableMap.of(
-                      "HOST_NAME", applicationHost.getHost().getHostName(), "ENV_NAME", environment.getName())))
+                  ImmutableMap.of("HOST_NAME", applicationHost.getHostName(), "ENV_NAME", environment.getName())))
               .build());
-      historyService.createAsync(
-          aHistory()
-              .withEventType(EventType.CREATED)
-              .withAppId(applicationHost.getAppId())
-              .withEntityType(EntityType.HOST)
-              .withEntityId(applicationHost.getUuid())
-              .withEntityName(applicationHost.getHost().getHostName())
-              .withEntityNewValue(applicationHost)
-              .withShortDescription("Host " + applicationHost.getHost().getHostName() + " created")
-              .withTitle("Host " + applicationHost.getHost().getHostName() + " created")
-              .build());
+      historyService.createAsync(aHistory()
+                                     .withEventType(EventType.CREATED)
+                                     .withAppId(applicationHost.getAppId())
+                                     .withEntityType(EntityType.HOST)
+                                     .withEntityId(applicationHost.getUuid())
+                                     .withEntityName(applicationHost.getHostName())
+                                     .withEntityNewValue(applicationHost)
+                                     .withShortDescription("Host " + applicationHost.getHostName() + " created")
+                                     .withTitle("Host " + applicationHost.getHostName() + " created")
+                                     .build());
     }
   }
 
@@ -277,17 +340,16 @@ public class HostServiceImpl implements HostService {
         executorService.submit(
             () -> configService.deleteByEntityId(applicationHost.getAppId(), applicationHost.getUuid()));
       }
-      historyService.createAsync(
-          aHistory()
-              .withEventType(EventType.DELETED)
-              .withAppId(applicationHost.getAppId())
-              .withEntityType(EntityType.HOST)
-              .withEntityId(applicationHost.getUuid())
-              .withEntityName(applicationHost.getHost().getHostName())
-              .withEntityNewValue(applicationHost)
-              .withShortDescription("Host " + applicationHost.getHost().getHostName() + " deleted")
-              .withTitle("Host " + applicationHost.getHost().getHostName() + " deleted")
-              .build());
+      historyService.createAsync(aHistory()
+                                     .withEventType(EventType.DELETED)
+                                     .withAppId(applicationHost.getAppId())
+                                     .withEntityType(EntityType.HOST)
+                                     .withEntityId(applicationHost.getUuid())
+                                     .withEntityName(applicationHost.getHostName())
+                                     .withEntityNewValue(applicationHost)
+                                     .withShortDescription("Host " + applicationHost.getHostName() + " deleted")
+                                     .withTitle("Host " + applicationHost.getHostName() + " deleted")
+                                     .build());
       return delete;
     }
     return false;
@@ -296,87 +358,6 @@ public class HostServiceImpl implements HostService {
   @Override
   public void deleteByInfra(String infraId) {
     wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId).asList().forEach(this ::delete);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
-   */
-  @Override
-  public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {
-    List<String> hostNames = baseHost.getHostNames()
-                                 .stream()
-                                 .filter(hostName -> !isNullOrEmpty(hostName))
-                                 .map(String::trim)
-                                 .collect(Collectors.toList());
-    List<ServiceTemplate> serviceTemplates =
-        validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
-    Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
-    Infrastructure infrastructure = infraService.get(infraId);
-    Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
-
-    List<String> duplicateHostNames = new ArrayList<>();
-    List<ApplicationHost> savedAppHosts = new ArrayList<>();
-
-    hostNames.forEach(hostName -> {
-      Host host = aHost()
-                      .withHostName(hostName)
-                      .withAppId(infrastructure.getAppId())
-                      .withInfraId(infrastructure.getUuid())
-                      .withHostConnAttr(baseHost.getHostConnAttr())
-                      .withEnvironments(asList(environment))
-                      .build();
-      SettingAttribute bastionConnAttr =
-          validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
-      if (bastionConnAttr != null) {
-        host.setBastionConnAttr(bastionConnAttr);
-      }
-      host.setConfigTag(configTag);
-      try {
-        Host savedHost = save(host);
-        ApplicationHost savedAppHost = saveApplicationHost(baseHost.getAppId(), envId, savedHost);
-        savedAppHosts.add(savedAppHost);
-      } catch (DuplicateKeyException dupEx) {
-        logger.error("Duplicate host insertion for host {} {}", host, dupEx.getMessage());
-        duplicateHostNames.add(host.getHostName());
-      }
-    });
-    //    serviceTemplates.forEach(serviceTemplate -> serviceTemplateService.addHosts(serviceTemplate, savedAppHosts));
-
-    int countOfNewHostsAdded = hostNames.size() - duplicateHostNames.size();
-    if (countOfNewHostsAdded > 0) {
-      notificationService.sendNotificationAsync(
-          anInformationNotification()
-              .withAppId(baseHost.getAppId())
-              .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
-                  ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
-              .build());
-      // TODO: history entry for bulk save
-    }
-
-    return aResponseMessage()
-        .withErrorType(WARN)
-        .withCode(ErrorCodes.DUPLICATE_HOST_NAMES)
-        .withMessage(Joiner.on(",").join(duplicateHostNames))
-        .build();
-  }
-
-  private ApplicationHost saveApplicationHost(String appId, String envId, Host host) {
-    return wingsPersistence.saveAndGet(ApplicationHost.class,
-        ApplicationHost.Builder.anApplicationHost()
-            .withAppId(appId)
-            .withEnvId(envId)
-            .withConfigTag(host.getConfigTag())
-            .withHost(host)
-            .build());
-  }
-
-  private List<Environment> validateAndFetchEnvironments(String appId, List<Environment> environments) {
-    List<Environment> environmentList = new ArrayList<>();
-    if (!(Strings.isNullOrEmpty(appId) || environments == null || environments.size() == 0)) {
-      environments.forEach(
-          environment -> environmentList.add(environmentService.get(appId, environment.getUuid(), false)));
-    }
-    return environmentList;
   }
 
   private List<ServiceTemplate> validateAndFetchServiceTemplate(String appId, List<ServiceTemplate> serviceTemplates) {
@@ -396,7 +377,7 @@ public class HostServiceImpl implements HostService {
   }
 
   private Tag validateAndFetchTag(String appId, String envId, Tag tag) {
-    Tag fetchedTag = null;
+    Tag fetchedTag;
     if (isValidDbReference(tag)) {
       fetchedTag = tagService.get(appId, envId, tag.getUuid());
       if (fetchedTag == null) {

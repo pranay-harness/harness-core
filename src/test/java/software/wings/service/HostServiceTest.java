@@ -102,7 +102,8 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    when(infrastructureService.getInfraByEnvId(ENV_ID)).thenReturn(aStaticInfrastructure().withUuid(INFRA_ID).build());
+    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
+        .thenReturn(aStaticInfrastructure().withUuid(INFRA_ID).build());
 
     when(wingsPersistence.createUpdateOperations(ApplicationHost.class)).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(ApplicationHost.class)).thenReturn(query);
@@ -173,7 +174,6 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateHost() {
-    // TODO: Infra
     //    Host host = builder.withUuid(HOST_ID).build();
     //    when(wingsPersistence.saveAndGet(eq(ApplicationHost.class), eq(host))).thenReturn(host);
     //    when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
@@ -249,7 +249,7 @@ public class HostServiceTest extends WingsBaseTest {
 
     List<ApplicationHost> hosts = hostService.getHostsByTags(APP_ID, ENV_ID, tags);
 
-    verify(infrastructureService).getInfraByEnvId(ENV_ID);
+    verify(infrastructureService).getInfraByEnvId(APP_ID, ENV_ID);
     verify(query).asList();
     verify(query).field("appId");
     verify(end).equal(APP_ID);

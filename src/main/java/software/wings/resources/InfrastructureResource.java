@@ -1,11 +1,15 @@
 package software.wings.resources;
 
+import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.Host;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -43,6 +47,14 @@ public class InfrastructureResource {
   @GET
   public RestResponse<PageResponse<Infrastructure>> list(@BeanParam PageRequest<Infrastructure> pageRequest) {
     return new RestResponse<>(infrastructureService.list(pageRequest));
+  }
+
+  @GET
+  @Path("{infraId}/hosts")
+  public RestResponse<PageRequest<Host>> listInfraHost(
+      @PathParam("infraId") String infraId, @BeanParam PageRequest<Host> pageRequest) {
+    pageRequest.addFilter(aSearchFilter().withField("infraId", Operator.EQ, infraId).build());
+    return new RestResponse<>(infrastructureService.listInfraHost(pageRequest));
   }
 
   /**

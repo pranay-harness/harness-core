@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import software.wings.beans.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -34,10 +35,12 @@ public interface InfrastructureService {
   /**
    * Gets infra by env id.
    *
+   *
+   * @param appId
    * @param envId the env id
    * @return the infra by env id
    */
-  Infrastructure getInfraByEnvId(String envId);
+  Infrastructure getInfraByEnvId(String appId, String envId);
 
   /**
    * Create default infrastructure.
@@ -58,4 +61,12 @@ public interface InfrastructureService {
    * @return the infrastructure
    */
   Infrastructure get(String infraId);
+
+  /**
+   * List infra host page request.
+   *
+   * @param pageRequest the page request
+   * @return the page request
+   */
+  PageRequest<Host> listInfraHost(PageRequest<Host> pageRequest);
 }

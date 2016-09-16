@@ -18,6 +18,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "applicationHosts", noClassnameStored = true)
 public class ApplicationHost extends Base {
   @NotEmpty private String envId;
+  @NotEmpty private String infraId;
+  @NotEmpty private String hostName;
 
   @Reference(idOnly = true, ignoreMissing = true) @NotNull private Host host;
 
@@ -97,9 +99,45 @@ public class ApplicationHost extends Base {
     this.configFiles = configFiles;
   }
 
+  /**
+   * Gets infra id.
+   *
+   * @return the infra id
+   */
+  public String getInfraId() {
+    return infraId;
+  }
+
+  /**
+   * Sets infra id.
+   *
+   * @param infraId the infra id
+   */
+  public void setInfraId(String infraId) {
+    this.infraId = infraId;
+  }
+
+  /**
+   * Gets host name.
+   *
+   * @return the host name
+   */
+  public String getHostName() {
+    return hostName;
+  }
+
+  /**
+   * Sets host name.
+   *
+   * @param hostName the host name
+   */
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
+  }
+
   @Override
   public int hashCode() {
-    return 31 * super.hashCode() + Objects.hash(host, envId, configTag, configFiles);
+    return 31 * super.hashCode() + Objects.hash(envId, infraId, hostName, host, configTag, configFiles);
   }
 
   @Override
@@ -114,15 +152,18 @@ public class ApplicationHost extends Base {
       return false;
     }
     final ApplicationHost other = (ApplicationHost) obj;
-    return Objects.equals(this.host, other.host) && Objects.equals(this.envId, other.envId)
+    return Objects.equals(this.envId, other.envId) && Objects.equals(this.infraId, other.infraId)
+        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.host, other.host)
         && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles);
   }
 
   @Override
   public String toString() {
     return MoreObjects.toStringHelper(this)
-        .add("host", host)
         .add("envId", envId)
+        .add("infraId", infraId)
+        .add("hostName", hostName)
+        .add("host", host)
         .add("configTag", configTag)
         .add("configFiles", configFiles)
         .toString();
@@ -132,8 +173,10 @@ public class ApplicationHost extends Base {
    * The type Builder.
    */
   public static final class Builder {
-    private Host host;
     private String envId;
+    private String infraId;
+    private String hostName;
+    private Host host;
     private Tag configTag;
     private List<ConfigFile> configFiles = new ArrayList<>();
     private String uuid;
@@ -156,17 +199,6 @@ public class ApplicationHost extends Base {
     }
 
     /**
-     * With host builder.
-     *
-     * @param host the host
-     * @return the builder
-     */
-    public Builder withHost(Host host) {
-      this.host = host;
-      return this;
-    }
-
-    /**
      * With env id builder.
      *
      * @param envId the env id
@@ -174,6 +206,39 @@ public class ApplicationHost extends Base {
      */
     public Builder withEnvId(String envId) {
       this.envId = envId;
+      return this;
+    }
+
+    /**
+     * With infra id builder.
+     *
+     * @param infraId the infra id
+     * @return the builder
+     */
+    public Builder withInfraId(String infraId) {
+      this.infraId = infraId;
+      return this;
+    }
+
+    /**
+     * With host name builder.
+     *
+     * @param hostName the host name
+     * @return the builder
+     */
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    /**
+     * With host builder.
+     *
+     * @param host the host
+     * @return the builder
+     */
+    public Builder withHost(Host host) {
+      this.host = host;
       return this;
     }
 
@@ -283,8 +348,10 @@ public class ApplicationHost extends Base {
      */
     public Builder but() {
       return anApplicationHost()
-          .withHost(host)
           .withEnvId(envId)
+          .withInfraId(infraId)
+          .withHostName(hostName)
+          .withHost(host)
           .withConfigTag(configTag)
           .withConfigFiles(configFiles)
           .withUuid(uuid)
@@ -303,8 +370,10 @@ public class ApplicationHost extends Base {
      */
     public ApplicationHost build() {
       ApplicationHost applicationHost = new ApplicationHost();
-      applicationHost.setHost(host);
       applicationHost.setEnvId(envId);
+      applicationHost.setInfraId(infraId);
+      applicationHost.setHostName(hostName);
+      applicationHost.setHost(host);
       applicationHost.setConfigTag(configTag);
       applicationHost.setConfigFiles(configFiles);
       applicationHost.setUuid(uuid);

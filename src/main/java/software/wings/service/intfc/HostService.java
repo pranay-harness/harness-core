@@ -75,12 +75,14 @@ public interface HostService {
   /**
    * Import hosts.
    *
+   * @param infraId            the infra id
    * @param appId              the app id
    * @param envId              the infra id
    * @param boundedInputStream the bounded input stream
    * @return the int
    */
-  int importHosts(@NotEmpty String appId, @NotEmpty String envId, @NotNull BoundedInputStream boundedInputStream);
+  int importHosts(@NotEmpty String infraId, @NotEmpty String appId, @NotEmpty String envId,
+      @NotNull BoundedInputStream boundedInputStream);
 
   /**
    * Gets the hosts by id.
@@ -136,7 +138,7 @@ public interface HostService {
    * @param hostId the host id
    * @return the host by env
    */
-  Host getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
+  ApplicationHost getHostByEnv(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId);
 
   /**
    * Bulk save.

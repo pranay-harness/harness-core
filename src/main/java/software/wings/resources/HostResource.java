@@ -169,7 +169,7 @@ public class HostResource {
   public RestResponse importHosts(@QueryParam("appId") String appId, @QueryParam("infraId") String infraId,
       @QueryParam("envId") String envId, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("file") FormDataContentDisposition fileDetail) {
-    hostService.importHosts(appId, envId,
+    hostService.importHosts(infraId, appId, envId,
         new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getHostUploadLimit()));
     return new RestResponse();
   }
@@ -187,7 +187,7 @@ public class HostResource {
   @Encoded
   public Response exportHosts(
       @QueryParam("appId") String appId, @QueryParam("infraId") String infraId, @QueryParam("envId") String envId) {
-    infraId = infraService.getInfraByEnvId(envId).getUuid();
+    infraId = infraService.getInfraByEnvId(appId, envId).getUuid();
     File hostsFile = hostService.exportHosts(appId, infraId);
     Response.ResponseBuilder response = Response.ok(hostsFile, MediaType.TEXT_PLAIN);
     response.header("Content-Disposition", "attachment; filename=" + hostsFile.getName());

@@ -6,6 +6,7 @@ import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.a
 
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
+import software.wings.beans.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -49,7 +50,6 @@ public class InfrastructureServiceImpl implements InfrastructureService {
 
   @Override
   public void delete(String infraId) {
-    // TODO:: INFRA:
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Infrastructure.class)
                                                   .field("appId")
                                                   .equal(Base.GLOBAL_APP_ID)
@@ -61,8 +61,8 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   }
 
   @Override
-  public Infrastructure getInfraByEnvId(String envId) {
-    // TODO:: INFRA:
+  public Infrastructure getInfraByEnvId(String appId, String envId) {
+    // TODO:: INFRA
     return wingsPersistence.createQuery(Infrastructure.class).field("appId").equal(GLOBAL_APP_ID).get();
   }
 
@@ -95,5 +95,10 @@ public class InfrastructureServiceImpl implements InfrastructureService {
                                         .get();
     Validator.notNullCheck("Infrastructure", infrastructure);
     return infrastructure;
+  }
+
+  @Override
+  public PageRequest<Host> listInfraHost(PageRequest<Host> pageRequest) {
+    return wingsPersistence.query(Host.class, pageRequest);
   }
 }

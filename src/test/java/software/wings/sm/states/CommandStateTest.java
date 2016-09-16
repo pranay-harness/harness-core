@@ -121,7 +121,7 @@ public class CommandStateTest extends WingsBaseTest {
           .withServiceName(SERVICE_INSTANCE.getServiceTemplate().getService().getName())
           .withCommandName(COMMAND.getName())
           .withCommandType(COMMAND.getCommandUnitType().name())
-          .withHostName(SERVICE_INSTANCE.getHost().getHost().getHostName())
+          .withHostName(SERVICE_INSTANCE.getHost().getHostName())
           .withServiceInstanceId(SERVICE_INSTANCE_ID)
           .build();
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
