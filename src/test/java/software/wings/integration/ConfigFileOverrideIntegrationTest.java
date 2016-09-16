@@ -13,7 +13,6 @@ import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -77,7 +76,6 @@ import javax.inject.Inject;
  * |
  */
 @RealMongo
-@Ignore // TODO:: Infra
 public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
   /**
    * The Test folder.

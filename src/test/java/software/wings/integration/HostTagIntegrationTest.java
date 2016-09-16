@@ -8,7 +8,6 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.Builder.aTag;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -152,7 +151,6 @@ public class HostTagIntegrationTest extends WingsBaseTest {
    * Should remove default tag from host when tagged by other tags.
    */
   @Test
-  @Ignore // TODO:: Infra
   public void shouldRemoveDefaultTagFromHostWhenTaggedByOtherTags() {
     List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
     List<ApplicationHost> hostsToTag = Arrays.asList(hosts.get(0), hosts.get(1), hosts.get(2));

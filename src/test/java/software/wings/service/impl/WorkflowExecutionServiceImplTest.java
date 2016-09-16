@@ -762,15 +762,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
 
-    Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-    Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-
     ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host1).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host1")
+            .build());
     ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host2).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host2")
+            .build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -901,15 +906,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     when(staticConfiguration.defaultSimpleWorkflow()).thenReturn(graph);
 
-    Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-    Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-
     ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host1).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host1")
+            .build());
     ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host2).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host2")
+            .build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());
@@ -2028,15 +2038,20 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
 
-    Host host1 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
-    Host host2 = wingsPersistence.saveAndGet(
-        Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host2").build());
-
     ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host1).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host1")
+            .build());
     ApplicationHost applicationHost2 = wingsPersistence.saveAndGet(ApplicationHost.class,
-        anApplicationHost().withAppId(app.getAppId()).withEnvId(env.getUuid()).withHost(host2).build());
+        anApplicationHost()
+            .withAppId(app.getAppId())
+            .withEnvId(env.getUuid())
+            .withInfraId(INFRA_ID)
+            .withHostName("host2")
+            .build());
 
     Service service = wingsPersistence.saveAndGet(
         Service.class, aService().withUuid(UUIDGenerator.getUuid()).withName("svc1").withAppId(app.getUuid()).build());

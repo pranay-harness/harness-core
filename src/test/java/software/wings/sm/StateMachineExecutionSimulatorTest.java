@@ -375,7 +375,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
                                         .withHostConnAttr(
                                             aSettingAttribute()
                                                 .withValue(aHostConnectionAttributes()
-                                                               .withAccessType(AccessType.USER_PASSWORD_SU_APP_USER)
+                                                               .withAccessType(AccessType.USER_PASSWORD_SUDO_APP_USER)
                                                                .build())
                                                 .build())
                                         .build())

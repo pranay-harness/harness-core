@@ -45,6 +45,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
@@ -274,11 +275,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldAddHosts() {
-    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
-    when(hostService.get(APP_ID, ENV_ID, HOST_ID))
-        .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build());
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
+    ApplicationHost host = anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build();
+    when(hostService.get(APP_ID, ENV_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(builder.build());
 
     ServiceTemplate template = builder.build();
@@ -288,8 +286,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
             ServiceTemplate.class, template.getUuid(), of("mappedBy", EntityType.HOST, "hosts", asList(host)));
     verify(serviceInstanceService)
         .updateInstanceMappings(template,
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()),
-            asList());
+            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()), asList());
   }
 
   /**
@@ -297,12 +294,9 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldDeleteHosts() {
-    Host host = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID").build();
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
         .thenReturn(
-            builder
-                .withHosts(asList(
-                    anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()))
+            builder.withHosts(asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()))
                 .build());
 
     ServiceTemplate template = builder.build();
@@ -311,7 +305,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
         .updateFields(ServiceTemplate.class, template.getUuid(), of("mappedBy", EntityType.HOST, "hosts", asList()));
     verify(serviceInstanceService)
         .updateInstanceMappings(template, asList(),
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()));
+            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build()));
   }
 
   /**
@@ -319,38 +313,25 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldAddAndDeleteHosts() {
-    Host existingHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_1").build();
-    Host newHost = aHost().withAppId(APP_ID).withInfraId(INFRA_ID).withUuid("HOST_ID_2").build();
-    when(hostService.get(APP_ID, ENV_ID, "HOST_ID_2"))
-        .thenReturn(
-            anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(newHost).build());
-    when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
-
+    when(hostService.get(APP_ID, ENV_ID, "NEW_HOST_ID"))
+        .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build());
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID))
-        .thenReturn(builder
-                        .withHosts(asList(anApplicationHost()
-                                              .withAppId(APP_ID)
-                                              .withEnvId(ENV_ID)
-                                              .withUuid(HOST_ID)
-                                              .withHost(existingHost)
-                                              .build()))
-                        .build());
+        .thenReturn(
+            builder
+                .withHosts(asList(
+                    anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("EXISTING_HOST_ID").build()))
+                .build());
 
     ServiceTemplate template = builder.build();
-    templateService.updateHosts(APP_ID, ENV_ID, template.getUuid(), asList("HOST_ID_2"));
+    templateService.updateHosts(APP_ID, ENV_ID, template.getUuid(), asList("NEW_HOST_ID"));
     verify(wingsPersistence)
-        .updateFields(
-            ServiceTemplate.class, template.getUuid(), of("mappedBy", EntityType.HOST, "hosts", asList(newHost)));
+        .updateFields(ServiceTemplate.class, template.getUuid(),
+            of("mappedBy", EntityType.HOST, "hosts",
+                asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build())));
     verify(serviceInstanceService)
         .updateInstanceMappings(template,
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(newHost).build()),
-            asList(anApplicationHost()
-                       .withAppId(APP_ID)
-                       .withEnvId(ENV_ID)
-                       .withUuid(HOST_ID)
-                       .withHost(existingHost)
-                       .build()));
+            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").build()),
+            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("EXISTING_HOST_ID").build()));
   }
 
   /**
@@ -420,13 +401,12 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldSetMappedByToHostAndRemoveMappedTagsWhenMappedByHost() {
     Tag tag = aTag().withEnvId(ENV_ID).withUuid(TAG_ID).build();
-    Host host = aHost().withUuid(HOST_ID).build();
+    ApplicationHost host = anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).build();
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
         .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
-    when(hostService.get(APP_ID, ENV_ID, HOST_ID))
-        .thenReturn(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build());
+    when(hostService.get(APP_ID, ENV_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     doReturn(builder.withTags(EMPTY_LIST).withLeafTags(EMPTY_SET).build())
         .when(spyTemplateService)
@@ -436,9 +416,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
 
     verify(spyTemplateService).updateTags(APP_ID, ENV_ID, TEMPLATE_ID, emptyList());
     verify(serviceInstanceService)
-        .updateInstanceMappings(builder.withMappedBy(EntityType.HOST).build(),
-            asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(host).build()),
-            EMPTY_LIST);
+        .updateInstanceMappings(builder.withMappedBy(EntityType.HOST).build(), asList(host), EMPTY_LIST);
     verify(wingsPersistence)
         .updateFields(
             ServiceTemplate.class, template.getUuid(), of("mappedBy", EntityType.HOST, "hosts", asList(host)));
@@ -569,12 +547,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
                         .withChildren(asList(aTag().withUuid(TAG_ID).withTagType(TagType.UNTAGGED_HOST).build()))
                         .build());
     when(hostService.getHostsByTags(any(), any(), anyList()))
-        .thenReturn(asList(anApplicationHost()
-                               .withAppId(APP_ID)
-                               .withEnvId(ENV_ID)
-                               .withUuid(HOST_ID)
-                               .withHost(aHost().withUuid("HOST_ID_1").build())
-                               .build()));
+        .thenReturn(asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("HOST_ID_1").build()));
 
     Map<String, List<ConfigFile>> hostConfigFileMapping =
         templateService.computedConfigFiles(APP_ID, ENV_ID, TEMPLATE_ID);

@@ -10,6 +10,7 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.FileUtils.createTempDirPath;
 
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
@@ -167,11 +168,9 @@ public class ConfigServiceImpl implements ConfigService {
         return tagService.getTagHierarchyPathString(
             tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
       case HOST:
-        // TODO:: INFRA:
-        //        Host host = hostService.get(configFile.getAppId(), configFile.getEntityId());
-        //        String tagHierarchyPathString = tagService.getTagHierarchyPathString(host.getConfigTag());
-        //        return tagHierarchyPathString + "/" + host.getHostName();
-        return "INCOMPLETE";
+        ApplicationHost host = hostService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId());
+        String tagHierarchyPathString = tagService.getTagHierarchyPathString(host.getConfigTag());
+        return tagHierarchyPathString + "/" + host.getHostName();
       default:
         throw new WingsException(UNKNOWN_ERROR, "message", "Unknown entity type encountered");
     }

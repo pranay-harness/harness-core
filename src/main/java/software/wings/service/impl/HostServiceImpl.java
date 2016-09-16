@@ -17,7 +17,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 
 import com.mongodb.DuplicateKeyException;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +88,7 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public ApplicationHost get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId) {
+  public ApplicationHost get(String appId, String envId, String hostId) {
     ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
                                           .field(ID_KEY)
                                           .equal(hostId)
@@ -162,7 +161,6 @@ public class HostServiceImpl implements HostService {
                                  .collect(Collectors.toList());
     List<ServiceTemplate> serviceTemplates =
         validateAndFetchServiceTemplate(baseHost.getAppId(), baseHost.getServiceTemplates());
-    Environment environment = environmentService.get(baseHost.getAppId(), envId, false);
     Infrastructure infrastructure = infraService.get(infraId);
     Tag configTag = validateAndFetchTag(baseHost.getAppId(), envId, baseHost.getConfigTag());
 
@@ -175,7 +173,6 @@ public class HostServiceImpl implements HostService {
                       .withAppId(infrastructure.getAppId())
                       .withInfraId(infrastructure.getUuid())
                       .withHostConnAttr(baseHost.getHostConnAttr())
-                      .withEnvironments(asList(environment))
                       .build();
       SettingAttribute bastionConnAttr =
           validateAndFetchBastionHostConnectionReference(baseHost.getAppId(), baseHost.getBastionConnAttr());
@@ -207,7 +204,8 @@ public class HostServiceImpl implements HostService {
           anInformationNotification()
               .withAppId(baseHost.getAppId())
               .withDisplayText(getDecoratedNotificationMessage(ADD_HOST_NOTIFICATION,
-                  ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME", environment.getName())))
+                  ImmutableMap.of("COUNT", Integer.toString(countOfNewHostsAdded), "ENV_NAME",
+                      environmentService.get(baseHost.getAppId(), envId, false).getName())))
               .build());
       // TODO: history entry for bulk save
     }
@@ -270,9 +268,10 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void removeTagFromHost(ApplicationHost host, Tag tag) {
-    if (!host.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)) {
-      setTag(host, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
+  public void removeTagFromHost(ApplicationHost applicationHost, Tag tag) {
+    if (applicationHost.getConfigTag() != null
+        && !applicationHost.getConfigTag().getTagType().equals(TagType.UNTAGGED_HOST)) {
+      setTag(applicationHost, tagService.getDefaultTagForUntaggedHosts(tag.getAppId(), tag.getEnvId()));
     }
   }
 
@@ -309,7 +308,7 @@ public class HostServiceImpl implements HostService {
   }
 
   @Override
-  public void delete(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String hostId) {
+  public void delete(String appId, String envId, String hostId) {
     ApplicationHost applicationHost = get(appId, envId, hostId);
     if (delete(applicationHost)) {
       Environment environment = environmentService.get(applicationHost.getAppId(), envId, false);

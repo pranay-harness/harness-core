@@ -29,7 +29,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -214,7 +213,6 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public ServiceTemplate updateHosts(String appId, String envId, String serviceTemplateId, List<String> hostIds) {
-    Infrastructure infrastructure = infrastructureService.getInfraByEnvId(appId, envId);
     List<ApplicationHost> hosts = hostIds.stream()
                                       .map(hostId -> hostService.get(appId, envId, hostId))
                                       .filter(Objects::nonNull)

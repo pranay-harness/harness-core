@@ -53,10 +53,6 @@ public class Host extends Base {
   @JsonProperty(access = WRITE_ONLY)
   private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
 
-  @Transient
-  @Reference(idOnly = true, ignoreMissing = true, lazy = true)
-  private List<Environment> environments = new ArrayList<>();
-
   /**
    * Gets infra id.
    *
@@ -219,29 +215,26 @@ public class Host extends Base {
     this.serviceTemplates = serviceTemplates;
   }
 
-  /**
-   * Gets environments.
-   *
-   * @return the environments
-   */
-  public List<Environment> getEnvironments() {
-    return environments;
-  }
-
-  /**
-   * Sets environments.
-   *
-   * @param environments the environments
-   */
-  public void setEnvironments(List<Environment> environments) {
-    this.environments = environments;
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("infraId", infraId)
+        .add("hostName", hostName)
+        .add("osType", osType)
+        .add("hostConnAttr", hostConnAttr)
+        .add("bastionConnAttr", bastionConnAttr)
+        .add("configTag", configTag)
+        .add("configFiles", configFiles)
+        .add("hostNames", hostNames)
+        .add("serviceTemplates", serviceTemplates)
+        .toString();
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
         + Objects.hash(infraId, hostName, osType, hostConnAttr, bastionConnAttr, configTag, configFiles, hostNames,
-              serviceTemplates, environments);
+              serviceTemplates);
   }
 
   @Override
@@ -261,24 +254,7 @@ public class Host extends Base {
         && Objects.equals(this.bastionConnAttr, other.bastionConnAttr)
         && Objects.equals(this.configTag, other.configTag) && Objects.equals(this.configFiles, other.configFiles)
         && Objects.equals(this.hostNames, other.hostNames)
-        && Objects.equals(this.serviceTemplates, other.serviceTemplates)
-        && Objects.equals(this.environments, other.environments);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("infraId", infraId)
-        .add("hostName", hostName)
-        .add("osType", osType)
-        .add("hostConnAttr", hostConnAttr)
-        .add("bastionConnAttr", bastionConnAttr)
-        .add("configTag", configTag)
-        .add("configFiles", configFiles)
-        .add("hostNames", hostNames)
-        .add("serviceTemplates", serviceTemplates)
-        .add("environments", environments)
-        .toString();
+        && Objects.equals(this.serviceTemplates, other.serviceTemplates);
   }
 
   /**
@@ -294,7 +270,6 @@ public class Host extends Base {
     private List<ConfigFile> configFiles = new ArrayList<>();
     private List<String> hostNames; // to support bulk add host API
     private List<ServiceTemplate> serviceTemplates; // to support bulk add host API
-    private List<Environment> environments = new ArrayList<>();
     private String uuid;
     private String appId;
     private User createdBy;
@@ -424,17 +399,6 @@ public class Host extends Base {
     }
 
     /**
-     * With environments builder.
-     *
-     * @param environments the environments
-     * @return the builder
-     */
-    public Builder withEnvironments(List<Environment> environments) {
-      this.environments = environments;
-      return this;
-    }
-
-    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -527,7 +491,6 @@ public class Host extends Base {
           .withConfigFiles(configFiles)
           .withHostNames(hostNames)
           .withServiceTemplates(serviceTemplates)
-          .withEnvironments(environments)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -553,7 +516,6 @@ public class Host extends Base {
       host.setConfigFiles(configFiles);
       host.setHostNames(hostNames);
       host.setServiceTemplates(serviceTemplates);
-      host.setEnvironments(environments);
       host.setUuid(uuid);
       host.setAppId(appId);
       host.setCreatedBy(createdBy);
