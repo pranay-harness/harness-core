@@ -23,6 +23,7 @@
         <dropwizard.version>1.0.0</dropwizard.version>
         <deployHost>{env.HOSTNAME}</deployHost>
         <deployUsername>${user.name}</deployUsername>
+        <portalHost>localhost:8000</portalHost>
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <atmosphere-version>2.4.5</atmosphere-version>
         <extensions-version>2.4.2</extensions-version>
@@ -1106,7 +1107,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="sed -i 's/url: https:\/\/localhost:8000/url: https:\/\/ci.wings.software/' config.yml"
+                                         command="sed -i 's/url: https:\/\/localhost:8000/url: https:\/\/${portalHost}/' config.yml"
                                          timeout="120000"/>
                                 <echo message="start server"/>
                                 <sshexec trust="true" failonerror="true"
@@ -1353,6 +1354,26 @@
                 <jacoco.skip>true</jacoco.skip>
                 <findbugs.skip>true</findbugs.skip>
                 <embedmongo.skip>true</embedmongo.skip>
+                <portalHost>ci.wings.software</portalHost>
+            </properties>
+        </profile>
+        <profile>
+            <id>deploy-demo</id>
+            <activation>
+                <property>
+                    <name>env</name>
+                    <value>demo</value>
+                </property>
+            </activation>
+            <properties>
+                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <checkstyle.skip>true</checkstyle.skip>
+                <skipTests>true</skipTests>
+                <jacoco.skip>true</jacoco.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <embedmongo.skip>true</embedmongo.skip>
+                <portalHost>demo.wings.software</portalHost>
             </properties>
         </profile>
     </profiles>
