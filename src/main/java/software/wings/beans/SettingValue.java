@@ -13,7 +13,8 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 @JsonSubTypes({
   @Type(JenkinsConfig.class)
   , @Type(SmtpConfig.class), @Type(HostConnectionAttributes.class), @Type(BastionConnectionAttributes.class),
-      @Type(StringValue.class), @Type(SplunkConfig.class), @Type(AppDynamicsConfig.class)
+      @Type(StringValue.class), @Type(SplunkConfig.class), @Type(AppDynamicsConfig.class),
+      @Type(ElasticLoadBalancerConfig.class)
 })
 public abstract class SettingValue {
   @JsonTypeId private SettingVariableTypes type;
@@ -80,6 +81,11 @@ public abstract class SettingValue {
     /**
      * App dynamics setting variable types.
      */
-    APP_DYNAMICS
+    APP_DYNAMICS,
+
+    /**
+     * Elastic Load Balancer Settings
+     */
+    ELB
   }
 }

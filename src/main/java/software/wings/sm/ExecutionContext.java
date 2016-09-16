@@ -22,7 +22,7 @@ public interface ExecutionContext {
    * @param expression the expression
    * @return the object
    */
-  public Object evaluateExpression(String expression);
+  Object evaluateExpression(String expression);
 
   /**
    * Evaluate expression.
@@ -31,14 +31,14 @@ public interface ExecutionContext {
    * @param stateExecutionData the state execution data
    * @return the object
    */
-  public Object evaluateExpression(String expression, StateExecutionData stateExecutionData);
+  Object evaluateExpression(String expression, StateExecutionData stateExecutionData);
 
   /**
    * Gets state execution data.
    *
    * @return the state execution data
    */
-  public StateExecutionData getStateExecutionData();
+  StateExecutionData getStateExecutionData();
 
   /**
    * Render expression.
@@ -46,7 +46,7 @@ public interface ExecutionContext {
    * @param expression the expression
    * @return the string
    */
-  public String renderExpression(String expression);
+  String renderExpression(String expression);
 
   /**
    * Render expression.
@@ -55,7 +55,7 @@ public interface ExecutionContext {
    * @param stateExecutionData the state execution data
    * @return the string
    */
-  public String renderExpression(String expression, StateExecutionData stateExecutionData);
+  String renderExpression(String expression, StateExecutionData stateExecutionData);
 
   /**
    * Gets context element.
