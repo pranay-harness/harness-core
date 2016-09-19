@@ -136,6 +136,13 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @Override
+  public void updateStatsFetchedOnForUser(User user) {
+    user.setStatsFetchedOn(System.currentTimeMillis());
+    wingsPersistence.updateFields(
+        User.class, user.getUuid(), ImmutableMap.of("statsFetchedOn", user.getStatsFetchedOn()));
+  }
+
   private boolean userAlreadyRegistered(User user) {
     return wingsPersistence.createQuery(User.class)
                .field("appId")

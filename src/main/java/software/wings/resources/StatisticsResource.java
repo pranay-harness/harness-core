@@ -7,6 +7,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.service.intfc.StatisticsService;
 
@@ -72,5 +73,11 @@ public class StatisticsResource {
   @Path("top-consumers")
   public RestResponse<WingsStatistics> topConsumers() {
     return new RestResponse<>(statisticsService.getTopConsumers());
+  }
+
+  @GET
+  @Path("keystats/users")
+  public RestResponse<UserStatistics> userStatistics() {
+    return new RestResponse<>(statisticsService.getUserStats());
   }
 }
