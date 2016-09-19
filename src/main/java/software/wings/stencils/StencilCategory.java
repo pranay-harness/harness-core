@@ -52,7 +52,7 @@ public enum StencilCategory {
   private Integer displayOrder = 3;
 
   StencilCategory() {
-    this(null, null);
+    this(null, 3);
   }
 
   StencilCategory(Integer displayOrder) {
