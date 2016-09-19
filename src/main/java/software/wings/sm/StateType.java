@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
@@ -110,12 +111,14 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * E l b enable host state type.
    */
-  E_L_B_ENABLE_HOST(ElasticLoadBalancerEnableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
+  E_L_B_ENABLE_HOST(
+      ElasticLoadBalancerEnableState.class, StencilCategory.CLOUD, "ELB Enable Host", ORCHESTRATION_STENCILS),
 
   /**
    * E l b disable host state type.
    */
-  E_L_B_DISABLE_HOST(ElasticLoadBalancerDisableState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS);
+  E_L_B_DISABLE_HOST(
+      ElasticLoadBalancerDisableState.class, StencilCategory.CLOUD, "ELB Disable Host", ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
@@ -125,7 +128,8 @@ public enum StateType implements StateTypeDescriptor {
   private Object uiSchema;
   private List<StateTypeScope> scopes = new ArrayList<>();
   private StencilCategory stencilCategory;
-  private Integer displayOrder;
+  private Integer displayOrder = DEFAULT_DISPLAY_ORDER;
+  private String displayName = UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
 
   /**
    * Instantiates a new state type.
@@ -146,11 +150,24 @@ public enum StateType implements StateTypeDescriptor {
    */
   StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
       StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, displayOrder, null, scopes);
+  }
+
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, String displayName,
+      StateTypeScope... scopes) {
+    this(stateClass, stencilCategory, DEFAULT_DISPLAY_ORDER, displayName, scopes);
+  }
+
+  StateType(Class<? extends State> stateClass, StencilCategory stencilCategory, Integer displayOrder,
+      String displayName, StateTypeScope... scopes) {
     this.stateClass = stateClass;
     this.scopes = Arrays.asList(scopes);
     this.jsonSchema = loadJsonSchema();
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;
+    if (isNotBlank(displayName)) {
+      this.displayName = displayName;
+    }
     try {
       this.uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
@@ -195,7 +212,7 @@ public enum StateType implements StateTypeDescriptor {
 
   @Override
   public String getName() {
-    return UPPER_UNDERSCORE.to(UPPER_CAMEL, name());
+    return displayName;
   }
 
   /*
