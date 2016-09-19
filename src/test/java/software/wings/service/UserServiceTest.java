@@ -2,19 +2,24 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.ErrorCodes.USER_DOES_NOT_EXIST;
+import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
+import static software.wings.utils.WingsTestConstants.ROLE_ID;
+import static software.wings.utils.WingsTestConstants.ROLE_NAME;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
@@ -33,17 +38,17 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.mapping.Mapper;
+import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
 import software.wings.beans.EmailVerificationToken;
-import software.wings.beans.Role;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.EmailNotificationService;
@@ -63,7 +68,6 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
-  private MainConfiguration configuration = new MainConfiguration();
 
   @Inject @InjectMocks private UserService userService;
 
@@ -74,12 +78,20 @@ public class UserServiceTest extends WingsBaseTest {
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Captor private ArgumentCaptor<Query<EmailVerificationToken>> emailVerificationQueryArgumentCaptor;
 
+  @Mock Query<User> query;
+  @Mock FieldEnd end;
+  @Mock UpdateOperations<User> updateOperations;
+
   /**
    * Sets mocks.
    */
   @Before
   public void setupMocks() {
-    when(wingsPersistence.createQuery(User.class)).thenReturn(datastore.createQuery(User.class));
+    when(wingsPersistence.createQuery(User.class)).thenReturn(query);
+    when(query.field(any())).thenReturn(end);
+    when(end.equal(any())).thenReturn(query);
+    when(wingsPersistence.createUpdateOperations(User.class)).thenReturn(updateOperations);
+    when(updateOperations.add(any(), any())).thenReturn(updateOperations);
     when(wingsPersistence.createQuery(EmailVerificationToken.class))
         .thenReturn(datastore.createQuery(EmailVerificationToken.class));
   }
@@ -174,6 +186,13 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(user).isEqualTo(userBuilder.withUuid(USER_ID).build());
   }
 
+  @Test
+  public void shouldThrowExceptionIfUserDoesNotExist() {
+    assertThatThrownBy(() -> userService.get("INVALID_USER_ID"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(USER_DOES_NOT_EXIST.getCode());
+  }
+
   /**
    * Should verify email.
    */
@@ -205,56 +224,34 @@ public class UserServiceTest extends WingsBaseTest {
   }
 
   /**
-   * Test create role.
-   */
-  @Test
-  @Ignore
-  public void shouldCreateRole() {
-    //    Permission permission = new Permission("ALL", "ALL", "ALL", "ALL");
-    //    Role role = new Role("ADMIN", "Administrator role. It can access resource and perform any action",
-    //    Collections.singletonList(permission)); role.setUuid("BFB4B4F079EB449C9B421D1BB720742E");
-    //    wingsPersistence.save(role);
-    //    permission = new Permission("APP", "ALL", "ALL", "ALL");
-    //    role = new Role("APP_ALL", "APP access", Collections.singletonList(permission));
-    //    role.setUuid("2C496ED72DDC48FEA51E5C3736DD33B9");
-    //    wingsPersistence.save(role);
-  }
-
-  /**
    * Test assign role to user.
    */
   @Test
-  @Ignore
-  public void shouldAssignRoleToUser() {
-    Role role = new Role();
-    role.setUuid("35D7D2C04A164655AB732B963A5DD308");
-    Query<User> updateQuery =
-        wingsPersistence.createQuery(User.class).field(ID_KEY).equal("D3BB4DEA57D043BCA73597CCDE01E637");
-    UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class).add("roles", role);
-    wingsPersistence.update(updateQuery, updateOperations);
-    PageResponse<User> list = userService.list(new PageRequest<User>());
-    userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "BFB4B4F079EB449C9B421D1BB720742E");
-    userService.addRole("51968DC229D7479EAA1D8B56D6C8EB6D", "2C496ED72DDC48FEA51E5C3736DD33B9");
-    userService.addRole("1AF8F38C83394D67B03AC13E704C8186", "BFB4B4F079EB449C9B421D1BB720742E");
-    userService.addRole("4D92F1B445EB4C2C8BD0C2898AF95F03", "BFB4B4F079EB449C9B421D1BB720742E");
-    userService.addRole("4D92F1B445EB4C2C8BD0C2898AF95F03", "2C496ED72DDC48FEA51E5C3736DD33B9");
+  public void shouldAddRole() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(roleService.get(ROLE_ID)).thenReturn(aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
+
+    userService.addRole(USER_ID, ROLE_ID);
+    verify(wingsPersistence, times(2)).get(User.class, USER_ID);
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+    verify(query).field(Mapper.ID_KEY);
+    verify(end).equal(USER_ID);
+    verify(updateOperations).add("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
   }
 
   /**
    * Test revoke role to user.
    */
   @Test
-  @Ignore
-  public void testRevokeRoleToUser() {
-    userService.revokeRole("51968DC229D7479EAA1D8B56D6C8EB6D", "AFBC5F9953BB4F20A56B84CE845EF7A3");
-  }
+  public void shouldRevokeRole() {
+    when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
+    when(roleService.get(ROLE_ID)).thenReturn(aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
 
-  /**
-   * Delete role.
-   */
-  @Test
-  @Ignore
-  public void deleteRole() {
-    roleService.delete("2C496ED72DDC48FEA51E5C3736DD33B9");
+    userService.revokeRole(USER_ID, ROLE_ID);
+    verify(wingsPersistence, times(2)).get(User.class, USER_ID);
+    verify(wingsPersistence).update(any(Query.class), any(UpdateOperations.class));
+    verify(query).field(Mapper.ID_KEY);
+    verify(end).equal(USER_ID);
+    verify(updateOperations).removeAll("roles", aRole().withUuid(ROLE_ID).withName(ROLE_NAME).build());
   }
 }

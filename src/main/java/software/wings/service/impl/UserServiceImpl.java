@@ -199,7 +199,11 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User get(String userId) {
-    return wingsPersistence.get(User.class, userId);
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    return user;
   }
 
   /* (non-Javadoc)
