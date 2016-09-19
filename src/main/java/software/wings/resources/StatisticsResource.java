@@ -76,7 +76,7 @@ public class StatisticsResource {
   }
 
   @GET
-  @Path("keystats/users")
+  @Path("user-stats")
   public RestResponse<UserStatistics> userStatistics() {
     return new RestResponse<>(statisticsService.getUserStats());
   }
