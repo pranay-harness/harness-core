@@ -253,7 +253,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withY(150)
                         .addProperty("applicationName", "MyApp")
                         .addProperty("metricPath",
-                            "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}:8005|Average Response Time (ms)")
+                            "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}|Average Response Time (ms)")
                         .addProperty("assertion", "${xpath('//metric-value/value/text()')} < 100")
                         .build())
                 .addLinks(
