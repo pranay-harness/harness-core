@@ -187,7 +187,7 @@ public enum ContainerFamily {
                       "rm -rf tomcat\n"
                           + (".".equals(appContainer.getStackRootDirectory())
                                     ? ""
-                                    : "rm -rf " + appContainer.getStackRootDirectory())
+                                    : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
                           + appContainer.getFileType().getUnarchiveCommand(
                                 appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
                           + "\nchmod +x tomcat/bin/*")
