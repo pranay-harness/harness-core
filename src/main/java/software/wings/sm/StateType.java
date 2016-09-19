@@ -70,17 +70,17 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Http state type.
    */
-  HTTP(HttpState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS),
+  HTTP(HttpState.class, StencilCategory.VERIFICATIONS, 1, ORCHESTRATION_STENCILS),
 
   /**
    * Splunk state type.
    */
-  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS),
+  SPLUNK(SplunkState.class, StencilCategory.VERIFICATIONS, 3, ORCHESTRATION_STENCILS),
 
   /**
    * App dynamics state type.
    */
-  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, ORCHESTRATION_STENCILS),
+  APP_DYNAMICS(AppDynamicsState.class, StencilCategory.VERIFICATIONS, 2, ORCHESTRATION_STENCILS),
 
   /**
    * Email state type.
