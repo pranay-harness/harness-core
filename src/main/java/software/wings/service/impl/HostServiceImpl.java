@@ -12,14 +12,21 @@ import static software.wings.beans.ResponseMessage.ResponseTypeEnum.WARN;
 import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import com.mongodb.DuplicateKeyException;
+import org.apache.commons.collections.IteratorUtils;
+import org.mongodb.morphia.aggregation.Accumulator;
+import org.mongodb.morphia.aggregation.Group;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
@@ -32,11 +39,13 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HistoryService;
@@ -52,6 +61,7 @@ import software.wings.utils.Validator;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -78,6 +88,7 @@ public class HostServiceImpl implements HostService {
   @Inject private HistoryService historyService;
   @Inject private ConfigService configService;
   @Inject private ExecutorService executorService;
+  @Inject private AppService appService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)
@@ -215,6 +226,33 @@ public class HostServiceImpl implements HostService {
         .withCode(ErrorCodes.DUPLICATE_HOST_NAMES)
         .withMessage(Joiner.on(",").join(duplicateHostNames))
         .build();
+  }
+
+  @Override
+  public int getHostCountByInfrastructure(String infraId) {
+    return (int) wingsPersistence.createQuery(Host.class).field("infraId").equal(infraId).countAll();
+  }
+
+  @Override
+  public List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String infraId) {
+    List<Application> apps =
+        appService.list(aPageRequest().withLimit("1000").withOffset("0").addFieldsIncluded("name").build(), false, 0)
+            .getResponse();
+    ImmutableMap<String, Application> applicationsById = Maps.uniqueIndex(apps, Application::getUuid);
+
+    Query<ApplicationHost> query = wingsPersistence.createQuery(ApplicationHost.class).field("infraId").equal(infraId);
+
+    Iterator<ApplicationHostUsage> hostUsageIterator =
+        wingsPersistence.getDatastore()
+            .createAggregation(ApplicationHost.class)
+            .match(query)
+            .group("appId", Group.grouping("count", new Accumulator("$sum", 1)))
+            .aggregate(ApplicationHostUsage.class);
+
+    hostUsageIterator.forEachRemaining(applicationHostUsage
+        -> applicationHostUsage.setAppName(applicationsById.get(applicationHostUsage.getAppId()).getName()));
+
+    return IteratorUtils.toList(hostUsageIterator);
   }
 
   /* (non-Javadoc)

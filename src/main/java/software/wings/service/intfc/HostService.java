@@ -6,6 +6,7 @@ import software.wings.beans.ApplicationHost;
 import software.wings.beans.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Tag;
+import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.utils.BoundedInputStream;
@@ -149,4 +150,20 @@ public interface HostService {
    * @return the response message
    */
   ResponseMessage bulkSave(String infraId, String envId, Host baseHost);
+
+  /**
+   * Gets host count by infrastructure.
+   *
+   * @param infraId the infra id
+   * @return the host count by infrastructure
+   */
+  int getHostCountByInfrastructure(String infraId);
+
+  /**
+   * Gets host usage by application for infrastructure.
+   *
+   * @param uuid the uuid
+   * @return the host usage by application for infrastructure
+   */
+  List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String uuid);
 }

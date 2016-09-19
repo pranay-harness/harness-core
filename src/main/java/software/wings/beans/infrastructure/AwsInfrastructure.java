@@ -114,6 +114,7 @@ public class AwsInfrastructure extends Infrastructure {
     private String secretAccessKey;
     private String serviceUrl;
     private String name;
+    private HostUsage hostUsage;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -174,6 +175,17 @@ public class AwsInfrastructure extends Infrastructure {
      */
     public Builder withName(String name) {
       this.name = name;
+      return this;
+    }
+
+    /**
+     * With host usage builder.
+     *
+     * @param hostUsage the host usage
+     * @return the builder
+     */
+    public Builder withHostUsage(HostUsage hostUsage) {
+      this.hostUsage = hostUsage;
       return this;
     }
 
@@ -265,6 +277,7 @@ public class AwsInfrastructure extends Infrastructure {
           .withSecretAccessKey(secretAccessKey)
           .withServiceUrl(serviceUrl)
           .withName(name)
+          .withHostUsage(hostUsage)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -285,6 +298,7 @@ public class AwsInfrastructure extends Infrastructure {
       awsInfrastructure.setSecretAccessKey(secretAccessKey);
       awsInfrastructure.setServiceUrl(serviceUrl);
       awsInfrastructure.setName(name);
+      awsInfrastructure.setHostUsage(hostUsage);
       awsInfrastructure.setUuid(uuid);
       awsInfrastructure.setAppId(appId);
       awsInfrastructure.setCreatedBy(createdBy);

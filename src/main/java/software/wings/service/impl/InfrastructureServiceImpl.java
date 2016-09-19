@@ -2,11 +2,14 @@ package software.wings.service.impl;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
+import software.wings.beans.infrastructure.ApplicationHostUsage;
+import software.wings.beans.infrastructure.HostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -36,8 +39,20 @@ public class InfrastructureServiceImpl implements InfrastructureService {
    * @see software.wings.service.intfc.InfrastructureService#list(software.wings.dl.PageRequest)
    */
   @Override
-  public PageResponse<Infrastructure> list(PageRequest<Infrastructure> req) {
-    return wingsPersistence.query(Infrastructure.class, req);
+  public PageResponse<Infrastructure> list(PageRequest<Infrastructure> req, boolean overview) {
+    PageResponse<Infrastructure> infrastructures = wingsPersistence.query(Infrastructure.class, req);
+    if (overview) {
+      infrastructures.getResponse().forEach(
+          infrastructure -> { infrastructure.setHostUsage(getInfrastructureHostUsage(infrastructure)); });
+    }
+    return infrastructures;
+  }
+
+  private HostUsage getInfrastructureHostUsage(Infrastructure infrastructure) {
+    int totalCount = hostService.getHostCountByInfrastructure(infrastructure.getUuid());
+    List<ApplicationHostUsage> applicationHostUsages =
+        hostService.getInfrastructureHostUsageByApplication(infrastructure.getUuid());
+    return aHostUsage().withTotalCount(totalCount).withApplicationHosts(applicationHostUsages).build();
   }
 
   /* (non-Javadoc)

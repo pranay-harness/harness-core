@@ -70,7 +70,7 @@ public class InfrastructureServiceTest extends WingsBaseTest {
     PageRequest<Infrastructure> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(infrastructure));
     when(wingsPersistence.query(Infrastructure.class, pageRequest)).thenReturn(pageResponse);
-    PageResponse<Infrastructure> infrastructures = infrastructureService.list(pageRequest);
+    PageResponse<Infrastructure> infrastructures = infrastructureService.list(pageRequest, true);
     assertThat(infrastructures).containsAll(asList(infrastructure));
   }
 

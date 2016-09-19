@@ -13,11 +13,9 @@ public class StaticInfrastructure extends Infrastructure {
     super(InfrastructureType.STATIC);
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String name;
+    private HostUsage hostUsage;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -28,111 +26,59 @@ public class StaticInfrastructure extends Infrastructure {
 
     private Builder() {}
 
-    /**
-     * A static infrastructure builder.
-     *
-     * @return the builder
-     */
     public static Builder aStaticInfrastructure() {
       return new Builder();
     }
 
-    /**
-     * With name builder.
-     *
-     * @param name the name
-     * @return the builder
-     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
+    public Builder withHostUsage(HostUsage hostUsage) {
+      this.hostUsage = hostUsage;
+      return this;
+    }
+
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aStaticInfrastructure()
           .withName(name)
+          .withHostUsage(hostUsage)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -142,14 +88,10 @@ public class StaticInfrastructure extends Infrastructure {
           .withActive(active);
     }
 
-    /**
-     * Build static infrastructure.
-     *
-     * @return the static infrastructure
-     */
     public StaticInfrastructure build() {
       StaticInfrastructure staticInfrastructure = new StaticInfrastructure();
       staticInfrastructure.setName(name);
+      staticInfrastructure.setHostUsage(hostUsage);
       staticInfrastructure.setUuid(uuid);
       staticInfrastructure.setAppId(appId);
       staticInfrastructure.setCreatedBy(createdBy);

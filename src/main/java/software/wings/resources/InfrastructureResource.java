@@ -46,7 +46,7 @@ public class InfrastructureResource {
    */
   @GET
   public RestResponse<PageResponse<Infrastructure>> list(@BeanParam PageRequest<Infrastructure> pageRequest) {
-    return new RestResponse<>(infrastructureService.list(pageRequest));
+    return new RestResponse<>(infrastructureService.list(pageRequest, true));
   }
 
   @GET

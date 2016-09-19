@@ -13,9 +13,10 @@ public interface InfrastructureService {
    * List.
    *
    * @param pageRequest the page request
+   * @param overview
    * @return the page response
    */
-  PageResponse<Infrastructure> list(PageRequest<Infrastructure> pageRequest);
+  PageResponse<Infrastructure> list(PageRequest<Infrastructure> pageRequest, boolean overview);
 
   /**
    * Save.
