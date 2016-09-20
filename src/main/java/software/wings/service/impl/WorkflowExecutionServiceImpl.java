@@ -965,6 +965,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ElementExecutionSummary> elementExecutionSummaryMap) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
             .addFilter("parentInstanceId", Operator.IN, repeatStateExecutionInstance.getUuid())
