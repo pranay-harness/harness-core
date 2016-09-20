@@ -164,8 +164,8 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     List<PartitionElement> partitions = processor.partitions("2", "30 %", "50 %");
     assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();
     assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull();
-    assertThat(partitions.get(1).getPartitionElements()).hasSize(2).doesNotContainNull();
-    assertThat(partitions.get(2).getPartitionElements()).hasSize(3).doesNotContainNull();
+    assertThat(partitions.get(1).getPartitionElements()).hasSize(3).doesNotContainNull();
+    assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull();
 
     String[] instanceIds = new String[] {instance1.getUuid(), instance2.getUuid(), instance3.getUuid(),
         instance4.getUuid(), instance5.getUuid(), instance6.getUuid(), instance7.getUuid()};
