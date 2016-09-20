@@ -1,6 +1,10 @@
 package software.wings.beans.infrastructure;
 
+import com.google.common.base.MoreObjects;
+
 import org.mongodb.morphia.annotations.Id;
+
+import java.util.Objects;
 
 /**
  * Created by anubhaw on 9/16/16.
@@ -62,6 +66,29 @@ public class ApplicationHostUsage {
    */
   public void setCount(int count) {
     this.count = count;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(appId, appName, count);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ApplicationHostUsage other = (ApplicationHostUsage) obj;
+    return Objects.equals(this.appId, other.appId) && Objects.equals(this.appName, other.appName)
+        && Objects.equals(this.count, other.count);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("appId", appId).add("appName", appName).add("count", count).toString();
   }
 
   /**

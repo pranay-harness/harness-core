@@ -13,7 +13,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.InfrastructureService;
 
 import javax.ws.rs.BeanParam;
@@ -34,7 +33,6 @@ import javax.ws.rs.Produces;
 @ExceptionMetered
 @Produces("application/json")
 @Consumes("application/json")
-@PublicApi // TODO::remove
 public class InfrastructureResource {
   @Inject private InfrastructureService infrastructureService;
 
@@ -49,6 +47,13 @@ public class InfrastructureResource {
     return new RestResponse<>(infrastructureService.list(pageRequest, true));
   }
 
+  /**
+   * List infra host rest response.
+   *
+   * @param infraId     the infra id
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   @Path("{infraId}/hosts")
   public RestResponse<PageRequest<Host>> listInfraHost(

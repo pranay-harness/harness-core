@@ -6,9 +6,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyCollection;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Host.Builder.aHost;
@@ -19,6 +21,7 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.infrastructure.ApplicationHostUsage.Builder.anApplicationHostUsage;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -32,14 +35,18 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.Host;
@@ -50,9 +57,11 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureService;
@@ -71,19 +80,21 @@ import javax.inject.Inject;
  */
 public class HostServiceTest extends WingsBaseTest {
   @Mock private HostCsvFileHelper csvFileHelper;
-  @Mock private WingsPersistence wingsPersistence;
+  @Mock(answer = Answers.RETURNS_DEEP_STUBS) private WingsPersistence wingsPersistence;
   @Mock private InfrastructureService infrastructureService;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private SettingsService settingsService;
   @Mock private TagService tagService;
   @Mock private EnvironmentService environmentService;
   @Mock private NotificationService notificationService;
+  @Mock private AppService appService;
 
   @Inject @InjectMocks private HostService hostService;
 
   @Mock private Query<ApplicationHost> query;
   @Mock private FieldEnd end;
   @Mock private UpdateOperations<ApplicationHost> updateOperations;
+  @Mock private AggregationPipeline aggregationPipeline;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute().withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build()).build();
@@ -361,5 +372,28 @@ public class HostServiceTest extends WingsBaseTest {
     verify(wingsPersistence).update(host, updateOperations);
     verify(wingsPersistence).createUpdateOperations(ApplicationHost.class);
     verify(updateOperations).set("configTag", tag);
+  }
+
+  @Test
+  public void shouldGetInfrastructureHostUsageByApplication() {
+    List<Application> applications = asList(anApplication().withUuid("ID1").withName("NAME1").build(),
+        anApplication().withUuid("ID2").withName("NAME2").build());
+    PageResponse pageResponse = new PageResponse();
+    pageResponse.setResponse(applications);
+    when(appService.list(any(), eq(false), eq(0))).thenReturn(pageResponse);
+    when(wingsPersistence.getDatastore().createAggregation(ApplicationHost.class)).thenReturn(aggregationPipeline);
+    when(aggregationPipeline.match(query)).thenReturn(aggregationPipeline);
+    when(aggregationPipeline.group(anyString(), any())).thenReturn(aggregationPipeline);
+    when(aggregationPipeline.aggregate(ApplicationHostUsage.class))
+        .thenReturn(asList(anApplicationHostUsage().withAppId("ID1").withCount(1).build(),
+            anApplicationHostUsage().withAppId("ID2").withCount(2).build())
+                        .listIterator());
+
+    List<ApplicationHostUsage> usageByApplication = hostService.getInfrastructureHostUsageByApplication(INFRA_ID);
+
+    Assertions.assertThat(usageByApplication)
+        .hasSize(2)
+        .containsExactlyInAnyOrder(anApplicationHostUsage().withAppId("ID1").withAppName("NAME1").withCount(1).build(),
+            anApplicationHostUsage().withAppId("ID2").withAppName("NAME2").withCount(2).build());
   }
 }

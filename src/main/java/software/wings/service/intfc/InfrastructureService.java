@@ -1,9 +1,13 @@
 package software.wings.service.intfc;
 
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.utils.validation.Create;
+
+import javax.validation.Valid;
 
 /**
  * The Interface InfrastructureService.
@@ -24,7 +28,7 @@ public interface InfrastructureService {
    * @param infrastructure the infrastructure
    * @return the infrastructure
    */
-  Infrastructure save(Infrastructure infrastructure);
+  @ValidationGroups(Create.class) Infrastructure save(@Valid Infrastructure infrastructure);
 
   /**
    * Delete.

@@ -236,7 +236,9 @@ public class HostServiceImpl implements HostService {
   @Override
   public List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String infraId) {
     List<Application> apps =
-        appService.list(aPageRequest().withLimit("1000").withOffset("0").addFieldsIncluded("name").build(), false, 0)
+        appService
+            .list(aPageRequest().withLimit(PageRequest.UNLIMITED).withOffset("0").addFieldsIncluded("name").build(),
+                false, 0)
             .getResponse();
     ImmutableMap<String, Application> applicationsById = Maps.uniqueIndex(apps, Application::getUuid);
 
@@ -249,10 +251,11 @@ public class HostServiceImpl implements HostService {
             .group("appId", Group.grouping("count", new Accumulator("$sum", 1)))
             .aggregate(ApplicationHostUsage.class);
 
-    hostUsageIterator.forEachRemaining(applicationHostUsage
+    List<ApplicationHostUsage> hostUsageList = IteratorUtils.toList(hostUsageIterator);
+    hostUsageList.forEach(applicationHostUsage
         -> applicationHostUsage.setAppName(applicationsById.get(applicationHostUsage.getAppId()).getName()));
 
-    return IteratorUtils.toList(hostUsageIterator);
+    return hostUsageList;
   }
 
   /* (non-Javadoc)
