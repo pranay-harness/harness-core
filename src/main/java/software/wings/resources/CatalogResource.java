@@ -16,7 +16,6 @@ import software.wings.beans.ExecutionCredential.ExecutionType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
-import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 
 import java.io.IOException;
@@ -56,21 +55,17 @@ public class CatalogResource {
   private final Logger logger = LoggerFactory.getLogger(getClass());
 
   private CatalogService catalogService;
-  private JenkinsBuildService jenkinsBuildService;
   private SettingsService settingsService;
 
   /**
    * Creates a new catalog resource.
    *
    * @param catalogService      catalogService object.
-   * @param jenkinsBuildService JenkinsBuildService object.
    * @param settingsService     SettingService object
    */
   @Inject
-  public CatalogResource(
-      CatalogService catalogService, JenkinsBuildService jenkinsBuildService, SettingsService settingsService) {
+  public CatalogResource(CatalogService catalogService, SettingsService settingsService) {
     this.catalogService = catalogService;
-    this.jenkinsBuildService = jenkinsBuildService;
     this.settingsService = settingsService;
   }
 
@@ -95,17 +90,10 @@ public class CatalogResource {
     if (catalogTypes == null || catalogTypes.size() == 0) {
       catalogs.put(CatalogNames.EXECUTION_TYPE, ExecutionType.values());
       catalogs.put(CatalogNames.ENVIRONMENT_TYPE, EnvironmentType.values());
-      catalogs.put(CatalogNames.EXECUTION_TYPE, EnvironmentType.values());
       catalogs.putAll(catalogService.getCatalogs());
     } else {
       for (String catalogType : catalogTypes) {
         switch (catalogType) {
-          case CatalogNames.JENKINS_CONFIG: {
-            catalogs.put(catalogType,
-                settingsService.getSettingAttributesByType(
-                    uriInfo.getQueryParameters().getFirst(APP_ID), SettingVariableTypes.JENKINS));
-            break;
-          }
           case CONNECTION_ATTRIBUTES: {
             catalogs.put(CONNECTION_ATTRIBUTES,
                 settingsService.getSettingAttributesByType(
