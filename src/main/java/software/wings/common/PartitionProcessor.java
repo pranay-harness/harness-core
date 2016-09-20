@@ -219,7 +219,7 @@ public interface PartitionProcessor {
       int count;
       val = val.trim();
       if (val.endsWith(PCT)) {
-        count = (int) Math.round((total * Integer.parseInt(val.substring(0, val.length() - 1).trim())) / 100.0);
+        count = (int) Math.ceil((total * Integer.parseInt(val.substring(0, val.length() - 1).trim())) / 100.0);
       } else {
         count = Integer.parseInt(val.trim());
       }

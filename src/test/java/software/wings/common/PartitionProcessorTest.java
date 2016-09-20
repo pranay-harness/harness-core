@@ -83,16 +83,13 @@ public class PartitionProcessorTest {
     SamplePartitionProcessor processor = new SamplePartitionProcessor(sampleElements);
     List<PartitionElement> partitions = processor.withPercentages("10 % ", "20 %", "30 %", "40%").partitions();
     assertThat(partitions).isNotNull().hasSize(4).doesNotContainNull();
-    assertThat(partitions.get(0).getPartitionElements()).hasSize(1).doesNotContainNull().containsExactly(e1);
-    assertThat(partitions.get(1).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e2, e3);
+    assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e1, e2);
+    assertThat(partitions.get(1).getPartitionElements()).hasSize(3).doesNotContainNull().containsExactly(e3, e4, e5);
     assertThat(partitions.get(2).getPartitionElements())
         .hasSize(4)
         .doesNotContainNull()
-        .containsExactly(e4, e5, e6, e7);
-    assertThat(partitions.get(3).getPartitionElements())
-        .hasSize(5)
-        .doesNotContainNull()
-        .containsExactly(e8, e9, e10, e11, e12);
+        .containsExactly(e6, e7, e8, e9);
+    assertThat(partitions.get(3).getPartitionElements()).hasSize(3).doesNotContainNull().containsExactly(e10, e11, e12);
   }
 
   /**
@@ -154,13 +151,12 @@ public class PartitionProcessorTest {
     SamplePartitionProcessor processor =
         (SamplePartitionProcessor) new SamplePartitionProcessor(sampleElements).withPercentages("33%", "50%", "30 %");
     List<PartitionElement> partitions = processor.partitions();
-    assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();
-    assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e1, e2);
+    assertThat(partitions).isNotNull().hasSize(2).doesNotContainNull();
+    assertThat(partitions.get(0).getPartitionElements()).hasSize(3).doesNotContainNull().containsExactly(e1, e2, e3);
     assertThat(partitions.get(1).getPartitionElements())
         .hasSize(4)
         .doesNotContainNull()
-        .containsExactly(e3, e4, e5, e6);
-    assertThat(partitions.get(2).getPartitionElements()).hasSize(1).doesNotContainNull().containsExactly(e7);
+        .containsExactly(e4, e5, e6, e7);
   }
 
   /**
