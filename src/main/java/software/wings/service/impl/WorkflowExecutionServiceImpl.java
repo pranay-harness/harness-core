@@ -1141,6 +1141,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
             .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")
