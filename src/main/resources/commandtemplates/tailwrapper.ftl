@@ -2,7 +2,6 @@
 
 export PATH=$PATH:/usr/local/bin
 
-set -x
 # Start tail.
 <#list tailPatterns as tailPattern>
 export GREP_COLOR="01;32"
