@@ -6,8 +6,9 @@ set -x
 # Start tail.
 <#list tailPatterns as tailPattern>
 export GREP_COLOR="01;32"
+touch "${tailPattern.filePath}"
 TAIL_FILE_PATH=$(realpath "${tailPattern.filePath}")
-touch "$TAIL_FILE_PATH"
+touch $TAIL_FILE_PATH
 tail -F -n0 "$TAIL_FILE_PATH" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
 </#list>
