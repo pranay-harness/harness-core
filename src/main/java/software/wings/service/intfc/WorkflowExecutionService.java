@@ -46,10 +46,11 @@ public interface WorkflowExecutionService {
    * @param pageRequest  the page request
    * @param includeGraph the include graph
    * @param runningOnly  the running only
+   * @param withBreakdownAndSummary
    * @return the page response
    */
-  PageResponse<WorkflowExecution> listExecutions(
-      PageRequest<WorkflowExecution> pageRequest, boolean includeGraph, boolean runningOnly);
+  PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,
+      boolean runningOnly, boolean withBreakdownAndSummary);
 
   /**
    * Trigger pipeline execution.

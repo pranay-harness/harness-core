@@ -215,6 +215,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowExecutionName();
+    verify(context, times(1)).getWorkflowType();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
 
@@ -295,6 +296,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(2)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
     verify(context, times(3)).getWorkflowExecutionId();
+    verify(context, times(1)).getWorkflowType();
     verify(context, times(4)).renderExpression(anyString());
     verify(context, times(1)).getWorkflowExecutionName();
     verify(context, times(1)).getStateExecutionInstanceId();

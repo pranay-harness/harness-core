@@ -34,6 +34,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Builder;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
@@ -67,6 +68,7 @@ public class ActivityServiceTest extends WingsBaseTest {
                                              .withStatus(ExecutionStatus.RUNNING)
                                              .withWorkflowExecutionId("WORKFLOW_ID")
                                              .withWorkflowExecutionName("Workflow 1")
+                                             .withWorkflowType(WorkflowType.SIMPLE)
                                              .withStateExecutionInstanceId("STATE_ID")
                                              .withStateExecutionInstanceName("STATE")
                                              .withServiceInstanceId(SERVICE_INSTANCE_ID);

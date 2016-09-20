@@ -290,7 +290,7 @@ public class StatisticsServiceImpl implements StatisticsService {
                            .build())
             .build();
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
+        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
 
     int artifactCount =
         workflowExecutions.stream()
@@ -307,8 +307,7 @@ public class StatisticsServiceImpl implements StatisticsService {
       Integer numOfDays, Long fromDateEpochMilli) {
     PageRequest pageRequest =
         aPageRequest()
-            .withLimit("10000")
-            .withOffset("0")
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, fromDateEpochMilli).build())
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
@@ -317,7 +316,7 @@ public class StatisticsServiceImpl implements StatisticsService {
             .build();
 
     List<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
+        workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
     List<DayActivityStatistics> dayActivityStatisticsList = new ArrayList<>(numOfDays);
 
     Map<Long, Map<ExecutionStatus, Long>> executionStatusCountByDay =
