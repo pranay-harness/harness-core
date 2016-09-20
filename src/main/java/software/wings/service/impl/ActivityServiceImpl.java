@@ -14,6 +14,7 @@ import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.beans.command.InitCommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -78,9 +79,17 @@ public class ActivityServiceImpl implements ActivityService {
     if (commandUnits != null && commandUnits.size() > 0) {
       commandUnits.add(0, new InitCommandUnit());
       commandUnits.add(new CleanupCommandUnit());
-      commandUnits.forEach(commandUnit -> {
-        commandUnit.setExecutionResult(logService.getUnitExecutionResult(appId, activityId, commandUnit.getName()));
-      });
+      boolean markNextQueued = false;
+      for (CommandUnit commandUnit : commandUnits) {
+        ExecutionResult executionResult = ExecutionResult.QUEUED;
+        if (!markNextQueued) {
+          logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
+          if (executionResult == ExecutionResult.FAILURE || executionResult == ExecutionResult.RUNNING) {
+            markNextQueued = true;
+          }
+        }
+        commandUnit.setExecutionResult(executionResult);
+      }
     }
     return commandUnits;
   }

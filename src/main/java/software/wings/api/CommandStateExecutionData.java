@@ -227,12 +227,14 @@ public class CommandStateExecutionData extends StateExecutionData {
           case FAILURE:
             countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
             break;
+          case RUNNING:
+            countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
+            break;
+          case QUEUED:
+            countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
+            break;
         }
       });
-      if (getStatus() == ExecutionStatus.RUNNING
-          && (countsByStatuses.getFailed() + countsByStatuses.getSuccess()) < commandUnits.size()) {
-        countsByStatuses.setInprogress(1);
-      }
       data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
     }
     putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
@@ -244,12 +246,10 @@ public class CommandStateExecutionData extends StateExecutionData {
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
-    // putNotNull(executionDetails, "hostId", anExecutionDataValue().withDisplayName("").withValue(activityId).build());
     putNotNull(
         executionDetails, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());
     putNotNull(executionDetails, "templateName",
         anExecutionDataValue().withDisplayName("Config").withValue(templateName).build());
-    // putNotNull(executionDetails, "templateId", templateId);
     putNotNull(executionDetails, "commandName",
         anExecutionDataValue().withDisplayName("Command").withValue(commandName).build());
     putNotNull(
