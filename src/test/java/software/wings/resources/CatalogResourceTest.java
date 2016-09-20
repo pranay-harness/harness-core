@@ -31,7 +31,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.service.intfc.CatalogService;
-import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.ResourceTestRule;
 
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MultivaluedMap;
 
 /**
  * The Class CatalogResourceTest.
@@ -49,7 +47,6 @@ import javax.ws.rs.core.MultivaluedMap;
 @RunWith(JUnitParamsRunner.class)
 public class CatalogResourceTest extends WingsBaseTest {
   private static final CatalogService catalogService = mock(CatalogService.class);
-  private static final JenkinsBuildService jenkinsBuildService = mock(JenkinsBuildService.class);
   private static final SettingsService settingsService = mock(SettingsService.class);
 
   /**
@@ -57,9 +54,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder()
-          .addResource(new CatalogResource(catalogService, jenkinsBuildService, settingsService))
-          .build();
+      ResourceTestRule.builder().addResource(new CatalogResource(catalogService, settingsService)).build();
 
   /**
    * The Verifier.
@@ -68,7 +63,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   public Verifier verifier = new Verifier() {
     @Override
     protected void verify() throws Throwable {
-      verifyNoMoreInteractions(catalogService, jenkinsBuildService, settingsService);
+      verifyNoMoreInteractions(catalogService, settingsService);
     }
   };
 
@@ -80,7 +75,6 @@ public class CatalogResourceTest extends WingsBaseTest {
   @Before
   public void setupMocks() throws IOException {
     when(settingsService.get(anyString())).thenReturn(aSettingAttribute().withValue(new JenkinsConfig()).build());
-    when(jenkinsBuildService.getBuilds(any(MultivaluedMap.class), any(JenkinsConfig.class))).thenReturn(newArrayList());
     when(settingsService.getSettingAttributesByType(anyString(), any(SettingVariableTypes.class)))
         .thenReturn(newArrayList());
   }
@@ -90,7 +84,7 @@ public class CatalogResourceTest extends WingsBaseTest {
    */
   @After
   public void tearDown() {
-    reset(catalogService, jenkinsBuildService, settingsService);
+    reset(catalogService, settingsService);
   }
 
   /**
@@ -111,8 +105,7 @@ public class CatalogResourceTest extends WingsBaseTest {
   }
 
   private Object[][] catalogNames() {
-    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.JENKINS_CONFIG), null},
-        {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES), null},
+    return new Object[][] {{UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.CONNECTION_ATTRIBUTES), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.BASTION_HOST_ATTRIBUTES), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.EXECUTION_TYPE), null},
         {UPPER_UNDERSCORE.to(UPPER_CAMEL, CatalogNames.ENVIRONMENT_TYPE), null}};

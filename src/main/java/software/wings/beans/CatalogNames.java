@@ -7,10 +7,6 @@ package software.wings.beans;
  */
 public interface CatalogNames {
   /**
-   * The constant JENKINS_CONFIG.
-   */
-  String JENKINS_CONFIG = "JENKINS_CONFIG";
-  /**
    * The constant CONNECTION_ATTRIBUTES.
    */
   String CONNECTION_ATTRIBUTES = "CONNECTION_ATTRIBUTES";
