@@ -57,7 +57,24 @@ public enum ArtifactType {
                   .withId(UUIDGenerator.graphIdGenerator("node"))
                   .withName("Process Running")
                   .withType(PROCESS_CHECK_RUNNING.name())
-                  .addProperty("commandString", "set -x\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"")
+                  .addProperty("commandString",
+                      "set -x\n"
+                          + "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    exit 0\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build())
           .buildPipeline();
     }

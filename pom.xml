@@ -1037,7 +1037,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="killall -9 java"
+                                         command="killall java; /home/ubuntu/waitForJavaShutdown.sh"
                                          timeout="120000"/>
                                 <echo message="backup jar file"/>
                                 <sshexec trust="true" failonerror="false"

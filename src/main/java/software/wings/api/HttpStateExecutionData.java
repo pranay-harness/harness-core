@@ -9,6 +9,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.common.base.MoreObjects;
 
+import org.mongodb.morphia.annotations.Transient;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import software.wings.common.Constants;
@@ -33,7 +34,7 @@ public class HttpStateExecutionData extends StateExecutionData {
   private String assertionStatement;
   private String assertionStatus;
 
-  private Document document;
+  @Transient private transient Document document;
 
   /**
    * Gets http url.

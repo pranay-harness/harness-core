@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import software.wings.beans.stats.DeploymentActivityStatistics;
+import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 
 import java.util.List;
@@ -38,4 +39,11 @@ public interface StatisticsService {
    * @return the deployment activities
    */
   DeploymentActivityStatistics getDeploymentActivities(Integer numOfDays, Long endDate);
+
+  /**
+   * Gets user stats.
+   *
+   * @return the user stats
+   */
+  UserStatistics getUserStats();
 }
