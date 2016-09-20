@@ -83,7 +83,7 @@ public class ActivityServiceImpl implements ActivityService {
       for (CommandUnit commandUnit : commandUnits) {
         ExecutionResult executionResult = ExecutionResult.QUEUED;
         if (!markNextQueued) {
-          logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
+          executionResult = logService.getUnitExecutionResult(appId, activityId, commandUnit.getName());
           if (executionResult == ExecutionResult.FAILURE || executionResult == ExecutionResult.RUNNING) {
             markNextQueued = true;
           }
