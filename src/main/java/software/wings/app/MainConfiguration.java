@@ -75,6 +75,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
     defaultSwaggerBundleConfiguration.setResourcePackage("software.wings.resources,software.wings.utils");
+    defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
   }
 

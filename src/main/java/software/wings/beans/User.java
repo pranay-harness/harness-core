@@ -44,6 +44,8 @@ public class User extends Base implements Principal {
 
   private String companyName;
 
+  private long statsFetchedOn;
+
   /**
    * Return partial user object without sensitive information.
    *
@@ -237,10 +239,29 @@ public class User extends Base implements Principal {
     this.companyName = companyName;
   }
 
+  /**
+   * Gets stats fetched on.
+   *
+   * @return the stats fetched on
+   */
+  public long getStatsFetchedOn() {
+    return statsFetchedOn;
+  }
+
+  /**
+   * Sets stats fetched on.
+   *
+   * @param statsFetchedOn the stats fetched on
+   */
+  public void setStatsFetchedOn(long statsFetchedOn) {
+    this.statsFetchedOn = statsFetchedOn;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(name, email, passwordHash, roles, lastLogin, password, token, emailVerified, companyName);
+        + Objects.hash(
+              name, email, passwordHash, roles, lastLogin, password, token, emailVerified, companyName, statsFetchedOn);
   }
 
   @Override
@@ -259,7 +280,8 @@ public class User extends Base implements Principal {
         && Objects.equals(this.passwordHash, other.passwordHash) && Objects.equals(this.roles, other.roles)
         && Objects.equals(this.lastLogin, other.lastLogin) && Objects.equals(this.password, other.password)
         && Objects.equals(this.token, other.token) && Objects.equals(this.emailVerified, other.emailVerified)
-        && Objects.equals(this.companyName, other.companyName);
+        && Objects.equals(this.companyName, other.companyName)
+        && Objects.equals(this.statsFetchedOn, other.statsFetchedOn);
   }
 
   @Override
@@ -274,6 +296,7 @@ public class User extends Base implements Principal {
         .add("token", token)
         .add("emailVerified", emailVerified)
         .add("companyName", companyName)
+        .add("statsFetchedOn", statsFetchedOn)
         .toString();
   }
 
@@ -290,6 +313,7 @@ public class User extends Base implements Principal {
     private String token;
     private boolean emailVerified = false;
     private String companyName;
+    private long statsFetchedOn;
     private String uuid;
     private String appId;
     private User createdBy;
@@ -409,6 +433,17 @@ public class User extends Base implements Principal {
     }
 
     /**
+     * With stats fetched on builder.
+     *
+     * @param statsFetchedOn the stats fetched on
+     * @return the builder
+     */
+    public Builder withStatsFetchedOn(long statsFetchedOn) {
+      this.statsFetchedOn = statsFetchedOn;
+      return this;
+    }
+
+    /**
      * With uuid builder.
      *
      * @param uuid the uuid
@@ -501,6 +536,7 @@ public class User extends Base implements Principal {
           .withToken(token)
           .withEmailVerified(emailVerified)
           .withCompanyName(companyName)
+          .withStatsFetchedOn(statsFetchedOn)
           .withUuid(uuid)
           .withAppId(appId)
           .withCreatedBy(createdBy)
@@ -526,6 +562,7 @@ public class User extends Base implements Principal {
       user.setToken(token);
       user.setEmailVerified(emailVerified);
       user.setCompanyName(companyName);
+      user.setStatsFetchedOn(statsFetchedOn);
       user.setUuid(uuid);
       user.setAppId(appId);
       user.setCreatedBy(createdBy);

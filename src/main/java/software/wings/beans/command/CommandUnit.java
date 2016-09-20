@@ -219,7 +219,9 @@ public abstract class CommandUnit {
     FAILURE, /**
               * Running execution result.
               */
-    RUNNING;
+    RUNNING,
+
+    QUEUED;
 
     /**
      * Created by peeyushaggarwal on 7/8/16.

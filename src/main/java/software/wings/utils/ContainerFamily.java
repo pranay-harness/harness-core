@@ -59,7 +59,24 @@ public enum ContainerFamily {
                   .withId(graphIdGenerator("node"))
                   .withName("Process Running")
                   .withType(PROCESS_CHECK_RUNNING.name())
-                  .addProperty("commandString", "set -x\npgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"")
+                  .addProperty("commandString",
+                      "set -x\n"
+                          + "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"\\-Dcatalina.home=$WINGS_RUNTIME_PATH/tomcat\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    exit 0\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build(),
               aNode()
                   .withX(350)
@@ -187,7 +204,7 @@ public enum ContainerFamily {
                       "rm -rf tomcat\n"
                           + (".".equals(appContainer.getStackRootDirectory())
                                     ? ""
-                                    : "rm -rf " + appContainer.getStackRootDirectory())
+                                    : "rm -rf " + appContainer.getStackRootDirectory() + "\n")
                           + appContainer.getFileType().getUnarchiveCommand(
                                 appContainer.getFileName(), appContainer.getStackRootDirectory(), "tomcat")
                           + "\nchmod +x tomcat/bin/*")
@@ -249,7 +266,24 @@ public enum ContainerFamily {
                   .withId(graphIdGenerator("node"))
                   .withName("Process Running")
                   .withType(PROCESS_CHECK_RUNNING.name())
-                  .addProperty("commandString", "set -x\npgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"")
+                  .addProperty("commandString",
+                      "set -x\n"
+                          + "i=0\n"
+                          + "while [ \"$i\" -lt 30 ]\n"
+                          + "do\n"
+                          + "  pgrep -f \"\\-Djboss.home.dir=$WINGS_RUNTIME_PATH/jboss\"\n"
+                          + "  rc=$?\n"
+                          + "  if [ \"$rc\" -eq 0 ]\n"
+                          + "  then\n"
+                          + "    exit 0\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  else\n"
+                          + "    sleep 1\n"
+                          + "    i=$((i+1))\n"
+                          + "  fi\n"
+                          + "done\n"
+                          + "exit 1")
                   .build(),
               aNode()
                   .withX(350)

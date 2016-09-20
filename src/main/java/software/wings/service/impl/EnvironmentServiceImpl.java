@@ -212,7 +212,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withType(StateType.HTTP.name())
                         .withX(590)
                         .withY(50)
-                        .addProperty("url", "http://www.google.com")
+                        .addProperty("url", "http://${host.name}:8080")
                         .addProperty("method", "GET")
                         .addProperty("assertion", "${httpResponseCode}==200")
                         .build(),
@@ -222,7 +222,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withType(StateType.WAIT.name())
                         .withX(740)
                         .withY(50)
-                        .addProperty("duration", "120")
+                        .addProperty("duration", "30")
                         .build(),
                     aNode()
                         .withId("n7")
@@ -249,7 +249,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                         .withY(150)
                         .addProperty("applicationName", "MyApp")
                         .addProperty("metricPath",
-                            "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}:8005|Average Response Time (ms)")
+                            "Overall Application Performance|MyTier|Individual Nodes|Tomcat@${host.hostName}|Average Response Time (ms)")
                         .addProperty("assertion", "${xpath('//metric-value/value/text()')} < 100")
                         .build())
                 .addLinks(

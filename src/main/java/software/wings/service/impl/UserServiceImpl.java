@@ -136,6 +136,13 @@ public class UserServiceImpl implements UserService {
     return true;
   }
 
+  @Override
+  public void updateStatsFetchedOnForUser(User user) {
+    user.setStatsFetchedOn(System.currentTimeMillis());
+    wingsPersistence.updateFields(
+        User.class, user.getUuid(), ImmutableMap.of("statsFetchedOn", user.getStatsFetchedOn()));
+  }
+
   private boolean userAlreadyRegistered(User user) {
     return wingsPersistence.createQuery(User.class)
                .field("appId")
@@ -192,7 +199,11 @@ public class UserServiceImpl implements UserService {
    */
   @Override
   public User get(String userId) {
-    return wingsPersistence.get(User.class, userId);
+    User user = wingsPersistence.get(User.class, userId);
+    if (user == null) {
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    return user;
   }
 
   /* (non-Javadoc)

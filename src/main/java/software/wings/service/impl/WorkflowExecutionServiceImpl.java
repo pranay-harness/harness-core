@@ -546,6 +546,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
         workflowExecution.getExecutionArgs().setArtifactIdNames(
             artifacts.stream().collect(Collectors.toMap(Artifact::getUuid, Artifact::getDisplayName)));
+        if (artifacts.size() > 0) {
+          workflowExecution.getExecutionArgs().setReleaseId(artifacts.get(0).getRelease().getUuid());
+        }
 
         List<ServiceElement> services = new ArrayList<>();
         artifacts.forEach(artifact -> {
@@ -965,6 +968,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       Map<String, ElementExecutionSummary> elementExecutionSummaryMap) {
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
             .addFilter("parentInstanceId", Operator.IN, repeatStateExecutionInstance.getUuid())

@@ -87,4 +87,10 @@ public interface UserService {
    * @return the string
    */
   boolean verifyEmail(String token);
+
+  /**
+   * Update stats fetched on.
+   * @param user
+   */
+  void updateStatsFetchedOnForUser(User user);
 }

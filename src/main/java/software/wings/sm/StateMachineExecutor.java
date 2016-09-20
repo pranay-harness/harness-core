@@ -678,6 +678,7 @@ public class StateMachineExecutor {
         boolean updated = markAbortingState(workflowExecutionEvent);
         PageRequest<StateExecutionInstance> pageRequest =
             aPageRequest()
+                .withLimit(PageRequest.UNLIMITED)
                 .addFilter("appId", Operator.EQ, workflowExecutionEvent.getAppId())
                 .addFilter("executionUuid", Operator.EQ, workflowExecutionEvent.getExecutionUuid())
                 .addFilter("status", Operator.IN, ExecutionStatus.ABORTING)
@@ -755,6 +756,7 @@ public class StateMachineExecutor {
 
     PageRequest<StateExecutionInstance> pageRequest =
         aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", Operator.EQ, parentStateExecutionInstance.getAppId())
             .addFilter("executionUuid", Operator.EQ, parentStateExecutionInstance.getExecutionUuid())
             .addFilter("parentInstanceId", Operator.IN, parentStateExecutionInstance.getUuid())

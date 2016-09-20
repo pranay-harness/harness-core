@@ -43,6 +43,7 @@ public enum StencilCategory {
   COPY, /**
          * Others stencil category.
          */
+  CLOUD(3),
   OTHERS(10);
 
   private String displayName;
@@ -51,7 +52,7 @@ public enum StencilCategory {
   private Integer displayOrder = 3;
 
   StencilCategory() {
-    this(null, null);
+    this(null, 3);
   }
 
   StencilCategory(Integer displayOrder) {

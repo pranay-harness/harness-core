@@ -15,6 +15,7 @@ import static software.wings.beans.SortOrder.Builder.aSortOrder;
 import static software.wings.beans.stats.DeploymentStatistics.Builder.aDeploymentStatistics;
 import static software.wings.beans.stats.KeyStatistics.Builder.aKeyStatistics;
 import static software.wings.beans.stats.TopConsumer.Builder.aTopConsumer;
+import static software.wings.beans.stats.UserStatistics.Builder.anUserStatistics;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
@@ -32,6 +33,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
+import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.ActiveArtifactStatistics;
@@ -43,12 +45,15 @@ import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
+import software.wings.beans.stats.UserStatistics;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
+import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 
@@ -61,6 +66,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.inject.Inject;
@@ -77,6 +83,8 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private ActivityService activityService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private UserService userService;
+  @Inject private ExecutorService executorService;
 
   @Override
   public List<WingsStatistics> getSummary() {
@@ -262,6 +270,37 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     long fromDateEpochMilli = endDate - MILLIS_IN_A_DAY * (numOfDays - 1);
     return getDeploymentActivitiesForXDaysStartingFrom(numOfDays, fromDateEpochMilli);
+  }
+
+  @Override
+  public UserStatistics getUserStats() {
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return new UserStatistics();
+    }
+    long statsFetchedOn = user.getStatsFetchedOn();
+
+    PageRequest pageRequest =
+        aPageRequest()
+            .withLimit("10000")
+            .withOffset("0")
+            .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
+            .addFilter(aSearchFilter()
+                           .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
+                           .build())
+            .build();
+    List<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false).getResponse();
+
+    int artifactCount =
+        workflowExecutions.stream()
+            .filter(wfle -> wfle.getExecutionArgs() != null && wfle.getExecutionArgs().getArtifactIdNames() != null)
+            .flatMap(wfle -> wfle.getExecutionArgs().getArtifactIdNames().keySet().stream())
+            .collect(toSet())
+            .size();
+
+    executorService.submit(() -> userService.updateStatsFetchedOnForUser(user));
+    return anUserStatistics().withDeploymentCount(workflowExecutions.size()).withReleaseCount(artifactCount).build();
   }
 
   private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(
