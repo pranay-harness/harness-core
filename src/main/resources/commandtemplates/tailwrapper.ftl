@@ -1,10 +1,14 @@
 #!/bin/bash
 
+export PATH=$PATH:/usr/local/bin
+
+set -x
 # Start tail.
 <#list tailPatterns as tailPattern>
 export GREP_COLOR="01;32"
-touch "${tailPattern.filePath}"
-tail -F -n0 "${tailPattern.filePath}" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
+TAIL_FILE_PATH=$(realpath "${tailPattern.filePath}")
+touch "$TAIL_FILE_PATH"
+tail -F -n0 "$TAIL_FILE_PATH" | grep --line-buffered --color=always -A10 -B10 "${tailPattern.pattern}" 2>&1 > ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} &
 pid${tailPattern?index}=$!
 </#list>
 
@@ -58,7 +62,7 @@ returnvalue=0
 echo " "
 echo " "
 echo "===================================================================================================="
-printf "Searching file ${r"${bold}"}'${tailPattern.filePath}'${r"${normal}"} for pattern ${r"${boldgreen}"}'${tailPattern.pattern}'${r"${normal}"} ... "
+printf "Searching file ${r"${bold}"}'$TAIL_FILE_PATH'${r"${normal}"} for pattern ${r"${boldgreen}"}'${tailPattern.pattern}'${r"${normal}"} ... "
 if [ -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
 then
   printf "${r"${boldgreen}"}[Found]${r"${normal}"}\n"
@@ -81,7 +85,7 @@ then
   if [ ! -s ${executionStagingDir}/tailoutput${executionId}${tailPattern?index} ]
   then
     echo "File: '${tailPattern.pattern}'"
-    echo "Pattern: '${tailPattern.filePath}'"
+    echo "Pattern: '$TAIL_FILE_PATH'"
   fi
 </#list>
 fi
