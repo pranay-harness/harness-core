@@ -4,9 +4,9 @@
 
 package software.wings.common;
 
+import static org.apache.commons.lang3.ArrayUtils.isNotEmpty;
 import static org.eclipse.jetty.util.LazyList.isEmpty;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PartitionElement;
@@ -77,7 +77,7 @@ public interface PartitionProcessor {
    */
   default List
     <PartitionElement> partitions(String... breakdownsParams) {
-      if (ArrayUtils.isNotEmpty(breakdownsParams)) {
+      if (isNotEmpty(breakdownsParams)) {
         setBreakdowns(breakdownsParams);
       }
 
@@ -141,7 +141,7 @@ public interface PartitionProcessor {
       List<Integer> finalCounts = new ArrayList<>();
 
       // highest priority to the breakdown
-      if (breakdowns != null && breakdowns.length > 0) {
+      if (isNotEmpty(breakdowns)) {
         for (String val : breakdowns) {
           finalCounts.add(pctCountValue(total, val));
         }
@@ -149,15 +149,15 @@ public interface PartitionProcessor {
       }
 
       // second priority to the percentages
-      if (percentages != null && percentages.length > 0) {
+      if (isNotEmpty(percentages)) {
         for (String val : percentages) {
           finalCounts.add(pctCountValue(total, val));
         }
         return finalCounts;
       }
       // second priority to the percentages
-      if (counts != null && counts.length > 0) {
-        for (String val : percentages) {
+      if (isNotEmpty(counts)) {
+        for (String val : counts) {
           finalCounts.add(pctCountValue(total, val));
         }
         return finalCounts;
@@ -219,7 +219,7 @@ public interface PartitionProcessor {
       int count;
       val = val.trim();
       if (val.endsWith(PCT)) {
-        count = total * Integer.parseInt(val.substring(0, val.length() - 1).trim()) / 100;
+        count = (int) Math.round((total * Integer.parseInt(val.substring(0, val.length() - 1).trim())) / 100.0);
       } else {
         count = Integer.parseInt(val.trim());
       }
