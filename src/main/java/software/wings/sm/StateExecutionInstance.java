@@ -4,6 +4,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsDeque;
 
 import java.util.ArrayDeque;
@@ -32,6 +33,8 @@ public class StateExecutionInstance extends Base {
   private StateMachineExecutionCallback callback;
 
   private String executionName;
+
+  private WorkflowType executionType;
 
   @Indexed private String executionUuid;
 
@@ -400,6 +403,24 @@ public class StateExecutionInstance extends Base {
     this.stateExecutionDataHistory = stateExecutionDataHistory;
   }
 
+  /**
+   * Gets execution type.
+   *
+   * @return the execution type
+   */
+  public WorkflowType getExecutionType() {
+    return executionType;
+  }
+
+  /**
+   * Sets execution type.
+   *
+   * @param executionType the execution type
+   */
+  public void setExecutionType(WorkflowType executionType) {
+    this.executionType = executionType;
+  }
+
   @Override
   public String toString() {
     return "StateExecutionInstance [stateMachineId=" + stateMachineId + ", stateName=" + stateName
@@ -424,6 +445,8 @@ public class StateExecutionInstance extends Base {
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
     private StateMachineExecutionCallback callback;
+    private String executionName;
+    private WorkflowType executionType;
     private String executionUuid;
     private String parentInstanceId;
     private String prevInstanceId;
@@ -486,9 +509,9 @@ public class StateExecutionInstance extends Base {
     }
 
     /**
-     * With context element type builder.
+     * With context element builder.
      *
-     * @param contextElement the context element type
+     * @param contextElement the context element
      * @return the builder
      */
     public Builder withContextElement(ContextElement contextElement) {
@@ -548,6 +571,28 @@ public class StateExecutionInstance extends Base {
      */
     public Builder withCallback(StateMachineExecutionCallback callback) {
       this.callback = callback;
+      return this;
+    }
+
+    /**
+     * With execution name builder.
+     *
+     * @param executionName the execution name
+     * @return the builder
+     */
+    public Builder withExecutionName(String executionName) {
+      this.executionName = executionName;
+      return this;
+    }
+
+    /**
+     * With execution type builder.
+     *
+     * @param executionType the execution type
+     * @return the builder
+     */
+    public Builder withExecutionType(WorkflowType executionType) {
+      this.executionType = executionType;
       return this;
     }
 
@@ -728,6 +773,42 @@ public class StateExecutionInstance extends Base {
     }
 
     /**
+     * But builder.
+     *
+     * @return the builder
+     */
+    public Builder but() {
+      return aStateExecutionInstance()
+          .withStateMachineId(stateMachineId)
+          .withStateName(stateName)
+          .withStateType(stateType)
+          .withContextElement(contextElement)
+          .withContextTransition(contextTransition)
+          .withContextElements(contextElements)
+          .withStateExecutionMap(stateExecutionMap)
+          .withStateExecutionDataHistory(stateExecutionDataHistory)
+          .withCallback(callback)
+          .withExecutionName(executionName)
+          .withExecutionType(executionType)
+          .withExecutionUuid(executionUuid)
+          .withParentInstanceId(parentInstanceId)
+          .withPrevInstanceId(prevInstanceId)
+          .withNextInstanceId(nextInstanceId)
+          .withCloneInstanceId(cloneInstanceId)
+          .withNotifyId(notifyId)
+          .withStatus(status)
+          .withStartTs(startTs)
+          .withEndTs(endTs)
+          .withUuid(uuid)
+          .withAppId(appId)
+          .withCreatedBy(createdBy)
+          .withCreatedAt(createdAt)
+          .withLastUpdatedBy(lastUpdatedBy)
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withActive(active);
+    }
+
+    /**
      * Build state execution instance.
      *
      * @return the state execution instance
@@ -743,6 +824,8 @@ public class StateExecutionInstance extends Base {
       stateExecutionInstance.setStateExecutionMap(stateExecutionMap);
       stateExecutionInstance.setStateExecutionDataHistory(stateExecutionDataHistory);
       stateExecutionInstance.setCallback(callback);
+      stateExecutionInstance.setExecutionName(executionName);
+      stateExecutionInstance.setExecutionType(executionType);
       stateExecutionInstance.setExecutionUuid(executionUuid);
       stateExecutionInstance.setParentInstanceId(parentInstanceId);
       stateExecutionInstance.setPrevInstanceId(prevInstanceId);

@@ -145,22 +145,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public PageResponse<WorkflowExecution> listExecutions(
       PageRequest<WorkflowExecution> pageRequest, boolean includeGraph) {
-    return listExecutions(pageRequest, includeGraph, false);
+    return listExecutions(pageRequest, includeGraph, false, true);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public PageResponse<WorkflowExecution> listExecutions(
-      PageRequest<WorkflowExecution> pageRequest, boolean includeGraph, boolean runningOnly) {
+  public PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest,
+      boolean includeGraph, boolean runningOnly, boolean withBreakdownAndSummary) {
     PageResponse<WorkflowExecution> res = wingsPersistence.query(WorkflowExecution.class, pageRequest);
     if (res == null || res.size() == 0) {
       return res;
     }
-    res.forEach(this ::refreshBreakdown);
+    if (withBreakdownAndSummary) {
+      res.forEach(this ::refreshBreakdown);
 
-    res.forEach(this ::refreshSummaries);
+      res.forEach(this ::refreshSummaries);
+    }
 
     if (!includeGraph) {
       return res;
@@ -567,8 +569,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setAppId(workflowExecution.getAppId());
     stateExecutionInstance.setExecutionName(workflowExecution.getName());
-
     stateExecutionInstance.setExecutionUuid(workflowExecutionId);
+    stateExecutionInstance.setExecutionType(workflowExecution.getWorkflowType());
+
     if (workflowExecutionUpdate == null) {
       workflowExecutionUpdate = new WorkflowExecutionUpdate();
     }
@@ -1141,6 +1144,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecution.getStateMachineId());
     PageRequest<StateExecutionInstance> req =
         aPageRequest()
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
             .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
             .addFieldsIncluded("uuid", "stateName", "contextElement", "parentInstanceId", "status")

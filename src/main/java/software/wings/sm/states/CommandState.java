@@ -220,6 +220,7 @@ public class CommandState extends State {
                                              .withType(Type.Command)
                                              .withServiceInstanceId(serviceInstance.getUuid())
                                              .withWorkflowExecutionId(context.getWorkflowExecutionId())
+                                             .withWorkflowType(context.getWorkflowType())
                                              .withWorkflowExecutionName(context.getWorkflowExecutionName())
                                              .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
                                              .withStateExecutionInstanceName(context.getStateExecutionInstanceName())

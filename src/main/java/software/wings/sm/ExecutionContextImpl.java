@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.WorkflowType;
 import software.wings.utils.ExpressionEvaluator;
 
 import java.util.ArrayDeque;
@@ -302,6 +303,11 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public String getWorkflowExecutionName() {
     return stateExecutionInstance.getExecutionName();
+  }
+
+  @Override
+  public WorkflowType getWorkflowType() {
+    return stateExecutionInstance.getExecutionType();
   }
 
   @Override

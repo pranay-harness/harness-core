@@ -7,6 +7,7 @@ package software.wings.sm;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.WorkflowType;
 
 import java.util.List;
 
@@ -109,6 +110,13 @@ public interface ExecutionContext {
    * @return the workflow execution name
    */
   String getWorkflowExecutionName();
+
+  /**
+   * Gets workflow type.
+   *
+   * @return the workflow type
+   */
+  WorkflowType getWorkflowType();
 
   /**
    * Gets state execution instance id.
