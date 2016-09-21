@@ -49,7 +49,7 @@ public class SplunkState extends HttpState {
   }
 
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
     String evaluatedQuery = context.renderExpression(query);
     logger.info("evaluatedQuery: {}", evaluatedQuery);
 
@@ -75,7 +75,7 @@ public class SplunkState extends HttpState {
         + Base64.encodeBase64URLSafeString(
               (splunkConfig.getUsername() + ":" + splunkConfig.getPassword()).getBytes(StandardCharsets.UTF_8)));
 
-    ExecutionResponse executionResponse = super.execute(context);
+    ExecutionResponse executionResponse = super.executeInternal(context);
 
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
     executionResponse.setStateExecutionData(aSplunkStateExecutionData()

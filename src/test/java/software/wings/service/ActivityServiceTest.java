@@ -2,9 +2,12 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CleanupCommandUnit.CLEANUP_UNIT;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.EXEC;
@@ -34,12 +37,16 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Builder;
+import software.wings.beans.Event.Type;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.EventEmitter;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
@@ -77,6 +84,10 @@ public class ActivityServiceTest extends WingsBaseTest {
 
   @Mock private ServiceResourceService serviceResourceService;
 
+  @Mock private ServiceInstanceService serviceInstanceService;
+
+  @Mock private EventEmitter eventEmitter;
+
   @Inject @InjectMocks private ActivityService activityService;
 
   /**
@@ -107,6 +118,15 @@ public class ActivityServiceTest extends WingsBaseTest {
     Activity activity = builder.but().build();
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+    verify(serviceInstanceService).updateActivity(activity);
+    verify(eventEmitter)
+        .send(Channel.ACTIVITIES,
+            anEvent()
+                .withUuid(activity.getUuid())
+                .withEnvId(activity.getEnvironmentId())
+                .withAppId(activity.getAppId())
+                .withType(Type.CREATE)
+                .build());
   }
 
   /**
@@ -151,5 +171,34 @@ public class ActivityServiceTest extends WingsBaseTest {
     wingsPersistence.save(activity);
     Activity lastProductionActivityForService = activityService.getLastProductionActivityForService(APP_ID, SERVICE_ID);
     assertThat(lastProductionActivityForService).isEqualTo(activity);
+  }
+
+  @Test
+  public void shouldUpdateActivityStatus() {
+    Activity activity = builder.but().build();
+    activityService.save(activity);
+    assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+    verify(serviceInstanceService).updateActivity(activity);
+    verify(eventEmitter)
+        .send(Channel.ACTIVITIES,
+            anEvent()
+                .withUuid(activity.getUuid())
+                .withEnvId(activity.getEnvironmentId())
+                .withAppId(activity.getAppId())
+                .withType(Type.CREATE)
+                .build());
+
+    activityService.updateStatus(activity.getUuid(), activity.getAppId(), ExecutionStatus.SUCCESS);
+
+    activity.setStatus(ExecutionStatus.SUCCESS);
+    verify(serviceInstanceService, times(2)).updateActivity(activity);
+    verify(eventEmitter)
+        .send(Channel.ACTIVITIES,
+            anEvent()
+                .withUuid(activity.getUuid())
+                .withEnvId(activity.getEnvironmentId())
+                .withAppId(activity.getAppId())
+                .withType(Type.UPDATE)
+                .build());
   }
 }

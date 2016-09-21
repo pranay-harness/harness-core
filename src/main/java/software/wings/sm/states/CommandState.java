@@ -255,7 +255,6 @@ public class CommandState extends State {
       }
 
       Activity activity = activityService.save(activityBuilder.build());
-      serviceInstanceService.updateActivity(activity);
       activityId = activity.getUuid();
 
       executionDataBuilder.withActivityId(activityId);
@@ -338,7 +337,6 @@ public class CommandState extends State {
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED);
     Activity activity = activityService.get(activityId, appId);
     String oldReleaseId = serviceInstance.getReleaseId();
-    serviceInstanceService.updateActivity(activity);
 
     if (artifactFromFirstOrDifferentReleaseSuccessfullyDeployed(executionResultData, activity, oldReleaseId)) {
       releaseService.addSuccessCount(appId, activity.getReleaseId(), envId, 1);

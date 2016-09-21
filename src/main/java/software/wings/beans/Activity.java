@@ -21,12 +21,12 @@ public class Activity extends Base {
   @NotEmpty private String environmentName;
   @NotNull private EnvironmentType environmentType;
   @NotEmpty private String commandName;
-  @NotEmpty private String commandType;
-  @NotEmpty private String serviceId;
-  @NotEmpty private String serviceName;
-  @NotEmpty private String serviceTemplateId;
-  @NotEmpty private String serviceTemplateName;
-  @NotEmpty private String hostName;
+  private String commandType;
+  private String serviceId;
+  private String serviceName;
+  private String serviceTemplateId;
+  private String serviceTemplateName;
+  private String hostName;
   private String serviceInstanceId;
   @NotEmpty private String workflowExecutionId;
   @NotEmpty private String workflowExecutionName;
