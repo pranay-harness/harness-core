@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
@@ -40,6 +41,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
@@ -77,6 +79,8 @@ public class ActivityServiceTest extends WingsBaseTest {
 
   @Mock private ServiceResourceService serviceResourceService;
 
+  @Mock private ServiceInstanceService serviceInstanceService;
+
   @Inject @InjectMocks private ActivityService activityService;
 
   /**
@@ -107,6 +111,7 @@ public class ActivityServiceTest extends WingsBaseTest {
     Activity activity = builder.but().build();
     activityService.save(activity);
     assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+    verify(serviceInstanceService).updateActivity(activity);
   }
 
   /**

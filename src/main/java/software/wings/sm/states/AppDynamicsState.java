@@ -48,7 +48,7 @@ public class AppDynamicsState extends HttpState {
   }
 
   @Override
-  public ExecutionResponse execute(ExecutionContext context) {
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
     AppDynamicsConfig appdConfig =
         (AppDynamicsConfig) settingsService.getGlobalSettingAttributesByType(SettingVariableTypes.APP_DYNAMICS)
             .get(0)
@@ -68,7 +68,7 @@ public class AppDynamicsState extends HttpState {
               String.format("%s@%s:%s", appdConfig.getUsername(), appdConfig.getAccountname(), appdConfig.getPassword())
                   .getBytes(StandardCharsets.UTF_8)));
 
-    ExecutionResponse executionResponse = super.execute(context);
+    ExecutionResponse executionResponse = super.executeInternal(context);
 
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();
     logger.info("Metric Data: {}", httpStateExecutionData.getHttpResponseBody());

@@ -23,6 +23,7 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
@@ -42,6 +43,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private LogService logService;
   @Inject private ArtifactService artifactService;
+  @Inject private ServiceInstanceService serviceInstanceService;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
@@ -60,6 +62,9 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public Activity save(Activity activity) {
     wingsPersistence.save(activity);
+    if (isNotBlank(activity.getServiceInstanceId())) {
+      serviceInstanceService.updateActivity(activity);
+    }
     return activity;
   }
 
@@ -68,6 +73,10 @@ public class ActivityServiceImpl implements ActivityService {
     wingsPersistence.update(
         wingsPersistence.createQuery(Activity.class).field(ID_KEY).equal(activityId).field("appId").equal(appId),
         wingsPersistence.createUpdateOperations(Activity.class).set("status", status));
+    Activity activity = get(activityId, appId);
+    if (isNotBlank(activity.getServiceInstanceId())) {
+      serviceInstanceService.updateActivity(activity);
+    }
   }
 
   @Override

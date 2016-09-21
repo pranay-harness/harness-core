@@ -64,6 +64,8 @@ public class WingsTestConstants {
    */
   public static final String RELEASE_NAME = "RELEASE_NAME";
 
+  public static final String STATE_EXECUTION_ID = "STATE_EXECUTION_ID";
+
   /**
    * The constant SERVICE_INSTANCE_ID.
    */
