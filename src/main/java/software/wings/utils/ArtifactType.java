@@ -94,7 +94,7 @@ public enum ArtifactType {
                         .withId(UUIDGenerator.graphIdGenerator("node"))
                         .withType(EXEC.name())
                         .withName("Stop Service")
-                        .addProperty("commandPath", "$WINGS_RUNTIME_PATH/tomcat/bin")
+                        .addProperty("commandPath", "$WINGS_RUNTIME_PATH")
                         .addProperty("commandString",
                             "\npgrep -f \"$WINGS_RUNTIME_PATH/$ARTIFACT_FILE_NAME\" | xargs kill  || true")
                         .build(),
