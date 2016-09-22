@@ -8,6 +8,7 @@ import software.wings.beans.Application;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter;
@@ -210,5 +211,15 @@ public class ExecutionResource {
   public RestResponse<RequiredExecutionArgs> requiredArgs(
       @QueryParam("appId") String appId, @QueryParam("envId") String envId, ExecutionArgs executionArgs) {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
+  }
+
+  @GET
+  @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
+  @Produces("application/json")
+  public RestResponse<Node> getExecutionNodeDetails(@QueryParam("appId") String appId,
+      @QueryParam("envId") String envId, @PathParam("workflowExecutionId") String workflowExecutionId,
+      @PathParam("stateExecutionInstanceId") String stateExecutionInstanceId) {
+    return new RestResponse<>(
+        workflowExecutionService.getExecutionDetailsForNode(appId, workflowExecutionId, stateExecutionInstanceId));
   }
 }
