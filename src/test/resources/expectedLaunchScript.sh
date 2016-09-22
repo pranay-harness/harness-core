@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 set -x
 # set session
@@ -16,7 +16,7 @@ export ARTIFACT_FILE_NAME
 WINGS_STAGING_PATH=/tmp/staging
 export WINGS_STAGING_PATH
 
-if [[ $# -gt 1 ]]
+if [ "$#" -gt 1 ]
 then
   key="$1"
   case $key in

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 set -x
 # set session
@@ -10,7 +10,7 @@ ${envVariable}=${envVariables[envVariable]}
 export ${envVariable}
 </#list>
 
-if [[ $# -gt 1 ]]
+if [ "$#" -gt 1 ]
 then
   key="$1"
   case $key in
