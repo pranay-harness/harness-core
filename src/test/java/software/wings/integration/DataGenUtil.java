@@ -145,7 +145,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
-  private static final String API_BASE = "https://localhost:9090/api";
+  private static final String API_BASE = "https://demo-api.wings.software/api";
 
   private static final String userName = "admin@wings.software";
   private static final String password = "YAg@bp2wWB";
@@ -680,7 +680,7 @@ private void createGlobalSettings() {
       Entity.entity(aSettingAttribute()
                         .withName("Splunk")
                         .withValue(aSplunkConfig()
-                                       .withHost("ec2-54-172-208-137.compute-1.amazonaws.com")
+                                       .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
                                        .withPort(8089)
                                        .withPassword("W!ngs@Splunk")
                                        .withUsername("admin")
