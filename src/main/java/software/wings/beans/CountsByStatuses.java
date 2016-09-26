@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import java.util.Objects;
+
 /**
  * Created by peeyushaggarwal on 7/8/16.
  */
@@ -79,6 +81,24 @@ public class CountsByStatuses {
    */
   public void setQueued(int queued) {
     this.queued = queued;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(success, failed, inprogress, queued);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final CountsByStatuses other = (CountsByStatuses) obj;
+    return Objects.equals(this.success, other.success) && Objects.equals(this.failed, other.failed)
+        && Objects.equals(this.inprogress, other.inprogress) && Objects.equals(this.queued, other.queued);
   }
 
   @Override

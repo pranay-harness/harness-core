@@ -27,10 +27,12 @@ import com.google.common.collect.Maps;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.aggregation.Projection;
+import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Release;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.User;
@@ -46,12 +48,15 @@ import software.wings.beans.stats.KeyStatistics;
 import software.wings.beans.stats.TopConsumer;
 import software.wings.beans.stats.TopConsumersStatistics;
 import software.wings.beans.stats.UserStatistics;
+import software.wings.beans.stats.UserStatistics.AppDeployment;
+import software.wings.beans.stats.UserStatistics.ReleaseDetails;
 import software.wings.beans.stats.WingsStatistics;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -63,6 +68,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,6 +91,7 @@ public class StatisticsServiceImpl implements StatisticsService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserService userService;
   @Inject private ExecutorService executorService;
+  @Inject private ReleaseService releaseService;
 
   @Override
   public List<WingsStatistics> getSummary() {
@@ -282,8 +289,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     PageRequest pageRequest =
         aPageRequest()
-            .withLimit("10000")
-            .withOffset("0")
+            .withLimit(PageRequest.UNLIMITED)
             .addFilter(aSearchFilter().withField("createdAt", Operator.GT, statsFetchedOn).build())
             .addFilter(aSearchFilter()
                            .withField("workflowType", Operator.IN, WorkflowType.ORCHESTRATION, WorkflowType.SIMPLE)
@@ -292,15 +298,60 @@ public class StatisticsServiceImpl implements StatisticsService {
     List<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, false, false, false).getResponse();
 
-    int artifactCount =
-        workflowExecutions.stream()
-            .filter(wfle -> wfle.getExecutionArgs() != null && wfle.getExecutionArgs().getArtifactIdNames() != null)
-            .flatMap(wfle -> wfle.getExecutionArgs().getArtifactIdNames().keySet().stream())
-            .collect(toSet())
-            .size();
+    Map<String, List<WorkflowExecution>> wflExecutionsByApp = new HashMap<>();
+    workflowExecutions.forEach(wflExecution
+        -> wflExecutionsByApp.computeIfAbsent(wflExecution.getAppId(), s -> new ArrayList<>()).add(wflExecution));
+
+    List<AppDeployment> appDeployments = new ArrayList<>();
+    List<ReleaseDetails> releaseDetailsList = new ArrayList<>();
+
+    wflExecutionsByApp.forEach((appId, wflExecutions) -> {
+      if (wflExecutions.size() != 0) {
+        String appName = wflExecutions.get(0).getAppName();
+
+        appDeployments.add(new AppDeployment(appId, appName, wflExecutions));
+
+        List<Release> releases = getAssociatedReleasesFromExecutions(appId, wflExecutions);
+        if (releases.size() > 0) {
+          releaseDetailsList.add(new ReleaseDetails(appId, appName, releases));
+        }
+      }
+    });
+
+    int releaseCount =
+        (int) releaseDetailsList.stream().map(releaseDetails -> releaseDetails.getReleases().size()).count();
+    int deploymentCount =
+        (int) appDeployments.stream().map(appDeployment -> appDeployment.getDeployments().size()).count();
 
     executorService.submit(() -> userService.updateStatsFetchedOnForUser(user));
-    return anUserStatistics().withDeploymentCount(workflowExecutions.size()).withReleaseCount(artifactCount).build();
+    return anUserStatistics()
+        .withAppDeployments(appDeployments)
+        .withReleaseDetails(releaseDetailsList)
+        .withReleaseCount(releaseCount)
+        .withDeploymentCount(deploymentCount)
+        .withLastFetchedOn(statsFetchedOn)
+        .build();
+  }
+
+  public List<Release> getAssociatedReleasesFromExecutions(String appId, List<WorkflowExecution> wflExecutions) {
+    Set<String> releaseIds =
+        wflExecutions.stream()
+            .filter(wfle -> wfle.getExecutionArgs() != null && wfle.getExecutionArgs().getReleaseId() != null)
+            .map(e -> e.getExecutionArgs().getReleaseId())
+            .collect(toSet());
+    if (releaseIds.size() == 0) {
+      return new ArrayList<>();
+    }
+
+    return releaseService
+        .list(
+            aPageRequest()
+                .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
+                .addFilter(aSearchFilter()
+                               .withField(Mapper.ID_KEY, Operator.IN, releaseIds.toArray(new String[releaseIds.size()]))
+                               .build())
+                .build())
+        .getResponse();
   }
 
   private DeploymentActivityStatistics getDeploymentActivitiesForXDaysStartingFrom(

@@ -71,21 +71,7 @@ public class GraphRenderer {
     Map<String, Map<String, Node>> parentIdElementsMap = new HashMap<>();
 
     for (StateExecutionInstance instance : instanceIdMap.values()) {
-      Node node = new Node();
-      node.setId(instance.getUuid());
-      node.setName(instance.getStateName());
-      node.setType(instance.getStateType());
-      node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
-      if (instance.getStateExecutionData() != null) {
-        StateExecutionData executionData = instance.getStateExecutionData();
-        injector.injectMembers(executionData);
-        node.setExecutionSummary(executionData.getExecutionSummary());
-        node.setExecutionDetails(executionData.getExecutionDetails());
-        if (executionData instanceof ElementStateExecutionData) {
-          ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
-          node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
-        }
-      }
+      Node node = convertToNode(instance);
 
       if ((StateType.REPEAT.name().equals(instance.getStateType())
               || StateType.FORK.name().equals(instance.getStateType()))
@@ -132,6 +118,25 @@ public class GraphRenderer {
     }
     logger.debug("graph generated: {}", graph);
     return graph;
+  }
+
+  Node convertToNode(StateExecutionInstance instance) {
+    Node node = new Node();
+    node.setId(instance.getUuid());
+    node.setName(instance.getStateName());
+    node.setType(instance.getStateType());
+    node.setStatus(String.valueOf(instance.getStatus()).toUpperCase());
+    if (instance.getStateExecutionData() != null) {
+      StateExecutionData executionData = instance.getStateExecutionData();
+      injector.injectMembers(executionData);
+      node.setExecutionSummary(executionData.getExecutionSummary());
+      node.setExecutionDetails(executionData.getExecutionDetails());
+      if (executionData instanceof ElementStateExecutionData) {
+        ElementStateExecutionData elementStateExecutionData = (ElementStateExecutionData) executionData;
+        node.setElementStatusSummary(elementStateExecutionData.getElementStatusSummary());
+      }
+    }
+    return node;
   }
 
   private void replaceCommandNodeName(List<Node> nodes, String commandName) {

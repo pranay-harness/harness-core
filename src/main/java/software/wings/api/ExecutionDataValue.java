@@ -1,5 +1,9 @@
 package software.wings.api;
 
+import com.google.common.base.MoreObjects;
+
+import java.util.Objects;
+
 /**
  * Created by peeyushaggarwal on 7/14/16.
  */
@@ -41,6 +45,28 @@ public class ExecutionDataValue {
    */
   public void setValue(Object value) {
     this.value = value;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(displayName, value);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    final ExecutionDataValue other = (ExecutionDataValue) obj;
+    return Objects.equals(this.displayName, other.displayName) && Objects.equals(this.value, other.value);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("displayName", displayName).add("value", value).toString();
   }
 
   /**

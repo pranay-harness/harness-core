@@ -202,7 +202,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
 
     verify(activityService).save(any(Activity.class));
-    verify(serviceInstanceService, times(2)).updateActivity(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
 
@@ -285,7 +284,6 @@ public class CommandStateTest extends WingsBaseTest {
     verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, "START");
     verify(serviceInstanceService, times(2)).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
     verify(activityService).save(any(Activity.class));
-    verify(serviceInstanceService, times(2)).updateActivity(any(Activity.class));
 
     verify(serviceCommandExecutorService)
         .execute(SERVICE_INSTANCE, command,

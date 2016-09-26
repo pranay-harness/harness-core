@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.Graph.NodeOps;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.WorkflowExecution;
@@ -158,4 +159,6 @@ public interface WorkflowExecutionService {
    * @return the breakdown
    */
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
+
+  Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
 }

@@ -37,6 +37,7 @@ import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Graph;
+import software.wings.beans.Graph.Node;
 import software.wings.beans.History;
 import software.wings.beans.InstanceStatusSummary;
 import software.wings.beans.Orchestration;
@@ -880,6 +881,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     refreshBreakdown(workflowExecution);
     return workflowExecution.getBreakdown();
+  }
+
+  @Override
+  public Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId) {
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    return graphRenderer.convertToNode(stateExecutionInstance);
   }
 
   private void refreshSummaries(WorkflowExecution workflowExecution) {

@@ -112,7 +112,7 @@ public enum ContainerFamily {
                         .withType(EXEC.name())
                         .withName("Stop Service")
                         .addProperty("commandPath", "$WINGS_RUNTIME_PATH/tomcat/bin")
-                        .addProperty("commandString", "[[ -f ./shutdown.sh ]] && ./shutdown.sh  || true")
+                        .addProperty("commandString", "[ -f ./shutdown.sh ] && ./shutdown.sh  || true")
                         .build(),
               aNode()
                   .withX(200)

@@ -5,12 +5,14 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ErrorCodes.COMMAND_DOES_NOT_EXIST;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 
 import com.google.inject.Inject;
 
 import software.wings.beans.Activity;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.command.CleanupCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
@@ -20,9 +22,11 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionStatus;
 
@@ -42,6 +46,8 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private LogService logService;
   @Inject private ArtifactService artifactService;
+  @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private EventEmitter eventEmitter;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {
@@ -60,6 +66,16 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public Activity save(Activity activity) {
     wingsPersistence.save(activity);
+    if (isNotBlank(activity.getServiceInstanceId())) {
+      serviceInstanceService.updateActivity(activity);
+    }
+    eventEmitter.send(Channel.ACTIVITIES,
+        anEvent()
+            .withType(Type.CREATE)
+            .withUuid(activity.getUuid())
+            .withAppId(activity.getAppId())
+            .withEnvId(activity.getEnvironmentId())
+            .build());
     return activity;
   }
 
@@ -68,6 +84,17 @@ public class ActivityServiceImpl implements ActivityService {
     wingsPersistence.update(
         wingsPersistence.createQuery(Activity.class).field(ID_KEY).equal(activityId).field("appId").equal(appId),
         wingsPersistence.createUpdateOperations(Activity.class).set("status", status));
+    Activity activity = get(activityId, appId);
+    if (isNotBlank(activity.getServiceInstanceId())) {
+      serviceInstanceService.updateActivity(activity);
+    }
+    eventEmitter.send(Channel.ACTIVITIES,
+        anEvent()
+            .withType(Type.UPDATE)
+            .withUuid(activity.getUuid())
+            .withAppId(activity.getAppId())
+            .withEnvId(activity.getEnvironmentId())
+            .build());
   }
 
   @Override

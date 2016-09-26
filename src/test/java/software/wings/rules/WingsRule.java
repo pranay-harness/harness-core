@@ -70,6 +70,11 @@ import javax.validation.ValidatorFactory;
  * Created by peeyushaggarwal on 4/5/16.
  */
 public class WingsRule implements MethodRule {
+  private static IRuntimeConfig runtimeConfig =
+      new RuntimeConfigBuilder().defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class)).build();
+
+  private static MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
+
   private MongodExecutable mongodExecutable;
   private Injector injector;
   private MongoServer mongoServer;
@@ -129,11 +134,6 @@ public class WingsRule implements MethodRule {
       mongoClient = new MongoClient("localhost", port);
     } else {
       if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
-        IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder()
-                                           .defaultsWithLogger(Command.MongoD, LoggerFactory.getLogger(RealMongo.class))
-                                           .build();
-        MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
-
         int port = Network.getFreeServerPort();
         IMongodConfig mongodConfig =
             new MongodConfigBuilder().version(Main.V3_2).net(new Net(port, Network.localhostIsIPv6())).build();

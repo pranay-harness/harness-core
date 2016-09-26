@@ -1413,6 +1413,18 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     triggerOrchestration(appId, env);
   }
 
+  @Test
+  public void shouldGetNodeDetails() throws InterruptedException {
+    Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
+    String appId = app.getUuid();
+    Environment env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(appId).build());
+
+    WorkflowExecution execution = workflowExecutionService.getExecutionDetails(appId, triggerOrchestration(appId, env));
+    Node node0 = execution.getGraph().getNodes().get(0);
+    assertThat(workflowExecutionService.getExecutionDetailsForNode(appId, execution.getUuid(), node0.getId()))
+        .isEqualToIgnoringGivenFields(node0, "x", "y", "width", "height", "next", "expanded");
+  }
+
   /**
    * Should update in progress count.
    *
@@ -1467,7 +1479,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    * @param env   the env
    * @throws InterruptedException the interrupted exception
    */
-  public void triggerOrchestration(String appId, Environment env) throws InterruptedException {
+  public String triggerOrchestration(String appId, Environment env) throws InterruptedException {
     Orchestration orchestration = createExecutableOrchestration(appId, env);
     ExecutionArgs executionArgs = new ExecutionArgs();
 
@@ -1488,6 +1500,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isNotNull()
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
+    return executionId;
   }
 
   private Orchestration createExecutableOrchestration(String appId, Environment env) {

@@ -2,9 +2,11 @@ package software.wings.sm.states;
 
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
+import static software.wings.beans.Activity.Builder.anActivity;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
+import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -24,9 +26,17 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.InstanceElement;
+import software.wings.beans.Activity;
+import software.wings.beans.Activity.Type;
+import software.wings.beans.Application;
+import software.wings.beans.Environment;
+import software.wings.service.intfc.ActivityService;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
@@ -62,6 +72,8 @@ public class HttpState extends State {
   @Attributes(title = "Assertion") private String assertion;
   @SchemaIgnore private int socketTimeoutMillis = 10000;
 
+  @Inject @Transient private transient ActivityService activityService;
+
   /**
    * Create a new Http State with given name.
    *
@@ -76,123 +88,9 @@ public class HttpState extends State {
    */
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    String errorMessage = null;
-    String evaluatedUrl = context.renderExpression(url);
-    logger.info("evaluatedUrl: {}", evaluatedUrl);
-    String evaluatedBody = body;
-    if (evaluatedBody != null) {
-      evaluatedBody = context.renderExpression(evaluatedBody);
-      logger.info("evaluatedBody: {}", evaluatedBody);
-    }
-
-    String evaluatedHeader = header;
-    if (evaluatedHeader != null) {
-      evaluatedHeader = context.renderExpression(evaluatedHeader);
-      logger.info("evaluatedHeader: {}", evaluatedHeader);
-    }
-
-    HttpStateExecutionData executionData = new HttpStateExecutionData();
-    executionData.setHttpUrl(evaluatedUrl);
-    executionData.setHttpMethod(method);
-    executionData.setAssertionStatement(assertion);
-
-    SSLContextBuilder builder = new SSLContextBuilder();
-    try {
-      builder.loadTrustMaterial((x509Certificates, s) -> true);
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    } catch (KeyStoreException e) {
-      e.printStackTrace();
-    }
-    SSLConnectionSocketFactory sslsf = null;
-    try {
-      sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
-    } catch (NoSuchAlgorithmException e) {
-      e.printStackTrace();
-    } catch (KeyManagementException e) {
-      e.printStackTrace();
-    }
-
-    RequestConfig.Builder requestBuilder = RequestConfig.custom();
-    requestBuilder = requestBuilder.setConnectTimeout(2000);
-    requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
-
-    CloseableHttpClient httpclient =
-        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
-
-    HttpUriRequest httpUriRequest = null;
-
-    switch (toUpperCase(method)) {
-      case "GET": {
-        httpUriRequest = new HttpGet(evaluatedUrl);
-        break;
-      }
-      case "POST": {
-        HttpPost post = new HttpPost(evaluatedUrl);
-        if (evaluatedBody != null) {
-          post.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = post;
-        break;
-      }
-      case "PUT": {
-        HttpPut put = new HttpPut(evaluatedUrl);
-        if (evaluatedBody != null) {
-          put.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
-        }
-        httpUriRequest = put;
-        break;
-      }
-      case "DELETE": {
-        httpUriRequest = new HttpDelete(evaluatedUrl);
-        break;
-      }
-      case "HEAD": {
-        httpUriRequest = new HttpHead(evaluatedUrl);
-        break;
-      }
-    }
-
-    if (evaluatedHeader != null) {
-      for (String header : HEADERS_SPLITTER.split(evaluatedHeader)) {
-        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
-
-        if (headerPair.size() == 2) {
-          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
-        }
-      }
-    }
-
-    try {
-      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      executionData.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
-      HttpEntity entity = httpResponse.getEntity();
-      executionData.setHttpResponseBody(
-          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
-    } catch (IOException e) {
-      logger.error("Exception: ", e);
-      errorMessage = getMessage(e);
-      executionData.setHttpResponseCode(500);
-      executionData.setHttpResponseBody(getMessage(e));
-    }
-
-    boolean status = false;
-    try {
-      status = (boolean) context.evaluateExpression(assertion, executionData);
-      logger.info("assertion status: {}", status);
-    } catch (Exception e) {
-      errorMessage = getMessage(e);
-      logger.error("Error in httpStateAssertion", e);
-      status = false;
-    }
-
-    ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
-    ExecutionResponse response = new ExecutionResponse();
-    response.setExecutionStatus(executionStatus);
-
-    executionData.setAssertionStatus(executionStatus.name());
-    response.setStateExecutionData(executionData);
-    response.setErrorMessage(errorMessage);
+    String activityId = createActivity(context);
+    ExecutionResponse response = executeInternal(context);
+    updateActivityStatus(activityId, context.getApp().getUuid(), response.getExecutionStatus());
     return response;
   }
 
@@ -327,6 +225,164 @@ public class HttpState extends State {
         .add("assertion", assertion)
         .add("socketTimeoutMillis", socketTimeoutMillis)
         .toString();
+  }
+
+  protected ExecutionResponse executeInternal(ExecutionContext context) {
+    String errorMessage = null;
+    String evaluatedUrl = context.renderExpression(url);
+    logger.info("evaluatedUrl: {}", evaluatedUrl);
+    String evaluatedBody = body;
+    if (evaluatedBody != null) {
+      evaluatedBody = context.renderExpression(evaluatedBody);
+      logger.info("evaluatedBody: {}", evaluatedBody);
+    }
+
+    String evaluatedHeader = header;
+    if (evaluatedHeader != null) {
+      evaluatedHeader = context.renderExpression(evaluatedHeader);
+      logger.info("evaluatedHeader: {}", evaluatedHeader);
+    }
+
+    HttpStateExecutionData executionData = new HttpStateExecutionData();
+    executionData.setHttpUrl(evaluatedUrl);
+    executionData.setHttpMethod(method);
+    executionData.setAssertionStatement(assertion);
+
+    SSLContextBuilder builder = new SSLContextBuilder();
+    try {
+      builder.loadTrustMaterial((x509Certificates, s) -> true);
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyStoreException e) {
+      e.printStackTrace();
+    }
+    SSLConnectionSocketFactory sslsf = null;
+    try {
+      sslsf = new SSLConnectionSocketFactory(builder.build(), (s, sslSession) -> true);
+    } catch (NoSuchAlgorithmException e) {
+      e.printStackTrace();
+    } catch (KeyManagementException e) {
+      e.printStackTrace();
+    }
+
+    RequestConfig.Builder requestBuilder = RequestConfig.custom();
+    requestBuilder = requestBuilder.setConnectTimeout(2000);
+    requestBuilder = requestBuilder.setSocketTimeout(socketTimeoutMillis);
+
+    CloseableHttpClient httpclient =
+        HttpClients.custom().setSSLSocketFactory(sslsf).setDefaultRequestConfig(requestBuilder.build()).build();
+
+    HttpUriRequest httpUriRequest = null;
+
+    switch (toUpperCase(method)) {
+      case "GET": {
+        httpUriRequest = new HttpGet(evaluatedUrl);
+        break;
+      }
+      case "POST": {
+        HttpPost post = new HttpPost(evaluatedUrl);
+        if (evaluatedBody != null) {
+          post.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
+        }
+        httpUriRequest = post;
+        break;
+      }
+      case "PUT": {
+        HttpPut put = new HttpPut(evaluatedUrl);
+        if (evaluatedBody != null) {
+          put.setEntity(new StringEntity(evaluatedBody, StandardCharsets.UTF_8));
+        }
+        httpUriRequest = put;
+        break;
+      }
+      case "DELETE": {
+        httpUriRequest = new HttpDelete(evaluatedUrl);
+        break;
+      }
+      case "HEAD": {
+        httpUriRequest = new HttpHead(evaluatedUrl);
+        break;
+      }
+    }
+
+    if (evaluatedHeader != null) {
+      for (String header : HEADERS_SPLITTER.split(evaluatedHeader)) {
+        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
+
+        if (headerPair.size() == 2) {
+          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
+        }
+      }
+    }
+
+    try {
+      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+      executionData.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
+      HttpEntity entity = httpResponse.getEntity();
+      executionData.setHttpResponseBody(
+          entity != null ? EntityUtils.toString(entity, ContentType.getOrDefault(entity).getCharset()) : "");
+    } catch (IOException e) {
+      logger.error("Exception: ", e);
+      errorMessage = getMessage(e);
+      executionData.setHttpResponseCode(500);
+      executionData.setHttpResponseBody(getMessage(e));
+    }
+
+    boolean status = false;
+    try {
+      status = (boolean) context.evaluateExpression(assertion, executionData);
+      logger.info("assertion status: {}", status);
+    } catch (Exception e) {
+      errorMessage = getMessage(e);
+      logger.error("Error in httpStateAssertion", e);
+      status = false;
+    }
+
+    ExecutionStatus executionStatus = status ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
+    ExecutionResponse response = new ExecutionResponse();
+    response.setExecutionStatus(executionStatus);
+
+    executionData.setAssertionStatus(executionStatus.name());
+    response.setStateExecutionData(executionData);
+    response.setErrorMessage(errorMessage);
+    return response;
+  }
+
+  protected String createActivity(ExecutionContext executionContext) {
+    Application app = executionContext.getApp();
+    Environment env = executionContext.getEnv();
+    InstanceElement instanceElement = executionContext.getContextElement(ContextElementType.INSTANCE);
+
+    Activity.Builder activityBuilder =
+        anActivity()
+            .withAppId(app.getUuid())
+            .withApplicationName(app.getName())
+            .withEnvironmentId(env.getUuid())
+            .withEnvironmentName(env.getName())
+            .withEnvironmentType(env.getEnvironmentType())
+            .withCommandName(getName())
+            .withType(Type.Verification)
+            .withWorkflowType(executionContext.getWorkflowType())
+            .withWorkflowExecutionName(executionContext.getWorkflowExecutionName())
+            .withStateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+            .withStateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+            .withCommandType(getStateType())
+            .withWorkflowExecutionId(executionContext.getWorkflowExecutionId());
+
+    if (instanceElement != null) {
+      activityBuilder.withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .withServiceId(instanceElement.getServiceTemplateElement().getServiceElement().getUuid())
+          .withServiceName(instanceElement.getServiceTemplateElement().getServiceElement().getName())
+          .withServiceInstanceId(instanceElement.getUuid())
+          .withHostName(instanceElement.getHostElement().getHostName());
+    }
+
+    return activityService.save(activityBuilder.build()).getUuid();
+  }
+
+  protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
+    activityService.updateStatus(activityId, appId, status);
   }
 
   /**

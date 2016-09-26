@@ -17,11 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
 import software.wings.beans.ApplicationHost;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.command.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -218,7 +218,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
         .set("commandType", activity.getCommandType())
         .set("lastActivityCreatedAt", activity.getCreatedAt());
 
-    if (activity.getCommandType().equals(CommandUnitType.COMMAND.getName())) {
+    if (activity.getType() == Type.Command && !isNullOrEmpty(activity.getArtifactId())) {
       operations.set("lastDeployedOn", activity.getLastUpdatedAt());
     }
     wingsPersistence.update(query, operations);
