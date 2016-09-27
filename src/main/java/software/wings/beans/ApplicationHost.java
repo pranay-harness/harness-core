@@ -4,6 +4,10 @@ import com.google.common.base.MoreObjects;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -16,6 +20,9 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 9/15/16.
  */
 @Entity(value = "applicationHosts", noClassnameStored = true)
+@Indexes(
+    @Index(fields = { @Field("infraId")
+                      , @Field("envId"), @Field("hostName") }, options = @IndexOptions(unique = true)))
 public class ApplicationHost extends Base {
   @NotEmpty private String envId;
   @NotEmpty private String infraId;

@@ -91,8 +91,10 @@ public class HostServiceTest extends WingsBaseTest {
 
   @Inject @InjectMocks private HostService hostService;
 
-  @Mock private Query<ApplicationHost> query;
-  @Mock private FieldEnd end;
+  @Mock private Query<ApplicationHost> applicationHostQuery;
+  @Mock private FieldEnd applicationHostQueryEnd;
+  @Mock private Query<Host> hostQuery;
+  @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<ApplicationHost> updateOperations;
   @Mock private AggregationPipeline aggregationPipeline;
 
@@ -124,10 +126,15 @@ public class HostServiceTest extends WingsBaseTest {
         .thenReturn(aStaticInfrastructure().withUuid(INFRA_ID).build());
 
     when(wingsPersistence.createUpdateOperations(ApplicationHost.class)).thenReturn(updateOperations);
-    when(wingsPersistence.createQuery(ApplicationHost.class)).thenReturn(query);
-    when(query.field(anyString())).thenReturn(end);
-    when(end.equal(anyObject())).thenReturn(query);
-    when(end.hasAnyOf(anyCollection())).thenReturn(query);
+
+    when(wingsPersistence.createQuery(ApplicationHost.class)).thenReturn(applicationHostQuery);
+    when(applicationHostQuery.field(anyString())).thenReturn(applicationHostQueryEnd);
+    when(applicationHostQueryEnd.equal(anyObject())).thenReturn(applicationHostQuery);
+    when(applicationHostQueryEnd.hasAnyOf(anyCollection())).thenReturn(applicationHostQuery);
+
+    when(wingsPersistence.createQuery(Host.class)).thenReturn(hostQuery);
+    when(hostQuery.field(anyString())).thenReturn(hostQueryEnd);
+    when(hostQueryEnd.equal(anyObject())).thenReturn(hostQuery);
   }
 
   /**
@@ -158,14 +165,14 @@ public class HostServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetHost() {
     ApplicationHost host = appHostBuilder.build();
-    when(query.get()).thenReturn(host);
+    when(applicationHostQuery.get()).thenReturn(host);
     ApplicationHost savedHost = hostService.get(APP_ID, ENV_ID, HOST_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(HOST_ID);
+    verify(applicationHostQuery).field("appId");
+    verify(applicationHostQueryEnd).equal(APP_ID);
+    verify(applicationHostQuery).field("envId");
+    verify(applicationHostQueryEnd).equal(ENV_ID);
+    verify(applicationHostQuery).field(ID_KEY);
+    verify(applicationHostQueryEnd).equal(HOST_ID);
     assertThat(savedHost).isNotNull();
     assertThat(savedHost).isInstanceOf(ApplicationHost.class);
   }
@@ -176,7 +183,7 @@ public class HostServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateHost() {
     Host host = hostBuilder.withUuid(HOST_ID).build();
-    when(query.get()).thenReturn(appHostBuilder.withHost(host).build());
+    when(applicationHostQuery.get()).thenReturn(appHostBuilder.withHost(host).build());
     when(tagService.getDefaultTagForUntaggedHosts(APP_ID, ENV_ID))
         .thenReturn(aTag().withAppId(APP_ID).withEnvId(ENV_ID).withTagType(TagType.UNTAGGED_HOST).build());
     ApplicationHost savedHost = hostService.update(ENV_ID, host);
@@ -191,16 +198,16 @@ public class HostServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteHost() {
     ApplicationHost host = appHostBuilder.build();
-    when(query.get()).thenReturn(host);
+    when(applicationHostQuery.get()).thenReturn(host);
     when(wingsPersistence.delete(any(Host.class))).thenReturn(true);
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
     hostService.delete(APP_ID, ENV_ID, HOST_ID);
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field(ID_KEY);
-    verify(end).equal(HOST_ID);
+    verify(applicationHostQuery).field("appId");
+    verify(applicationHostQueryEnd).equal(APP_ID);
+    verify(applicationHostQuery).field("envId");
+    verify(applicationHostQueryEnd).equal(ENV_ID);
+    verify(applicationHostQuery).field(ID_KEY);
+    verify(applicationHostQueryEnd).equal(HOST_ID);
     verify(wingsPersistence).delete(host);
     verify(serviceTemplateService).deleteHostFromTemplates(host);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
@@ -217,13 +224,13 @@ public class HostServiceTest extends WingsBaseTest {
                                .withUuid(HOST_ID)
                                .withHost(hostBuilder.withUuid(HOST_ID).build())
                                .build();
-    when(query.asList()).thenReturn(asList(host));
+    when(applicationHostQuery.asList()).thenReturn(asList(host));
     when(wingsPersistence.delete(any(ApplicationHost.class))).thenReturn(true);
     hostService.deleteByInfra(INFRA_ID);
 
-    verify(query).asList();
-    verify(query).field("infraId");
-    verify(end).equal(INFRA_ID);
+    verify(applicationHostQuery).asList();
+    verify(applicationHostQuery).field("infraId");
+    verify(applicationHostQueryEnd).equal(INFRA_ID);
     verify(wingsPersistence).delete(host);
     verify(serviceTemplateService).deleteHostFromTemplates(host);
   }
@@ -234,17 +241,17 @@ public class HostServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetHostsByTags() {
     List<Tag> tags = asList(aTag().withUuid(TAG_ID).build());
-    when(query.asList()).thenReturn(asList(appHostBuilder.withUuid(HOST_ID).build()));
+    when(applicationHostQuery.asList()).thenReturn(asList(appHostBuilder.withUuid(HOST_ID).build()));
 
     List<ApplicationHost> hosts = hostService.getHostsByTags(APP_ID, ENV_ID, tags);
 
-    verify(query).asList();
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field("configTag");
-    verify(end).hasAnyOf(tags);
+    verify(applicationHostQuery).asList();
+    verify(applicationHostQuery).field("appId");
+    verify(applicationHostQueryEnd).equal(APP_ID);
+    verify(applicationHostQuery).field("envId");
+    verify(applicationHostQueryEnd).equal(ENV_ID);
+    verify(applicationHostQuery).field("configTag");
+    verify(applicationHostQueryEnd).hasAnyOf(tags);
     assertThat(hosts.get(0)).isInstanceOf(ApplicationHost.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
   }
@@ -254,16 +261,16 @@ public class HostServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetHostsByHostIds() {
-    when(query.asList()).thenReturn(asList(appHostBuilder.withUuid(HOST_ID).build()));
+    when(applicationHostQuery.asList()).thenReturn(asList(appHostBuilder.withUuid(HOST_ID).build()));
     List<ApplicationHost> hosts = hostService.getHostsByHostIds(APP_ID, ENV_ID, asList(HOST_ID));
 
-    verify(query).asList();
-    verify(query).field("appId");
-    verify(end).equal(APP_ID);
-    verify(query).field("envId");
-    verify(end).equal(ENV_ID);
-    verify(query).field(ID_KEY);
-    verify(end).hasAnyOf(asList(HOST_ID));
+    verify(applicationHostQuery).asList();
+    verify(applicationHostQuery).field("appId");
+    verify(applicationHostQueryEnd).equal(APP_ID);
+    verify(applicationHostQuery).field("envId");
+    verify(applicationHostQueryEnd).equal(ENV_ID);
+    verify(applicationHostQuery).field(ID_KEY);
+    verify(applicationHostQueryEnd).hasAnyOf(asList(HOST_ID));
     assertThat(hosts.get(0)).isInstanceOf(ApplicationHost.class);
     assertThat(hosts.get(0).getUuid()).isEqualTo(HOST_ID);
   }
@@ -382,7 +389,7 @@ public class HostServiceTest extends WingsBaseTest {
     pageResponse.setResponse(applications);
     when(appService.list(any(), eq(false), eq(0))).thenReturn(pageResponse);
     when(wingsPersistence.getDatastore().createAggregation(ApplicationHost.class)).thenReturn(aggregationPipeline);
-    when(aggregationPipeline.match(query)).thenReturn(aggregationPipeline);
+    when(aggregationPipeline.match(applicationHostQuery)).thenReturn(aggregationPipeline);
     when(aggregationPipeline.group(anyString(), any())).thenReturn(aggregationPipeline);
     when(aggregationPipeline.aggregate(ApplicationHostUsage.class))
         .thenReturn(asList(anApplicationHostUsage().withAppId("ID1").withCount(1).build(),
