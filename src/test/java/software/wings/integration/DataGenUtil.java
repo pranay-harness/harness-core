@@ -325,7 +325,6 @@ private void addDefaultRoleAndUsers() {
 }
 
 private void addAdminUser() {
-  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
   WebTarget target = client.target(API_BASE + "/users/");
   RestResponse<User> response = target.request().post(
       Entity.entity(
@@ -344,6 +343,12 @@ private void addAdminUser() {
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+  loginAdminUser();
+}
+
+private void loginAdminUser() {
+  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
+  RestResponse<User> response;
   response = client.target(API_BASE + "/users/login")
                  .request()
                  .header("Authorization", basicAuthValue)
@@ -680,7 +685,7 @@ private void createGlobalSettings() {
       Entity.entity(aSettingAttribute()
                         .withName("Splunk")
                         .withValue(aSplunkConfig()
-                                       .withHost("ec2-54-172-208-137.compute-1.amazonaws.com")
+                                       .withHost("ec2-52-54-103-49.compute-1.amazonaws.com")
                                        .withPort(8089)
                                        .withPassword("W!ngs@Splunk")
                                        .withUsername("admin")
@@ -693,9 +698,9 @@ private void createGlobalSettings() {
       Entity.entity(aSettingAttribute()
                         .withName("AppDynamics")
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                       .withControllerUrl("https://wingssoftware.saas.appdynamics.com/controller")
+                                       .withControllerUrl("https://na595.saas.appdynamics.com/controller")
                                        .withUsername("testuser")
-                                       .withAccountname("WingsSoftware")
+                                       .withAccountname("na595")
                                        .withPassword("testuser123")
                                        .build())
                         .build(),

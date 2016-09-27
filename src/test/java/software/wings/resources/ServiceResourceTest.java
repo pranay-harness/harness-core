@@ -14,6 +14,7 @@ import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -46,7 +47,6 @@ public class ServiceResourceTest {
                                                        .addResource(new ServiceResource(RESOURCE_SERVICE))
                                                        .addProvider(WingsExceptionMapper.class)
                                                        .build();
-  private static final String SERVICE_ID = "SERVICE_ID";
   private static final Service aSERVICE = aService()
                                               .withAppId(APP_ID)
                                               .withName("NAME")

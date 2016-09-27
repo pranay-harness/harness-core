@@ -64,6 +64,9 @@ public class WingsTestConstants {
    */
   public static final String RELEASE_NAME = "RELEASE_NAME";
 
+  /**
+   * The constant STATE_EXECUTION_ID.
+   */
   public static final String STATE_EXECUTION_ID = "STATE_EXECUTION_ID";
 
   /**
@@ -212,4 +215,9 @@ public class WingsTestConstants {
    * The constant ROLE_ID.
    */
   public static final String ROLE_ID = "ROLE_ID";
+
+  /**
+   * The constant SERVICE_VARIABLE_ID.
+   */
+  public static final String SERVICE_VARIABLE_ID = "SERVICE_VARIABLE_ID";
 }

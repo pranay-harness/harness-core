@@ -90,7 +90,8 @@ public interface UserService {
 
   /**
    * Update stats fetched on.
-   * @param user
+   *
+   * @param user the user
    */
   void updateStatsFetchedOnForUser(User user);
 }

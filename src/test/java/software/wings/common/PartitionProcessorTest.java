@@ -65,6 +65,9 @@ public class PartitionProcessorTest {
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
   }
 
+  /**
+   * Should partition by pct with all.
+   */
   @Test
   public void shouldPartitionByPctWithAll() {
     SampleElement e1 = new SampleElement("e1");

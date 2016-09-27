@@ -473,19 +473,6 @@ public class Activity extends Base {
     this.workflowType = workflowType;
   }
 
-  /**
-   * The enum Type.
-   */
-  public enum Type {
-    /**
-     * Command type.
-     */
-    Command, /**
-              * Verification type.
-              */
-    Verification
-  }
-
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
@@ -555,6 +542,19 @@ public class Activity extends Base {
         .add("artifactName", artifactName)
         .add("status", status)
         .toString();
+  }
+
+  /**
+   * The enum Type.
+   */
+  public enum Type {
+    /**
+     * Command type.
+     */
+    Command, /**
+              * Verification type.
+              */
+    Verification
   }
 
   /**

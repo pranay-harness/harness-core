@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 import com.google.inject.Inject;
@@ -11,9 +12,9 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowType;
+import software.wings.common.VariableProcessor;
 import software.wings.utils.ExpressionEvaluator;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +33,7 @@ public class ExecutionContextImpl implements ExecutionContext {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private ExpressionEvaluator evaluator;
   @Inject private ExpressionProcessorFactory expressionProcessorFactory;
+  @Inject private VariableProcessor variableProcessor;
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
 
@@ -110,13 +112,11 @@ public class ExecutionContextImpl implements ExecutionContext {
    */
   @Override
   public <T extends ContextElement> T getContextElement(ContextElementType contextElementType) {
-    ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
-    for (ContextElement contextElement : contextElements) {
-      if (contextElement.getElementType() == contextElementType) {
-        return (T) contextElement;
-      }
-    }
-    return null;
+    return (T) stateExecutionInstance.getContextElements()
+        .stream()
+        .filter(contextElement -> contextElement.getElementType() == contextElementType)
+        .findFirst()
+        .orElse(null);
   }
 
   /**
@@ -124,14 +124,11 @@ public class ExecutionContextImpl implements ExecutionContext {
    */
   @Override
   public <T extends ContextElement> List<T> getContextElementList(ContextElementType contextElementType) {
-    ArrayDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
-    List<T> selected = new ArrayList<>();
-    for (ContextElement contextElement : contextElements) {
-      if (contextElement.getElementType() == contextElementType) {
-        selected.add((T) contextElement);
-      }
-    }
-    return selected;
+    return stateExecutionInstance.getContextElements()
+        .stream()
+        .filter(contextElement -> contextElement.getElementType() == contextElementType)
+        .map(contextElement -> (T) contextElement)
+        .collect(toList());
   }
 
   @Override
@@ -236,6 +233,8 @@ public class ExecutionContextImpl implements ExecutionContext {
         context.putAll(map);
       }
     }
+
+    context.put("variables", variableProcessor.getVariables(stateExecutionInstance.getContextElements()));
 
     return context;
   }

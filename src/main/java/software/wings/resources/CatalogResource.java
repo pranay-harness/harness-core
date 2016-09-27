@@ -60,8 +60,8 @@ public class CatalogResource {
   /**
    * Creates a new catalog resource.
    *
-   * @param catalogService      catalogService object.
-   * @param settingsService     SettingService object
+   * @param catalogService  catalogService object.
+   * @param settingsService SettingService object
    */
   @Inject
   public CatalogResource(CatalogService catalogService, SettingsService settingsService) {

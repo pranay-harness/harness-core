@@ -78,6 +78,7 @@ public class HostElement implements ContextElement {
    * The type Builder.
    */
   public static final class Builder {
+    private String uuid;
     private String hostName;
 
     private Builder() {}
@@ -89,6 +90,17 @@ public class HostElement implements ContextElement {
      */
     public static Builder aHostElement() {
       return new Builder();
+    }
+
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
     }
 
     /**
@@ -108,7 +120,7 @@ public class HostElement implements ContextElement {
      * @return the builder
      */
     public Builder but() {
-      return aHostElement().withHostName(hostName);
+      return aHostElement().withUuid(uuid).withHostName(hostName);
     }
 
     /**
@@ -118,6 +130,7 @@ public class HostElement implements ContextElement {
      */
     public HostElement build() {
       HostElement hostElement = new HostElement();
+      hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
       return hostElement;
     }

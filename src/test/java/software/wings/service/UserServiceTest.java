@@ -65,22 +65,27 @@ import javax.inject.Inject;
 public class UserServiceTest extends WingsBaseTest {
   private final User.Builder userBuilder =
       anUser().withAppId(APP_ID).withEmail(USER_EMAIL).withName(USER_NAME).withPassword(PASSWORD);
+  /**
+   * The Query.
+   */
+  @Mock Query<User> query;
+  /**
+   * The End.
+   */
+  @Mock FieldEnd end;
+  /**
+   * The Update operations.
+   */
+  @Mock UpdateOperations<User> updateOperations;
   @Mock private EmailNotificationService<EmailData> emailDataNotificationService;
   @Mock private RoleService roleService;
   @Mock private WingsPersistence wingsPersistence;
-
   @Inject @InjectMocks private UserService userService;
-
   @Inject @Named("primaryDatastore") private Datastore datastore;
-
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
   @Captor private ArgumentCaptor<Query<EmailVerificationToken>> emailVerificationQueryArgumentCaptor;
-
-  @Mock Query<User> query;
-  @Mock FieldEnd end;
-  @Mock UpdateOperations<User> updateOperations;
 
   /**
    * Sets mocks.
@@ -186,6 +191,9 @@ public class UserServiceTest extends WingsBaseTest {
     assertThat(user).isEqualTo(userBuilder.withUuid(USER_ID).build());
   }
 
+  /**
+   * Should throw exception if user does not exist.
+   */
   @Test
   public void shouldThrowExceptionIfUserDoesNotExist() {
     assertThatThrownBy(() -> userService.get("INVALID_USER_ID"))

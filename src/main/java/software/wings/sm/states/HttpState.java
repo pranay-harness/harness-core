@@ -227,6 +227,12 @@ public class HttpState extends State {
         .toString();
   }
 
+  /**
+   * Execute internal execution response.
+   *
+   * @param context the context
+   * @return the execution response
+   */
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     String errorMessage = null;
     String evaluatedUrl = context.renderExpression(url);
@@ -348,6 +354,12 @@ public class HttpState extends State {
     return response;
   }
 
+  /**
+   * Create activity string.
+   *
+   * @param executionContext the execution context
+   * @return the string
+   */
   protected String createActivity(ExecutionContext executionContext) {
     Application app = executionContext.getApp();
     Environment env = executionContext.getEnv();
@@ -381,6 +393,13 @@ public class HttpState extends State {
     return activityService.save(activityBuilder.build()).getUuid();
   }
 
+  /**
+   * Update activity status.
+   *
+   * @param activityId the activity id
+   * @param appId      the app id
+   * @param status     the status
+   */
   protected void updateActivityStatus(String activityId, String appId, ExecutionStatus status) {
     activityService.updateStatus(activityId, appId, status);
   }

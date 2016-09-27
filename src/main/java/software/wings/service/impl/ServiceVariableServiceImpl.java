@@ -12,14 +12,14 @@ import com.google.inject.Inject;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.ServiceSetting;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
-import software.wings.service.intfc.ServiceSettingService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,52 +28,52 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
-public class ServiceSettingServiceImpl implements ServiceSettingService {
+public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceTemplateService serviceTemplateService;
 
   @Override
-  public PageResponse<ServiceSetting> list(PageRequest<ServiceSetting> request) {
-    return wingsPersistence.query(ServiceSetting.class, request);
+  public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
+    return wingsPersistence.query(ServiceVariable.class, request);
   }
 
   @Override
-  public String save(@Valid ServiceSetting serviceSetting) {
-    if (!Arrays.asList(SERVICE, EntityType.TAG, EntityType.HOST).contains(serviceSetting.getEntityType())) {
+  public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
+    if (!Arrays.asList(SERVICE, EntityType.TAG, EntityType.HOST).contains(serviceVariable.getEntityType())) {
       throw new WingsException(
-          INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceSetting.getEntityType());
+          INVALID_ARGUMENT, "args", "Service setting not supported for entityType " + serviceVariable.getEntityType());
     }
-    String envId = serviceSetting.getEntityType().equals(SERVICE)
+    String envId = serviceVariable.getEntityType().equals(SERVICE)
         ? GLOBAL_ENV_ID
-        : serviceTemplateService.get(serviceSetting.getAppId(), serviceSetting.getTemplateId()).getEnvId();
+        : serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getTemplateId()).getEnvId();
 
-    serviceSetting.setEnvId(envId);
-    return wingsPersistence.save(serviceSetting);
+    serviceVariable.setEnvId(envId);
+    return wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable);
   }
 
   @Override
-  public ServiceSetting get(@NotEmpty String appId, @NotEmpty String settingId) {
-    ServiceSetting serviceSetting = wingsPersistence.get(ServiceSetting.class, appId, settingId);
-    if (serviceSetting == null) {
+  public ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId) {
+    ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
+    if (serviceVariable == null) {
       throw new WingsException(INVALID_ARGUMENT, "message", "Service Setting not found");
     }
 
-    return serviceSetting;
+    return serviceVariable;
   }
 
   @Override
-  public ServiceSetting update(@Valid ServiceSetting serviceSetting) {
-    return wingsPersistence.saveAndGet(ServiceSetting.class, serviceSetting);
+  public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
+    return wingsPersistence.saveAndGet(ServiceVariable.class, serviceVariable);
   }
 
   @Override
   public void delete(@NotEmpty String appId, @NotEmpty String settingId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(ServiceSetting.class).field("appId").equal(appId).field(ID_KEY).equal(settingId));
+        wingsPersistence.createQuery(ServiceVariable.class).field("appId").equal(appId).field(ID_KEY).equal(settingId));
   }
 
   @Override
-  public List<ServiceSetting> getSettingsForEntity(String appId, String templateId, String entityId) {
+  public List<ServiceVariable> getServiceVariablesForEntity(String appId, String templateId, String entityId) {
     return list(aPageRequest()
                     .addFilter(aSearchFilter().withField("appId", Operator.EQ, appId).build())
                     .addFilter(aSearchFilter().withField("templateId", Operator.EQ, templateId).build())
@@ -83,8 +83,9 @@ public class ServiceSettingServiceImpl implements ServiceSettingService {
   }
 
   @Override
-  public List<ServiceSetting> getServiceSettingByTemplate(String appId, String envId, ServiceTemplate serviceTemplate) {
-    return wingsPersistence.createQuery(ServiceSetting.class)
+  public List<ServiceVariable> getServiceVariablesByTemplate(
+      String appId, String envId, ServiceTemplate serviceTemplate) {
+    return wingsPersistence.createQuery(ServiceVariable.class)
         .field("appId")
         .equal(appId)
         .field("envId")
@@ -96,7 +97,7 @@ public class ServiceSettingServiceImpl implements ServiceSettingService {
 
   @Override
   public void deleteByEntityId(String appId, String templateId, String entityId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceSetting.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
                                 .field("appId")
                                 .equal(appId)
                                 .field("templateId")
@@ -107,7 +108,7 @@ public class ServiceSettingServiceImpl implements ServiceSettingService {
 
   @Override
   public void deleteByTemplateId(String appId, String serviceTemplateId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceSetting.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
                                 .field("appId")
                                 .equal(appId)
                                 .field("templateId")
@@ -116,7 +117,7 @@ public class ServiceSettingServiceImpl implements ServiceSettingService {
 
   @Override
   public void deleteByEntityId(String appId, String entityId) {
-    wingsPersistence.delete(wingsPersistence.createQuery(ServiceSetting.class)
+    wingsPersistence.delete(wingsPersistence.createQuery(ServiceVariable.class)
                                 .field("appId")
                                 .equal(appId)
                                 .field("entityId")

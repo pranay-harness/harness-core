@@ -31,6 +31,7 @@ public class Tag extends Base {
   @NotEmpty private String envId;
   @Reference(idOnly = true, ignoreMissing = true) private List<Tag> children = new ArrayList<>();
   @Transient private List<ConfigFile> configFiles = new ArrayList<>();
+  @Transient private List<ServiceVariable> serviceVariables = new ArrayList<>();
 
   /**
    * Gets name.
@@ -192,6 +193,24 @@ public class Tag extends Base {
    */
   public void setTagType(TagType tagType) {
     this.tagType = tagType;
+  }
+
+  /**
+   * Getter for property 'serviceVariables'.
+   *
+   * @return Value for property 'serviceVariables'.
+   */
+  public List<ServiceVariable> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  /**
+   * Setter for property 'serviceVariables'.
+   *
+   * @param serviceVariables Value to set for property 'serviceVariables'.
+   */
+  public void setServiceVariables(List<ServiceVariable> serviceVariables) {
+    this.serviceVariables = serviceVariables;
   }
 
   @Override

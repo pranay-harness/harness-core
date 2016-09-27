@@ -173,6 +173,9 @@ public class ActivityServiceTest extends WingsBaseTest {
     assertThat(lastProductionActivityForService).isEqualTo(activity);
   }
 
+  /**
+   * Should update activity status.
+   */
   @Test
   public void shouldUpdateActivityStatus() {
     Activity activity = builder.but().build();

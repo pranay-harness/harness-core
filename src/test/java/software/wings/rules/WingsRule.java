@@ -135,8 +135,10 @@ public class WingsRule implements MethodRule {
     } else {
       if (annotations.stream().filter(annotation -> RealMongo.class.isInstance(annotation)).findFirst().isPresent()) {
         int port = Network.getFreeServerPort();
-        IMongodConfig mongodConfig =
-            new MongodConfigBuilder().version(Main.V3_2).net(new Net(port, Network.localhostIsIPv6())).build();
+        IMongodConfig mongodConfig = new MongodConfigBuilder()
+                                         .version(Main.V3_2)
+                                         .net(new Net("127.0.0.1", port, Network.localhostIsIPv6()))
+                                         .build();
         mongodExecutable = starter.prepare(mongodConfig);
         mongodExecutable.start();
         mongoClient = new MongoClient("localhost", port);

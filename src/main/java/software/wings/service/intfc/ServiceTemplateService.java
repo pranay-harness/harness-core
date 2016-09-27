@@ -9,6 +9,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -48,6 +49,16 @@ public interface ServiceTemplateService {
    * @return the service template
    */
   @ValidationGroups(Update.class) ServiceTemplate update(@Valid ServiceTemplate serviceTemplate);
+
+  /**
+   * Compute service variables map.
+   *
+   * @param appId      the app id
+   * @param envId      the env id
+   * @param templateId the template id
+   * @return the map
+   */
+  Map<String, List<ServiceVariable>> computeServiceVariables(String appId, String envId, String templateId);
 
   /**
    * Override config files.

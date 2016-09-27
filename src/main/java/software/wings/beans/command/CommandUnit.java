@@ -221,6 +221,9 @@ public abstract class CommandUnit {
               */
     RUNNING,
 
+    /**
+     * Queued execution result.
+     */
     QUEUED;
 
     /**
