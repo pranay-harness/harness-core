@@ -222,10 +222,12 @@ public class HostServiceTest extends WingsBaseTest {
                                .withAppId(APP_ID)
                                .withEnvId(ENV_ID)
                                .withUuid(HOST_ID)
+                               .withHostName(HOST_NAME)
                                .withHost(hostBuilder.withUuid(HOST_ID).build())
                                .build();
     when(applicationHostQuery.asList()).thenReturn(asList(host));
     when(wingsPersistence.delete(any(ApplicationHost.class))).thenReturn(true);
+    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().withName("PROD").build());
     hostService.deleteByInfra(INFRA_ID);
 
     verify(applicationHostQuery).asList();
@@ -233,6 +235,7 @@ public class HostServiceTest extends WingsBaseTest {
     verify(applicationHostQueryEnd).equal(INFRA_ID);
     verify(wingsPersistence).delete(host);
     verify(serviceTemplateService).deleteHostFromTemplates(host);
+    verify(notificationService).sendNotificationAsync(any(Notification.class));
   }
 
   /**
