@@ -260,6 +260,9 @@ public class HostIntegrationTest extends WingsBaseTest {
         .isEqualTo(3);
   }
 
+  /**
+   * Should delete all service template mapping and all service instances on host delete by infra.
+   */
   @Test
   public void shouldDeleteAllServiceTemplateMappingAndAllServiceInstancesOnHostDeleteByInfra() {
     Host baseHost = aHost()

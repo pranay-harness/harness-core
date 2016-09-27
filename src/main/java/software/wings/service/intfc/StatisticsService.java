@@ -11,13 +11,6 @@ import java.util.List;
  */
 public interface StatisticsService {
   /**
-   * Gets summary.
-   *
-   * @return the summary
-   */
-  List<WingsStatistics> getSummary();
-
-  /**
    * Gets top consumers.
    *
    * @return the top consumers

@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -52,11 +54,14 @@ import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
+import software.wings.beans.Setup;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -65,6 +70,7 @@ import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SetupService;
 import software.wings.stencils.Stencil;
 
 import java.util.ArrayList;
@@ -105,6 +111,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private NotificationService notificationService;
   @Mock private HistoryService historyService;
+  @Mock private SetupService setupService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -122,7 +129,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(wingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(builder.but().build());
-    when(wingsPersistence.get(eq(Service.class), anyString(), anyString())).thenReturn(builder.but().build());
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
     when(wingsPersistence.createQuery(Service.class)).thenReturn(datastore.createQuery(Service.class));
     when(wingsPersistence.createUpdateOperations(Service.class))
         .thenReturn(datastore.createUpdateOperations(Service.class));
@@ -187,6 +194,38 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
     verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldAddSetupSuggestionForIncompleteService() {
+    when(wingsPersistence.get(Service.class, APP_ID, SERVICE_ID)).thenReturn(builder.but().build());
+    when(configService.getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID)).thenReturn(new ArrayList<>());
+    when(setupService.getServiceSetupStatus(builder.but().build())).thenReturn(Setup.Builder.aSetup().build());
+
+    Service service = srs.get(APP_ID, SERVICE_ID, SetupStatus.INCOMPLETE);
+
+    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
+    verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
+    verify(activityService).getLastActivityForService(APP_ID, SERVICE_ID);
+    verify(activityService).getLastProductionActivityForService(APP_ID, SERVICE_ID);
+    verify(setupService).getServiceSetupStatus(builder.but().build());
+    assertThat(service.getSetup()).isNotNull();
+  }
+
+  @Test
+  public void shouldThrowExceptionForNonExistentServiceGet() {
+    assertThatThrownBy(() -> srs.get(APP_ID, "NON_EXISTENT_SERVICE_ID"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+    verify(wingsPersistence).get(Service.class, APP_ID, "NON_EXISTENT_SERVICE_ID");
+  }
+
+  @Test
+  public void shouldThrowExceptionForNonExistentServiceDelete() {
+    assertThatThrownBy(() -> srs.delete(APP_ID, "NON_EXISTENT_SERVICE_ID"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+    verify(wingsPersistence).get(Service.class, APP_ID, "NON_EXISTENT_SERVICE_ID");
   }
 
   /**

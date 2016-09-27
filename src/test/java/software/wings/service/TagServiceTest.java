@@ -25,7 +25,6 @@ import static software.wings.utils.WingsTestConstants.TAG_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -188,16 +187,6 @@ public class TagServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence).delete(tag);
     verify(serviceInstanceService).updateInstanceMappings(serviceTemplate, asList(), asList(applicationHost));
-  }
-
-  /**
-   * Should save root tag.
-   */
-  @Test
-  @Ignore
-  public void shouldSaveRootTag() {
-    tagService.save(null, getTagBuilder().build());
-    verify(wingsPersistence).saveAndGet(Tag.class, getTagBuilder().withTagType(TagType.ENVIRONMENT).build());
   }
 
   /**
@@ -407,11 +396,4 @@ public class TagServiceTest extends WingsBaseTest {
     verify(end).equal(ENVIRONMENT);
     verify(query).get();
   }
-
-  /**
-   * Should get leaf tags.
-   */
-  @Test
-  @Ignore
-  public void shouldGetLeafTags() {}
 }

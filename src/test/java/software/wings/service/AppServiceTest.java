@@ -6,6 +6,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -14,6 +15,8 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
+import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
@@ -33,9 +36,13 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EventType;
 import software.wings.beans.History;
 import software.wings.beans.Notification;
+import software.wings.beans.Service;
+import software.wings.beans.Setup;
+import software.wings.beans.Setup.SetupStatus;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -43,6 +50,7 @@ import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SetupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
 import javax.inject.Inject;
@@ -78,6 +86,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private NotificationService notificationService;
   @Mock private HistoryService historyService;
+  @Mock private SetupService setupService;
   @Captor private ArgumentCaptor<History> historyArgumentCaptor = ArgumentCaptor.forClass(History.class);
 
   /**
@@ -92,6 +101,8 @@ public class AppServiceTest extends WingsBaseTest {
     when(query.field(any())).thenReturn(end);
     when(end.equal(any())).thenReturn(query);
     when(updateOperations.set(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.add(any(), any())).thenReturn(updateOperations);
+    when(updateOperations.removeAll(any(), any(Service.class))).thenReturn(updateOperations);
   }
 
   /**
@@ -168,6 +179,55 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(application.getNotifications())
         .hasSize(1)
         .containsExactly(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+  }
+
+  @Test
+  public void shouldAddSetupSuggestionForIncompleteApplicationGet() {
+    PageResponse<Notification> notificationPageResponse = new PageResponse<>();
+    notificationPageResponse.add(anApprovalNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
+    when(notificationService.list(any(PageRequest.class))).thenReturn(notificationPageResponse);
+    when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(anApplication().withUuid(APP_ID).build());
+    when(setupService.getApplicationSetupStatus(anApplication().withUuid(APP_ID).build()))
+        .thenReturn(Setup.Builder.aSetup().build());
+    Application application = appService.get(APP_ID, SetupStatus.INCOMPLETE);
+
+    verify(wingsPersistence).get(Application.class, APP_ID);
+    verify(setupService).getApplicationSetupStatus(anApplication().withUuid(APP_ID).build());
+    assertThat(application.getSetup()).isNotNull();
+  }
+
+  @Test
+  public void shouldThrowExceptionForNonExistentApplicationGet() {
+    assertThatThrownBy(() -> appService.get("NON_EXISTENT_APP_ID"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+  }
+
+  @Test
+  public void shouldThrowExceptionForNonExistentApplicationDelete() {
+    assertThatThrownBy(() -> appService.delete("NON_EXISTENT_APP_ID"))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_ARGUMENT.name());
+  }
+
+  @Test
+  public void shouldAddService() {
+    appService.addService(aService().withAppId(APP_ID).build());
+
+    verify(query).field(ID_KEY);
+    verify(end).equal(APP_ID);
+    verify(updateOperations).add("services", aService().withAppId(APP_ID).build());
+    verify(wingsPersistence).update(query, updateOperations);
+  }
+
+  @Test
+  public void shouldDeleteService() {
+    appService.deleteService(aService().withAppId(APP_ID).build());
+
+    verify(query).field(ID_KEY);
+    verify(end).equal(APP_ID);
+    verify(updateOperations).removeAll("services", aService().withAppId(APP_ID).build());
+    verify(wingsPersistence).update(query, updateOperations);
   }
 
   /**

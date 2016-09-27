@@ -29,17 +29,6 @@ public class StatisticsResource {
   @Inject private StatisticsService statisticsService;
 
   /**
-   * Cards rest response.
-   *
-   * @return the rest response
-   */
-  @GET
-  @Path("summary")
-  public RestResponse<List<WingsStatistics>> cards() {
-    return new RestResponse<>(statisticsService.getSummary());
-  }
-
-  /**
    * Key stats rest response.
    *
    * @return the rest response
