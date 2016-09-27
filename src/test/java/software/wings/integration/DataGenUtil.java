@@ -693,9 +693,9 @@ private void createGlobalSettings() {
       Entity.entity(aSettingAttribute()
                         .withName("AppDynamics")
                         .withValue(AppDynamicsConfig.Builder.anAppDynamicsConfig()
-                                       .withControllerUrl("https://wingssoftware.saas.appdynamics.com/controller")
+                                       .withControllerUrl("https://na595.saas.appdynamics.com/controller")
                                        .withUsername("testuser")
-                                       .withAccountname("WingsSoftware")
+                                       .withAccountname("na595")
                                        .withPassword("testuser123")
                                        .build())
                         .build(),
