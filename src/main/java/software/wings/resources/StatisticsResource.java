@@ -75,6 +75,11 @@ public class StatisticsResource {
     return new RestResponse<>(statisticsService.getTopConsumers());
   }
 
+  /**
+   * User statistics rest response.
+   *
+   * @return the rest response
+   */
   @GET
   @Path("user-stats")
   public RestResponse<UserStatistics> userStatistics() {

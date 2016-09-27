@@ -18,6 +18,9 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
   private String accessKey;
   private String secretKey;
 
+  /**
+   * Instantiates a new Elastic load balancer config.
+   */
   public ElasticLoadBalancerConfig() {
     super(SettingVariableTypes.ELB);
   }
@@ -122,6 +125,9 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
         .toString();
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private Regions region;
     private String loadBalancerName;
@@ -131,35 +137,75 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
 
     private Builder() {}
 
+    /**
+     * An elastic load balancer config builder.
+     *
+     * @return the builder
+     */
     public static Builder anElasticLoadBalancerConfig() {
       return new Builder();
     }
 
+    /**
+     * With region builder.
+     *
+     * @param region the region
+     * @return the builder
+     */
     public Builder withRegion(Regions region) {
       this.region = region;
       return this;
     }
 
+    /**
+     * With load balancer name builder.
+     *
+     * @param loadBalancerName the load balancer name
+     * @return the builder
+     */
     public Builder withLoadBalancerName(String loadBalancerName) {
       this.loadBalancerName = loadBalancerName;
       return this;
     }
 
+    /**
+     * With access key builder.
+     *
+     * @param accessKey the access key
+     * @return the builder
+     */
     public Builder withAccessKey(String accessKey) {
       this.accessKey = accessKey;
       return this;
     }
 
+    /**
+     * With secret key builder.
+     *
+     * @param secretKey the secret key
+     * @return the builder
+     */
     public Builder withSecretKey(String secretKey) {
       this.secretKey = secretKey;
       return this;
     }
 
+    /**
+     * With type builder.
+     *
+     * @param type the type
+     * @return the builder
+     */
     public Builder withType(SettingVariableTypes type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return anElasticLoadBalancerConfig()
           .withRegion(region)
@@ -169,6 +215,11 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig {
           .withType(type);
     }
 
+    /**
+     * Build elastic load balancer config.
+     *
+     * @return the elastic load balancer config
+     */
     public ElasticLoadBalancerConfig build() {
       ElasticLoadBalancerConfig elasticLoadBalancerConfig = new ElasticLoadBalancerConfig();
       elasticLoadBalancerConfig.setRegion(region);

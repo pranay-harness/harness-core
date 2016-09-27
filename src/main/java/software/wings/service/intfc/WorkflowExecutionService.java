@@ -44,10 +44,10 @@ public interface WorkflowExecutionService {
   /**
    * List executions page response.
    *
-   * @param pageRequest  the page request
-   * @param includeGraph the include graph
-   * @param runningOnly  the running only
-   * @param withBreakdownAndSummary
+   * @param pageRequest             the page request
+   * @param includeGraph            the include graph
+   * @param runningOnly             the running only
+   * @param withBreakdownAndSummary the with breakdown and summary
    * @return the page response
    */
   PageResponse<WorkflowExecution> listExecutions(PageRequest<WorkflowExecution> pageRequest, boolean includeGraph,
@@ -160,5 +160,13 @@ public interface WorkflowExecutionService {
    */
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 
+  /**
+   * Gets execution details for node.
+   *
+   * @param appId                    the app id
+   * @param workflowExecutionId      the workflow execution id
+   * @param stateExecutionInstanceId the state execution instance id
+   * @return the execution details for node
+   */
   Node getExecutionDetailsForNode(String appId, String workflowExecutionId, String stateExecutionInstanceId);
 }

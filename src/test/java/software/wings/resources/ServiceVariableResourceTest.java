@@ -39,6 +39,9 @@ import javax.ws.rs.core.Response;
 public class ServiceVariableResourceTest {
   private static final ServiceVariableService VARIABLE_SERVICE = mock(ServiceVariableService.class);
 
+  /**
+   * The constant RESOURCES.
+   */
   @ClassRule
   public static final ResourceTestRule RESOURCES = ResourceTestRule.builder()
                                                        .addResource(new ServiceVariableResource(VARIABLE_SERVICE))
@@ -56,6 +59,11 @@ public class ServiceVariableResourceTest {
                                                               .withValue("8080")
                                                               .build();
 
+  /**
+   * Should list variables.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldListVariables() throws Exception {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
@@ -75,6 +83,11 @@ public class ServiceVariableResourceTest {
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }
 
+  /**
+   * Should save service variable.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldSaveServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.save(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
@@ -87,6 +100,11 @@ public class ServiceVariableResourceTest {
     verify(VARIABLE_SERVICE).save(SERVICE_VARIABLE);
   }
 
+  /**
+   * Should get variable.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldGetVariable() throws Exception {
     when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
@@ -99,6 +117,11 @@ public class ServiceVariableResourceTest {
     verify(VARIABLE_SERVICE).get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID);
   }
 
+  /**
+   * Should update service variable.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldUpdateServiceVariable() throws Exception {
     when(VARIABLE_SERVICE.update(any(ServiceVariable.class))).thenReturn(SERVICE_VARIABLE);
@@ -112,6 +135,11 @@ public class ServiceVariableResourceTest {
     verify(VARIABLE_SERVICE).update(SERVICE_VARIABLE);
   }
 
+  /**
+   * Should delete service variable.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldDeleteServiceVariable() throws Exception {
     Response restResponse =
@@ -123,6 +151,11 @@ public class ServiceVariableResourceTest {
     verify(VARIABLE_SERVICE).delete(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID);
   }
 
+  /**
+   * Shoudl delete by entity.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shoudlDeleteByEntity() throws Exception {
     Response restResponse =

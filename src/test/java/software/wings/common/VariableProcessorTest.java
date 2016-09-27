@@ -31,17 +31,30 @@ import java.util.ArrayDeque;
  * Created by peeyushaggarwal on 9/27/16.
  */
 public class VariableProcessorTest {
+  /**
+   * The Mockito rule.
+   */
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private ServiceTemplateService serviceTemplateService;
 
   @InjectMocks private VariableProcessor variableProcessor = new VariableProcessor();
 
+  /**
+   * Should get no variables.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldGetNoVariables() throws Exception {
     assertThat(variableProcessor.getVariables(new ArrayDeque<>())).isEmpty();
   }
 
+  /**
+   * Should get variables for instance element.
+   *
+   * @throws Exception the exception
+   */
   @Test
   public void shouldGetVariablesForInstanceElement() throws Exception {
     when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID))

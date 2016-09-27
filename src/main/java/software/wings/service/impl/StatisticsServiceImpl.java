@@ -333,6 +333,13 @@ public class StatisticsServiceImpl implements StatisticsService {
         .build();
   }
 
+  /**
+   * Gets associated releases from executions.
+   *
+   * @param appId         the app id
+   * @param wflExecutions the wfl executions
+   * @return the associated releases from executions
+   */
   public List<Release> getAssociatedReleasesFromExecutions(String appId, List<WorkflowExecution> wflExecutions) {
     Set<String> releaseIds =
         wflExecutions.stream()

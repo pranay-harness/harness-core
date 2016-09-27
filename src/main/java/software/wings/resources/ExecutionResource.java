@@ -213,6 +213,15 @@ public class ExecutionResource {
     return new RestResponse<>(workflowExecutionService.getRequiredExecutionArgs(appId, envId, executionArgs));
   }
 
+  /**
+   * Gets execution node details.
+   *
+   * @param appId                    the app id
+   * @param envId                    the env id
+   * @param workflowExecutionId      the workflow execution id
+   * @param stateExecutionInstanceId the state execution instance id
+   * @return the execution node details
+   */
   @GET
   @Path("{workflowExecutionId}/node/{stateExecutionInstanceId}")
   @Produces("application/json")

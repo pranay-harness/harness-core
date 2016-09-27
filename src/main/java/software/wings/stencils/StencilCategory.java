@@ -43,7 +43,9 @@ public enum StencilCategory {
   COPY, /**
          * Others stencil category.
          */
-  CLOUD(3),
+  CLOUD(3), /**
+             * Others stencil category.
+             */
   OTHERS(10);
 
   private String displayName;

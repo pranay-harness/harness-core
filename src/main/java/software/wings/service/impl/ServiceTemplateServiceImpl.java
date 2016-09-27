@@ -28,8 +28,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -40,8 +40,8 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
 
@@ -533,6 +533,13 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     return existingFiles;
   }
 
+  /**
+   * Override service settings list.
+   *
+   * @param existingFiles the existing files
+   * @param newFiles      the new files
+   * @return the list
+   */
   public List<ServiceVariable> overrideServiceSettings(
       List<ServiceVariable> existingFiles, List<ServiceVariable> newFiles) {
     logger.info("Config files before overrides [{}]", existingFiles.toString());

@@ -1383,6 +1383,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     triggerOrchestration(appId, env);
   }
 
+  /**
+   * Should get node details.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
   @Test
   public void shouldGetNodeDetails() throws InterruptedException {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("abc").build());
@@ -1447,6 +1452,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
    *
    * @param appId the app id
    * @param env   the env
+   * @return the string
    * @throws InterruptedException the interrupted exception
    */
   public String triggerOrchestration(String appId, Environment env) throws InterruptedException {

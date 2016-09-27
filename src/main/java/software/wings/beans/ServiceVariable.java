@@ -41,23 +41,6 @@ public class ServiceVariable extends Base {
 
   private Type type;
 
-  public enum Type {
-    TEXT,
-    LB(true);
-
-    private boolean settingAttribute;
-
-    Type() {}
-
-    Type(boolean settingAttribute) {
-      this.settingAttribute = settingAttribute;
-    }
-
-    public boolean isSettingAttribute() {
-      return settingAttribute;
-    }
-  }
-
   /**
    * Getter for property 'templateId'.
    *
@@ -223,6 +206,39 @@ public class ServiceVariable extends Base {
         .toString();
   }
 
+  /**
+   * The enum Type.
+   */
+  public enum Type {
+    /**
+     * Text type.
+     */
+    TEXT, /**
+           * Lb type.
+           */
+    LB(true);
+
+    private boolean settingAttribute;
+
+    Type() {}
+
+    Type(boolean settingAttribute) {
+      this.settingAttribute = settingAttribute;
+    }
+
+    /**
+     * Is setting attribute boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isSettingAttribute() {
+      return settingAttribute;
+    }
+  }
+
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private String templateId;
     private String envId;
@@ -241,80 +257,174 @@ public class ServiceVariable extends Base {
 
     private Builder() {}
 
+    /**
+     * A service variable builder.
+     *
+     * @return the builder
+     */
     public static Builder aServiceVariable() {
       return new Builder();
     }
 
+    /**
+     * With template id builder.
+     *
+     * @param templateId the template id
+     * @return the builder
+     */
     public Builder withTemplateId(String templateId) {
       this.templateId = templateId;
       return this;
     }
 
+    /**
+     * With env id builder.
+     *
+     * @param envId the env id
+     * @return the builder
+     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
+    /**
+     * With entity type builder.
+     *
+     * @param entityType the entity type
+     * @return the builder
+     */
     public Builder withEntityType(EntityType entityType) {
       this.entityType = entityType;
       return this;
     }
 
+    /**
+     * With entity id builder.
+     *
+     * @param entityId the entity id
+     * @return the builder
+     */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
       return this;
     }
 
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
     public Builder withName(String name) {
       this.name = name;
       return this;
     }
 
+    /**
+     * With value builder.
+     *
+     * @param value the value
+     * @return the builder
+     */
     public Builder withValue(String value) {
       this.value = value;
       return this;
     }
 
+    /**
+     * With type builder.
+     *
+     * @param type the type
+     * @return the builder
+     */
     public Builder withType(Type type) {
       this.type = type;
       return this;
     }
 
+    /**
+     * With uuid builder.
+     *
+     * @param uuid the uuid
+     * @return the builder
+     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With created by builder.
+     *
+     * @param createdBy the created by
+     * @return the builder
+     */
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
+    /**
+     * With created at builder.
+     *
+     * @param createdAt the created at
+     * @return the builder
+     */
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
+    /**
+     * With last updated by builder.
+     *
+     * @param lastUpdatedBy the last updated by
+     * @return the builder
+     */
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
+    /**
+     * With last updated at builder.
+     *
+     * @param lastUpdatedAt the last updated at
+     * @return the builder
+     */
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
+    /**
+     * With active builder.
+     *
+     * @param active the active
+     * @return the builder
+     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aServiceVariable()
           .withTemplateId(templateId)
@@ -333,6 +443,11 @@ public class ServiceVariable extends Base {
           .withActive(active);
     }
 
+    /**
+     * Build service variable.
+     *
+     * @return the service variable
+     */
     public ServiceVariable build() {
       ServiceVariable serviceVariable = new ServiceVariable();
       serviceVariable.setTemplateId(templateId);

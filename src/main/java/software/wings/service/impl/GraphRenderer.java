@@ -120,6 +120,12 @@ public class GraphRenderer {
     return graph;
   }
 
+  /**
+   * Convert to node node.
+   *
+   * @param instance the instance
+   * @return the node
+   */
   Node convertToNode(StateExecutionInstance instance) {
     Node node = new Node();
     node.setId(instance.getUuid());

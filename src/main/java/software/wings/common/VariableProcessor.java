@@ -22,10 +22,19 @@ import java.util.Map;
 import java.util.Optional;
 import javax.inject.Inject;
 
+/**
+ * The type Variable processor.
+ */
 @Singleton
 public class VariableProcessor {
   @Inject private ServiceTemplateService serviceTemplateService;
 
+  /**
+   * Gets variables.
+   *
+   * @param contextElements the context elements
+   * @return the variables
+   */
   public Map<String, String> getVariables(ArrayDeque<ContextElement> contextElements) {
     Map<String, String> variables = Maps.newHashMap();
     Optional<ContextElement> instanceElement =

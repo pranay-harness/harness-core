@@ -16,164 +16,6 @@ public class UserStatistics {
   private List<ReleaseDetails> releaseDetails;
 
   /**
-   * The type App deployment.
-   */
-  public static class AppDeployment {
-    private String appId;
-    private String appName;
-    /**
-     * The Deployments.
-     */
-    List<WorkflowExecution> deployments;
-
-    /**
-     * Instantiates a new App deployment.
-     *
-     * @param appId       the app id
-     * @param appName     the app name
-     * @param deployments the deployments
-     */
-    public AppDeployment(String appId, String appName, List<WorkflowExecution> deployments) {
-      this.appId = appId;
-      this.appName = appName;
-      this.deployments = deployments;
-    }
-
-    /**
-     * Gets app id.
-     *
-     * @return the app id
-     */
-    public String getAppId() {
-      return appId;
-    }
-
-    /**
-     * Sets app id.
-     *
-     * @param appId the app id
-     */
-    public void setAppId(String appId) {
-      this.appId = appId;
-    }
-
-    /**
-     * Gets app name.
-     *
-     * @return the app name
-     */
-    public String getAppName() {
-      return appName;
-    }
-
-    /**
-     * Sets app name.
-     *
-     * @param appName the app name
-     */
-    public void setAppName(String appName) {
-      this.appName = appName;
-    }
-
-    /**
-     * Gets deployments.
-     *
-     * @return the deployments
-     */
-    public List<WorkflowExecution> getDeployments() {
-      return deployments;
-    }
-
-    /**
-     * Sets deployments.
-     *
-     * @param deployments the deployments
-     */
-    public void setDeployments(List<WorkflowExecution> deployments) {
-      this.deployments = deployments;
-    }
-  }
-
-  /**
-   * The type Release details.
-   */
-  public static class ReleaseDetails {
-    private String appId;
-    private String appName;
-    /**
-     * The Releases.
-     */
-    List<Release> releases;
-
-    /**
-     * Instantiates a new Release details.
-     *
-     * @param appId    the app id
-     * @param appName  the app name
-     * @param releases the releases
-     */
-    public ReleaseDetails(String appId, String appName, List<Release> releases) {
-      this.appId = appId;
-      this.appName = appName;
-      this.releases = releases;
-    }
-
-    /**
-     * Gets app id.
-     *
-     * @return the app id
-     */
-    public String getAppId() {
-      return appId;
-    }
-
-    /**
-     * Sets app id.
-     *
-     * @param appId the app id
-     */
-    public void setAppId(String appId) {
-      this.appId = appId;
-    }
-
-    /**
-     * Gets app name.
-     *
-     * @return the app name
-     */
-    public String getAppName() {
-      return appName;
-    }
-
-    /**
-     * Sets app name.
-     *
-     * @param appName the app name
-     */
-    public void setAppName(String appName) {
-      this.appName = appName;
-    }
-
-    /**
-     * Gets releases.
-     *
-     * @return the releases
-     */
-    public List<Release> getReleases() {
-      return releases;
-    }
-
-    /**
-     * Sets releases.
-     *
-     * @param releases the releases
-     */
-    public void setReleases(List<Release> releases) {
-      this.releases = releases;
-    }
-  }
-
-  /**
    * Gets deployment count.
    *
    * @return the deployment count
@@ -261,6 +103,164 @@ public class UserStatistics {
    */
   public void setReleaseDetails(List<ReleaseDetails> releaseDetails) {
     this.releaseDetails = releaseDetails;
+  }
+
+  /**
+   * The type App deployment.
+   */
+  public static class AppDeployment {
+    /**
+     * The Deployments.
+     */
+    List<WorkflowExecution> deployments;
+    private String appId;
+    private String appName;
+
+    /**
+     * Instantiates a new App deployment.
+     *
+     * @param appId       the app id
+     * @param appName     the app name
+     * @param deployments the deployments
+     */
+    public AppDeployment(String appId, String appName, List<WorkflowExecution> deployments) {
+      this.appId = appId;
+      this.appName = appName;
+      this.deployments = deployments;
+    }
+
+    /**
+     * Gets app id.
+     *
+     * @return the app id
+     */
+    public String getAppId() {
+      return appId;
+    }
+
+    /**
+     * Sets app id.
+     *
+     * @param appId the app id
+     */
+    public void setAppId(String appId) {
+      this.appId = appId;
+    }
+
+    /**
+     * Gets app name.
+     *
+     * @return the app name
+     */
+    public String getAppName() {
+      return appName;
+    }
+
+    /**
+     * Sets app name.
+     *
+     * @param appName the app name
+     */
+    public void setAppName(String appName) {
+      this.appName = appName;
+    }
+
+    /**
+     * Gets deployments.
+     *
+     * @return the deployments
+     */
+    public List<WorkflowExecution> getDeployments() {
+      return deployments;
+    }
+
+    /**
+     * Sets deployments.
+     *
+     * @param deployments the deployments
+     */
+    public void setDeployments(List<WorkflowExecution> deployments) {
+      this.deployments = deployments;
+    }
+  }
+
+  /**
+   * The type Release details.
+   */
+  public static class ReleaseDetails {
+    /**
+     * The Releases.
+     */
+    List<Release> releases;
+    private String appId;
+    private String appName;
+
+    /**
+     * Instantiates a new Release details.
+     *
+     * @param appId    the app id
+     * @param appName  the app name
+     * @param releases the releases
+     */
+    public ReleaseDetails(String appId, String appName, List<Release> releases) {
+      this.appId = appId;
+      this.appName = appName;
+      this.releases = releases;
+    }
+
+    /**
+     * Gets app id.
+     *
+     * @return the app id
+     */
+    public String getAppId() {
+      return appId;
+    }
+
+    /**
+     * Sets app id.
+     *
+     * @param appId the app id
+     */
+    public void setAppId(String appId) {
+      this.appId = appId;
+    }
+
+    /**
+     * Gets app name.
+     *
+     * @return the app name
+     */
+    public String getAppName() {
+      return appName;
+    }
+
+    /**
+     * Sets app name.
+     *
+     * @param appName the app name
+     */
+    public void setAppName(String appName) {
+      this.appName = appName;
+    }
+
+    /**
+     * Gets releases.
+     *
+     * @return the releases
+     */
+    public List<Release> getReleases() {
+      return releases;
+    }
+
+    /**
+     * Sets releases.
+     *
+     * @param releases the releases
+     */
+    public void setReleases(List<Release> releases) {
+      this.releases = releases;
+    }
   }
 
   /**

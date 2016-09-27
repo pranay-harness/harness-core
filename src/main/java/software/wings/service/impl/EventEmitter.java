@@ -45,7 +45,9 @@ public class EventEmitter {
     /**
      * Artifacts channel.
      */
-    ARTIFACTS("artifacts", "ARTIFACT:ALL"),
+    ARTIFACTS("artifacts", "ARTIFACT:ALL"), /**
+                                             * Activities channel.
+                                             */
     ACTIVITIES("activities", "ENVIRONMENT:ALL");
 
     private String channelName;

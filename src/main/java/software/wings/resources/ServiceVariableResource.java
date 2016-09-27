@@ -31,22 +31,47 @@ import javax.ws.rs.QueryParam;
 public class ServiceVariableResource {
   private ServiceVariableService serviceVariablesService;
 
+  /**
+   * Instantiates a new Service variable resource.
+   *
+   * @param serviceVariablesService the service variables service
+   */
   @Inject
   public ServiceVariableResource(ServiceVariableService serviceVariablesService) {
     this.serviceVariablesService = serviceVariablesService;
   }
 
+  /**
+   * List rest response.
+   *
+   * @param pageRequest the page request
+   * @return the rest response
+   */
   @GET
   public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest) {
     return new RestResponse<>(serviceVariablesService.list(pageRequest));
   }
 
+  /**
+   * Save rest response.
+   *
+   * @param appId           the app id
+   * @param serviceVariable the service variable
+   * @return the rest response
+   */
   @POST
   public RestResponse<ServiceVariable> save(@QueryParam("appId") String appId, ServiceVariable serviceVariable) {
     serviceVariable.setAppId(appId);
     return new RestResponse<>(serviceVariablesService.save(serviceVariable));
   }
 
+  /**
+   * Get rest response.
+   *
+   * @param appId             the app id
+   * @param serviceVariableId the service variable id
+   * @return the rest response
+   */
   @GET
   @Path("{serviceVariableId}")
   public RestResponse<ServiceVariable> get(
@@ -54,6 +79,14 @@ public class ServiceVariableResource {
     return new RestResponse<>(serviceVariablesService.get(appId, serviceVariableId));
   }
 
+  /**
+   * Update rest response.
+   *
+   * @param appId             the app id
+   * @param serviceVariableId the service variable id
+   * @param serviceVariable   the service variable
+   * @return the rest response
+   */
   @PUT
   @Path("{serviceVariableId}")
   public RestResponse update(@QueryParam("appId") String appId,
@@ -62,6 +95,13 @@ public class ServiceVariableResource {
     return new RestResponse<>(serviceVariablesService.update(serviceVariable));
   }
 
+  /**
+   * Delete rest response.
+   *
+   * @param appId             the app id
+   * @param serviceVariableId the service variable id
+   * @return the rest response
+   */
   @DELETE
   @Path("{serviceVariableId}")
   public RestResponse delete(
@@ -70,6 +110,14 @@ public class ServiceVariableResource {
     return new RestResponse();
   }
 
+  /**
+   * Delete by entity rest response.
+   *
+   * @param appId      the app id
+   * @param templateId the template id
+   * @param entityId   the entity id
+   * @return the rest response
+   */
   @DELETE
   @Path("/entity/{entityId}")
   public RestResponse deleteByEntity(@QueryParam("appId") String appId,
