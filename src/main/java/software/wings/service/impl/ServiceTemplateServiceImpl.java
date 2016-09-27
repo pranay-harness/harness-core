@@ -28,6 +28,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Host;
 import software.wings.beans.Infra;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.dl.PageRequest;
@@ -39,6 +40,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfraService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.Validator;
@@ -69,6 +71,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TagService tagService;
   @Inject private ConfigService configService;
+  @Inject private ServiceVariableService serviceVariableService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private HostService hostService;
   @Inject private InfraService infraService;
@@ -474,6 +477,47 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   /* (non-Javadoc)
+   * @see software.wings.service.intfc.ServiceTemplateService#computedConfigFiles(java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
+  @Override
+  public Map<String, List<ServiceVariable>> computeServiceVariables(String appId, String envId, String templateId) {
+    ServiceTemplate serviceTemplate = wingsPersistence.get(ServiceTemplate.class, templateId);
+    if (serviceTemplate == null) {
+      return new HashMap<>();
+    }
+    /* override order(left to right): Service -> [Tag Hierarchy] -> Host */
+
+    List<ServiceVariable> serviceConfigFiles = serviceVariableService.getServiceVariablesForEntity(
+        appId, DEFAULT_TEMPLATE_ID, serviceTemplate.getService().getUuid());
+
+    // flatten tag hierarchy and [tag -> tag] overrides
+    logger.info("Flatten Tag hierarchy and getInfo config overrides");
+    List<Tag> leafTagNodes = applyOverrideAndGetLeafTags(serviceTemplate);
+
+    // service->tag override
+    logger.info("Apply tag override on tags");
+    for (Tag tag : leafTagNodes) {
+      tag.setServiceVariables(overrideServiceSettings(serviceConfigFiles, tag.getServiceVariables()));
+    }
+
+    // Tag -> Host override
+    logger.info("Apply host overrides");
+    Map<String, List<ServiceVariable>> computedHostConfigs = new HashMap<>();
+
+    logger.info("Apply host overrides for tagged hosts");
+    for (Tag tag : leafTagNodes) {
+      List<Host> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
+      for (Host host : taggedHosts) {
+        computedHostConfigs.put(host.getUuid(),
+            overrideServiceSettings(tag.getServiceVariables(),
+                serviceVariableService.getServiceVariablesForEntity(appId, templateId, host.getUuid())));
+      }
+    }
+    return computedHostConfigs;
+  }
+
+  /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#overrideConfigFiles(java.util.List, java.util.List)
    */
   @Override
@@ -483,6 +527,19 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     if (newFiles != null && !newFiles.isEmpty()) {
       existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
                           .filter(new TreeSet<>(Comparator.comparing(ConfigFile::getName))::add)
+                          .collect(toList());
+    }
+    logger.info("Config files after overrides [{}]", existingFiles.toString());
+    return existingFiles;
+  }
+
+  public List<ServiceVariable> overrideServiceSettings(
+      List<ServiceVariable> existingFiles, List<ServiceVariable> newFiles) {
+    logger.info("Config files before overrides [{}]", existingFiles.toString());
+    logger.info("New override config files [{}]", newFiles != null ? newFiles.toString() : null);
+    if (newFiles != null && !newFiles.isEmpty()) {
+      existingFiles = Stream.concat(newFiles.stream(), existingFiles.stream())
+                          .filter(new TreeSet<>(Comparator.comparing(ServiceVariable::getName))::add)
                           .collect(toList());
     }
     logger.info("Config files after overrides [{}]", existingFiles.toString());
@@ -510,6 +567,35 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
           child.getConfigFiles().addAll(configService.getConfigFilesForEntity(
               serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
           child.setConfigFiles(overrideConfigFiles(parentTag.getConfigFiles(), child.getConfigFiles()));
+          queue.add(child);
+        }
+      }
+    }
+    return leafTagNodes;
+  }
+
+  private List<Tag> applyOverrideAndGetLeafTagsWithServiceSettings(ServiceTemplate serviceTemplate) {
+    List<Tag> leafTagNodes = new ArrayList<>();
+    Tag rootTag = tagService.getRootConfigTag(serviceTemplate.getAppId(), serviceTemplate.getEnvId());
+    if (rootTag == null) {
+      return leafTagNodes;
+    }
+    rootTag.getServiceVariables().addAll(serviceVariableService.getServiceVariablesForEntity(
+        serviceTemplate.getAppId(), serviceTemplate.getUuid(), rootTag.getUuid()));
+
+    Queue<Tag> queue = new ArrayQueue<>();
+    queue.add(rootTag);
+
+    while (!queue.isEmpty()) {
+      Tag parentTag = queue.poll();
+      if (parentTag.getChildren().size() == 0) {
+        leafTagNodes.add(parentTag);
+      } else {
+        for (Tag child : parentTag.getChildren()) {
+          child.getServiceVariables().addAll(serviceVariableService.getServiceVariablesForEntity(
+              serviceTemplate.getAppId(), serviceTemplate.getUuid(), child.getUuid()));
+          child.setServiceVariables(
+              overrideServiceSettings(parentTag.getServiceVariables(), child.getServiceVariables()));
           queue.add(child);
         }
       }

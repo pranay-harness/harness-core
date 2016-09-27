@@ -74,50 +74,33 @@ public class HostElement implements ContextElement {
     return MoreObjects.toStringHelper(this).add("hostName", hostName).toString();
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
+    private String uuid;
     private String hostName;
 
     private Builder() {}
 
-    /**
-     * A host element builder.
-     *
-     * @return the builder
-     */
     public static Builder aHostElement() {
       return new Builder();
     }
 
-    /**
-     * With host name builder.
-     *
-     * @param hostName the host name
-     * @return the builder
-     */
+    public Builder withUuid(String uuid) {
+      this.uuid = uuid;
+      return this;
+    }
+
     public Builder withHostName(String hostName) {
       this.hostName = hostName;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
-      return aHostElement().withHostName(hostName);
+      return aHostElement().withUuid(uuid).withHostName(hostName);
     }
 
-    /**
-     * Build host element.
-     *
-     * @return the host element
-     */
     public HostElement build() {
       HostElement hostElement = new HostElement();
+      hostElement.setUuid(uuid);
       hostElement.setHostName(hostName);
       return hostElement;
     }

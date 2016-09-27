@@ -145,7 +145,7 @@ public class DataGenUtil extends WingsBaseTest {
   private static final int NUM_HOSTS_PER_INFRA = 5; /* No limit */
   private static final int NUM_TAG_GROUPS_PER_ENV = 3; /* Max 10   */
   private static final int TAG_HIERARCHY_DEPTH = 3; /* Max 10   */
-  private static final String API_BASE = "https://demo-api.wings.software/api";
+  private static final String API_BASE = "https://localhost:9090/api";
 
   private static final String userName = "admin@wings.software";
   private static final String password = "YAg@bp2wWB";
@@ -325,7 +325,6 @@ private void addDefaultRoleAndUsers() {
 }
 
 private void addAdminUser() {
-  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
   WebTarget target = client.target(API_BASE + "/users/");
   RestResponse<User> response = target.request().post(
       Entity.entity(
@@ -344,6 +343,12 @@ private void addAdminUser() {
       new GenericType<RestResponse<User>>() {});
   assertThat(response.getResource()).isInstanceOf(User.class);
   wingsPersistence.updateFields(User.class, response.getResource().getUuid(), ImmutableMap.of("emailVerified", true));
+  loginAdminUser();
+}
+
+private void loginAdminUser() {
+  String basicAuthValue = "Basic " + encodeBase64String(format("%s:%s", userName, password).getBytes());
+  RestResponse<User> response;
   response = client.target(API_BASE + "/users/login")
                  .request()
                  .header("Authorization", basicAuthValue)

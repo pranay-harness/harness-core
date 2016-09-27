@@ -212,4 +212,6 @@ public class WingsTestConstants {
    * The constant ROLE_ID.
    */
   public static final String ROLE_ID = "ROLE_ID";
+
+  public static final String SERVICE_VARIABLE_ID = "SERVICE_VARIABLE_ID";
 }

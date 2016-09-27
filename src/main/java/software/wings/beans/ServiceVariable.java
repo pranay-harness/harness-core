@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import com.google.common.base.MoreObjects;
+
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -8,23 +12,23 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.utils.validation.Create;
 
+import java.util.Objects;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.DefaultValue;
 
 /**
  * Created by peeyushaggarwal on 9/14/16.
  */
-@Entity(value = "serviceSettings", noClassnameStored = true)
+@Entity(value = "serviceVariables", noClassnameStored = true)
 @Indexes(@Index(
     fields = { @Field("entityId")
                , @Field("templateId"), @Field("type") }, options = @IndexOptions(unique = true)))
-public class ServiceSetting extends Base {
+public class ServiceVariable extends Base {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 
-  @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
+  private String templateId = DEFAULT_TEMPLATE_ID;
 
   @NotEmpty(groups = {Create.class}) private String envId;
 
@@ -32,12 +36,13 @@ public class ServiceSetting extends Base {
 
   @NotEmpty(groups = {Create.class}) private String entityId;
 
+  private String name;
   private String value;
 
   private Type type;
 
   public enum Type {
-    PORT,
+    TEXT,
     LB(true);
 
     private boolean settingAttribute;
@@ -68,6 +73,9 @@ public class ServiceSetting extends Base {
    * @param templateId Value to set for property 'templateId'.
    */
   public void setTemplateId(String templateId) {
+    if (isBlank(templateId)) {
+      templateId = DEFAULT_TEMPLATE_ID;
+    }
     this.templateId = templateId;
   }
 
@@ -161,11 +169,66 @@ public class ServiceSetting extends Base {
     this.type = type;
   }
 
+  /**
+   * Getter for property 'name'.
+   *
+   * @return Value for property 'name'.
+   */
+  public String getName() {
+    return name;
+  }
+
+  /**
+   * Setter for property 'name'.
+   *
+   * @param name Value to set for property 'name'.
+   */
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode() + Objects.hash(templateId, envId, entityType, entityId, name, value, type);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ServiceVariable other = (ServiceVariable) obj;
+    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.name, other.name) && Objects.equals(this.value, other.value)
+        && Objects.equals(this.type, other.type);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("templateId", templateId)
+        .add("envId", envId)
+        .add("entityType", entityType)
+        .add("entityId", entityId)
+        .add("name", name)
+        .add("value", value)
+        .add("type", type)
+        .toString();
+  }
+
   public static final class Builder {
     private String templateId;
     private String envId;
     private EntityType entityType;
     private String entityId;
+    private String name;
     private String value;
     private Type type;
     private String uuid;
@@ -178,7 +241,7 @@ public class ServiceSetting extends Base {
 
     private Builder() {}
 
-    public static Builder aServiceSetting() {
+    public static Builder aServiceVariable() {
       return new Builder();
     }
 
@@ -199,6 +262,11 @@ public class ServiceSetting extends Base {
 
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
+      return this;
+    }
+
+    public Builder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -248,11 +316,12 @@ public class ServiceSetting extends Base {
     }
 
     public Builder but() {
-      return aServiceSetting()
+      return aServiceVariable()
           .withTemplateId(templateId)
           .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
+          .withName(name)
           .withValue(value)
           .withType(type)
           .withUuid(uuid)
@@ -264,22 +333,23 @@ public class ServiceSetting extends Base {
           .withActive(active);
     }
 
-    public ServiceSetting build() {
-      ServiceSetting serviceSetting = new ServiceSetting();
-      serviceSetting.setTemplateId(templateId);
-      serviceSetting.setEnvId(envId);
-      serviceSetting.setEntityType(entityType);
-      serviceSetting.setEntityId(entityId);
-      serviceSetting.setValue(value);
-      serviceSetting.setType(type);
-      serviceSetting.setUuid(uuid);
-      serviceSetting.setAppId(appId);
-      serviceSetting.setCreatedBy(createdBy);
-      serviceSetting.setCreatedAt(createdAt);
-      serviceSetting.setLastUpdatedBy(lastUpdatedBy);
-      serviceSetting.setLastUpdatedAt(lastUpdatedAt);
-      serviceSetting.setActive(active);
-      return serviceSetting;
+    public ServiceVariable build() {
+      ServiceVariable serviceVariable = new ServiceVariable();
+      serviceVariable.setTemplateId(templateId);
+      serviceVariable.setEnvId(envId);
+      serviceVariable.setEntityType(entityType);
+      serviceVariable.setEntityId(entityId);
+      serviceVariable.setName(name);
+      serviceVariable.setValue(value);
+      serviceVariable.setType(type);
+      serviceVariable.setUuid(uuid);
+      serviceVariable.setAppId(appId);
+      serviceVariable.setCreatedBy(createdBy);
+      serviceVariable.setCreatedAt(createdAt);
+      serviceVariable.setLastUpdatedBy(lastUpdatedBy);
+      serviceVariable.setLastUpdatedAt(lastUpdatedAt);
+      serviceVariable.setActive(active);
+      return serviceVariable;
     }
   }
 }
