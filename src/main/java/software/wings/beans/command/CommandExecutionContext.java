@@ -29,6 +29,7 @@ public class CommandExecutionContext {
   private String stagingPath;
   private String backupPath;
   private ExecutionCredential executionCredential;
+  private Map<String, String> serviceVariables = Maps.newHashMap();
   private Map<String, String> envVariables = Maps.newHashMap();
 
   /**
@@ -51,6 +52,7 @@ public class CommandExecutionContext {
     this.backupPath = other.backupPath;
     this.executionCredential = other.executionCredential;
     this.envVariables = other.envVariables;
+    this.serviceVariables = other.serviceVariables;
   }
 
   /**
@@ -197,6 +199,24 @@ public class CommandExecutionContext {
     this.serviceInstance = serviceInstance;
   }
 
+  /**
+   * Getter for property 'serviceVariables'.
+   *
+   * @return Value for property 'serviceVariables'.
+   */
+  public Map<String, String> getServiceVariables() {
+    return serviceVariables;
+  }
+
+  /**
+   * Setter for property 'serviceVariables'.
+   *
+   * @param serviceVariables Value to set for property 'serviceVariables'.
+   */
+  public void setServiceVariables(Map<String, String> serviceVariables) {
+    this.serviceVariables = serviceVariables;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(
@@ -319,111 +339,59 @@ public class CommandExecutionContext {
     private String stagingPath;
     private String backupPath;
     private ExecutionCredential executionCredential;
+    private Map<String, String> serviceVariables = Maps.newHashMap();
 
     private Builder() {}
 
-    /**
-     * A command execution context builder.
-     *
-     * @return the builder
-     */
     public static Builder aCommandExecutionContext() {
       return new Builder();
     }
 
-    /**
-     * With artifact builder.
-     *
-     * @param artifact the artifact
-     * @return the builder
-     */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
       return this;
     }
 
-    /**
-     * With service instance builder.
-     *
-     * @param serviceInstance the service instance
-     * @return the builder
-     */
     public Builder withServiceInstance(ServiceInstance serviceInstance) {
       this.serviceInstance = serviceInstance;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With activity id builder.
-     *
-     * @param activityId the activity id
-     * @return the builder
-     */
     public Builder withActivityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
-    /**
-     * With runtime path builder.
-     *
-     * @param runtimePath the runtime path
-     * @return the builder
-     */
     public Builder withRuntimePath(String runtimePath) {
       this.runtimePath = runtimePath;
       return this;
     }
 
-    /**
-     * With staging path builder.
-     *
-     * @param stagingPath the staging path
-     * @return the builder
-     */
     public Builder withStagingPath(String stagingPath) {
       this.stagingPath = stagingPath;
       return this;
     }
 
-    /**
-     * With backup path builder.
-     *
-     * @param backupPath the backup path
-     * @return the builder
-     */
     public Builder withBackupPath(String backupPath) {
       this.backupPath = backupPath;
       return this;
     }
 
-    /**
-     * With execution credential builder.
-     *
-     * @param executionCredential the execution credential
-     * @return the builder
-     */
     public Builder withExecutionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
+    public Builder withServiceVariables(Map<String, String> serviceVariables) {
+      this.serviceVariables = serviceVariables;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withArtifact(artifact)
@@ -433,14 +401,10 @@ public class CommandExecutionContext {
           .withRuntimePath(runtimePath)
           .withStagingPath(stagingPath)
           .withBackupPath(backupPath)
-          .withExecutionCredential(executionCredential);
+          .withExecutionCredential(executionCredential)
+          .withServiceVariables(serviceVariables);
     }
 
-    /**
-     * Build command execution context.
-     *
-     * @return the command execution context
-     */
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setArtifact(artifact);
@@ -451,6 +415,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setStagingPath(stagingPath);
       commandExecutionContext.setBackupPath(backupPath);
       commandExecutionContext.setExecutionCredential(executionCredential);
+      commandExecutionContext.setServiceVariables(serviceVariables);
       return commandExecutionContext;
     }
   }

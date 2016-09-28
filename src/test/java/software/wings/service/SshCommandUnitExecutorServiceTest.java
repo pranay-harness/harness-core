@@ -33,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.SSH_KEY;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
@@ -124,6 +125,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                             .withArtifactFiles(Lists.newArrayList(
                                 anArtifactFile().withName("artifact.war").withFileUuid(FILE_ID).build()))
                             .build())
+          .withServiceVariables(ImmutableMap.of("PORT", "8080"))
           .build();
 
   /**

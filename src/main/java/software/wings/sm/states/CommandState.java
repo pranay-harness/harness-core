@@ -238,7 +238,8 @@ public class CommandState extends State {
               .withBackupPath(backupPath)
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
-              .withExecutionCredential(workflowStandardParams.getExecutionCredential());
+              .withExecutionCredential(workflowStandardParams.getExecutionCredential())
+              .withServiceVariables(context.getServiceVariables());
 
       if (command.isArtifactNeeded()) {
         Artifact artifact =

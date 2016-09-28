@@ -10,6 +10,7 @@ import software.wings.beans.ErrorStrategy;
 import software.wings.beans.WorkflowType;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Interface ExecutionContext.
@@ -131,4 +132,6 @@ public interface ExecutionContext {
    * @return the state execution instance name
    */
   String getStateExecutionInstanceName();
+
+  Map<String, String> getServiceVariables();
 }
