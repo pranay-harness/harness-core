@@ -113,9 +113,13 @@ public class ConfigResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @BeanParam ConfigFile configFile) {
     configFile.setAppId(appId);
     configFile.setUuid(configId);
-    configFile.setFileName(fileDetail.getFileName());
+    if (fileDetail != null && fileDetail.getFileName() != null) {
+      configFile.setFileName(fileDetail.getFileName());
+    }
     configService.update(configFile,
-        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
+        uploadedInputStream == null
+            ? uploadedInputStream
+            : new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit()));
     return new RestResponse();
   }
 

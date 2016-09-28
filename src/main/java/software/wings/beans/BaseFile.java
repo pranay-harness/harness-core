@@ -4,6 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.utils.validation.Create;
 
 import java.util.Objects;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 public class BaseFile extends Base {
   @FormDataParam("name") private String name;
   private String fileUuid;
-  @NotEmpty private String fileName;
+  @NotEmpty(groups = Create.class) private String fileName;
   private String mimeType;
   private long size;
   private ChecksumType checksumType = ChecksumType.MD5;

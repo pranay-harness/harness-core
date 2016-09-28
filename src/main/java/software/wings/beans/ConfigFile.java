@@ -38,6 +38,8 @@ public class ConfigFile extends BaseFile {
 
   @FormDataParam("entityId") @NotEmpty(groups = {Create.class}) private String entityId;
 
+  @FormDataParam("description") private String description;
+
   @FormDataParam("parentConfigFileId") private String parentConfigFileId;
 
   @FormDataParam("relativeFilePath") private String relativeFilePath;
@@ -192,48 +194,6 @@ public class ConfigFile extends BaseFile {
     this.versions = versions;
   }
 
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(templateId, envId, entityType, entityId, parentConfigFileId, relativeFilePath, overridePath,
-              versions, overriddenConfigFile);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final ConfigFile other = (ConfigFile) obj;
-    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
-        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
-        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
-        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
-        && Objects.equals(this.overridePath, other.overridePath) && Objects.equals(this.versions, other.versions)
-        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("templateId", templateId)
-        .add("envId", envId)
-        .add("entityType", entityType)
-        .add("entityId", entityId)
-        .add("parentConfigFileId", parentConfigFileId)
-        .add("relativeFilePath", relativeFilePath)
-        .add("overridePath", overridePath)
-        .add("versions", versions)
-        .add("overriddenConfigFile", overriddenConfigFile)
-        .toString();
-  }
-
   /**
    * Gets parent config file id.
    *
@@ -253,6 +213,68 @@ public class ConfigFile extends BaseFile {
   }
 
   /**
+   * Gets description.
+   *
+   * @return the description
+   */
+  public String getDescription() {
+    return description;
+  }
+
+  /**
+   * Sets description.
+   *
+   * @param description the description
+   */
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * super.hashCode()
+        + Objects.hash(templateId, envId, entityType, entityId, description, parentConfigFileId, relativeFilePath,
+              overridePath, versions, overriddenConfigFile);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null || getClass() != obj.getClass()) {
+      return false;
+    }
+    if (!super.equals(obj)) {
+      return false;
+    }
+    final ConfigFile other = (ConfigFile) obj;
+    return Objects.equals(this.templateId, other.templateId) && Objects.equals(this.envId, other.envId)
+        && Objects.equals(this.entityType, other.entityType) && Objects.equals(this.entityId, other.entityId)
+        && Objects.equals(this.description, other.description)
+        && Objects.equals(this.parentConfigFileId, other.parentConfigFileId)
+        && Objects.equals(this.relativeFilePath, other.relativeFilePath)
+        && Objects.equals(this.overridePath, other.overridePath) && Objects.equals(this.versions, other.versions)
+        && Objects.equals(this.overriddenConfigFile, other.overriddenConfigFile);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("templateId", templateId)
+        .add("envId", envId)
+        .add("entityType", entityType)
+        .add("entityId", entityId)
+        .add("description", description)
+        .add("parentConfigFileId", parentConfigFileId)
+        .add("relativeFilePath", relativeFilePath)
+        .add("overridePath", overridePath)
+        .add("versions", versions)
+        .add("overriddenConfigFile", overriddenConfigFile)
+        .toString();
+  }
+
+  /**
    * The type Builder.
    */
   public static final class Builder {
@@ -260,6 +282,7 @@ public class ConfigFile extends BaseFile {
     private String envId;
     private EntityType entityType;
     private String entityId;
+    private String description;
     private String parentConfigFileId;
     private String relativeFilePath;
     private String overridePath;
@@ -332,6 +355,17 @@ public class ConfigFile extends BaseFile {
      */
     public Builder withEntityId(String entityId) {
       this.entityId = entityId;
+      return this;
+    }
+
+    /**
+     * With description builder.
+     *
+     * @param description the description
+     * @return the builder
+     */
+    public Builder withDescription(String description) {
+      this.description = description;
       return this;
     }
 
@@ -555,6 +589,7 @@ public class ConfigFile extends BaseFile {
           .withEnvId(envId)
           .withEntityType(entityType)
           .withEntityId(entityId)
+          .withDescription(description)
           .withParentConfigFileId(parentConfigFileId)
           .withRelativeFilePath(relativeFilePath)
           .withOverridePath(overridePath)
@@ -587,6 +622,7 @@ public class ConfigFile extends BaseFile {
       configFile.setEnvId(envId);
       configFile.setEntityType(entityType);
       configFile.setEntityId(entityId);
+      configFile.setDescription(description);
       configFile.setParentConfigFileId(parentConfigFileId);
       configFile.setRelativeFilePath(relativeFilePath);
       configFile.setOverridePath(overridePath);

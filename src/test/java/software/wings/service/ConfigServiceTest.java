@@ -246,7 +246,6 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .withEntityType(EntityType.TAG)
                                 .withEntityId(TAG_ID)
                                 .withTemplateId(TEMPLATE_ID)
-                                .withName(FILE_NAME)
                                 .withRelativeFilePath("PATH")
                                 .withFileUuid("GFS_FILE_ID")
                                 .withFileName(FILE_NAME)
@@ -260,10 +259,11 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(FILE_ID), argumentCaptor.capture());
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
+    assertThat(updateMap.size()).isEqualTo(4);
     assertThat(updateMap.get("fileUuid")).isEqualTo("GFS_FILE_ID");
     assertThat(updateMap.get("checksum")).isEqualTo("CHECKSUM");
     assertThat(updateMap.get("size")).isEqualTo(100L);
-    assertThat(updateMap.get("name")).isEqualTo(FILE_NAME);
+    assertThat(updateMap.get("fileName")).isEqualTo(FILE_NAME);
   }
 
   /**
@@ -356,12 +356,12 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldValidateAndResolveFilePath() throws Exception {
-    assertThat(configService.validateAndResolveFilePath("config/abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
-    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt", "abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("config/abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt")).isEqualTo("config/abc.txt");
+    assertThat(configService.validateAndResolveFilePath("./config/./abc.txt")).isEqualTo("config/abc.txt");
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> configService.validateAndResolveFilePath("/config", "abc.txt"))
+        .isThrownBy(() -> configService.validateAndResolveFilePath("/config"))
         .withMessage(INVALID_ARGUMENT.name());
   }
 }

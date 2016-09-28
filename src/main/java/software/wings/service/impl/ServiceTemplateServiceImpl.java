@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -12,7 +13,6 @@ import static software.wings.beans.EntityType.TAG;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
@@ -147,15 +147,16 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   }
 
   @Override
-  public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String envId, String serviceId) {
-    return wingsPersistence.createQuery(ServiceTemplate.class)
-        .field("appId")
-        .equal(appId)
-        .field("envId")
-        .equal(envId)
-        .field("service")
-        .equal(serviceId)
-        .asKeyList();
+  public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId) {
+    Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
+                                               .field("appId")
+                                               .equal(appId)
+                                               .field("service")
+                                               .equal(serviceId);
+    if (!isNullOrEmpty(envId)) {
+      templateQuery.field("envId").equal(envId);
+    }
+    return templateQuery.asKeyList();
   }
 
   @Override
@@ -195,7 +196,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     overrideConfigFiles.forEach(configFile -> {
       if (configFile.getEntityType().equals(TAG) || configFile.getEntityType().equals(HOST)) {
         String path = configFile.getOverridePath();
-        while (!Strings.isNullOrEmpty(path)) {
+        while (!isNullOrEmpty(path)) {
           String parentPath = substringBeforeLast(path, "/");
           if (overridePathMap.containsKey(parentPath) && !parentPath.equals(path)) {
             configFile.setOverriddenConfigFile(overridePathMap.get(parentPath));

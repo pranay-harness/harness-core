@@ -10,6 +10,8 @@ import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 import static software.wings.utils.FileUtils.createTempDirPath;
 
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Host;
@@ -37,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -83,8 +86,7 @@ public class ConfigServiceImpl implements ConfigService {
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
 
     configFile.setEnvId(envId);
-    configFile.setRelativeFilePath(
-        validateAndResolveFilePath(configFile.getRelativeFilePath(), configFile.getFileName()));
+    configFile.setRelativeFilePath(validateAndResolveFilePath(configFile.getRelativeFilePath()));
     String fileId = fileService.saveFile(configFile, inputStream, CONFIGS);
     String id = wingsPersistence.save(configFile);
     fileService.updateParentEntityId(id, fileId, CONFIGS);
@@ -92,11 +94,7 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  public String validateAndResolveFilePath(String relativePath, String fileName) {
-    if (!relativePath.endsWith(fileName)) {
-      throw new WingsException(INVALID_ARGUMENT, "args", "Relative file path doesn't end with uploaded file name");
-    }
-
+  public String validateAndResolveFilePath(String relativePath) {
     try {
       Path path = Paths.get(relativePath);
       if (path.isAbsolute()) {
@@ -184,6 +182,11 @@ public class ConfigServiceImpl implements ConfigService {
     ConfigFile savedConfigFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid(), false);
     Validator.notNullCheck("Configuration file", savedConfigFile);
 
+    if (savedConfigFile.getEntityType().equals(SERVICE)
+        && !savedConfigFile.getRelativeFilePath().equals(inputConfigFile.getRelativeFilePath())) {
+      updateRelativeFilePathForServiceAndAllOverrideFiles(savedConfigFile, inputConfigFile.getRelativeFilePath());
+    }
+
     Map<String, Object> updateMap = new HashMap<>();
     String oldFileId = savedConfigFile.getFileUuid();
 
@@ -193,13 +196,37 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("fileUuid", inputConfigFile.getFileUuid());
       updateMap.put("checksum", inputConfigFile.getChecksum());
       updateMap.put("size", inputConfigFile.getSize());
+      updateMap.put("fileName", inputConfigFile.getFileName());
     }
-    updateMap.put("name", inputConfigFile.getName());
+    if (inputConfigFile.getDescription() != null) {
+      updateMap.put("description", inputConfigFile.getDescription());
+    }
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
 
     if (!oldFileId.equals(inputConfigFile.getFileUuid())) { // new file updated successfully delete old file gridfs file
       executorService.submit(() -> fileService.deleteFile(oldFileId, CONFIGS));
     }
+  }
+
+  public void updateRelativeFilePathForServiceAndAllOverrideFiles(
+      ConfigFile existingConfigFile, String newRelativeFilePath) {
+    String resolvedFilePath = validateAndResolveFilePath(newRelativeFilePath);
+
+    List<Object> templateIds =
+        serviceTemplateService
+            .getTemplateRefKeysByService(existingConfigFile.getAppId(), existingConfigFile.getEntityId(), null)
+            .stream()
+            .map(serviceTemplateKey -> serviceTemplateKey.getId())
+            .collect(Collectors.toList());
+
+    Query<ConfigFile> query =
+        wingsPersistence.createQuery(ConfigFile.class).field("appId").equal(existingConfigFile.getAppId());
+    query.or(query.criteria("entityId").equal(existingConfigFile.getEntityId()),
+        query.criteria("templateId").in(templateIds));
+
+    UpdateOperations<ConfigFile> updateOperations =
+        wingsPersistence.createUpdateOperations(ConfigFile.class).set("relativeFilePath", resolvedFilePath);
+    wingsPersistence.update(query, updateOperations);
   }
 
   /* (non-Javadoc)

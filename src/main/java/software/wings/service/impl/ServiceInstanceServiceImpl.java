@@ -60,7 +60,7 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
     pageRequest.addFilter("appId", appId, EQ);
     pageRequest.addFilter("envId", envId, EQ);
     if (!isNullOrEmpty(serviceId)) {
-      List<Key<ServiceTemplate>> keyList = serviceTemplateService.getTemplateRefKeysByService(appId, envId, serviceId);
+      List<Key<ServiceTemplate>> keyList = serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId);
       if (keyList.size() > 0) {
         pageRequest.addFilter(aSearchFilter().withField("serviceTemplate", IN, keyList.toArray()).build());
       }
