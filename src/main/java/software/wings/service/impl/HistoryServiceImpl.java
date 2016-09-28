@@ -40,7 +40,7 @@ public class HistoryServiceImpl implements HistoryService {
     if (history.getEntityType() == EntityType.ORCHESTRATED_DEPLOYMENT
         || history.getEntityType() == EntityType.SIMPLE_DEPLOYMENT) {
       history.setEntityNewValue(
-          workflowExecutionService.getExecutionDetails(history.getAppId(), history.getEntityId()));
+          workflowExecutionService.getExecutionDetailsWithoutGraph(history.getAppId(), history.getEntityId()));
     }
     return history;
   }
