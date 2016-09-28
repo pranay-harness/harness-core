@@ -66,6 +66,7 @@ public class InitCommandUnit extends CommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = new File("/tmp", activityId).getAbsolutePath();
     preInitCommand = "mkdir -p " + executionStagingDir;
+    envVariables.putAll(context.getServiceVariables());
     envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
     envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
     envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());

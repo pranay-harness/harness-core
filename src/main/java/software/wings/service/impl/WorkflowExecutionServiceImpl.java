@@ -190,13 +190,22 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution getExecutionDetails(String appId, String workflowExecutionId, List<String> expandedGroupIds,
       String requestedGroupId, Graph.NodeOps nodeOps) {
+    WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
+
     if (expandedGroupIds == null) {
       expandedGroupIds = new ArrayList<>();
     }
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution != null) {
       populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
     }
+    workflowExecution.setExpandedGroupIds(expandedGroupIds);
+    return workflowExecution;
+  }
+
+  @Override
+  public WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+
     if (workflowExecution.getExecutionArgs() != null) {
       if (workflowExecution.getExecutionArgs().getServiceInstanceIdNames() != null) {
         PageRequest<ServiceInstance> pageRequest =
@@ -218,7 +227,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.getExecutionArgs().setArtifacts(artifactService.list(pageRequest).getResponse());
       }
     }
-    workflowExecution.setExpandedGroupIds(expandedGroupIds);
     refreshBreakdown(workflowExecution);
     refreshSummaries(workflowExecution);
     return workflowExecution;

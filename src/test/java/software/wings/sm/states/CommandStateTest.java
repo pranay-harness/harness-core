@@ -73,6 +73,7 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -183,6 +184,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.INSTANCE))
         .thenReturn(anInstanceElement().withUuid(SERVICE_INSTANCE_ID).build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
+    when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
     commandState.setExecutorService(executorService);
   }
 
@@ -225,6 +227,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getWorkflowType();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
+    verify(context).getServiceVariables();
 
     verify(context, times(4)).renderExpression(anyString());
 
@@ -307,6 +310,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getWorkflowExecutionName();
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
+    verify(context).getServiceVariables();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);

@@ -40,10 +40,9 @@ public interface ConfigService {
    * Validate and compute relative path string.
    *
    * @param relativePath the relative path
-   * @param fileName     the file name
    * @return the string
    */
-  String validateAndResolveFilePath(String relativePath, String fileName);
+  String validateAndResolveFilePath(String relativePath);
 
   /**
    * Gets the.

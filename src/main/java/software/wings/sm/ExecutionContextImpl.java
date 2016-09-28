@@ -234,7 +234,7 @@ public class ExecutionContextImpl implements ExecutionContext {
       }
     }
 
-    context.put("variables", variableProcessor.getVariables(stateExecutionInstance.getContextElements()));
+    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements()));
 
     return context;
   }
@@ -317,5 +317,10 @@ public class ExecutionContextImpl implements ExecutionContext {
   @Override
   public String getStateExecutionInstanceName() {
     return stateExecutionInstance.getStateName();
+  }
+
+  @Override
+  public Map<String, String> getServiceVariables() {
+    return variableProcessor.getVariables(stateExecutionInstance.getContextElements());
   }
 }

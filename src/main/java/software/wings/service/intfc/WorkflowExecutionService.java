@@ -97,6 +97,15 @@ public interface WorkflowExecutionService {
       List<String> expandedGroupIds, String requestedGroupId, NodeOps nodeOps);
 
   /**
+   * Gets execution details without graph.
+   *
+   * @param appId               the app id
+   * @param workflowExecutionId the workflow execution id
+   * @return the execution details without graph
+   */
+  WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
+
+  /**
    * Trigger env execution workflow execution.
    *
    * @param appId         the app id

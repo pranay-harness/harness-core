@@ -219,11 +219,11 @@ public interface ServiceTemplateService {
    * Gets template ref keys by service.
    *
    * @param appId     the app id
-   * @param envId     the env id
    * @param serviceId the service id
+   * @param envId     the env id
    * @return the template ref keys by service
    */
-  List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String envId, String serviceId);
+  List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId);
 
   /**
    * Gets override files.
