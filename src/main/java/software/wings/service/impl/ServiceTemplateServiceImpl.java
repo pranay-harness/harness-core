@@ -508,8 +508,8 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     logger.info("Apply host overrides for tagged hosts");
     for (Tag tag : leafTagNodes) {
-      List<Host> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
-      for (Host host : taggedHosts) {
+      List<ApplicationHost> taggedHosts = hostService.getHostsByTags(tag.getAppId(), tag.getEnvId(), asList(tag));
+      for (ApplicationHost host : taggedHosts) {
         computedHostConfigs.put(host.getUuid(),
             overrideServiceSettings(tag.getServiceVariables(),
                 serviceVariableService.getServiceVariablesForEntity(appId, templateId, host.getUuid())));
