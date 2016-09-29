@@ -293,9 +293,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getExecutionArgs() != null) {
       commandName = workflowExecution.getExecutionArgs().getCommandName();
     }
-    Graph graph = graphRenderer.generateGraph(
-        instanceIdMap, sm.getInitialStateName(), expandedGroupIds, commandName, expandLastOnly);
-    workflowExecution.setGraph(graph);
+    if (expandedGroupIds != null && expandedGroupIds.contains("ALL")) {
+      workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(
+          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, expandLastOnly));
+    } else {
+      Graph graph = graphRenderer.generateGraph(
+          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, commandName, expandLastOnly);
+      workflowExecution.setGraph(graph);
+    }
     if (pausedNodesFound(workflowExecution)) {
       workflowExecution.setStatus(ExecutionStatus.PAUSED);
     }
@@ -388,7 +393,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .equal(workflowExecution.getUuid());
     if (byParentInstanceOnly) {
       query.or(query.criteria("uuid").in(expandedGroupIds), query.criteria("parentInstanceId").in(expandedGroupIds));
-    } else {
+    } else if (!expandedGroupIds.contains("ALL")) {
       if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
         query.field("parentInstanceId").doesNotExist();
       } else {

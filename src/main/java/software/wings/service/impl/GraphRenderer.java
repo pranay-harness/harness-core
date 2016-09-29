@@ -63,6 +63,19 @@ public class GraphRenderer {
    */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, String commandName, Boolean expandLastOnly) {
+    Node originNode = generateHierarchyNode(instanceIdMap, initialStateName, expandedGroupIds, expandLastOnly);
+    Graph graph = new Graph();
+    extrapolateDimension(originNode);
+    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
+    if (StringUtils.isNotBlank(commandName)) {
+      replaceCommandNodeName(graph.getNodes(), commandName);
+    }
+    logger.debug("graph generated: {}", graph);
+    return graph;
+  }
+
+  Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
+      List<String> expandedGroupIds, Boolean expandLastOnly) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -110,14 +123,7 @@ public class GraphRenderer {
     generateNodeHierarchy(
         instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null, expandLastOnly);
 
-    Graph graph = new Graph();
-    extrapolateDimension(originNode);
-    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    if (StringUtils.isNotBlank(commandName)) {
-      replaceCommandNodeName(graph.getNodes(), commandName);
-    }
-    logger.debug("graph generated: {}", graph);
-    return graph;
+    return originNode;
   }
 
   /**
@@ -220,7 +226,7 @@ public class GraphRenderer {
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
       Boolean expandLastOnly, Group group, String element) {
     Node elementNode =
-        Node.Builder.aNode().withId(UUIDGenerator.getUuid()).withName(element).withType("ELEMENT").build();
+        Node.Builder.aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
     group.getElements().add(elementNode);
     logger.debug("generateNodeHierarchy elementNode added - node: {}", elementNode);
     Node elementRepeatNode = parentIdElementsMap.get(node.getId()).get(element);

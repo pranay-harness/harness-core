@@ -338,9 +338,9 @@ public class Graph {
    * The Class Node.
    */
   public static class Group extends Node {
-    @JsonIgnore private List<Node> elements = new ArrayList<>();
+    private List<Node> elements = new ArrayList<>();
 
-    @JsonIgnore private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
+    private ExecutionStrategy executionStrategy = ExecutionStrategy.PARALLEL;
 
     /**
      * Instantiates a new Group.
@@ -410,8 +410,8 @@ public class Graph {
 
     private Map<String, Object> properties = new HashMap<>();
 
-    @JsonIgnore private Node next;
-    @JsonIgnore private Group group;
+    private Node next;
+    private Group group;
 
     /**
      * Gets id.
