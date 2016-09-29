@@ -46,9 +46,7 @@ public class ServiceInstanceResource {
    * @return the rest response
    */
   @GET
-  public RestResponse<PageResponse<ServiceInstance>> list(@ApiParam @QueryParam("appId") String appId,
-      @ApiParam @QueryParam("envId") String envId, @QueryParam("serviceId") String serviceId,
-      @BeanParam PageRequest<ServiceInstance> pageRequest) {
-    return new RestResponse<>(instanceService.list(pageRequest, appId, envId, serviceId));
+  public RestResponse<PageResponse<ServiceInstance>> list(@BeanParam PageRequest<ServiceInstance> pageRequest) {
+    return new RestResponse<>(instanceService.list(pageRequest));
   }
 }

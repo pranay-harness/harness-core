@@ -30,18 +30,6 @@ public interface ServiceInstanceService {
   PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest);
 
   /**
-   * List.
-   *
-   * @param pageRequest the page request
-   * @param appId       the app id
-   * @param envId       the env id
-   * @param serviceId   @return the page response
-   * @return the page response
-   */
-  PageResponse<ServiceInstance> list(
-      PageRequest<ServiceInstance> pageRequest, @NotEmpty String appId, @NotEmpty String envId, String serviceId);
-
-  /**
    * Save.
    *
    * @param serviceInstance the service instance

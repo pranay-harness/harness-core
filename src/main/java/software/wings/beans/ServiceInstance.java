@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -27,6 +28,10 @@ public class ServiceInstance extends Base {
   //@Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
 
   @Property("serviceTemplate") private String serviceTemplateId;
+
+  private String serviceTemplateName;
+
+  @Indexed private String serviceId;
 
   @Indexed private String serviceName;
 
@@ -303,52 +308,144 @@ public class ServiceInstance extends Base {
     this.lastActivityCreatedAt = lastActivityCreatedAt;
   }
 
+  /**
+   * Getter for property 'serviceTemplateId'.
+   *
+   * @return Value for property 'serviceTemplateId'.
+   */
   public String getServiceTemplateId() {
     return serviceTemplateId;
   }
 
+  /**
+   * Setter for property 'serviceTemplateId'.
+   *
+   * @param serviceTemplateId Value to set for property 'serviceTemplateId'.
+   */
   public void setServiceTemplateId(String serviceTemplateId) {
     this.serviceTemplateId = serviceTemplateId;
   }
 
+  /**
+   * Getter for property 'serviceName'.
+   *
+   * @return Value for property 'serviceName'.
+   */
   public String getServiceName() {
     return serviceName;
   }
 
+  /**
+   * Setter for property 'serviceName'.
+   *
+   * @param serviceName Value to set for property 'serviceName'.
+   */
   public void setServiceName(String serviceName) {
     this.serviceName = serviceName;
   }
 
+  /**
+   * Getter for property 'hostId'.
+   *
+   * @return Value for property 'hostId'.
+   */
   public String getHostId() {
     return hostId;
   }
 
+  /**
+   * Setter for property 'hostId'.
+   *
+   * @param hostId Value to set for property 'hostId'.
+   */
   public void setHostId(String hostId) {
     this.hostId = hostId;
   }
 
+  /**
+   * Getter for property 'hostName'.
+   *
+   * @return Value for property 'hostName'.
+   */
   public String getHostName() {
     return hostName;
   }
 
+  /**
+   * Setter for property 'hostName'.
+   *
+   * @param hostName Value to set for property 'hostName'.
+   */
   public void setHostName(String hostName) {
     this.hostName = hostName;
   }
 
+  /**
+   * Getter for property 'tagName'.
+   *
+   * @return Value for property 'tagName'.
+   */
   public String getTagName() {
     return tagName;
   }
 
+  /**
+   * Setter for property 'tagName'.
+   *
+   * @param tagName Value to set for property 'tagName'.
+   */
   public void setTagName(String tagName) {
     this.tagName = tagName;
+  }
+
+  /**
+   * Getter for property 'serviceId'.
+   *
+   * @return Value for property 'serviceId'.
+   */
+  public String getServiceId() {
+    return serviceId;
+  }
+
+  /**
+   * Setter for property 'serviceId'.
+   *
+   * @param serviceId Value to set for property 'serviceId'.
+   */
+  public void setServiceId(String serviceId) {
+    this.serviceId = serviceId;
+  }
+
+  /**
+   * Getter for property 'serviceTemplateName'.
+   *
+   * @return Value for property 'serviceTemplateName'.
+   */
+  public String getServiceTemplateName() {
+    return serviceTemplateName;
+  }
+
+  /**
+   * Setter for property 'serviceTemplateName'.
+   *
+   * @param serviceTemplateName Value to set for property 'serviceTemplateName'.
+   */
+  public void setServiceTemplateName(String serviceTemplateName) {
+    this.serviceTemplateName = serviceTemplateName;
+  }
+
+  @JsonProperty
+  public String getDisplayName() {
+    return hostName + ":" + serviceTemplateName;
   }
 
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, serviceTemplateId, serviceName, hostId, hostName, tagName, releaseId, releaseName,
-              artifactId, artifactName, artifactDeployedOn, artifactDeploymentStatus, artifactDeploymentActivityId,
-              lastActivityId, lastActivityStatus, lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
+        + Objects.hash(envId, serviceTemplateId, serviceTemplateName, serviceId, serviceName, hostId, hostName, tagName,
+              releaseId, releaseName, artifactId, artifactName, artifactDeployedOn, artifactDeploymentStatus,
+              artifactDeploymentActivityId, lastActivityId, lastActivityStatus, lastActivityCreatedAt, commandName,
+              commandType, lastDeployedOn);
   }
 
   @Override
@@ -364,10 +461,12 @@ public class ServiceInstance extends Base {
     }
     final ServiceInstance other = (ServiceInstance) obj;
     return Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
-        && Objects.equals(this.serviceName, other.serviceName) && Objects.equals(this.hostId, other.hostId)
-        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.tagName, other.tagName)
-        && Objects.equals(this.releaseId, other.releaseId) && Objects.equals(this.releaseName, other.releaseName)
-        && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
+        && Objects.equals(this.serviceTemplateName, other.serviceTemplateName)
+        && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.serviceName, other.serviceName)
+        && Objects.equals(this.hostId, other.hostId) && Objects.equals(this.hostName, other.hostName)
+        && Objects.equals(this.tagName, other.tagName) && Objects.equals(this.releaseId, other.releaseId)
+        && Objects.equals(this.releaseName, other.releaseName) && Objects.equals(this.artifactId, other.artifactId)
+        && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
         && Objects.equals(this.artifactDeploymentStatus, other.artifactDeploymentStatus)
         && Objects.equals(this.artifactDeploymentActivityId, other.artifactDeploymentActivityId)
@@ -383,6 +482,8 @@ public class ServiceInstance extends Base {
     return MoreObjects.toStringHelper(this)
         .add("envId", envId)
         .add("serviceTemplateId", serviceTemplateId)
+        .add("serviceTemplateName", serviceTemplateName)
+        .add("serviceId", serviceId)
         .add("serviceName", serviceName)
         .add("hostId", hostId)
         .add("hostName", hostName)
@@ -400,12 +501,15 @@ public class ServiceInstance extends Base {
         .add("commandName", commandName)
         .add("commandType", commandType)
         .add("lastDeployedOn", lastDeployedOn)
+        .add("displayName", getDisplayName())
         .toString();
   }
 
   public static final class Builder {
     private String envId;
     private String serviceTemplateId;
+    private String serviceTemplateName;
+    private String serviceId;
     private String serviceName;
     private String hostId;
     private String hostName;
@@ -431,6 +535,9 @@ public class ServiceInstance extends Base {
     private long lastUpdatedAt;
     private boolean active = true;
 
+    /**
+     * Do not instantiate Builder.
+     */
     private Builder() {}
 
     public static Builder aServiceInstance() {
@@ -461,6 +568,8 @@ public class ServiceInstance extends Base {
 
     public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceName = serviceTemplate.getService() != null ? serviceTemplate.getService().getName() : "";
+      this.serviceId = serviceTemplate.getService() != null ? serviceTemplate.getService().getUuid() : "";
+
       this.serviceTemplateId = serviceTemplate.getUuid();
       return this;
     }
@@ -584,6 +693,8 @@ public class ServiceInstance extends Base {
       return aServiceInstance()
           .withEnvId(envId)
           .withServiceTemplateId(serviceTemplateId)
+          .withServiceTemplateName(serviceTemplateName)
+          .withServiceId(serviceId)
           .withServiceName(serviceName)
           .withHostId(hostId)
           .withHostName(hostName)
@@ -608,6 +719,16 @@ public class ServiceInstance extends Base {
           .withLastDeployedOn(lastDeployedOn)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
+    }
+
+    public Builder withServiceTemplateName(String serviceTemplateName) {
+      this.serviceTemplateName = serviceTemplateName;
+      return this;
+    }
+
+    public Builder withServiceId(String serviceId) {
+      this.serviceId = serviceId;
+      return this;
     }
 
     public ServiceInstance build() {
@@ -638,6 +759,8 @@ public class ServiceInstance extends Base {
       serviceInstance.setLastDeployedOn(lastDeployedOn);
       serviceInstance.setLastUpdatedAt(lastUpdatedAt);
       serviceInstance.setActive(active);
+      serviceInstance.setServiceId(serviceId);
+      serviceInstance.setServiceTemplateName(serviceTemplateName);
       return serviceInstance;
     }
   }
