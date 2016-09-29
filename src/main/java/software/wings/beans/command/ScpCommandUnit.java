@@ -56,7 +56,7 @@ public class ScpCommandUnit extends CommandUnit {
         break;
       case APPLICATION_STACK:
         fileBucket = FileBucket.PLATFORMS;
-        AppContainer appContainer = context.getServiceInstance().getServiceTemplate().getService().getAppContainer();
+        AppContainer appContainer = context.getServiceTemplate().getService().getAppContainer();
         fileIds.add(Pair.of(appContainer.getFileUuid(), null));
         break;
       default:

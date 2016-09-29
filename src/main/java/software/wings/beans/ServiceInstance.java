@@ -1,8 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.beans.Host.Builder.aHost;
-import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-
 import com.google.common.base.MoreObjects;
 
 import org.mongodb.morphia.annotations.Entity;
@@ -11,11 +8,10 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Reference;
+import org.mongodb.morphia.annotations.Property;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * The Class ServiceInstance.
@@ -26,8 +22,19 @@ import java.util.Optional;
     options = @IndexOptions(unique = true)))
 public class ServiceInstance extends Base {
   @Indexed private String envId;
-  @Reference(idOnly = true, ignoreMissing = true) private Host host;
-  @Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
+
+  //@Reference(idOnly = true, ignoreMissing = true) private Host host;
+  //@Reference(idOnly = true, ignoreMissing = true) private ServiceTemplate serviceTemplate;
+
+  @Property("serviceTemplate") private String serviceTemplateId;
+
+  @Indexed private String serviceName;
+
+  @Property("host") private String hostId;
+
+  @Indexed private String hostName;
+
+  @Indexed private String tagName;
 
   private String releaseId;
   @Indexed private String releaseName;
@@ -45,21 +52,6 @@ public class ServiceInstance extends Base {
   private long lastDeployedOn;
 
   /**
-   * Gets display name.
-   *
-   * @return the display name
-   */
-  public String getDisplayName() {
-    return Optional.ofNullable(host).orElse(aHost().withHostName("").build()).getHostName() + ":"
-        + Optional.ofNullable(serviceTemplate).orElse(aServiceTemplate().withName("").build()).getName();
-  }
-
-  /**
-   * Sets display name.
-   */
-  public void setDisplayName() {}
-
-  /**
    * Gets env id.
    *
    * @return the env id
@@ -75,42 +67,6 @@ public class ServiceInstance extends Base {
    */
   public void setEnvId(String envId) {
     this.envId = envId;
-  }
-
-  /**
-   * Gets host.
-   *
-   * @return the host
-   */
-  public Host getHost() {
-    return host;
-  }
-
-  /**
-   * Sets host.
-   *
-   * @param host the host
-   */
-  public void setHost(Host host) {
-    this.host = host;
-  }
-
-  /**
-   * Gets service template.
-   *
-   * @return the service template
-   */
-  public ServiceTemplate getServiceTemplate() {
-    return serviceTemplate;
-  }
-
-  /**
-   * Sets service template.
-   *
-   * @param serviceTemplate the service template
-   */
-  public void setServiceTemplate(ServiceTemplate serviceTemplate) {
-    this.serviceTemplate = serviceTemplate;
   }
 
   /**
@@ -347,12 +303,52 @@ public class ServiceInstance extends Base {
     this.lastActivityCreatedAt = lastActivityCreatedAt;
   }
 
+  public String getServiceTemplateId() {
+    return serviceTemplateId;
+  }
+
+  public void setServiceTemplateId(String serviceTemplateId) {
+    this.serviceTemplateId = serviceTemplateId;
+  }
+
+  public String getServiceName() {
+    return serviceName;
+  }
+
+  public void setServiceName(String serviceName) {
+    this.serviceName = serviceName;
+  }
+
+  public String getHostId() {
+    return hostId;
+  }
+
+  public void setHostId(String hostId) {
+    this.hostId = hostId;
+  }
+
+  public String getHostName() {
+    return hostName;
+  }
+
+  public void setHostName(String hostName) {
+    this.hostName = hostName;
+  }
+
+  public String getTagName() {
+    return tagName;
+  }
+
+  public void setTagName(String tagName) {
+    this.tagName = tagName;
+  }
+
   @Override
   public int hashCode() {
     return 31 * super.hashCode()
-        + Objects.hash(envId, host, serviceTemplate, releaseId, releaseName, artifactId, artifactName,
-              artifactDeployedOn, artifactDeploymentStatus, artifactDeploymentActivityId, lastActivityId,
-              lastActivityStatus, lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
+        + Objects.hash(envId, serviceTemplateId, serviceName, hostId, hostName, tagName, releaseId, releaseName,
+              artifactId, artifactName, artifactDeployedOn, artifactDeploymentStatus, artifactDeploymentActivityId,
+              lastActivityId, lastActivityStatus, lastActivityCreatedAt, commandName, commandType, lastDeployedOn);
   }
 
   @Override
@@ -367,8 +363,9 @@ public class ServiceInstance extends Base {
       return false;
     }
     final ServiceInstance other = (ServiceInstance) obj;
-    return Objects.equals(this.envId, other.envId) && Objects.equals(this.host, other.host)
-        && Objects.equals(this.serviceTemplate, other.serviceTemplate)
+    return Objects.equals(this.envId, other.envId) && Objects.equals(this.serviceTemplateId, other.serviceTemplateId)
+        && Objects.equals(this.serviceName, other.serviceName) && Objects.equals(this.hostId, other.hostId)
+        && Objects.equals(this.hostName, other.hostName) && Objects.equals(this.tagName, other.tagName)
         && Objects.equals(this.releaseId, other.releaseId) && Objects.equals(this.releaseName, other.releaseName)
         && Objects.equals(this.artifactId, other.artifactId) && Objects.equals(this.artifactName, other.artifactName)
         && Objects.equals(this.artifactDeployedOn, other.artifactDeployedOn)
@@ -385,8 +382,11 @@ public class ServiceInstance extends Base {
   public String toString() {
     return MoreObjects.toStringHelper(this)
         .add("envId", envId)
-        .add("host", host)
-        .add("serviceTemplate", serviceTemplate)
+        .add("serviceTemplateId", serviceTemplateId)
+        .add("serviceName", serviceName)
+        .add("hostId", hostId)
+        .add("hostName", hostName)
+        .add("tagName", tagName)
         .add("releaseId", releaseId)
         .add("releaseName", releaseName)
         .add("artifactId", artifactId)
@@ -403,358 +403,239 @@ public class ServiceInstance extends Base {
         .toString();
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private String envId;
-    private Host host;
-    private ServiceTemplate serviceTemplate;
+    private String serviceTemplateId;
+    private String serviceName;
+    private String hostId;
+    private String hostName;
+    private String tagName;
     private String releaseId;
     private String releaseName;
     private String artifactId;
     private String artifactName;
     private long artifactDeployedOn;
     private ExecutionStatus artifactDeploymentStatus;
+    private String uuid;
     private String artifactDeploymentActivityId;
+    private String appId;
     private String lastActivityId;
     private ExecutionStatus lastActivityStatus;
+    private User createdBy;
     private long lastActivityCreatedAt;
+    private long createdAt;
     private String commandName;
     private String commandType;
-    private long lastDeployedOn;
-    private String uuid;
-    private String appId;
-    private User createdBy;
-    private long createdAt;
     private User lastUpdatedBy;
+    private long lastDeployedOn;
     private long lastUpdatedAt;
     private boolean active = true;
 
     private Builder() {}
 
-    /**
-     * A service instance builder.
-     *
-     * @return the builder
-     */
     public static Builder aServiceInstance() {
       return new Builder();
     }
 
-    /**
-     * With env id builder.
-     *
-     * @param envId the env id
-     * @return the builder
-     */
     public Builder withEnvId(String envId) {
       this.envId = envId;
       return this;
     }
 
-    /**
-     * With host builder.
-     *
-     * @param host the host
-     * @return the builder
-     */
+    public Builder withServiceTemplateId(String serviceTemplateId) {
+      this.serviceTemplateId = serviceTemplateId;
+      return this;
+    }
+
+    public Builder withServiceName(String serviceName) {
+      this.serviceName = serviceName;
+      return this;
+    }
+
     public Builder withHost(Host host) {
-      this.host = host;
+      this.hostId = host.getUuid();
+      this.hostName = host.getHostName();
+      this.tagName = host.getConfigTag() != null ? host.getConfigTag().getName() : null;
       return this;
     }
 
-    /**
-     * With service template builder.
-     *
-     * @param serviceTemplate the service template
-     * @return the builder
-     */
     public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
-      this.serviceTemplate = serviceTemplate;
+      this.serviceName = serviceTemplate.getService() != null ? serviceTemplate.getService().getName() : "";
+      this.serviceTemplateId = serviceTemplate.getUuid();
       return this;
     }
 
-    /**
-     * With release id builder.
-     *
-     * @param releaseId the release id
-     * @return the builder
-     */
+    public Builder withHostId(String hostId) {
+      this.hostId = hostId;
+      return this;
+    }
+
+    public Builder withHostName(String hostName) {
+      this.hostName = hostName;
+      return this;
+    }
+
+    public Builder withTagName(String tagName) {
+      this.tagName = tagName;
+      return this;
+    }
+
     public Builder withReleaseId(String releaseId) {
       this.releaseId = releaseId;
       return this;
     }
 
-    /**
-     * With release name builder.
-     *
-     * @param releaseName the release name
-     * @return the builder
-     */
     public Builder withReleaseName(String releaseName) {
       this.releaseName = releaseName;
       return this;
     }
 
-    /**
-     * With artifact id builder.
-     *
-     * @param artifactId the artifact id
-     * @return the builder
-     */
     public Builder withArtifactId(String artifactId) {
       this.artifactId = artifactId;
       return this;
     }
 
-    /**
-     * With artifact name builder.
-     *
-     * @param artifactName the artifact name
-     * @return the builder
-     */
     public Builder withArtifactName(String artifactName) {
       this.artifactName = artifactName;
       return this;
     }
 
-    /**
-     * With artifact deployed on builder.
-     *
-     * @param artifactDeployedOn the artifact deployed on
-     * @return the builder
-     */
     public Builder withArtifactDeployedOn(long artifactDeployedOn) {
       this.artifactDeployedOn = artifactDeployedOn;
       return this;
     }
 
-    /**
-     * With artifact deployment status builder.
-     *
-     * @param artifactDeploymentStatus the artifact deployment status
-     * @return the builder
-     */
     public Builder withArtifactDeploymentStatus(ExecutionStatus artifactDeploymentStatus) {
       this.artifactDeploymentStatus = artifactDeploymentStatus;
       return this;
     }
 
-    /**
-     * With artifact deployment activity id builder.
-     *
-     * @param artifactDeploymentActivityId the artifact deployment activity id
-     * @return the builder
-     */
-    public Builder withArtifactDeploymentActivityId(String artifactDeploymentActivityId) {
-      this.artifactDeploymentActivityId = artifactDeploymentActivityId;
-      return this;
-    }
-
-    /**
-     * With last activity id builder.
-     *
-     * @param lastActivityId the last activity id
-     * @return the builder
-     */
-    public Builder withLastActivityId(String lastActivityId) {
-      this.lastActivityId = lastActivityId;
-      return this;
-    }
-
-    /**
-     * With last activity status builder.
-     *
-     * @param lastActivityStatus the last activity status
-     * @return the builder
-     */
-    public Builder withLastActivityStatus(ExecutionStatus lastActivityStatus) {
-      this.lastActivityStatus = lastActivityStatus;
-      return this;
-    }
-
-    /**
-     * With last activity created on builder.
-     *
-     * @param lastActivityCreatedOn the last activity created on
-     * @return the builder
-     */
-    public Builder withLastActivityCreatedOn(long lastActivityCreatedOn) {
-      this.lastActivityCreatedAt = lastActivityCreatedOn;
-      return this;
-    }
-
-    /**
-     * With command name builder.
-     *
-     * @param commandName the command name
-     * @return the builder
-     */
-    public Builder withCommandName(String commandName) {
-      this.commandName = commandName;
-      return this;
-    }
-
-    /**
-     * With command type builder.
-     *
-     * @param commandType the command type
-     * @return the builder
-     */
-    public Builder withCommandType(String commandType) {
-      this.commandType = commandType;
-      return this;
-    }
-
-    /**
-     * With last deployed on builder.
-     *
-     * @param lastDeployedOn the last deployed on
-     * @return the builder
-     */
-    public Builder withLastDeployedOn(long lastDeployedOn) {
-      this.lastDeployedOn = lastDeployedOn;
-      return this;
-    }
-
-    /**
-     * With uuid builder.
-     *
-     * @param uuid the uuid
-     * @return the builder
-     */
     public Builder withUuid(String uuid) {
       this.uuid = uuid;
       return this;
     }
 
-    /**
-     * With app id builder.
-     *
-     * @param appId the app id
-     * @return the builder
-     */
+    public Builder withArtifactDeploymentActivityId(String artifactDeploymentActivityId) {
+      this.artifactDeploymentActivityId = artifactDeploymentActivityId;
+      return this;
+    }
+
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
-    /**
-     * With created by builder.
-     *
-     * @param createdBy the created by
-     * @return the builder
-     */
+    public Builder withLastActivityId(String lastActivityId) {
+      this.lastActivityId = lastActivityId;
+      return this;
+    }
+
+    public Builder withLastActivityStatus(ExecutionStatus lastActivityStatus) {
+      this.lastActivityStatus = lastActivityStatus;
+      return this;
+    }
+
     public Builder withCreatedBy(User createdBy) {
       this.createdBy = createdBy;
       return this;
     }
 
-    /**
-     * With created at builder.
-     *
-     * @param createdAt the created at
-     * @return the builder
-     */
+    public Builder withLastActivityCreatedAt(long lastActivityCreatedAt) {
+      this.lastActivityCreatedAt = lastActivityCreatedAt;
+      return this;
+    }
+
     public Builder withCreatedAt(long createdAt) {
       this.createdAt = createdAt;
       return this;
     }
 
-    /**
-     * With last updated by builder.
-     *
-     * @param lastUpdatedBy the last updated by
-     * @return the builder
-     */
+    public Builder withCommandName(String commandName) {
+      this.commandName = commandName;
+      return this;
+    }
+
+    public Builder withCommandType(String commandType) {
+      this.commandType = commandType;
+      return this;
+    }
+
     public Builder withLastUpdatedBy(User lastUpdatedBy) {
       this.lastUpdatedBy = lastUpdatedBy;
       return this;
     }
 
-    /**
-     * With last updated at builder.
-     *
-     * @param lastUpdatedAt the last updated at
-     * @return the builder
-     */
+    public Builder withLastDeployedOn(long lastDeployedOn) {
+      this.lastDeployedOn = lastDeployedOn;
+      return this;
+    }
+
     public Builder withLastUpdatedAt(long lastUpdatedAt) {
       this.lastUpdatedAt = lastUpdatedAt;
       return this;
     }
 
-    /**
-     * With active builder.
-     *
-     * @param active the active
-     * @return the builder
-     */
     public Builder withActive(boolean active) {
       this.active = active;
       return this;
     }
 
-    /**
-     * But builder.
-     *
-     * @return the builder
-     */
     public Builder but() {
       return aServiceInstance()
           .withEnvId(envId)
-          .withHost(host)
-          .withServiceTemplate(serviceTemplate)
+          .withServiceTemplateId(serviceTemplateId)
+          .withServiceName(serviceName)
+          .withHostId(hostId)
+          .withHostName(hostName)
+          .withTagName(tagName)
           .withReleaseId(releaseId)
           .withReleaseName(releaseName)
           .withArtifactId(artifactId)
           .withArtifactName(artifactName)
           .withArtifactDeployedOn(artifactDeployedOn)
           .withArtifactDeploymentStatus(artifactDeploymentStatus)
+          .withUuid(uuid)
           .withArtifactDeploymentActivityId(artifactDeploymentActivityId)
+          .withAppId(appId)
           .withLastActivityId(lastActivityId)
           .withLastActivityStatus(lastActivityStatus)
-          .withLastActivityCreatedOn(lastActivityCreatedAt)
+          .withCreatedBy(createdBy)
+          .withLastActivityCreatedAt(lastActivityCreatedAt)
+          .withCreatedAt(createdAt)
           .withCommandName(commandName)
           .withCommandType(commandType)
-          .withLastDeployedOn(lastDeployedOn)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
+          .withLastDeployedOn(lastDeployedOn)
           .withLastUpdatedAt(lastUpdatedAt)
           .withActive(active);
     }
 
-    /**
-     * Build service instance.
-     *
-     * @return the service instance
-     */
     public ServiceInstance build() {
       ServiceInstance serviceInstance = new ServiceInstance();
       serviceInstance.setEnvId(envId);
-      serviceInstance.setHost(host);
-      serviceInstance.setServiceTemplate(serviceTemplate);
+      serviceInstance.setServiceTemplateId(serviceTemplateId);
+      serviceInstance.setServiceName(serviceName);
+      serviceInstance.setHostId(hostId);
+      serviceInstance.setHostName(hostName);
+      serviceInstance.setTagName(tagName);
       serviceInstance.setReleaseId(releaseId);
       serviceInstance.setReleaseName(releaseName);
       serviceInstance.setArtifactId(artifactId);
       serviceInstance.setArtifactName(artifactName);
       serviceInstance.setArtifactDeployedOn(artifactDeployedOn);
       serviceInstance.setArtifactDeploymentStatus(artifactDeploymentStatus);
+      serviceInstance.setUuid(uuid);
       serviceInstance.setArtifactDeploymentActivityId(artifactDeploymentActivityId);
+      serviceInstance.setAppId(appId);
       serviceInstance.setLastActivityId(lastActivityId);
       serviceInstance.setLastActivityStatus(lastActivityStatus);
+      serviceInstance.setCreatedBy(createdBy);
       serviceInstance.setLastActivityCreatedAt(lastActivityCreatedAt);
+      serviceInstance.setCreatedAt(createdAt);
       serviceInstance.setCommandName(commandName);
       serviceInstance.setCommandType(commandType);
-      serviceInstance.setLastDeployedOn(lastDeployedOn);
-      serviceInstance.setUuid(uuid);
-      serviceInstance.setAppId(appId);
-      serviceInstance.setCreatedBy(createdBy);
-      serviceInstance.setCreatedAt(createdAt);
       serviceInstance.setLastUpdatedBy(lastUpdatedBy);
+      serviceInstance.setLastDeployedOn(lastDeployedOn);
       serviceInstance.setLastUpdatedAt(lastUpdatedAt);
       serviceInstance.setActive(active);
       return serviceInstance;

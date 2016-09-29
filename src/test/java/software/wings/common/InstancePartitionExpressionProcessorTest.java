@@ -5,13 +5,18 @@
 package software.wings.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Host.Builder.aHost;
+import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Injector;
@@ -22,14 +27,14 @@ import software.wings.WingsBaseTest;
 import software.wings.api.PartitionElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Host.Builder;
-import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ContextElement;
@@ -47,29 +52,32 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
   /**
    * The Injector.
    */
-  @Inject Injector injector;
+  @Inject private Injector injector;
   /**
    * The App service.
    */
-  @Inject AppService appService;
+  @Inject private AppService appService;
   /**
    * The Environment service.
    */
-  @Inject EnvironmentService environmentService;
+  @Inject private EnvironmentService environmentService;
 
   /**
    * The Service instance service.
    */
-  @Inject ServiceInstanceService serviceInstanceService;
+  @Inject private ServiceInstanceService serviceInstanceService;
 
   /**
    * The Service instance service mock.
    */
-  @Mock ServiceInstanceService serviceInstanceServiceMock;
+  @Mock private ServiceInstanceService serviceInstanceServiceMock;
   /**
    * The Service template service mock.
    */
-  @Mock ServiceTemplateService serviceTemplateServiceMock;
+  @Mock private ServiceTemplateService serviceTemplateService;
+
+  @Mock private HostService hostService;
+
   @Inject private WingsPersistence wingsPersistence;
 
   /**
@@ -87,79 +95,64 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     when(context.getEnv()).thenReturn(env);
 
     PageResponse<ServiceInstance> res = new PageResponse<>();
-    ServiceInstance instance1 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host1").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance2 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host2").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance3 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host3").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance4 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host3").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance5 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host3").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance6 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host3").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
-    ServiceInstance instance7 =
-        aServiceInstance()
-            .withUuid(UUIDGenerator.getUuid())
-            .withHost(Builder.aHost().withHostName("host3").build())
-            .withServiceTemplate(aServiceTemplate()
-                                     .withName("template")
-                                     .withService(Service.Builder.aService().withUuid("uuid1").withName("svc1").build())
-                                     .build())
-            .build();
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withUuid(TEMPLATE_ID)
+                                          .withName("template")
+                                          .withService(aService().withUuid("uuid1").withName("svc1").build())
+                                          .build();
+
+    ServiceInstance instance1 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid1").withHostName("host1").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance2 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid2").withHostName("host2").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance3 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid3").withHostName("host3").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance4 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid4").withHostName("host3").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance5 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid5").withHostName("host3").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance6 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid6").withHostName("host3").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
+    ServiceInstance instance7 = aServiceInstance()
+                                    .withUuid(UUIDGenerator.getUuid())
+                                    .withHost(aHost().withUuid("huuid7").withHostName("host3").build())
+                                    .withServiceTemplate(serviceTemplate)
+                                    .build();
     List<ServiceInstance> instances =
         Lists.newArrayList(instance1, instance2, instance3, instance4, instance5, instance6, instance7);
     res.setResponse(instances);
 
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateServiceMock.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false))).thenReturn(new PageResponse<>());
 
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
-    processor.setServiceTemplateService(serviceTemplateServiceMock);
+    processor.setServiceTemplateService(serviceTemplateService);
+    on(processor).set("hostService", hostService);
+
+    when(serviceTemplateService.get(anyString(), eq(TEMPLATE_ID))).thenReturn(serviceTemplate);
+
+    instances.forEach(instance
+        -> when(hostService.getHostByEnv(anyString(), anyString(), eq(instance.getHostId())))
+               .thenReturn(aHost().withUuid(instance.getHostId()).withHostName(instance.getHostName()).build()));
 
     List<PartitionElement> partitions = processor.partitions("2", "30 %", "50 %");
     assertThat(partitions).isNotNull().hasSize(3).doesNotContainNull();

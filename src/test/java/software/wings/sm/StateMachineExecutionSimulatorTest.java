@@ -6,6 +6,7 @@ package software.wings.sm;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -20,6 +21,7 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.UUIDGenerator.getUuid;
+import static software.wings.dl.PageResponse.Builder.aPageResponse;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateMachine.Builder.aStateMachine;
 import static software.wings.sm.Transition.Builder.aTransition;
@@ -41,14 +43,18 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.Host;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.RequiredExecutionArgs;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.command.Command;
+import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 
+import java.util.Arrays;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -62,6 +68,7 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
   @InjectMocks @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceInstanceService serviceInstanceService;
+  @Mock private HostService hostService;
 
   /**
    * Should return empty arg type.
@@ -137,19 +144,18 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(cmd.isArtifactNeeded()).thenReturn(false);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "STOP")).thenReturn(cmd);
 
-    PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(
-                aHost()
+    Host host = aHost()
                     .withHostConnAttr(
                         aSettingAttribute()
                             .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
                             .build())
-                    .build())
-            .build()));
+                    .build();
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
+    when(hostService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host)).build());
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -198,19 +204,18 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(cmd.isArtifactNeeded()).thenReturn(true);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
 
-    PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(
-                aHost()
+    Host host = aHost()
                     .withHostConnAttr(
                         aSettingAttribute()
                             .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
                             .build())
-                    .build())
-            .build()));
+                    .build();
+
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
+    when(hostService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host)).build());
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -259,29 +264,25 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(cmd.isArtifactNeeded()).thenReturn(true);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
 
-    PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
+    Host host1 = aHost()
+                     .withHostConnAttr(
+                         aSettingAttribute()
+                             .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                             .build())
+                     .build();
+    Host host2 =
+        aHost()
+            .withHostConnAttr(
+                aSettingAttribute()
+                    .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD_SU_APP_USER).build())
                     .build())
-            .build(),
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(aHost()
-                          .withHostConnAttr(aSettingAttribute()
-                                                .withValue(aHostConnectionAttributes()
-                                                               .withAccessType(AccessType.USER_PASSWORD_SU_APP_USER)
-                                                               .build())
-                                                .build())
-                          .build())
-            .build()));
+            .build();
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host1).build(),
+        aServiceInstance().withUuid(getUuid()).withHost(host2).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
+    when(hostService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host1, host2)).build());
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);
@@ -331,29 +332,26 @@ public class StateMachineExecutionSimulatorTest extends WingsBaseTest {
     when(cmd.isArtifactNeeded()).thenReturn(true);
     when(serviceResourceService.getCommandByName(app.getUuid(), service.getUuid(), "INSTALL")).thenReturn(cmd);
 
-    PageResponse<ServiceInstance> res = new PageResponse<>();
-    res.setResponse(Lists.newArrayList(
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(
-                aHost()
-                    .withHostConnAttr(
-                        aSettingAttribute()
-                            .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
-                            .build())
+    Host host1 = aHost()
+                     .withHostConnAttr(
+                         aSettingAttribute()
+                             .withValue(aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD).build())
+                             .build())
+                     .build();
+    Host host2 =
+        aHost()
+            .withHostConnAttr(
+                aSettingAttribute()
+                    .withValue(
+                        aHostConnectionAttributes().withAccessType(AccessType.USER_PASSWORD_SUDO_APP_USER).build())
                     .build())
-            .build(),
-        aServiceInstance()
-            .withUuid(getUuid())
-            .withHost(aHost()
-                          .withHostConnAttr(aSettingAttribute()
-                                                .withValue(aHostConnectionAttributes()
-                                                               .withAccessType(AccessType.USER_PASSWORD_SUDO_APP_USER)
-                                                               .build())
-                                                .build())
-                          .build())
-            .build()));
+            .build();
+    PageResponse<ServiceInstance> res = new PageResponse<>();
+    res.setResponse(Lists.newArrayList(aServiceInstance().withUuid(getUuid()).withHost(host1).build(),
+        aServiceInstance().withUuid(getUuid()).withHost(host2).build()));
     when(serviceInstanceService.list(anyObject())).thenReturn(res);
+    when(hostService.list(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(Arrays.asList(host1, host2)).build());
 
     RequiredExecutionArgs reqArgs =
         stateMachineExecutionSimulator.getRequiredExecutionArgs(app.getUuid(), env.getUuid(), sm, executionArgs);

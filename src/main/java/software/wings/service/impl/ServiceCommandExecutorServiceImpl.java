@@ -47,24 +47,24 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
   @Override
   public ExecutionResult execute(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     try {
-      prepareCommand(serviceInstance, command);
+      prepareCommand(serviceInstance, command, context);
       InitCommandUnit initCommandUnit = new InitCommandUnit();
       initCommandUnit.setCommand(command);
       command.getCommandUnits().add(0, initCommandUnit);
       command.getCommandUnits().add(new CleanupCommandUnit());
       ExecutionResult executionResult = executeCommand(serviceInstance, command, context);
-      commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
+      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       return executionResult;
     } catch (Exception ex) {
-      commandUnitExecutorService.cleanup(context.getActivityId(), serviceInstance.getHost());
+      commandUnitExecutorService.cleanup(context.getActivityId(), context.getHost());
       throw ex;
     }
   }
 
-  private void prepareCommand(ServiceInstance serviceInstance, Command command) {
+  private void prepareCommand(ServiceInstance serviceInstance, Command command, CommandExecutionContext context) {
     if (isNotEmpty(command.getReferenceId())) {
-      Command referedCommand = serviceResourceService.getCommandByName(serviceInstance.getAppId(),
-          serviceInstance.getServiceTemplate().getService().getUuid(), command.getReferenceId());
+      Command referedCommand = serviceResourceService.getCommandByName(
+          serviceInstance.getAppId(), context.getServiceTemplate().getService().getUuid(), command.getReferenceId());
       if (referedCommand == null) {
         throw new WingsException(COMMAND_DOES_NOT_EXIST);
       }
@@ -73,7 +73,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (COMMAND.equals(commandUnit.getCommandUnitType())) {
-        prepareCommand(serviceInstance, (Command) commandUnit);
+        prepareCommand(serviceInstance, (Command) commandUnit, context);
       }
     }
   }
@@ -87,7 +87,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     for (CommandUnit commandUnit : commandUnits) {
       executionResult = COMMAND.equals(commandUnit.getCommandUnitType())
           ? executeCommand(serviceInstance, (Command) commandUnit, context)
-          : commandUnitExecutorService.execute(serviceInstance.getHost(), commandUnit, context);
+          : commandUnitExecutorService.execute(context.getHost(), commandUnit, context);
       if (FAILURE == executionResult) {
         break;
       }

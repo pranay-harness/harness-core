@@ -31,6 +31,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -98,13 +99,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
    */
   @Override
   public void updateInstanceMappings(ServiceTemplate template, List<Host> addedHosts, List<Host> deletedHosts) {
-    Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
-                                             .field("appId")
-                                             .equal(template.getAppId())
-                                             .field("serviceTemplate")
-                                             .equal(template.getUuid())
-                                             .field("host")
-                                             .hasAnyOf(deletedHosts);
+    Query<ServiceInstance> deleteQuery =
+        wingsPersistence.createQuery(ServiceInstance.class)
+            .field("appId")
+            .equal(template.getAppId())
+            .field("serviceTemplate")
+            .equal(template.getUuid())
+            .field("host")
+            .hasAnyOf(deletedHosts.stream().map(Host::getUuid).collect(Collectors.toList()));
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {
@@ -112,8 +114,11 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
           aServiceInstance()
               .withAppId(template.getAppId())
               .withEnvId(template.getEnvId()) // Fixme: do it one by one and ignore unique constraints failure
-              .withServiceTemplate(template)
-              .withHost(host)
+              .withServiceTemplateId(template.getUuid())
+              .withHostId(host.getUuid())
+              .withServiceName(template.getService().getName())
+              .withTagName(host.getConfigTag() != null ? host.getConfigTag().getName() : null)
+              .withHostName(host.getHostName())
               .build();
       try {
         wingsPersistence.save(serviceInstance);

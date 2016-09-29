@@ -8,7 +8,9 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Artifact;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.Host;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
 import software.wings.service.intfc.FileService.FileBucket;
 
@@ -23,6 +25,8 @@ import java.util.Objects;
 public class CommandExecutionContext {
   private Artifact artifact;
   private ServiceInstance serviceInstance;
+  private Host host;
+  private ServiceTemplate serviceTemplate;
   private String appId;
   private String activityId;
   private String runtimePath;
@@ -53,6 +57,8 @@ public class CommandExecutionContext {
     this.executionCredential = other.executionCredential;
     this.envVariables = other.envVariables;
     this.serviceVariables = other.serviceVariables;
+    this.host = other.host;
+    this.serviceTemplate = other.serviceTemplate;
   }
 
   /**
@@ -217,6 +223,42 @@ public class CommandExecutionContext {
     this.serviceVariables = serviceVariables;
   }
 
+  /**
+   * Getter for property 'host'.
+   *
+   * @return Value for property 'host'.
+   */
+  public Host getHost() {
+    return host;
+  }
+
+  /**
+   * Setter for property 'host'.
+   *
+   * @param host Value to set for property 'host'.
+   */
+  public void setHost(Host host) {
+    this.host = host;
+  }
+
+  /**
+   * Getter for property 'serviceTemplate'.
+   *
+   * @return Value for property 'serviceTemplate'.
+   */
+  public ServiceTemplate getServiceTemplate() {
+    return serviceTemplate;
+  }
+
+  /**
+   * Setter for property 'serviceTemplate'.
+   *
+   * @param serviceTemplate Value to set for property 'serviceTemplate'.
+   */
+  public void setServiceTemplate(ServiceTemplate serviceTemplate) {
+    this.serviceTemplate = serviceTemplate;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(
@@ -327,12 +369,11 @@ public class CommandExecutionContext {
     return text;
   }
 
-  /**
-   * The type Builder.
-   */
   public static final class Builder {
     private Artifact artifact;
     private ServiceInstance serviceInstance;
+    private Host host;
+    private ServiceTemplate serviceTemplate;
     private String appId;
     private String activityId;
     private String runtimePath;
@@ -354,6 +395,16 @@ public class CommandExecutionContext {
 
     public Builder withServiceInstance(ServiceInstance serviceInstance) {
       this.serviceInstance = serviceInstance;
+      return this;
+    }
+
+    public Builder withHost(Host host) {
+      this.host = host;
+      return this;
+    }
+
+    public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
+      this.serviceTemplate = serviceTemplate;
       return this;
     }
 
@@ -396,6 +447,8 @@ public class CommandExecutionContext {
       return aCommandExecutionContext()
           .withArtifact(artifact)
           .withServiceInstance(serviceInstance)
+          .withHost(host)
+          .withServiceTemplate(serviceTemplate)
           .withAppId(appId)
           .withActivityId(activityId)
           .withRuntimePath(runtimePath)
@@ -409,6 +462,8 @@ public class CommandExecutionContext {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setArtifact(artifact);
       commandExecutionContext.setServiceInstance(serviceInstance);
+      commandExecutionContext.setHost(host);
+      commandExecutionContext.setServiceTemplate(serviceTemplate);
       commandExecutionContext.setAppId(appId);
       commandExecutionContext.setActivityId(activityId);
       commandExecutionContext.setRuntimePath(runtimePath);
