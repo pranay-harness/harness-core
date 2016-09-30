@@ -4,11 +4,14 @@
 
 package software.wings.sm;
 
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.api.ForkElement.Builder.aForkElement;
+import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.ErrorCodes;
@@ -23,6 +26,7 @@ import software.wings.beans.command.Command;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.states.CommandState;
@@ -52,6 +56,7 @@ public class StateMachineExecutionSimulator {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutionContextFactory executionContextFactory;
   @Inject private ServiceInstanceService serviceInstanceService;
+  @Inject private HostService hostService;
 
   /**
    * Gets status breakdown.
@@ -117,7 +122,7 @@ public class StateMachineExecutionSimulator {
    * @return the infrastructure required entity type
    */
   public Set<EntityType> getInfrastructureRequiredEntityType(String appId, Collection<String> serviceInstanceIds) {
-    PageRequest<ServiceInstance> pageRequest = PageRequest.Builder.aPageRequest()
+    PageRequest<ServiceInstance> pageRequest = aPageRequest()
                                                    .addFilter("appId", Operator.EQ, appId)
                                                    .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
                                                    .addFieldsIncluded("uuid", "host")
@@ -130,8 +135,19 @@ public class StateMachineExecutionSimulator {
     }
 
     Set<AccessType> accessTypes = new HashSet<>();
-    for (ServiceInstance serviceInstance : res.getResponse()) {
-      SettingAttribute connAttribute = serviceInstance.getHost().getHost().getHostConnAttr();
+    List<ApplicationHost> hostResponse = hostService
+                                             .list(aPageRequest()
+                                                       .addFilter(ID_KEY, Operator.IN,
+                                                           res.getResponse()
+                                                               .stream()
+                                                               .map(ServiceInstance::getHostId)
+                                                               .collect(Collectors.toSet())
+                                                               .toArray())
+                                                       .build())
+                                             .getResponse();
+
+    for (ApplicationHost host : hostResponse) {
+      SettingAttribute connAttribute = host.getHost().getHostConnAttr();
       if (connAttribute == null || connAttribute.getValue() == null
           || !(connAttribute.getValue() instanceof HostConnectionAttributes)
           || ((HostConnectionAttributes) connAttribute.getValue()).getAccessType() == null) {

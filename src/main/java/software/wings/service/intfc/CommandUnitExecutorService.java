@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.Host;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnit.ExecutionResult;
@@ -17,7 +17,7 @@ public interface CommandUnitExecutorService {
    * @param context     the context
    * @return the execution result
    */
-  ExecutionResult execute(ApplicationHost host, CommandUnit commandUnit, CommandExecutionContext context);
+  ExecutionResult execute(Host host, CommandUnit commandUnit, CommandExecutionContext context);
 
   /**
    * Clenup any resource blocked execution optimization
@@ -25,5 +25,5 @@ public interface CommandUnitExecutorService {
    * @param activityId the activity id
    * @param host       the host
    */
-  void cleanup(String activityId, ApplicationHost host);
+  void cleanup(String activityId, Host host);
 }

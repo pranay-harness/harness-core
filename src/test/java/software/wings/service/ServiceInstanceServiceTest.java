@@ -31,6 +31,7 @@ import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 import static software.wings.utils.WingsTestConstants.RELEASE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import org.junit.Before;
@@ -247,12 +248,20 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
   public void shouldUpdateHostInstanceMapping() {
     Host newHost = aHost().withUuid("NEW_HOST_ID").build();
     Host deletedHost = aHost().withUuid("DELETED_HOST_ID").build();
-    List<ApplicationHost> newHostList =
-        asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(newHost).build());
-    List<ApplicationHost> deletedHosts =
-        asList(anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(HOST_ID).withHost(deletedHost).build());
-    ServiceTemplate serviceTemplate =
-        aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build();
+    List<ApplicationHost> newHostList = asList(
+        anApplicationHost().withAppId(APP_ID).withEnvId(ENV_ID).withUuid("NEW_HOST_ID").withHost(newHost).build());
+    List<ApplicationHost> deletedHosts = asList(anApplicationHost()
+                                                    .withAppId(APP_ID)
+                                                    .withEnvId(ENV_ID)
+                                                    .withUuid("DELETED_HOST_ID")
+                                                    .withHost(deletedHost)
+                                                    .build());
+    ServiceTemplate serviceTemplate = aServiceTemplate()
+                                          .withAppId(APP_ID)
+                                          .withEnvId(ENV_ID)
+                                          .withUuid(TEMPLATE_ID)
+                                          .withService(aService().withUuid(SERVICE_ID).withName(SERVICE_NAME).build())
+                                          .build();
     serviceInstanceService.updateInstanceMappings(serviceTemplate, newHostList, deletedHosts);
     verify(wingsPersistence).delete(isA(Query.class));
     verify(query).field("appId");
@@ -260,7 +269,7 @@ public class ServiceInstanceServiceTest extends WingsBaseTest {
     verify(query).field("serviceTemplate");
     verify(end).equal(TEMPLATE_ID);
     verify(query).field("host");
-    verify(end).hasAnyOf(deletedHosts);
+    verify(end).hasAnyOf(asList("DELETED_HOST_ID"));
     verify(wingsPersistence)
         .save(aServiceInstance()
                   .withAppId(APP_ID)

@@ -17,6 +17,7 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
@@ -28,6 +29,7 @@ import software.wings.beans.SortOrder.OrderType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.Builder;
 import software.wings.dl.PageResponse;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -69,6 +71,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
+  @Inject private HostService hostService;
 
   private ExecutionContext context;
 
@@ -92,13 +95,14 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
    * @param instance the instance
    * @return the instance element
    */
-  static InstanceElement convertToInstanceElement(ServiceInstance instance) {
+  static InstanceElement convertToInstanceElement(
+      ServiceInstance instance, ApplicationHost host, ServiceTemplate serviceTemplate) {
     InstanceElement element = new InstanceElement();
     MapperUtils.mapObject(instance, element);
-    element.setHostElement(HostExpressionProcessor.convertToHostElement(instance.getHost()));
+    element.setHostElement(HostExpressionProcessor.convertToHostElement(host));
     element.setServiceTemplateElement(
-        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(instance.getServiceTemplate()));
-
+        ServiceTemplateExpressionProcessor.convertToServiceTemplateElement(serviceTemplate));
+    element.setDisplayName(host.getHostName() + ":" + serviceTemplate.getName());
     return element;
   }
 
@@ -245,7 +249,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
 
     List<InstanceElement> elements = new ArrayList<>();
     for (ServiceInstance instance : instances) {
-      elements.add(convertToInstanceElement(instance));
+      ServiceTemplate serviceTemplate =
+          serviceTemplateService.get(instance.getAppId(), instance.getServiceTemplateId());
+      ApplicationHost host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
+      elements.add(convertToInstanceElement(instance, host, serviceTemplate));
     }
 
     if (ArrayUtils.isNotEmpty(instanceIds)) {
@@ -307,10 +314,10 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     }
 
     if (serviceTemplates != null && !serviceTemplates.isEmpty()) {
-      pageRequest.addFilter(
-          SearchFilter.Builder.aSearchFilter()
-              .withField("serviceTemplate", Operator.IN, serviceTemplates.toArray(new ServiceTemplate[0]))
-              .build());
+      pageRequest.addFilter(SearchFilter.Builder.aSearchFilter()
+                                .withField("serviceTemplate", Operator.IN,
+                                    serviceTemplates.stream().map(ServiceTemplate::getUuid).toArray())
+                                .build());
     }
   }
 

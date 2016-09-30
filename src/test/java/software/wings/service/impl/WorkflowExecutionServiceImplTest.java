@@ -27,6 +27,7 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import com.google.common.collect.Lists;
@@ -732,6 +733,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -881,6 +883,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph = aGraph()
                       .addNodes(aNode()
@@ -1032,6 +1035,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
@@ -2056,6 +2060,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
         anApplicationHost()
@@ -2252,6 +2257,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
+    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());

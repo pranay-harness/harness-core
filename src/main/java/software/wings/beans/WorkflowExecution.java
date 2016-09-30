@@ -7,6 +7,7 @@ package software.wings.beans;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Graph.Node;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.LinkedHashMap;
@@ -29,6 +30,8 @@ public class WorkflowExecution extends Base {
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
   @Transient private Graph graph;
   @Transient private List<String> expandedGroupIds;
+
+  @Transient private Graph.Node executionNode;
 
   private ErrorStrategy errorStrategy;
 
@@ -276,6 +279,14 @@ public class WorkflowExecution extends Base {
   public void setStatusInstanceBreakdownMap(
       LinkedHashMap<ExecutionStatus, StatusInstanceBreakdown> statusInstanceBreakdownMap) {
     this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
+  }
+
+  public Node getExecutionNode() {
+    return executionNode;
+  }
+
+  public void setExecutionNode(Node executionNode) {
+    this.executionNode = executionNode;
   }
 
   /**

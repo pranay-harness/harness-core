@@ -11,9 +11,11 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Release.Builder.aRelease;
@@ -38,6 +40,7 @@ import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.RELEASE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
@@ -50,9 +53,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
-import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
-import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.command.Command;
@@ -61,10 +62,12 @@ import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
@@ -102,29 +105,22 @@ public class CommandStateTest extends WingsBaseTest {
           .withAppId(APP_ID)
           .withEnvId(ENV_ID)
           .withServiceTemplate(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build())
-          .withHost(ApplicationHost.Builder.anApplicationHost()
-                        .withAppId(APP_ID)
-                        .withEnvId(ENV_ID)
-                        .withUuid(HOST_ID)
-                        .withHost(Host.Builder.aHost().withHostName(HOST_NAME).build())
-                        .build())
+          .withHost(anApplicationHost().withUuid(HOST_ID).withHostName(HOST_NAME).build())
           .build();
-
-  private static final Activity ACTIVITY_WITH_ID =
-      anActivity()
-          .withUuid(ACTIVITY_ID)
-          .withAppId(APP_ID)
-          .withApplicationName(APP_NAME)
-          .withEnvironmentId(SERVICE_INSTANCE.getEnvId())
-          .withServiceTemplateId(SERVICE_INSTANCE.getServiceTemplate().getUuid())
-          .withServiceTemplateName(SERVICE_INSTANCE.getServiceTemplate().getName())
-          .withServiceId(SERVICE_INSTANCE.getServiceTemplate().getService().getUuid())
-          .withServiceName(SERVICE_INSTANCE.getServiceTemplate().getService().getName())
-          .withCommandName(COMMAND.getName())
-          .withCommandType(COMMAND.getCommandUnitType().name())
-          .withHostName(SERVICE_INSTANCE.getHost().getHostName())
-          .withServiceInstanceId(SERVICE_INSTANCE_ID)
-          .build();
+  private static final Activity ACTIVITY_WITH_ID = anActivity()
+                                                       .withUuid(ACTIVITY_ID)
+                                                       .withAppId(APP_ID)
+                                                       .withApplicationName(APP_NAME)
+                                                       .withEnvironmentId(SERVICE_INSTANCE.getEnvId())
+                                                       .withServiceTemplateId(SERVICE_INSTANCE.getServiceTemplateId())
+                                                       .withServiceTemplateName(null)
+                                                       .withServiceId(SERVICE_ID)
+                                                       .withServiceName(SERVICE_NAME)
+                                                       .withCommandName(COMMAND.getName())
+                                                       .withCommandType(COMMAND.getCommandUnitType().name())
+                                                       .withHostName(HOST_NAME)
+                                                       .withServiceInstanceId(SERVICE_INSTANCE_ID)
+                                                       .build();
   private static final WorkflowStandardParams WORKFLOW_STANDARD_PARAMS =
       aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
   private static final SimpleWorkflowParam SIMPLE_WORKFLOW_PARAM = aSimpleWorkflowParam().build();
@@ -142,6 +138,9 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private ReleaseService releaseService;
+  @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private HostService hostService;
+
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
   /**
@@ -182,9 +181,16 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.SERVICE))
         .thenReturn(aServiceElement().withUuid(SERVICE_ID).build());
     when(context.getContextElement(ContextElementType.INSTANCE))
-        .thenReturn(anInstanceElement().withUuid(SERVICE_INSTANCE_ID).build());
+        .thenReturn(anInstanceElement()
+                        .withUuid(SERVICE_INSTANCE_ID)
+                        .withServiceTemplateElement(aServiceTemplateElement().withUuid(TEMPLATE_ID).build())
+                        .build());
     when(context.renderExpression(anyString())).thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[0]);
     when(context.getServiceVariables()).thenReturn(Collections.emptyMap());
+    when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
+        .thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).withService(SERVICE).build());
+    when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID))
+        .thenReturn(anApplicationHost().withHostName(HOST_NAME).build());
     commandState.setExecutorService(executorService);
   }
 

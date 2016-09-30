@@ -3,13 +3,9 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 
 import com.mongodb.DuplicateKeyException;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -31,6 +27,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.validation.executable.ValidateOnExecution;
@@ -49,23 +46,6 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public PageResponse<ServiceInstance> list(PageRequest<ServiceInstance> pageRequest) {
     return wingsPersistence.query(ServiceInstance.class, pageRequest);
-  }
-
-  /* (non-Javadoc)
-   * @see software.wings.service.intfc.ServiceInstanceService#list(software.wings.dl.PageRequest)
-   */
-  @Override
-  public PageResponse<ServiceInstance> list(
-      PageRequest<ServiceInstance> pageRequest, String appId, String envId, String serviceId) {
-    pageRequest.addFilter("appId", appId, EQ);
-    pageRequest.addFilter("envId", envId, EQ);
-    if (!isNullOrEmpty(serviceId)) {
-      List<Key<ServiceTemplate>> keyList = serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId);
-      if (keyList.size() > 0) {
-        pageRequest.addFilter(aSearchFilter().withField("serviceTemplate", IN, keyList.toArray()).build());
-      }
-    }
-    return list(pageRequest);
   }
 
   /* (non-Javadoc)
@@ -99,13 +79,14 @@ public class ServiceInstanceServiceImpl implements ServiceInstanceService {
   @Override
   public void updateInstanceMappings(
       ServiceTemplate template, List<ApplicationHost> addedHosts, List<ApplicationHost> deletedHosts) {
-    Query<ServiceInstance> deleteQuery = wingsPersistence.createQuery(ServiceInstance.class)
-                                             .field("appId")
-                                             .equal(template.getAppId())
-                                             .field("serviceTemplate")
-                                             .equal(template.getUuid())
-                                             .field("host")
-                                             .hasAnyOf(deletedHosts);
+    Query<ServiceInstance> deleteQuery =
+        wingsPersistence.createQuery(ServiceInstance.class)
+            .field("appId")
+            .equal(template.getAppId())
+            .field("serviceTemplate")
+            .equal(template.getUuid())
+            .field("host")
+            .hasAnyOf(deletedHosts.stream().map(ApplicationHost::getUuid).collect(Collectors.toList()));
     wingsPersistence.delete(deleteQuery);
 
     addedHosts.forEach(host -> {

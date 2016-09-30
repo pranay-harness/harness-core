@@ -28,6 +28,7 @@
         <atmosphere-version>2.4.5</atmosphere-version>
         <extensions-version>2.4.2</extensions-version>
         <alpnboot.version>8.1.8.v20160420</alpnboot.version>
+        <newrelic.version>3.32.0</newrelic.version>
     </properties>
 
     <repositories>
@@ -102,6 +103,12 @@
             <groupId>org.mortbay.jetty.alpn</groupId>
             <artifactId>alpn-boot</artifactId>
             <version>${alpnboot.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.newrelic.agent.java</groupId>
+            <artifactId>newrelic-agent</artifactId>
+            <version>${newrelic.version}</version>
         </dependency>
 
         <dependency>
@@ -735,10 +742,24 @@
                             <value>8=91</value>
                         </entry>
                         <entry>
+                            <key>Java-Agents</key>
+                            <value>newrelic-agent-${newrelic.version}.jar</value>
+                        </entry>
+                        <entry>
+                            <key>Environment-Variables</key>
+                            <value>NEW_RELIC_LICENSE_KEY=b121ea34124754a7952717207b122be017f2ae76</value>
+                        </entry>
+                        <entry>
                             <key>Args</key>
                             <value>server $*</value>
                         </entry>
                     </manifest>
+                    <fileSets>
+                        <fileSet>
+                            <directory>${project.basedir}</directory>
+                            <includes>newrelic.yml</includes>
+                        </fileSet>
+                    </fileSets>
                     <execPluginConfig>root</execPluginConfig>
                 </configuration>
                 <executions>
@@ -1114,7 +1135,7 @@
                                          host="${deployHost}"
                                          username="${deployUsername}"
                                          keyfile="${user.home}/.ssh/id_${deployHost}"
-                                         command="nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
+                                         command="NEW_RELIC_APP_NAME='${app.name}' nohup java -Dfile.encoding=UTF-8 -jar $HOME/portal-0.0.1-SNAPSHOT-capsule.jar config.yml &gt; portal.log 2&gt;&amp;1 &amp;"
                                          timeout="120000"/>
                                 <echo message="cleanup files"/>
                                 <sshexec trust="true" failonerror="true"
@@ -1355,6 +1376,7 @@
                 <findbugs.skip>true</findbugs.skip>
                 <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>ci.wings.software</portalHost>
+                <app.name>CI Server</app.name>
             </properties>
         </profile>
         <profile>
@@ -1374,6 +1396,7 @@
                 <findbugs.skip>true</findbugs.skip>
                 <embedmongo.skip>true</embedmongo.skip>
                 <portalHost>demo.wings.software</portalHost>
+                <app.name>Demo Server</app.name>
             </properties>
         </profile>
     </profiles>

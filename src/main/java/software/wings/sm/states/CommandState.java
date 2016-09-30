@@ -26,11 +26,14 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.command.Command;
@@ -42,10 +45,12 @@ import software.wings.exception.WingsException;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ReleaseService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElement;
@@ -91,6 +96,10 @@ public class CommandState extends State {
   @Inject @Transient private transient ServiceResourceService serviceResourceService;
 
   @Inject @Transient private transient ServiceInstanceService serviceInstanceService;
+
+  @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
+
+  @Inject @Transient private transient HostService hostService;
 
   @Inject @Transient private transient ServiceCommandExecutorService serviceCommandExecutorService;
 
@@ -178,14 +187,18 @@ public class CommandState extends State {
         throw new StateExecutionException("Unable to find service instance");
       }
 
-      Service service = serviceInstance.getServiceTemplate().getService();
+      ServiceTemplate serviceTemplate =
+          serviceTemplateService.get(appId, instanceElement.getServiceTemplateElement().getUuid());
+      Service service = serviceTemplate.getService();
+      ApplicationHost host =
+          hostService.getHostByEnv(serviceInstance.getAppId(), serviceInstance.getEnvId(), serviceInstance.getHostId());
 
       executionDataBuilder.withServiceId(service.getUuid())
           .withServiceName(service.getName())
-          .withTemplateId(serviceInstance.getServiceTemplate().getUuid())
-          .withTemplateName(serviceInstance.getServiceTemplate().getName())
-          .withHostId(serviceInstance.getHost().getHost().getInfraId())
-          .withHostName(serviceInstance.getHost().getHostName())
+          .withTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+          .withTemplateName(instanceElement.getServiceTemplateElement().getName())
+          .withHostId(host.getUuid())
+          .withHostName(host.getHostName())
           .withAppId(appId);
 
       String actualCommand = commandName;
@@ -206,26 +219,27 @@ public class CommandState extends State {
 
       Application application = appService.get(serviceInstance.getAppId());
 
-      Activity.Builder activityBuilder = anActivity()
-                                             .withAppId(application.getUuid())
-                                             .withApplicationName(application.getName())
-                                             .withEnvironmentId(environment.getUuid())
-                                             .withEnvironmentName(environment.getName())
-                                             .withEnvironmentType(environment.getEnvironmentType())
-                                             .withServiceTemplateId(serviceInstance.getServiceTemplate().getUuid())
-                                             .withServiceTemplateName(serviceInstance.getServiceTemplate().getName())
-                                             .withServiceId(service.getUuid())
-                                             .withServiceName(service.getName())
-                                             .withCommandName(command.getName())
-                                             .withType(Type.Command)
-                                             .withServiceInstanceId(serviceInstance.getUuid())
-                                             .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                                             .withWorkflowType(context.getWorkflowType())
-                                             .withWorkflowExecutionName(context.getWorkflowExecutionName())
-                                             .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                             .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                             .withCommandType(command.getCommandUnitType().name())
-                                             .withHostName(serviceInstance.getHost().getHostName());
+      Activity.Builder activityBuilder =
+          anActivity()
+              .withAppId(application.getUuid())
+              .withApplicationName(application.getName())
+              .withEnvironmentId(environment.getUuid())
+              .withEnvironmentName(environment.getName())
+              .withEnvironmentType(environment.getEnvironmentType())
+              .withServiceTemplateId(instanceElement.getServiceTemplateElement().getUuid())
+              .withServiceTemplateName(instanceElement.getServiceTemplateElement().getName())
+              .withServiceId(service.getUuid())
+              .withServiceName(service.getName())
+              .withCommandName(command.getName())
+              .withType(Type.Command)
+              .withServiceInstanceId(serviceInstance.getUuid())
+              .withWorkflowExecutionId(context.getWorkflowExecutionId())
+              .withWorkflowType(context.getWorkflowType())
+              .withWorkflowExecutionName(context.getWorkflowExecutionName())
+              .withStateExecutionInstanceId(context.getStateExecutionInstanceId())
+              .withStateExecutionInstanceName(context.getStateExecutionInstanceName())
+              .withCommandType(command.getCommandUnitType().name())
+              .withHostName(host.getHostName());
 
       String backupPath = getEvaluatedSettingValue(context, appId, envId, BACKUP_PATH).replace(" ", "\\ ");
       String runtimePath = getEvaluatedSettingValue(context, appId, envId, RUNTIME_PATH).replace(" ", "\\ ");
@@ -239,11 +253,12 @@ public class CommandState extends State {
               .withRuntimePath(runtimePath)
               .withStagingPath(stagingPath)
               .withExecutionCredential(workflowStandardParams.getExecutionCredential())
-              .withServiceVariables(context.getServiceVariables());
+              .withServiceVariables(context.getServiceVariables())
+              .withHost(host.getHost())
+              .withServiceTemplate(serviceTemplate);
 
       if (command.isArtifactNeeded()) {
-        Artifact artifact =
-            workflowStandardParams.getArtifactForService(serviceInstance.getServiceTemplate().getService());
+        Artifact artifact = workflowStandardParams.getArtifactForService(serviceTemplate.getService());
         if (artifact == null) {
           throw new StateExecutionException(String.format("Unable to find artifact for service %s", service.getName()));
         }

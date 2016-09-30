@@ -121,13 +121,13 @@ public class HostIntegrationTest extends WingsBaseTest {
         serviceResourceService.save(Builder.aService().withAppId(app.getAppId()).withName("Account").build());
     accountServiceTemplate = serviceTemplateService.get(app.getUuid(),
         (String) serviceTemplateService
-            .getTemplateRefKeysByService(app.getUuid(), environment.getUuid(), account.getUuid())
+            .getTemplateRefKeysByService(app.getUuid(), account.getUuid(), environment.getUuid())
             .get(0)
             .getId());
     Service order = serviceResourceService.save(Builder.aService().withAppId(app.getAppId()).withName("Order").build());
     orderServiceTemplate = serviceTemplateService.get(app.getUuid(),
         (String) serviceTemplateService
-            .getTemplateRefKeysByService(app.getUuid(), environment.getUuid(), order.getUuid())
+            .getTemplateRefKeysByService(app.getUuid(), order.getUuid(), environment.getUuid())
             .get(0)
             .getId());
 
