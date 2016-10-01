@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
@@ -29,8 +30,9 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String activityId;
   private String artifactId;
   private String artifactName;
+  private CountsByStatuses countsByStatuses;
 
-  @Inject private ActivityService activityService;
+  @Transient @Inject private transient ActivityService activityService;
 
   /**
    * Getter for property 'hostName'.
@@ -212,29 +214,54 @@ public class CommandStateExecutionData extends StateExecutionData {
     this.artifactName = artifactName;
   }
 
+  /**
+   * Getter for property 'countsByStatuses'.
+   *
+   * @return Value for property 'countsByStatuses'.
+   */
+  public CountsByStatuses getCountsByStatuses() {
+    return countsByStatuses;
+  }
+
+  /**
+   * Setter for property 'countsByStatuses'.
+   *
+   * @param countsByStatuses Value to set for property 'countsByStatuses'.
+   */
+  public void setCountsByStatuses(CountsByStatuses countsByStatuses) {
+    this.countsByStatuses = countsByStatuses;
+  }
+
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> data = super.getExecutionSummary();
     if (isNotEmpty(appId) && isNotEmpty(activityId) && activityService != null) {
-      List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
-      data.put("total", anExecutionDataValue().withDisplayName("Total").withValue(commandUnits.size()).build());
-      CountsByStatuses countsByStatuses = new CountsByStatuses();
-      commandUnits.stream().forEach(commandUnit -> {
-        switch (commandUnit.getExecutionResult()) {
-          case SUCCESS:
-            countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
-            break;
-          case FAILURE:
-            countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
-            break;
-          case RUNNING:
-            countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
-            break;
-          case QUEUED:
-            countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
-            break;
-        }
-      });
+      if (countsByStatuses == null) {
+        List<CommandUnit> commandUnits = activityService.getCommandUnits(appId, activityId);
+        countsByStatuses = new CountsByStatuses();
+        commandUnits.stream().forEach(commandUnit -> {
+          switch (commandUnit.getExecutionResult()) {
+            case SUCCESS:
+              countsByStatuses.setSuccess(countsByStatuses.getSuccess() + 1);
+              break;
+            case FAILURE:
+              countsByStatuses.setFailed(countsByStatuses.getFailed() + 1);
+              break;
+            case RUNNING:
+              countsByStatuses.setInprogress(countsByStatuses.getInprogress() + 1);
+              break;
+            case QUEUED:
+              countsByStatuses.setQueued(countsByStatuses.getQueued() + 1);
+              break;
+          }
+        });
+      }
+      data.put("total",
+          anExecutionDataValue()
+              .withDisplayName("Total")
+              .withValue(countsByStatuses.getFailed() + countsByStatuses.getInprogress() + countsByStatuses.getSuccess()
+                  + countsByStatuses.getQueued())
+              .build());
       data.put("breakdown", anExecutionDataValue().withDisplayName("breakdown").withValue(countsByStatuses).build());
     }
     putNotNull(data, "hostName", anExecutionDataValue().withDisplayName("Host").withValue(hostName).build());

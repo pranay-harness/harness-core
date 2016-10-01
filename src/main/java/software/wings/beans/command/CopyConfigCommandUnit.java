@@ -39,10 +39,10 @@ public class CopyConfigCommandUnit extends CommandUnit {
 
   @Override
   public ExecutionResult execute(CommandExecutionContext context) {
-    ServiceTemplate serviceTemplate = context.getServiceInstance().getServiceTemplate();
+    ServiceTemplate serviceTemplate = context.getServiceTemplate();
     Map<String, List<ConfigFile>> computedConfigFiles = serviceTemplateService.computedConfigFiles(
         serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid());
-    List<ConfigFile> configFiles = computedConfigFiles.get(context.getServiceInstance().getHost().getUuid());
+    List<ConfigFile> configFiles = computedConfigFiles.get(context.getHost().getUuid());
 
     ExecutionResult result = ExecutionResult.SUCCESS;
     if (!isEmpty(configFiles)) {

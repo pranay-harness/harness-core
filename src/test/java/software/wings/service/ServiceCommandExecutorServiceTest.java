@@ -111,6 +111,8 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
                                                 .withArtifact(anArtifact().withUuid(ARTIFACT_ID).build())
                                                 .withRuntimePath(RUNTIME_PATH)
                                                 .withExecutionCredential(credential)
+                                                .withServiceTemplate(serviceTemplate)
+                                                .withHost(host)
                                                 .build();
 
   /**

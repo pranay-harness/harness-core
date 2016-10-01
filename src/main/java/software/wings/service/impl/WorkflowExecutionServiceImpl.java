@@ -562,8 +562,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           logger.error("Service instances argument and valid service instance retrieved size not matching");
           throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Invalid service instances");
         }
-        workflowExecution.getExecutionArgs().setServiceInstanceIdNames(serviceInstances.stream().collect(
-            Collectors.toMap(ServiceInstance::getUuid, ServiceInstance::getDisplayName)));
+        workflowExecution.getExecutionArgs().setServiceInstanceIdNames(
+            serviceInstances.stream().collect(Collectors.toMap(ServiceInstance::getUuid,
+                serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
       }
 
       if (workflowExecution.getExecutionArgs().getArtifacts() != null

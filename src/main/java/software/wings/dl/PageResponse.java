@@ -8,7 +8,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.jetty.util.LazyList;
+import software.wings.beans.SearchFilter;
+import software.wings.beans.SortOrder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -20,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
+import javax.ws.rs.core.UriInfo;
 
 /**
  * PageResponse bean class.
@@ -369,5 +373,95 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
         .add("total", total)
         .add("currentPage", getCurrentPage())
         .toString();
+  }
+
+  public static final class Builder<T> {
+    private List<T> response = Lists.newArrayList();
+    private long total;
+    private String offset;
+    private String limit;
+    private List<SearchFilter> filters = new ArrayList<>();
+    private List<SortOrder> orders = new ArrayList<>();
+    private List<String> fieldsIncluded = new ArrayList<>();
+    private List<String> fieldsExcluded = new ArrayList<>();
+    private UriInfo uriInfo;
+
+    private Builder() {}
+
+    public static Builder aPageResponse() {
+      return new Builder();
+    }
+
+    public Builder withResponse(List<T> response) {
+      this.response = response;
+      return this;
+    }
+
+    public Builder withTotal(long total) {
+      this.total = total;
+      return this;
+    }
+
+    public Builder withOffset(String offset) {
+      this.offset = offset;
+      return this;
+    }
+
+    public Builder withLimit(String limit) {
+      this.limit = limit;
+      return this;
+    }
+
+    public Builder withFilters(List<SearchFilter> filters) {
+      this.filters = filters;
+      return this;
+    }
+
+    public Builder withOrders(List<SortOrder> orders) {
+      this.orders = orders;
+      return this;
+    }
+
+    public Builder withFieldsIncluded(List<String> fieldsIncluded) {
+      this.fieldsIncluded = fieldsIncluded;
+      return this;
+    }
+
+    public Builder withFieldsExcluded(List<String> fieldsExcluded) {
+      this.fieldsExcluded = fieldsExcluded;
+      return this;
+    }
+
+    public Builder withUriInfo(UriInfo uriInfo) {
+      this.uriInfo = uriInfo;
+      return this;
+    }
+
+    public Builder but() {
+      return aPageResponse()
+          .withResponse(response)
+          .withTotal(total)
+          .withOffset(offset)
+          .withLimit(limit)
+          .withFilters(filters)
+          .withOrders(orders)
+          .withFieldsIncluded(fieldsIncluded)
+          .withFieldsExcluded(fieldsExcluded)
+          .withUriInfo(uriInfo);
+    }
+
+    public PageResponse build() {
+      PageResponse pageResponse = new PageResponse();
+      pageResponse.setResponse(response);
+      pageResponse.setTotal(total);
+      pageResponse.setOffset(offset);
+      pageResponse.setLimit(limit);
+      pageResponse.setFilters(filters);
+      pageResponse.setOrders(orders);
+      pageResponse.setFieldsIncluded(fieldsIncluded);
+      pageResponse.setFieldsExcluded(fieldsExcluded);
+      pageResponse.setUriInfo(uriInfo);
+      return pageResponse;
+    }
   }
 }

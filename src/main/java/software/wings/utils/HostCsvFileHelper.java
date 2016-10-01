@@ -7,6 +7,8 @@ import static software.wings.beans.ErrorCodes.INVALID_CSV_FILE;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.Host.Builder.aHost;
 
+import com.google.common.io.Files;
+
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
@@ -89,7 +91,7 @@ public class HostCsvFileHelper {
    * @return the file
    */
   public File createHostsFile(List<Host> hosts) {
-    File tempDir = FileUtils.createTempDirPath();
+    File tempDir = Files.createTempDir();
     File file =
         new File(tempDir, String.format("Hosts_%s.csv", dateFormatter.format(new Date(System.currentTimeMillis()))));
     OutputStreamWriter fileWriter = null;
