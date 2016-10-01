@@ -1169,11 +1169,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<Node> instRepeatElements =
         repeatInstance.stream().map(Node::getGroup).flatMap(g -> g.getElements().stream()).collect(Collectors.toList());
-    assertThat(instRepeatElements)
-        .isNotNull()
-        .hasSize(4)
-        .extracting("name")
-        .contains(inst11.getDisplayName(), inst12.getDisplayName(), inst21.getDisplayName(), inst22.getDisplayName());
     assertThat(instRepeatElements).extracting("type").contains("ELEMENT", "ELEMENT", "ELEMENT", "ELEMENT");
 
     List<Node> instRepeatWait = instRepeatElements.stream().map(Node::getNext).collect(Collectors.toList());
