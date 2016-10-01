@@ -44,7 +44,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -214,6 +213,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).save(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(serviceCommandExecutorService)
         .execute(SERVICE_INSTANCE, COMMAND,
@@ -326,6 +326,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));

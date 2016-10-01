@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -364,6 +365,7 @@ public class CommandState extends State {
 
     CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
     commandStateExecutionData.setStatus(executionStatus);
+    on(commandStateExecutionData).set("activityService", activityService);
     commandStateExecutionData.setCountsByStatuses(
         (CountsByStatuses) commandStateExecutionData.getExecutionSummary().get("breakdown").getValue());
 

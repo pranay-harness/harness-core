@@ -5,6 +5,7 @@ import static software.wings.api.ExecutionDataValue.Builder.anExecutionDataValue
 
 import com.google.inject.Inject;
 
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.ActivityService;
@@ -31,7 +32,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String artifactName;
   private CountsByStatuses countsByStatuses;
 
-  @Inject private ActivityService activityService;
+  @Transient @Inject private transient ActivityService activityService;
 
   /**
    * Getter for property 'hostName'.
