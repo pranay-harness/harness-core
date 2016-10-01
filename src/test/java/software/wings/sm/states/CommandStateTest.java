@@ -44,6 +44,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -72,6 +73,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -201,7 +203,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   public void execute() throws Exception {
     when(serviceCommandExecutorService.execute(eq(SERVICE_INSTANCE), eq(COMMAND), any())).thenReturn(SUCCESS);
-    commandState.execute(context);
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
@@ -233,6 +236,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context).getServiceVariables();
+    verify(context).getStateExecutionData();
 
     verify(context, times(4)).renderExpression(anyString());
 
@@ -285,7 +289,8 @@ public class CommandStateTest extends WingsBaseTest {
                  .build()))
         .thenReturn(SUCCESS);
 
-    commandState.execute(context);
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
@@ -316,6 +321,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context).getServiceVariables();
+    verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);

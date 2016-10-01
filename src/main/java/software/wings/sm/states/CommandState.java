@@ -27,6 +27,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.Artifact;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -361,9 +362,15 @@ public class CommandState extends State {
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     updateWorkflowExecutionStats(executionStatus, context);
 
+    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+    commandStateExecutionData.setStatus(executionStatus);
+    commandStateExecutionData.setCountsByStatuses(
+        (CountsByStatuses) commandStateExecutionData.getExecutionSummary().get("breakdown").getValue());
+
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withErrorMessage(executionResultData.getErrorMessage())
+        .withStateExecutionData(commandStateExecutionData)
         .build();
   }
 
