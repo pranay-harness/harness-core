@@ -63,7 +63,7 @@ public class GraphRenderer {
    */
   Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, String commandName, Boolean expandLastOnly) {
-    Node originNode = generateHierarchyNode(instanceIdMap, initialStateName, expandedGroupIds, expandLastOnly);
+    Node originNode = generateHierarchyNode(instanceIdMap, initialStateName, expandedGroupIds, expandLastOnly, false);
     Graph graph = new Graph();
     extrapolateDimension(originNode);
     paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
@@ -75,7 +75,7 @@ public class GraphRenderer {
   }
 
   Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, Boolean expandLastOnly) {
+      List<String> expandedGroupIds, Boolean expandLastOnly, boolean allExpanded) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",
         instanceIdMap, initialStateName, expandedGroupIds);
     Node originNode = null;
@@ -88,7 +88,7 @@ public class GraphRenderer {
 
       if ((StateType.REPEAT.name().equals(instance.getStateType())
               || StateType.FORK.name().equals(instance.getStateType()))
-          && (expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
+          && (allExpanded || expandedGroupIds == null || !expandedGroupIds.contains(instance.getUuid()))) {
         node.setExpanded(false);
       } else {
         node.setExpanded(true);
@@ -120,8 +120,8 @@ public class GraphRenderer {
         "generateNodeHierarchy invoked - instanceIdMap: {}, nodeIdMap: {}, prevInstanceIdMap: {}, parentIdElementsMap: {}, originNode: {}",
         instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode);
 
-    generateNodeHierarchy(
-        instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null, expandLastOnly);
+    generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, originNode, null,
+        expandLastOnly, allExpanded);
 
     return originNode;
   }
@@ -163,7 +163,7 @@ public class GraphRenderer {
 
   private void generateNodeHierarchy(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      StateExecutionData elementStateExecutionData, Boolean expandLastOnly) {
+      StateExecutionData elementStateExecutionData, Boolean expandLastOnly, boolean allExpanded) {
     logger.debug("generateNodeHierarchy requested- node: {}", node);
     StateExecutionInstance instance = instanceIdMap.get(node.getId());
 
@@ -171,7 +171,7 @@ public class GraphRenderer {
       elementStateExecutionData.setStartTs(instance.getStartTs());
     }
 
-    if ((expandLastOnly == null || expandLastOnly) && parentIdElementsMap.get(node.getId()) != null) {
+    if ((allExpanded || expandLastOnly == null || expandLastOnly) && parentIdElementsMap.get(node.getId()) != null) {
       Group group = new Group();
       group.setId(node.getId() + "-group");
       logger.debug("generateNodeHierarchy group attached - group: {}, node: {}", group, node);
@@ -196,11 +196,11 @@ public class GraphRenderer {
       int i = 0;
       for (String element : elements) {
         generateElement(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, node,
-            expandLastOnly == null ? null : (i == elements.size() - 1), group, element);
+            expandLastOnly == null ? null : (i == elements.size() - 1), allExpanded, group, element);
         i++;
       }
     }
-    if (expandLastOnly != null && !expandLastOnly) {
+    if (!allExpanded && expandLastOnly != null && !expandLastOnly) {
       node.setExpanded(false);
     }
 
@@ -209,7 +209,7 @@ public class GraphRenderer {
       logger.debug("generateNodeHierarchy nextNode attached - nextNode: {}, node: {}", nextNode, node);
       node.setNext(nextNode);
       generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, nextNode,
-          elementStateExecutionData, expandLastOnly);
+          elementStateExecutionData, expandLastOnly, allExpanded);
     } else {
       if (elementStateExecutionData != null) {
         StateExecutionData executionData = instance.getStateExecutionData();
@@ -224,7 +224,7 @@ public class GraphRenderer {
 
   private void generateElement(Map<String, StateExecutionInstance> instanceIdMap, Map<String, Node> nodeIdMap,
       Map<String, Node> prevInstanceIdMap, Map<String, Map<String, Node>> parentIdElementsMap, Node node,
-      Boolean expandLastOnly, Group group, String element) {
+      Boolean expandLastOnly, boolean allExpanded, Group group, String element) {
     Node elementNode =
         Node.Builder.aNode().withId(node.getId() + "-" + element).withName(element).withType("ELEMENT").build();
     group.getElements().add(elementNode);
@@ -235,7 +235,7 @@ public class GraphRenderer {
       elementNode.setNext(elementRepeatNode);
       logger.debug("generateNodeHierarchy elementNode next added - node: {}", elementRepeatNode);
       generateNodeHierarchy(instanceIdMap, nodeIdMap, prevInstanceIdMap, parentIdElementsMap, elementRepeatNode,
-          executionData, expandLastOnly);
+          executionData, expandLastOnly, allExpanded);
     }
     if (executionData.getStatus() == null) {
       executionData.setStatus(ExecutionStatus.QUEUED);
