@@ -44,6 +44,11 @@ public class JsonSubtypeResolver extends SubtypeResolver {
             }
           });
 
+  /**
+   * Instantiates a new Json subtype resolver.
+   *
+   * @param subtypeResolver the subtype resolver
+   */
   public JsonSubtypeResolver(SubtypeResolver subtypeResolver) {
     this.subtypeResolver = subtypeResolver;
   }

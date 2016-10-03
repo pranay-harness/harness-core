@@ -92,7 +92,9 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
   /**
    * Convert to instance element instance element.
    *
-   * @param instance the instance
+   * @param instance        the instance
+   * @param host            the host
+   * @param serviceTemplate the service template
    * @return the instance element
    */
   static InstanceElement convertToInstanceElement(

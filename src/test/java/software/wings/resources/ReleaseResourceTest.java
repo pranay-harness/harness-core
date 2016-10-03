@@ -71,6 +71,11 @@ public class ReleaseResourceTest extends WingsBaseTest {
         new JsonSubtypeResolver(RESOURCES.getObjectMapper().getSubtypeResolver()));
   }
 
+  static {
+    RESOURCES.getObjectMapper().setSubtypeResolver(
+        new JsonSubtypeResolver(RESOURCES.getObjectMapper().getSubtypeResolver()));
+  }
+
   /**
    * The constant releaseBuilder.
    */

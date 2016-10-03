@@ -209,6 +209,12 @@ public class ConfigServiceImpl implements ConfigService {
     }
   }
 
+  /**
+   * Update relative file path for service and all override files.
+   *
+   * @param existingConfigFile  the existing config file
+   * @param newRelativeFilePath the new relative file path
+   */
   public void updateRelativeFilePathForServiceAndAllOverrideFiles(
       ConfigFile existingConfigFile, String newRelativeFilePath) {
     String resolvedFilePath = validateAndResolveFilePath(newRelativeFilePath);

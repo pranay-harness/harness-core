@@ -61,6 +61,11 @@ import javax.inject.Inject;
  * @author Rishi
  */
 public class InstanceExpressionProcessorTest extends WingsBaseTest {
+  private static final ServiceTemplate SERVICE_TEMPLATE =
+      aServiceTemplate()
+          .withName("template")
+          .withService(aService().withUuid("uuid1").withName("svc1").build())
+          .build();
   /**
    * The Injector.
    */
@@ -73,12 +78,10 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Environment service.
    */
   @Inject EnvironmentService environmentService;
-
   /**
    * The Service instance service.
    */
   @Inject ServiceInstanceService serviceInstanceService;
-
   /**
    * The Service instance service mock.
    */
@@ -87,16 +90,11 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    * The Service template service mock.
    */
   @Mock ServiceTemplateService serviceTemplateService;
-
+  /**
+   * The Host service.
+   */
   @Mock HostService hostService;
-
   @Inject private WingsPersistence wingsPersistence;
-
-  private static final ServiceTemplate SERVICE_TEMPLATE =
-      aServiceTemplate()
-          .withName("template")
-          .withService(aService().withUuid("uuid1").withName("svc1").build())
-          .build();
 
   /**
    * Should return instances.

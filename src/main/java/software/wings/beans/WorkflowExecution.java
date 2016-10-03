@@ -281,10 +281,20 @@ public class WorkflowExecution extends Base {
     this.statusInstanceBreakdownMap = statusInstanceBreakdownMap;
   }
 
+  /**
+   * Gets execution node.
+   *
+   * @return the execution node
+   */
   public Node getExecutionNode() {
     return executionNode;
   }
 
+  /**
+   * Sets execution node.
+   *
+   * @param executionNode the execution node
+   */
   public void setExecutionNode(Node executionNode) {
     this.executionNode = executionNode;
   }

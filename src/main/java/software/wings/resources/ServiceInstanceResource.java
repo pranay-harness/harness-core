@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceInstance;
 import software.wings.dl.PageRequest;
@@ -19,7 +18,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 
 /**
  * Created by anubhaw on 5/26/16.
@@ -39,9 +37,6 @@ public class ServiceInstanceResource {
   /**
    * List.
    *
-   * @param appId       the app id
-   * @param envId       the env id
-   * @param serviceId   the service id
    * @param pageRequest the page request
    * @return the rest response
    */
