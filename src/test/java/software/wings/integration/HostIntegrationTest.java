@@ -121,7 +121,11 @@ public class HostIntegrationTest extends WingsBaseTest {
 
     // test setup
     Application app = appService.save(anApplication().withName("AppA").build());
-    environment = environmentService.getEnvByApp(app.getUuid()).get(0);
+    List<Environment> environments = environmentService.getEnvByApp(app.getUuid());
+    for (int i = 1; i < environments.size(); i++) {
+      environmentService.delete(app.getUuid(), environments.get(i).getUuid());
+    }
+    environment = environments.get(0);
 
     Service account =
         serviceResourceService.save(Builder.aService().withAppId(app.getAppId()).withName("Account").build());

@@ -75,7 +75,7 @@ public class AppServiceImpl implements AppService {
   public Application save(Application app) {
     Application application = wingsPersistence.saveAndGet(Application.class, app);
     settingsService.createDefaultSettings(application.getUuid());
-    infrastructureService.createDefaultInfrastructure();
+    infrastructureService.createDefaultInfrastructure(app.getUuid());
     environmentService.createDefaultEnvironments(application.getUuid());
     notificationService.sendNotificationAsync(
         anInformationNotification()

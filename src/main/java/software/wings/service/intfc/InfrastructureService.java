@@ -48,8 +48,9 @@ public interface InfrastructureService {
 
   /**
    * Create default infrastructure.
+   * @param appId
    */
-  void createDefaultInfrastructure();
+  void createDefaultInfrastructure(String appId);
 
   /**
    * Gets default infrastructure id.

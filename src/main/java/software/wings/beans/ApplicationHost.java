@@ -20,9 +20,9 @@ import javax.validation.constraints.NotNull;
  * Created by anubhaw on 9/15/16.
  */
 @Entity(value = "applicationHosts", noClassnameStored = true)
-@Indexes(
-    @Index(fields = { @Field("infraId")
-                      , @Field("envId"), @Field("hostName") }, options = @IndexOptions(unique = true)))
+@Indexes(@Index(fields = { @Field("infraId")
+                           , @Field("appId"), @Field("envId"), @Field("hostName") },
+    options = @IndexOptions(unique = true)))
 public class ApplicationHost extends Base {
   @NotEmpty private String envId;
   @NotEmpty private String infraId;

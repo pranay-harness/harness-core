@@ -8,6 +8,7 @@ import static software.wings.beans.History.Builder.aHistory;
 import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
+import static software.wings.beans.Tag.Builder.aTag;
 import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -203,7 +204,6 @@ public class HostServiceImpl implements HostService {
         host.setBastionConnAttr(bastionConnAttr);
       }
       host = wingsPersistence.saveAndGet(Host.class, host);
-      infraService.applyApplicableMappingRules(infrastructure, host);
     }
     return host;
   }
@@ -213,6 +213,7 @@ public class HostServiceImpl implements HostService {
     List<ApplicationHost> applicationHosts = new ArrayList<>();
 
     hostNames.forEach(hostName -> {
+      Host host = getOrCreateInfraHost(infrastructure, hostName, baseHost);
       ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
                                             .field("hostName")
                                             .equal(hostName)
@@ -220,7 +221,6 @@ public class HostServiceImpl implements HostService {
                                             .equal(baseHost.getAppId())
                                             .get();
       if (applicationHost == null) {
-        Host host = getOrCreateInfraHost(infrastructure, hostName, baseHost);
         applicationHost = wingsPersistence.saveAndGet(ApplicationHost.class,
             anApplicationHost()
                 .withAppId(baseHost.getAppId())
@@ -231,6 +231,7 @@ public class HostServiceImpl implements HostService {
                 .withHost(host)
                 .build());
       }
+      infraService.applyApplicableMappingRules(infrastructure, host); // TODO: move
       applicationHosts.add(applicationHost);
     });
     return applicationHosts;
@@ -276,10 +277,11 @@ public class HostServiceImpl implements HostService {
         .filter(environment -> envId == null || envId.equals(environment.getUuid()))
         .forEach(environment -> {
           Tag tag = null;
-          if (tagId != null) {
-            tag = tagService.get(environment.getAppId(), environment.getUuid(), tagId);
+          if (tagId != null && envId != null) {
+            tag = validateAndFetchTag(appId, envId, aTag().withUuid(tagId).build());
             Validator.notNullCheck("Tag", tag);
           }
+
           ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
                                                 .field("hostName")
                                                 .equal(host.getHostName())
