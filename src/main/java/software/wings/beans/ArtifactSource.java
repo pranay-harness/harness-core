@@ -2,8 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -17,15 +16,11 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "sourceType")
-@JsonSubTypes({
-  @Type(value = JenkinsArtifactSource.class, name = "JENKINS")
-  , @Type(value = FileUploadSource.class, name = "FILE_UPLOAD"), @Type(value = FileUrlSource.class, name = "HTTP")
-})
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "sourceType")
 public abstract class ArtifactSource {
   @NotEmpty private String sourceName;
 
-  @NotNull private SourceType sourceType;
+  @JsonTypeId @NotNull private SourceType sourceType;
 
   @NotNull private ArtifactType artifactType;
 

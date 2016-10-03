@@ -6,6 +6,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.utils.ArtifactType;
 
@@ -16,6 +17,7 @@ import javax.validation.Valid;
 /**
  * The Class JenkinsArtifactSource.
  */
+@JsonTypeName("JENKINS")
 public class JenkinsArtifactSource extends ArtifactSource {
   @NotEmpty private String jenkinsSettingId;
 

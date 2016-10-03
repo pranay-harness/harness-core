@@ -10,6 +10,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
@@ -31,6 +32,7 @@ import java.util.Properties;
 /**
  * Created by peeyushaggarwal on 7/26/16.
  */
+@JsonTypeName("INIT")
 public class InitCommandUnit extends CommandUnit {
   /**
    * The constant INITIALIZE_UNIT.

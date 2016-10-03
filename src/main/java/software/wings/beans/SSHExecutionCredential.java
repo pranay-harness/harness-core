@@ -4,11 +4,14 @@
 
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  * The type Ssh execution credential.
  *
  * @author Rishi
  */
+@JsonTypeName("SSH")
 public class SSHExecutionCredential extends ExecutionCredential {
   private String sshUser;
   private String sshPassword;

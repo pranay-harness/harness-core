@@ -33,6 +33,7 @@ import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ReleaseService;
+import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
@@ -64,6 +65,11 @@ public class ReleaseResourceTest extends WingsBaseTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder().addResource(releaseResource).addProvider(WingsExceptionMapper.class).build();
+
+  static {
+    RESOURCES.getObjectMapper().setSubtypeResolver(
+        new JsonSubtypeResolver(RESOURCES.getObjectMapper().getSubtypeResolver()));
+  }
 
   /**
    * The constant releaseBuilder.

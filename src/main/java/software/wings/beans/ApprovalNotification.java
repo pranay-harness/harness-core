@@ -11,6 +11,7 @@ import static software.wings.beans.NotificationAction.NotificationActionType.REJ
 
 import com.google.common.collect.ImmutableMap;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Artifact.Status;
@@ -24,6 +25,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 7/25/16.
  */
+@JsonTypeName("APPROVAL")
 public class ApprovalNotification extends ActionableNotification {
   @NotEmpty private String entityName;
   @NotNull private ApprovalStage stage = PENDING;

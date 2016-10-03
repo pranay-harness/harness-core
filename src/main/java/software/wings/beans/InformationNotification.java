@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  * Created by anubhaw on 7/27/16.
  */
+@JsonTypeName("INFORMATION")
 public class InformationNotification extends Notification {
   private String displayText;
 

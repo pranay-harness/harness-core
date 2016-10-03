@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.Sets;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.utils.ArtifactType;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 /**
  * The Class FileUploadSource.
  */
+@JsonTypeName("FILE_UPLOAD")
 public class FileUploadSource extends ArtifactSource {
   @Reference(idOnly = true, ignoreMissing = true, lazy = true) private Set<Service> services;
 

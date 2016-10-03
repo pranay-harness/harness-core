@@ -3,8 +3,9 @@ package software.wings.utils;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.jayway.jsonpath.DocumentContext;
@@ -62,20 +63,20 @@ public class JsonUtilsTest {
     BaseA baseA = new BaseA();
     String jsona = JsonUtils.asJson(baseA);
 
-    assertThatJson(jsona).isEqualTo(
-        "{\"baseType\":\"A\",\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}");
+    assertThatJson(jsona).isEqualTo("{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}");
 
     BaseB baseB = new BaseB();
     String jsonb = JsonUtils.asJson(baseB);
 
-    assertThatJson(jsonb).isEqualTo(
-        "{\"baseType\":\"B\",\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}");
+    assertThatJson(jsonb).isEqualTo("{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}");
 
-    assertThat(JsonUtils.asObject(jsona, Base.class))
+    assertThat(
+        JsonUtils.asObject("{\"baseType\":\"A\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseA\"}", Base.class))
         .isInstanceOf(BaseA.class)
         .extracting(Base::getBaseType)
         .containsExactly(BaseType.A);
-    assertThat(JsonUtils.asObject(jsonb, Base.class))
+    assertThat(
+        JsonUtils.asObject("{\"baseType\":\"B\",\"name\":\"software.wings.utils.JsonUtilsTest$BaseB\"}", Base.class))
         .isInstanceOf(BaseB.class)
         .extracting(Base::getBaseType)
         .containsExactly(BaseType.B);
@@ -95,13 +96,9 @@ public class JsonUtilsTest {
   /**
    * The Class Base.
    */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "baseType")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = BaseA.class, name = "A")
-    , @JsonSubTypes.Type(value = BaseB.class, name = "B"), @JsonSubTypes.Type(value = BaseC.class, name = "C")
-  })
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "baseType")
   public static class Base {
-    private BaseType baseType;
+    @JsonTypeId private BaseType baseType;
 
     @SchemaIgnore private String x;
 
@@ -163,6 +160,7 @@ public class JsonUtilsTest {
   /**
    * The Class BaseA.
    */
+  @JsonTypeName("A")
   @Attributes(title = "BaseA")
   public static class BaseA extends Base {
     @Attributes(required = true) private String name = BaseA.class.getName();
@@ -197,6 +195,7 @@ public class JsonUtilsTest {
   /**
    * The Class BaseB.
    */
+  @JsonTypeName("B")
   public static class BaseB extends Base {
     private String name = BaseB.class.getName();
 
@@ -230,6 +229,7 @@ public class JsonUtilsTest {
   /**
    * The Class BaseC.
    */
+  @JsonTypeName("C")
   public static class BaseC extends Base {
     private String name = BaseC.class.getName();
 

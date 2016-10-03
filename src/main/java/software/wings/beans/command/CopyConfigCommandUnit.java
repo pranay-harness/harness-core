@@ -5,6 +5,7 @@ import static org.eclipse.jetty.util.LazyList.isEmpty;
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
@@ -23,6 +24,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 7/14/16.
  */
+@JsonTypeName("COPY_CONFIGS")
 public class CopyConfigCommandUnit extends CommandUnit {
   @Attributes(title = "Destination Parent Path")
   @DefaultValue("$WINGS_RUNTIME_PATH")

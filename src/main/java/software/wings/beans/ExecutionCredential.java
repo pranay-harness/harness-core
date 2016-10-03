@@ -4,8 +4,7 @@
 
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 /**
@@ -13,11 +12,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
  *
  * @author Rishi
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "executionType")
-@JsonSubTypes({ @Type(value = SSHExecutionCredential.class, name = "SSH") })
-
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "executionType")
 public abstract class ExecutionCredential {
-  private ExecutionType executionType;
+  @JsonTypeId private ExecutionType executionType;
 
   ;
 
