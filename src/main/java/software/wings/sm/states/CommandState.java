@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
@@ -28,6 +29,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationHost;
 import software.wings.beans.Artifact;
+import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Host;
@@ -362,9 +364,16 @@ public class CommandState extends State {
         executionResultData.getResult().equals(SUCCESS) ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     updateWorkflowExecutionStats(executionStatus, context);
 
+    CommandStateExecutionData commandStateExecutionData = (CommandStateExecutionData) context.getStateExecutionData();
+    commandStateExecutionData.setStatus(executionStatus);
+    on(commandStateExecutionData).set("activityService", activityService);
+    commandStateExecutionData.setCountsByStatuses(
+        (CountsByStatuses) commandStateExecutionData.getExecutionSummary().get("breakdown").getValue());
+
     return anExecutionResponse()
         .withExecutionStatus(executionStatus)
         .withErrorMessage(executionResultData.getErrorMessage())
+        .withStateExecutionData(commandStateExecutionData)
         .build();
   }
 

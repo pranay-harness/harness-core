@@ -8,7 +8,8 @@ import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
-import static software.wings.utils.FileUtils.createTempDirPath;
+
+import com.google.common.io.Files;
 
 import software.wings.beans.ApplicationHost;
 import org.mongodb.morphia.query.Query;
@@ -141,7 +142,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public File download(String appId, String configId) {
     ConfigFile configFile = get(appId, configId, false);
-    File file = new File(createTempDirPath(), new File(configFile.getRelativeFilePath()).getName());
+    File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     fileService.download(configFile.getFileUuid(), file, CONFIGS);
     return file;
   }
@@ -149,7 +150,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public File download(String appId, String configId, String version) {
     ConfigFile configFile = get(appId, configId, false);
-    File file = new File(createTempDirPath(), new File(configFile.getRelativeFilePath()).getName());
+    File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     String fileId = configFile.getFileUuid();
     if (configFile.getVersions().contains(version)) {
       fileId = version;

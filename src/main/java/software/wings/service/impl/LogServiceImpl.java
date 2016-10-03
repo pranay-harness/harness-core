@@ -4,8 +4,8 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static software.wings.beans.command.CommandUnit.ExecutionResult.RUNNING;
-import static software.wings.utils.FileUtils.createTempDirPath;
 
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import software.wings.beans.Log;
@@ -70,7 +70,7 @@ public class LogServiceImpl implements LogService {
   @Override
   public File exportLogs(String appId, String activityId) {
     File file = new File(
-        createTempDirPath(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
+        Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
     try {
       OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8);
       List<Log> logList = wingsPersistence.createQuery(Log.class)

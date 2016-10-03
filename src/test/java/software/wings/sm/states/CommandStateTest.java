@@ -72,6 +72,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -202,7 +203,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Test
   public void execute() throws Exception {
     when(serviceCommandExecutorService.execute(eq(SERVICE_INSTANCE), eq(COMMAND), any())).thenReturn(SUCCESS);
-    commandState.execute(context);
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
@@ -212,6 +214,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityService).save(any(Activity.class));
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(serviceCommandExecutorService)
         .execute(SERVICE_INSTANCE, COMMAND,
@@ -234,6 +237,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context).getServiceVariables();
+    verify(context).getStateExecutionData();
 
     verify(context, times(4)).renderExpression(anyString());
 
@@ -286,7 +290,8 @@ public class CommandStateTest extends WingsBaseTest {
                  .build()))
         .thenReturn(SUCCESS);
 
-    commandState.execute(context);
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
     commandState.handleAsyncResponse(
         context, ImmutableMap.of(ACTIVITY_ID, anExecutionResultData().withResult(SUCCESS).build()));
 
@@ -317,10 +322,12 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getStateExecutionInstanceId();
     verify(context, times(1)).getStateExecutionInstanceName();
     verify(context).getServiceVariables();
+    verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(activityService).get(ACTIVITY_ID, APP_ID);
     verify(settingsService, times(3)).getByName(eq(APP_ID), eq(ENV_ID), anyString());
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));

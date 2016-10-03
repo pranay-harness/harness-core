@@ -196,7 +196,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       expandedGroupIds = new ArrayList<>();
     }
     if (workflowExecution != null) {
-      populateGraph(workflowExecution, expandedGroupIds, requestedGroupId, nodeOps, true);
+      populateNodeHierarchy(workflowExecution, false);
     }
     workflowExecution.setExpandedGroupIds(expandedGroupIds);
     return workflowExecution;
@@ -230,6 +230,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     refreshBreakdown(workflowExecution);
     refreshSummaries(workflowExecution);
     return workflowExecution;
+  }
+
+  private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean expandLastOnly) {
+    List<StateExecutionInstance> allInstances = queryAllInstances(workflowExecution);
+    Map<String, StateExecutionInstance> allInstancesIdMap =
+        allInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
+
+    StateMachine sm =
+        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+    String commandName = null;
+    if (workflowExecution.getExecutionArgs() != null) {
+      commandName = workflowExecution.getExecutionArgs().getCommandName();
+    }
+    List<StateExecutionInstance> pausedInstances =
+        allInstances.stream()
+            .filter(i -> (i.getStatus() == ExecutionStatus.PAUSED || i.getStatus() == ExecutionStatus.PAUSED_ON_ERROR))
+            .collect(Collectors.toList());
+    if (pausedInstances != null && !pausedInstances.isEmpty()) {
+      workflowExecution.setStatus(ExecutionStatus.PAUSED);
+    }
+    workflowExecution.setExecutionNode(
+        graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
   }
 
   private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
@@ -295,7 +317,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     if (expandedGroupIds != null && expandedGroupIds.contains("ALL")) {
       workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(
-          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, expandLastOnly));
+          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, expandLastOnly, true));
     } else {
       Graph graph = graphRenderer.generateGraph(
           instanceIdMap, sm.getInitialStateName(), expandedGroupIds, commandName, expandLastOnly);
@@ -336,13 +358,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(workflowExecution.getAppId())
-                                              .field("executionUuid")
-                                              .equal(workflowExecution.getUuid());
+    PageRequest<StateExecutionInstance> req = aPageRequest()
+                                                  .withLimit(PageRequest.UNLIMITED)
+                                                  .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
+                                                  .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
+                                                  .addFieldsExcluded("contextElements", "callback")
+                                                  .build();
 
-    return wingsPersistence.executeGetListQuery(query);
+    return wingsPersistence.query(StateExecutionInstance.class, req);
   }
 
   private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
