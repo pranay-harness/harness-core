@@ -11,6 +11,10 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.beans.InfrastructureMappingRule;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by anubhaw on 4/1/16.
@@ -22,6 +26,7 @@ import software.wings.beans.Base;
 public class Infrastructure extends Base {
   private String name;
   private InfrastructureType type;
+  private List<InfrastructureMappingRule> infrastructureMappingRules = new ArrayList<>();
   @Transient private HostUsage hostUsage;
 
   /**
@@ -77,6 +82,24 @@ public class Infrastructure extends Base {
    */
   public void setHostUsage(HostUsage hostUsage) {
     this.hostUsage = hostUsage;
+  }
+
+  /**
+   * Gets infrastructure mapping rules.
+   *
+   * @return the infrastructure mapping rules
+   */
+  public List<InfrastructureMappingRule> getInfrastructureMappingRules() {
+    return infrastructureMappingRules;
+  }
+
+  /**
+   * Sets infrastructure mapping rules.
+   *
+   * @param infrastructureMappingRules the infrastructure mapping rules
+   */
+  public void setInfrastructureMappingRules(List<InfrastructureMappingRule> infrastructureMappingRules) {
+    this.infrastructureMappingRules = infrastructureMappingRules;
   }
 
   /**

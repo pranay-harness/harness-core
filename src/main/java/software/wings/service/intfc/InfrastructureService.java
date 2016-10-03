@@ -17,7 +17,7 @@ public interface InfrastructureService {
    * List.
    *
    * @param pageRequest the page request
-   * @param overview
+   * @param overview    the overview
    * @return the page response
    */
   PageResponse<Infrastructure> list(PageRequest<Infrastructure> pageRequest, boolean overview);
@@ -40,8 +40,7 @@ public interface InfrastructureService {
   /**
    * Gets infra by env id.
    *
-   *
-   * @param appId
+   * @param appId the app id
    * @param envId the env id
    * @return the infra by env id
    */
@@ -74,4 +73,12 @@ public interface InfrastructureService {
    * @return the page request
    */
   PageRequest<Host> listInfraHost(PageRequest<Host> pageRequest);
+
+  /**
+   * Apply applicable mapping rules.
+   *
+   * @param infrastructure the infrastructure
+   * @param host           the host
+   */
+  void applyApplicableMappingRules(Infrastructure infrastructure, Host host);
 }

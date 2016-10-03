@@ -5,9 +5,12 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.infrastructure.HostUsage.Builder.aHostUsage;
 import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
 
+import com.google.common.collect.ImmutableMap;
+
 import software.wings.beans.Base;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.Host;
+import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
 import software.wings.beans.infrastructure.HostUsage;
 import software.wings.beans.infrastructure.Infrastructure;
@@ -20,6 +23,7 @@ import software.wings.service.intfc.InfrastructureService;
 import software.wings.utils.Validator;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -115,5 +119,22 @@ public class InfrastructureServiceImpl implements InfrastructureService {
   @Override
   public PageRequest<Host> listInfraHost(PageRequest<Host> pageRequest) {
     return wingsPersistence.query(Host.class, pageRequest);
+  }
+
+  @Override
+  public void applyApplicableMappingRules(Infrastructure infrastructure, Host host) {
+    List<InfrastructureMappingRule> infrastructureMappingRules = infrastructure.getInfrastructureMappingRules();
+    infrastructureMappingRules.forEach(rule -> applyInfraMapping(rule, host));
+  }
+
+  private void applyInfraMapping(InfrastructureMappingRule mappingRule, Host host) {
+    Map<String, String> context = getHostAttributes(host);
+    if (mappingRule.evaluate(context)) {
+      hostService.addApplicationHost(mappingRule.getAppId(), mappingRule.getEnvId(), mappingRule.getTagId(), host);
+    }
+  }
+
+  private Map<String, String> getHostAttributes(Host host) {
+    return ImmutableMap.of("HOST_NAME", host.getHostName());
   }
 }

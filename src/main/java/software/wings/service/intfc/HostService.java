@@ -166,4 +166,13 @@ public interface HostService {
    * @return the host usage by application for infrastructure
    */
   List<ApplicationHostUsage> getInfrastructureHostUsageByApplication(String uuid);
+
+  /**
+   * Add application host.
+   *  @param appId the app id
+   * @param envId the env id
+   * @param tagId
+   * @param host  the host
+   */
+  void addApplicationHost(String appId, String envId, String tagId, Host host);
 }

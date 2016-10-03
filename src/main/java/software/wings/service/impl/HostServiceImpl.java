@@ -12,6 +12,7 @@ import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFIC
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -106,7 +107,7 @@ public class HostServiceImpl implements HostService {
                                           .field("appId")
                                           .equal(appId)
                                           .get();
-    Validator.notNullCheck("ApplicationHost", applicationHost);
+    notNullCheck("ApplicationHost", applicationHost);
     return applicationHost;
   }
 
@@ -202,6 +203,7 @@ public class HostServiceImpl implements HostService {
         host.setBastionConnAttr(bastionConnAttr);
       }
       host = wingsPersistence.saveAndGet(Host.class, host);
+      infraService.applyApplicableMappingRules(infrastructure, host);
     }
     return host;
   }
@@ -262,6 +264,43 @@ public class HostServiceImpl implements HostService {
         -> applicationHostUsage.setAppName(applicationsById.get(applicationHostUsage.getAppId()).getName()));
 
     return hostUsageList;
+  }
+
+  @Override
+  public void addApplicationHost(String appId, String envId, String tagId, Host host) {
+    Application application = appService.get(appId);
+    notNullCheck("Application", application);
+
+    application.getEnvironments()
+        .stream()
+        .filter(environment -> envId == null || envId.equals(environment.getUuid()))
+        .forEach(environment -> {
+          Tag tag = null;
+          if (tagId != null) {
+            tag = tagService.get(environment.getAppId(), environment.getUuid(), tagId);
+            Validator.notNullCheck("Tag", tag);
+          }
+          ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
+                                                .field("hostName")
+                                                .equal(host.getHostName())
+                                                .field("appId")
+                                                .equal(environment.getAppId())
+                                                .field("envId")
+                                                .equal(environment.getUuid())
+                                                .get();
+          if (applicationHost == null) {
+            wingsPersistence.saveAndGet(ApplicationHost.class,
+                anApplicationHost()
+                    .withAppId(environment.getAppId())
+                    .withEnvId(environment.getUuid())
+                    .withConfigTag(tag)
+                    .withInfraId(host.getInfraId())
+                    .withHostName(host.getHostName())
+                    .withHost(host)
+                    .build());
+          }
+          // TODO: add Notification/History
+        });
   }
 
   /* (non-Javadoc)
