@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
@@ -189,25 +191,36 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
     ImmutableMap<String, ConfigFile> serviceConfigFilesMap =
         Maps.uniqueIndex(serviceConfigFiles, ConfigFile::getRelativeFilePath);
-    ImmutableMap<String, ConfigFile> overridePathMap =
-        Maps.uniqueIndex(overrideConfigFiles, ConfigFile::getOverridePath);
+    Map<String, List<ConfigFile>> overridePathMap =
+        overrideConfigFiles.stream().collect(groupingBy(ConfigFile::getOverridePath));
 
-    overrideConfigFiles.forEach(configFile -> {
-      if (configFile.getEntityType().equals(TAG) || configFile.getEntityType().equals(HOST)) {
-        String path = configFile.getOverridePath();
-        while (!isNullOrEmpty(path)) {
-          String parentPath = substringBeforeLast(path, "/");
-          if (overridePathMap.containsKey(parentPath) && !parentPath.equals(path)) {
-            configFile.setOverriddenConfigFile(overridePathMap.get(parentPath));
-            break;
-          } else if (path.equals(parentPath)) {
-            configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getRelativeFilePath()));
-            break;
+    overrideConfigFiles.stream()
+        .filter(configFile -> asList(TAG, HOST).contains(configFile.getEntityType()))
+        .forEach(configFile -> {
+          String path = configFile.getOverridePath();
+          while (!isNullOrEmpty(path)) {
+            String parentPath = substringBeforeLast(path, "/");
+
+            if (overridePathMap.containsKey(parentPath) && !parentPath.equals(path)) {
+              Optional<ConfigFile> parentFile =
+                  overridePathMap.get(parentPath)
+                      .stream()
+                      .filter(parentConfigFile
+                          -> parentConfigFile.getRelativeFilePath().equals(configFile.getRelativeFilePath()))
+                      .findFirst();
+              if (parentFile.isPresent()) {
+                configFile.setOverriddenConfigFile(parentFile.get());
+                break;
+              }
+            } else if (path.equals(
+                           parentPath)) { // no more parent path possible. override must be on service config file
+              configFile.setOverriddenConfigFile(serviceConfigFilesMap.get(configFile.getRelativeFilePath()));
+              break;
+            }
+            path = parentPath;
           }
-          path = parentPath;
-        }
-      }
-    });
+        });
+
     return overrideConfigFiles;
   }
 
