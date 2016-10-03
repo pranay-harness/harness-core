@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+
 /**
  * Created by anubhaw on 7/25/16.
  */
+@JsonTypeName("CHANGE")
 public class ChangeNotification extends Notification {
   private long scheduledOn;
 

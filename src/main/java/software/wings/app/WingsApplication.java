@@ -51,6 +51,7 @@ import software.wings.resources.AppResource;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.BasicAuthAuthenticator;
+import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
 
@@ -105,6 +106,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     bootstrap.addBundle(new VersionInfoBundle("build.properties"));
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
     bootstrap.getObjectMapper().addMixIn(AssetsConfiguration.class, AssetsConfigurationMixin.class);
+    bootstrap.getObjectMapper().setSubtypeResolver(
+        new JsonSubtypeResolver(bootstrap.getObjectMapper().getSubtypeResolver()));
 
     logger.info("bootstrapping done.");
   }

@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.utils.ArtifactType;
 
@@ -8,6 +9,7 @@ import java.util.Set;
 /**
  * Created by anubhaw on 4/13/16.
  */
+@JsonTypeName("HTTP")
 public class FileUrlSource extends ArtifactSource {
   private String url;
 

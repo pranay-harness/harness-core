@@ -74,6 +74,16 @@ public class GraphRenderer {
     return graph;
   }
 
+  /**
+   * Generate hierarchy node node.
+   *
+   * @param instanceIdMap    the instance id map
+   * @param initialStateName the initial state name
+   * @param expandedGroupIds the expanded group ids
+   * @param expandLastOnly   the expand last only
+   * @param allExpanded      the all expanded
+   * @return the node
+   */
   Node generateHierarchyNode(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
       List<String> expandedGroupIds, Boolean expandLastOnly, boolean allExpanded) {
     logger.debug("generateGraph request received - instanceIdMap: {}, initialStateName: {}, expandedGroupIds: {}",

@@ -3,8 +3,7 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -20,20 +19,9 @@ import java.util.Objects;
  * Created by anubhaw on 5/25/16.
  */
 @JsonTypeInfo(use = Id.NAME, property = "commandUnitType")
-@JsonSubTypes({
-  @Type(value = Command.class, name = "COMMAND")
-  , @Type(value = ExecCommandUnit.class, name = "EXEC"), @Type(value = ScpCommandUnit.class, name = "SCP"),
-      @Type(value = SetupEnvCommandUnit.class, name = "SETUP_ENV"),
-      @Type(value = ProcessCheckRunningCommandUnit.class, name = "PROCESS_CHECK_RUNNING"),
-      @Type(value = InitCommandUnit.class, name = "INIT"),
-      @Type(value = PortCheckListeningCommandUnit.class, name = "PORT_CHECK_LISTENING"),
-      @Type(value = CopyConfigCommandUnit.class, name = "COPY_CONFIGS"),
-      @Type(value = PortCheckClearedCommandUnit.class, name = "PORT_CHECK_CLEARED"),
-      @Type(value = ProcessCheckStoppedCommandUnit.class, name = "PROCESS_CHECK_STOPPED")
-})
 public abstract class CommandUnit {
   @SchemaIgnore private String name;
-  private CommandUnitType commandUnitType;
+  @JsonTypeId private CommandUnitType commandUnitType;
   private ExecutionResult executionResult;
   @SchemaIgnore private boolean artifactNeeded = false;
 

@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.stencils.DefaultValue;
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 7/12/16.
  */
+@JsonTypeName("SETUP_ENV")
 public class SetupEnvCommandUnit extends ExecCommandUnit {
   /**
    * Instantiates a new Setup env command unit.

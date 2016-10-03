@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -23,6 +24,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 5/31/16.
  */
+@JsonTypeName("COMMAND")
 @Attributes(title = "Command")
 public class Command extends CommandUnit {
   @Expand(dataProvider = ServiceResourceServiceImpl.class)

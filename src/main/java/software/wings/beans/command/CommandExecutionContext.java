@@ -369,6 +369,9 @@ public class CommandExecutionContext {
     return text;
   }
 
+  /**
+   * The type Builder.
+   */
   public static final class Builder {
     private Artifact artifact;
     private ServiceInstance serviceInstance;
@@ -384,65 +387,141 @@ public class CommandExecutionContext {
 
     private Builder() {}
 
+    /**
+     * A command execution context builder.
+     *
+     * @return the builder
+     */
     public static Builder aCommandExecutionContext() {
       return new Builder();
     }
 
+    /**
+     * With artifact builder.
+     *
+     * @param artifact the artifact
+     * @return the builder
+     */
     public Builder withArtifact(Artifact artifact) {
       this.artifact = artifact;
       return this;
     }
 
+    /**
+     * With service instance builder.
+     *
+     * @param serviceInstance the service instance
+     * @return the builder
+     */
     public Builder withServiceInstance(ServiceInstance serviceInstance) {
       this.serviceInstance = serviceInstance;
       return this;
     }
 
+    /**
+     * With host builder.
+     *
+     * @param host the host
+     * @return the builder
+     */
     public Builder withHost(Host host) {
       this.host = host;
       return this;
     }
 
+    /**
+     * With service template builder.
+     *
+     * @param serviceTemplate the service template
+     * @return the builder
+     */
     public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceTemplate = serviceTemplate;
       return this;
     }
 
+    /**
+     * With app id builder.
+     *
+     * @param appId the app id
+     * @return the builder
+     */
     public Builder withAppId(String appId) {
       this.appId = appId;
       return this;
     }
 
+    /**
+     * With activity id builder.
+     *
+     * @param activityId the activity id
+     * @return the builder
+     */
     public Builder withActivityId(String activityId) {
       this.activityId = activityId;
       return this;
     }
 
+    /**
+     * With runtime path builder.
+     *
+     * @param runtimePath the runtime path
+     * @return the builder
+     */
     public Builder withRuntimePath(String runtimePath) {
       this.runtimePath = runtimePath;
       return this;
     }
 
+    /**
+     * With staging path builder.
+     *
+     * @param stagingPath the staging path
+     * @return the builder
+     */
     public Builder withStagingPath(String stagingPath) {
       this.stagingPath = stagingPath;
       return this;
     }
 
+    /**
+     * With backup path builder.
+     *
+     * @param backupPath the backup path
+     * @return the builder
+     */
     public Builder withBackupPath(String backupPath) {
       this.backupPath = backupPath;
       return this;
     }
 
+    /**
+     * With execution credential builder.
+     *
+     * @param executionCredential the execution credential
+     * @return the builder
+     */
     public Builder withExecutionCredential(ExecutionCredential executionCredential) {
       this.executionCredential = executionCredential;
       return this;
     }
 
+    /**
+     * With service variables builder.
+     *
+     * @param serviceVariables the service variables
+     * @return the builder
+     */
     public Builder withServiceVariables(Map<String, String> serviceVariables) {
       this.serviceVariables = serviceVariables;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aCommandExecutionContext()
           .withArtifact(artifact)
@@ -458,6 +537,11 @@ public class CommandExecutionContext {
           .withServiceVariables(serviceVariables);
     }
 
+    /**
+     * Build command execution context.
+     *
+     * @return the command execution context
+     */
     public CommandExecutionContext build() {
       CommandExecutionContext commandExecutionContext = new CommandExecutionContext();
       commandExecutionContext.setArtifact(artifact);

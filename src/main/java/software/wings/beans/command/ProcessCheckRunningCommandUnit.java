@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.stencils.DefaultValue;
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 7/14/16.
  */
+@JsonTypeName("PROCESS_CHECK_RUNNING")
 public class ProcessCheckRunningCommandUnit extends ExecCommandUnit {
   /**
    * Instantiates a new Process check command unit.

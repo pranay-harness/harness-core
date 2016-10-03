@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.stencils.DefaultValue;
 
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 8/3/16.
  */
+@JsonTypeName("PORT_CHECK_LISTENING")
 public class PortCheckListeningCommandUnit extends ExecCommandUnit {
   /**
    * Instantiates a new Port check listening command unit.

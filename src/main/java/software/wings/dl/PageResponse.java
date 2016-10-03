@@ -375,6 +375,11 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
         .toString();
   }
 
+  /**
+   * The type Builder.
+   *
+   * @param <T> the type parameter
+   */
   public static final class Builder<T> {
     private List<T> response = Lists.newArrayList();
     private long total;
@@ -388,55 +393,119 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
 
     private Builder() {}
 
+    /**
+     * A page response builder.
+     *
+     * @return the builder
+     */
     public static Builder aPageResponse() {
       return new Builder();
     }
 
+    /**
+     * With response builder.
+     *
+     * @param response the response
+     * @return the builder
+     */
     public Builder withResponse(List<T> response) {
       this.response = response;
       return this;
     }
 
+    /**
+     * With total builder.
+     *
+     * @param total the total
+     * @return the builder
+     */
     public Builder withTotal(long total) {
       this.total = total;
       return this;
     }
 
+    /**
+     * With offset builder.
+     *
+     * @param offset the offset
+     * @return the builder
+     */
     public Builder withOffset(String offset) {
       this.offset = offset;
       return this;
     }
 
+    /**
+     * With limit builder.
+     *
+     * @param limit the limit
+     * @return the builder
+     */
     public Builder withLimit(String limit) {
       this.limit = limit;
       return this;
     }
 
+    /**
+     * With filters builder.
+     *
+     * @param filters the filters
+     * @return the builder
+     */
     public Builder withFilters(List<SearchFilter> filters) {
       this.filters = filters;
       return this;
     }
 
+    /**
+     * With orders builder.
+     *
+     * @param orders the orders
+     * @return the builder
+     */
     public Builder withOrders(List<SortOrder> orders) {
       this.orders = orders;
       return this;
     }
 
+    /**
+     * With fields included builder.
+     *
+     * @param fieldsIncluded the fields included
+     * @return the builder
+     */
     public Builder withFieldsIncluded(List<String> fieldsIncluded) {
       this.fieldsIncluded = fieldsIncluded;
       return this;
     }
 
+    /**
+     * With fields excluded builder.
+     *
+     * @param fieldsExcluded the fields excluded
+     * @return the builder
+     */
     public Builder withFieldsExcluded(List<String> fieldsExcluded) {
       this.fieldsExcluded = fieldsExcluded;
       return this;
     }
 
+    /**
+     * With uri info builder.
+     *
+     * @param uriInfo the uri info
+     * @return the builder
+     */
     public Builder withUriInfo(UriInfo uriInfo) {
       this.uriInfo = uriInfo;
       return this;
     }
 
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
     public Builder but() {
       return aPageResponse()
           .withResponse(response)
@@ -450,6 +519,11 @@ public class PageResponse<T> extends PageRequest<T> implements List<T> {
           .withUriInfo(uriInfo);
     }
 
+    /**
+     * Build page response.
+     *
+     * @return the page response
+     */
     public PageResponse build() {
       PageResponse pageResponse = new PageResponse();
       pageResponse.setResponse(response);

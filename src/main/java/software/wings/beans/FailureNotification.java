@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import software.wings.beans.NotificationAction.NotificationActionType;
 
 import javax.validation.constraints.NotNull;
@@ -7,6 +8,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by anubhaw on 7/25/16.
  */
+@JsonTypeName("FAILURE")
 public class FailureNotification extends ActionableNotification {
   @NotNull private String entityName;
   @NotNull private String executionId;

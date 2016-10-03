@@ -71,6 +71,7 @@ public class JsonUtils {
     mapper = new ObjectMapper();
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSerializationInclusion(Include.NON_NULL);
+    mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
 
     mapperForCloning = new ObjectMapper();
     mapperForCloning.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);

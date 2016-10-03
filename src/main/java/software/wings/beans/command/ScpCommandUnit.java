@@ -8,6 +8,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.apache.commons.lang3.tuple.Pair;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 /**
  * Created by anubhaw on 7/14/16.
  */
+@JsonTypeName("SCP")
 public class ScpCommandUnit extends CommandUnit {
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)

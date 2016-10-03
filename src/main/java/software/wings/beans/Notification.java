@@ -1,7 +1,6 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeId;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import org.mongodb.morphia.annotations.Entity;
@@ -14,15 +13,11 @@ import javax.validation.constraints.NotNull;
  */
 @Entity(value = "notifications")
 @JsonTypeInfo(use = Id.NAME, property = "notificationType")
-@JsonSubTypes({
-  @Type(ApprovalNotification.class)
-  , @Type(FailureNotification.class), @Type(ChangeNotification.class), @Type(InformationNotification.class)
-})
 public abstract class Notification extends Base {
   private String environmentId;
   private String entityId;
   private EntityType entityType;
-  @NotNull private NotificationType notificationType;
+  @JsonTypeId @NotNull private NotificationType notificationType;
   @Indexed @NotNull private boolean complete = true;
   @Indexed @NotNull private boolean actionable = false;
 

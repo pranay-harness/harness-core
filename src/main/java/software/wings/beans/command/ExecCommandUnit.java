@@ -11,6 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import freemarker.cache.ClassTemplateLoader;
@@ -31,6 +32,7 @@ import java.util.Objects;
 /**
  * Created by anubhaw on 5/25/16.
  */
+@JsonTypeName("EXEC")
 public class ExecCommandUnit extends CommandUnit {
   @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;

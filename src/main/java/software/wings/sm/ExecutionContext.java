@@ -133,5 +133,10 @@ public interface ExecutionContext {
    */
   String getStateExecutionInstanceName();
 
+  /**
+   * Gets service variables.
+   *
+   * @return the service variables
+   */
   Map<String, String> getServiceVariables();
 }
