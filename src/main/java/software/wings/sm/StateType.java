@@ -25,6 +25,8 @@ import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.HttpState;
+import software.wings.sm.states.LoadBalancerDisable;
+import software.wings.sm.states.LoadBalancerEnable;
 import software.wings.sm.states.PauseState;
 import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SplunkState;
@@ -107,6 +109,12 @@ public enum StateType implements StateTypeDescriptor {
    * Approval state type.
    */
   APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
+
+  LOAD_BALANCER_ENABLE(
+      LoadBalancerEnable.class, StencilCategory.COMMANDS, "LoadBalancer Enable Host", ORCHESTRATION_STENCILS),
+
+  LOAD_BALANCER_DISABLE(
+      LoadBalancerDisable.class, StencilCategory.COMMANDS, "LoadBalancer Disable Host", ORCHESTRATION_STENCILS),
 
   /**
    * E l b enable host state type.

@@ -4,11 +4,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.multibindings.Multibinder;
 
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.api.LoadBalancer;
 import software.wings.beans.ArtifactSource.SourceType;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.core.cloud.ElasticLoadBalancer;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
@@ -158,5 +161,8 @@ public class WingsModule extends AbstractModule {
         .to(JenkinsArtifactCollectorServiceImpl.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
+
+    Multibinder<LoadBalancer> loadBalancerMultibinder = Multibinder.newSetBinder(binder(), LoadBalancer.class);
+    loadBalancerMultibinder.addBinding().to(ElasticLoadBalancer.class);
   }
 }
