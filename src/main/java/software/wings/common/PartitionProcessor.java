@@ -119,6 +119,7 @@ public interface PartitionProcessor {
           PartitionElement pe = new PartitionElement();
           pe.setPartitionElements(elementPart);
           pe.setName("Phase " + partitionIndex);
+          pe.setUuid("Phase-" + partitionIndex);
           partitionIndex++;
           partLists.add(pe);
         }
