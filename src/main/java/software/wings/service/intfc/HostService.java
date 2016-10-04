@@ -2,8 +2,8 @@ package software.wings.service.intfc;
 
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ApplicationHost;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHostUsage;

@@ -15,7 +15,7 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.api.SimpleWorkflowParam.Builder.aSimpleWorkflowParam;
 import static software.wings.beans.Activity.Builder.anActivity;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Artifact.Builder.anArtifact;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Release.Builder.aRelease;

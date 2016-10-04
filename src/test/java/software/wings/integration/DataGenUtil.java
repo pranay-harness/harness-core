@@ -86,7 +86,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;

@@ -11,7 +11,7 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.io.Files;
 
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;

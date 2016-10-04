@@ -77,6 +77,11 @@ public abstract class SettingValue {
     /**
      * Elastic Load Balancer Settings
      */
-    ELB
+    ELB,
+
+    /**
+     * Aws credentials setting variable types.
+     */
+    AWS_CREDENTIALS
   }
 }

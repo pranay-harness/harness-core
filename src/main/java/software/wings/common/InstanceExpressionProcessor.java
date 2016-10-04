@@ -17,7 +17,7 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Environment;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;

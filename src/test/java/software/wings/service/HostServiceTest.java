@@ -11,9 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
@@ -21,8 +19,11 @@ import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.infrastructure.ApplicationHostUsage.Builder.anApplicationHostUsage;
-import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
+import static software.wings.beans.infrastructure.Infrastructure.InfrastructureType.STATIC;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -47,9 +48,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
 import software.wings.beans.Base;
-import software.wings.beans.Host;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.Notification;
 import software.wings.beans.SearchFilter;
@@ -57,7 +56,10 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
+import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -123,7 +125,7 @@ public class HostServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(aStaticInfrastructure().withUuid(INFRA_ID).build());
+        .thenReturn(anInfrastructure().withType(STATIC).withUuid(INFRA_ID).build());
 
     when(wingsPersistence.createUpdateOperations(ApplicationHost.class)).thenReturn(updateOperations);
 
@@ -336,7 +338,11 @@ public class HostServiceTest extends WingsBaseTest {
     when(wingsPersistence.saveAndGet(ApplicationHost.class, applicationHostPreSave))
         .thenReturn(applicationHostPostSave);
     when(infrastructureService.get(INFRA_ID))
-        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
+        .thenReturn(Infrastructure.Builder.anInfrastructure()
+                        .withType(STATIC)
+                        .withAppId(Base.GLOBAL_APP_ID)
+                        .withUuid(INFRA_ID)
+                        .build());
 
     hostService.bulkSave(INFRA_ID, ENV_ID, requestHost);
 

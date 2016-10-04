@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.infrastructure.ApplicationHost;
 
 import java.util.ArrayList;
 import java.util.HashSet;

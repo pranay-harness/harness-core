@@ -17,15 +17,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.ConfigFile.Builder.aConfigFile;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Tag.Builder.aTag;
-import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
@@ -45,17 +44,18 @@ import org.mockito.Spy;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ApplicationHost;
-import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.Host;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.Infrastructure;
+import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -405,7 +405,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     ServiceTemplate template = builder.withMappedBy(EntityType.TAG).withUuid(TEMPLATE_ID).withTags(asList(tag)).build();
 
     when(infrastructureService.getInfraByEnvId(APP_ID, ENV_ID))
-        .thenReturn(aStaticInfrastructure().withAppId(Base.GLOBAL_APP_ID).withUuid(INFRA_ID).build());
+        .thenReturn(
+            Infrastructure.Builder.anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).build());
     when(hostService.get(APP_ID, ENV_ID, HOST_ID)).thenReturn(host);
     when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     doReturn(builder.withTags(EMPTY_LIST).withLeafTags(EMPTY_SET).build())

@@ -3,7 +3,7 @@ package software.wings.service.intfc;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Activity;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;
 import software.wings.beans.ServiceInstance;

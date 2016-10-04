@@ -4,11 +4,11 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
 import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.STARTS_WITH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
 
 import org.junit.Before;
@@ -17,18 +17,18 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.Host;
 import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
+import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
-import software.wings.beans.infrastructure.StaticInfrastructure;
+import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
@@ -320,7 +320,8 @@ public class HostIntegrationTest extends WingsBaseTest {
                                                                             .withEnvId(environment.getUuid())
                                                                             .build());
 
-    Infrastructure infrastructure = StaticInfrastructure.Builder.aStaticInfrastructure()
+    Infrastructure infrastructure = Infrastructure.Builder.anInfrastructure()
+                                        .withType(InfrastructureType.STATIC)
                                         .withAppId(GLOBAL_APP_ID)
                                         .withInfrastructureMappingRules(infrastructureMappingRules)
                                         .build();

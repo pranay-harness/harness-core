@@ -3,9 +3,9 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.History.Builder.aHistory;
-import static software.wings.beans.Host.Builder.aHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.Tag.Builder.aTag;
@@ -26,13 +26,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -113,7 +113,7 @@ public class HostServiceImpl implements HostService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#update(software.wings.beans.Host)
+   * @see software.wings.service.intfc.HostService#update(software.wings.beans.infrastructure.Host)
    */
   @Override
   public ApplicationHost update(String envId, Host host) {
@@ -153,7 +153,7 @@ public class HostServiceImpl implements HostService {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.Host, java.util.List)
+   * @see software.wings.service.intfc.HostService#bulkSave(software.wings.beans.infrastructure.Host, java.util.List)
    */
   @Override
   public ResponseMessage bulkSave(String infraId, String envId, Host baseHost) {

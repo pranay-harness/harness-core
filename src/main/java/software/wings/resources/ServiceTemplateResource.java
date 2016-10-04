@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceTemplate;

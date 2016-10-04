@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
 import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
@@ -21,13 +20,14 @@ import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
 import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
-import static software.wings.beans.Host.Builder.aHost;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
 import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Service.Builder.aService;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.beans.infrastructure.StaticInfrastructure.Builder.aStaticInfrastructure;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.beans.infrastructure.Infrastructure.Builder.anInfrastructure;
 import static software.wings.utils.WingsTestConstants.INFRA_ID;
 
 import com.google.common.collect.Lists;
@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorCodes;
@@ -48,7 +47,6 @@ import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.Graph;
 import software.wings.beans.Graph.Node;
-import software.wings.beans.Host;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.SearchFilter;
@@ -58,6 +56,9 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.infrastructure.ApplicationHost;
+import software.wings.beans.infrastructure.Host;
+import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
 import software.wings.common.UUIDGenerator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -732,7 +733,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph =
         aGraph()
@@ -886,7 +888,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Graph graph = aGraph()
                       .addNodes(aNode()
@@ -1042,7 +1045,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());
@@ -2023,7 +2027,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     ApplicationHost applicationHost1 = wingsPersistence.saveAndGet(ApplicationHost.class,
         anApplicationHost()
@@ -2255,7 +2260,8 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     Application app = wingsPersistence.saveAndGet(Application.class, anApplication().withName("App1").build());
     Environment env =
         wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
-    wingsPersistence.save(aStaticInfrastructure().withUuid(INFRA_ID).withAppId(app.getUuid()).build());
+    wingsPersistence.save(
+        anInfrastructure().withType(InfrastructureType.STATIC).withUuid(INFRA_ID).withAppId(app.getUuid()).build());
 
     Host host1 = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withInfraId(INFRA_ID).withHostName("host1").build());

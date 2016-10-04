@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Infrastructure;
@@ -82,6 +82,13 @@ public class InfrastructureResource {
   @DELETE
   public RestResponse delete(@PathParam("infraId") String infraId) {
     infrastructureService.delete(infraId);
+    return new RestResponse();
+  }
+
+  @POST
+  @Path("{infraId}/sync")
+  public RestResponse sync(@PathParam("infraId") String infraId) {
+    infrastructureService.sync(infraId);
     return new RestResponse();
   }
 }

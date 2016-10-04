@@ -6,7 +6,7 @@ import static software.wings.beans.Setup.SetupStatus.INCOMPLETE;
 import static software.wings.beans.SetupAction.Builder.aSetupAction;
 
 import software.wings.beans.Application;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Artifact;
 import software.wings.beans.Artifact.Status;
 import software.wings.beans.Environment;

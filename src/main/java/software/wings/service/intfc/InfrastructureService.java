@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -48,7 +48,8 @@ public interface InfrastructureService {
 
   /**
    * Create default infrastructure.
-   * @param appId
+   *
+   * @param appId the app id
    */
   void createDefaultInfrastructure(String appId);
 
@@ -82,4 +83,11 @@ public interface InfrastructureService {
    * @param host           the host
    */
   void applyApplicableMappingRules(Infrastructure infrastructure, Host host);
+
+  /**
+   * Sync.
+   *
+   * @param infraId the infra id
+   */
+  void sync(String infraId);
 }

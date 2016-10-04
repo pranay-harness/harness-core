@@ -12,7 +12,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Activity;
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.InstanceCountByEnv;
 import software.wings.beans.Release;

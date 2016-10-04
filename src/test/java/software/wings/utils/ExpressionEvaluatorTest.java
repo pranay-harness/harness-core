@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 
 import java.util.HashMap;
 import java.util.Map;

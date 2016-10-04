@@ -11,7 +11,7 @@ import static software.wings.beans.Tag.Builder.aTag;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
-import software.wings.beans.ApplicationHost;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.Tag;

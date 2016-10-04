@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.infrastructure;
 
 import com.google.common.base.MoreObjects;
 
@@ -10,6 +10,10 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.Tag;
+import software.wings.beans.User;
 
 import java.util.ArrayList;
 import java.util.List;

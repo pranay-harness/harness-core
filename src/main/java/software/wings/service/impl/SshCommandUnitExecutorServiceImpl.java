@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.ErrorCodes;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SSHExecutionCredential;

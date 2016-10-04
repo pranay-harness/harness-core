@@ -25,6 +25,7 @@ import software.wings.service.impl.AppServiceImpl;
 import software.wings.service.impl.ArtifactServiceImpl;
 import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
+import software.wings.service.impl.AwsInfrastructureProviderImpl;
 import software.wings.service.impl.BuildSourceServiceImpl;
 import software.wings.service.impl.CatalogServiceImpl;
 import software.wings.service.impl.ConfigServiceImpl;
@@ -70,6 +71,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.HistoryService;
 import software.wings.service.intfc.HostService;
+import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
@@ -154,6 +156,9 @@ public class WingsModule extends AbstractModule {
     bind(StatisticsService.class).to(StatisticsServiceImpl.class);
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
+    Multibinder.newSetBinder(binder(), InfrastructureProvider.class)
+        .addBinding()
+        .to(AwsInfrastructureProviderImpl.class);
 
     MapBinder<String, ArtifactCollectorService> artifactCollectorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactCollectorService.class);

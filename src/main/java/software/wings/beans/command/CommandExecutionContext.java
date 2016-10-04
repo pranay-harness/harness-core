@@ -8,7 +8,7 @@ import com.google.common.collect.Maps;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.Artifact;
 import software.wings.beans.ExecutionCredential;
-import software.wings.beans.Host;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.command.CommandUnit.ExecutionResult;

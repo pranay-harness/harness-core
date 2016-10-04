@@ -1,4 +1,4 @@
-package software.wings.beans;
+package software.wings.beans.infrastructure;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
@@ -15,6 +15,13 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.Base;
+import software.wings.beans.ConfigFile;
+import software.wings.beans.HostConnectionCredential;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.Tag;
+import software.wings.beans.User;
 
 import java.util.ArrayList;
 import java.util.List;

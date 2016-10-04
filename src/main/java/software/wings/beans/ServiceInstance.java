@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Property;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
