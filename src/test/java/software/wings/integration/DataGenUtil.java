@@ -57,6 +57,9 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -84,7 +87,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
 import software.wings.beans.Host;
-import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
@@ -96,6 +98,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -104,6 +107,7 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.Misc;
 
 import java.io.BufferedWriter;
@@ -197,10 +201,18 @@ public class DataGenUtil extends WingsBaseTest {
   }
 }
 }, new java.security.SecureRandom());
+
+ObjectMapper objectMapper = new ObjectMapper();
+objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
+JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+jacksonProvider.setMapper(objectMapper);
+
 client = ClientBuilder.newBuilder()
              .sslContext(sslcontext)
              .hostnameVerifier((s1, s2) -> true)
              .register(MultiPartFeature.class)
+             .register(jacksonProvider)
              .build();
 }
 
