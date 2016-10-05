@@ -3,12 +3,12 @@ package software.wings.service.impl;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
 import static software.wings.beans.History.Builder.aHistory;
-import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ResponseMessage.Builder.aResponseMessage;
 import static software.wings.beans.Tag.Builder.aTag;
+import static software.wings.beans.infrastructure.ApplicationHost.Builder.anApplicationHost;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.NotificationMessageResolver.ADD_HOST_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.HOST_DELETE_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
@@ -26,19 +26,19 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCodes;
 import software.wings.beans.EventType;
-import software.wings.beans.infrastructure.Host;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Tag;
 import software.wings.beans.Tag.TagType;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.ApplicationHostUsage;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -56,7 +56,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TagService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.HostCsvFileHelper;
-import software.wings.utils.Validator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -231,7 +230,7 @@ public class HostServiceImpl implements HostService {
                 .withHost(host)
                 .build());
       }
-      infraService.applyApplicableMappingRules(infrastructure, host); // TODO: move
+      //      infraService.applyApplicableMappingRules(infrastructure, host); //TODO: move
       applicationHosts.add(applicationHost);
     });
     return applicationHosts;
@@ -276,11 +275,7 @@ public class HostServiceImpl implements HostService {
         .stream()
         .filter(environment -> envId == null || envId.equals(environment.getUuid()))
         .forEach(environment -> {
-          Tag tag = null;
-          if (tagId != null && envId != null) {
-            tag = validateAndFetchTag(appId, envId, aTag().withUuid(tagId).build());
-            Validator.notNullCheck("Tag", tag);
-          }
+          Tag tag = validateAndFetchTag(environment.getAppId(), environment.getUuid(), aTag().withUuid(tagId).build());
 
           ApplicationHost applicationHost = wingsPersistence.createQuery(ApplicationHost.class)
                                                 .field("hostName")
@@ -456,7 +451,9 @@ public class HostServiceImpl implements HostService {
     if (isValidDbReference(tag)) {
       fetchedTag = tagService.get(appId, envId, tag.getUuid());
       if (fetchedTag == null) {
-        throw new WingsException(ErrorCodes.INVALID_ARGUMENT, "args", "configTags");
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Config tag doesn't exist");
+      } else if (fetchedTag.getChildren() != null && fetchedTag.getChildren().size() > 0) {
+        throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Host can only be added to leaf tags");
       }
     } else {
       fetchedTag = tagService.getDefaultTagForUntaggedHosts(appId, envId);
