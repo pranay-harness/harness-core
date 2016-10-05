@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import ro.fortsoft.pf4j.PluginManager;
@@ -50,8 +49,6 @@ public class LoadBalancerState extends State {
   @DefaultValue("Instance") @Attributes(title = "Entity") private Entity entity;
 
   @Attributes(title = "Custom Entity") private String custom;
-
-  @JsonIgnore private boolean enable;
 
   public LoadBalancerState(String name) {
     super(name, StateType.LOAD_BALANCER.name());
@@ -113,10 +110,6 @@ public class LoadBalancerState extends State {
                 .filter(loadBalancer -> loadBalancerConfig.getClass().isAssignableFrom(loadBalancer.supportedConfig()))
                 .findFirst()
                 .orElse(null));
-  }
-
-  public void setEnable(boolean enable) {
-    this.enable = enable;
   }
 
   /**
