@@ -37,7 +37,6 @@ public class ExecCommandUnit extends CommandUnit {
   @JsonIgnore @Transient private final Configuration cfg = new Configuration(VERSION_2_3_23);
   @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
   @Attributes(title = "Command") @NotEmpty private String commandString;
-  @Attributes(title = "Tail Files?") private boolean tailFiles;
 
   @Attributes(title = "Files and Patterns") private List<TailFilePatternEntry> tailPatterns;
 
@@ -65,7 +64,7 @@ public class ExecCommandUnit extends CommandUnit {
 
     List<String> returnValue = Lists.newArrayList(commandFile);
 
-    if (tailFiles && !isEmpty(tailPatterns)) {
+    if (!isEmpty(tailPatterns)) {
       cfg.setTemplateLoader(new ClassTemplateLoader(getClass(), "/commandtemplates"));
       String tailWrapperFileName = "wingstailwrapper" + DigestUtils.md5Hex(prefix + getName() + activityId);
       String tailWrapperFile = new File(System.getProperty("java.io.tmpdir"), tailWrapperFileName).getAbsolutePath();
@@ -87,7 +86,7 @@ public class ExecCommandUnit extends CommandUnit {
 
   @Override
   public int hashCode() {
-    return Objects.hash(commandPath, commandString, tailFiles, tailPatterns);
+    return Objects.hash(commandPath, commandString, tailPatterns);
   }
 
   @Override
@@ -100,7 +99,7 @@ public class ExecCommandUnit extends CommandUnit {
     }
     final ExecCommandUnit other = (ExecCommandUnit) obj;
     return Objects.equals(this.commandPath, other.commandPath)
-        && Objects.equals(this.commandString, other.commandString) && Objects.equals(this.tailFiles, other.tailFiles)
+        && Objects.equals(this.commandString, other.commandString)
         && Objects.equals(this.tailPatterns, other.tailPatterns);
   }
 
@@ -109,7 +108,6 @@ public class ExecCommandUnit extends CommandUnit {
     return MoreObjects.toStringHelper(this)
         .add("commandPath", commandPath)
         .add("commandString", commandString)
-        .add("tailFiles", tailFiles)
         .add("tailPatterns", tailPatterns)
         .add("preparedCommand", preparedCommand)
         .toString();
@@ -175,24 +173,6 @@ public class ExecCommandUnit extends CommandUnit {
   }
 
   /**
-   * Is tail files boolean.
-   *
-   * @return the boolean
-   */
-  public boolean isTailFiles() {
-    return tailFiles;
-  }
-
-  /**
-   * Sets tail files.
-   *
-   * @param tailFiles the tail files
-   */
-  public void setTailFiles(boolean tailFiles) {
-    this.tailFiles = tailFiles;
-  }
-
-  /**
    * Gets tail patterns.
    *
    * @return the tail patterns
@@ -217,7 +197,6 @@ public class ExecCommandUnit extends CommandUnit {
     private String name;
     private String commandPath;
     private String commandString;
-    private boolean tailFiles;
     private List<TailFilePatternEntry> tailPatterns;
 
     private Builder() {}
@@ -265,17 +244,6 @@ public class ExecCommandUnit extends CommandUnit {
     }
 
     /**
-     * With tail files builder.
-     *
-     * @param tailFiles the tail files
-     * @return the builder
-     */
-    public Builder withTailFiles(boolean tailFiles) {
-      this.tailFiles = tailFiles;
-      return this;
-    }
-
-    /**
      * With tail patterns builder.
      *
      * @param tailPatterns the tail patterns
@@ -296,7 +264,6 @@ public class ExecCommandUnit extends CommandUnit {
           .withName(name)
           .withCommandPath(commandPath)
           .withCommandString(commandString)
-          .withTailFiles(tailFiles)
           .withTailPatterns(tailPatterns);
     }
 
@@ -310,7 +277,6 @@ public class ExecCommandUnit extends CommandUnit {
       execCommandUnit.setName(name);
       execCommandUnit.setCommandPath(commandPath);
       execCommandUnit.setCommandString(commandString);
-      execCommandUnit.setTailFiles(tailFiles);
       execCommandUnit.setTailPatterns(tailPatterns);
       return execCommandUnit;
     }

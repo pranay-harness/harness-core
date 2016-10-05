@@ -41,12 +41,6 @@ public class SetupEnvCommandUnit extends ExecCommandUnit {
 
   @SchemaIgnore
   @Override
-  public boolean isTailFiles() {
-    return super.isTailFiles();
-  }
-
-  @SchemaIgnore
-  @Override
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
   }
