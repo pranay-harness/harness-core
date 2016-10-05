@@ -43,12 +43,6 @@ public class ProcessCheckStoppedCommandUnit extends ExecCommandUnit {
 
   @SchemaIgnore
   @Override
-  public boolean isTailFiles() {
-    return super.isTailFiles();
-  }
-
-  @SchemaIgnore
-  @Override
   public String getPreparedCommand() {
     return super.getPreparedCommand();
   }

@@ -18,6 +18,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.ChangeNotification.Builder.aChangeNotification;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.ElasticLoadBalancerConfig.Builder.anElasticLoadBalancerConfig;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.DEV;
@@ -36,6 +37,7 @@ import static software.wings.beans.Pipeline.Builder.aPipeline;
 import static software.wings.beans.Release.Builder.aRelease;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
+import static software.wings.beans.ServiceVariable.Builder.aServiceVariable;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.beans.SplunkConfig.Builder.aSplunkConfig;
@@ -57,6 +59,7 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -86,7 +89,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Graph;
-import software.wings.beans.infrastructure.Host;
 import software.wings.beans.Orchestration;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Release;
@@ -95,9 +97,13 @@ import software.wings.beans.Role;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingValue.SettingVariableTypes;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -760,6 +766,59 @@ private void createAppSettings(String appId) {
               .build(),
           APPLICATION_JSON),
       new GenericType<RestResponse<SettingAttribute>>() {});
+}
+
+private String createPort(String appId, String serviceId) {
+  WebTarget target = client.target(API_BASE + "/service-variables/?appId=" + appId);
+  RestResponse<ServiceVariable> restResponse =
+      getRequestWithAuthHeader(target).post(Entity.entity(aServiceVariable()
+                                                              .withName("PORT")
+                                                              .withType(Type.TEXT)
+                                                              .withEntityId(serviceId)
+                                                              .withEntityType(EntityType.SERVICE)
+                                                              .withValue("7070")
+                                                              .build(),
+                                                APPLICATION_JSON),
+          new GenericType<RestResponse<ServiceVariable>>() {});
+
+  return restResponse.getResource().getUuid();
+}
+
+private String createLoadBalancer(String appId, String serviceId, String value) {
+  WebTarget target = client.target(API_BASE + "/service-variables/?appId=" + appId);
+  RestResponse<ServiceVariable> restResponse =
+      getRequestWithAuthHeader(target).post(Entity.entity(aServiceVariable()
+                                                              .withName("PORT")
+                                                              .withType(Type.LB)
+                                                              .withEntityId(serviceId)
+                                                              .withEntityType(EntityType.SERVICE)
+                                                              .withValue(value)
+                                                              .build(),
+                                                APPLICATION_JSON),
+          new GenericType<RestResponse<ServiceVariable>>() {});
+
+  return restResponse.getResource().getUuid();
+}
+
+private String createLoadBalancerConfig(String appId, String envId, String lbName) {
+  WebTarget target = client.target(API_BASE + "/settings/?appId=" + appId);
+  RestResponse<SettingAttribute> restResponse = getRequestWithAuthHeader(target).post(
+      Entity.entity(aSettingAttribute()
+                        .withAppId(appId)
+                        .withEnvId(envId)
+                        .withName("Elastic Load Balancer")
+                        .withValue(anElasticLoadBalancerConfig()
+                                       .withRegion(Regions.US_EAST_1)
+                                       .withAccessKey("AKIAIJ5H5UG5TUB3L2QQ")
+                                       .withSecretKey("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")
+                                       .withLoadBalancerName(lbName)
+                                       .withType(SettingVariableTypes.ELB)
+                                       .build())
+                        .build(),
+          APPLICATION_JSON),
+      new GenericType<RestResponse<SettingAttribute>>() {});
+
+  return restResponse.getResource().getUuid();
 }
 
 private List<Application> createApplications() {
