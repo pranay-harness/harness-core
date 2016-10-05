@@ -250,7 +250,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
     attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
-    attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.TAG);
+    attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.HOST);
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());
 
@@ -268,7 +268,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     attacheConfigFileToEntity(template.getService().getUuid(), EntityType.SERVICE);
     attacheConfigFileToEntity(rootEnvTag.getUuid(), EntityType.TAG);
     attacheConfigFileToEntity(ncOz1.getUuid(), EntityType.TAG);
-    attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.TAG);
+    attacheConfigFileToEntity(hosts.get(0).getUuid(), EntityType.HOST);
 
     Map<String, List<ConfigFile>> hostConfigMapping =
         templateService.computedConfigFiles(template.getAppId(), template.getEnvId(), template.getUuid());

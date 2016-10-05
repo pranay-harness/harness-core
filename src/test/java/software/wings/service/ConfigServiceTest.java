@@ -132,6 +132,7 @@ public class ConfigServiceTest extends WingsBaseTest {
   public void shouldSave() {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID))
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
+    when(tagService.exist(APP_ID, TAG_ID)).thenReturn(true);
     ConfigFile configFile = aConfigFile()
                                 .withAppId(APP_ID)
                                 .withEnvId(ENV_ID)
