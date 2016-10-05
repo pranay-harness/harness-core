@@ -9,10 +9,11 @@ public class LoadBalancerEnable extends LoadBalancerState {
   /**
    * Instantiates a new state.
    *
-   * @param name      the name
+   * @param name the name
    */
   public LoadBalancerEnable(String name) {
-    super(name, StateType.LOAD_BALANCER_ENABLE.name());
+    super(name);
     setEnable(true);
+    setStateType(StateType.LOAD_BALANCER_ENABLE.name());
   }
 }

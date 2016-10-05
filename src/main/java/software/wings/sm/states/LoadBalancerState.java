@@ -1,10 +1,12 @@
 package software.wings.sm.states;
 
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.api.ElbStateExecutionData.Builder.anElbStateExecutionData;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.Attributes;
 import org.mongodb.morphia.annotations.Transient;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.api.InstanceElement;
@@ -15,12 +17,15 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.stencils.DefaultValue;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +36,7 @@ import javax.inject.Inject;
 /**
  * Created by peeyushaggarwal on 10/3/16.
  */
-public abstract class LoadBalancerState extends State {
+public class LoadBalancerState extends State {
   @Transient @Inject public transient ServiceTemplateService serviceTemplateService;
 
   @Transient @Inject public transient SettingsService settingsService;
@@ -40,21 +45,23 @@ public abstract class LoadBalancerState extends State {
 
   @Transient @Inject private PluginManager pluginManager;
 
+  @Attributes(description = "Operation") private Operation operation;
+
+  @DefaultValue("") @Attributes(description = "Entity") private Entity entity;
+
+  @Attributes(description = "Custom Entity") private String custom;
+
   @JsonIgnore private boolean enable;
 
-  /**
-   * Instantiates a new state.
-   *
-   * @param name      the name
-   * @param stateType the state type
-   */
-  public LoadBalancerState(String name, String stateType) {
-    super(name, stateType);
+  public LoadBalancerState(String name) {
+    super(name, StateType.LOAD_BALANCER.name());
   }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ExecutionStatus status = ExecutionStatus.SUCCESS;
+    ContextElement contextElement =
+        (ContextElement) context.evaluateExpression(isNotBlank(custom) ? custom : entity.getExpression());
     String errorMessage = "";
     WorkflowStandardParams standardParam = context.getContextElement(ContextElementType.STANDARD);
     InstanceElement instance = context.getContextElement(ContextElementType.INSTANCE);
@@ -75,8 +82,9 @@ public abstract class LoadBalancerState extends State {
       LoadBalancer<LoadBalancerConfig> loadBalancer = getLoadBalancer(loadBalancerConfig);
       if (loadBalancer != null) {
         try {
-          boolean result = enable ? loadBalancer.enableHost(loadBalancerConfig, instance.getHostElement())
-                                  : loadBalancer.disableHost(loadBalancerConfig, instance.getHostElement());
+          boolean result = operation == Operation.Enable
+              ? loadBalancer.enableInstance(loadBalancerConfig, contextElement)
+              : loadBalancer.disableInstance(loadBalancerConfig, contextElement);
           status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
         } catch (Exception e) {
           status = ExecutionStatus.ERROR;
@@ -109,5 +117,22 @@ public abstract class LoadBalancerState extends State {
 
   public void setEnable(boolean enable) {
     this.enable = enable;
+  }
+
+  public enum Operation { Enable, Disable }
+
+  private enum Entity {
+    Instance("${instance}"),
+    Custom("");
+
+    private String expression;
+
+    Entity(String expression) {
+      this.expression = expression;
+    }
+
+    public String getExpression() {
+      return expression;
+    }
   }
 }

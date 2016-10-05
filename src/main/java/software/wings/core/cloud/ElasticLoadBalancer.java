@@ -18,15 +18,19 @@ import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLo
 import com.amazonaws.services.elasticloadbalancing.model.RegisterInstancesWithLoadBalancerResult;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
 import software.wings.api.LoadBalancer;
+import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
+import software.wings.sm.ContextElement;
 
 /**
  * Created by peeyushaggarwal on 10/3/16.
  */
 public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConfig> {
   @Override
-  public boolean enableHost(ElasticLoadBalancerConfig loadBalancerConfig, HostElement hostElement) {
+  public boolean enableInstance(ElasticLoadBalancerConfig loadBalancerConfig, ContextElement contextElement) {
+    HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
     String hostName = hostElement.getHostName();
     String awsInstanceId = getInstanceId(hostName, loadBalancerConfig);
     AmazonElasticLoadBalancingClient elbClient =
@@ -49,7 +53,8 @@ public class ElasticLoadBalancer implements LoadBalancer<ElasticLoadBalancerConf
   }
 
   @Override
-  public boolean disableHost(ElasticLoadBalancerConfig loadBalancerConfig, HostElement hostElement) {
+  public boolean disableInstance(ElasticLoadBalancerConfig loadBalancerConfig, ContextElement contextElement) {
+    HostElement hostElement = ((InstanceElement) contextElement).getHostElement();
     String hostName = hostElement.getHostName();
     String awsInstanceId = getInstanceId(hostName, loadBalancerConfig);
     AmazonElasticLoadBalancingClient elbClient =
