@@ -169,10 +169,20 @@ public interface HostService {
 
   /**
    * Add application host.
-   *  @param appId the app id
+   *
+   * @param appId the app id
    * @param envId the env id
-   * @param tagId
+   * @param tagId the tag id
    * @param host  the host
    */
   void addApplicationHost(String appId, String envId, String tagId, Host host);
+
+  /**
+   * Exist boolean.
+   *
+   * @param appId  the app id
+   * @param hostId the host id
+   * @return the boolean
+   */
+  boolean exist(String appId, String hostId);
 }

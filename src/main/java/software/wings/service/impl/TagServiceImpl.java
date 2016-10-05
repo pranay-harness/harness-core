@@ -368,6 +368,12 @@ public class TagServiceImpl implements TagService {
   }
 
   @Override
+  public boolean exist(String appId, String tagId) {
+    return wingsPersistence.createQuery(Tag.class).field("appId").equal(appId).field(ID_KEY).equal(tagId).getKey()
+        != null;
+  }
+
+  @Override
   public List<Tag> getLeafTagInSubTree(Tag tag) {
     List<Tag> leafTags = new ArrayList<>();
     getLeafTagInSubTree(tag, leafTags);

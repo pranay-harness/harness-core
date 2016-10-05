@@ -171,6 +171,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return service;
   }
 
+  @Override
+  public boolean exist(@NotEmpty String appId, @NotEmpty String serviceId) {
+    return wingsPersistence.createQuery(Service.class)
+               .field("appId")
+               .equal(appId)
+               .field(ID_KEY)
+               .equal(serviceId)
+               .getKey()
+        != null;
+  }
+
   /**
    * {@inheritDoc}
    */

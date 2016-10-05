@@ -4,6 +4,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCodes.INVALID_ARGUMENT;
+import static software.wings.beans.ErrorCodes.INVALID_REQUEST;
 import static software.wings.beans.ErrorCodes.UNKNOWN_ERROR;
 import static software.wings.beans.SearchFilter.Builder.aSearchFilter;
 import static software.wings.dl.PageRequest.Builder.aPageRequest;
@@ -11,13 +12,13 @@ import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
 import com.google.common.io.Files;
 
-import software.wings.beans.infrastructure.ApplicationHost;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -35,7 +36,6 @@ import java.io.InputStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,10 +78,7 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public String save(ConfigFile configFile, InputStream inputStream) {
-    if (!Arrays.asList(EntityType.SERVICE, EntityType.TAG, EntityType.HOST).contains(configFile.getEntityType())) {
-      throw new WingsException(
-          INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + configFile.getEntityType());
-    }
+    validateEntity(configFile.getAppId(), configFile.getEntityId(), configFile.getEntityType());
     String envId = configFile.getEntityType().equals(SERVICE)
         ? GLOBAL_ENV_ID
         : serviceTemplateService.get(configFile.getAppId(), configFile.getTemplateId()).getEnvId();
@@ -92,6 +89,22 @@ public class ConfigServiceImpl implements ConfigService {
     String id = wingsPersistence.save(configFile);
     fileService.updateParentEntityId(id, fileId, CONFIGS);
     return id;
+  }
+
+  private void validateEntity(String appId, String entityId, EntityType entityType) {
+    boolean entityExist;
+    if (EntityType.SERVICE.equals(entityType)) {
+      entityExist = serviceResourceService.exist(appId, entityId);
+    } else if (EntityType.TAG.equals(entityType)) {
+      entityExist = tagService.exist(appId, entityId);
+    } else if (EntityType.HOST.equals(entityType)) {
+      entityExist = hostService.exist(appId, entityId);
+    } else {
+      throw new WingsException(INVALID_ARGUMENT, "args", "Config upload not supported for entityType " + entityType);
+    }
+    if (!entityExist) {
+      throw new WingsException(INVALID_REQUEST, "message", "Node identifier and node type do not match");
+    }
   }
 
   @Override

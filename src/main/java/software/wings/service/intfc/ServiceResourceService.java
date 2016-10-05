@@ -53,6 +53,15 @@ public interface ServiceResourceService {
   Service get(@NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
+   * Exist boolean.
+   *
+   * @param appId     the app id
+   * @param serviceId the service id
+   * @return the boolean
+   */
+  boolean exist(@NotEmpty String appId, @NotEmpty String serviceId);
+
+  /**
    * Delete.
    *
    * @param appId     the app id

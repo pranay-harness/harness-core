@@ -159,4 +159,13 @@ public interface TagService {
    * @return the user created leaf tags
    */
   List<Tag> getUserCreatedLeafTags(String appId, String envId);
+
+  /**
+   * Exist boolean.
+   *
+   * @param appId the app id
+   * @param tagId the tag id
+   * @return the boolean
+   */
+  boolean exist(String appId, String tagId);
 }

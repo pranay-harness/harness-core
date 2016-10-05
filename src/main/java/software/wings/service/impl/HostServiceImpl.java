@@ -300,6 +300,17 @@ public class HostServiceImpl implements HostService {
         });
   }
 
+  @Override
+  public boolean exist(String appId, String hostId) {
+    return wingsPersistence.createQuery(ApplicationHost.class)
+               .field(ID_KEY)
+               .equal(hostId)
+               .field("appId")
+               .equal(appId)
+               .getKey()
+        != null;
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#importHosts(java.lang.String, java.lang.String,
    * software.wings.utils.BoundedInputStream)
