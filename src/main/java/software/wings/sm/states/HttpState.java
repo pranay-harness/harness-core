@@ -66,8 +66,7 @@ public class HttpState extends State {
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
   private String method;
-  @Attributes(title = "Header", description = "Content-Type: application/json, Accept: application/json,...")
-  private String header;
+  @Attributes(title = "Header") private String header;
   @Attributes(title = "Body") private String body;
   @Attributes(title = "Assertion") private String assertion;
   @SchemaIgnore private int socketTimeoutMillis = 10000;

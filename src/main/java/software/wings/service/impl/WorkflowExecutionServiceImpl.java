@@ -170,7 +170,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     for (WorkflowExecution workflowExecution : res) {
       if (!runningOnly || workflowExecution.isRunningStatus() || workflowExecution.isPausedStatus()) {
-        populateGraph(workflowExecution, null, null, null, false);
+        // populateGraph(workflowExecution, null, null, null, false);
+        populateNodeHierarchy(workflowExecution, false);
       }
     }
     return res;

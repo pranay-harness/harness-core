@@ -1,5 +1,8 @@
 {
   "ui:order": ["url", "method", "header", "body", "assertion"],
+  "header": {
+    "ui:placeholder": "Content-Type: application/json, Accept: application/json,..."
+  },
   "body": {
     "ui:widget": "textarea"
   },
