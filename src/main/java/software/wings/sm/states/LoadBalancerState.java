@@ -119,6 +119,50 @@ public class LoadBalancerState extends State {
     this.enable = enable;
   }
 
+  /**
+   * Getter for property 'operation'.
+   *
+   * @return Value for property 'operation'.
+   */
+  public Operation getOperation() {
+    return operation;
+  }
+
+  /**
+   * Setter for property 'operation'.
+   *
+   * @param operation Value to set for property 'operation'.
+   */
+  public void setOperation(Operation operation) {
+    this.operation = operation;
+  }
+
+  public String getCustom() {
+    return custom;
+  }
+
+  public void setCustom(String custom) {
+    this.custom = custom;
+  }
+
+  /**
+   * Getter for property 'entity'.
+   *
+   * @return Value for property 'entity'.
+   */
+  public Entity getEntity() {
+    return entity;
+  }
+
+  /**
+   * Setter for property 'entity'.
+   *
+   * @param entity Value to set for property 'entity'.
+   */
+  public void setEntity(Entity entity) {
+    this.entity = entity;
+  }
+
   public enum Operation { Enable, Disable }
 
   private enum Entity {
