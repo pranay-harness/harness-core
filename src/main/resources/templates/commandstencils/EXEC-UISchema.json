@@ -6,5 +6,5 @@
   "tailPatterns": {
     "classNames": "__execCommandTailPatterns"
   },
-  "ui:order": ["commandPath", "commandString", "tailFiles", "tailPatterns"]
+  "ui:order": ["commandPath", "commandString", "tailPatterns"]
 }
