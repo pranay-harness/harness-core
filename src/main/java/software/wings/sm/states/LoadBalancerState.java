@@ -37,9 +37,9 @@ import javax.inject.Inject;
  * Created by peeyushaggarwal on 10/3/16.
  */
 public class LoadBalancerState extends State {
-  @Transient @Inject public transient ServiceTemplateService serviceTemplateService;
+  @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
 
-  @Transient @Inject public transient SettingsService settingsService;
+  @Transient @Inject private transient SettingsService settingsService;
 
   @Transient @Inject private Set<LoadBalancer> systemLoadBalancers;
 
