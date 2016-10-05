@@ -3,9 +3,6 @@ package software.wings.integration;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.InfrastructureMappingRule.Builder.anInfrastructureMappingRule;
-import static software.wings.beans.InfrastructureMappingRule.HostRuleOperator.STARTS_WITH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
@@ -19,7 +16,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMappingRule;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Builder;
 import software.wings.beans.ServiceTemplate;
@@ -28,8 +24,6 @@ import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Infrastructure;
-import software.wings.beans.infrastructure.Infrastructure.InfrastructureType;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
@@ -305,41 +299,5 @@ public class HostIntegrationTest extends WingsBaseTest {
                    .getResponse()
                    .size())
         .isEqualTo(0);
-  }
-
-  /**
-   * Should add infra host and apply auto mapping rules.
-   */
-  @Test
-  public void shouldAddInfraHostAndApplyAutoMappingRules() {
-    List<InfrastructureMappingRule.Rule> rules =
-        asList(new InfrastructureMappingRule.Rule("HOST_NAME", STARTS_WITH, "aws"));
-    List<InfrastructureMappingRule> infrastructureMappingRules = asList(anInfrastructureMappingRule()
-                                                                            .withRules(rules)
-                                                                            .withAppId(environment.getAppId())
-                                                                            .withEnvId(environment.getUuid())
-                                                                            .build());
-
-    Infrastructure infrastructure = Infrastructure.Builder.anInfrastructure()
-                                        .withType(InfrastructureType.STATIC)
-                                        .withAppId(GLOBAL_APP_ID)
-                                        .withInfrastructureMappingRules(infrastructureMappingRules)
-                                        .build();
-    Infrastructure savedInfra = infrastructureService.save(infrastructure);
-
-    Host baseHost = aHost()
-                        .withAppId(GLOBAL_APP_ID)
-                        .withInfraId(savedInfra.getUuid())
-                        .withHostConnAttr(settingAttribute)
-                        .withBastionConnAttr(settingAttribute)
-                        .withHostName("aws.host1")
-                        .build();
-    Host host = wingsPersistence.saveAndGet(Host.class, baseHost);
-
-    infrastructureService.applyApplicableMappingRules(infrastructure, host);
-    List<ApplicationHost> appHosts =
-        hostService.list(PageRequest.Builder.aPageRequest().addFilter("appId", EQ, environment.getAppId()).build())
-            .getResponse();
-    assertThat(appHosts).hasSize(1);
   }
 }
