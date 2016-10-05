@@ -11,6 +11,7 @@ import static software.wings.beans.Tag.Builder.aTag;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
@@ -306,6 +307,10 @@ public class TagServiceImpl implements TagService {
 
     if (!tag.getTagType().isModificationAllowed()) {
       throw new WingsException(INVALID_REQUEST, "message", "System generated Tags can not be modified by users");
+    }
+
+    if (tag.getChildren() != null && tag.getChildren().size() > 0) {
+      throw new WingsException(ErrorCodes.INVALID_REQUEST, "message", "Host can only be added to leaf tags");
     }
 
     List<ApplicationHost> inputHosts = hostService.getHostsByHostIds(

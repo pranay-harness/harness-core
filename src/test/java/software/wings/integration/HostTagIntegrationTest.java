@@ -1,6 +1,7 @@
 package software.wings.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.beans.SearchFilter.Operator.EQ;
@@ -13,6 +14,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.ErrorCodes;
 import software.wings.beans.infrastructure.ApplicationHost;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
@@ -25,6 +27,7 @@ import software.wings.beans.Tag.TagType;
 import software.wings.beans.infrastructure.Infrastructure;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -202,5 +205,17 @@ public class HostTagIntegrationTest extends WingsBaseTest {
     PageRequest<ApplicationHost> pageRequest = new PageRequest<>();
     pageRequest.addFilter("infraId", infraId, EQ);
     return hostService.list(pageRequest).getResponse();
+  }
+
+  @Test
+  public void shouldThrowExceptionIfHostMappedToNonLeafTags() {
+    List<ApplicationHost> hosts = importAndGetHosts(environment.getAppId(), environment.getUuid(), infraId);
+    tagService.save(nc.getUuid(),
+        aTag().withAppId(rootEnvTag.getAppId()).withEnvId(rootEnvTag.getEnvId()).withName("NC_OZ1").build());
+    assertThatThrownBy(()
+                           -> tagService.tagHostsByApi(
+                               nc.getAppId(), nc.getEnvId(), nc.getUuid(), Arrays.asList(hosts.get(0).getUuid())))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(ErrorCodes.INVALID_REQUEST.name());
   }
 }
