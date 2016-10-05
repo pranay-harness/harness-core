@@ -75,7 +75,6 @@ public class JsonSubtypeResolver extends SubtypeResolver {
         e.printStackTrace();
       }
     }
-    System.out.println(baseType + "=" + returnValue);
     return returnValue;
   }
 
@@ -91,7 +90,6 @@ public class JsonSubtypeResolver extends SubtypeResolver {
         e.printStackTrace();
       }
     }
-    System.out.println(baseType + "=" + newReturnValue);
     return newReturnValue;
   }
 }

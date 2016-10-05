@@ -19,8 +19,6 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BuildState;
 import software.wings.sm.states.CommandState;
-import software.wings.sm.states.ElasticLoadBalancerDisableState;
-import software.wings.sm.states.ElasticLoadBalancerEnableState;
 import software.wings.sm.states.EmailState;
 import software.wings.sm.states.EnvState;
 import software.wings.sm.states.ForkState;
@@ -111,22 +109,10 @@ public enum StateType implements StateTypeDescriptor {
   APPROVAL(ApprovalState.class, StencilCategory.OTHERS, ORCHESTRATION_STENCILS, PIPELINE_STENCILS),
 
   LOAD_BALANCER_ENABLE(
-      LoadBalancerEnable.class, StencilCategory.COMMANDS, "LoadBalancer Enable Host", ORCHESTRATION_STENCILS),
+      LoadBalancerEnable.class, StencilCategory.COMMANDS, "LoadBalancer Enable Instance", ORCHESTRATION_STENCILS),
 
   LOAD_BALANCER_DISABLE(
-      LoadBalancerDisable.class, StencilCategory.COMMANDS, "LoadBalancer Disable Host", ORCHESTRATION_STENCILS),
-
-  /**
-   * E l b enable host state type.
-   */
-  E_L_B_ENABLE_HOST(
-      ElasticLoadBalancerEnableState.class, StencilCategory.CLOUD, "ELB Enable Host", ORCHESTRATION_STENCILS),
-
-  /**
-   * E l b disable host state type.
-   */
-  E_L_B_DISABLE_HOST(
-      ElasticLoadBalancerDisableState.class, StencilCategory.CLOUD, "ELB Disable Host", ORCHESTRATION_STENCILS);
+      LoadBalancerDisable.class, StencilCategory.COMMANDS, "LoadBalancer Disable Instance", ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
