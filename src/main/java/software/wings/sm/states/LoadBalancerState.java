@@ -45,11 +45,11 @@ public class LoadBalancerState extends State {
 
   @Transient @Inject private PluginManager pluginManager;
 
-  @Attributes(description = "Operation") private Operation operation;
+  @Attributes(title = "Operation") private Operation operation;
 
-  @DefaultValue("") @Attributes(description = "Entity") private Entity entity;
+  @DefaultValue("Instance") @Attributes(title = "Entity") private Entity entity;
 
-  @Attributes(description = "Custom Entity") private String custom;
+  @Attributes(title = "Custom Entity") private String custom;
 
   @JsonIgnore private boolean enable;
 
