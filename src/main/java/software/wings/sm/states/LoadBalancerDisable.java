@@ -12,7 +12,7 @@ public class LoadBalancerDisable extends LoadBalancerState {
    * @param name      the name
    */
   public LoadBalancerDisable(String name) {
-    super(name, StateType.LOAD_BALANCER_DISABLE.getName());
+    super(name, StateType.LOAD_BALANCER_DISABLE.name());
     setEnable(false);
   }
 }
