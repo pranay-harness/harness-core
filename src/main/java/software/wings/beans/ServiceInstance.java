@@ -613,6 +613,7 @@ public class ServiceInstance extends Base {
     public Builder withServiceTemplate(ServiceTemplate serviceTemplate) {
       this.serviceName = serviceTemplate.getService() != null ? serviceTemplate.getService().getName() : "";
       this.serviceId = serviceTemplate.getService() != null ? serviceTemplate.getService().getUuid() : "";
+      this.serviceTemplateName = serviceTemplate.getName();
 
       this.serviceTemplateId = serviceTemplate.getUuid();
       return this;
