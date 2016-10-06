@@ -15,8 +15,6 @@ import static software.wings.sm.ContextElementType.INSTANCE;
 import static software.wings.sm.ContextElementType.SERVICE;
 import static software.wings.sm.ContextElementType.SERVICE_TEMPLATE;
 
-import com.google.common.collect.Lists;
-
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -82,9 +80,7 @@ import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.utils.MapperUtils;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -255,109 +251,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         graphRenderer.generateHierarchyNode(allInstancesIdMap, sm.getInitialStateName(), null, true, true));
   }
 
-  private void populateGraph(WorkflowExecution workflowExecution, List<String> expandedGroupIds,
-      String requestedGroupId, Graph.NodeOps nodeOps, boolean detailsRequested) {
-    if (expandedGroupIds == null) {
-      expandedGroupIds = new ArrayList<>();
-    }
-    if (nodeOps != Graph.NodeOps.COLLAPSE && requestedGroupId != null && !expandedGroupIds.contains(requestedGroupId)) {
-      expandedGroupIds.add(requestedGroupId);
-    }
-
-    Boolean expandLastOnly = null;
-    List<StateExecutionInstance> instances;
-
-    if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
-      if (workflowExecution.isRunningStatus() || workflowExecution.isFailedStatus()
-          || workflowExecution.isPausedStatus()) {
-        instances = queryInstancesForRunningFailedPausedState(workflowExecution);
-      } else {
-        instances = queryAllInstances(workflowExecution);
-        expandLastOnly = true;
-      }
-    } else {
-      instances = queryStateExecutionInstances(workflowExecution, expandedGroupIds, false);
-    }
-
-    Map<String, StateExecutionInstance> instanceIdMap =
-        instances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
-    HashSet<String> missingParentInstanceIds = getMissingParentInstanceIds(instances, expandedGroupIds);
-
-    while (missingParentInstanceIds != null && missingParentInstanceIds.size() > 0) {
-      List<StateExecutionInstance> moreInstances =
-          queryStateExecutionInstances(workflowExecution, missingParentInstanceIds, true);
-      if (moreInstances != null) {
-        Map<String, StateExecutionInstance> moreInstanceIdMap =
-            moreInstances.stream().collect(toMap(StateExecutionInstance::getUuid, identity()));
-        instanceIdMap.putAll(moreInstanceIdMap);
-      }
-      if (!instanceIdMap.keySet().containsAll(missingParentInstanceIds)) {
-        WingsException ex =
-            new WingsException("Corrupt data.. some of parentinstanceIds are invalid " + missingParentInstanceIds);
-        logger.error(ex.getMessage(), ex);
-        throw ex;
-      }
-      expandedGroupIds.addAll(missingParentInstanceIds);
-      missingParentInstanceIds = getMissingParentInstanceIds(instances, expandedGroupIds);
-    }
-
-    if (nodeOps == Graph.NodeOps.COLLAPSE && requestedGroupId != null) {
-      List<String> childrenIds = new ArrayList<>();
-      collectChildrenIds(instanceIdMap, requestedGroupId, childrenIds);
-      childrenIds.forEach(childId -> { instanceIdMap.remove(childId); });
-      if (expandedGroupIds.contains(requestedGroupId)) {
-        expandedGroupIds.remove(requestedGroupId);
-      }
-    }
-
-    StateMachine sm =
-        wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
-    String commandName = null;
-    if (workflowExecution.getExecutionArgs() != null) {
-      commandName = workflowExecution.getExecutionArgs().getCommandName();
-    }
-    if (expandedGroupIds != null && expandedGroupIds.contains("ALL")) {
-      workflowExecution.setExecutionNode(graphRenderer.generateHierarchyNode(
-          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, expandLastOnly, true));
-    } else {
-      Graph graph = graphRenderer.generateGraph(
-          instanceIdMap, sm.getInitialStateName(), expandedGroupIds, commandName, expandLastOnly);
-      workflowExecution.setGraph(graph);
-    }
-    if (pausedNodesFound(workflowExecution)) {
-      workflowExecution.setStatus(ExecutionStatus.PAUSED);
-    }
-  }
-
-  private List<StateExecutionInstance> queryInstancesForRunningFailedPausedState(WorkflowExecution workflowExecution) {
-    Query<StateExecutionInstance> query =
-        wingsPersistence.createQuery(StateExecutionInstance.class)
-            .field("appId")
-            .equal(workflowExecution.getAppId())
-            .field("executionUuid")
-            .equal(workflowExecution.getUuid())
-            .field("status")
-            .in(Lists.newArrayList(ExecutionStatus.NEW, ExecutionStatus.RUNNING, ExecutionStatus.STARTING,
-                ExecutionStatus.ABORTING, ExecutionStatus.FAILED, ExecutionStatus.ERROR, ExecutionStatus.ABORTED,
-                ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR));
-
-    List<StateExecutionInstance> childInstances = wingsPersistence.executeGetListQuery(query);
-    List<String> parentInstanceIds = childInstances.stream()
-                                         .filter(ins -> ins.getParentInstanceId() != null)
-                                         .map(StateExecutionInstance::getParentInstanceId)
-                                         .collect(Collectors.toList());
-
-    Query<StateExecutionInstance> queryByParentId = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                                        .field("appId")
-                                                        .equal(workflowExecution.getAppId())
-                                                        .field("executionUuid")
-                                                        .equal(workflowExecution.getUuid());
-
-    queryByParentId.or(
-        query.criteria("parentInstanceId").doesNotExist(), query.criteria("parentInstanceId").in(parentInstanceIds));
-    return wingsPersistence.executeGetListQuery(queryByParentId);
-  }
-
   private List<StateExecutionInstance> queryAllInstances(WorkflowExecution workflowExecution) {
     PageRequest<StateExecutionInstance> req = aPageRequest()
                                                   .withLimit(PageRequest.UNLIMITED)
@@ -367,66 +260,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                   .build();
 
     return wingsPersistence.query(StateExecutionInstance.class, req);
-  }
-
-  private boolean pausedNodesFound(WorkflowExecution workflowExecution) {
-    PageRequest<StateExecutionInstance> req =
-        aPageRequest()
-            .addFilter("appId", Operator.EQ, workflowExecution.getAppId())
-            .addFilter("executionUuid", Operator.EQ, workflowExecution.getUuid())
-            .addFilter("status", Operator.IN, ExecutionStatus.PAUSED, ExecutionStatus.PAUSED_ON_ERROR)
-            .build();
-    return wingsPersistence.get(StateExecutionInstance.class, req) != null;
-  }
-
-  private void collectChildrenIds(
-      Map<String, StateExecutionInstance> instanceIdMap, String collapseGroupId, List<String> childrenIds) {
-    if (collapseGroupId == null || instanceIdMap.get(collapseGroupId) == null) {
-      return;
-    }
-    for (StateExecutionInstance instance : instanceIdMap.values()) {
-      if (collapseGroupId.equals(instance.getParentInstanceId())) {
-        childrenIds.add(instance.getUuid());
-        collectChildrenIds(instanceIdMap, instance.getUuid(), childrenIds);
-      }
-    }
-  }
-
-  private HashSet<String> getMissingParentInstanceIds(List<StateExecutionInstance> list, List<String> instanceIds) {
-    if (list == null || list.isEmpty()) {
-      return null;
-    }
-
-    HashSet<String> missingParentInstanceIds = new HashSet<>();
-    for (StateExecutionInstance instance : list) {
-      if (instance.getParentInstanceId() != null
-          && (instanceIds == null || !instanceIds.contains(instance.getParentInstanceId()))) {
-        missingParentInstanceIds.add(instance.getParentInstanceId());
-      }
-    }
-
-    return missingParentInstanceIds;
-  }
-
-  private List<StateExecutionInstance> queryStateExecutionInstances(
-      WorkflowExecution workflowExecution, Collection<String> expandedGroupIds, boolean byParentInstanceOnly) {
-    Query<StateExecutionInstance> query = wingsPersistence.createQuery(StateExecutionInstance.class)
-                                              .field("appId")
-                                              .equal(workflowExecution.getAppId())
-                                              .field("executionUuid")
-                                              .equal(workflowExecution.getUuid());
-    if (byParentInstanceOnly) {
-      query.or(query.criteria("uuid").in(expandedGroupIds), query.criteria("parentInstanceId").in(expandedGroupIds));
-    } else if (!expandedGroupIds.contains("ALL")) {
-      if (expandedGroupIds == null || expandedGroupIds.isEmpty()) {
-        query.field("parentInstanceId").doesNotExist();
-      } else {
-        query.or(query.criteria("parentInstanceId").doesNotExist(), query.criteria("uuid").in(expandedGroupIds),
-            query.criteria("parentInstanceId").in(expandedGroupIds));
-      }
-    }
-
-    return wingsPersistence.executeGetListQuery(query);
   }
 
   /**

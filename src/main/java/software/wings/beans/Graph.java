@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.common.Constants;
 import software.wings.common.UUIDGenerator;
-import software.wings.sm.TransitionType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,52 +32,6 @@ import java.util.Optional;
  * @author Rishi
  */
 public class Graph {
-  /**
-   * The Default initial x.
-   */
-  public static final int DEFAULT_INITIAL_X = 10;
-
-  /**
-   * The Default initial y.
-   */
-  public static final int DEFAULT_INITIAL_Y = 0;
-
-  /**
-   * The Default node width.
-   */
-  public static final int DEFAULT_NODE_WIDTH = 50;
-
-  /**
-   * The constant DEFAULT_ELEMENT_NODE_WIDTH.
-   */
-  public static final int DEFAULT_ELEMENT_NODE_WIDTH = 105;
-  /**
-   * The Default node height.
-   */
-  public static final int DEFAULT_NODE_HEIGHT = 40;
-
-  /**
-   * The Default arrow width.
-   */
-  public static final int DEFAULT_ARROW_WIDTH = 50;
-
-  /**
-   * The Default arrow height.
-   */
-  public static final int DEFAULT_ARROW_HEIGHT = 50;
-
-  /**
-   * The Default group padding.
-   */
-  public static final int DEFAULT_GROUP_PADDING = 17;
-
-  /**
-   * The constant DEFAULT_ELEMENT_PADDING.
-   */
-  public static final int DEFAULT_ELEMENT_PADDING = 8;
-
-  private static final String GROUP_TYPE = "group";
-
   private String graphName = Constants.DEFAULT_WORKFLOW_NAME;
   private List<Node> nodes = new ArrayList<>();
 
@@ -166,43 +119,6 @@ public class Graph {
   @JsonIgnore
   public Map<String, Node> getNodesMap() {
     return getNodes().stream().collect(toMap(Node::getId, identity()));
-  }
-
-  /**
-   * Gets repeat links map.
-   *
-   * @return the repeat links map
-   */
-  @JsonIgnore
-  public Map<String, List<Link>> getRepeatLinkMap() {
-    Map<String, List<Link>> map = new HashMap<>();
-    getLinks().forEach(link -> {
-      if (TransitionType.REPEAT.name().toLowerCase().equals(link.getType())) {
-        List<Link> toList = map.get(link.getFrom());
-        if (toList == null) {
-          toList = new ArrayList<>();
-          map.put(link.getFrom(), toList);
-        }
-        toList.add(link);
-      }
-    });
-    return map;
-  }
-
-  /**
-   * Gets next links map.
-   *
-   * @return the repeat links map
-   */
-  @JsonIgnore
-  public Map<String, Link> getNextLinkMap() {
-    Map<String, Link> map = new HashMap<>();
-    getLinks().forEach(link -> {
-      if (!"repeat".equals(link.getType())) {
-        map.put(link.getFrom(), link);
-      }
-    });
-    return map;
   }
 
   /**

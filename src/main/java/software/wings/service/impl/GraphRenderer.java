@@ -4,26 +4,12 @@
 
 package software.wings.service.impl;
 
-import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
-import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
-import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
-import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
-import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_NODE_WIDTH;
-
 import com.google.inject.Injector;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Graph;
 import software.wings.beans.Graph.Group;
-import software.wings.beans.Graph.Link;
 import software.wings.beans.Graph.Node;
-import software.wings.common.UUIDGenerator;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -50,29 +36,6 @@ import javax.inject.Singleton;
 public class GraphRenderer {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   @Inject private Injector injector;
-
-  /**
-   * Generate graph graph.
-   *
-   * @param instanceIdMap    the instance id map
-   * @param initialStateName the initial state name
-   * @param expandedGroupIds the expanded group ids
-   * @param commandName      the command name
-   * @param expandLastOnly   the expand last only
-   * @return the graph
-   */
-  Graph generateGraph(Map<String, StateExecutionInstance> instanceIdMap, String initialStateName,
-      List<String> expandedGroupIds, String commandName, Boolean expandLastOnly) {
-    Node originNode = generateHierarchyNode(instanceIdMap, initialStateName, expandedGroupIds, expandLastOnly, false);
-    Graph graph = new Graph();
-    extrapolateDimension(originNode);
-    paintGraph(originNode, graph, DEFAULT_INITIAL_X, DEFAULT_INITIAL_Y);
-    if (StringUtils.isNotBlank(commandName)) {
-      replaceCommandNodeName(graph.getNodes(), commandName);
-    }
-    logger.debug("graph generated: {}", graph);
-    return graph;
-  }
 
   /**
    * Generate hierarchy node node.
@@ -253,87 +216,5 @@ public class GraphRenderer {
     elementNode.setStatus(executionData.getStatus().name());
     elementNode.setExecutionSummary(executionData.getExecutionSummary());
     elementNode.setExecutionDetails(executionData.getExecutionDetails());
-  }
-
-  private void paintGraph(Group group, Graph graph, int x, int y) {
-    group.setX(x);
-    group.setY(y);
-    graph.addNode(group);
-
-    y += DEFAULT_ARROW_HEIGHT;
-    Node priorElement = null;
-    for (Node node : group.getElements()) {
-      paintGraph(node, graph, x + DEFAULT_ELEMENT_PADDING, y);
-      y += node.getHeight() + DEFAULT_ARROW_HEIGHT;
-      priorElement = node;
-    }
-    if (priorElement == null) {
-      group.setHeight(0);
-    } else {
-      group.setHeight(priorElement.getY() + DEFAULT_NODE_HEIGHT / 2 - group.getY());
-    }
-  }
-
-  private void paintGraph(Node node, Graph graph, int x, int y) {
-    node.setX(x);
-    node.setY(y);
-    graph.addNode(node);
-
-    Group group = node.getGroup();
-    if (group != null) {
-      paintGraph(group, graph, x + DEFAULT_GROUP_PADDING, y + DEFAULT_NODE_HEIGHT);
-    }
-
-    Node next = node.getNext();
-    if (next != null) {
-      if (group == null || next.getGroup() == null) {
-        if (node.getType().equals("ELEMENT")) {
-          paintGraph(next, graph, x + DEFAULT_ELEMENT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
-        } else {
-          paintGraph(next, graph, x + DEFAULT_NODE_WIDTH + DEFAULT_ARROW_WIDTH, y);
-        }
-      } else {
-        paintGraph(next, graph, x + node.getWidth() - next.getWidth(), y);
-      }
-      graph.addLink(Link.Builder.aLink()
-                        .withId(UUIDGenerator.getUuid())
-                        .withFrom(node.getId())
-                        .withTo(next.getId())
-                        .withType(node.getStatus())
-                        .build());
-    }
-  }
-
-  private void extrapolateDimension(Group group) {
-    for (Node node : group.getElements()) {
-      extrapolateDimension(node);
-      if (group.getWidth() < node.getWidth()) {
-        group.setWidth(node.getWidth());
-      }
-      group.setHeight(group.getHeight() + node.getHeight() + DEFAULT_ARROW_HEIGHT);
-    }
-  }
-
-  private void extrapolateDimension(Node node) {
-    node.setWidth(DEFAULT_NODE_WIDTH);
-    node.setHeight(DEFAULT_NODE_HEIGHT);
-
-    Group group = node.getGroup();
-    if (group != null) {
-      extrapolateDimension(group);
-      if (node.getWidth() < group.getWidth()) {
-        node.setWidth(group.getWidth());
-      }
-      node.setHeight(node.getHeight() + group.getHeight());
-    }
-
-    Node next = node.getNext();
-    if (next != null) {
-      extrapolateDimension(next);
-      if (node.getHeight() < next.getHeight()) {
-        node.setHeight(next.getHeight());
-      }
-      node.setWidth(node.getWidth() + next.getWidth() + DEFAULT_ARROW_WIDTH);
-    }
   }
 }
