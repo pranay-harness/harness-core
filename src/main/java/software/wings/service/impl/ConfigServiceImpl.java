@@ -95,7 +95,7 @@ public class ConfigServiceImpl implements ConfigService {
     boolean entityExist;
     if (EntityType.SERVICE.equals(entityType)) {
       entityExist = serviceResourceService.exist(appId, entityId);
-    } else if (EntityType.TAG.equals(entityType)) {
+    } else if (EntityType.TAG.equals(entityType) || EntityType.ENVIRONMENT.equals(entityType)) {
       entityExist = tagService.exist(appId, entityId);
     } else if (EntityType.HOST.equals(entityType)) {
       entityExist = hostService.exist(appId, entityId);
@@ -177,6 +177,7 @@ public class ConfigServiceImpl implements ConfigService {
       case SERVICE:
         return serviceResourceService.get(configFile.getAppId(), configFile.getEntityId()).getName();
       case TAG:
+      case ENVIRONMENT:
         return tagService.getTagHierarchyPathString(
             tagService.get(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId()));
       case HOST:

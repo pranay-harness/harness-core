@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
+import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.HOST;
 import static software.wings.beans.EntityType.TAG;
 import static software.wings.beans.SearchFilter.Operator.IN;
@@ -195,7 +196,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
         overrideConfigFiles.stream().collect(groupingBy(ConfigFile::getOverridePath));
 
     overrideConfigFiles.stream()
-        .filter(configFile -> asList(TAG, HOST).contains(configFile.getEntityType()))
+        .filter(configFile -> asList(TAG, HOST, ENVIRONMENT).contains(configFile.getEntityType()))
         .forEach(configFile -> {
           String path = configFile.getOverridePath();
           while (!isNullOrEmpty(path)) {
