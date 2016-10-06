@@ -10,14 +10,6 @@ import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Graph.Builder.aGraph;
-import static software.wings.beans.Graph.DEFAULT_ARROW_HEIGHT;
-import static software.wings.beans.Graph.DEFAULT_ARROW_WIDTH;
-import static software.wings.beans.Graph.DEFAULT_ELEMENT_NODE_WIDTH;
-import static software.wings.beans.Graph.DEFAULT_ELEMENT_PADDING;
-import static software.wings.beans.Graph.DEFAULT_GROUP_PADDING;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_X;
-import static software.wings.beans.Graph.DEFAULT_INITIAL_Y;
-import static software.wings.beans.Graph.DEFAULT_NODE_HEIGHT;
 import static software.wings.beans.Graph.Link.Builder.aLink;
 import static software.wings.beans.Graph.Node.Builder.aNode;
 import static software.wings.beans.Orchestration.Builder.anOrchestration;
@@ -1014,25 +1006,14 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     PageResponse<WorkflowExecution> res = workflowExecutionService.listExecutions(pageRequest, true);
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
 
-    graph = res.get(0).getGraph();
-    assertThat(graph.getNodes())
-        .hasSize(6)
-        .extracting("y")
-        .containsExactly(DEFAULT_INITIAL_Y, DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT,
-            DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT,
-            DEFAULT_INITIAL_Y + DEFAULT_NODE_HEIGHT + DEFAULT_ARROW_HEIGHT,
-            DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT,
-            DEFAULT_INITIAL_Y + 2 * DEFAULT_NODE_HEIGHT + 2 * DEFAULT_ARROW_HEIGHT);
-    assertThat(graph.getNodes())
-        .hasSize(6)
-        .extracting("x")
-        .containsExactly(DEFAULT_INITIAL_X, DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING,
-            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING,
-            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING + DEFAULT_ELEMENT_NODE_WIDTH
-                + DEFAULT_ARROW_WIDTH,
-            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING,
-            DEFAULT_INITIAL_X + DEFAULT_GROUP_PADDING + DEFAULT_ELEMENT_PADDING + DEFAULT_ELEMENT_NODE_WIDTH
-                + DEFAULT_ARROW_WIDTH);
+    workflowExecution2 = res.get(0);
+    assertThat(workflowExecution2)
+        .isNotNull()
+        .extracting(WorkflowExecution::getUuid, WorkflowExecution::getAppId, WorkflowExecution::getStateMachineId,
+            WorkflowExecution::getWorkflowId)
+        .containsExactly(workflowExecution.getUuid(), app.getUuid(), workflowExecution.getStateMachineId(),
+            workflowExecution.getWorkflowId());
+    assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   /**
@@ -1280,7 +1261,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
             WorkflowExecution::getWorkflowId)
         .containsExactly(workflowExecution.getUuid(), appId, workflowExecution.getStateMachineId(), pipeline.getUuid());
     assertThat(workflowExecution2.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
-    assertThat(workflowExecution2.getGraph()).isNotNull();
+    assertThat(workflowExecution2.getExecutionNode()).isNotNull();
   }
 
   private Pipeline createPipeline(String appId) {
