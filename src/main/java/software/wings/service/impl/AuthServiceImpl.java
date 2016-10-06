@@ -11,7 +11,6 @@ import static software.wings.dl.PageRequest.PageRequestType.LIST_WITHOUT_ENV_ID;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.Application;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Environment;
 import software.wings.beans.Permission;
@@ -60,33 +59,31 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public void authorize(String appId, String envId, User user, List<PermissionAttribute> permissionAttributes,
       PageRequestType requestType) {
-    Application application = dbCache.get(Application.class, appId);
-    Environment environment = dbCache.get(Environment.class, envId);
     for (PermissionAttribute permissionAttribute : permissionAttributes) {
-      if (!authorizeAccessType(application, environment, permissionAttribute, user.getRoles(), requestType)) {
+      if (!authorizeAccessType(appId, envId, permissionAttribute, user.getRoles(), requestType)) {
         throw new WingsException(ACCESS_DENIED);
       }
     }
   }
 
-  private boolean authorizeAccessType(Application application, Environment environment,
-      PermissionAttribute permissionAttribute, List<Role> roles, PageRequestType requestType) {
+  private boolean authorizeAccessType(String appId, String envId, PermissionAttribute permissionAttribute,
+      List<Role> roles, PageRequestType requestType) {
     return roles.stream()
-        .filter(role -> roleAuthorizedWithAccessType(role, permissionAttribute, application, environment, requestType))
+        .filter(role -> roleAuthorizedWithAccessType(role, permissionAttribute, appId, envId, requestType))
         .findFirst()
         .isPresent();
   }
 
-  private boolean roleAuthorizedWithAccessType(Role role, PermissionAttribute permissionAttribute,
-      Application application, Environment environment, PageRequestType requestType) {
+  private boolean roleAuthorizedWithAccessType(
+      Role role, PermissionAttribute permissionAttribute, String appId, String envId, PageRequestType requestType) {
     ResourceType reqResourceType = permissionAttribute.getResourceType();
     Action reqAction = permissionAttribute.getAction();
     boolean requiresEnvironmentPermission = permissionAttribute.getScope().equals(PermissionScope.ENV);
     for (Permission permission : role.getPermissions()) {
       if (hasMatchingPermissionType(requiresEnvironmentPermission, permission.getPermissionScope())
           && hasResourceAccess(reqResourceType, permission) && canPerformAction(reqAction, permission)
-          && allowedInEnv(environment, requiresEnvironmentPermission, permission, requestType)
-          && forApplication(application, permission, requestType)) {
+          && allowedInEnv(envId, requiresEnvironmentPermission, permission, requestType)
+          && forApplication(appId, permission, requestType)) {
         return true;
       }
     }
@@ -98,15 +95,23 @@ public class AuthServiceImpl implements AuthService {
                                          : permissionScope.equals(PermissionScope.APP);
   }
 
-  private boolean forApplication(Application application, Permission permission, PageRequestType requestType) {
+  private boolean forApplication(String appId, Permission permission, PageRequestType requestType) {
     return requestType.equals(LIST_WITHOUT_APP_ID) || GLOBAL_APP_ID.equals(permission.getAppId())
-        || (application != null && application.getUuid().equals(permission.getAppId()));
+        || (appId != null && appId.equals(permission.getAppId()));
   }
 
-  private boolean allowedInEnv(Environment environment, boolean requiresEnvironmentPermission, Permission permission,
-      PageRequestType requestType) {
+  private boolean allowedInEnv(
+      String envId, boolean requiresEnvironmentPermission, Permission permission, PageRequestType requestType) {
     return !requiresEnvironmentPermission || requestType.equals(LIST_WITHOUT_ENV_ID)
-        || hasAccessByEnvType(environment, permission) || hasAccessByEnvId(environment, permission);
+        || allowedInSpecificEnvironment(envId, permission);
+  }
+
+  private boolean allowedInSpecificEnvironment(String envId, Permission permission) {
+    if (envId != null) {
+      Environment environment = dbCache.get(Environment.class, envId);
+      return hasAccessByEnvType(environment, permission) || hasAccessByEnvId(environment, permission);
+    }
+    return false;
   }
 
   private boolean hasAccessByEnvId(Environment environment, Permission permission) {
