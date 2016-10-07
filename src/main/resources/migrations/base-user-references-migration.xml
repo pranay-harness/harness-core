@@ -3,7 +3,7 @@
         <script>
             migrateUserFunction = function(collection,doc) {
               var updateData = {};
-              if(doc.createdBy != null &amp;&amp; typeof doc.createBy == "string") {
+              if(doc.createdBy != null &amp;&amp; typeof doc.createdBy == "string") {
                  var user = db.users.find({"_id": doc.createdBy})[0] || {};
                  updateData["createdBy"] = { "uuid": doc.createdBy, "email": user["email"], "name": user["name"] };
               }
@@ -14,7 +14,8 @@
               if(updateData["createdBy"] != null || updateData["lastUpdatedBy"] != null) {
                 collection.update({ "_id": doc["_id"]}, { "$set": updateData});
               }
-            };
+            }
+
             db.applications.find().forEach(migrateUserFunction.bind(null, db.applications));
             db.activities.find().forEach(migrateUserFunction.bind(null, db.activities));
             db.appContainers.find().forEach(migrateUserFunction.bind(null, db.appContainers));
